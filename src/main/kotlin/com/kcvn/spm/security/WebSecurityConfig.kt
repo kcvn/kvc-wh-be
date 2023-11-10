@@ -78,6 +78,8 @@ class WebSecurityConfig {
                 Customizer { auth ->
                     auth.requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/user/**").hasRole("ADMIN") // ROLE_ is automatically prepended when using hasRole
+                        .requestMatchers("/api/group/**").hasRole("ADMIN")
+                        .requestMatchers("/api/permission/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 }
             )

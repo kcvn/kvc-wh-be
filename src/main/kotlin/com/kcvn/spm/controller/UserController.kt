@@ -103,11 +103,20 @@ class UserController(
         }
         val userId = userService.save(user)
         if (userId != null) roleService.saveUserRoles(userId, roles)
-        return ResponseEntity<UserResponse>(UserResponse(userId!!, user.username!!, roles = strRoles?.toList() ?: listOf()), HttpStatus.CREATED)
+        return ResponseEntity<UserResponse>(
+            UserResponse(
+                userId!!,
+                user.username!!,
+                roles = strRoles?.toList() ?: listOf()
+            ), HttpStatus.CREATED
+        )
     }
 
     @PutMapping("/update/{id}")
-    fun updateUser(@PathVariable("id") id: Long, @RequestBody userRequest: @Valid UserRequest): ResponseEntity<UserResponse?> {
+    fun updateUser(
+        @PathVariable("id") id: Long,
+        @RequestBody userRequest: @Valid UserRequest
+    ): ResponseEntity<UserResponse?> {
         val user = userService.findById(id)
         if (user != null) {
             user.username = userRequest.username

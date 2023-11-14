@@ -22,8 +22,12 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
+import org.springframework.web.servlet.config.annotation.CorsRegistry
+
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 
 @Configuration
@@ -62,7 +66,9 @@ class WebSecurityConfig {
     @Bean
     @Throws(Exception::class)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http.csrf { csrf: CsrfConfigurer<HttpSecurity> -> csrf.disable() } // Disable CSRF
+        http.cors { } // Enable CORS
+            // Disable CSRF
+            .csrf { csrf: CsrfConfigurer<HttpSecurity> -> csrf.disable() }
             // Set unauthorized requests exception handler
             .exceptionHandling { exception: ExceptionHandlingConfigurer<HttpSecurity?> ->
                 exception.authenticationEntryPoint(
@@ -79,7 +85,8 @@ class WebSecurityConfig {
             .authorizeHttpRequests(
                 Customizer { auth ->
                     auth.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/user/**").hasRole("ADMIN") // ROLE_ is automatically prepended when using hasRole
+                        // ROLE_ is automatically prepended when using hasRole
+                        .requestMatchers("/api/user/**").hasRole("ADMIN")
                         .requestMatchers("/api/group/**").hasRole("ADMIN")
                         .requestMatchers("/api/permission/**").hasRole("ADMIN")
                         .requestMatchers("/v3/api-docs/**").permitAll()
@@ -93,28 +100,16 @@ class WebSecurityConfig {
     }
 
     @Bean
-    fun corsFilter(): CorsFilter {
-        val source = UrlBasedCorsConfigurationSource()
+    open fun corsConfigurationSource(): CorsConfigurationSource {
         val config = CorsConfiguration()
-        config.allowCredentials = true
-        config.maxAge = 60*60
+        config.allowCredentials = false
+        config.maxAge = 60 * 60
         config.addAllowedOrigin(CorsConfiguration.ALL)
         config.addAllowedHeader(CorsConfiguration.ALL)
         config.addAllowedMethod(CorsConfiguration.ALL)
+        val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", config)
-        return CorsFilter(source)
-    }
-
-    @Throws(java.lang.Exception::class)
-    fun configure(web: WebSecurity) {
-        web.ignoring().requestMatchers(
-            "/v3/api-docs",
-            "/configuration/ui",
-            "/swagger-resources/**",
-            "/configuration/security",
-            "/swagger-ui/index.html",
-            "/webjars/**"
-        )
+        return source
     }
 
 }

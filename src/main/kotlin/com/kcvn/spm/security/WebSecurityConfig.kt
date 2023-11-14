@@ -12,6 +12,7 @@ import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer
 import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer
@@ -21,8 +22,13 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
+import org.springframework.web.servlet.config.annotation.CorsRegistry
+
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+
 
 @Configuration
 @EnableMethodSecurity
@@ -60,7 +66,9 @@ class WebSecurityConfig {
     @Bean
     @Throws(Exception::class)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http.csrf { csrf: CsrfConfigurer<HttpSecurity> -> csrf.disable() } // Disable CSRF
+        http.cors { } // Enable CORS
+            // Disable CSRF
+            .csrf { csrf: CsrfConfigurer<HttpSecurity> -> csrf.disable() }
             // Set unauthorized requests exception handler
             .exceptionHandling { exception: ExceptionHandlingConfigurer<HttpSecurity?> ->
                 exception.authenticationEntryPoint(
@@ -77,7 +85,12 @@ class WebSecurityConfig {
             .authorizeHttpRequests(
                 Customizer { auth ->
                     auth.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/user/**").hasRole("ADMIN") // ROLE_ is automatically prepended when using hasRole
+                        // ROLE_ is automatically prepended when using hasRole
+                        .requestMatchers("/api/user/**").hasRole("ADMIN")
+                        .requestMatchers("/api/group/**").hasRole("ADMIN")
+                        .requestMatchers("/api/permission/**").hasRole("ADMIN")
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
                         .anyRequest().authenticated()
                 }
             )
@@ -87,15 +100,16 @@ class WebSecurityConfig {
     }
 
     @Bean
-    fun corsFilter(): CorsFilter {
-        val source = UrlBasedCorsConfigurationSource()
+    open fun corsConfigurationSource(): CorsConfigurationSource {
         val config = CorsConfiguration()
-        config.allowCredentials = true
-        config.maxAge = 60*60
+        config.allowCredentials = false
+        config.maxAge = 60 * 60
         config.addAllowedOrigin(CorsConfiguration.ALL)
         config.addAllowedHeader(CorsConfiguration.ALL)
         config.addAllowedMethod(CorsConfiguration.ALL)
+        val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", config)
-        return CorsFilter(source)
+        return source
     }
+
 }

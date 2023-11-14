@@ -28,6 +28,7 @@ class UserService(private val context: DSLContext) {
     fun update(user: Users) = context.update(USERS)
         .set(USERS.USERNAME, user.username)
         .set(USERS.PASSWORD, user.password)
+        .where(USERS.USER_ID.eq(user.userId))
         .returningResult(USERS)
         .fetchInto(Users::class.java).firstOrNull()
 

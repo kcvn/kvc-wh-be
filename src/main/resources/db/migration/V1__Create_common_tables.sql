@@ -131,6 +131,3 @@ create table user_function_permissions
 		primary key (user_id, function_id, permission_id)
 );
 
--------------------------------------
-
-

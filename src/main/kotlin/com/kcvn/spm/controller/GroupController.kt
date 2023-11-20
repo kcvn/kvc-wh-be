@@ -17,19 +17,12 @@ class GroupController(
     @GetMapping("/all")
     fun getAllGroups(): ResponseEntity<List<GroupResponse>?> {
         return try {
-            val groups: MutableList<GroupResponse> = mutableListOf()
-            groupService.findAll().forEach { u ->
-                groups.add(
-                    GroupResponse(
-                        u.groupId!!,
-                        u.groupName!!,
-                        u.groupDescription
-                    )
-                )
-            }
+            val groups: List<GroupResponse> = groupService.findAll()
 
-            if (groups.isEmpty()) ResponseEntity<List<GroupResponse>?>(HttpStatus.NO_CONTENT)
-            else ResponseEntity<List<GroupResponse>?>(groups, HttpStatus.OK)
+            if (groups.isEmpty())
+                ResponseEntity<List<GroupResponse>?>(HttpStatus.NO_CONTENT)
+            else
+                ResponseEntity<List<GroupResponse>?>(groups, HttpStatus.OK)
         } catch (e: Exception) {
             ResponseEntity<List<GroupResponse>?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
         }
@@ -39,13 +32,7 @@ class GroupController(
     fun getGroupById(@PathVariable("id") id: Int): ResponseEntity<GroupResponse?> {
         val group = groupService.findById(id)
         return if (group != null) {
-            ResponseEntity<GroupResponse?>(
-                GroupResponse(
-                    group.groupId!!,
-                    group.groupName!!,
-                    group.groupDescription
-                ), HttpStatus.OK
-            )
+            ResponseEntity<GroupResponse?>(group, HttpStatus.OK)
         } else {
             ResponseEntity<GroupResponse?>(HttpStatus.NOT_FOUND)
         }
@@ -71,19 +58,9 @@ class GroupController(
         @PathVariable("id") id: Int,
         @RequestBody groupRequest: @Valid GroupRequest
     ): ResponseEntity<GroupResponse?> {
-        val group = groupService.findById(id)
+        val group = groupService.update(id, groupRequest)
         return if (group != null) {
-            group.groupName = groupRequest.name
-            group.groupDescription = groupRequest.description
-            val response: GroupResponse
-            groupService.update(group).let {
-                response = GroupResponse(
-                    group.groupId!!,
-                    group.groupName!!,
-                    group.groupDescription
-                )
-            }
-            ResponseEntity<GroupResponse?>(response, HttpStatus.OK)
+            ResponseEntity<GroupResponse?>(group, HttpStatus.OK)
         } else {
             ResponseEntity<GroupResponse?>(HttpStatus.NOT_FOUND)
         }

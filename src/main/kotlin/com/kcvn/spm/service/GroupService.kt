@@ -1,28 +1,51 @@
 package com.kcvn.spm.service
 
 import com.kcvn.spm.model.tables.pojos.Groups
-import com.kcvn.spm.model.tables.references.GROUPS
-import org.jooq.DSLContext
+import com.kcvn.spm.payload.request.GroupRequest
+import com.kcvn.spm.payload.response.GroupResponse
+import com.kcvn.spm.repository.GroupDAO
 import org.springframework.stereotype.Service
 
 @Service
-class GroupService(private val context: DSLContext) {
-    fun findAll() = context.selectFrom(GROUPS).fetchInto(Groups::class.java)
+class GroupService(private val groupDAO: GroupDAO) {
+    fun findAll(): List<GroupResponse> = groupDAO.findAll().map { g ->
+        GroupResponse(
+            g.groupId!!,
+            g.groupName!!,
+            g.groupDescription
+        )
+    }
 
-    fun findById(id: Int): Groups? =
-        context.selectFrom(GROUPS).where(GROUPS.GROUP_ID.eq(id)).fetchInto(Groups::class.java).firstOrNull()
+    fun findById(id: Int): GroupResponse? {
+        val group = groupDAO.findById(id)
+        return if (group == null) {
+            null
+        } else {
+            GroupResponse(
+                group.groupId!!,
+                group.groupName!!,
+                group.groupDescription
+            )
+        }
+    }
 
-    fun save(group: Groups) = context.insertInto(GROUPS, GROUPS.GROUP_NAME, GROUPS.GROUP_DESCRIPTION)
-        .values(group.groupName, group.groupDescription)
-        .returningResult(GROUPS.GROUP_ID)
-        .fetchOne()?.value1()
+    fun save(group: Groups) = groupDAO.save(group)
 
-    fun update(group: Groups) = context.update(GROUPS)
-        .set(GROUPS.GROUP_NAME, group.groupName)
-        .set(GROUPS.GROUP_DESCRIPTION, group.groupDescription)
-        .where(GROUPS.GROUP_ID.eq(group.groupId))
-        .returningResult(GROUPS)
-        .fetchInto(Groups::class.java).firstOrNull()
+    fun update(id: Int, request: GroupRequest): GroupResponse? {
+        var group = groupDAO.findById(id)
+        return if (group == null) {
+            null
+        } else {
+            group.groupName = request.name
+            group.groupDescription = request.description
+            group = groupDAO.update(group)
+            GroupResponse(
+                group?.groupId!!,
+                group.groupName!!,
+                group.groupDescription
+            )
+        }
+    }
 
-    fun deleteById(id: Int) = context.deleteFrom(GROUPS).where(GROUPS.GROUP_ID.eq(id)).execute()
+    fun deleteById(id: Int) = groupDAO.deleteById(id)
 }

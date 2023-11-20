@@ -1,0 +1,19 @@
+insert into permissions(permission_name) values ('VIEW_USER');
+insert into permissions(permission_name) values ('CREATE_USER');
+insert into permissions(permission_name) values ('UPDATE_USER');
+insert into permissions(permission_name) values ('DELETE_USER');
+insert into permissions(permission_name) values ('VIEW_ROLE');
+insert into permissions(permission_name) values ('CREATE_ROLE');
+insert into permissions(permission_name) values ('UPDATE_ROLE');
+insert into permissions(permission_name) values ('DELETE_ROLE');
+insert into permissions(permission_name) values ('VIEW_LOG');
+insert into permissions(permission_name) values ('VIEW_REPORT_AVERAGE_OUTPUT_OF_TWO_MONTHS');
+insert into permissions(permission_name) values ('VIEW_REPORT_KTTN_PRODUCT_DELIVERY');
+insert into permissions(permission_name) values ('VIEW_IMPORT_INVENTORY');
+insert into permissions(permission_name) values ('VIEW_ODER_QUANTITY');
+insert into permissions(permission_name) values ('VIEW_PASS_RATE');
+insert into permissions(permission_name) values ('VIEW_WORK_RESULT');
+insert into permissions(permission_name) values ('VIEW_MANAGEMENT_PRODUCT_INFO');
+insert into permissions(permission_name) values ('VIEW_MANAGEMENT_PRODUCT_CREATION_FLOW');
+insert into permissions(permission_name) values ('VIEW_PLAN_PROCESS');
+

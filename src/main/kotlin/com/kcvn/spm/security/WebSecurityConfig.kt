@@ -12,7 +12,6 @@ import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer
 import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer
@@ -24,10 +23,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
-import org.springframework.web.filter.CorsFilter
-import org.springframework.web.servlet.config.annotation.CorsRegistry
-
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 
 @Configuration
@@ -84,14 +79,13 @@ class WebSecurityConfig {
             // Set permissions on endpoints
             .authorizeHttpRequests(
                 Customizer { auth ->
+                    // ROLE_ is automatically prepended when using hasRole
                     auth.requestMatchers("/api/auth/**").permitAll()
-                        // ROLE_ is automatically prepended when using hasRole
-                        .requestMatchers("/api/user/**").hasRole("ADMIN")
-                        .requestMatchers("/api/group/**").hasRole("ADMIN")
-                        .requestMatchers("/api/permission/**").hasRole("ADMIN")
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/user/**").authenticated()
+                        .requestMatchers("/api/group/**").authenticated()
+                        .requestMatchers("/api/role/**").authenticated()
+                        .requestMatchers("/api/function/**").authenticated()
+                        .anyRequest().permitAll()
                 }
             )
             .authenticationProvider(authenticationProvider())
@@ -100,7 +94,7 @@ class WebSecurityConfig {
     }
 
     @Bean
-    open fun corsConfigurationSource(): CorsConfigurationSource {
+    fun corsConfigurationSource(): CorsConfigurationSource {
         val config = CorsConfiguration()
         config.allowCredentials = false
         config.maxAge = 60 * 60

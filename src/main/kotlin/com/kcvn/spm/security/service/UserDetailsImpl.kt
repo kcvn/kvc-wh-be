@@ -1,11 +1,12 @@
 package com.kcvn.spm.security.service
 
+import com.kcvn.spm.model.tables.pojos.Permissions
 import com.kcvn.spm.model.tables.pojos.Roles
 import com.kcvn.spm.model.tables.pojos.Users
+import com.kcvn.spm.security.EPermission
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
-import java.util.stream.Collectors
 
 class UserDetailsImpl(
     private val id: Long,
@@ -16,10 +17,10 @@ class UserDetailsImpl(
     companion object {
         private const val serialVersionUID = 1L
 
-        fun build(user: Users, roles: List<Roles>): UserDetailsImpl {
-            val authorities = roles.stream()
-                .map { role -> SimpleGrantedAuthority(role.roleName) }
-                .collect(Collectors.toList())
+        fun build(user: Users, roles: List<Roles>, permissions: List<Permissions>): UserDetailsImpl {
+            val authorities = mutableListOf<GrantedAuthority>()
+            authorities.addAll(roles.map { role -> SimpleGrantedAuthority(role.roleName) })
+            authorities.addAll(permissions.map { SimpleGrantedAuthority(EPermission.valueOf(it.permissionName!!).value) })
             return UserDetailsImpl(
                 user.userId?: 0L,
                 user.username.toString(),

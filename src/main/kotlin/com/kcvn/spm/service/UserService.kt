@@ -1,36 +1,117 @@
 package com.kcvn.spm.service
 
+import com.kcvn.spm.model.tables.pojos.Roles
 import com.kcvn.spm.model.tables.pojos.Users
-import com.kcvn.spm.model.tables.references.USERS
-import org.jooq.DSLContext
+import com.kcvn.spm.payload.request.UserRequest
+import com.kcvn.spm.payload.response.UserResponse
+import com.kcvn.spm.repository.PermissionDAO
+import com.kcvn.spm.repository.RoleDAO
+import com.kcvn.spm.repository.UserDAO
+import com.kcvn.spm.security.EPermission
+import com.kcvn.spm.security.ERole
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
-class UserService(private val context: DSLContext) {
-    fun findAll() = context.selectFrom(USERS).fetchInto(Users::class.java)
+class UserService(
+    private val userDAO: UserDAO,
+    private val roleDAO: RoleDAO,
+    private val permissionDAO: PermissionDAO,
+    private val encoder: PasswordEncoder
+) {
+    fun getUsers(uName: String?): List<UserResponse> {
+        val userList =
+            if (uName == null) userDAO.findAll()
+            else userDAO.findByUsernameContaining(uName)
 
-    fun findById(id: Long): Users? =
-        context.selectFrom(USERS).where(USERS.USER_ID.eq(id)).fetchInto(Users::class.java).firstOrNull()
+        return userList.map { u ->
+            UserResponse(
+                u.userId!!,
+                u.username!!
+            )
+        }
+    }
 
-    fun findByUsername(userName: String): Users? =
-        context.selectFrom(USERS).where(USERS.USERNAME.eq(userName)).fetchInto(Users::class.java).firstOrNull()
+    fun findById(id: Long): UserResponse? {
+        val user = userDAO.findById(id)
+        return if (user == null) null
+        else UserResponse(
+            user.userId!!,
+            user.username!!,
+            permissionDAO.findByRoleIds(roleDAO.findByUserId(user.userId!!).map { it.roleId!! })
+                .map { p -> EPermission.valueOf(p.permissionName!!).value }
+        )
+    }
 
-    fun findByUsernameContaining(userName: String): List<Users> =
-        context.selectFrom(USERS).where(USERS.USERNAME.contains(userName)).fetchInto(Users::class.java)
+    fun createUser(request: UserRequest): UserResponse? {
+        if (userDAO.findByUsername(request.username!!) != null) {
+            throw RuntimeException("Error: Username is already taken!")
+        }
 
-    fun existsByUsername(username: String): Boolean = findByUsername(username) != null
+        // Create new user's account
+        val user = Users(
+            null,
+            request.username,
+            encoder.encode(request.password)
+        )
+        val roleIds: Set<Int> = request.roles ?: setOf()
+        val roles: MutableSet<Roles> = mutableSetOf()
+        if (roleIds.isEmpty()) {
+            val userRole: Roles = roleDAO.findByName(ERole.ROLE_USER.name)
+                ?: throw RuntimeException("Error: Role is not found.")
+            roles.add(userRole)
+        } else {
+            roleIds.forEach { roleId: Int ->
+                val role: Roles = roleDAO.findById(roleId)
+                    ?: throw RuntimeException("Error: Role is not found.")
+                roles.add(role)
+            }
+        }
+        val userId = userDAO.save(user)
+        return if (userId != null) {
+            roleDAO.saveUserRoles(userId, roles)
+            UserResponse(
+                userId,
+                user.username!!
+            )
+        } else null
+    }
 
-    fun save(user: Users) = context.insertInto(USERS, USERS.USERNAME, USERS.PASSWORD)
-        .values(user.username, user.password)
-        .returningResult(USERS.USER_ID)
-        .fetchOne()?.value1()
+    fun update(userId: Long, request: UserRequest): UserResponse? {
+        var user = userDAO.findById(userId)
+        return if (user == null) {
+            null
+        } else {
+            user.password = request.password!!
 
-    fun update(user: Users) = context.update(USERS)
-        .set(USERS.USERNAME, user.username)
-        .set(USERS.PASSWORD, user.password)
-        .where(USERS.USER_ID.eq(user.userId))
-        .returningResult(USERS)
-        .fetchInto(Users::class.java).firstOrNull()
+            val roleIds: Set<Int> = request.roles ?: setOf()
+            val roles: MutableSet<Roles> = mutableSetOf()
+            if (roleIds.isEmpty()) {
+                val userRole: Roles = roleDAO.findByName(ERole.ROLE_USER.name)
+                    ?: throw RuntimeException("Error: Role is not found.")
+                roles.add(userRole)
+            } else {
+                roleIds.forEach { roleId: Int ->
+                    val role: Roles = roleDAO.findById(roleId)
+                        ?: throw RuntimeException("Error: Role is not found.")
+                    roles.add(role)
+                }
+            }
+            roleDAO.saveUserRoles(userId, roles)
 
-    fun deleteById(id: Long) = context.deleteFrom(USERS).where(USERS.USER_ID.eq(id)).execute()
+            user = userDAO.update(user)
+            UserResponse(
+                user?.userId!!,
+                user.username!!
+            )
+        }
+    }
+
+    fun deleteById(id: Long) {
+        val roles = roleDAO.findByUserId(id)
+        if (roles.stream().anyMatch{ r -> r.roleName.equals(ERole.ROLE_ADMIN.name)}) {
+            throw RuntimeException("Error: Cannot delete admin!")
+        }
+        userDAO.deleteById(id)
+    }
 }

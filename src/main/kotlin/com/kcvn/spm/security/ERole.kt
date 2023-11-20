@@ -1,6 +1,6 @@
 package com.kcvn.spm.security
 
-enum class ERole {
-    ROLE_ADMIN,
-    ROLE_USER
+enum class ERole(val value: String) {
+    ROLE_ADMIN("admin"),
+    ROLE_USER("user")
 }

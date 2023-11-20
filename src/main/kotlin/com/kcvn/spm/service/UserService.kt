@@ -27,7 +27,8 @@ class UserService(
         return userList.map { u ->
             UserResponse(
                 u.userId!!,
-                u.username!!
+                u.username!!,
+                false
             )
         }
     }
@@ -35,12 +36,16 @@ class UserService(
     fun findById(id: Long): UserResponse? {
         val user = userDAO.findById(id)
         return if (user == null) null
-        else UserResponse(
-            user.userId!!,
-            user.username!!,
-            permissionDAO.findByRoleIds(roleDAO.findByUserId(user.userId!!).map { it.roleId!! })
-                .map { p -> EPermission.valueOf(p.permissionName!!).value }
-        )
+        else {
+            val roles = roleDAO.findByUserId(user.userId!!)
+            UserResponse(
+                user.userId!!,
+                user.username!!,
+                roles.stream().anyMatch{ it.roleName.equals(ERole.ROLE_ADMIN.name) },
+                permissionDAO.findByRoleIds(roles.map { it.roleId!! })
+                    .map { p -> EPermission.valueOf(p.permissionName!!).value }
+            )
+        }
     }
 
     fun createUser(request: UserRequest): UserResponse? {
@@ -72,7 +77,8 @@ class UserService(
             roleDAO.saveUserRoles(userId, roles)
             UserResponse(
                 userId,
-                user.username!!
+                user.username!!,
+                roles.stream().anyMatch{ it.roleName.equals(ERole.ROLE_ADMIN.name) }
             )
         } else null
     }
@@ -102,7 +108,8 @@ class UserService(
             user = userDAO.update(user)
             UserResponse(
                 user?.userId!!,
-                user.username!!
+                user.username!!,
+                roles.stream().anyMatch{ it.roleName.equals(ERole.ROLE_ADMIN.name) }
             )
         }
     }

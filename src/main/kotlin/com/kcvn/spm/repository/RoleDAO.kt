@@ -3,7 +3,6 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.model.tables.pojos.Roles
 import com.kcvn.spm.model.tables.pojos.UserRoles
 import com.kcvn.spm.model.tables.references.ROLES
-import com.kcvn.spm.model.tables.references.USERS
 import com.kcvn.spm.model.tables.references.USER_ROLES
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -35,7 +34,7 @@ class RoleDAO(private val context: DSLContext) {
         context.update(ROLES)
             .set(ROLES.ROLE_NAME, role.roleName)
             .set(ROLES.ROLE_DESCRIPTION, role.roleDescription)
-            .returningResult(USERS)
+            .returningResult(ROLES)
             .fetchInto(Roles::class.java).firstOrNull()
 
     fun deleteById(roleId: Int) = context.deleteFrom(ROLES).where(ROLES.ROLE_ID.eq(roleId)).execute()

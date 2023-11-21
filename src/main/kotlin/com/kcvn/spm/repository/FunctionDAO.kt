@@ -19,6 +19,7 @@ class FunctionDAO(private val context: DSLContext) {
 
     fun update(functions: Functions) = context.update(FUNCTIONS)
         .set(FUNCTIONS.FUNCTION_NAME,functions.functionName)
+        .where(FUNCTIONS.FUNCTION_ID.eq(functions.functionId))
         .returningResult(FUNCTIONS)
         .fetchInto(Functions::class.java).firstOrNull()
 

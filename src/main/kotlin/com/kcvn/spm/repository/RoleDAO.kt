@@ -34,6 +34,7 @@ class RoleDAO(private val context: DSLContext) {
         context.update(ROLES)
             .set(ROLES.ROLE_NAME, role.roleName)
             .set(ROLES.ROLE_DESCRIPTION, role.roleDescription)
+            .where(ROLES.ROLE_ID.eq(role.roleId))
             .returningResult(ROLES)
             .fetchInto(Roles::class.java).firstOrNull()
 

@@ -164,36 +164,37 @@
 						<goals>
 							<goal>generate</goal>
 						</goals>
-						<configuration>
-							<!--Insert your DB configuration-->
-							<jdbc>
-								<driver>org.postgresql.Driver</driver>
-								<url>${spring.datasource.url}</url>
-								<user>${spring.datasource.username}</user>
-								<password>${spring.datasource.password}</password>
-							</jdbc>
-							<generator>
-								<name>org.jooq.codegen.KotlinGenerator</name>
-								<database>
-									<name>org.jooq.meta.postgres.PostgresDatabase</name>
-									<includes>.*</includes>
-									<excludes>flyway_schema_history</excludes>
-									<inputSchema>public</inputSchema>
-								</database>
-								<generate>
-									<pojos>true</pojos>
-									<pojosEqualsAndHashCode>true</pojosEqualsAndHashCode>
-									<javaTimeTypes>true</javaTimeTypes>
-									<fluentSetters>true</fluentSetters>
-								</generate>
-								<target>
-									<packageName>com.kcvn.spm.model</packageName>
-									<directory>src/main/kotlin</directory>
-								</target>
-							</generator>
-						</configuration>
 					</execution>
 				</executions>
+				<configuration>
+					<!--Insert your DB configuration-->
+					<jdbc>
+						<driver>org.postgresql.Driver</driver>
+						<!-- These properties will be read by properties-maven-plugin above in case you run 'mvn clean install' -->
+						<url>${spring.datasource.url}</url>
+						<user>${spring.datasource.username}</user>
+						<password>${spring.datasource.password}</password>
+					</jdbc>
+					<generator>
+						<name>org.jooq.codegen.KotlinGenerator</name>
+						<database>
+							<name>org.jooq.meta.postgres.PostgresDatabase</name>
+							<includes>.*</includes>
+							<excludes>flyway_schema_history</excludes>
+							<inputSchema>public</inputSchema>
+						</database>
+						<generate>
+							<pojos>true</pojos>
+							<pojosEqualsAndHashCode>true</pojosEqualsAndHashCode>
+							<javaTimeTypes>true</javaTimeTypes>
+							<fluentSetters>true</fluentSetters>
+						</generate>
+						<target>
+							<packageName>com.kcvn.spm.model</packageName>
+							<directory>src/main/kotlin</directory>
+						</target>
+					</generator>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -1,133 +1,166 @@
-create sequence roles_role_id_seq;
+-- Function: common_update_stamp
+CREATE FUNCTION common_update_stamp() RETURNS trigger AS $common_update_stamp$
+    BEGIN
+        NEW.updated_date := current_timestamp;
+        RETURN NEW;
+    END;
+$common_update_stamp$ LANGUAGE plpgsql;
 
-create table roles
+-- Table: auth_user
+CREATE TABLE auth_user
 (
-  role_id int default nextval('roles_role_id_seq'::regclass) not null
-    constraint roles_pkey
-    primary key,
-  role_name varchar(50) not null,
-  role_description varchar(100)
+    id VARCHAR NOT NULL DEFAULT GEN_RANDOM_UUID(),
+    username VARCHAR NOT NULL,
+    password VARCHAR NOT NULL,
+	email VARCHAR,
+    phone_number VARCHAR,
+    full_name VARCHAR,
+    full_name_unsigned VARCHAR,
+    date_of_birth DATE,
+    avatar VARCHAR,
+    is_super_admin BOOLEAN NOT NULL DEFAULT false,
+    status SMALLINT NOT NULL DEFAULT 0,
+    created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR NOT NULL,
+    updated_date TIMESTAMP WITH TIME ZONE,
+    updated_by VARCHAR,
+    is_deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT auth_user_pkey PRIMARY KEY (id),
+    CONSTRAINT auth_user_uniq_username UNIQUE (username, is_deleted)
 );
 
-create unique index roles_role_name_uindex on roles (role_name);
+-- Trigger: auth_user_stamp
+CREATE TRIGGER auth_user_stamp BEFORE UPDATE ON auth_user
+    FOR EACH ROW EXECUTE FUNCTION common_update_stamp();
 
-insert into roles(role_name) values('ROLE_ADMIN');
-insert into roles(role_name) values('ROLE_USER');
+-- insert admin user, default password: admin
+INSERT INTO auth_user(username, password, is_super_admin, created_by)
+	VALUES ('admin', '$2a$10$T1SsiqMn4IHFlhGgJyJo9.JYssXKt3wYSauKY50HG/QwTB8BoBqgK', true, 'SYSTEM');
 
------------------------------
-
-create sequence users_user_id_seq;
-
-create table users
+-- Table: auth_role
+CREATE TABLE auth_role
 (
-  user_id bigint default nextval('users_user_id_seq'::regclass) not null
-    constraint users_pkey
-    primary key,
-  username varchar(50) not null,
-  password varchar(100) not null
+    id VARCHAR NOT NULL DEFAULT GEN_RANDOM_UUID(),
+    name VARCHAR NOT NULL,
+    description VARCHAR,
+    created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR NOT NULL,
+    updated_date TIMESTAMP WITH TIME ZONE,
+    updated_by VARCHAR,
+    is_deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT auth_role_pkey PRIMARY KEY (id),
+    CONSTRAINT auth_role_uniq_name UNIQUE (name, is_deleted)
 );
 
-create unique index users_username_uindex on users (username);
+-- Trigger: auth_role_stamp
+CREATE TRIGGER auth_role_stamp BEFORE UPDATE ON auth_role
+    FOR EACH ROW EXECUTE FUNCTION common_update_stamp();
 
-insert into users(username, password) values('admin', '$2a$10$T1SsiqMn4IHFlhGgJyJo9.JYssXKt3wYSauKY50HG/QwTB8BoBqgK');
+---- Table: auth_permission
+--CREATE TABLE auth_permission
+--(
+--    code VARCHAR NOT NULL,
+--    name VARCHAR NOT NULL,
+--    created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--    created_by VARCHAR NOT NULL,
+--    updated_date TIMESTAMP WITH TIME ZONE,
+--    updated_by VARCHAR,
+--    is_deleted boolean NOT NULL DEFAULT false,
+--    CONSTRAINT auth_permission_pkey PRIMARY KEY (code),
+--    CONSTRAINT auth_permission_uniq_name UNIQUE (name, is_deleted)
+--);
+--
+---- Trigger: auth_permission_stamp
+--CREATE TRIGGER auth_permission_stamp BEFORE UPDATE ON auth_permission
+--    FOR EACH ROW EXECUTE FUNCTION common_update_stamp();
+--
+---- Insert permissions
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('u.v', 'VIEW_USER', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('u.c', 'CREATE_USER', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('u.u', 'UPDATE_USER', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('u.d', 'DELETE_USER', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('r.v', 'VIEW_ROLE', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('r.c', 'CREATE_ROLE', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('r.u', 'UPDATE_ROLE', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('r.d', 'DELETE_ROLE', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('l.v', 'VIEW_LOG', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('rp.aootm.v', 'VIEW_REPORT_AVERAGE_OUTPUT_OF_TWO_MONTHS', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('rp.kpd.v', 'VIEW_REPORT_KTTN_PRODUCT_DELIVERY', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('ip.i.v', 'VIEW_IMPORT_INVENTORY', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('ip.o.v', 'VIEW_ODER_QUANTITY', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('ip.p.v', 'VIEW_PASS_RATE', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('ip.r.v', 'VIEW_WORK_RESULT', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('m.p.i.v', 'VIEW_MANAGEMENT_PRODUCT_INFO', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('m.p.c.f.v', 'VIEW_MANAGEMENT_PRODUCT_CREATION_FLOW', 'SYSTEM');
+--INSERT INTO auth_permission(code, name, created_by) VALUES ('pl.p.v', 'VIEW_PLAN_PROCESS', 'SYSTEM');
 
------------------------------
-
-create table user_roles
+-- Table: auth_user_role
+CREATE TABLE auth_user_role
 (
-  user_id bigint not null
-    constraint user_roles_users_user_id_fk
-    references users,
-  role_id int not null
-    constraint user_roles_roles_role_id_fk
-    references roles,
-  constraint user_roles_user_id_role_id_pk
-  primary key (user_id, role_id)
+    user_id VARCHAR NOT NULL,
+    role_id VARCHAR NOT NULL,
+    created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR NOT NULL,
+    updated_date TIMESTAMP WITH TIME ZONE,
+    updated_by VARCHAR,
+    is_deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT auth_user_role_pkey PRIMARY KEY (user_id, role_id),
+    CONSTRAINT auth_user_role_auth_role_id_fk FOREIGN KEY (role_id)
+            REFERENCES auth_role (id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE,
+        CONSTRAINT auth_user_role_auth_user_id_fk FOREIGN KEY (user_id)
+            REFERENCES auth_user (id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE
 );
 
-insert into user_roles(user_id, role_id) values(1, 1);
-insert into user_roles(user_id, role_id) values(1, 2);
+-- Trigger: auth_user_role_stamp
+CREATE TRIGGER auth_user_role_stamp BEFORE UPDATE ON auth_user_role
+    FOR EACH ROW EXECUTE FUNCTION common_update_stamp();
 
------------------------------
-
-create sequence groups_group_id_seq;
-
-create table groups
+-- Table: auth_user_claim
+CREATE TABLE auth_user_claim
 (
-	group_id int default nextval('groups_group_id_seq'::regclass) not null
-		constraint groups_pkey
-			primary key,
-	group_name varchar(50) not null,
-	group_description varchar(100)
+    id VARCHAR NOT NULL DEFAULT GEN_RANDOM_UUID(),
+    user_id VARCHAR NOT NULL,
+    claim_type VARCHAR NOT NULL,
+    claim_value VARCHAR,
+    created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR NOT NULL,
+    updated_date TIMESTAMP WITH TIME ZONE,
+    updated_by VARCHAR,
+    is_deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT auth_user_claim_pkey PRIMARY KEY (id),
+    CONSTRAINT auth_user_claim_auth_user_id_fk FOREIGN KEY (user_id)
+            REFERENCES auth_user (id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE
 );
 
------------------------------
+-- Trigger: auth_user_claim_stamp
+CREATE TRIGGER auth_user_claim_stamp BEFORE UPDATE ON auth_user_claim
+    FOR EACH ROW EXECUTE FUNCTION common_update_stamp();
 
-create table group_members
+-- Table: auth_role_claim
+CREATE TABLE auth_role_claim
 (
-	group_id int not null
-		constraint group_members_groups_group_id_fk
-			references groups,
-	user_id bigint not null
-		constraint group_members_users_user_id_fk
-			references users,
-	constraint group_members_group_id_user_id_pk
-		primary key (group_id, user_id)
+    id VARCHAR NOT NULL DEFAULT GEN_RANDOM_UUID(),
+    role_id VARCHAR NOT NULL,
+    claim_type VARCHAR NOT NULL,
+    claim_value VARCHAR,
+    created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR NOT NULL,
+    updated_date TIMESTAMP WITH TIME ZONE,
+    updated_by VARCHAR,
+    is_deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT auth_role_claim_pkey PRIMARY KEY (id),
+    CONSTRAINT auth_role_claim_auth_role_id_fk FOREIGN KEY (role_id)
+            REFERENCES auth_role (id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE
 );
 
------------------------------
-
-create sequence permissions_permission_id_seq;
-
-create table permissions
-(
-	permission_id int default nextval('permissions_permission_id_seq'::regclass) not null
-		constraint permissions_pkey
-			primary key,
-	permission_name varchar(50) not null,
-	permission_description varchar(100)
-);
-
------------------------------
-
-create table role_permissions
-(
-	role_id int not null
-		constraint role_permissions_roles_role_id_fk
-			references roles,
-	permission_id int not null
-		constraint role_permissions_permissions_permission_id_fk
-			references permissions,
-	constraint role_permissions_role_id_permission_id_pk
-		primary key (role_id, permission_id)
-);
-
------------------------------
-
-create sequence functions_function_id_seq;
-
-create table functions
-(
-	function_id int default nextval('functions_function_id_seq'::regclass) not null
-		constraint functions_pkey
-			primary key,
-	function_name varchar(50) not null
-);
-
------------------------------
-
-create table user_function_permissions
-(
-	user_id bigint not null
-		constraint user_function_permissions_users_user_id_fk
-			references users,
-	function_id int not null
-		constraint user_function_permissions_functions_function_id_fk
-			references functions,
-	permission_id int not null
-		constraint user_function_permissions_permissions_permission_id_fk
-			references permissions,
-	constraint user_function_permissions_user_id_function_id_permission_id_pk
-		primary key (user_id, function_id, permission_id)
-);
-
+-- Trigger: auth_role_claim_stamp
+CREATE TRIGGER auth_role_claim_stamp BEFORE UPDATE ON auth_role_claim
+    FOR EACH ROW EXECUTE FUNCTION common_update_stamp();

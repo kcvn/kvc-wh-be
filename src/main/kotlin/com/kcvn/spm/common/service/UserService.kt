@@ -6,6 +6,7 @@ import com.kcvn.spm.common.payload.response.UserResponse
 import com.kcvn.spm.common.repository.RoleDAO
 import com.kcvn.spm.common.repository.UserDAO
 import com.kcvn.spm.common.CommonUtils
+import com.kcvn.spm.common.payload.response.PaginatedResponse
 import com.kcvn.spm.common.security.EPermission
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -19,9 +20,8 @@ class UserService(
     private val encoder: PasswordEncoder
 ) {
     fun getUsers(uName: String?): List<UserResponse> {
-        val userList =
-            if (uName == null) userDAO.findAll()
-            else userDAO.findByUsernameContaining(uName)
+        val userList = if (uName == null) userDAO.findAll()
+        else userDAO.findByUsernameContaining(uName)
 
         return userList.map { user ->
             UserResponse(
@@ -35,6 +35,27 @@ class UserService(
                 user.isSuperAdmin!!
             )
         }
+    }
+
+    fun getPaginatedUsers(uName: String?, page: Int, size: Int): PaginatedResponse {
+        val result = if (uName == null) userDAO.findAllPaginated(page, size)
+        else userDAO.findByUsernameContainingPaginated(uName, page, size)
+
+        return PaginatedResponse(
+            result.first.map { user ->
+                UserResponse(
+                    user.id!!,
+                    user.username!!,
+                    user.email,
+                    user.phoneNumber,
+                    user.fullName,
+                    user.dateOfBirth,
+                    user.avatar,
+                    user.isSuperAdmin!!
+                )
+            },
+            result.second
+        )
     }
 
     fun findById(id: String): UserResponse? {

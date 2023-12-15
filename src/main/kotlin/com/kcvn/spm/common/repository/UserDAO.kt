@@ -9,7 +9,19 @@ import org.springframework.stereotype.Repository
 @Repository
 class UserDAO(private val context: DSLContext) {
     fun findAll(): List<AuthUser> =
-        context.selectFrom(AUTH_USER).where(AUTH_USER.IS_DELETED.eq(false)).fetchInto(AuthUser::class.java)
+        context.selectFrom(AUTH_USER).where(AUTH_USER.IS_DELETED.eq(false))
+            .orderBy(AUTH_USER.CREATED_DATE)
+            .fetchInto(AuthUser::class.java)
+
+    fun findAllPaginated(page: Int, size: Int): Pair<List<AuthUser>, Int> {
+        val users = context.selectFrom(AUTH_USER).where(AUTH_USER.IS_DELETED.eq(false))
+            .orderBy(AUTH_USER.CREATED_DATE)
+            .limit(size).offset((page - 1) * size)
+            .fetchInto(AuthUser::class.java)
+        val total = context.fetchCount(AUTH_USER, AUTH_USER.IS_DELETED.eq(false))
+        return Pair(users, total)
+    }
+
 
     fun findById(id: String): AuthUser? =
         context.selectFrom(AUTH_USER).where(AUTH_USER.ID.eq(id)).fetchInto(AuthUser::class.java).firstOrNull()
@@ -21,6 +33,15 @@ class UserDAO(private val context: DSLContext) {
     fun findByUsernameContaining(userName: String): List<AuthUser> =
         context.selectFrom(AUTH_USER).where(AUTH_USER.USERNAME.contains(userName).and(AUTH_USER.IS_DELETED.eq(false)))
             .fetchInto(AuthUser::class.java)
+
+    fun findByUsernameContainingPaginated(userName: String, page: Int, size: Int): Pair<List<AuthUser>, Int> {
+        val users = context.selectFrom(AUTH_USER).where(AUTH_USER.USERNAME.contains(userName).and(AUTH_USER.IS_DELETED.eq(false)))
+            .orderBy(AUTH_USER.CREATED_DATE)
+            .limit(size).offset((page - 1) * size)
+            .fetchInto(AuthUser::class.java)
+        val total = context.fetchCount(AUTH_USER, AUTH_USER.USERNAME.contains(userName).and(AUTH_USER.IS_DELETED.eq(false)))
+        return Pair(users, total)
+    }
 
     fun save(user: AuthUser): AuthUser? = context
         .insertInto(

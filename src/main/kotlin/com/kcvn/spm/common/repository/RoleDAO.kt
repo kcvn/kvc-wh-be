@@ -16,7 +16,18 @@ class RoleDAO(private val context: DSLContext) {
     }
 
     fun findAll(): List<AuthRole> =
-        context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.IS_DELETED.eq(false)).fetchInto(AuthRole::class.java)
+        context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.IS_DELETED.eq(false))
+            .orderBy(AUTH_ROLE.CREATED_DATE)
+            .fetchInto(AuthRole::class.java)
+
+    fun findAllPaginated(page: Int, size: Int): Pair<List<AuthRole>, Int> {
+        val roles = context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.IS_DELETED.eq(false))
+            .orderBy(AUTH_ROLE.CREATED_DATE)
+            .limit(size).offset((page - 1) * size)
+            .fetchInto(AuthRole::class.java)
+        val total = context.fetchCount(AUTH_ROLE, AUTH_ROLE.IS_DELETED.eq(false))
+        return Pair(roles, total)
+    }
 
     fun findById(id: String): AuthRole? =
         context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.ID.eq(id)).fetchInto(AuthRole::class.java).firstOrNull()

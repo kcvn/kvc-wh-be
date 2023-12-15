@@ -14,16 +14,27 @@ import org.springframework.web.bind.annotation.*
 class UserController(private val userService: UserService) {
     @GetMapping("/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.security.EPermission).VIEW_USER.value) || hasRole('ADMIN')")
-    fun getAllUsers(@RequestParam(required = false) uName: String?): ResponseEntity<List<UserResponse>?> {
+    fun getAllUsers(
+        @RequestParam(required = false) uName: String?,
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) size: Int?
+    ): ResponseEntity<Any?> {
         return try {
-            val users: List<UserResponse> = userService.getUsers(uName)
-
-            if (users.isEmpty())
-                ResponseEntity<List<UserResponse>?>(HttpStatus.NO_CONTENT)
-            else
-                ResponseEntity<List<UserResponse>?>(users, HttpStatus.OK)
+            if (page != null && size != null) {
+                val result = userService.getPaginatedUsers(uName, page, size)
+                if (result.data.isEmpty())
+                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+                else
+                    ResponseEntity<Any?>(result, HttpStatus.OK)
+            } else {
+                val users: List<UserResponse> = userService.getUsers(uName)
+                if (users.isEmpty())
+                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+                else
+                    ResponseEntity<Any?>(users, HttpStatus.OK)
+            }
         } catch (e: Exception) {
-            ResponseEntity<List<UserResponse>?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
+            ResponseEntity<Any?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 

@@ -16,14 +16,22 @@ class RoleController(
 ) {
     @GetMapping("/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.security.EPermission).VIEW_ROLE.value) || hasRole('ADMIN')")
-    fun getAllRoles(): ResponseEntity<List<RoleResponse>?> {
+    fun getAllRoles(
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) size: Int?
+    ): ResponseEntity<Any?> {
         return try {
-            val roles: List<RoleResponse> = roleService.findAll()
-
-            if (roles.isEmpty()) ResponseEntity<List<RoleResponse>?>(HttpStatus.NO_CONTENT)
-            else ResponseEntity<List<RoleResponse>?>(roles, HttpStatus.OK)
+            if (page != null && size != null) {
+                val result = roleService.findAllPaginated(page, size)
+                if (result.data.isEmpty()) ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+                else ResponseEntity<Any?>(result, HttpStatus.OK)
+            } else {
+                val roles: List<RoleResponse> = roleService.findAll()
+                if (roles.isEmpty()) ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+                else ResponseEntity<Any?>(roles, HttpStatus.OK)
+            }
         } catch (e: Exception) {
-            ResponseEntity<List<RoleResponse>?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
+            ResponseEntity<Any?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 

@@ -2,6 +2,7 @@ package com.kcvn.spm.common.service
 
 import com.kcvn.spm.model.tables.pojos.AuthRole
 import com.kcvn.spm.common.payload.request.RoleRequest
+import com.kcvn.spm.common.payload.response.PaginatedResponse
 import com.kcvn.spm.common.payload.response.RoleResponse
 import com.kcvn.spm.common.repository.RoleDAO
 import com.kcvn.spm.common.security.EPermission
@@ -12,6 +13,14 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class RoleService(private val roleDAO: RoleDAO) {
     fun findAll(): List<RoleResponse> = roleDAO.findAll().map { RoleResponse(it.id!!, it.name!!, it.description) }
+
+    fun findAllPaginated(page: Int, size: Int): PaginatedResponse {
+        val result = roleDAO.findAllPaginated(page, size)
+        return PaginatedResponse(
+            result.first.map { RoleResponse(it.id!!, it.name!!, it.description) },
+            result.second
+        )
+    }
 
     fun findById(id: String): RoleResponse? {
         val role = roleDAO.findById(id)

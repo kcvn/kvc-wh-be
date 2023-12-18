@@ -19,9 +19,9 @@ class UserService(
     private val roleDAO: RoleDAO,
     private val encoder: PasswordEncoder
 ) {
-    fun getUsers(uName: String?): List<UserResponse> {
-        val userList = if (uName == null) userDAO.findAll()
-        else userDAO.findByUsernameContaining(uName)
+    fun getUsers(search: String?): List<UserResponse> {
+        val userList = if (search == null) userDAO.findAll()
+        else userDAO.findByKeyword(search)
 
         return userList.map { user ->
             UserResponse(
@@ -37,9 +37,9 @@ class UserService(
         }
     }
 
-    fun getPaginatedUsers(uName: String?, page: Int, size: Int): PaginatedResponse {
-        val result = if (uName == null) userDAO.findAllPaginated(page, size)
-        else userDAO.findByUsernameContainingPaginated(uName, page, size)
+    fun getPaginatedUsers(search: String?, page: Int, size: Int): PaginatedResponse {
+        val result = if (search == null) userDAO.findAllPaginated(page, size)
+        else userDAO.findByKeywordPaginated(search, page, size)
 
         return PaginatedResponse(
             result.first.map { user ->
@@ -73,7 +73,7 @@ class UserService(
                 user.avatar,
                 user.isSuperAdmin!!,
                 roles.map { it.id!! },
-                roleDAO.findPermissionsByRoleIds(roles.map { it.id!! }).map { p -> EPermission.valueOf(p.name!!).value }
+                roleDAO.findPermissionsByRoleIds(roles.map { it.id!! }).map { p -> EPermission.valueOf(p.name).value }
             )
         }
     }

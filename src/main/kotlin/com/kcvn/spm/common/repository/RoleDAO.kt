@@ -29,6 +29,22 @@ class RoleDAO(private val context: DSLContext) {
         return Pair(roles, total)
     }
 
+    fun findByKeyword(keyword: String): List<AuthRole> =
+        context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.NAME.contains(keyword).or(AUTH_ROLE.DESCRIPTION.contains(keyword)))
+            .and(AUTH_ROLE.IS_DELETED.eq(false))
+            .orderBy(AUTH_ROLE.CREATED_DATE)
+            .fetchInto(AuthRole::class.java)
+
+    fun findByKeywordPaginated(keyword: String, page: Int, size: Int): Pair<List<AuthRole>, Int> {
+        val roles = context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.NAME.contains(keyword).or(AUTH_ROLE.DESCRIPTION.contains(keyword)))
+            .and(AUTH_ROLE.IS_DELETED.eq(false))
+            .orderBy(AUTH_ROLE.CREATED_DATE)
+            .limit(size).offset((page - 1) * size)
+            .fetchInto(AuthRole::class.java)
+        val total = context.fetchCount(AUTH_ROLE, AUTH_ROLE.IS_DELETED.eq(false))
+        return Pair(roles, total)
+    }
+
     fun findById(id: String): AuthRole? =
         context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.ID.eq(id)).fetchInto(AuthRole::class.java).firstOrNull()
 

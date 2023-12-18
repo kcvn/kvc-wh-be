@@ -1,6 +1,8 @@
 package com.kcvn.spm.common.controller
 
 import com.kcvn.spm.common.payload.request.RoleRequest
+import com.kcvn.spm.common.payload.response.MessageResponse
+import com.kcvn.spm.common.payload.response.PaginatedResponse
 import com.kcvn.spm.common.payload.response.RoleResponse
 import com.kcvn.spm.common.service.RoleService
 import jakarta.validation.Valid
@@ -17,18 +19,23 @@ class RoleController(
     @GetMapping("/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.security.EPermission).VIEW_ROLE.value) || hasRole('ADMIN')")
     fun getAllRoles(
+        @RequestParam(required = false) search: String?,
         @RequestParam(required = false) page: Int?,
         @RequestParam(required = false) size: Int?
-    ): ResponseEntity<Any?> {
+    ): ResponseEntity<*> {
         return try {
             if (page != null && size != null) {
-                val result = roleService.findAllPaginated(page, size)
-                if (result.data.isEmpty()) ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-                else ResponseEntity<Any?>(result, HttpStatus.OK)
+                val result = roleService.findAllPaginated(search, page, size)
+                if (result.data.isEmpty())
+                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+                else
+                    ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
             } else {
-                val roles: List<RoleResponse> = roleService.findAll()
-                if (roles.isEmpty()) ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-                else ResponseEntity<Any?>(roles, HttpStatus.OK)
+                val roles: List<RoleResponse> = roleService.findAll(search)
+                if (roles.isEmpty())
+                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+                else
+                    ResponseEntity<List<RoleResponse>>(roles, HttpStatus.OK)
             }
         } catch (e: Exception) {
             ResponseEntity<Any?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
@@ -51,9 +58,9 @@ class RoleController(
     fun createRole(@RequestBody request: @Valid RoleRequest?): ResponseEntity<*> {
         val role = roleService.createRole(request!!)
         return if (role == null) {
-            ResponseEntity<RoleResponse?>(HttpStatus.BAD_REQUEST)
+            ResponseEntity<MessageResponse>(MessageResponse(role, "Action failed!"), HttpStatus.BAD_REQUEST)
         } else {
-            ResponseEntity<RoleResponse>(role, HttpStatus.CREATED)
+            ResponseEntity<MessageResponse>(MessageResponse(role, "Action succeeded!"), HttpStatus.CREATED)
         }
     }
 
@@ -62,23 +69,23 @@ class RoleController(
     fun updateRole(
         @PathVariable("id") id: String,
         @RequestBody request: @Valid RoleRequest
-    ): ResponseEntity<RoleResponse?> {
+    ): ResponseEntity<*> {
         val role = roleService.updateRole(id, request)
         return if (role == null) {
-            ResponseEntity<RoleResponse?>(HttpStatus.NOT_FOUND)
+            ResponseEntity<MessageResponse>(MessageResponse(role, "Action failed!"), HttpStatus.NOT_FOUND)
         } else {
-            ResponseEntity<RoleResponse?>(role, HttpStatus.OK)
+            ResponseEntity<MessageResponse>(MessageResponse(role, "Action succeeded!"), HttpStatus.OK)
         }
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.security.EPermission).DELETE_ROLE.value) || hasRole('ADMIN')")
-    fun deleteRole(@PathVariable("id") id: String): ResponseEntity<HttpStatus> {
+    fun deleteRole(@PathVariable("id") id: String): ResponseEntity<*> {
         return try {
             roleService.deleteById(id)
-            ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT)
+            ResponseEntity<MessageResponse>(MessageResponse(null, "Action succeeded!"), HttpStatus.OK)
         } catch (e: Exception) {
-            ResponseEntity<HttpStatus>(HttpStatus.INTERNAL_SERVER_ERROR)
+            ResponseEntity<MessageResponse>(MessageResponse(null, "Action failed!"), HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 }

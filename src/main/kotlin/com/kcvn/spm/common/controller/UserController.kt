@@ -1,6 +1,8 @@
 package com.kcvn.spm.common.controller
 
 import com.kcvn.spm.common.payload.request.UserRequest
+import com.kcvn.spm.common.payload.response.MessageResponse
+import com.kcvn.spm.common.payload.response.PaginatedResponse
 import com.kcvn.spm.common.payload.response.UserResponse
 import com.kcvn.spm.common.service.UserService
 import jakarta.validation.Valid
@@ -15,23 +17,23 @@ class UserController(private val userService: UserService) {
     @GetMapping("/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.security.EPermission).VIEW_USER.value) || hasRole('ADMIN')")
     fun getAllUsers(
-        @RequestParam(required = false) uName: String?,
+        @RequestParam(required = false) search: String?,
         @RequestParam(required = false) page: Int?,
         @RequestParam(required = false) size: Int?
-    ): ResponseEntity<Any?> {
+    ): ResponseEntity<*> {
         return try {
             if (page != null && size != null) {
-                val result = userService.getPaginatedUsers(uName, page, size)
+                val result = userService.getPaginatedUsers(search, page, size)
                 if (result.data.isEmpty())
                     ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
                 else
-                    ResponseEntity<Any?>(result, HttpStatus.OK)
+                    ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
             } else {
-                val users: List<UserResponse> = userService.getUsers(uName)
+                val users: List<UserResponse> = userService.getUsers(search)
                 if (users.isEmpty())
                     ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
                 else
-                    ResponseEntity<Any?>(users, HttpStatus.OK)
+                    ResponseEntity<List<UserResponse>>(users, HttpStatus.OK)
             }
         } catch (e: Exception) {
             ResponseEntity<Any?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
@@ -54,9 +56,9 @@ class UserController(private val userService: UserService) {
     fun createUser(@RequestBody userRequest: @Valid UserRequest?): ResponseEntity<*> {
         val user = userService.createUser(userRequest!!)
         return if (user != null) {
-            ResponseEntity<UserResponse?>(user, HttpStatus.CREATED)
+            ResponseEntity<MessageResponse>(MessageResponse(user, "Action succeeded!"), HttpStatus.CREATED)
         } else {
-            ResponseEntity<UserResponse?>(HttpStatus.BAD_REQUEST)
+            ResponseEntity<MessageResponse>(MessageResponse(user, "Action failed!"), HttpStatus.BAD_REQUEST)
         }
     }
 
@@ -65,12 +67,12 @@ class UserController(private val userService: UserService) {
     fun updateUser(
         @PathVariable("id") id: String,
         @RequestBody userRequest: @Valid UserRequest
-    ): ResponseEntity<UserResponse?> {
+    ): ResponseEntity<*> {
         val user = userService.updateInfo(id, userRequest)
         return if (user != null) {
-            ResponseEntity<UserResponse?>(user, HttpStatus.OK)
+            ResponseEntity<MessageResponse>(MessageResponse(user, "Action succeeded!"), HttpStatus.OK)
         } else {
-            ResponseEntity<UserResponse?>(HttpStatus.NOT_FOUND)
+            ResponseEntity<MessageResponse>(MessageResponse(user, "Action failed!"), HttpStatus.BAD_REQUEST)
         }
     }
 
@@ -79,23 +81,23 @@ class UserController(private val userService: UserService) {
     fun changePassword(
         @PathVariable("id") id: String,
         @RequestBody userRequest: @Valid UserRequest
-    ): ResponseEntity<UserResponse?> {
+    ): ResponseEntity<*> {
         val user = userService.updatePassword(id, userRequest)
         return if (user != null) {
-            ResponseEntity<UserResponse?>(user, HttpStatus.OK)
+            ResponseEntity<MessageResponse>(MessageResponse(user, "Action succeeded!"), HttpStatus.OK)
         } else {
-            ResponseEntity<UserResponse?>(HttpStatus.NOT_FOUND)
+            ResponseEntity<MessageResponse>(MessageResponse(user, "Action failed!"), HttpStatus.BAD_REQUEST)
         }
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.security.EPermission).DELETE_USER.value) || hasRole('ADMIN')")
-    fun deleteUser(@PathVariable("id") id: String): ResponseEntity<HttpStatus> {
+    fun deleteUser(@PathVariable("id") id: String): ResponseEntity<*> {
         return try {
             userService.deleteById(id)
-            ResponseEntity<HttpStatus>(HttpStatus.NO_CONTENT)
+            ResponseEntity<MessageResponse>(MessageResponse(null, "Action succeeded!"), HttpStatus.OK)
         } catch (e: Exception) {
-            ResponseEntity<HttpStatus>(HttpStatus.INTERNAL_SERVER_ERROR)
+            ResponseEntity<MessageResponse>(MessageResponse(null, "Action failed!"), HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 }

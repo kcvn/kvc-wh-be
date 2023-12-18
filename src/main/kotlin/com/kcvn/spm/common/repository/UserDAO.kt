@@ -4,6 +4,7 @@ import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.model.tables.references.AUTH_USER
 import com.kcvn.spm.common.CommonUtils
 import org.jooq.DSLContext
+import org.jooq.Keyword
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -30,16 +31,26 @@ class UserDAO(private val context: DSLContext) {
         context.selectFrom(AUTH_USER).where(AUTH_USER.USERNAME.eq(userName).and(AUTH_USER.IS_DELETED.eq(false)))
             .fetchInto(AuthUser::class.java).firstOrNull()
 
-    fun findByUsernameContaining(userName: String): List<AuthUser> =
-        context.selectFrom(AUTH_USER).where(AUTH_USER.USERNAME.contains(userName).and(AUTH_USER.IS_DELETED.eq(false)))
+    fun findByKeyword(keyword: String): List<AuthUser> =
+        context.selectFrom(AUTH_USER).where(
+            AUTH_USER.USERNAME.contains(keyword)
+                .or(AUTH_USER.FULL_NAME.contains(keyword))
+                .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword))
+        )
+            .and(AUTH_USER.IS_DELETED.eq(false))
             .fetchInto(AuthUser::class.java)
 
-    fun findByUsernameContainingPaginated(userName: String, page: Int, size: Int): Pair<List<AuthUser>, Int> {
-        val users = context.selectFrom(AUTH_USER).where(AUTH_USER.USERNAME.contains(userName).and(AUTH_USER.IS_DELETED.eq(false)))
+    fun findByKeywordPaginated(keyword: String, page: Int, size: Int): Pair<List<AuthUser>, Int> {
+        val users = context.selectFrom(AUTH_USER).where(
+            AUTH_USER.USERNAME.contains(keyword)
+                .or(AUTH_USER.FULL_NAME.contains(keyword))
+                .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword))
+        )
+            .and(AUTH_USER.IS_DELETED.eq(false))
             .orderBy(AUTH_USER.CREATED_DATE)
             .limit(size).offset((page - 1) * size)
             .fetchInto(AuthUser::class.java)
-        val total = context.fetchCount(AUTH_USER, AUTH_USER.USERNAME.contains(userName).and(AUTH_USER.IS_DELETED.eq(false)))
+        val total = context.fetchCount(AUTH_USER, AUTH_USER.USERNAME.contains(keyword).and(AUTH_USER.IS_DELETED.eq(false)))
         return Pair(users, total)
     }
 

@@ -1,10 +1,10 @@
 package com.kcvn.spm.auth.controller
 
 import com.kcvn.spm.auth.payload.request.RoleRequest
-import com.kcvn.spm.common.payload.MessageResponse
-import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.auth.payload.response.RoleResponse
 import com.kcvn.spm.auth.service.RoleService
+import com.kcvn.spm.common.payload.MessageResponse
+import com.kcvn.spm.common.payload.PaginatedResponse
 import jakarta.validation.Valid
 import org.springframework.context.MessageSource
 import org.springframework.context.i18n.LocaleContextHolder
@@ -41,7 +41,8 @@ class RoleController(
                     ResponseEntity<List<RoleResponse>>(roles, HttpStatus.OK)
             }
         } catch (e: Exception) {
-            ResponseEntity<Any?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
+            e.printStackTrace()
+            ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -68,7 +69,7 @@ class RoleController(
         } else {
             ResponseEntity<MessageResponse>(
                 MessageResponse(
-                    messageSource.getMessage("action.failed", null, LocaleContextHolder.getLocale()),
+                    messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale()),
                     role
                 ),
                 HttpStatus.CREATED
@@ -83,36 +84,22 @@ class RoleController(
         @RequestBody request: @Valid RoleRequest
     ): ResponseEntity<*> {
         val role = roleService.updateRole(id, request)
-        return if (role == null) {
-            ResponseEntity<MessageResponse>(
-                MessageResponse(messageSource.getMessage("action.failed", null, LocaleContextHolder.getLocale())),
-                HttpStatus.NOT_FOUND
-            )
-        } else {
-            ResponseEntity<MessageResponse>(
-                MessageResponse(
-                    messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale()),
-                    role
-                ),
-                HttpStatus.OK
-            )
-        }
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(
+                messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale()),
+                role
+            ),
+            HttpStatus.OK
+        )
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.auth.security.EPermission).DELETE_ROLE.value) || hasRole('ADMIN')")
     fun deleteRole(@PathVariable("id") id: String): ResponseEntity<*> {
-        return try {
-            roleService.deleteById(id)
-            ResponseEntity<MessageResponse>(
-                MessageResponse(messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale())),
-                HttpStatus.OK
-            )
-        } catch (e: Exception) {
-            ResponseEntity<MessageResponse>(
-                MessageResponse(messageSource.getMessage("action.failed", null, LocaleContextHolder.getLocale())),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            )
-        }
+        roleService.deleteById(id)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale())),
+            HttpStatus.OK
+        )
     }
 }

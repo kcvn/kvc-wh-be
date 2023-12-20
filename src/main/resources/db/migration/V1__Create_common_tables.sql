@@ -12,21 +12,24 @@ CREATE TABLE auth_user
     id VARCHAR NOT NULL DEFAULT GEN_RANDOM_UUID(),
     username VARCHAR NOT NULL,
     password VARCHAR NOT NULL,
+	employee_code VARCHAR,
 	email VARCHAR,
     phone_number VARCHAR,
     full_name VARCHAR,
     full_name_unsigned VARCHAR,
     date_of_birth DATE,
     avatar VARCHAR,
+    status SMALLINT NOT NULL DEFAULT 1,
     is_super_admin BOOLEAN NOT NULL DEFAULT false,
-    status SMALLINT NOT NULL DEFAULT 0,
     created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR NOT NULL,
     updated_date TIMESTAMP WITH TIME ZONE,
     updated_by VARCHAR,
     is_deleted boolean NOT NULL DEFAULT false,
     CONSTRAINT auth_user_pkey PRIMARY KEY (id),
-    CONSTRAINT auth_user_uniq_username UNIQUE (username, is_deleted)
+    CONSTRAINT auth_user_uniq_username UNIQUE (username, is_deleted),
+    CONSTRAINT auth_user_uniq_employee_code UNIQUE (employee_code, is_deleted),
+    CONSTRAINT auth_user_uniq_email UNIQUE (email, is_deleted)
 );
 
 -- Trigger: auth_user_stamp
@@ -163,4 +166,27 @@ CREATE TABLE auth_role_claim
 
 -- Trigger: auth_role_claim_stamp
 CREATE TRIGGER auth_role_claim_stamp BEFORE UPDATE ON auth_role_claim
+    FOR EACH ROW EXECUTE FUNCTION common_update_stamp();
+
+-- Table: auth_password_reset_token
+CREATE TABLE auth_password_reset_token
+(
+    id VARCHAR NOT NULL DEFAULT GEN_RANDOM_UUID(),
+    user_id VARCHAR NOT NULL,
+    token VARCHAR NOT NULL,
+    expired_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR NOT NULL,
+    updated_date TIMESTAMP WITH TIME ZONE,
+    updated_by VARCHAR,
+    is_deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT auth_password_reset_token_pkey PRIMARY KEY (id),
+    CONSTRAINT auth_password_reset_token_auth_user_id_fk FOREIGN KEY (user_id)
+            REFERENCES auth_user (id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE
+);
+
+-- Trigger: auth_password_reset_token_stamp
+CREATE TRIGGER auth_password_reset_token_stamp BEFORE UPDATE ON auth_password_reset_token
     FOR EACH ROW EXECUTE FUNCTION common_update_stamp();

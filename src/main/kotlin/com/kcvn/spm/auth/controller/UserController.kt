@@ -1,19 +1,28 @@
 package com.kcvn.spm.auth.controller
 
+import com.kcvn.spm.auth.payload.request.PasswordRequest
 import com.kcvn.spm.auth.payload.request.UserRequest
+import com.kcvn.spm.auth.payload.response.UserResponse
+import com.kcvn.spm.auth.security.service.UserDetailsImpl
+import com.kcvn.spm.auth.service.UserService
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
-import com.kcvn.spm.auth.payload.response.UserResponse
-import com.kcvn.spm.auth.service.UserService
 import jakarta.validation.Valid
+import org.springframework.context.MessageSource
+import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
+
 
 @RestController
 @RequestMapping("/api/user")
-class UserController(private val userService: UserService) {
+class UserController(
+    private val userService: UserService,
+    private val messageSource: MessageSource
+) {
     @GetMapping("/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.auth.security.EPermission).VIEW_USER.value) || hasRole('ADMIN')")
     fun getAllUsers(
@@ -36,7 +45,8 @@ class UserController(private val userService: UserService) {
                     ResponseEntity<List<UserResponse>>(users, HttpStatus.OK)
             }
         } catch (e: Exception) {
-            ResponseEntity<Any?>(null, HttpStatus.INTERNAL_SERVER_ERROR)
+            e.printStackTrace()
+            ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -56,9 +66,18 @@ class UserController(private val userService: UserService) {
     fun createUser(@RequestBody userRequest: @Valid UserRequest?): ResponseEntity<*> {
         val user = userService.createUser(userRequest!!)
         return if (user != null) {
-            ResponseEntity<MessageResponse>(MessageResponse("Action succeeded!", user), HttpStatus.CREATED)
+            ResponseEntity<MessageResponse>(
+                MessageResponse(
+                    messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale()),
+                    user
+                ),
+                HttpStatus.CREATED
+            )
         } else {
-            ResponseEntity<MessageResponse>(MessageResponse("Action failed!"), HttpStatus.BAD_REQUEST)
+            ResponseEntity<MessageResponse>(
+                MessageResponse(messageSource.getMessage("action.failed", null, LocaleContextHolder.getLocale())),
+                HttpStatus.BAD_REQUEST
+            )
         }
     }
 
@@ -69,35 +88,49 @@ class UserController(private val userService: UserService) {
         @RequestBody userRequest: @Valid UserRequest
     ): ResponseEntity<*> {
         val user = userService.updateInfo(id, userRequest)
-        return if (user != null) {
-            ResponseEntity<MessageResponse>(MessageResponse("Action succeeded!", user), HttpStatus.OK)
-        } else {
-            ResponseEntity<MessageResponse>(MessageResponse("Action failed!"), HttpStatus.BAD_REQUEST)
-        }
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(
+                messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale()),
+                user
+            ),
+            HttpStatus.OK
+        )
     }
 
     @PutMapping("/change-password/{id}")
     @PreAuthorize("#id == principal.id || hasAuthority(T(com.kcvn.spm.auth.security.EPermission).UPDATE_USER.value) || hasRole('ADMIN')")
     fun changePassword(
         @PathVariable("id") id: String,
-        @RequestBody userRequest: @Valid UserRequest
+        @RequestBody passwordRequest: @Valid PasswordRequest,
+        authentication: Authentication
     ): ResponseEntity<*> {
-        val user = userService.updatePassword(id, userRequest)
-        return if (user != null) {
-            ResponseEntity<MessageResponse>(MessageResponse("Action succeeded!", user), HttpStatus.OK)
-        } else {
-            ResponseEntity<MessageResponse>(MessageResponse("Action failed!"), HttpStatus.BAD_REQUEST)
+        val userDetails = authentication.principal as UserDetailsImpl
+        if (userDetails.getId().equals(id)) {
+            // user change password him/herself, validate old password first
+            if (!userService.validateOldPassword(id, passwordRequest.oldPassword!!)) {
+                return ResponseEntity<MessageResponse>(
+                    MessageResponse("Wrong password!"),
+                    HttpStatus.BAD_REQUEST
+                )
+            }
         }
+        val user = userService.updatePassword(id, passwordRequest.password!!)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(
+                messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale()),
+                user
+            ),
+            HttpStatus.OK
+        )
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.auth.security.EPermission).DELETE_USER.value) || hasRole('ADMIN')")
     fun deleteUser(@PathVariable("id") id: String): ResponseEntity<*> {
-        return try {
-            userService.deleteById(id)
-            ResponseEntity<MessageResponse>(MessageResponse("Action succeeded!"), HttpStatus.OK)
-        } catch (e: Exception) {
-            ResponseEntity<MessageResponse>(MessageResponse("Action failed!"), HttpStatus.INTERNAL_SERVER_ERROR)
-        }
+        userService.deleteById(id)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale())),
+            HttpStatus.OK
+        )
     }
 }

@@ -54,7 +54,7 @@ class RoleDAO(private val context: DSLContext) {
 
     fun save(role: AuthRole): String? =
         context.insertInto(AUTH_ROLE, AUTH_ROLE.NAME, AUTH_ROLE.DESCRIPTION, AUTH_ROLE.CREATED_BY)
-            .values(role.name, role.description, CommonUtils.loggedInUser())
+            .values(role.name, role.description, CommonUtils.loggedInUser()?: "SYSTEM")
             .returningResult(AUTH_ROLE.ID)
             .fetchOne()?.value1()
 
@@ -62,14 +62,14 @@ class RoleDAO(private val context: DSLContext) {
         context.update(AUTH_ROLE)
             .set(AUTH_ROLE.NAME, role.name)
             .set(AUTH_ROLE.DESCRIPTION, role.description)
-            .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser())
+            .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser()?: "SYSTEM")
             .where(AUTH_ROLE.ID.eq(role.id))
             .returningResult(AUTH_ROLE)
             .fetchInto(AuthRole::class.java).firstOrNull()
 
     fun deleteById(roleId: String) = context.update(AUTH_ROLE)
         .set(AUTH_ROLE.IS_DELETED, true)
-        .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser())
+        .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser()?: "SYSTEM")
         .where(AUTH_ROLE.ID.eq(roleId)).execute()
 
     fun findByUserId(userId: String): List<AuthRole> {
@@ -90,7 +90,7 @@ class RoleDAO(private val context: DSLContext) {
                 AUTH_USER_ROLE.ROLE_ID,
                 AUTH_USER_ROLE.CREATED_BY
             )
-                .values(userId, role, CommonUtils.loggedInUser())
+                .values(userId, role, CommonUtils.loggedInUser()?: "SYSTEM")
                 .execute()
         }
     }
@@ -116,8 +116,11 @@ class RoleDAO(private val context: DSLContext) {
                 AUTH_ROLE_CLAIM.CLAIM_VALUE,
                 AUTH_ROLE_CLAIM.CREATED_BY
             )
-                .values(roleId, PERMISSION_TYPE, permission, CommonUtils.loggedInUser())
+                .values(roleId, PERMISSION_TYPE, permission, CommonUtils.loggedInUser()?: "SYSTEM")
                 .execute()
         }
     }
+
+    fun isRoleUsed(roleId: String): Boolean =
+        context.fetchCount(AUTH_USER_ROLE, AUTH_USER_ROLE.ROLE_ID.eq(roleId)) > 0
 }

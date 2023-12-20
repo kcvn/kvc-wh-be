@@ -10,11 +10,11 @@ class CommonUtils {
     companion object {
         val REMOVE_ACCENT_PATTERN = Pattern.compile("\\p{InCombiningDiacriticalMarks}+")
 
-        fun loggedInUser(): String {
+        fun loggedInUser(): String? {
             val authentication: Authentication = SecurityContextHolder.getContext().authentication
             return if (authentication !is AnonymousAuthenticationToken) {
                 authentication.getName()
-            } else throw RuntimeException("No logged in user!")
+            } else null
         }
 
         fun removeAccent(s: String?): String {

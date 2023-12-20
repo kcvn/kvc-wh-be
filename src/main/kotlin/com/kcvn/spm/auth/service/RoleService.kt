@@ -6,6 +6,9 @@ import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.auth.payload.response.RoleResponse
 import com.kcvn.spm.repository.RoleDAO
 import com.kcvn.spm.auth.security.EPermission
+import com.kcvn.spm.common.exception.BusinessException
+import org.springframework.context.MessageSource
+import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -45,7 +48,7 @@ class RoleService(private val roleDAO: RoleDAO) {
 
     fun createRole(request: RoleRequest): RoleResponse? {
         if (roleDAO.findByName(request.name!!) != null) {
-            throw RuntimeException("Error: Role name is already existed!")
+            throw BusinessException("Error: Role name is already existed!")
         }
 
         val role = AuthRole(
@@ -55,8 +58,8 @@ class RoleService(private val roleDAO: RoleDAO) {
         )
         val permissionCodes: Set<String> = request.permissionCodes ?: setOf()
         permissionCodes.forEach { p: String ->
-            if (EPermission.values().none { it.value.equals("u.v") })
-                throw RuntimeException("Error: Permission $p is not found.")
+            if (EPermission.values().none { it.value.equals(p) })
+                throw BusinessException("Error: Permission $p is not found.")
         }
         val roleId = roleDAO.save(role)
         return if (roleId != null) {
@@ -70,31 +73,29 @@ class RoleService(private val roleDAO: RoleDAO) {
         } else null
     }
 
-    fun updateRole(roleId: String, request: RoleRequest): RoleResponse? {
-        var role = roleDAO.findById(roleId)
-        return if (role == null) {
-            throw RuntimeException("Error: Role is not found.")
-        } else {
-            role.name = request.name
-            role.description = request.description
+    fun updateRole(roleId: String, request: RoleRequest): RoleResponse {
+        val role = roleDAO.findById(roleId) ?: throw BusinessException("Error: Role is not found.")
+        role.name = request.name
+        role.description = request.description
 
-            val permissionCodes: Set<String> = request.permissionCodes ?: setOf()
-            permissionCodes.forEach { p: String ->
-                if (EPermission.values().none { it.value.equals("u.v") })
-                    throw RuntimeException("Error: Permission $p is not found.")
-            }
-            roleDAO.saveRolePermissions(roleId, permissionCodes)
-            role = roleDAO.update(role)
-            RoleResponse(
-                role?.id!!,
-                role.name!!,
-                role.description,
-                permissionCodes
-            )
+        val permissionCodes: Set<String> = request.permissionCodes ?: setOf()
+        permissionCodes.forEach { p: String ->
+            if (EPermission.values().none { it.value.equals(p) })
+                throw BusinessException("Error: Permission $p is not found.")
         }
+        roleDAO.saveRolePermissions(roleId, permissionCodes)
+        roleDAO.update(role)
+        return RoleResponse(
+            role.id!!,
+            role.name!!,
+            role.description,
+            permissionCodes
+        )
     }
 
     fun deleteById(roleId: String) {
+        if (roleDAO.isRoleUsed(roleId))
+            throw BusinessException("Role is in use!")
         roleDAO.deleteById(roleId)
     }
 }

@@ -1,5 +1,6 @@
 package com.kcvn.spm.auth.security.service
 
+import com.kcvn.spm.auth.EUserStatus
 import com.kcvn.spm.model.tables.pojos.AuthRole
 import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.auth.security.EPermission
@@ -12,7 +13,7 @@ class UserDetailsImpl(
     private val username: String,
     private val password: String,
     private val authorities: Collection<GrantedAuthority>,
-    private val isDeleted: Boolean
+    private val isActive: Boolean
 ) : UserDetails {
     companion object {
         private const val serialVersionUID = 1L
@@ -27,7 +28,7 @@ class UserDetailsImpl(
                 user.username.toString(),
                 user.password.toString(),
                 authorities,
-                user.isDeleted!!
+                user.status == EUserStatus.ACTIVE.value
             )
         }
     }
@@ -61,7 +62,7 @@ class UserDetailsImpl(
     }
 
     override fun isEnabled(): Boolean {
-        return !isDeleted
+        return isActive
     }
 
     override fun equals(other: Any?): Boolean {

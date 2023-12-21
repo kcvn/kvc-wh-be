@@ -45,7 +45,7 @@ class AuthController(
         userService.createPasswordResetToken(request!!.email!!, request.url!!)
         return ResponseEntity<MessageResponse>(
             MessageResponse(CommonUtils.getMessage("action.succeeded")),
-            HttpStatus.INTERNAL_SERVER_ERROR
+            HttpStatus.OK
         )
     }
 
@@ -56,7 +56,7 @@ class AuthController(
         userService.updatePassword(user.id!!, passwordRequest.password!!)
         return ResponseEntity<MessageResponse>(
             MessageResponse(CommonUtils.getMessage("action.succeeded")),
-            HttpStatus.INTERNAL_SERVER_ERROR
+            HttpStatus.OK
         )
     }
 }

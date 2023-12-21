@@ -15,17 +15,8 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional
 class RoleService(private val roleDAO: RoleDAO) {
-//    fun findAll(search: String?): List<RoleResponse> =
-//        if (search == null )
-//            roleDAO.findAll().map { RoleResponse(it.id!!, it.name!!, it.description) }
-//        else
-//            roleDAO.findByKeyword(search).map { RoleResponse(it.id!!, it.name!!, it.description) }
-
     fun findAllPaginated(search: String?, pageable: Pageable): PaginatedResponse {
-        val result = if (search == null)
-            roleDAO.findAllPaginated(pageable)
-        else
-            roleDAO.findByKeywordPaginated(search, pageable)
+        val result = roleDAO.findByKeywordPaginated(search, pageable)
         return PaginatedResponse(
             result.first.map { RoleResponse(it.id!!, it.name!!, it.description) },
             result.second

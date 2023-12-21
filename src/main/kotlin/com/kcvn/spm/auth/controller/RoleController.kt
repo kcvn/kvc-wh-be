@@ -24,19 +24,11 @@ class RoleController(private val roleService: RoleService) {
         @PageableDefault(size = 10, page = 0) pageable: Pageable?
     ): ResponseEntity<*> {
         return try {
-//            if (pageable != null) {
-                val result = roleService.findAllPaginated(search, pageable!!)
-                if (result.data.isEmpty())
-                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-                else
-                    ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
-//            } else {
-//                val roles: List<RoleResponse> = roleService.findAll(search)
-//                if (roles.isEmpty())
-//                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-//                else
-//                    ResponseEntity<List<RoleResponse>>(roles, HttpStatus.OK)
-//            }
+            val result = roleService.findAllPaginated(search, pageable!!)
+            if (result.data.isEmpty())
+                ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+            else
+                ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
         } catch (e: Exception) {
             e.printStackTrace()
             ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)

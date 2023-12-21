@@ -7,14 +7,16 @@ import com.kcvn.spm.model.tables.pojos.AuthRole
 import com.kcvn.spm.model.tables.references.AUTH_ROLE
 import com.kcvn.spm.model.tables.references.AUTH_ROLE_CLAIM
 import com.kcvn.spm.model.tables.references.AUTH_USER_ROLE
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
+import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 
 @Repository
-class RoleDAO(private val context: DSLContext): SortingRepository() {
+class RoleDAO(private val context: DSLContext) : SortingRepository() {
     companion object {
         const val PERMISSION_TYPE = "permission"
     }
@@ -24,28 +26,17 @@ class RoleDAO(private val context: DSLContext): SortingRepository() {
             .orderBy(AUTH_ROLE.CREATED_DATE)
             .fetchInto(AuthRole::class.java)
 
-    fun findAllPaginated(pageable: Pageable): Pair<List<AuthRole>, Int> {
-        val roles = context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.IS_DELETED.eq(false))
-            .orderBy(getSortFields(pageable.sort, AUTH_ROLE.CREATED_DATE))
-            .limit(pageable.pageSize).offset(pageable.offset)
-            .fetchInto(AuthRole::class.java)
-        val total = context.fetchCount(AUTH_ROLE, AUTH_ROLE.IS_DELETED.eq(false))
-        return Pair(roles, total)
-    }
-
-    fun findByKeyword(keyword: String): List<AuthRole> =
-        context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.NAME.contains(keyword).or(AUTH_ROLE.DESCRIPTION.contains(keyword)))
-            .and(AUTH_ROLE.IS_DELETED.eq(false))
-            .orderBy(AUTH_ROLE.CREATED_DATE)
-            .fetchInto(AuthRole::class.java)
-
-    fun findByKeywordPaginated(keyword: String, pageable: Pageable): Pair<List<AuthRole>, Int> {
-        val roles = context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.NAME.contains(keyword).or(AUTH_ROLE.DESCRIPTION.contains(keyword)))
+    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<AuthRole>, Int> {
+        var condition: Condition = DSL.noCondition()
+        if (keyword != null) {
+            condition = condition.and(AUTH_ROLE.NAME.contains(keyword).or(AUTH_ROLE.DESCRIPTION.contains(keyword)))
+        }
+        val roles = context.selectFrom(AUTH_ROLE).where(condition)
             .and(AUTH_ROLE.IS_DELETED.eq(false))
             .orderBy(getSortFields(pageable.sort, AUTH_ROLE.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(AuthRole::class.java)
-        val total = context.fetchCount(AUTH_ROLE, AUTH_ROLE.IS_DELETED.eq(false))
+        val total = context.fetchCount(AUTH_ROLE, condition.and(AUTH_ROLE.IS_DELETED.eq(false)))
         return Pair(roles, total)
     }
 
@@ -58,7 +49,7 @@ class RoleDAO(private val context: DSLContext): SortingRepository() {
 
     fun save(role: AuthRole): String? =
         context.insertInto(AUTH_ROLE, AUTH_ROLE.NAME, AUTH_ROLE.DESCRIPTION, AUTH_ROLE.CREATED_BY)
-            .values(role.name, role.description, CommonUtils.loggedInUser()?: "SYSTEM")
+            .values(role.name, role.description, CommonUtils.loggedInUser() ?: "SYSTEM")
             .returningResult(AUTH_ROLE.ID)
             .fetchOne()?.value1()
 
@@ -66,14 +57,14 @@ class RoleDAO(private val context: DSLContext): SortingRepository() {
         context.update(AUTH_ROLE)
             .set(AUTH_ROLE.NAME, role.name)
             .set(AUTH_ROLE.DESCRIPTION, role.description)
-            .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser()?: "SYSTEM")
+            .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .where(AUTH_ROLE.ID.eq(role.id))
             .returningResult(AUTH_ROLE)
             .fetchInto(AuthRole::class.java).firstOrNull()
 
     fun deleteById(roleId: String) = context.update(AUTH_ROLE)
         .set(AUTH_ROLE.IS_DELETED, true)
-        .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser()?: "SYSTEM")
+        .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
         .where(AUTH_ROLE.ID.eq(roleId)).execute()
 
     fun findByUserId(userId: String): List<AuthRole> {
@@ -94,7 +85,7 @@ class RoleDAO(private val context: DSLContext): SortingRepository() {
                 AUTH_USER_ROLE.ROLE_ID,
                 AUTH_USER_ROLE.CREATED_BY
             )
-                .values(userId, role, CommonUtils.loggedInUser()?: "SYSTEM")
+                .values(userId, role, CommonUtils.loggedInUser() ?: "SYSTEM")
                 .execute()
         }
     }
@@ -120,7 +111,7 @@ class RoleDAO(private val context: DSLContext): SortingRepository() {
                 AUTH_ROLE_CLAIM.CLAIM_VALUE,
                 AUTH_ROLE_CLAIM.CREATED_BY
             )
-                .values(roleId, PERMISSION_TYPE, permission, CommonUtils.loggedInUser()?: "SYSTEM")
+                .values(roleId, PERMISSION_TYPE, permission, CommonUtils.loggedInUser() ?: "SYSTEM")
                 .execute()
         }
     }

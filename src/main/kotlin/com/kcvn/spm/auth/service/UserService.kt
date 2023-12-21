@@ -32,30 +32,8 @@ class UserService(
     private val mailSender: JavaMailSender,
     private val env: Environment
 ) {
-//    fun getUsers(search: String?): List<UserResponse> {
-//        val userList = if (search == null) userDAO.findAll()
-//        else userDAO.findByKeyword(search)
-//        val positionsByUser = userDAO.findPositions(userList.map { it.id!! })
-//        return userList.map { user ->
-//            UserResponse(
-//                user.id!!,
-//                user.username!!,
-//                user.employeeCode,
-//                user.email,
-//                user.phoneNumber,
-//                user.fullName,
-//                user.dateOfBirth,
-//                user.avatar,
-//                user.status,
-//                user.isSuperAdmin!!,
-//                positionsByUser.getOrDefault(user.id!!, listOf())
-//            )
-//        }
-//    }
-
     fun getPaginatedUsers(search: String?, pageable: Pageable): PaginatedResponse {
-        val result = if (search == null) userDAO.findAllPaginated(pageable)
-        else userDAO.findByKeywordPaginated(search, pageable)
+        val result = userDAO.findByKeywordPaginated(search, pageable)
         val positionsByUser = userDAO.findPositions(result.first.map { it.id!! })
         return PaginatedResponse(
             result.first.map { user ->

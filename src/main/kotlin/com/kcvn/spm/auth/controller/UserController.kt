@@ -27,19 +27,11 @@ class UserController(private val userService: UserService) {
         @PageableDefault(size = 10, page = 0) pageable: Pageable?
     ): ResponseEntity<*> {
         return try {
-//            if (pageable != null) {
-                val result = userService.getPaginatedUsers(search, pageable!!)
-                if (result.data.isEmpty())
-                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-                else
-                    ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
-//            } else {
-//                val users: List<UserResponse> = userService.getUsers(search)
-//                if (users.isEmpty())
-//                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-//                else
-//                    ResponseEntity<List<UserResponse>>(users, HttpStatus.OK)
-//            }
+            val result = userService.getPaginatedUsers(search, pageable!!)
+            if (result.data.isEmpty())
+                ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+            else
+                ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
         } catch (e: Exception) {
             e.printStackTrace()
             ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)

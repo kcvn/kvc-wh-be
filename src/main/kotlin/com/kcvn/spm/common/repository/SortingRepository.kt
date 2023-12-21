@@ -1,9 +1,7 @@
 package com.kcvn.spm.common.repository
 
-import com.kcvn.spm.model.tables.references.AUTH_ROLE
 import org.jooq.SortField
 import org.jooq.TableField
-import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Sort
 
 abstract class SortingRepository {
@@ -28,7 +26,7 @@ abstract class SortingRepository {
 
     protected abstract fun getTableField(sortFieldName: String): TableField<*, *>
 
-    protected fun convertTableFieldToSortField(
+    private fun convertTableFieldToSortField(
         tableField: TableField<*, *>?,
         sortDirection: Sort.Direction
     ): SortField<*> {

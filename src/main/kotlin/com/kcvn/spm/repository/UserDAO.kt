@@ -1,37 +1,24 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.common.repository.SortingRepository
-import com.kcvn.spm.model.tables.pojos.AuthUser
-import com.kcvn.spm.model.tables.references.AUTH_USER
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.model.tables.pojos.AuthUserClaim
+import com.kcvn.spm.model.tables.references.AUTH_USER
 import com.kcvn.spm.model.tables.references.AUTH_USER_CLAIM
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
+import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 
 @Repository
-class UserDAO(private val context: DSLContext): SortingRepository() {
+class UserDAO(private val context: DSLContext) : SortingRepository() {
     companion object {
         const val POSITION_TYPE = "position"
     }
-
-    fun findAll(): List<AuthUser> =
-        context.selectFrom(AUTH_USER).where(AUTH_USER.IS_DELETED.eq(false))
-            .orderBy(AUTH_USER.CREATED_DATE)
-            .fetchInto(AuthUser::class.java)
-
-    fun findAllPaginated(pageable: Pageable): Pair<List<AuthUser>, Int> {
-        val users = context.selectFrom(AUTH_USER).where(AUTH_USER.IS_DELETED.eq(false))
-            .orderBy(getSortFields(pageable.sort, AUTH_USER.CREATED_DATE))
-            .limit(pageable.pageSize).offset(pageable.offset)
-            .fetchInto(AuthUser::class.java)
-        val total = context.fetchCount(AUTH_USER, AUTH_USER.IS_DELETED.eq(false))
-        return Pair(users, total)
-    }
-
 
     fun findById(id: String): AuthUser? =
         context.selectFrom(AUTH_USER).where(AUTH_USER.ID.eq(id)).fetchInto(AuthUser::class.java).firstOrNull()
@@ -44,26 +31,22 @@ class UserDAO(private val context: DSLContext): SortingRepository() {
         context.selectFrom(AUTH_USER).where(AUTH_USER.EMAIL.eq(email).and(AUTH_USER.IS_DELETED.eq(false)))
             .fetchInto(AuthUser::class.java).firstOrNull()
 
-    fun findByKeyword(keyword: String): List<AuthUser> =
-        context.selectFrom(AUTH_USER).where(
-            AUTH_USER.USERNAME.contains(keyword)
-                .or(AUTH_USER.FULL_NAME.contains(keyword))
-                .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword))
-        )
-            .and(AUTH_USER.IS_DELETED.eq(false))
-            .fetchInto(AuthUser::class.java)
-
-    fun findByKeywordPaginated(keyword: String, pageable: Pageable): Pair<List<AuthUser>, Int> {
-        val users = context.selectFrom(AUTH_USER).where(
-            AUTH_USER.USERNAME.contains(keyword)
-                .or(AUTH_USER.FULL_NAME.contains(keyword))
-                .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword))
-        )
+    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<AuthUser>, Int> {
+        var condition: Condition = DSL.noCondition()
+        if (keyword != null) {
+            condition = condition.and(
+                AUTH_USER.USERNAME.contains(keyword)
+                    .or(AUTH_USER.FULL_NAME.contains(keyword))
+                    .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword))
+            )
+        }
+        val users = context.selectFrom(AUTH_USER).where(condition)
             .and(AUTH_USER.IS_DELETED.eq(false))
             .orderBy(getSortFields(pageable.sort, AUTH_USER.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(AuthUser::class.java)
-        val total = context.fetchCount(AUTH_USER, AUTH_USER.USERNAME.contains(keyword).and(AUTH_USER.IS_DELETED.eq(false)))
+        val total =
+            context.fetchCount(AUTH_USER, condition.and(AUTH_USER.IS_DELETED.eq(false)))
         return Pair(users, total)
     }
 
@@ -85,7 +68,7 @@ class UserDAO(private val context: DSLContext): SortingRepository() {
             user.dateOfBirth,
             user.avatar,
             user.status,
-            CommonUtils.loggedInUser()?: "SYSTEM"
+            CommonUtils.loggedInUser() ?: "SYSTEM"
         )
         .returningResult(AUTH_USER)
         .fetchInto(AuthUser::class.java).firstOrNull()
@@ -99,21 +82,21 @@ class UserDAO(private val context: DSLContext): SortingRepository() {
         .set(AUTH_USER.DATE_OF_BIRTH, user.dateOfBirth)
         .set(AUTH_USER.AVATAR, user.avatar)
         .set(AUTH_USER.STATUS, user.status)
-        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser()?: "SYSTEM")
+        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
         .where(AUTH_USER.ID.eq(user.id))
         .returningResult(AUTH_USER)
         .fetchInto(AuthUser::class.java).firstOrNull()
 
     fun updatePassword(user: AuthUser): AuthUser? = context.update(AUTH_USER)
         .set(AUTH_USER.PASSWORD, user.password)
-        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser()?: "SYSTEM")
+        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
         .where(AUTH_USER.ID.eq(user.id))
         .returningResult(AUTH_USER)
         .fetchInto(AuthUser::class.java).firstOrNull()
 
     fun deleteById(id: String) = context.update(AUTH_USER)
         .set(AUTH_USER.IS_DELETED, true)
-        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser()?: "SYSTEM")
+        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
         .where(AUTH_USER.ID.eq(id)).execute()
 
     fun findPositions(userIds: List<String>): Map<String, List<String>> =
@@ -141,7 +124,7 @@ class UserDAO(private val context: DSLContext): SortingRepository() {
                 userId,
                 POSITION_TYPE,
                 it,
-                CommonUtils.loggedInUser()?: "SYSTEM"
+                CommonUtils.loggedInUser() ?: "SYSTEM"
             ).execute()
         }
     }

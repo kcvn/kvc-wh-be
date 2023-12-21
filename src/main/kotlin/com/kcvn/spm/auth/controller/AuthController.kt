@@ -8,9 +8,8 @@ import com.kcvn.spm.auth.security.jwt.JwtUtils
 import com.kcvn.spm.auth.security.service.UserDetailsImpl
 import com.kcvn.spm.auth.service.UserService
 import com.kcvn.spm.common.payload.MessageResponse
+import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
-import org.springframework.context.MessageSource
-import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
@@ -28,8 +27,7 @@ import java.util.*
 class AuthController(
     private val authenticationManager: AuthenticationManager,
     private val jwtUtils: JwtUtils,
-    private val userService: UserService,
-    private val messageSource: MessageSource
+    private val userService: UserService
 ) {
     @PostMapping("/signin")
     fun authenticateUser(@RequestBody loginRequest: @Valid LoginRequest?): ResponseEntity<*> {
@@ -46,7 +44,7 @@ class AuthController(
     fun forgotPassword(@RequestBody request: @Valid ForgotPasswordRequest?): ResponseEntity<*> {
         userService.createPasswordResetToken(request!!.email!!, request.url!!)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale())),
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
             HttpStatus.INTERNAL_SERVER_ERROR
         )
     }
@@ -57,7 +55,7 @@ class AuthController(
         val user = userService.getUserByPasswordResetToken(passwordRequest.token!!)
         userService.updatePassword(user.id!!, passwordRequest.password!!)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale())),
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
             HttpStatus.INTERNAL_SERVER_ERROR
         )
     }

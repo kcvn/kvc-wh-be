@@ -1,6 +1,7 @@
 package com.kcvn.spm.auth.controller
 
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.util.CommonUtils
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -17,8 +18,8 @@ class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
     protected fun handleBadCredentialsException(ex: RuntimeException, request: ServletWebRequest): ResponseEntity<Any>? {
         val bodyOfResponse: MutableMap<String, Any> = HashMap()
         bodyOfResponse["status"] = HttpServletResponse.SC_UNAUTHORIZED
-        bodyOfResponse["error"] = "Unauthorized"
-        bodyOfResponse["message"] = "Wrong password"
+        bodyOfResponse["error"] = HttpStatus.UNAUTHORIZED.reasonPhrase
+        bodyOfResponse["message"] = CommonUtils.getMessage("login.error.wrongPassword")
         bodyOfResponse["path"] = request.request.servletPath
         return handleExceptionInternal(
             ex,

@@ -7,25 +7,25 @@ import com.kcvn.spm.auth.payload.response.RoleResponse
 import com.kcvn.spm.repository.RoleDAO
 import com.kcvn.spm.auth.security.EPermission
 import com.kcvn.spm.common.exception.BusinessException
-import org.springframework.context.MessageSource
-import org.springframework.context.i18n.LocaleContextHolder
+import com.kcvn.spm.common.util.CommonUtils
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
 class RoleService(private val roleDAO: RoleDAO) {
-    fun findAll(search: String?): List<RoleResponse> =
-        if (search == null )
-            roleDAO.findAll().map { RoleResponse(it.id!!, it.name!!, it.description) }
-        else
-            roleDAO.findByKeyword(search).map { RoleResponse(it.id!!, it.name!!, it.description) }
+//    fun findAll(search: String?): List<RoleResponse> =
+//        if (search == null )
+//            roleDAO.findAll().map { RoleResponse(it.id!!, it.name!!, it.description) }
+//        else
+//            roleDAO.findByKeyword(search).map { RoleResponse(it.id!!, it.name!!, it.description) }
 
-    fun findAllPaginated(search: String?, page: Int, size: Int): PaginatedResponse {
+    fun findAllPaginated(search: String?, pageable: Pageable): PaginatedResponse {
         val result = if (search == null)
-            roleDAO.findAllPaginated(page, size)
+            roleDAO.findAllPaginated(pageable)
         else
-            roleDAO.findByKeywordPaginated(search, page, size)
+            roleDAO.findByKeywordPaginated(search, pageable)
         return PaginatedResponse(
             result.first.map { RoleResponse(it.id!!, it.name!!, it.description) },
             result.second
@@ -48,7 +48,7 @@ class RoleService(private val roleDAO: RoleDAO) {
 
     fun createRole(request: RoleRequest): RoleResponse? {
         if (roleDAO.findByName(request.name!!) != null) {
-            throw BusinessException("Error: Role name is already existed!")
+            throw BusinessException(CommonUtils.getMessage("role.error.nameTaken"))
         }
 
         val role = AuthRole(
@@ -58,8 +58,8 @@ class RoleService(private val roleDAO: RoleDAO) {
         )
         val permissionCodes: Set<String> = request.permissionCodes ?: setOf()
         permissionCodes.forEach { p: String ->
-            if (EPermission.values().none { it.value.equals(p) })
-                throw BusinessException("Error: Permission $p is not found.")
+            if (EPermission.values().none { it.value == p })
+                throw BusinessException(CommonUtils.getMessage("permission.error.notFound", arrayOf(p)))
         }
         val roleId = roleDAO.save(role)
         return if (roleId != null) {
@@ -74,14 +74,14 @@ class RoleService(private val roleDAO: RoleDAO) {
     }
 
     fun updateRole(roleId: String, request: RoleRequest): RoleResponse {
-        val role = roleDAO.findById(roleId) ?: throw BusinessException("Error: Role is not found.")
+        val role = roleDAO.findById(roleId) ?: throw BusinessException(CommonUtils.getMessage("role.error.notFound"))
         role.name = request.name
         role.description = request.description
 
         val permissionCodes: Set<String> = request.permissionCodes ?: setOf()
         permissionCodes.forEach { p: String ->
-            if (EPermission.values().none { it.value.equals(p) })
-                throw BusinessException("Error: Permission $p is not found.")
+            if (EPermission.values().none { it.value == p })
+                throw BusinessException(CommonUtils.getMessage("permission.error.notFound", arrayOf(p)))
         }
         roleDAO.saveRolePermissions(roleId, permissionCodes)
         roleDAO.update(role)
@@ -95,7 +95,7 @@ class RoleService(private val roleDAO: RoleDAO) {
 
     fun deleteById(roleId: String) {
         if (roleDAO.isRoleUsed(roleId))
-            throw BusinessException("Role is in use!")
+            throw BusinessException(CommonUtils.getMessage("role.error.inUse"))
         roleDAO.deleteById(roleId)
     }
 }

@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.AuthenticationEntryPoint
@@ -26,7 +27,7 @@ class AuthEntryPointJwt : AuthenticationEntryPoint {
         response.status = HttpServletResponse.SC_UNAUTHORIZED
         val body: MutableMap<String, Any> = HashMap()
         body["status"] = HttpServletResponse.SC_UNAUTHORIZED
-        body["error"] = "Unauthorized"
+        body["error"] = HttpStatus.UNAUTHORIZED.reasonPhrase
         body["message"] = authException.localizedMessage
         body["path"] = request.servletPath
         val mapper = ObjectMapper()

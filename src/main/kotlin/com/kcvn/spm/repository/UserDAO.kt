@@ -1,15 +1,19 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.model.tables.references.AUTH_USER
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.AuthUserClaim
 import com.kcvn.spm.model.tables.references.AUTH_USER_CLAIM
 import org.jooq.DSLContext
+import org.jooq.TableField
+import org.springframework.dao.InvalidDataAccessApiUsageException
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 
 @Repository
-class UserDAO(private val context: DSLContext) {
+class UserDAO(private val context: DSLContext): SortingRepository() {
     companion object {
         const val POSITION_TYPE = "position"
     }
@@ -19,10 +23,10 @@ class UserDAO(private val context: DSLContext) {
             .orderBy(AUTH_USER.CREATED_DATE)
             .fetchInto(AuthUser::class.java)
 
-    fun findAllPaginated(page: Int, size: Int): Pair<List<AuthUser>, Int> {
+    fun findAllPaginated(pageable: Pageable): Pair<List<AuthUser>, Int> {
         val users = context.selectFrom(AUTH_USER).where(AUTH_USER.IS_DELETED.eq(false))
-            .orderBy(AUTH_USER.CREATED_DATE)
-            .limit(size).offset((page - 1) * size)
+            .orderBy(getSortFields(pageable.sort, AUTH_USER.CREATED_DATE))
+            .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(AuthUser::class.java)
         val total = context.fetchCount(AUTH_USER, AUTH_USER.IS_DELETED.eq(false))
         return Pair(users, total)
@@ -49,15 +53,15 @@ class UserDAO(private val context: DSLContext) {
             .and(AUTH_USER.IS_DELETED.eq(false))
             .fetchInto(AuthUser::class.java)
 
-    fun findByKeywordPaginated(keyword: String, page: Int, size: Int): Pair<List<AuthUser>, Int> {
+    fun findByKeywordPaginated(keyword: String, pageable: Pageable): Pair<List<AuthUser>, Int> {
         val users = context.selectFrom(AUTH_USER).where(
             AUTH_USER.USERNAME.contains(keyword)
                 .or(AUTH_USER.FULL_NAME.contains(keyword))
                 .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword))
         )
             .and(AUTH_USER.IS_DELETED.eq(false))
-            .orderBy(AUTH_USER.CREATED_DATE)
-            .limit(size).offset((page - 1) * size)
+            .orderBy(getSortFields(pageable.sort, AUTH_USER.CREATED_DATE))
+            .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(AuthUser::class.java)
         val total = context.fetchCount(AUTH_USER, AUTH_USER.USERNAME.contains(keyword).and(AUTH_USER.IS_DELETED.eq(false)))
         return Pair(users, total)
@@ -140,5 +144,39 @@ class UserDAO(private val context: DSLContext) {
                 CommonUtils.loggedInUser()?: "SYSTEM"
             ).execute()
         }
+    }
+
+    override fun getTableField(sortFieldName: String): TableField<*, *> {
+        val sortField: TableField<*, *> = when (sortFieldName) {
+            "id" -> {
+                AUTH_USER.ID
+            }
+            "username" -> {
+                AUTH_USER.USERNAME
+            }
+            "employeeCode" -> {
+                AUTH_USER.EMPLOYEE_CODE
+            }
+            "email" -> {
+                AUTH_USER.EMAIL
+            }
+            "phoneNumber" -> {
+                AUTH_USER.PHONE_NUMBER
+            }
+            "fullName" -> {
+                AUTH_USER.FULL_NAME
+            }
+            "dateOfBirth" -> {
+                AUTH_USER.DATE_OF_BIRTH
+            }
+            "createdDate" -> {
+                AUTH_USER.CREATED_DATE
+            }
+            else -> {
+                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
+                throw InvalidDataAccessApiUsageException(errorMessage)
+            }
+        }
+        return sortField
     }
 }

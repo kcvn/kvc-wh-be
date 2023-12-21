@@ -1,16 +1,20 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.auth.security.EPermission
+import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.AuthRole
 import com.kcvn.spm.model.tables.references.AUTH_ROLE
 import com.kcvn.spm.model.tables.references.AUTH_ROLE_CLAIM
 import com.kcvn.spm.model.tables.references.AUTH_USER_ROLE
-import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.auth.security.EPermission
 import org.jooq.DSLContext
+import org.jooq.TableField
+import org.springframework.dao.InvalidDataAccessApiUsageException
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 
 @Repository
-class RoleDAO(private val context: DSLContext) {
+class RoleDAO(private val context: DSLContext): SortingRepository() {
     companion object {
         const val PERMISSION_TYPE = "permission"
     }
@@ -20,10 +24,10 @@ class RoleDAO(private val context: DSLContext) {
             .orderBy(AUTH_ROLE.CREATED_DATE)
             .fetchInto(AuthRole::class.java)
 
-    fun findAllPaginated(page: Int, size: Int): Pair<List<AuthRole>, Int> {
+    fun findAllPaginated(pageable: Pageable): Pair<List<AuthRole>, Int> {
         val roles = context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.IS_DELETED.eq(false))
-            .orderBy(AUTH_ROLE.CREATED_DATE)
-            .limit(size).offset((page - 1) * size)
+            .orderBy(getSortFields(pageable.sort, AUTH_ROLE.CREATED_DATE))
+            .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(AuthRole::class.java)
         val total = context.fetchCount(AUTH_ROLE, AUTH_ROLE.IS_DELETED.eq(false))
         return Pair(roles, total)
@@ -35,11 +39,11 @@ class RoleDAO(private val context: DSLContext) {
             .orderBy(AUTH_ROLE.CREATED_DATE)
             .fetchInto(AuthRole::class.java)
 
-    fun findByKeywordPaginated(keyword: String, page: Int, size: Int): Pair<List<AuthRole>, Int> {
+    fun findByKeywordPaginated(keyword: String, pageable: Pageable): Pair<List<AuthRole>, Int> {
         val roles = context.selectFrom(AUTH_ROLE).where(AUTH_ROLE.NAME.contains(keyword).or(AUTH_ROLE.DESCRIPTION.contains(keyword)))
             .and(AUTH_ROLE.IS_DELETED.eq(false))
-            .orderBy(AUTH_ROLE.CREATED_DATE)
-            .limit(size).offset((page - 1) * size)
+            .orderBy(getSortFields(pageable.sort, AUTH_ROLE.CREATED_DATE))
+            .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(AuthRole::class.java)
         val total = context.fetchCount(AUTH_ROLE, AUTH_ROLE.IS_DELETED.eq(false))
         return Pair(roles, total)
@@ -123,4 +127,26 @@ class RoleDAO(private val context: DSLContext) {
 
     fun isRoleUsed(roleId: String): Boolean =
         context.fetchCount(AUTH_USER_ROLE, AUTH_USER_ROLE.ROLE_ID.eq(roleId)) > 0
+
+    override fun getTableField(sortFieldName: String): TableField<*, *> {
+        val sortField: TableField<*, *> = when (sortFieldName) {
+            "id" -> {
+                AUTH_ROLE.ID
+            }
+            "name" -> {
+                AUTH_ROLE.NAME
+            }
+            "description" -> {
+                AUTH_ROLE.DESCRIPTION
+            }
+            "createdDate" -> {
+                AUTH_ROLE.CREATED_DATE
+            }
+            else -> {
+                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
+                throw InvalidDataAccessApiUsageException(errorMessage)
+            }
+        }
+        return sortField
+    }
 }

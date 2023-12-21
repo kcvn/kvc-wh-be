@@ -1,6 +1,5 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.references.AUTH_PASSWORD_RESET_TOKEN
 import org.jooq.DSLContext

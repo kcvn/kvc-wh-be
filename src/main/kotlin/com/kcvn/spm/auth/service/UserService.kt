@@ -12,9 +12,8 @@ import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.repository.PasswordResetTokenDAO
 import com.kcvn.spm.repository.RoleDAO
 import com.kcvn.spm.repository.UserDAO
-import org.springframework.context.MessageSource
-import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.core.env.Environment
+import org.springframework.data.domain.Pageable
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -31,33 +30,32 @@ class UserService(
     private val encoder: PasswordEncoder,
     private val passwordResetTokenDAO: PasswordResetTokenDAO,
     private val mailSender: JavaMailSender,
-    private val messageSource: MessageSource,
     private val env: Environment
 ) {
-    fun getUsers(search: String?): List<UserResponse> {
-        val userList = if (search == null) userDAO.findAll()
-        else userDAO.findByKeyword(search)
-        val positionsByUser = userDAO.findPositions(userList.map { it.id!! })
-        return userList.map { user ->
-            UserResponse(
-                user.id!!,
-                user.username!!,
-                user.employeeCode,
-                user.email,
-                user.phoneNumber,
-                user.fullName,
-                user.dateOfBirth,
-                user.avatar,
-                user.status,
-                user.isSuperAdmin!!,
-                positionsByUser.getOrDefault(user.id!!, listOf())
-            )
-        }
-    }
+//    fun getUsers(search: String?): List<UserResponse> {
+//        val userList = if (search == null) userDAO.findAll()
+//        else userDAO.findByKeyword(search)
+//        val positionsByUser = userDAO.findPositions(userList.map { it.id!! })
+//        return userList.map { user ->
+//            UserResponse(
+//                user.id!!,
+//                user.username!!,
+//                user.employeeCode,
+//                user.email,
+//                user.phoneNumber,
+//                user.fullName,
+//                user.dateOfBirth,
+//                user.avatar,
+//                user.status,
+//                user.isSuperAdmin!!,
+//                positionsByUser.getOrDefault(user.id!!, listOf())
+//            )
+//        }
+//    }
 
-    fun getPaginatedUsers(search: String?, page: Int, size: Int): PaginatedResponse {
-        val result = if (search == null) userDAO.findAllPaginated(page, size)
-        else userDAO.findByKeywordPaginated(search, page, size)
+    fun getPaginatedUsers(search: String?, pageable: Pageable): PaginatedResponse {
+        val result = if (search == null) userDAO.findAllPaginated(pageable)
+        else userDAO.findByKeywordPaginated(search, pageable)
         val positionsByUser = userDAO.findPositions(result.first.map { it.id!! })
         return PaginatedResponse(
             result.first.map { user ->
@@ -105,7 +103,7 @@ class UserService(
 
     fun createUser(request: UserRequest): UserResponse? {
         if (userDAO.findByUsername(request.username!!) != null) {
-            throw BusinessException("Error: Username is already taken!")
+            throw BusinessException(CommonUtils.getMessage("user.error.usernameTaken"))
         }
 
         // Create new user's account
@@ -126,7 +124,7 @@ class UserService(
         val allRoles = roleDAO.findAll()
         roleIds.forEach { roleId: String ->
             allRoles.find { it.id.equals(roleId) }
-                ?: throw BusinessException("Error: Role $roleId is not found.")
+                ?: throw BusinessException(CommonUtils.getMessage("role.error.notFound"))
         }
         val createdUser = userDAO.save(user)
         return if (createdUser != null) {
@@ -141,7 +139,7 @@ class UserService(
     }
 
     fun updateInfo(userId: String, request: UserRequest): UserResponse {
-        val user = userDAO.findById(userId) ?: throw BusinessException("Error: User is not found.")
+        val user = userDAO.findById(userId) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
         user.employeeCode = request.employeeCode
         user.email = request.email
         user.phoneNumber = request.phoneNumber
@@ -155,7 +153,7 @@ class UserService(
         val allRoles = roleDAO.findAll()
         roleIds.forEach { roleId: String ->
             allRoles.find { it.id.equals(roleId) }
-                ?: throw BusinessException("Error: Role $roleId is not found.")
+                ?: throw BusinessException(CommonUtils.getMessage("role.error.notFound"))
         }
         roleDAO.saveUserRoles(userId, roleIds)
         userDAO.savePositions(userId, request.positions ?: setOf())
@@ -168,12 +166,12 @@ class UserService(
     }
 
     fun validateOldPassword(userId: String, oldPassword: String): Boolean {
-        val user = userDAO.findById(userId) ?: throw BusinessException("Error: User is not found.")
+        val user = userDAO.findById(userId) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
         return encoder.matches(oldPassword, user.password)
     }
 
     fun updatePassword(userId: String, password: String): UserResponse {
-        val user = userDAO.findById(userId) ?: throw BusinessException("Error: User is not found.")
+        val user = userDAO.findById(userId) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
         user.password = encoder.encode(password)
         userDAO.updatePassword(user)
         return UserResponse(
@@ -188,7 +186,7 @@ class UserService(
     }
 
     fun createPasswordResetToken(email: String, siteUrl: String) {
-        val user = userDAO.findByEmail(email) ?: throw BusinessException("User not found!")
+        val user = userDAO.findByEmail(email) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
         val token: String = UUID.randomUUID().toString()
         passwordResetTokenDAO.save(
             AuthPasswordResetToken(
@@ -199,8 +197,8 @@ class UserService(
             )
         )
         val resetPasswordLink = "$siteUrl?token=$token"
-//        sendEmail(email, resetPasswordLink);
-        mailSender.send(constructResetTokenEmail(LocaleContextHolder.getLocale(), resetPasswordLink, email));
+//        sendEmail(email, resetPasswordLink)
+        mailSender.send(constructResetTokenEmail(resetPasswordLink, email))
     }
 
 //    @Throws(MessagingException::class, UnsupportedEncodingException::class)
@@ -216,14 +214,9 @@ class UserService(
 //        mailSender.send(message)
 //    }
 
-    private fun constructResetTokenEmail(
-        locale: Locale, resetPasswordLink: String, userEmail: String
-    ): SimpleMailMessage {
-        val message: String = messageSource.getMessage(
-            "message.resetPassword",
-            null, locale
-        )
-        return constructEmail("Reset Password", "$message \r\n$resetPasswordLink", userEmail)
+    private fun constructResetTokenEmail(resetPasswordLink: String, userEmail: String): SimpleMailMessage {
+        val message: String = CommonUtils.getMessage("message.resetPassword")
+        return constructEmail(message, "$message \r\n$resetPasswordLink", userEmail)
     }
 
     private fun constructEmail(
@@ -231,21 +224,24 @@ class UserService(
         userMail: String
     ): SimpleMailMessage {
         val email = SimpleMailMessage()
-        email.setSubject(subject)
-        email.setText(body)
+        email.subject = subject
+        email.text = body
         email.setTo(userMail)
-        email.setFrom(env.getProperty("support.email"))
+        email.from = env.getProperty("support.email")
         return email
     }
 
     fun validatePasswordResetToken(token: String) {
-        val passToken = passwordResetTokenDAO.findByToken(token) ?: throw BusinessException("invalid token")
+        val passToken = passwordResetTokenDAO.findByToken(token)
+            ?: throw BusinessException(CommonUtils.getMessage("login.resetPassword.error.invalidToken"))
         if (passToken.expiredDate!!.isBefore(OffsetDateTime.now()))
-            throw BusinessException("token expired")
+            throw BusinessException(CommonUtils.getMessage("login.resetPassword.error.tokenExpired"))
     }
 
     fun getUserByPasswordResetToken(token: String): AuthUser {
-        val passToken = passwordResetTokenDAO.findByToken(token) ?: throw BusinessException("invalid token")
-        return userDAO.findById(passToken.userId!!) ?: throw BusinessException("Not found user")
+        val passToken = passwordResetTokenDAO.findByToken(token)
+            ?: throw BusinessException(CommonUtils.getMessage("login.resetPassword.error.invalidToken"))
+        return userDAO.findById(passToken.userId!!)
+            ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
     }
 }

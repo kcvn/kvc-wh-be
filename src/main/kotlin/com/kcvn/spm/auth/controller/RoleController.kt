@@ -5,9 +5,10 @@ import com.kcvn.spm.auth.payload.response.RoleResponse
 import com.kcvn.spm.auth.service.RoleService
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
+import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
-import org.springframework.context.MessageSource
-import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -15,31 +16,27 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/role")
-class RoleController(
-    private val roleService: RoleService,
-    private val messageSource: MessageSource
-) {
+class RoleController(private val roleService: RoleService) {
     @GetMapping("/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.auth.security.EPermission).VIEW_ROLE.value) || hasRole('ADMIN')")
     fun getAllRoles(
         @RequestParam(required = false) search: String?,
-        @RequestParam(required = false) page: Int?,
-        @RequestParam(required = false) size: Int?
+        @PageableDefault(size = 10, page = 0) pageable: Pageable?
     ): ResponseEntity<*> {
         return try {
-            if (page != null && size != null) {
-                val result = roleService.findAllPaginated(search, page, size)
+//            if (pageable != null) {
+                val result = roleService.findAllPaginated(search, pageable!!)
                 if (result.data.isEmpty())
                     ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
                 else
                     ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
-            } else {
-                val roles: List<RoleResponse> = roleService.findAll(search)
-                if (roles.isEmpty())
-                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-                else
-                    ResponseEntity<List<RoleResponse>>(roles, HttpStatus.OK)
-            }
+//            } else {
+//                val roles: List<RoleResponse> = roleService.findAll(search)
+//                if (roles.isEmpty())
+//                    ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+//                else
+//                    ResponseEntity<List<RoleResponse>>(roles, HttpStatus.OK)
+//            }
         } catch (e: Exception) {
             e.printStackTrace()
             ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)
@@ -63,15 +60,12 @@ class RoleController(
         val role = roleService.createRole(request!!)
         return if (role == null) {
             ResponseEntity<MessageResponse>(
-                MessageResponse(messageSource.getMessage("action.failed", null, LocaleContextHolder.getLocale())),
+                MessageResponse(CommonUtils.getMessage("action.failed")),
                 HttpStatus.BAD_REQUEST
             )
         } else {
             ResponseEntity<MessageResponse>(
-                MessageResponse(
-                    messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale()),
-                    role
-                ),
+                MessageResponse(CommonUtils.getMessage("action.succeeded"), role),
                 HttpStatus.CREATED
             )
         }
@@ -85,10 +79,7 @@ class RoleController(
     ): ResponseEntity<*> {
         val role = roleService.updateRole(id, request)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(
-                messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale()),
-                role
-            ),
+            MessageResponse(CommonUtils.getMessage("action.succeeded"), role),
             HttpStatus.OK
         )
     }
@@ -98,7 +89,7 @@ class RoleController(
     fun deleteRole(@PathVariable("id") id: String): ResponseEntity<*> {
         roleService.deleteById(id)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(messageSource.getMessage("action.succeeded", null, LocaleContextHolder.getLocale())),
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
             HttpStatus.OK
         )
     }

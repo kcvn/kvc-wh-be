@@ -17,10 +17,11 @@ class UserDetailsImpl(
 ) : UserDetails {
     companion object {
         private const val serialVersionUID = 1L
+        private const val ROLE_ADMIN = "ROLE_ADMIN"
 
         fun build(user: AuthUser, roles: List<AuthRole>, permissions: List<EPermission>): UserDetailsImpl {
             val authorities = mutableListOf<GrantedAuthority>()
-            if (user.isSuperAdmin!!) authorities.add(SimpleGrantedAuthority("ROLE_ADMIN"))
+            if (user.isSuperAdmin!!) authorities.add(SimpleGrantedAuthority(ROLE_ADMIN))
             authorities.addAll(roles.map { role -> SimpleGrantedAuthority(role.name) })
             authorities.addAll(permissions.map { SimpleGrantedAuthority(it.value) })
             return UserDetailsImpl(

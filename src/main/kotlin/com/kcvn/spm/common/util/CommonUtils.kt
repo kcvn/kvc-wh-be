@@ -21,7 +21,8 @@ class CommonUtils {
             } else null
         }
 
-        fun removeAccent(s: String?): String {
+        fun removeAccent(s: String?): String? {
+            if (s == null) return null
             val temp: String = Normalizer.normalize(s, Normalizer.Form.NFD)
             return REMOVE_ACCENT_PATTERN.matcher(temp).replaceAll("")
                 .replace('đ','d').replace('Đ','D')

@@ -1,0 +1,17 @@
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    nginx.ingress.kubernetes.io/proxy-body-size: "50M"
+livenessProbe:
+  enabled: false
+readinessProbe:
+  enabled: false
+image:
+  repository: <image_version>
+  tag: <image_tag_version>
+  secrets:
+    - name: registry-3s
+service:
+  enabled: false
+persistence:
+  enabled: false

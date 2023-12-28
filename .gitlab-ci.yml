@@ -1,0 +1,32 @@
+variables:
+  SRC_PATH: .
+  DOCKERFILE_PATH: .devops/1-build
+  VALUESFILE_PATH: .devops/2-deploy
+  
+  TEST_DISABLED: "true"
+  CODE_QUALITY_DISABLED: "true"
+  LICENSE_MANAGEMENT_DISABLED: "true"
+  PERFORMANCE_DISABLED: "true"
+  LOAD_PERFORMANCE_DISABLED: "true"
+  SAST_DISABLED: "true"
+  SECRET_DETECTION_DISABLED: "true"
+  DEPENDENCY_SCANNING_DISABLED: "true"
+  CONTAINER_SCANNING_DISABLED: "true"
+  DAST_DISABLED: "true"
+  POSTGRES_ENABLED: "false"
+ 
+  KCVN_NAMESPACE: 23-kcvn-spm-dev
+  KUBE_INGRESS_BASE_DOMAIN: dev.3si.vn
+  HELM_UPGRADE_VALUES_FILE: .yaml
+
+  API_DOMAIN: 23-kcvn-spm.api
+
+#before_script:
+#  - export VERSION=$CI_COMMIT_SHORT_SHA
+
+stages:
+  - build
+  - deploy
+
+include:
+    - local: .devops/0-cicd/kcvn-api.yml

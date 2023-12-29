@@ -48,7 +48,7 @@ deploy_kcvn_api:
     - cat $HELM_VALUES_FILE
 
     - kubectl delete secret "${MODULE_NAME}-secret" -n "$KCVN_NAMESPACE" --ignore-not-found=true
-    - kubectl create secret generic -n "$KCVN_NAMESPACE" "${MODULE_NAME}-secret" --from-literal=APPSETTINGS="${K8S_SECRET_APPSETTINGS}"
+    - kubectl create secret generic -n "$KCVN_NAMESPACE" "${MODULE_NAME}-secret" --from-literal=APPSETTINGS="${CONFIG_FILE}"
 
     - helm upgrade --install --wait $MODULE_NAME $AUTO_DEVOPS_CHART_REPOSITORY_NAME/$HELM_CHART_NAME -f $HELM_VALUES_FILE --set application.secretName="${MODULE_NAME}-secret" --set gitlab.env="${CI_COMMIT_REF_SLUG}" --namespace="$KCVN_NAMESPACE"
   only:

@@ -17,7 +17,6 @@ variables:
  
   KCVN_NAMESPACE: 23-kcvn-spm-dev
   KUBE_INGRESS_BASE_DOMAIN: dev.3si.vn
-  HELM_UPGRADE_VALUES_FILE: .yaml
 
   API_DOMAIN: 23-kcvn-spm.api
 

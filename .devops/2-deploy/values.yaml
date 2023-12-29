@@ -10,7 +10,7 @@ image:
   repository: <image_version>
   tag: <image_tag_version>
   secrets:
-    - name: registry-3s
+    - name: registry
 service:
   enabled: false
 persistence:

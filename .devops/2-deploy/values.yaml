@@ -12,6 +12,9 @@ image:
   secrets:
     - name: registry
 service:
-  enabled: false
+  url: <environment-url>  
+  controller_segment: <controller_segment>
+  externalPort: 8080
+  internalPort: 8080
 persistence:
   enabled: false

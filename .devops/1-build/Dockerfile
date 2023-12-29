@@ -12,6 +12,5 @@ RUN echo "$CONFIG_FILE" > './src/main/resources/application.properties'
 RUN cat ./src/main/resources/application.properties
 RUN ./mvnw -Dflyway.configFiles=./src/main/resources/application.properties flyway:migrate
 RUN ./mvnw clean install
-RUN ./mvnw jooq-codegen:generate
 
 CMD ["./mvnw", "spring-boot:run"]

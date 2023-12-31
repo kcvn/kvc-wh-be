@@ -1,4 +1,4 @@
-FROM openjdk:17-slim-buster as build
+FROM openjdk:11-slim-buster as build
 ARG CONFIG_FILE
 
 LABEL mentainer="phong.ld@3si.vn"
@@ -17,7 +17,7 @@ RUN cat ./src/main/resources/application.properties
 
 RUN ./mvnw -f ./pom.xml -B package
 
-FROM openjdk:17-jre-slim-buster
+FROM openjdk:11-jre-slim-buster
 
 COPY ./target/23-kcvn-spm-be-0.0.1-SNAPSHOT.jar ./23-kcvn-spm-be.jar
 

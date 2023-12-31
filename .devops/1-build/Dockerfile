@@ -7,10 +7,6 @@ ARG DB_PASS
 LABEL mentainer="phong.ld@3si.vn"
 WORKDIR /app
 
-ENV spring.datasource.url="$DB_URL"
-ENV spring.datasource.username="$DB_USER"
-ENV spring.datasource.password="$DB_PASS"
-
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 COPY src ./src

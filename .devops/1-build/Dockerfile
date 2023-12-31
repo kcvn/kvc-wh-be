@@ -11,10 +11,6 @@ ENV spring.datasource.url="$DB_URL"
 ENV spring.datasource.username="$DB_USER"
 ENV spring.datasource.password="$DB_PASS"
 
-RUN cat spring.datasource.url
-RUN cat spring.datasource.username
-RUN cat spring.datasource.password
-
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 COPY src ./src

@@ -11,6 +11,6 @@ RUN chmod +x ./mvnw
 RUN echo "$CONFIG_FILE" > './src/main/resources/application.properties'
 RUN cat ./src/main/resources/application.properties
 RUN ./mvnw -Dflyway.configFiles=./src/main/resources/application.properties flyway:migrate
-RUN mvnw clean package
+RUN ./mvnw clean package
 
 ENTRYPOINT ["java", "-jar", "./target/spm-0.0.1-SNAPSHOT.jar"]

@@ -4,9 +4,9 @@ LABEL mentainer="phong.ld@3si.vn"
 WORKDIR /app
  
 COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
 RUN chmod +x ./mvnw
 
-COPY mvnw pom.xml ./
 RUN sed -i "s|${spring.datasource.url}|\"${DB_URL}\"|g" ./pom.xml
 RUN sed -i "s|${spring.datasource.username}|\"${DB_USER}\"|g" ./pom.xml
 RUN sed -i "s|${spring.datasource.password}|\"${DB_PASS}\"|g" ./pom.xml

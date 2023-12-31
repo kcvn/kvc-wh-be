@@ -16,12 +16,12 @@ COPY mvnw pom.xml ./
 COPY src ./src
 RUN chmod +x ./mvnw
 
-RUN ./mvnw dependency:go-offline
-RUN cat ./pom.xml
-
 RUN echo "$CONFIG_FILE" > './src/main/resources/application.properties'
 RUN cat ./src/main/resources/application.properties
+RUN ./mvnw -f ./pom.xml clean package
 RUN ./mvnw -Dflyway.configFiles=./src/main/resources/application.properties flyway:migrate
-RUN ./mvnw clean package
+RUN cat ./pom.xml
 
-ENTRYPOINT ["java", "-jar", "./target/spm-0.0.1-SNAPSHOT.jar"]
+ADD ./target/23-kcvn-spm-be-0.0.1-SNAPSHOT.jar ./23-kcvn-spm-be.jar
+
+ENTRYPOINT ["java", "-jar", "23-kcvn-spm-be.jar"]

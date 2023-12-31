@@ -14,7 +14,9 @@ build_kcvn_api:
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${DOCKERFILE_PATH}/Dockerfile"
       --build-arg "CONFIG_FILE=$CONFIG_FILE"
-      --build-arg "POM_XML_FILE=$POM_XML_FILE"
+      --build-arg "DB_URL=$DB_URL"
+      --build-arg "DB_USER=$DB_USER"
+      --build-arg "DB_URL=$DB_URL"
       --destination "${CI_IMAGE_NAME}"
       --destination "${CI_IMAGE_NAME}-${CI_COMMIT_SHORT_SHA}"
   tags:

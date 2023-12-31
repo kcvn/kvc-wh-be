@@ -1,21 +1,30 @@
 FROM eclipse-temurin:17-jdk-alpine
 ARG CONFIG_FILE
-ARG POM_XML_FILE
+ARG DB_URL
+ARG DB_USER
+ARG DB_PASS
 
 LABEL mentainer="phong.ld@3si.vn"
 WORKDIR /app
- 
+
+ENV spring.datasource.url="$DB_URL"
+ENV spring.datasource.username="$DB_USER"
+ENV spring.datasource.password="$DB_PASS"
+
+RUN cat spring.datasource.url
+RUN cat spring.datasource.username
+RUN cat spring.datasource.password
+
 COPY .mvn/ .mvn
-COPY mvnw ./
+COPY mvnw pom.xml ./
 COPY src ./src
 RUN chmod +x ./mvnw
 
-RUN echo "$POM_XML_FILE" > './pom.xml'
+RUN ./mvnw dependency:go-offline
 RUN cat ./pom.xml
 
 RUN echo "$CONFIG_FILE" > './src/main/resources/application.properties'
 RUN cat ./src/main/resources/application.properties
-
 RUN ./mvnw -Dflyway.configFiles=./src/main/resources/application.properties flyway:migrate
 RUN ./mvnw clean package
 

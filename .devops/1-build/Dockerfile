@@ -1,17 +1,13 @@
-FROM eclipse-temurin:17-jdk-focal
+FROM eclipse-temurin:17-jdk-alpine
 ARG CONFIG_FILE
+LABEL mentainer="phong.ld@3si.vn"
 WORKDIR /app
  
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN chmod +x ./mvnw
-RUN chmod 777 ./mvnw
-RUN chmod -R 777 ./mvnw
-RUN ./mvnw dependency:go-offline
+RUN echo "$CONFIG_FILE" > '/src/main/resources/application.properties'
+RUN chmod +x mvnw
+RUN mvnw -Dflyway.configFiles=/src/main/resources/application.properties flyway:migrate
+RUN mvnw clean package
  
-COPY src ./src
-RUN echo "$CONFIG_FILE" > './src/main/resources/application.properties'
-RUN cat ./src/main/resources/application.properties
-RUN ./mvnw -Dflyway.configFiles=./src/main/resources/application.properties flyway:migrate
+COPY target/spm-0.0.1-SNAPSHOT.jar /app/spm.jar
 
-CMD ["./mvnw", "spring-boot:run"]
+ENTRYPOINT ["java", "-jar", "spm.jar"]

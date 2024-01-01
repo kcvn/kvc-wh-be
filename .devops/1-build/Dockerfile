@@ -19,8 +19,7 @@ RUN --mount=type=cache,target=/root/.m2,rw ./mvnw -B package
 
 FROM eclipse-temurin:17-jre-focal
 WORKDIR /app
-RUN echo $(ls -1 /app/target)
 
-COPY --from=build app/target/spm-0.0.1-SNAPSHOT.jar .  
+COPY --from=build app/target/spm-0.0.1-SNAPSHOT.jar ./app.jar  
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "spm-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

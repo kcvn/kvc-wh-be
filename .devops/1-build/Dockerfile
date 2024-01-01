@@ -18,7 +18,7 @@ RUN cat ./src/main/resources/application.properties
 RUN --mount=type=cache,target=/root/.m2,rw ./mvnw -B package
 
 FROM eclipse-temurin:17-jre-focal
-
+WORKDIR /app
 COPY --from=build target/23-kcvn-spm-be-0.0.1-SNAPSHOT.jar ./23-kcvn-spm-be.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "23-kcvn-spm-be.jar"]

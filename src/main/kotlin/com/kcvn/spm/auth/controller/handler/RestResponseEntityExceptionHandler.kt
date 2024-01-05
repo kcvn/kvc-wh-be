@@ -1,4 +1,4 @@
-package com.kcvn.spm.auth.controller
+package com.kcvn.spm.auth.controller.handler
 
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils

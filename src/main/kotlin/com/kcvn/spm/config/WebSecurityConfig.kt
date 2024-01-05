@@ -2,8 +2,8 @@ package com.kcvn.spm.config
 
 import com.kcvn.spm.auth.security.jwt.AuthEntryPointJwt
 import com.kcvn.spm.auth.security.jwt.AuthTokenFilter
+import com.kcvn.spm.auth.security.jwt.JwtUtils
 import com.kcvn.spm.auth.security.service.UserDetailsServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.web.config.EnableSpringDataWebSupport
@@ -28,16 +28,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableMethodSecurity
 @EnableSpringDataWebSupport
-class WebSecurityConfig {
-    @Autowired
-    var userDetailsService: UserDetailsServiceImpl? = null
-
-    @Autowired
-    private val unauthorizedHandler: AuthEntryPointJwt? = null
-
+class WebSecurityConfig(
+    private val userDetailsService: UserDetailsServiceImpl,
+    private val unauthorizedHandler: AuthEntryPointJwt,
+    private val jwtUtils: JwtUtils
+) {
     @Bean
     fun authenticationJwtTokenFilter(): AuthTokenFilter {
-        return AuthTokenFilter()
+        return AuthTokenFilter(jwtUtils, userDetailsService)
     }
 
     @Bean
@@ -79,15 +77,13 @@ class WebSecurityConfig {
                 )
             }
             // Set permissions on endpoints
-            .authorizeHttpRequests(
-                Customizer { auth ->
-                    // ROLE_ is automatically prepended when using hasRole
-                    auth.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/user/**").authenticated()
-                        .requestMatchers("/api/role/**").authenticated()
-                        .anyRequest().permitAll()
-                }
-            )
+            .authorizeHttpRequests { auth ->
+                // ROLE_ is automatically prepended when using hasRole
+                auth.requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/user/**").authenticated()
+                    .requestMatchers("/api/role/**").authenticated()
+                    .anyRequest().permitAll()
+            }
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter::class.java)
         return http.build()

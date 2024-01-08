@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class SwaggerConfiguration {
+class SwaggerConfig {
     @Bean
     fun openAPI(): OpenAPI {
         return OpenAPI().addSecurityItem(SecurityRequirement().addList("Bearer Authentication"))

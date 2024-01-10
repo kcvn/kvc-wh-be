@@ -6,13 +6,10 @@ package com.kcvn.spm.model.tables
 
 import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.AUTH_ROLE_PKEY
-import com.kcvn.spm.model.keys.AUTH_ROLE_UNIQ_NAME
 import com.kcvn.spm.model.tables.records.AuthRoleRecord
 
 import java.time.OffsetDateTime
 import java.util.function.Function
-
-import kotlin.collections.List
 
 import org.jooq.Field
 import org.jooq.ForeignKey
@@ -126,7 +123,6 @@ open class AuthRole(
     constructor(child: Table<out Record>, key: ForeignKey<out Record, AuthRoleRecord>): this(Internal.createPathAlias(child, key), child, key, AUTH_ROLE, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<AuthRoleRecord> = AUTH_ROLE_PKEY
-    override fun getUniqueKeys(): List<UniqueKey<AuthRoleRecord>> = listOf(AUTH_ROLE_UNIQ_NAME)
     override fun `as`(alias: String): AuthRole = AuthRole(DSL.name(alias), this)
     override fun `as`(alias: Name): AuthRole = AuthRole(alias, this)
     override fun `as`(alias: Table<*>): AuthRole = AuthRole(alias.getQualifiedName(), this)

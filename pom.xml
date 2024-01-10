@@ -202,7 +202,11 @@
 						<database>
 							<name>org.jooq.meta.postgres.PostgresDatabase</name>
 							<includes>.*</includes>
-							<excludes>flyway_schema_history</excludes>
+							<excludes>
+								flyway_schema_history
+								| batch_job_.*
+								| batch_step_.*
+							</excludes>
 							<inputSchema>public</inputSchema>
 						</database>
 						<generate>

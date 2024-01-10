@@ -6,16 +6,11 @@ package com.kcvn.spm.model.tables
 
 import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.AUTH_USER_PKEY
-import com.kcvn.spm.model.keys.AUTH_USER_UNIQ_EMAIL
-import com.kcvn.spm.model.keys.AUTH_USER_UNIQ_EMPLOYEE_CODE
-import com.kcvn.spm.model.keys.AUTH_USER_UNIQ_USERNAME
 import com.kcvn.spm.model.tables.records.AuthUserRecord
 
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.function.Function
-
-import kotlin.collections.List
 
 import org.jooq.Field
 import org.jooq.ForeignKey
@@ -174,7 +169,6 @@ open class AuthUser(
     constructor(child: Table<out Record>, key: ForeignKey<out Record, AuthUserRecord>): this(Internal.createPathAlias(child, key), child, key, AUTH_USER, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<AuthUserRecord> = AUTH_USER_PKEY
-    override fun getUniqueKeys(): List<UniqueKey<AuthUserRecord>> = listOf(AUTH_USER_UNIQ_USERNAME, AUTH_USER_UNIQ_EMPLOYEE_CODE, AUTH_USER_UNIQ_EMAIL)
     override fun `as`(alias: String): AuthUser = AuthUser(DSL.name(alias), this)
     override fun `as`(alias: Name): AuthUser = AuthUser(alias, this)
     override fun `as`(alias: Table<*>): AuthUser = AuthUser(alias.getQualifiedName(), this)

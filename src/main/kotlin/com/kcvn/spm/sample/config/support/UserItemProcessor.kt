@@ -22,6 +22,7 @@ class UserItemProcessor : ItemListenerSupport<UserDto, AuthUser>(), ItemProcesso
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution?) {
         this.stepExecution = stepExecution
+        skipped = false
     }
 
     override fun process(userDto: UserDto): AuthUser {

@@ -46,7 +46,7 @@ class ImportExportService(private val jobLauncher: JobLauncher) {
                     .toJobParameters()
             )
 
-            return if (errorFilePath.fileSize() > 0) {
+            return if (jobExecution.stepExecutions.any { it.exitStatus.exitCode.equals("COMPLETED WITH SKIPS") }) {
                 val resource = ByteArrayResource(Files.readAllBytes(errorFilePath))
                 val headers = HttpHeaders()
                 headers.add("Cache-Control", "no-cache, no-store, must-revalidate")

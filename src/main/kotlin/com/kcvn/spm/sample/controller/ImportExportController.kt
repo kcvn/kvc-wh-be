@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/sample")
 class ImportExportController(
     private val importExcelJob: Job,
     private val exportCsvJob: Job,

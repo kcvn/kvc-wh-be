@@ -1,11 +1,9 @@
 package com.kcvn.spm.sample.config
 
+import com.kcvn.spm.common.batch.excel.poi.PoiItemReader
 import com.kcvn.spm.model.tables.pojos.AuthUser
+import com.kcvn.spm.sample.config.support.*
 import com.kcvn.spm.sample.dto.UserDto
-import com.kcvn.spm.sample.config.support.ClearDummyUserJooqItemReader
-import com.kcvn.spm.sample.config.support.ClearDummyUserJooqItemWriter
-import com.kcvn.spm.sample.config.support.InsertUserJooqItemWriter
-import com.kcvn.spm.sample.config.support.UserItemProcessor
 import org.jooq.DSLContext
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -13,8 +11,11 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.item.ParseException
 import org.springframework.batch.item.file.FlatFileItemReader
+import org.springframework.batch.item.file.FlatFileItemWriter
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder
+import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -67,6 +68,37 @@ class ImportUserCsvJobConfig(private val dslContext: DSLContext) {
     fun userItemProcessor(): UserItemProcessor = UserItemProcessor()
 
     @Bean
+    @Scope(value = "step", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    fun itemErrorCsvWriter(
+        @Value("#{jobParameters[outputFile]}") pathToFile: String
+    ): FlatFileItemWriter<UserDto> {
+        return FlatFileItemWriterBuilder<UserDto>().name("itemWriter")
+            .resource(FileSystemResource(pathToFile))
+            .delimited()
+            .names("id", "username", "password", "employeeCode", "email", "phoneNumber", "fullName", "fullNameUnsigned", "dateOfBirth", "status", "message")
+            .headerCallback { writer ->
+                writer.append("id,username,password,employeeCode,email,phoneNumber,fullName,fullNameUnsigned,dateOfBirth,status,message")
+            }
+            .build()
+    }
+
+    @Bean
+    fun step2Csv(
+        jobRepository: JobRepository,
+        transactionManager: DataSourceTransactionManager,
+        reader: FlatFileItemReader<UserDto>,
+        excelErrorProcessor: ErrorUserItemProcessor,
+        itemErrorCsvWriter: FlatFileItemWriter<UserDto>
+    ): Step {
+        return StepBuilder("return error file", jobRepository)
+            .chunk<UserDto, UserDto>(10, transactionManager)
+            .reader(reader)
+            .processor(excelErrorProcessor)
+            .writer(itemErrorCsvWriter)
+            .build()
+    }
+
+    @Bean
     fun importCsvStep(
         jobRepository: JobRepository,
         transactionManager: DataSourceTransactionManager,
@@ -79,14 +111,19 @@ class ImportUserCsvJobConfig(private val dslContext: DSLContext) {
             .reader(importUserReader)
             .processor(userItemProcessor)
             .writer(importUserWriter)
+            .faultTolerant()
+            .skipLimit(10)
+            .skip(ParseException::class.java)
             .build()
     }
 
     @Bean
-    fun importUserJob(jobRepository: JobRepository, clearDummyStep: Step, importCsvStep: Step): Job {
+    fun importUserJob(jobRepository: JobRepository, clearDummyStep: Step, importCsvStep: Step, step2Csv: Step): Job {
         return JobBuilder("importCsvJob", jobRepository)
             .start(clearDummyStep)
             .next(importCsvStep)
+            .on("*").end()
+            .from(importCsvStep).on("FAILED").to(step2Csv).end()
             .build()
     }
 }

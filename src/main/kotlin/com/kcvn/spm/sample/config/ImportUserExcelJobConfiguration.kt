@@ -13,6 +13,9 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.item.ParseException
+import org.springframework.batch.item.file.FlatFileItemWriter
+import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -41,19 +44,26 @@ class ImportUserExcelJobConfiguration(private val dsl: DSLContext) {
     }
 
     @Bean
-    fun excelProcessor(): UserItemProcessor {
-        return UserItemProcessor()
-    }
+    fun excelProcessor(): UserItemProcessor = UserItemProcessor()
+
+    @Bean
+    fun excelErrorProcessor(): ErrorUserItemProcessor = ErrorUserItemProcessor()
 
     @Bean
     fun writerExcel(): InsertUserJooqItemWriter = InsertUserJooqItemWriter(dsl)
 
-
     @Bean
-    fun importExcelJob(jobRepository: JobRepository, step1Excel: Step, listener: JobCompletionNotificationListener): Job {
-        return JobBuilder("importExcelJob", jobRepository)
-            .listener(listener)
-            .start(step1Excel)
+    @Scope(value = "step", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    fun itemErrorCsvWriter2(
+        @Value("#{jobParameters[outputFile]}") pathToFile: String
+    ): FlatFileItemWriter<UserDto> {
+        return FlatFileItemWriterBuilder<UserDto>().name("itemWriter")
+            .resource(FileSystemResource(pathToFile))
+            .delimited()
+            .names("id", "username", "password", "employeeCode", "email", "phoneNumber", "fullName", "fullNameUnsigned", "dateOfBirth", "status", "message")
+            .headerCallback { writer ->
+                writer.append("id,username,password,employeeCode,email,phoneNumber,fullName,fullNameUnsigned,dateOfBirth,status,message")
+            }
             .build()
     }
 
@@ -61,15 +71,49 @@ class ImportUserExcelJobConfiguration(private val dsl: DSLContext) {
     fun step1Excel(
         jobRepository: JobRepository,
         transactionManager: DataSourceTransactionManager,
-        reader: PoiItemReader<UserDto>,
+        excelPersonReader: PoiItemReader<UserDto>,
         excelProcessor: UserItemProcessor,
         writerExcel: InsertUserJooqItemWriter
     ): Step {
         return StepBuilder("step1Excel", jobRepository)
             .chunk<UserDto, AuthUser>(10, transactionManager)
-            .reader(reader)
+            .reader(excelPersonReader)
             .processor(excelProcessor)
             .writer(writerExcel)
+            .faultTolerant()
+            .skipLimit(10)
+            .skip(ParseException::class.java)
+            .build()
+    }
+
+    @Bean
+    fun step2Excel(
+        jobRepository: JobRepository,
+        transactionManager: DataSourceTransactionManager,
+        excelPersonReader: PoiItemReader<UserDto>,
+        excelErrorProcessor: ErrorUserItemProcessor,
+        itemErrorCsvWriter2: FlatFileItemWriter<UserDto>
+    ): Step {
+        return StepBuilder("return error file", jobRepository)
+            .chunk<UserDto, UserDto>(10, transactionManager)
+            .reader(excelPersonReader)
+            .processor(excelErrorProcessor)
+            .writer(itemErrorCsvWriter2)
+            .build()
+    }
+
+    @Bean
+    fun importExcelJob(jobRepository: JobRepository,
+                       clearDummyStep: Step,
+                       step1Excel: Step,
+                       listener: JobCompletionNotificationListener,
+                       step2Excel: Step): Job {
+        return JobBuilder("importExcelJob", jobRepository)
+            .listener(listener)
+            .start(clearDummyStep)
+            .next(step1Excel)
+            .on("*").end()
+            .from(step1Excel).on("FAILED").to(step2Excel).end()
             .build()
     }
 }

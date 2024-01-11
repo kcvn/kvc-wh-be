@@ -4,6 +4,7 @@ import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.sample.config.support.UserJooqItemReader
 import org.jooq.DSLContext
 import org.springframework.batch.core.Job
+import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
@@ -42,18 +43,23 @@ class ExportUserCsvJobConfiguration(private val dslContext: DSLContext) {
     }
 
     @Bean
+    fun exportCsvUserStep(jobRepository: JobRepository,
+                          transactionManager: JdbcTransactionManager,
+                          itemReaderDB: UserJooqItemReader,
+                          itemCsvWriter: FlatFileItemWriter<AuthUser>): Step {
+        return StepBuilder("step1", jobRepository).chunk<AuthUser, AuthUser>(3, transactionManager)
+            .reader(itemReaderDB)
+            .writer(itemCsvWriter)
+            .build()
+    }
+
+    @Bean
     fun exportCsvJob(
-        jobRepository: JobRepository, transactionManager: JdbcTransactionManager,
-        itemReaderDB: UserJooqItemReader,
-        itemCsvWriter: FlatFileItemWriter<AuthUser>
+        jobRepository: JobRepository,
+        exportCsvUserStep: Step
     ): Job {
         return JobBuilder("exportCsvSampleJob", jobRepository)
-            .start(
-                StepBuilder("step1", jobRepository).chunk<AuthUser, AuthUser>(3, transactionManager)
-                    .reader(itemReaderDB)
-                    .writer(itemCsvWriter)
-                    .build()
-            )
+            .start(exportCsvUserStep)
             .build()
     }
 }

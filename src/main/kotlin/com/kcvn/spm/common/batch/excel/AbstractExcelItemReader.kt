@@ -36,7 +36,6 @@ abstract class AbstractExcelItemReader<T> :
     private var rowSetFactory: RowSetFactory = DefaultRowSetFactory()
     private var rs: RowSet? = null
     private var password: String? = null
-    private var datesAsIso = false
     private var userLocale: Locale? = null
     private var dataFormatter: DataFormatter? = null
 
@@ -186,11 +185,7 @@ abstract class AbstractExcelItemReader<T> :
 
     override fun afterPropertiesSet() {
         Assert.notNull(rowMapper, "RowMapper must be set")
-        dataFormatter = if (datesAsIso) {
-            if ((userLocale != null)) IsoFormattingDateDataFormatter(userLocale) else IsoFormattingDateDataFormatter()
-        } else {
-            if ((userLocale != null)) DataFormatter(userLocale) else DataFormatter()
-        }
+        dataFormatter = if ((userLocale != null)) DataFormatter(userLocale) else DataFormatter()
     }
 
     protected fun getDataFormatter(): DataFormatter? {
@@ -271,15 +266,6 @@ abstract class AbstractExcelItemReader<T> :
      */
     fun setPassword(password: String?) {
         this.password = password
-    }
-
-    /**
-     * Instead of using the format defined in the Excel sheet, read the date/time fields as an ISO formatted
-     * string instead. This is by default `false` to leave the original behavior.
-     * @param datesAsIso default `false`
-     */
-    fun setDatesAsIso(datesAsIso: Boolean) {
-        this.datesAsIso = datesAsIso
     }
 
     /**

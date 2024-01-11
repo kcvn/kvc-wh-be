@@ -113,7 +113,7 @@ class ImportUserExcelJobConfiguration(private val dsl: DSLContext) {
             .start(clearDummyStep)
             .next(step1Excel)
             .on("*").end()
-            .from(step1Excel).on("FAILED").to(step2Excel).end()
+            .from(step1Excel).on("COMPLETED WITH SKIPS").to(step2Excel).end()
             .build()
     }
 }

@@ -12,13 +12,14 @@ import java.time.LocalDate
 class ErrorUserItemProcessor : ItemProcessor<UserDto, UserDto> {
     private val logger = LoggerFactory.getLogger(ErrorUserItemProcessor::class.java)
 
-    override fun process(user: UserDto): UserDto {
+    override fun process(user: UserDto): UserDto? {
         logger.info("processing user ${user.username}")
         try {
             if (!StringUtils.isEmpty(user.dateOfBirth)) LocalDate.parse(user.dateOfBirth)
         } catch (e: Exception) {
             user.message = "wrong date format"
+            return user
         }
-        return user
+        return null
     }
 }

@@ -123,7 +123,7 @@ class ImportUserCsvJobConfig(private val dslContext: DSLContext) {
             .start(clearDummyStep)
             .next(importCsvStep)
             .on("*").end()
-            .from(importCsvStep).on("FAILED").to(step2Csv).end()
+            .from(importCsvStep).on("COMPLETED WITH SKIPS").to(step2Csv).end()
             .build()
     }
 }

@@ -4,6 +4,7 @@
 package com.kcvn.spm.model.tables.references
 
 
+import com.kcvn.spm.model.tables.AppSetting
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
 import com.kcvn.spm.model.tables.AuthRoleClaim
@@ -12,6 +13,11 @@ import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
 
 
+
+/**
+ * The table <code>public.app_setting</code>.
+ */
+val APP_SETTING: AppSetting = AppSetting.APP_SETTING
 
 /**
  * The table <code>public.auth_password_reset_token</code>.

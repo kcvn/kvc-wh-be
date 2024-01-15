@@ -4,6 +4,7 @@
 package com.kcvn.spm.model
 
 
+import com.kcvn.spm.model.tables.AppSetting
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
 import com.kcvn.spm.model.tables.AuthRoleClaim
@@ -30,6 +31,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
          */
         val PUBLIC: Public = Public()
     }
+
+    /**
+     * The table <code>public.app_setting</code>.
+     */
+    val APP_SETTING: AppSetting get() = AppSetting.APP_SETTING
 
     /**
      * The table <code>public.auth_password_reset_token</code>.
@@ -64,6 +70,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     override fun getCatalog(): Catalog = DefaultCatalog.DEFAULT_CATALOG
 
     override fun getTables(): List<Table<*>> = listOf(
+        AppSetting.APP_SETTING,
         AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN,
         AuthRole.AUTH_ROLE,
         AuthRoleClaim.AUTH_ROLE_CLAIM,

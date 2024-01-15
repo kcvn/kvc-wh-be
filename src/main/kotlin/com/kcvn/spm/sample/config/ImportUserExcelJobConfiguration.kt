@@ -14,8 +14,6 @@ import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.item.ParseException
-import org.springframework.batch.item.file.FlatFileItemWriter
-import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -56,15 +54,11 @@ class ImportUserExcelJobConfiguration(private val dsl: DSLContext) {
     @Scope(value = "step", proxyMode = ScopedProxyMode.TARGET_CLASS)
     fun itemErrorCsvWriter2(
         @Value("#{jobParameters[outputFile]}") pathToFile: String
-    ): FlatFileItemWriter<UserDto> {
-        return FlatFileItemWriterBuilder<UserDto>().name("itemWriter")
-            .resource(FileSystemResource(pathToFile))
-            .delimited()
-            .names("id", "username", "password", "employeeCode", "email", "phoneNumber", "fullName", "fullNameUnsigned", "dateOfBirth", "status", "message")
-            .headerCallback { writer ->
-                writer.append("id,username,password,employeeCode,email,phoneNumber,fullName,fullNameUnsigned,dateOfBirth,status,message")
-            }
-            .build()
+    ): ErrorUserExcelItemWriter {
+        val writer = ErrorUserExcelItemWriter()
+        writer.setResource(FileSystemResource(pathToFile))
+        writer.setHeaders(listOf("id", "username", "password", "employeeCode", "email", "phoneNumber", "fullName", "fullNameUnsigned", "dateOfBirth", "status", "message"))
+        return writer
     }
 
     @Bean
@@ -92,7 +86,7 @@ class ImportUserExcelJobConfiguration(private val dsl: DSLContext) {
         transactionManager: DataSourceTransactionManager,
         excelPersonReader: PoiItemReader<UserDto>,
         excelErrorProcessor: ErrorUserItemProcessor,
-        itemErrorCsvWriter2: FlatFileItemWriter<UserDto>
+        itemErrorCsvWriter2: ErrorUserExcelItemWriter
     ): Step {
         return StepBuilder("return error file", jobRepository)
             .chunk<UserDto, UserDto>(10, transactionManager)

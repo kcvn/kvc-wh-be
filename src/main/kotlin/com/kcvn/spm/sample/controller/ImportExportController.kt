@@ -14,21 +14,26 @@ class ImportExportController(
     private val importExcelJob: Job,
     private val exportCsvJob: Job,
     private val importUserJob: Job,
+    private val exportExcelJob: Job,
     private val importExportService: ImportExportService
 ) {
     @PostMapping(value = ["/import/users/csv"], consumes = ["multipart/form-data"])
     fun importCsvUsers(@RequestPart("file") multipartFile: MultipartFile): ResponseEntity<*> {
-        return importExportService.import(importUserJob, multipartFile)
+        return importExportService.import(importUserJob, multipartFile, "error.csv")
     }
 
     @PostMapping(value = ["/import/users/excel"], consumes = ["multipart/form-data"])
     fun importExcel(@RequestPart("file") multipartFile: MultipartFile): ResponseEntity<*> {
-        return importExportService.import(importExcelJob, multipartFile)
+        return importExportService.import(importExcelJob, multipartFile, "error.xlsx")
     }
 
     @GetMapping("/export/users/csv")
     fun exportCsv(response: HttpServletResponse): StreamingResponseBody {
         return importExportService.export(response, exportCsvJob, "exported_users.csv")
+    }
 
+    @GetMapping("/export/users/excel")
+    fun exportExcel(response: HttpServletResponse): StreamingResponseBody {
+        return importExportService.export(response, exportExcelJob, "exported_users.xlsx")
     }
 }

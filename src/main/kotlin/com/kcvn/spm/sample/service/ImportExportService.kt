@@ -1,16 +1,16 @@
 package com.kcvn.spm.sample.service
 
+import com.kcvn.spm.common.payload.MessageResponse
+import com.kcvn.spm.sample.dto.FileDto
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
 import org.springframework.batch.core.launch.JobLauncher
-import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.servlet.function.RequestPredicates.path
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.nio.file.Files
 import java.nio.file.Path
@@ -20,7 +20,7 @@ import kotlin.io.path.fileSize
 
 @Service
 class ImportExportService(private val jobLauncher: JobLauncher) {
-    fun import(job: Job, multipartFile: MultipartFile): ResponseEntity<*> {
+    fun import(job: Job, multipartFile: MultipartFile, errorFileName: String): ResponseEntity<*> {
         val tempFolderPath = Files.createTempDirectory(Paths.get("/"), "temp")
 
         val filepath: Path = Files.createTempFile(
@@ -33,7 +33,7 @@ class ImportExportService(private val jobLauncher: JobLauncher) {
         val errorFilePath = Files.createTempFile(
             tempFolderPath,
             null,
-            "error.csv"
+            errorFileName
         )
 
         try {
@@ -47,17 +47,25 @@ class ImportExportService(private val jobLauncher: JobLauncher) {
             )
 
             return if (jobExecution.stepExecutions.any { it.exitStatus.exitCode.equals("COMPLETED WITH SKIPS") }) {
-                val resource = ByteArrayResource(Files.readAllBytes(errorFilePath))
-                val headers = HttpHeaders()
-                headers.add("Cache-Control", "no-cache, no-store, must-revalidate")
-                headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=error.csv")
+//                val resource = InputStreamResource(FileInputStream(errorFilePath.toFile()))//ByteArrayResource(Files.readAllBytes(errorFilePath))
+//                val headers = HttpHeaders()
+//                headers.add("Cache-Control", "no-cache, no-store, must-revalidate")
+//                headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=error.csv")
+//                headers.add("Import-Message", "There are records with errors")
                 ResponseEntity.ok()
-                    .headers(headers)
-                    .contentLength(errorFilePath.fileSize())
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body<ByteArrayResource>(resource)
+//                    .headers(headers)
+//                    .contentLength(errorFilePath.fileSize())
+//                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(MessageResponse(
+                        "there are error records!",
+                        FileDto(
+                            errorFileName,
+                            if (errorFileName.contains(".xlsx")) "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" else "text/csv",
+                            Files.readAllBytes(errorFilePath)
+                        )
+                    ))
             } else {
-                ResponseEntity.ok().body(jobExecution.status.name)
+                ResponseEntity.ok().body(MessageResponse(jobExecution.status.name))
             }
         } finally {
             filepath.toFile().delete()

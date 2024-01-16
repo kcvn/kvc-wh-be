@@ -18,6 +18,7 @@
 		<kotlin.version>1.8.22</kotlin.version>
 		<postgres.driver.version>42.6.0</postgres.driver.version>
 		<flyway.version>9.20.0</flyway.version>
+		<apache.poi.version>5.2.0</apache.poi.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -39,6 +40,20 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-batch</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>${apache.poi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>${apache.poi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
@@ -187,7 +202,11 @@
 						<database>
 							<name>org.jooq.meta.postgres.PostgresDatabase</name>
 							<includes>.*</includes>
-							<excludes>flyway_schema_history</excludes>
+							<excludes>
+								flyway_schema_history
+								| batch_job_.*
+								| batch_step_.*
+							</excludes>
 							<inputSchema>public</inputSchema>
 						</database>
 						<generate>

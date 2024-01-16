@@ -14,13 +14,10 @@ import org.springframework.util.StringUtils
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
 
-class AuthTokenFilter : OncePerRequestFilter() {
-    @Autowired
-    private val jwtUtils: JwtUtils? = null
-
-    @Autowired
-    private val userDetailsService: UserDetailsServiceImpl? = null
-
+class AuthTokenFilter(
+    private val jwtUtils: JwtUtils,
+    private val userDetailsService: UserDetailsServiceImpl
+) : OncePerRequestFilter() {
     @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -29,9 +26,9 @@ class AuthTokenFilter : OncePerRequestFilter() {
     ) {
         try {
             val jwt = parseJwt(request)
-            if (jwt != null && jwtUtils!!.validateJwtToken(jwt)) {
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 val username = jwtUtils.getUserNameFromJwtToken(jwt)
-                val userDetails = userDetailsService!!.loadUserByUsername(username)
+                val userDetails = userDetailsService.loadUserByUsername(username)
                 val authentication = UsernamePasswordAuthenticationToken(
                     userDetails, null,
                     userDetails.authorities
@@ -40,7 +37,7 @@ class AuthTokenFilter : OncePerRequestFilter() {
                 SecurityContextHolder.getContext().authentication = authentication
             }
         } catch (e: Exception) {
-            Companion.logger.error("Cannot set user authentication: $e")
+            logger.error("Cannot set user authentication: $e")
         }
         filterChain.doFilter(request, response)
     }
@@ -50,9 +47,5 @@ class AuthTokenFilter : OncePerRequestFilter() {
         return if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             headerAuth.substring(7, headerAuth.length)
         } else null
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AuthTokenFilter::class.java)
     }
 }

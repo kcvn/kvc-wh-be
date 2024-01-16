@@ -4,12 +4,14 @@
 package com.kcvn.spm.model.keys
 
 
+import com.kcvn.spm.model.tables.AppSetting
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
 import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.records.AppSettingRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
 import com.kcvn.spm.model.tables.records.AuthRoleClaimRecord
 import com.kcvn.spm.model.tables.records.AuthRoleRecord
@@ -28,14 +30,11 @@ import org.jooq.impl.Internal
 // UNIQUE and PRIMARY KEY definitions
 // -------------------------------------------------------------------------
 
+val APP_SETTING_PKEY: UniqueKey<AppSettingRecord> = Internal.createUniqueKey(AppSetting.APP_SETTING, DSL.name("app_setting_pkey"), arrayOf(AppSetting.APP_SETTING.ID), true)
 val AUTH_PASSWORD_RESET_TOKEN_PKEY: UniqueKey<AuthPasswordResetTokenRecord> = Internal.createUniqueKey(AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN, DSL.name("auth_password_reset_token_pkey"), arrayOf(AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN.ID), true)
 val AUTH_ROLE_PKEY: UniqueKey<AuthRoleRecord> = Internal.createUniqueKey(AuthRole.AUTH_ROLE, DSL.name("auth_role_pkey"), arrayOf(AuthRole.AUTH_ROLE.ID), true)
-val AUTH_ROLE_UNIQ_NAME: UniqueKey<AuthRoleRecord> = Internal.createUniqueKey(AuthRole.AUTH_ROLE, DSL.name("auth_role_uniq_name"), arrayOf(AuthRole.AUTH_ROLE.NAME, AuthRole.AUTH_ROLE.IS_DELETED), true)
 val AUTH_ROLE_CLAIM_PKEY: UniqueKey<AuthRoleClaimRecord> = Internal.createUniqueKey(AuthRoleClaim.AUTH_ROLE_CLAIM, DSL.name("auth_role_claim_pkey"), arrayOf(AuthRoleClaim.AUTH_ROLE_CLAIM.ID), true)
 val AUTH_USER_PKEY: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_pkey"), arrayOf(AuthUser.AUTH_USER.ID), true)
-val AUTH_USER_UNIQ_EMAIL: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_uniq_email"), arrayOf(AuthUser.AUTH_USER.EMAIL, AuthUser.AUTH_USER.IS_DELETED), true)
-val AUTH_USER_UNIQ_EMPLOYEE_CODE: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_uniq_employee_code"), arrayOf(AuthUser.AUTH_USER.EMPLOYEE_CODE, AuthUser.AUTH_USER.IS_DELETED), true)
-val AUTH_USER_UNIQ_USERNAME: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_uniq_username"), arrayOf(AuthUser.AUTH_USER.USERNAME, AuthUser.AUTH_USER.IS_DELETED), true)
 val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUniqueKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_pkey"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.ID), true)
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
 

@@ -1,9 +1,11 @@
 #### BUILD KCVN API #####
-build_kcvn_api:
+build_kcvn_dev_api:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.9.1-debug
     entrypoint: [""]
+  environment:
+    name: develop
   variables:
     MODULE_NAME: kcvn-api
     CI_IMAGE_NAME: $CI_REGISTRY_IMAGE/$MODULE_NAME:$CI_COMMIT_REF_SLUG
@@ -22,8 +24,34 @@ build_kcvn_api:
     refs:
       - develop
       
+#### BUILD KCVN API #####
+build_kcvn_stg_api:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.1-debug
+    entrypoint: [""]
+  environment:
+    name: staging
+  variables:
+    MODULE_NAME: kcvn-api
+    CI_IMAGE_NAME: $CI_REGISTRY_IMAGE/$MODULE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --snapshot-mode=time --image-fs-extract-retry=3
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${DOCKERFILE_PATH}/Dockerfile"
+      --build-arg "CONFIG_FILE=$CONFIG_FILE"
+      --destination "${CI_IMAGE_NAME}"
+      --destination "${CI_IMAGE_NAME}-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - docker
+  only:
+    refs:
+      - staging
+      
 ### DEPLOY KCVN API #####
-deploy_kcvn_api:
+deploy_kcvn_dev_api:
   stage: deploy
   image:
     name: registry.3si.vn/docker-hub/helm-kubectl:latest
@@ -54,5 +82,39 @@ deploy_kcvn_api:
   only:
     refs:
       - develop
+  tags:
+    - docker
+
+deploy_kcvn_stg_api:
+  stage: deploy
+  image:
+    name: registry.3si.vn/docker-hub/helm-kubectl:latest
+    entrypoint: ["/bin/sh", "-c"]
+  environment:
+    name: staging
+    kubernetes:
+      namespace: $KCVN_NAMESPACE_STG
+  variables:
+    MODULE_NAME: kcvn-api
+    HELM_CHART_NAME: auto-deploy-java-spring-boot
+    HELM_VALUES_FILE: $VALUESFILE_PATH/values.yaml
+  script:
+    - helm repo add $AUTO_DEVOPS_CHART_REPOSITORY_NAME $AUTO_DEVOPS_CHART_REPOSITORY
+    - helm repo update $AUTO_DEVOPS_CHART_REPOSITORY_NAME
+    - helm search repo $AUTO_DEVOPS_CHART_REPOSITORY_NAME
+
+    - sed -i "s|<image_version>|\"$CI_REGISTRY_IMAGE/$MODULE_NAME\"|g" $HELM_VALUES_FILE
+    - sed -i "s|<image_tag_version>|\"${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}\"|g" $HELM_VALUES_FILE
+    - sed -i "s|<environment-url>|\"https://$API_DOMAIN.$KUBE_INGRESS_BASE_DOMAIN_STG\"|g" $HELM_VALUES_FILE
+    - sed -i "s|<controller_segment>|\"$SERVICE_SEGMENT\"|g" $HELM_VALUES_FILE
+    - cat $HELM_VALUES_FILE
+
+    - kubectl delete secret "${MODULE_NAME}-secret" -n "$KCVN_NAMESPACE_STG" --ignore-not-found=true
+    - kubectl create secret generic -n "$KCVN_NAMESPACE_STG" "${MODULE_NAME}-secret" --from-literal=APPSETTINGS="${CONFIG_FILE}"
+
+    - helm upgrade --install --wait $MODULE_NAME $AUTO_DEVOPS_CHART_REPOSITORY_NAME/$HELM_CHART_NAME -f $HELM_VALUES_FILE --set application.secretName="${MODULE_NAME}-secret" --set gitlab.env="${CI_COMMIT_REF_SLUG}" --namespace="$KCVN_NAMESPACE_STG"
+  only:
+    refs:
+      - staging
   tags:
     - docker

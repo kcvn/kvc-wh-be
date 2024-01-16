@@ -12,6 +12,7 @@ build_kcvn_dev_api:
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - cat "${CONFIG_FILE}"
     - /kaniko/executor --snapshot-mode=time --image-fs-extract-retry=3
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${DOCKERFILE_PATH}/Dockerfile"
@@ -38,6 +39,7 @@ build_kcvn_stg_api:
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - cat "${CONFIG_FILE}"
     - /kaniko/executor --snapshot-mode=time --image-fs-extract-retry=3
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${DOCKERFILE_PATH}/Dockerfile"

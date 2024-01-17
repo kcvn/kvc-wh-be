@@ -18,6 +18,9 @@ variables:
   KCVN_NAMESPACE: 23-kcvn-spm-dev
   KUBE_INGRESS_BASE_DOMAIN: dev.3si.vn
 
+  KCVN_NAMESPACE_STG: 23-kcvn-spm-stg
+  KUBE_INGRESS_BASE_DOMAIN_STG: stg.3si.vn
+  
   API_DOMAIN: 23-kcvn-spm.api
 
 #before_script:

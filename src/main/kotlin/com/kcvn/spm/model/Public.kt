@@ -11,6 +11,8 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.ProcessProcedureStructure
+import com.kcvn.spm.model.tables.SyncHistory
 
 import kotlin.collections.List
 
@@ -67,6 +69,16 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      */
     val AUTH_USER_ROLE: AuthUserRole get() = AuthUserRole.AUTH_USER_ROLE
 
+    /**
+     * The table <code>public.process_procedure_structure</code>.
+     */
+    val PROCESS_PROCEDURE_STRUCTURE: ProcessProcedureStructure get() = ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE
+
+    /**
+     * The table <code>public.sync_history</code>.
+     */
+    val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
+
     override fun getCatalog(): Catalog = DefaultCatalog.DEFAULT_CATALOG
 
     override fun getTables(): List<Table<*>> = listOf(
@@ -76,6 +88,8 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         AuthRoleClaim.AUTH_ROLE_CLAIM,
         AuthUser.AUTH_USER,
         AuthUserClaim.AUTH_USER_CLAIM,
-        AuthUserRole.AUTH_USER_ROLE
+        AuthUserRole.AUTH_USER_ROLE,
+        ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE,
+        SyncHistory.SYNC_HISTORY
     )
 }

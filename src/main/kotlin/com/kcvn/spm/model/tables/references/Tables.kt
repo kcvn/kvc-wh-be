@@ -11,6 +11,8 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.ProcessProcedureStructure
+import com.kcvn.spm.model.tables.SyncHistory
 
 
 
@@ -48,3 +50,13 @@ val AUTH_USER_CLAIM: AuthUserClaim = AuthUserClaim.AUTH_USER_CLAIM
  * The table <code>public.auth_user_role</code>.
  */
 val AUTH_USER_ROLE: AuthUserRole = AuthUserRole.AUTH_USER_ROLE
+
+/**
+ * The table <code>public.process_procedure_structure</code>.
+ */
+val PROCESS_PROCEDURE_STRUCTURE: ProcessProcedureStructure = ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE
+
+/**
+ * The table <code>public.sync_history</code>.
+ */
+val SYNC_HISTORY: SyncHistory = SyncHistory.SYNC_HISTORY

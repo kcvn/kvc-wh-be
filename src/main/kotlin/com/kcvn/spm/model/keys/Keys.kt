@@ -11,6 +11,8 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.ProcessProcedureStructure
+import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.records.AppSettingRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
 import com.kcvn.spm.model.tables.records.AuthRoleClaimRecord
@@ -18,6 +20,8 @@ import com.kcvn.spm.model.tables.records.AuthRoleRecord
 import com.kcvn.spm.model.tables.records.AuthUserClaimRecord
 import com.kcvn.spm.model.tables.records.AuthUserRecord
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
+import com.kcvn.spm.model.tables.records.ProcessProcedureStructureRecord
+import com.kcvn.spm.model.tables.records.SyncHistoryRecord
 
 import org.jooq.ForeignKey
 import org.jooq.UniqueKey
@@ -37,6 +41,8 @@ val AUTH_ROLE_CLAIM_PKEY: UniqueKey<AuthRoleClaimRecord> = Internal.createUnique
 val AUTH_USER_PKEY: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_pkey"), arrayOf(AuthUser.AUTH_USER.ID), true)
 val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUniqueKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_pkey"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.ID), true)
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
+val PROCESS_PROCEDURE_STRUCTURE_PKEY: UniqueKey<ProcessProcedureStructureRecord> = Internal.createUniqueKey(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE, DSL.name("process_procedure_structure_pkey"), arrayOf(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE.ID), true)
+val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
 
 // -------------------------------------------------------------------------
 // FOREIGN KEY definitions

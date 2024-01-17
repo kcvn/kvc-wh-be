@@ -27,6 +27,13 @@ class UserDAO(private val context: DSLContext) : SortingRepository() {
         context.selectFrom(AUTH_USER).where(AUTH_USER.USERNAME.eq(userName).and(AUTH_USER.IS_DELETED.eq(false)))
             .fetchInto(AuthUser::class.java).firstOrNull()
 
+    fun findByListUsername(userNames: List<String>): List<AuthUser?> {
+        return context.selectFrom(AUTH_USER).where(AUTH_USER.USERNAME.`in`(userNames))
+            .and(AUTH_USER.IS_DELETED.eq(false))
+            .fetchInto(AuthUser::class.java)
+    }
+
+
     fun findByEmail(email: String): AuthUser? =
         context.selectFrom(AUTH_USER).where(AUTH_USER.EMAIL.eq(email).and(AUTH_USER.IS_DELETED.eq(false)))
             .fetchInto(AuthUser::class.java).firstOrNull()

@@ -136,6 +136,14 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
         }
     }
 
+    fun getUserClaim(userId: String, claimType: String?): List<AuthUserClaim> {
+        var condition: Condition = DSL.noCondition().and(AUTH_USER_CLAIM.USER_ID.eq(userId)).and(AUTH_USER_CLAIM.IS_DELETED.eq(false))
+        if (!claimType.isNullOrEmpty()) {
+            condition = condition.and(AUTH_USER_CLAIM.CLAIM_TYPE.eq(claimType))
+        }
+        return context.selectFrom(AUTH_USER_CLAIM).where(condition).fetchInto(AuthUserClaim::class.java)
+    }
+
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {
             "id" -> {

@@ -13,13 +13,15 @@ class UserDetailsImpl(
     private val username: String,
     private val password: String,
     private val authorities: Collection<GrantedAuthority>,
-    private val isActive: Boolean
+    private val isActive: Boolean,
+    private val position: String?,
+    private val employeeCode: String?
 ) : UserDetails {
     companion object {
         private const val serialVersionUID = 1L
         private const val ROLE_ADMIN = "ROLE_ADMIN"
 
-        fun build(user: AuthUser, roles: List<AuthRole>, permissions: List<EPermission>): UserDetailsImpl {
+        fun build(user: AuthUser, roles: List<AuthRole>, permissions: List<EPermission>, position: String?): UserDetailsImpl {
             val authorities = mutableListOf<GrantedAuthority>()
             if (user.isSuperAdmin!!) authorities.add(SimpleGrantedAuthority(ROLE_ADMIN))
             authorities.addAll(roles.map { role -> SimpleGrantedAuthority(role.name) })
@@ -29,7 +31,9 @@ class UserDetailsImpl(
                 user.username.toString(),
                 user.password.toString(),
                 authorities,
-                user.status == EUserStatus.ACTIVE.value
+                user.status == EUserStatus.ACTIVE.value,
+                position,
+                user.employeeCode
             )
         }
     }
@@ -40,6 +44,14 @@ class UserDetailsImpl(
 
     fun getId(): String {
         return id
+    }
+
+    fun getPosition(): String? {
+        return position
+    }
+
+    fun getEmployeeCode(): String? {
+        return employeeCode
     }
 
     override fun getPassword(): String {

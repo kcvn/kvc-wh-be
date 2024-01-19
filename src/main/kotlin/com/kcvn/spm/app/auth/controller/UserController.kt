@@ -3,6 +3,7 @@ package com.kcvn.spm.app.auth.controller
 import com.kcvn.spm.app.auth.payload.request.PasswordRequest
 import com.kcvn.spm.app.auth.payload.request.UserRequest
 import com.kcvn.spm.app.auth.payload.response.UserResponse
+import com.kcvn.spm.app.auth.security.jwt.JwtUtils
 import com.kcvn.spm.app.auth.security.service.UserDetailsImpl
 import com.kcvn.spm.app.auth.service.UserService
 import com.kcvn.spm.common.payload.MessageResponse
@@ -19,7 +20,24 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/user")
-class UserController(private val userService: UserService) {
+class UserController(
+    private val userService: UserService,
+    private val jwtUtils: JwtUtils
+)
+{
+
+    @GetMapping("/profile")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).VIEW_USER.value) || hasRole('ADMIN')")
+    fun getUserProfile(): ResponseEntity<UserResponse?> {
+        val userId = jwtUtils.getCurrentUser().getId()
+        val user = userService.findById(userId)
+        return if (user != null) {
+            ResponseEntity<UserResponse?>(user, HttpStatus.OK)
+        } else {
+            ResponseEntity<UserResponse?>(HttpStatus.NOT_FOUND)
+        }
+    }
+
     @GetMapping("/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).VIEW_USER.value) || hasRole('ADMIN')")
     fun getAllUsers(

@@ -42,13 +42,16 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
         var condition: Condition = DSL.noCondition()
         if (keyword != null) {
             condition = condition.and(
-                AUTH_USER.USERNAME.contains(keyword)
-                    .or(AUTH_USER.FULL_NAME.contains(keyword))
-                    .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword))
+                    AUTH_USER.USERNAME.ne("admin")
+                        .and(AUTH_USER.USERNAME.contains(keyword)
+                            .or(AUTH_USER.FULL_NAME.contains(keyword))
+                            .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword)))
             )
+        }else {
+            condition = condition.and(AUTH_USER.USERNAME.ne("admin"))
         }
-        val users = context.selectFrom(AUTH_USER).where(condition)
-            .and(AUTH_USER.IS_DELETED.eq(false))
+        val users = context.selectFrom(AUTH_USER)
+            .where(condition.and(AUTH_USER.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, AUTH_USER.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(AuthUser::class.java)

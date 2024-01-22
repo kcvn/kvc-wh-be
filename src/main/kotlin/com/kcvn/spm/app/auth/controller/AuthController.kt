@@ -32,7 +32,6 @@ class AuthController(
 ) {
     @PostMapping("/signin")
     fun authenticateUser(@RequestBody loginRequest: @Valid LoginRequest?): ResponseEntity<*> {
-        try {
             val authentication: Authentication = authenticationManager.authenticate(
                     UsernamePasswordAuthenticationToken(loginRequest?.username, loginRequest?.password)
             )
@@ -46,12 +45,6 @@ class AuthController(
                             userDetails.username
                     )
             )
-        } catch (e: Exception) {
-            return ResponseEntity<MessageResponse>(
-                    MessageResponse(CommonUtils.getMessage("login.error")),
-                    HttpStatus.BAD_REQUEST
-            )
-        }
     }
 
     @PostMapping("/forgot-password")

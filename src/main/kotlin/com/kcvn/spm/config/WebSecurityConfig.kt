@@ -42,7 +42,7 @@ class WebSecurityConfig(
         val authProvider = DaoAuthenticationProvider()
         authProvider.setUserDetailsService(userDetailsService)
         authProvider.setPasswordEncoder(passwordEncoder())
-        authProvider.isHideUserNotFoundExceptions = false
+//        authProvider.isHideUserNotFoundExceptions = false
         return authProvider
     }
 

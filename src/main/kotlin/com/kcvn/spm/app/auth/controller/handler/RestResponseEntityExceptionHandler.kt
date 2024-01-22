@@ -17,15 +17,15 @@ class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(value = [BadCredentialsException::class])
     protected fun handleBadCredentialsException(ex: RuntimeException, request: ServletWebRequest): ResponseEntity<Any>? {
         val bodyOfResponse: MutableMap<String, Any> = HashMap()
-        bodyOfResponse["status"] = HttpServletResponse.SC_UNAUTHORIZED
-        bodyOfResponse["error"] = HttpStatus.UNAUTHORIZED.reasonPhrase
-        bodyOfResponse["message"] = CommonUtils.getMessage("login.error.wrongPassword")
+        bodyOfResponse["status"] = HttpServletResponse.SC_BAD_REQUEST
+        bodyOfResponse["error"] = HttpStatus.BAD_REQUEST.reasonPhrase
+        bodyOfResponse["message"] = CommonUtils.getMessage("login.error")
         bodyOfResponse["path"] = request.request.servletPath
         return handleExceptionInternal(
             ex,
             bodyOfResponse,
             HttpHeaders(),
-            HttpStatus.UNAUTHORIZED,
+            HttpStatus.BAD_REQUEST,
             request
         )
     }

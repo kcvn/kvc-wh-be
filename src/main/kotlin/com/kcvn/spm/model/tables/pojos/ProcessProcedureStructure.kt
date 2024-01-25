@@ -21,15 +21,15 @@ data class ProcessProcedureStructure(
     var remediationDirectiveNumber: String? = null,
     var productCode: String? = null,
     var layerCode: String? = null,
-    var stageCode: String? = null,
-    var stageSequence: Int? = null,
-    var stageSequenceRev: Int? = null,
+    var processCode: String? = null,
+    var processSequence: Int? = null,
+    var processSequenceRev: Int? = null,
     var machiningSequenceRev: String? = null,
     var completionRate: BigDecimal? = null,
     var finishedProductRate: BigDecimal? = null,
     var printType: String? = null,
-    var stageType: String? = null,
-    var displayStageSequence: Int? = null,
+    var processType: String? = null,
+    var displayProcessSequence: Int? = null,
     var inputSystem: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsActualResult")
@@ -110,23 +110,23 @@ data class ProcessProcedureStructure(
         }
         else if (this.layerCode != o.layerCode)
             return false
-        if (this.stageCode == null) {
-            if (o.stageCode != null)
+        if (this.processCode == null) {
+            if (o.processCode != null)
                 return false
         }
-        else if (this.stageCode != o.stageCode)
+        else if (this.processCode != o.processCode)
             return false
-        if (this.stageSequence == null) {
-            if (o.stageSequence != null)
+        if (this.processSequence == null) {
+            if (o.processSequence != null)
                 return false
         }
-        else if (this.stageSequence != o.stageSequence)
+        else if (this.processSequence != o.processSequence)
             return false
-        if (this.stageSequenceRev == null) {
-            if (o.stageSequenceRev != null)
+        if (this.processSequenceRev == null) {
+            if (o.processSequenceRev != null)
                 return false
         }
-        else if (this.stageSequenceRev != o.stageSequenceRev)
+        else if (this.processSequenceRev != o.processSequenceRev)
             return false
         if (this.machiningSequenceRev == null) {
             if (o.machiningSequenceRev != null)
@@ -152,17 +152,17 @@ data class ProcessProcedureStructure(
         }
         else if (this.printType != o.printType)
             return false
-        if (this.stageType == null) {
-            if (o.stageType != null)
+        if (this.processType == null) {
+            if (o.processType != null)
                 return false
         }
-        else if (this.stageType != o.stageType)
+        else if (this.processType != o.processType)
             return false
-        if (this.displayStageSequence == null) {
-            if (o.displayStageSequence != null)
+        if (this.displayProcessSequence == null) {
+            if (o.displayProcessSequence != null)
                 return false
         }
-        else if (this.displayStageSequence != o.displayStageSequence)
+        else if (this.displayProcessSequence != o.displayProcessSequence)
             return false
         if (this.inputSystem == null) {
             if (o.inputSystem != null)
@@ -315,15 +315,15 @@ data class ProcessProcedureStructure(
         result = prime * result + (if (this.remediationDirectiveNumber == null) 0 else this.remediationDirectiveNumber.hashCode())
         result = prime * result + (if (this.productCode == null) 0 else this.productCode.hashCode())
         result = prime * result + (if (this.layerCode == null) 0 else this.layerCode.hashCode())
-        result = prime * result + (if (this.stageCode == null) 0 else this.stageCode.hashCode())
-        result = prime * result + (if (this.stageSequence == null) 0 else this.stageSequence.hashCode())
-        result = prime * result + (if (this.stageSequenceRev == null) 0 else this.stageSequenceRev.hashCode())
+        result = prime * result + (if (this.processCode == null) 0 else this.processCode.hashCode())
+        result = prime * result + (if (this.processSequence == null) 0 else this.processSequence.hashCode())
+        result = prime * result + (if (this.processSequenceRev == null) 0 else this.processSequenceRev.hashCode())
         result = prime * result + (if (this.machiningSequenceRev == null) 0 else this.machiningSequenceRev.hashCode())
         result = prime * result + (if (this.completionRate == null) 0 else this.completionRate.hashCode())
         result = prime * result + (if (this.finishedProductRate == null) 0 else this.finishedProductRate.hashCode())
         result = prime * result + (if (this.printType == null) 0 else this.printType.hashCode())
-        result = prime * result + (if (this.stageType == null) 0 else this.stageType.hashCode())
-        result = prime * result + (if (this.displayStageSequence == null) 0 else this.displayStageSequence.hashCode())
+        result = prime * result + (if (this.processType == null) 0 else this.processType.hashCode())
+        result = prime * result + (if (this.displayProcessSequence == null) 0 else this.displayProcessSequence.hashCode())
         result = prime * result + (if (this.inputSystem == null) 0 else this.inputSystem.hashCode())
         result = prime * result + (if (this.isActualResult == null) 0 else this.isActualResult.hashCode())
         result = prime * result + (if (this.shipmentSize == null) 0 else this.shipmentSize.hashCode())
@@ -360,15 +360,15 @@ data class ProcessProcedureStructure(
         sb.append(", ").append(remediationDirectiveNumber)
         sb.append(", ").append(productCode)
         sb.append(", ").append(layerCode)
-        sb.append(", ").append(stageCode)
-        sb.append(", ").append(stageSequence)
-        sb.append(", ").append(stageSequenceRev)
+        sb.append(", ").append(processCode)
+        sb.append(", ").append(processSequence)
+        sb.append(", ").append(processSequenceRev)
         sb.append(", ").append(machiningSequenceRev)
         sb.append(", ").append(completionRate)
         sb.append(", ").append(finishedProductRate)
         sb.append(", ").append(printType)
-        sb.append(", ").append(stageType)
-        sb.append(", ").append(displayStageSequence)
+        sb.append(", ").append(processType)
+        sb.append(", ").append(displayProcessSequence)
         sb.append(", ").append(inputSystem)
         sb.append(", ").append(isActualResult)
         sb.append(", ").append(shipmentSize)

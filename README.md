@@ -1,11 +1,11 @@
 project 23-KCVN-SPM-BE
 
-- Framework: Spring Boot
+- Framework: Spring Boot 3.1.5
 - Language: Kotlin
 - JDK: 17
 - DB: PostgreSQL 15
 - Migration: Flyway 9.20.0
-- Data access layer: jOOQ
+- Data access layer: jOOQ 3.18.7
 - Builder: Maven
 
 Commands:

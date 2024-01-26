@@ -11,7 +11,12 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.CommonCategory
+import com.kcvn.spm.model.tables.CompletionRateProcess
+import com.kcvn.spm.model.tables.CompletionRateProcessProduct
+import com.kcvn.spm.model.tables.CompletionRateProduct
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
+import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.records.AppSettingRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
@@ -20,7 +25,12 @@ import com.kcvn.spm.model.tables.records.AuthRoleRecord
 import com.kcvn.spm.model.tables.records.AuthUserClaimRecord
 import com.kcvn.spm.model.tables.records.AuthUserRecord
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
+import com.kcvn.spm.model.tables.records.CommonCategoryRecord
+import com.kcvn.spm.model.tables.records.CompletionRateProcessProductRecord
+import com.kcvn.spm.model.tables.records.CompletionRateProcessRecord
+import com.kcvn.spm.model.tables.records.CompletionRateProductRecord
 import com.kcvn.spm.model.tables.records.ProcessProcedureStructureRecord
+import com.kcvn.spm.model.tables.records.ProductRecord
 import com.kcvn.spm.model.tables.records.SyncHistoryRecord
 
 import org.jooq.ForeignKey
@@ -41,7 +51,12 @@ val AUTH_ROLE_CLAIM_PKEY: UniqueKey<AuthRoleClaimRecord> = Internal.createUnique
 val AUTH_USER_PKEY: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_pkey"), arrayOf(AuthUser.AUTH_USER.ID), true)
 val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUniqueKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_pkey"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.ID), true)
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
+val COMMON_CATEGORY_PKEY: UniqueKey<CommonCategoryRecord> = Internal.createUniqueKey(CommonCategory.COMMON_CATEGORY, DSL.name("common_category_pkey"), arrayOf(CommonCategory.COMMON_CATEGORY.ID), true)
+val COMPLETION_RATE_PROCESS_PKEY: UniqueKey<CompletionRateProcessRecord> = Internal.createUniqueKey(CompletionRateProcess.COMPLETION_RATE_PROCESS, DSL.name("completion_rate_process_pkey"), arrayOf(CompletionRateProcess.COMPLETION_RATE_PROCESS.ID), true)
+val COMPLETION_RATE_PROCESS_PRODUCT_PKEY: UniqueKey<CompletionRateProcessProductRecord> = Internal.createUniqueKey(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT, DSL.name("completion_rate_process_product_pkey"), arrayOf(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.ID), true)
+val COMPLETION_RATE_PRODUCT_PKEY: UniqueKey<CompletionRateProductRecord> = Internal.createUniqueKey(CompletionRateProduct.COMPLETION_RATE_PRODUCT, DSL.name("completion_rate_product_pkey"), arrayOf(CompletionRateProduct.COMPLETION_RATE_PRODUCT.ID), true)
 val PROCESS_PROCEDURE_STRUCTURE_PKEY: UniqueKey<ProcessProcedureStructureRecord> = Internal.createUniqueKey(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE, DSL.name("process_procedure_structure_pkey"), arrayOf(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE.ID), true)
+val PRODUCT_PKEY: UniqueKey<ProductRecord> = Internal.createUniqueKey(Product.PRODUCT, DSL.name("product_pkey"), arrayOf(Product.PRODUCT.ID), true)
 val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
 
 // -------------------------------------------------------------------------

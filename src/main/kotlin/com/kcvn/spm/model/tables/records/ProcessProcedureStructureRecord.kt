@@ -47,15 +47,15 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
         set(value): Unit = set(6, value)
         get(): String? = get(6) as String?
 
-    open var stageCode: String?
+    open var processCode: String?
         set(value): Unit = set(7, value)
         get(): String? = get(7) as String?
 
-    open var stageSequence: Int?
+    open var processSequence: Int?
         set(value): Unit = set(8, value)
         get(): Int? = get(8) as Int?
 
-    open var stageSequenceRev: Int?
+    open var processSequenceRev: Int?
         set(value): Unit = set(9, value)
         get(): Int? = get(9) as Int?
 
@@ -75,11 +75,11 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
         set(value): Unit = set(13, value)
         get(): String? = get(13) as String?
 
-    open var stageType: String?
+    open var processType: String?
         set(value): Unit = set(14, value)
         get(): String? = get(14) as String?
 
-    open var displayStageSequence: Int?
+    open var displayProcessSequence: Int?
         set(value): Unit = set(15, value)
         get(): Int? = get(15) as Int?
 
@@ -188,7 +188,7 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
     /**
      * Create a detached, initialised ProcessProcedureStructureRecord
      */
-    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, remediationDirectiveNumber: String? = null, productCode: String? = null, layerCode: String? = null, stageCode: String? = null, stageSequence: Int? = null, stageSequenceRev: Int? = null, machiningSequenceRev: String? = null, completionRate: BigDecimal? = null, finishedProductRate: BigDecimal? = null, printType: String? = null, stageType: String? = null, displayStageSequence: Int? = null, inputSystem: String? = null, isActualResult: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, standardProcedureType: String? = null, grpCheckProcess: String? = null, registerBy: String? = null, registerDate: LocalDateTime? = null, updateBy: String? = null, updateDate: LocalDateTime? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null): this() {
+    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, remediationDirectiveNumber: String? = null, productCode: String? = null, layerCode: String? = null, processCode: String? = null, processSequence: Int? = null, processSequenceRev: Int? = null, machiningSequenceRev: String? = null, completionRate: BigDecimal? = null, finishedProductRate: BigDecimal? = null, printType: String? = null, processType: String? = null, displayProcessSequence: Int? = null, inputSystem: String? = null, isActualResult: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, standardProcedureType: String? = null, grpCheckProcess: String? = null, registerBy: String? = null, registerDate: LocalDateTime? = null, updateBy: String? = null, updateDate: LocalDateTime? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null): this() {
         this.id = id
         this.objectId = objectId
         this.companyCode = companyCode
@@ -196,15 +196,15 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
         this.remediationDirectiveNumber = remediationDirectiveNumber
         this.productCode = productCode
         this.layerCode = layerCode
-        this.stageCode = stageCode
-        this.stageSequence = stageSequence
-        this.stageSequenceRev = stageSequenceRev
+        this.processCode = processCode
+        this.processSequence = processSequence
+        this.processSequenceRev = processSequenceRev
         this.machiningSequenceRev = machiningSequenceRev
         this.completionRate = completionRate
         this.finishedProductRate = finishedProductRate
         this.printType = printType
-        this.stageType = stageType
-        this.displayStageSequence = displayStageSequence
+        this.processType = processType
+        this.displayProcessSequence = displayProcessSequence
         this.inputSystem = inputSystem
         this.isActualResult = isActualResult
         this.shipmentSize = shipmentSize
@@ -243,15 +243,15 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
             this.remediationDirectiveNumber = value.remediationDirectiveNumber
             this.productCode = value.productCode
             this.layerCode = value.layerCode
-            this.stageCode = value.stageCode
-            this.stageSequence = value.stageSequence
-            this.stageSequenceRev = value.stageSequenceRev
+            this.processCode = value.processCode
+            this.processSequence = value.processSequence
+            this.processSequenceRev = value.processSequenceRev
             this.machiningSequenceRev = value.machiningSequenceRev
             this.completionRate = value.completionRate
             this.finishedProductRate = value.finishedProductRate
             this.printType = value.printType
-            this.stageType = value.stageType
-            this.displayStageSequence = value.displayStageSequence
+            this.processType = value.processType
+            this.displayProcessSequence = value.displayProcessSequence
             this.inputSystem = value.inputSystem
             this.isActualResult = value.isActualResult
             this.shipmentSize = value.shipmentSize

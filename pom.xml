@@ -193,9 +193,12 @@
 					<jdbc>
 						<driver>org.postgresql.Driver</driver>
 						<!-- These properties will be read by properties-maven-plugin above in case you run 'mvn clean install' -->
-						<url>${spring.datasource.url}</url>
-						<user>${spring.datasource.username}</user>
-						<password>${spring.datasource.password}</password>
+<!--						<url>${spring.datasource.url}</url>-->
+<!--						<user>${spring.datasource.username}</user>-->
+<!--						<password>${spring.datasource.password}</password>-->
+						<url>jdbc:postgresql://192.168.1.147:31792/postgres</url>
+						<user>postgres</user>
+						<password>db-password</password>
 					</jdbc>
 					<generator>
 						<name>org.jooq.codegen.KotlinGenerator</name>

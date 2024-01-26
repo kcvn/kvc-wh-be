@@ -15,9 +15,12 @@ import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
+import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.WorkResult
 
 import kotlin.collections.List
 
@@ -95,6 +98,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val COMPLETION_RATE_PRODUCT: CompletionRateProduct get() = CompletionRateProduct.COMPLETION_RATE_PRODUCT
 
     /**
+     * The table <code>public.process_master</code>.
+     */
+    val PROCESS_MASTER: ProcessMaster get() = ProcessMaster.PROCESS_MASTER
+
+    /**
      * The table <code>public.process_procedure_structure</code>.
      */
     val PROCESS_PROCEDURE_STRUCTURE: ProcessProcedureStructure get() = ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE
@@ -105,9 +113,19 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val PRODUCT: Product get() = Product.PRODUCT
 
     /**
+     * The table <code>public.product_process</code>.
+     */
+    val PRODUCT_PROCESS: ProductProcess get() = ProductProcess.PRODUCT_PROCESS
+
+    /**
      * The table <code>public.sync_history</code>.
      */
     val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
+
+    /**
+     * The table <code>public.work_result</code>.
+     */
+    val WORK_RESULT: WorkResult get() = WorkResult.WORK_RESULT
 
     override fun getCatalog(): Catalog = DefaultCatalog.DEFAULT_CATALOG
 
@@ -123,8 +141,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         CompletionRateProcess.COMPLETION_RATE_PROCESS,
         CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,
         CompletionRateProduct.COMPLETION_RATE_PRODUCT,
+        ProcessMaster.PROCESS_MASTER,
         ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE,
         Product.PRODUCT,
-        SyncHistory.SYNC_HISTORY
+        ProductProcess.PRODUCT_PROCESS,
+        SyncHistory.SYNC_HISTORY,
+        WorkResult.WORK_RESULT
     )
 }

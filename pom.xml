@@ -17,7 +17,7 @@
 		<java.version>17</java.version>
 		<kotlin.version>1.8.22</kotlin.version>
 		<postgres.driver.version>42.6.0</postgres.driver.version>
-		<flyway.version>9.20.0</flyway.version>
+		<flyway.version>10.6.0</flyway.version>
 		<apache.poi.version>5.2.0</apache.poi.version>
 	</properties>
 	<dependencies>
@@ -61,7 +61,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<version>${flyway.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -196,7 +197,7 @@
 <!--						<url>${spring.datasource.url}</url>-->
 <!--						<user>${spring.datasource.username}</user>-->
 <!--						<password>${spring.datasource.password}</password>-->
-						<url>jdbc:postgresql://192.168.1.147:31792/postgres</url>
+						<url>jdbc:postgresql://192.168.1.147:31792/kcvn-spm</url>
 						<user>postgres</user>
 						<password>db-password</password>
 					</jdbc>

@@ -31,7 +31,7 @@ class UserService(
     private val env: Environment
 ) {
     fun getPaginatedUsers(search: String?, pageable: Pageable): PaginatedResponse {
-        val result = userRep.findByKeywordPaginated(search, pageable)
+        val result = UserRepository.findByKeywordPaginated(userRep, search, pageable)
         val positionsByUser = userRep.findPositions(result.first.map { it.id!! })
         return PaginatedResponse(
             result.first.map { user ->

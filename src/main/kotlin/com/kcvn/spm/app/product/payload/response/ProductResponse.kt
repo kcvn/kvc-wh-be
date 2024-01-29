@@ -21,5 +21,5 @@ class ProductResponse {
     var tapeType: String? = null
     var completionRate: Double? = 0.0
     var productLayerDetail: String? = null
-    var lstProcess: List<DropdownResponse> = listOf(DropdownResponse())
+    var lstProcess: List<DropdownResponse> = listOf()
 }

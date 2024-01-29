@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/sync")
 class SyncTransAmDataController (private val syncTransAmDataService: SyncTransAmDataService) {
 
+
     @PostMapping("/process-procedure-structure")
     fun syncProcessProcedureStructure(): ResponseEntity<*> {
         return try {

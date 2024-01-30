@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.product.controller
 
+import com.kcvn.spm.app.auth.payload.response.UserResponse
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductResponse
@@ -44,5 +45,15 @@ class ProductController(private val productService: ProductService) {
     @PostMapping("/sync")
     fun sync(): ResponseEntity<*> {
         return ResponseEntity<Any?>(null, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-product-detail/{id}")
+    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<ProductResponse?> {
+        val data = productService.getProductDetail(id)
+        return if (data != null) {
+            ResponseEntity<ProductResponse?>(data, HttpStatus.OK)
+        } else {
+            ResponseEntity<ProductResponse?>(HttpStatus.NOT_FOUND)
+        }
     }
 }

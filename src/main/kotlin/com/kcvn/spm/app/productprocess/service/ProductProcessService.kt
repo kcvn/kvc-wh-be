@@ -19,15 +19,16 @@ class ProductProcessService(
         return PaginatedResponse(result.first.map {
             productProcess -> ProductProcessResponse(
                 id = productProcess.id!!,
-                productName = productProcess.productName!!,
-                layerCode = productProcess.layerCode!!,
-                processCode = productProcess.processCode!!,
-                processName = productProcess.processName!!,
-                processNameJp = productProcess.processNameJp!!,
-                processConvertCode = productProcess.processConvertCode!!,
-                processStatisticCode = productProcess.processStatisticCode!!,
-                processInventoryCode = productProcess.processInventoryCode!!
+                productName = productProcess.productName,
+                layerCode = productProcess.layerCode,
+                processCode = productProcess.processCode,
+                processName = productProcess.processName,
+                processNameJp = productProcess.processNameJp,
+                processConvertCode = productProcess.processConvertCode,
+                processStatisticCode = productProcess.processStatisticCode,
+                processInventoryCode = productProcess.processInventoryCode
             )
         }, result.second)
     }
+
 }

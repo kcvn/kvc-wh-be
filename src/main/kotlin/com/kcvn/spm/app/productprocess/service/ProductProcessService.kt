@@ -1,6 +1,6 @@
 package com.kcvn.spm.sample.service
 
-import com.kcvn.spm.app.productProcess.payload.ProductProcessResponse
+import com.kcvn.spm.app.productprocess.payload.ProductProcessResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.repository.ProductProcessRepository
 import org.springframework.data.domain.Pageable

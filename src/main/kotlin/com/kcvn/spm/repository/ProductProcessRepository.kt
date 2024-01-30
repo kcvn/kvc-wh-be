@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProductProcessRepository(private val context: DSLContext) : SortingRepository()  {
-    fun findByKeywordPaginated(processRepository: ProductProcessRepository ,keyword: String?, pageable: Pageable): Pair<List<ProductProcess>, Int>
+    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<ProductProcess>, Int>
     {
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
@@ -23,7 +23,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         }
         val productProcessQuery = context.selectFrom(PRODUCT_PROCESS)
             .where(condition.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
-            .orderBy(processRepository.getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE))
+            .orderBy(getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE))
             .limit(pageable.pageSize)
             .offset(pageable.offset)
             .fetchInto(ProductProcess::class.java)

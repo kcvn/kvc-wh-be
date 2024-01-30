@@ -55,4 +55,36 @@ class ProductService(
 
         return response
     }
+
+    fun getProductDetail (request: String) : ProductResponse? {
+        val query = productRep.getProductDetail(request)
+        if (query == null)
+        {
+            return null
+        }
+        else
+        {
+            val data = ProductResponse(
+                id = query.id,
+                name = query.name,
+                exportType = query.exportType,
+                size = query.size,
+                frame_1 = query.frame_1,
+                frame_2 = query.frame_2,
+                mold = query.mold,
+                productLine = query.productLine,
+                srNosr = query.srNosr,
+                pcsSh = query.pcsSh,
+                shBlock = query.shBlock,
+                layerCount = query.layerCount,
+                ringJig = query.ringJig,
+                snapMold = query.snapMold,
+                tapeCommon = query.tapeCommon,
+                tapeType = query.tapeType,
+                productLayerDetail = query.productLayerDetail,
+                process = query.process
+            )
+            return data
+        }
+    }
 }

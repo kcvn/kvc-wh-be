@@ -46,6 +46,13 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
         return Pair(data, total)
     }
 
+    fun getProductDetail(request: String) : Product? {
+        val data = context.selectFrom((PRODUCT))
+            .where(PRODUCT.ID.eq(request))
+            .fetchAnyInto(Product::class.java)
+        return data;
+    }
+
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {

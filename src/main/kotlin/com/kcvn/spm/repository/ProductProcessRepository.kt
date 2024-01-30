@@ -14,13 +14,17 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProductProcessRepository(private val context: DSLContext) : SortingRepository()  {
-    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<ProductProcess>, Int>
+    fun findByKeywordPaginated(keyword: String?,hasProcessConvertCode: Boolean, pageable: Pageable): Pair<List<ProductProcess>, Int>
     {
-        val test = context.selectFrom(PRODUCT_PROCESS).fetchInto(ProductProcess::class.java);
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
             val lowerKeyword = DSL.lower(keyword);
             condition = condition.and(DSL.lower(PRODUCT_PROCESS.PROCESS_NAME).contains(lowerKeyword))
+        }
+        if(hasProcessConvertCode){
+            condition = condition.and(PRODUCT_PROCESS.PROCESS_CONVERT_CODE.isNull
+                .or(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.isNull))
+
         }
         val productProcessQuery = context.selectFrom(PRODUCT_PROCESS)
             .where(condition.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))

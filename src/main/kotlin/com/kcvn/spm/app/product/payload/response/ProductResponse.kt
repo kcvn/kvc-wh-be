@@ -21,5 +21,6 @@ data class ProductResponse (
     var tapeType: String? = null,
     var completionRate: Double? = 0.0,
     var productLayerDetail: String? = null,
+    var process : Int? = 0,
     var lstProcess: List<DropdownResponse> = listOf()
 )

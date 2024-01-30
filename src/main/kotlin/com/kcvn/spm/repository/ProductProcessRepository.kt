@@ -24,6 +24,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         if(hasProcessConvertCode){
             condition = condition.and(PRODUCT_PROCESS.PROCESS_CONVERT_CODE.isNull
                 .or(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.isNull))
+
         }
         val productProcessQuery = context.selectFrom(PRODUCT_PROCESS)
             .where(condition.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))

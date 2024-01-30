@@ -3,6 +3,7 @@ package com.kcvn.spm.app.product.controller
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductResponse
+import com.kcvn.spm.app.product.service.ProductService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.FileResponse
 import org.springframework.data.domain.Pageable
@@ -15,14 +16,15 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 @RestController
 @RequestMapping("/api/product")
-class ProductController {
+class ProductController(private val productService: ProductService) {
     @GetMapping("/get-list")
     fun getList(
         request: ProductSearchRequest?,
-        @PageableDefault(size = 10, page = 0) pageable: Pageable?
+        @PageableDefault(size = 10, page = 0) pageable: Pageable
     ): ResponseEntity<PagingProductResponse> {
         return try {
-            ResponseEntity<PagingProductResponse>(null, HttpStatus.OK)
+            val data = productService.getListProduct(request, pageable)
+            ResponseEntity<PagingProductResponse>(data, HttpStatus.OK)
         } catch (e: Exception) {
             e.printStackTrace()
             ResponseEntity<PagingProductResponse>(null, HttpStatus.OK)

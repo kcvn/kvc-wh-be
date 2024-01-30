@@ -15,7 +15,7 @@ class ProductProcessService(
 {
     fun getPaginatedProductProcess(search: String?, pageable: Pageable): PaginatedResponse
     {
-        val result = productProcessRep.findByKeywordPaginated(productProcessRep,search,pageable);
+        val result = productProcessRep.findByKeywordPaginated(search,pageable);
         return PaginatedResponse(result.first.map {
             productProcess -> ProductProcessResponse(
                 id = productProcess.id!!,

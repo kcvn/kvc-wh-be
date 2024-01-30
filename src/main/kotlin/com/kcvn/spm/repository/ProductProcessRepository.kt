@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository
 class ProductProcessRepository(private val context: DSLContext) : SortingRepository()  {
     fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<ProductProcess>, Int>
     {
+        val test = context.selectFrom(PRODUCT_PROCESS).fetchInto(ProductProcess::class.java);
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
             val lowerKeyword = DSL.lower(keyword);

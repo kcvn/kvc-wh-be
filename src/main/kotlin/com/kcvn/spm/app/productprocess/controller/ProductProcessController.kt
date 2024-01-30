@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.productprocess.controller
 
+import com.kcvn.spm.app.productprocess.payload.request.ProductProcessSearchRequest
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.sample.service.ProductProcessService
 import org.springframework.data.domain.Pageable
@@ -19,12 +20,12 @@ class ProductProcessController(
 {
     @GetMapping("/all")
     fun getAllProductProcess (
-        @RequestParam(required = false) search: String?,
+        request: ProductProcessSearchRequest,
         @PageableDefault(size = 10, page = 0) pageable: Pageable?
     ): ResponseEntity<*>
     {
         return try {
-            val result = productProcessService.getPaginatedProductProcess(search, pageable!!);
+            val result = productProcessService.getPaginatedProductProcess(request.search,request.hasProcessConvertCode, pageable!!);
             if(result.data.isEmpty())
                 ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
             else

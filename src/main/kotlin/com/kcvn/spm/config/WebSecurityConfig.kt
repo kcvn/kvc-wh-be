@@ -81,6 +81,7 @@ class WebSecurityConfig(
                 auth.requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/user/**").authenticated()
                     .requestMatchers("/api/role/**").authenticated()
+                    .requestMatchers("/api/product-process/**").authenticated()
                     .anyRequest().permitAll()
             }
             .authenticationProvider(authenticationProvider())

@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.productprocess.payload
+package com.kcvn.spm.app.productprocess.payload.response
 
 data class ProductProcessResponse (
     var id: String,

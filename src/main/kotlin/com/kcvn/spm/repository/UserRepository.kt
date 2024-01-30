@@ -18,29 +18,29 @@ import org.springframework.stereotype.Repository
 class UserRepository(private val context: DSLContext) : SortingRepository() {
     companion object {
         const val POSITION_TYPE = "position"
-        fun findByKeywordPaginated(userRepository: UserRepository, keyword: String?, pageable: Pageable): Pair<List<AuthUser>, Int> {
-            var condition: Condition = DSL.noCondition()
-            if (keyword != null) {
-                condition = condition.and(
-                        AUTH_USER.USERNAME.ne("admin")
-                            .and(AUTH_USER.USERNAME.contains(keyword)
-                                .or(AUTH_USER.FULL_NAME.contains(keyword))
-                                .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword)))
-                )
-            }else {
-                condition = condition.and(AUTH_USER.USERNAME.ne("admin"))
-            }
-            val users = userRepository.context.selectFrom(AUTH_USER)
-                .where(condition.and(AUTH_USER.IS_DELETED.eq(false)))
-                .orderBy(userRepository.getSortFields(pageable.sort, AUTH_USER.CREATED_DATE))
-                .limit(pageable.pageSize).offset(pageable.offset)
-                .fetchInto(AuthUser::class.java)
-            val total =
-                userRepository.context.fetchCount(AUTH_USER, condition.and(AUTH_USER.IS_DELETED.eq(false)))
-            return Pair(users, total)
-        }
     }
 
+    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<AuthUser>, Int> {
+        var condition: Condition = DSL.noCondition()
+        if (keyword != null) {
+            condition = condition.and(
+                AUTH_USER.USERNAME.ne("admin")
+                    .and(AUTH_USER.USERNAME.contains(keyword)
+                        .or(AUTH_USER.FULL_NAME.contains(keyword))
+                        .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword)))
+            )
+        }else {
+            condition = condition.and(AUTH_USER.USERNAME.ne("admin"))
+        }
+        val users = context.selectFrom(AUTH_USER)
+            .where(condition.and(AUTH_USER.IS_DELETED.eq(false)))
+            .orderBy(getSortFields(pageable.sort, AUTH_USER.CREATED_DATE))
+            .limit(pageable.pageSize).offset(pageable.offset)
+            .fetchInto(AuthUser::class.java)
+        val total =
+            context.fetchCount(AUTH_USER, condition.and(AUTH_USER.IS_DELETED.eq(false)))
+        return Pair(users, total)
+    }
     fun findById(id: String): AuthUser? =
         context.selectFrom(AUTH_USER).where(AUTH_USER.ID.eq(id)).fetchInto(AuthUser::class.java).firstOrNull()
 
@@ -58,6 +58,8 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
     fun findByEmail(email: String): AuthUser? =
         context.selectFrom(AUTH_USER).where(AUTH_USER.EMAIL.eq(email).and(AUTH_USER.IS_DELETED.eq(false)))
             .fetchInto(AuthUser::class.java).firstOrNull()
+
+
 
     fun save(user: AuthUser): AuthUser? = context
         .insertInto(

@@ -14,19 +14,19 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional
 class ProductService(
-    private val productRepository: ProductRepository,
-    private val productProcessRepository: ProductProcessRepository,
-    private val completionRateProductRepository: CompletionRateProductRepository
+    private val productRep: ProductRepository,
+    private val productProcessRep: ProductProcessRepository,
+    private val completionRateProductRep: CompletionRateProductRepository
 ) {
 
     fun getListProduct(request: ProductSearchRequest?, pageable: Pageable) : PagingProductResponse {
-        val products = productRepository.getList(request, pageable)
+        val products = productRep.getList(request, pageable)
         val response = PagingProductResponse()
 
         if (products.first.isNotEmpty()) {
             val productNames = products.first.mapNotNull { x -> x.name }
-            val completionRates = completionRateProductRepository.getByProduct(productNames)
-            val productProcesses = productProcessRepository.getByProduct(productNames)
+            val completionRates = completionRateProductRep.getByProduct(productNames)
+            val productProcesses = productProcessRep.getByProduct(productNames)
             val processGroups = productProcesses.groupBy { x -> Pair(x.productName, x.processCode) }
 
             response.data = products.first.map { x -> ProductResponse(

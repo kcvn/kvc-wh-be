@@ -10,14 +10,14 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional
 class MasterDataService(
-    private val commonCategoryRepository: CommonCategoryRepository
+    private val commonCategoryRep: CommonCategoryRepository
 ) {
     fun getMasterDataSelection() : MasterDataSelectionResponse {
         val types = listOf(
             Constants.KHUNG_1, Constants.KHUNG_2, Constants.KHUON_DUC,
             Constants.SR_OR_NSR, Constants.LOAI_XUAT_HANG, Constants.LOAI_TAPE
         )
-        val data = commonCategoryRepository.getByType(types)
+        val data = commonCategoryRep.getByType(types)
         return MasterDataSelectionResponse(
             frame1Selections = data.filter { x -> x.type == Constants.KHUNG_1 }.mapNotNull { x -> DropdownResponse(x.value, x.value) },
             frame2Selections = data.filter { x -> x.type == Constants.KHUNG_2 }.mapNotNull { x -> DropdownResponse(x.value, x.value) },

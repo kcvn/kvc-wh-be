@@ -12,3 +12,4 @@ data class ProductProcessResponse (
     var processInventoryCode: String? = null,
     var productId: String? = null
 )
+

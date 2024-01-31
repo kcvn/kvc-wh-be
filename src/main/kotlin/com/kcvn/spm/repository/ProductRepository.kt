@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.model.tables.references.AUTH_ROLE
@@ -14,6 +15,8 @@ import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Repository
 class ProductRepository (private val context: DSLContext) : SortingRepository(){
@@ -51,6 +54,66 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
             .where(PRODUCT.ID.eq(request))
             .fetchAnyInto(Product::class.java)
         return data;
+    }
+
+    fun getByName(names: List<String>): List<Product> {
+        return context.selectFrom(PRODUCT)
+            .where(PRODUCT.NAME.`in`(names).and(PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(Product::class.java)
+    }
+
+    fun add(data: Product) : Product? {
+        return context.insertInto(
+            PRODUCT,
+            PRODUCT.NAME, PRODUCT.EXPORT_TYPE, PRODUCT.SIZE, PRODUCT.FRAME_1, PRODUCT.FRAME_2, PRODUCT.MOLD, PRODUCT.PRODUCT_LINE,
+            PRODUCT.SR_NOSR, PRODUCT.PCS_SH, PRODUCT.SH_BLOCK, PRODUCT.LAYER_COUNT, PRODUCT.RING_JIG, PRODUCT.PROCESS,
+            PRODUCT.SNAP_MOLD, PRODUCT.TAPE_COMMON, PRODUCT.TAPE_TYPE, PRODUCT.PRODUCT_LAYER_DETAIL, PRODUCT.CREATED_BY
+        ).values(
+            data.name,
+            data.exportType,
+            data.size,
+            data.frame_1,
+            data.frame_2,
+            data.mold,
+            data.productLine,
+            data.srNosr,
+            data.pcsSh,
+            data.shBlock,
+            data.layerCount,
+            data.ringJig,
+            data.process,
+            data.snapMold,
+            data.tapeCommon,
+            data.tapeType,
+            data.productLayerDetail,
+            CommonUtils.loggedInUser() ?: "SYSTEM"
+        ).returningResult(PRODUCT).fetchInto(Product::class.java).firstOrNull()
+    }
+
+    fun update(data: Product) : Product? {
+        return context.update(PRODUCT)
+            .set(PRODUCT.NAME, data.name)
+            .set(PRODUCT.EXPORT_TYPE, data.exportType)
+            .set(PRODUCT.SIZE, data.size)
+            .set(PRODUCT.FRAME_1, data.frame_1)
+            .set(PRODUCT.FRAME_2, data.frame_2)
+            .set(PRODUCT.MOLD, data.mold)
+            .set(PRODUCT.PRODUCT_LINE, data.productLine)
+            .set(PRODUCT.SR_NOSR, data.srNosr)
+            .set(PRODUCT.PCS_SH, data.pcsSh)
+            .set(PRODUCT.SH_BLOCK, data.shBlock)
+            .set(PRODUCT.LAYER_COUNT, data.layerCount)
+            .set(PRODUCT.RING_JIG, data.ringJig)
+            .set(PRODUCT.PROCESS, data.process)
+            .set(PRODUCT.SNAP_MOLD, data.snapMold)
+            .set(PRODUCT.TAPE_COMMON, data.tapeCommon)
+            .set(PRODUCT.TAPE_TYPE, data.tapeType)
+            .set(PRODUCT.PRODUCT_LAYER_DETAIL, data.productLayerDetail)
+            .set(PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(PRODUCT.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
+            .where(PRODUCT.ID.eq(data.id))
+            .returningResult(PRODUCT)
+            .fetchInto(Product::class.java).firstOrNull()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

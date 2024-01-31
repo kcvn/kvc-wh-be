@@ -1,4 +1,4 @@
-package com.kcvn.spm.common.helper.csvHelper
+package com.kcvn.spm.common.helper.csvhelper
 
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention

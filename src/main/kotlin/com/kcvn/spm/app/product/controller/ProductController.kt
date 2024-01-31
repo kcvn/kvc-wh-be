@@ -52,9 +52,9 @@ class ProductController(
     @PostMapping(value = ["/import-csv"], consumes = ["multipart/form-data"])
     fun importCsv(@RequestPart("file") file: MultipartFile): ResponseEntity<*> {
         try {
-            productService.importCsvProduct(file)
+            val data = productService.importCsvProduct(file)
             return ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("import.success")),
+                MessageResponse(data),
                 HttpStatus.OK
             )
         }

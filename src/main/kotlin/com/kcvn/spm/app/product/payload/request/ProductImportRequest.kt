@@ -1,6 +1,6 @@
 package com.kcvn.spm.app.product.payload.request
 
-import com.kcvn.spm.common.helper.csvHelper.CsvMappingField
+import com.kcvn.spm.common.helper.csvhelper.CsvMappingField
 
 data class ProductImportRequest (
     @CsvMappingField("Tên sản phẩm")

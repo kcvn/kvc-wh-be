@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.masterData.payload.response
+package com.kcvn.spm.app.masterdata.payload.response
 
 import com.kcvn.spm.common.payload.DropdownResponse
 

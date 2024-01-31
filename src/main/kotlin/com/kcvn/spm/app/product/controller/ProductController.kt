@@ -100,10 +100,10 @@ class ProductController(
         val nameProduct = dataProduct?.name
         val dataProcess = productProcessService.getProductProcessDetail(nameProduct)
         val resultData = ProductAndProcessResponse(
-            listProduct = listOf(dataProduct),
+            detail = dataProduct,
             listProcess = dataProcess
         )
-        return if (resultData.listProduct != null ) {
+        return if (resultData.detail != null ) {
             ResponseEntity<ProductAndProcessResponse?>(resultData, HttpStatus.OK)
         } else {
             ResponseEntity<ProductAndProcessResponse?>(HttpStatus.NOT_FOUND)

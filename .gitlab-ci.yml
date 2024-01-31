@@ -26,6 +26,7 @@ variables:
 #before_script:
 #  - export VERSION=$CI_COMMIT_SHORT_SHA
 sonarqube-check:
+  stage: build
   image: maven:3.6.3-jdk-11
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache

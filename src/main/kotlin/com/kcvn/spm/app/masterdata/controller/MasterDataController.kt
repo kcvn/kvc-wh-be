@@ -1,7 +1,7 @@
-package com.kcvn.spm.app.masterData.controller
+package com.kcvn.spm.app.masterdata.controller
 
-import com.kcvn.spm.app.masterData.payload.response.MasterDataSelectionResponse
-import com.kcvn.spm.app.masterData.service.MasterDataService
+import com.kcvn.spm.app.masterdata.payload.response.MasterDataSelectionResponse
+import com.kcvn.spm.app.masterdata.service.MasterDataService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping

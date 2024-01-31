@@ -39,8 +39,6 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             "id" -> COMPLETION_RATE_PROCESS.ID
             "key" -> COMPLETION_RATE_PROCESS.KEY
             "processCode" -> COMPLETION_RATE_PROCESS.PROCESS_CODE
-            "layerCode" -> COMPLETION_RATE_PROCESS.LAYER_CODE
-            "rate" -> COMPLETION_RATE_PROCESS.RATE
             // Add more cases for other fields as needed
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }

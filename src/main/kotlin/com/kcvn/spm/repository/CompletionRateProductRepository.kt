@@ -42,7 +42,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         return when (sortFieldName) {
             "id" -> COMPLETION_RATE_PRODUCT.ID
-
+            "productname" -> COMPLETION_RATE_PRODUCT.PRODUCT_NAME
             "rate" -> COMPLETION_RATE_PRODUCT.RATE
             // Add more cases for other fields as needed
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")

@@ -35,9 +35,9 @@ class CompletionRateProcessProductRepository (private val context: DSLContext) :
         return when (sortFieldName) {
             "id" -> COMPLETION_RATE_PROCESS_PRODUCT.ID
             "key" -> COMPLETION_RATE_PROCESS_PRODUCT.KEY
-            "processCode" -> COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE
+            "product_name_shortcut" -> COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT
             "layerCode" -> COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE
-            "rate" -> COMPLETION_RATE_PROCESS_PRODUCT.RATE
+            "process_code"-> COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE
             // Add more cases for other fields as needed
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }

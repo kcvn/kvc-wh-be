@@ -60,34 +60,38 @@ class ProductProcessService(
         }
     }
 
-    fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : ProductProcessResponse? {
-        if(request.processInventoryCode == null){
-            throw BusinessException(CommonUtils.getMessage("Process Inventory Code Not Null"))
-        }
-        if(request.processStatisticCode == null){
-            throw BusinessException(CommonUtils.getMessage("Process Statistic Code Not Null"))
-        }
+    fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : List<ProductProcessResponse>? {
+        var dataResult: MutableList<ProductProcessResponse> = mutableListOf()
+        for (item in request.listProcess!!){
+            if(item.processInventoryCode == null){
+                throw BusinessException(CommonUtils.getMessage("Process Inventory Code Not Null"))
+            }
+            if(item.processStatisticCode == null){
+                throw BusinessException(CommonUtils.getMessage("Process Statistic Code Not Null"))
+            }
 
-        val productProcess = productProcessRep.getByProductProcessDetailById(request.id)
-        if(productProcess == null){
-            throw BusinessException(CommonUtils.getMessage("Product Process Not Found "))
-        }
-        productProcess.processConvertCode = request.processConvertCode;
-        productProcess.processStatisticCode = request.processStatisticCode;
-        productProcess.processInventoryCode = request.processInventoryCode;
+            val productProcess = productProcessRep.getByProductProcessDetailById(item.id)
+            if(productProcess == null){
+                throw BusinessException(CommonUtils.getMessage("Product Process Not Found "))
+            }
+            productProcess.processConvertCode = item.processConvertCode;
+            productProcess.processStatisticCode = item.processStatisticCode;
+            productProcess.processInventoryCode = item.processInventoryCode;
 
-        val data = productProcessRep.updateProductDetail(productProcess);
-        val result = ProductProcessResponse(
-            id = data?.id,
-            productName = data?.productName,
-            layerCode = data?.layerCode,
-            processCode = data?.processCode,
-            processName = data?.processName,
-            processNameJp = data?.processNameJp,
-            processConvertCode = data?.processConvertCode,
-            processStatisticCode = data?.processStatisticCode,
-            processInventoryCode = data?.processInventoryCode
-        )
-        return  result;
+            val data = productProcessRep.updateProductDetail(productProcess);
+            val result = ProductProcessResponse(
+                id = data?.id,
+                productName = data?.productName,
+                layerCode = data?.layerCode,
+                processCode = data?.processCode,
+                processName = data?.processName,
+                processNameJp = data?.processNameJp,
+                processConvertCode = data?.processConvertCode,
+                processStatisticCode = data?.processStatisticCode,
+                processInventoryCode = data?.processInventoryCode
+            )
+            dataResult.add(result)
+        }
+        return  dataResult
     }
 }

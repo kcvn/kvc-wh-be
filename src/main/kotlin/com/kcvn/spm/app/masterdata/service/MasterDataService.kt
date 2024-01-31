@@ -1,6 +1,6 @@
-package com.kcvn.spm.app.masterData.service
+package com.kcvn.spm.app.masterdata.service
 
-import com.kcvn.spm.app.masterData.payload.response.MasterDataSelectionResponse
+import com.kcvn.spm.app.masterdata.payload.response.MasterDataSelectionResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.repository.CommonCategoryRepository

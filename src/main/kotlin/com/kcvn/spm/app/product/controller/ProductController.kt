@@ -3,10 +3,12 @@ package com.kcvn.spm.app.product.controller
 import com.kcvn.spm.app.auth.payload.response.UserResponse
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
+import com.kcvn.spm.app.product.payload.response.ProductAndProcessResponse
 import com.kcvn.spm.app.product.payload.response.ProductResponse
 import com.kcvn.spm.app.product.service.ProductService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.FileResponse
+import com.kcvn.spm.sample.service.ProductProcessService
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
@@ -17,7 +19,10 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 @RestController
 @RequestMapping("/api/product")
-class ProductController(private val productService: ProductService) {
+class ProductController(
+    private val productService: ProductService,
+    private val productProcessService: ProductProcessService
+) {
     @GetMapping("/get-list")
     fun getList(
         request: ProductSearchRequest?,
@@ -48,12 +53,18 @@ class ProductController(private val productService: ProductService) {
     }
 
     @GetMapping("/get-product-detail/{id}")
-    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<ProductResponse?> {
-        val data = productService.getProductDetail(id)
-        return if (data != null) {
-            ResponseEntity<ProductResponse?>(data, HttpStatus.OK)
+    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<ProductAndProcessResponse?> {
+        val dataProduct = productService.getProductDetail(id)
+        val nameProduct = dataProduct?.name
+        val dataProcess = productProcessService.getProductProcessDetail(nameProduct)
+        val resultData = ProductAndProcessResponse(
+            listProduct = listOf(dataProduct),
+            listProcess = dataProcess
+        )
+        return if (resultData.listProduct != null ) {
+            ResponseEntity<ProductAndProcessResponse?>(resultData, HttpStatus.OK)
         } else {
-            ResponseEntity<ProductResponse?>(HttpStatus.NOT_FOUND)
+            ResponseEntity<ProductAndProcessResponse?>(HttpStatus.NOT_FOUND)
         }
     }
 }

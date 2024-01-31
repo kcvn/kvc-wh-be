@@ -1,7 +1,9 @@
 package com.kcvn.spm.app.product.controller
 
+import com.kcvn.spm.app.auth.payload.response.UserResponse
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
+import com.kcvn.spm.app.product.payload.response.ProductAndProcessResponse
 import com.kcvn.spm.app.product.payload.response.ProductResponse
 import com.kcvn.spm.app.product.service.ProductService
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -11,6 +13,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.FileSystemResource
+import com.kcvn.spm.sample.service.ProductProcessService
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -28,7 +31,10 @@ import kotlin.io.path.fileSize
 
 @RestController
 @RequestMapping("/api/product")
-class ProductController(private val productService: ProductService) {
+class ProductController(
+    private val productService: ProductService,
+    private val productProcessService: ProductProcessService
+) {
     @GetMapping("/get-list")
     fun getList(
         request: ProductSearchRequest?,
@@ -86,5 +92,21 @@ class ProductController(private val productService: ProductService) {
     @PostMapping("/sync")
     fun sync(): ResponseEntity<*> {
         return ResponseEntity<Any?>(null, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-product-detail/{id}")
+    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<ProductAndProcessResponse?> {
+        val dataProduct = productService.getProductDetail(id)
+        val nameProduct = dataProduct?.name
+        val dataProcess = productProcessService.getProductProcessDetail(nameProduct)
+        val resultData = ProductAndProcessResponse(
+            listProduct = listOf(dataProduct),
+            listProcess = dataProcess
+        )
+        return if (resultData.listProduct != null ) {
+            ResponseEntity<ProductAndProcessResponse?>(resultData, HttpStatus.OK)
+        } else {
+            ResponseEntity<ProductAndProcessResponse?>(HttpStatus.NOT_FOUND)
+        }
     }
 }

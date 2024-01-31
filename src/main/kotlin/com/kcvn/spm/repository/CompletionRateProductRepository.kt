@@ -11,13 +11,20 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 
 @Repository
-class CompletionRateProductRepository(private val context: DSLContext) : SortingRepository(){
-    fun getByProduct(productNames: List<String>) : List<CompletionRateProduct> {
+class CompletionRateProductRepository(private val context: DSLContext) : SortingRepository() {
+    fun getByProduct(productNames: List<String>): List<CompletionRateProduct> {
         return context.selectFrom(COMPLETION_RATE_PRODUCT)
-            .where(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames).and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
+            .where(
+                COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames)
+                    .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false))
+            )
             .fetchInto(CompletionRateProduct::class.java)
     }
-    fun getPaginatedCompletionRateProduct(search: String?, pageable: Pageable?): Pair<List<CompletionRateProduct>, Int> {
+
+    fun getPaginatedCompletionRateProduct(
+        search: String?,
+        pageable: Pageable?
+    ): Pair<List<CompletionRateProduct>, Int> {
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
@@ -35,7 +42,6 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             .fetchInto(CompletionRateProduct::class.java)
 
         val total = context.fetchCount(COMPLETION_RATE_PRODUCT, condition)
-
         return Pair(completionRateProcessesQuery, total)
     }
 
@@ -47,6 +53,13 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             // Add more cases for other fields as needed
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }
+    }
+
+    fun delete(id: String) {
+        context.update(COMPLETION_RATE_PRODUCT)
+            .set(COMPLETION_RATE_PRODUCT.IS_DELETED, true)
+            .where(COMPLETION_RATE_PRODUCT.ID.eq(id))
+            .execute()
     }
 
 }

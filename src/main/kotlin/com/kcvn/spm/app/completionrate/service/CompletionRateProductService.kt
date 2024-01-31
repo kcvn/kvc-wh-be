@@ -19,7 +19,7 @@ class CompletionRateProductService(private val completionRateProductRepository: 
                     productName = item.productName,
                     rate = item.rate,
 
-                )
+                    )
 
             }, result.second
         )

@@ -1,4 +1,5 @@
 package com.kcvn.spm.app.completionrate.controller
+
 import com.kcvn.spm.app.completionrate.service.CompletionRateProcessService
 import com.kcvn.spm.common.payload.PaginatedResponse
 import org.springframework.data.web.PageableDefault
@@ -16,8 +17,8 @@ class CompletionRateProcessController(private val completionRateProcessService: 
 
     @GetMapping("/all")
     fun getAllProducts(
-            @RequestParam(required = false) search: String?,
-            @PageableDefault(size = 10, page = 0) pageable: Pageable?
+        @RequestParam(required = false) search: String?,
+        @PageableDefault(size = 10, page = 0) pageable: Pageable?
     ): ResponseEntity<*> {
         return try {
             val result = completionRateProcessService.getPaginatedCompletionRateProcesses(search, pageable!!)

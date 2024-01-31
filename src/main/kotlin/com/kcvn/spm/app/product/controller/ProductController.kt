@@ -69,7 +69,7 @@ class ProductController(
 
     @GetMapping("/download-template-csv")
     fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
-        val resource = ClassPathResource("media/template/data.csv")
+        val resource = ClassPathResource("media/template/ImportProductTemplate.csv")
         val file = FileSystemResource(resource.file.absolutePath)
         val streamingResponseBody = StreamingResponseBody { outputStream ->
             file.inputStream.use { input ->

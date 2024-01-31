@@ -16,22 +16,38 @@ enum class EPermission(val value: String) {
     // log
     VIEW_LOG("l.v"),
 
+    // products
+    V_PRODUCT("product.v"),
+    I_PRODUCT("product.i"),
+    SY_PRODUCT("product.sy"),
+    E_PRODUCT("product.e"),
+
+    // process
+    V_PROCESS("process.v"),
+    I_PROCESS("process.i"),
+    E_PROCESS("process.e"),
+
+    // completion - rate
+    V_COMPLETION_RATE("com_rate.v"),
+    I_COMPLETION_RATE("com_rate.i"),
+    E_COMPLETION_RATE("com_rate.e"),
+
+    // the - order
+    V_ORDER("order.v"),
+
+    //production plan
+    V_PRODUCTTION_PLAN("product_plan.v"),
+
+    //production result
+    V_PRODUCTION_RESULT("product_result.v"),
+
+    // inventory
+    V_INVENTORY("inventory.v"),
+
     // report
-    VIEW_REPORT_AVERAGE_OUTPUT_OF_TWO_MONTHS("rp.aootm.v"),
-    VIEW_REPORT_KTTN_PRODUCT_DELIVERY("rp.kpd.v"),
+    V_REPORT_ASVERAGE_OUTPUT_OF_TWO_MONTHS("rp.aootm.v"),
+    V_REPORT_KTTN_PRODUCT_DELIVERY("rp.kpd.v"),
 
-    //import
-    VIEW_IMPORT_INVENTORY("ip.i.v"),
-    VIEW_ODER_QUANTITY("ip.o.v"),
-    VIEW_PASS_RATE("ip.p.v"),
-    VIEW_WORK_RESULT("ip.r.v"),
-
-    // manage-product-information
-    VIEW_MANAGEMENT_PRODUCT_INFO("m.p.i.v"),
-
-    //manage-product-creation-flow
-    VIEW_MANAGEMENT_PRODUCT_CREATION_FLOW("m.p.c.f.v"),
-
-    //plan Process
-    VIEW_PLAN_PROCESS("pl.p.v")
+    // sync data
+    V_SYNC_PROCESS_PROCEDURE_STRUCTURE("sync.ppst.v"),
 }

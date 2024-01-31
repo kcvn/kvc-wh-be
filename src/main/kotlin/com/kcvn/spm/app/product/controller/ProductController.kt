@@ -69,19 +69,25 @@ class ProductController(
 
     @GetMapping("/download-template-csv")
     fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
-        val resource = ClassPathResource("media/template/ImportProductTemplate.csv")
-        val file = FileSystemResource(resource.file.absolutePath)
-        val streamingResponseBody = StreamingResponseBody { outputStream ->
-            file.inputStream.use { input ->
-                input.copyTo(outputStream)
+        try {
+            val resource = ClassPathResource("media/template/ImportProductTemplate.csv")
+            val file = FileSystemResource(resource.file.absolutePath)
+            val streamingResponseBody = StreamingResponseBody { outputStream ->
+                file.inputStream.use { input ->
+                    input.copyTo(outputStream)
+                }
             }
-        }
 
-        response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
-        response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
-        response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
-        response.setContentLengthLong(resource.file.length())
-        return streamingResponseBody
+            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+            response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
+            response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
+            response.setContentLengthLong(resource.file.length())
+            return streamingResponseBody
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
     }
 
     @GetMapping("/export-excel")

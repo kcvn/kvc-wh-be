@@ -53,7 +53,7 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
     fun getProductDetail(request: String) : Product? {
         val data = context.selectFrom((PRODUCT))
             .where(PRODUCT.ID.eq(request))
-            .orderBy(PRODUCT_PROCESS.LAYER_CODE)
+            .orderBy(PRODUCT.LAYER_COUNT)
             .fetchAnyInto(Product::class.java)
         return data;
     }

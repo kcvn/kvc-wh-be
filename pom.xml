@@ -52,11 +52,6 @@
 			<version>5.9</version>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.module</groupId>
-			<artifactId>jackson-module-kotlin</artifactId>
-			<version>2.13.0</version> <!-- Sử dụng phiên bản mới nhất của Jackson -->
-		</dependency>
-		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>${apache.poi.version}</version>
@@ -203,11 +198,9 @@
 							<outputDirectory>${project.build.directory}/classes</outputDirectory>
 							<resources>
 								<resource>
-									<directory>src/main/resources</directory>
+									<directory>src/main/resources/media/template</directory>
 									<includes>
-										<include>**/*.csv</include>
-										<include>**/*.json</include>
-										<include>**/*.xlsx</include>
+										<include>*.csv</include>
 									</includes>
 								</resource>
 							</resources>

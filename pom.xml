@@ -19,6 +19,7 @@
 		<postgres.driver.version>42.6.0</postgres.driver.version>
 		<flyway.version>10.6.0</flyway.version>
 		<apache.poi.version>5.2.0</apache.poi.version>
+		<sonar.qualitygate.wait>true</sonar.qualitygate.wait>
 	</properties>
 	<dependencies>
 		<dependency>

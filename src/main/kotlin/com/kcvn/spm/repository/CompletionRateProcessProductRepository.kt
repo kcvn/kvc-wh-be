@@ -1,4 +1,4 @@
-
+package com.kcvn.spm.repository
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT

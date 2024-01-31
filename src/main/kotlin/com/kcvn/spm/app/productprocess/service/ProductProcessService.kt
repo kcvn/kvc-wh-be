@@ -1,9 +1,13 @@
 package com.kcvn.spm.sample.service
 
+import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.PaginatedResponse
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.ProductProcessRepository
+import com.kcvn.spm.repository.ProductRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -11,12 +15,16 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional
 class ProductProcessService(
-    private val productProcessRep : ProductProcessRepository
+    private val productProcessRep : ProductProcessRepository,
+    private val productRepository: ProductRepository
 )
 {
     fun getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): PaginatedResponse
     {
         val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
+        val listProductName = result.first.map { it.productName }
+        val  uniqueListProductName = listProductName.distinct()
+        val listProduct = productRepository.getProductByListName(uniqueListProductName);
         return PaginatedResponse(result.first.map {
             productProcess -> ProductProcessResponse(
                 id = productProcess.id,
@@ -27,7 +35,8 @@ class ProductProcessService(
                 processNameJp = productProcess.processNameJp,
                 processConvertCode = productProcess.processConvertCode,
                 processStatisticCode = productProcess.processStatisticCode,
-                processInventoryCode = productProcess.processInventoryCode
+                processInventoryCode = productProcess.processInventoryCode,
+                productId = listProduct?.find { x -> x.name == productProcess.productName }?.id
             )
         }, result.second)
     }
@@ -49,5 +58,36 @@ class ProductProcessService(
 
             )
         }
+    }
+
+    fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : ProductProcessResponse? {
+        if(request.processInventoryCode == null){
+            throw BusinessException(CommonUtils.getMessage("Process Inventory Code Not Null"))
+        }
+        if(request.processStatisticCode == null){
+            throw BusinessException(CommonUtils.getMessage("Process Statistic Code Not Null"))
+        }
+
+        val productProcess = productProcessRep.getByProductProcessDetailById(request.id)
+        if(productProcess == null){
+            throw BusinessException(CommonUtils.getMessage("Product Process Not Found "))
+        }
+        productProcess.processConvertCode = request.processConvertCode;
+        productProcess.processStatisticCode = request.processStatisticCode;
+        productProcess.processInventoryCode = request.processInventoryCode;
+
+        val data = productProcessRep.updateProductDetail(productProcess);
+        val result = ProductProcessResponse(
+            id = data?.id,
+            productName = data?.productName,
+            layerCode = data?.layerCode,
+            processCode = data?.processCode,
+            processName = data?.processName,
+            processNameJp = data?.processNameJp,
+            processConvertCode = data?.processConvertCode,
+            processStatisticCode = data?.processStatisticCode,
+            processInventoryCode = data?.processInventoryCode
+        )
+        return  result;
     }
 }

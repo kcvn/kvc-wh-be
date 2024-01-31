@@ -1,7 +1,10 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.AuthRole
 import com.kcvn.spm.model.tables.pojos.ProductProcess
+import com.kcvn.spm.model.tables.references.AUTH_ROLE
 import com.kcvn.spm.model.tables.references.AUTH_USER
 import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
@@ -47,6 +50,24 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)))
             .fetchInto(ProductProcess::class.java)
         return  data
+    }
+
+    fun  getByProductProcessDetailById(id: String?) : ProductProcess? {
+        val data = context.selectFrom(PRODUCT_PROCESS)
+            .where((PRODUCT_PROCESS.ID.eq(id)))
+            .fetchAnyInto(ProductProcess::class.java)
+        return  data
+    }
+    fun updateProductDetail(request: ProductProcess) :  ProductProcess? {
+        val data = context.update(PRODUCT_PROCESS)
+            .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, request.processConvertCode)
+            .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
+            .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
+            .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .where(PRODUCT_PROCESS.ID.eq(request.id))
+            .returningResult(PRODUCT_PROCESS)
+            .fetchInto(ProductProcess::class.java).firstOrNull()
+        return  data;
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

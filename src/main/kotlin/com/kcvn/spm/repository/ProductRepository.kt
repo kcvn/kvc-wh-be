@@ -7,6 +7,7 @@ import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.model.tables.references.AUTH_ROLE
 import com.kcvn.spm.model.tables.references.AUTH_USER
 import com.kcvn.spm.model.tables.references.PRODUCT
+import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -49,8 +50,16 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
     fun getProductDetail(request: String) : Product? {
         val data = context.selectFrom((PRODUCT))
             .where(PRODUCT.ID.eq(request))
+            .orderBy(PRODUCT_PROCESS.LAYER_CODE)
             .fetchAnyInto(Product::class.java)
         return data;
+    }
+
+    fun getProductByListName(request: List<String?>) : List<Product>? {
+        val data = context.selectFrom(PRODUCT)
+            .where(PRODUCT.NAME.`in`(request))
+            .fetchInto(Product::class.java)
+        return data
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

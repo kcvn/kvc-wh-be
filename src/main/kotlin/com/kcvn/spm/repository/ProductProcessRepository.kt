@@ -42,8 +42,19 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .fetchInto(ProductProcess::class.java)
     }
 
+    fun  getByProductProcessDetail(productName: String?) : List<ProductProcess?>? {
+        val data = context.selectFrom(PRODUCT_PROCESS)
+            .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)))
+            .fetchInto(ProductProcess::class.java)
+        return  data
+    }
+
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {
+            "default" -> {
+                PRODUCT_PROCESS.PROCESS_NAME
+                PRODUCT_PROCESS.LAYER_CODE
+            }
             "productName" -> {
                 PRODUCT_PROCESS.PRODUCT_NAME
             }

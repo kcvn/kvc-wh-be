@@ -99,7 +99,7 @@ open class CompletionRateProcessProduct(
     /**
      * The column <code>public.completion_rate_process_product.rate</code>.
      */
-    val RATE: TableField<CompletionRateProcessProductRecord, BigDecimal?> = createField(DSL.name("rate"), SQLDataType.NUMERIC(3, 2).nullable(false), this, "")
+    val RATE: TableField<CompletionRateProcessProductRecord, BigDecimal?> = createField(DSL.name("rate"), SQLDataType.NUMERIC(5, 2).nullable(false), this, "")
 
     /**
      * The column

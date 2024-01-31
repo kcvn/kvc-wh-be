@@ -1,6 +1,6 @@
 package com.kcvn.spm.app.completionrate.controller
 
-import com.kcvn.spm.app.completionrate.service.completionRateProductService
+import com.kcvn.spm.app.completionrate.service.CompletionRateProductService
 import com.kcvn.spm.common.payload.PaginatedResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 class CompletionRateProductController {
     @RestController
     @RequestMapping("/api/completion-rate/product")
-    class CompletionRateProductController(private val completionRateProductService: completionRateProductService) {
+    class CompletionRateProductController(private val completionRateProductService: CompletionRateProductService) {
 
         @GetMapping("/all")
         fun getAllProducts(

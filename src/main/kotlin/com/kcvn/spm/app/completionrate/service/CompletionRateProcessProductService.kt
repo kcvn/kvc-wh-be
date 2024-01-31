@@ -1,6 +1,5 @@
 package com.kcvn.spm.app.completionrate.service
-
-import CompletionRateProcessProductRepository
+import com.kcvn.spm.repository.CompletionRateProcessProductRepository
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import org.springframework.data.domain.Pageable

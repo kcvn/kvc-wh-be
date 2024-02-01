@@ -1,7 +1,9 @@
 package com.kcvn.spm.app.completionrate.controller
 
 import com.kcvn.spm.app.completionrate.service.CompletionRateProductService
+import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
+import com.kcvn.spm.common.util.CommonUtils
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
@@ -34,31 +36,26 @@ class CompletionRateProductController(private val completionRateProductService: 
 
 
     @PostMapping(value = ["/import-csv"], consumes = ["multipart/form-data"])
-    fun importCsv(@RequestPart("file") multipartFile: MultipartFile): ResponseEntity<List<CsvRecord>> {
-        val csvRecords = mutableListOf<CsvRecord>()
-
+    fun importCsv(@RequestPart("file") multipartFile: MultipartFile): ResponseEntity<*> {
         try {
-            if (!multipartFile.isEmpty) {
-                val bytes: ByteArray = multipartFile.bytes
-                val completeData = String(bytes)
-                val rows = completeData.split("#")
-                val columns = rows[0].split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-
-
-                val check = 1;
-            }
-
-            return ResponseEntity<List<CsvRecord>>(csvRecords, HttpStatus.OK)
-
-        } catch (e: Exception) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null)
+            val data = completionRateProductService.importCsvProduct(multipartFile)
+            return ResponseEntity<MessageResponse>(
+                MessageResponse(data),
+                HttpStatus.OK
+            )
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            return ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("import.failed")),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
         }
     }
 
 
 
 
-    data class CsvRecord(val key: String, val tld: String)
 
 
 }

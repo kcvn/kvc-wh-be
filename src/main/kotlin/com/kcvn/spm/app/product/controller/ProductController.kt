@@ -6,6 +6,7 @@ import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductAndProcessResponse
 import com.kcvn.spm.app.product.payload.response.ProductResponse
 import com.kcvn.spm.app.product.service.ProductService
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.FileResponse
 import com.kcvn.spm.common.payload.MessageResponse
@@ -71,6 +72,7 @@ class ProductController(
     fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
         try {
             val resource = ClassPathResource("media/template/ImportProductTemplate.csv")
+            if (resource.exists()) throw BusinessException("Đường dẫn file không tồn tại")
             val file = FileSystemResource(resource.file.absolutePath)
             val streamingResponseBody = StreamingResponseBody { outputStream ->
                 file.inputStream.use { input ->
@@ -86,7 +88,7 @@ class ProductController(
         }
         catch (e: Exception) {
             e.printStackTrace()
-            throw e
+            throw BusinessException(e.localizedMessage)
         }
     }
 

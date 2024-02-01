@@ -4,7 +4,9 @@ import jakarta.validation.constraints.NotBlank
 import java.time.LocalDate
 
 class UserRequest {
+    @field:NotBlank(message = "username must not be blank")
     var username: @NotBlank String? = null
+    @field:NotBlank(message = "password must not be blank")
     var password: @NotBlank String? = null
     var employeeCode: String? = null
     var email: String? = null

@@ -13,10 +13,10 @@ import org.springframework.web.multipart.MultipartFile
 
 
 @RestController
-@RequestMapping("/api/completion-rate/product")
+@RequestMapping("/api/completion-rate")
 class CompletionRateProductController(private val completionRateProductService: CompletionRateProductService) {
 
-    @GetMapping("/all")
+    @GetMapping("/product/all")
     fun getAllProducts(
         @RequestParam(required = false) search: String?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable?
@@ -35,7 +35,7 @@ class CompletionRateProductController(private val completionRateProductService: 
     }
 
 
-    @PostMapping(value = ["/import-csv"], consumes = ["multipart/form-data"])
+    @PostMapping(value = ["/product/import-csv"], consumes = ["multipart/form-data"])
     fun importCsv(@RequestPart("file") multipartFile: MultipartFile): ResponseEntity<*> {
         try {
             val data = completionRateProductService.importCsvProduct(multipartFile)

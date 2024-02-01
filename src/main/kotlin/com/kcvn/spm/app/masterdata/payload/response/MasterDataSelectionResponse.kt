@@ -11,4 +11,6 @@ data class MasterDataSelectionResponse (
     val tapeTypeSelections: List<DropdownResponse> = listOf(),
     val processConvertCodes:  List<DropdownResponse> = listOf(),
     val processStatisticCodes: List<DropdownResponse> = listOf(),
+    val tapeCommonSelections: List<DropdownResponse> = listOf(),
+    val ringJigSelections: List<DropdownResponse> = listOf(),
 )

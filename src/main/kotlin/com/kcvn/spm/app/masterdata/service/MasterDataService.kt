@@ -15,7 +15,8 @@ class MasterDataService(
     fun getMasterDataSelection() : MasterDataSelectionResponse {
         val types = listOf(
             Constants.KHUNG_1, Constants.KHUNG_2, Constants.KHUON_DUC,
-            Constants.SR_OR_NSR, Constants.LOAI_XUAT_HANG, Constants.LOAI_TAPE
+            Constants.SR_OR_NSR, Constants.LOAI_XUAT_HANG, Constants.LOAI_TAPE,
+            Constants.MACHUYENDOI, Constants.MATHONGKE
         )
         val data = commonCategoryRep.getByType(types)
         return MasterDataSelectionResponse(

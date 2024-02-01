@@ -228,9 +228,9 @@
 <!--						<url>${spring.datasource.url}</url>-->
 <!--						<user>${spring.datasource.username}</user>-->
 <!--						<password>${spring.datasource.password}</password>-->
-						<url>jdbc:postgresql://192.168.1.147:31792/kcvn-spm</url>
+						<url>jdbc:postgresql://localhost:5432/kcvn-spm</url>
 						<user>postgres</user>
-						<password>db-password</password>
+						<password>123</password>
 					</jdbc>
 					<generator>
 						<name>org.jooq.codegen.KotlinGenerator</name>

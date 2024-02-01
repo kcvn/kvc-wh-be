@@ -3,6 +3,7 @@ package com.kcvn.spm.common.exception.handler
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.servlet.http.HttpServletResponse
+import org.apache.commons.text.StringEscapeUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -55,9 +56,9 @@ class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
         status: HttpStatusCode,
         request: WebRequest
     ): ResponseEntity<Any>? {
-        val firstErrorMessage = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage
+        val firstErrorMessage = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage.toString()
 
-        val result: Map<String, String?> = mapOf("message" to firstErrorMessage)
+        val result: Map<String, String?> = mapOf("message" to CommonUtils.getMessage(firstErrorMessage))
 
         return ResponseEntity(result, HttpStatus.BAD_REQUEST)
     }

@@ -105,7 +105,7 @@ class ProductController(
     }
 
     @GetMapping("/get-product-detail/{id}")
-    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<ProductAndProcessResponse?> {
+    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<ProductAndProcessResponse> {
         val dataProduct = productService.getProductDetail(id)
         val nameProduct = dataProduct?.name
         val dataProcess = productProcessService.getProductProcessDetail(nameProduct)
@@ -114,9 +114,9 @@ class ProductController(
             listProcess = dataProcess
         )
         return if (resultData.detail != null ) {
-            ResponseEntity<ProductAndProcessResponse?>(resultData, HttpStatus.OK)
+            ResponseEntity<ProductAndProcessResponse>(resultData, HttpStatus.OK)
         } else {
-            ResponseEntity<ProductAndProcessResponse?>(HttpStatus.NOT_FOUND)
+            ResponseEntity<ProductAndProcessResponse>(HttpStatus.NOT_FOUND)
         }
     }
 }

@@ -1,4 +1,5 @@
 package com.kcvn.spm.repository
+
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
@@ -10,8 +11,11 @@ import org.springframework.stereotype.Repository
 import org.springframework.data.domain.Pageable
 
 @Repository
-class CompletionRateProcessProductRepository (private val context: DSLContext) : SortingRepository(){
-    fun getPaginatedCompletionRateProcessesProduct(search: String?, pageable: Pageable?): Pair<List<CompletionRateProcessProduct>, Int> {
+class CompletionRateProcessProductRepository(private val context: DSLContext) : SortingRepository() {
+    fun getPaginatedCompletionRateProcessesProduct(
+        search: String?,
+        pageable: Pageable?
+    ): Pair<List<CompletionRateProcessProduct>, Int> {
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
@@ -37,7 +41,7 @@ class CompletionRateProcessProductRepository (private val context: DSLContext) :
             "key" -> COMPLETION_RATE_PROCESS_PRODUCT.KEY
             "product_name_shortcut" -> COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT
             "layerCode" -> COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE
-            "process_code"-> COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE
+            "process_code" -> COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE
             // Add more cases for other fields as needed
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }
@@ -47,8 +51,10 @@ class CompletionRateProcessProductRepository (private val context: DSLContext) :
         return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
             .fetchInto(CompletionRateProcessProduct::class.java)
     }
+
     fun findByObjectId(objectId: String): CompletionRateProcessProduct? {
-        return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT).where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(objectId))
+        return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
+            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(objectId))
             .fetchInto(CompletionRateProcessProduct::class.java)
             .firstOrNull()
     }
@@ -65,6 +71,9 @@ class CompletionRateProcessProductRepository (private val context: DSLContext) :
     }
 
     fun delete(id: String) {
-        context.deleteFrom(COMPLETION_RATE_PROCESS_PRODUCT).where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(id)).execute()
+        context.update(COMPLETION_RATE_PROCESS_PRODUCT)
+            .set(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED, true)
+            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(id))
+            .execute()
     }
 }

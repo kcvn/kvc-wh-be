@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import org.springframework.http.MediaType
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
 import java.nio.file.Files
 import kotlin.io.path.fileSize
@@ -71,11 +72,12 @@ class ProductController(
     @GetMapping("/download-template-csv")
     fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
         try {
-            val resource = ClassPathResource("media/template/ImportProductTemplate.csv")
-            if (resource.exists()) throw BusinessException("Đường dẫn file không tồn tại")
-            val file = FileSystemResource(resource.file.absolutePath)
+            val filePath = "${System.getProperty("user.dir")}/target/classes/media/template/ImportProductTemplate.csv"
+            println(filePath)
+            val resource = FileSystemResource(filePath)
+
             val streamingResponseBody = StreamingResponseBody { outputStream ->
-                file.inputStream.use { input ->
+                resource.inputStream.use { input ->
                     input.copyTo(outputStream)
                 }
             }
@@ -83,7 +85,7 @@ class ProductController(
             response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
             response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
             response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
-            response.setContentLengthLong(resource.file.length())
+            response.setContentLengthLong(1048576)
             return streamingResponseBody
         }
         catch (e: Exception) {

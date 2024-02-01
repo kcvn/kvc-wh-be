@@ -52,11 +52,6 @@
 			<version>5.9</version>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.module</groupId>
-			<artifactId>jackson-module-kotlin</artifactId>
-			<version>2.13.0</version> <!-- Sử dụng phiên bản mới nhất của Jackson -->
-		</dependency>
-		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>${apache.poi.version}</version>
@@ -184,6 +179,31 @@
 							<files>
 								<file>src/main/resources/application.properties</file>
 							</files>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/media/template</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/resources/media/template</directory>
+									<includes>
+										<include>*.csv</include>
+									</includes>
+								</resource>
+							</resources>
 						</configuration>
 					</execution>
 				</executions>

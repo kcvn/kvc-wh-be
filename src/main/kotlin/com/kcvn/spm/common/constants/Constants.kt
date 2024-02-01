@@ -18,5 +18,7 @@ class Constants {
         const val SR_OR_NSR = "SR_OR_NSR"
         const val RING_JIG = "RING_JIG"
         const val TAPE_DUNG_CHUNG = "TAPE_DUNG_CHUNG"
+        const val MACHUYENDOI = "MA_CHUYEN_DOI"
+        const val MATHONGKE = "MA_THONG_KE"
     }
 }

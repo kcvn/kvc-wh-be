@@ -15,7 +15,8 @@ class MasterDataService(
     fun getMasterDataSelection() : MasterDataSelectionResponse {
         val types = listOf(
             Constants.KHUNG_1, Constants.KHUNG_2, Constants.KHUON_DUC,
-            Constants.SR_OR_NSR, Constants.LOAI_XUAT_HANG, Constants.LOAI_TAPE
+            Constants.SR_OR_NSR, Constants.LOAI_XUAT_HANG, Constants.LOAI_TAPE,
+            Constants.MACHUYENDOI, Constants.MATHONGKE
         )
         val data = commonCategoryRep.getByType(types)
         return MasterDataSelectionResponse(
@@ -25,6 +26,8 @@ class MasterDataService(
             srNosrSelections = data.filter { x -> x.type == Constants.SR_OR_NSR }.mapNotNull { x -> DropdownResponse(x.value, x.value) },
             exportTypeSelections = data.filter { x -> x.type == Constants.LOAI_XUAT_HANG }.mapNotNull { x -> DropdownResponse(x.value, x.value) },
             tapeTypeSelections = data.filter { x -> x.type == Constants.LOAI_TAPE }.mapNotNull { x -> DropdownResponse(x.value, x.value) },
+            processConvertCodes = data.filter { x -> x.type == Constants.MACHUYENDOI }.mapNotNull { x -> DropdownResponse(x.value, x.value) },
+            processStatisticCodes = data.filter { x -> x.type == Constants.MATHONGKE }.mapNotNull { x -> DropdownResponse(x.value, x.value) },
         )
     }
 }

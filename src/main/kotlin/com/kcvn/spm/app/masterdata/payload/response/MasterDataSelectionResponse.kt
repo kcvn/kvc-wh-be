@@ -9,4 +9,6 @@ data class MasterDataSelectionResponse (
     val exportTypeSelections: List<DropdownResponse> = listOf(),
     val srNosrSelections: List<DropdownResponse> = listOf(),
     val tapeTypeSelections: List<DropdownResponse> = listOf(),
+    val processConvertCodes:  List<DropdownResponse> = listOf(),
+    val processStatisticCodes: List<DropdownResponse> = listOf(),
 )

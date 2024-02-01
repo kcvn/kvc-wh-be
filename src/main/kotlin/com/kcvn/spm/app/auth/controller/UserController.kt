@@ -69,7 +69,7 @@ class UserController(
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_USER.value) || hasRole('ADMIN')")
-    fun createUser(@RequestBody userRequest: @Valid UserRequest?): ResponseEntity<*> {
+    fun createUser(@Valid @RequestBody userRequest: UserRequest?): ResponseEntity<*> {
         val user = userService.createUser(userRequest!!)
         return if (user != null) {
             ResponseEntity<MessageResponse>(
@@ -88,7 +88,7 @@ class UserController(
     @PreAuthorize("#id == principal.id || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).UPDATE_USER.value) || hasRole('ADMIN')")
     fun updateUser(
         @PathVariable("id") id: String,
-        @RequestBody userRequest: @Valid UserRequest
+        @Valid @RequestBody userRequest: UserRequest
     ): ResponseEntity<*> {
         val user = userService.updateInfo(id, userRequest)
         return ResponseEntity<MessageResponse>(
@@ -101,7 +101,7 @@ class UserController(
     @PreAuthorize("#id == principal.id || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).UPDATE_USER.value) || hasRole('ADMIN')")
     fun changePassword(
         @PathVariable("id") id: String,
-        @RequestBody passwordRequest: @Valid PasswordRequest,
+        @Valid @RequestBody passwordRequest: PasswordRequest,
         authentication: Authentication
     ): ResponseEntity<*> {
         val userDetails = authentication.principal as UserDetailsImpl

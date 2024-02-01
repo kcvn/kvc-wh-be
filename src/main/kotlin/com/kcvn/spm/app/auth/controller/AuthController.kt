@@ -31,7 +31,7 @@ class AuthController(
         private val userService: UserService
 ) {
     @PostMapping("/signin")
-    fun authenticateUser(@RequestBody loginRequest: @Valid LoginRequest?): ResponseEntity<*> {
+    fun authenticateUser(@Valid @RequestBody loginRequest: LoginRequest?): ResponseEntity<*> {
             val authentication: Authentication = authenticationManager.authenticate(
                     UsernamePasswordAuthenticationToken(loginRequest?.username, loginRequest?.password)
             )
@@ -48,7 +48,7 @@ class AuthController(
     }
 
     @PostMapping("/forgot-password")
-    fun forgotPassword(@RequestBody request: @Valid ForgotPasswordRequest?): ResponseEntity<*> {
+    fun forgotPassword(@Valid @RequestBody request: ForgotPasswordRequest?): ResponseEntity<*> {
         userService.createPasswordResetToken(request!!.email!!, request.url!!)
         return ResponseEntity<MessageResponse>(
                 MessageResponse(CommonUtils.getMessage("action.succeeded")),
@@ -57,7 +57,7 @@ class AuthController(
     }
 
     @PostMapping("/reset-password")
-    fun resetPassword(locale: Locale?, @RequestBody passwordRequest: @Valid PasswordRequest): ResponseEntity<*> {
+    fun resetPassword(locale: Locale?, @Valid @RequestBody passwordRequest: PasswordRequest): ResponseEntity<*> {
         userService.validatePasswordResetToken(passwordRequest.token!!)
         val user = userService.getUserByPasswordResetToken(passwordRequest.token!!)
         userService.updatePassword(user.id!!, passwordRequest.password!!)

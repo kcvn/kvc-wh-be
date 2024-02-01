@@ -66,7 +66,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .where(PRODUCT_PROCESS.ID.eq(request.id))
             .returningResult(PRODUCT_PROCESS)
-            .fetchInto(ProductProcess::class.java).firstOrNull()
+            .fetchAnyInto(ProductProcess::class.java)
         return  data;
     }
 

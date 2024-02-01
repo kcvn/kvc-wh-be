@@ -8,6 +8,7 @@ import com.kcvn.spm.app.product.payload.response.ProductResponse
 import com.kcvn.spm.app.product.service.ProductService
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.FileResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
@@ -55,7 +56,7 @@ class ProductController(
             ResponseEntity<PagingProductResponse>(data, HttpStatus.OK)
         } catch (e: Exception) {
             e.printStackTrace()
-            ResponseEntity<PagingProductResponse>(null, HttpStatus.OK)
+            ResponseEntity<PagingProductResponse>(null, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -104,38 +105,19 @@ class ProductController(
 //    }
 
     @GetMapping("/download-template-csv")
-    fun downloadTemplateCsv(response: HttpServletResponse) : ResponseEntity<FileResponse> {
+    fun downloadTemplateCsv(response: HttpServletResponse) : ResponseEntity<BaseResponse<FileResponse>> {
 
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.csv"
         val file = File(filePath)
 
         val fileContent = Files.readAllBytes(file.toPath())
-
-        val response = FileResponse(
-            fileName = "ImportProductTemplate.csv",
-            contentType = "text/csv",
-            content = fileContent
+        val data = FileResponse(
+                fileName = "ImportProductTemplate.csv",
+                contentType = "text/csv",
+                content = fileContent
         )
+        val response = BaseResponse<FileResponse>(data)
         return ResponseEntity(response, HttpStatus.OK)
-    }
-
-    fun convertFileInputStreamToByteArray(fileInputStream: FileInputStream): ByteArrayOutputStream {
-        val byteStream = ByteArrayOutputStream()
-
-        try {
-            // Đọc dữ liệu từ FileInputStream và ghi vào ByteArrayOutputStream
-            val buffer = ByteArray(4096)
-            var bytesRead: Int
-            while (fileInputStream.read(buffer).also { bytesRead = it } != -1) {
-                byteStream.write(buffer, 0, bytesRead)
-            }
-        } finally {
-            // Đóng FileInputStream
-            fileInputStream.close()
-        }
-
-        // Chuyển đổi ByteArrayOutputStream thành ByteArray
-        return byteStream
     }
 
     @GetMapping("/export-excel")

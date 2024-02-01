@@ -11,10 +11,13 @@ import org.springframework.stereotype.Repository
 import org.springframework.data.domain.Pageable
 
 @Repository
-class CompletionRateProcessRepository(private val context: DSLContext) : SortingRepository(){
+class CompletionRateProcessRepository(private val context: DSLContext) : SortingRepository() {
 
 
-    fun getPaginatedCompletionRateProcesses(search: String?, pageable: Pageable?): Pair<List<CompletionRateProcess>, Int> {
+    fun getPaginatedCompletionRateProcesses(
+        search: String?,
+        pageable: Pageable?
+    ): Pair<List<CompletionRateProcess>, Int> {
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
@@ -23,11 +26,11 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
         }
 
         val completionRateProcessesQuery = context.selectFrom(COMPLETION_RATE_PROCESS)
-                .where(condition)
-                .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS.UPDATED_DATE))
-                .limit(pageable?.pageSize ?: 10)
-                .offset(pageable?.offset ?: 0)
-                .fetchInto(CompletionRateProcess::class.java)
+            .where(condition)
+            .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS.UPDATED_DATE))
+            .limit(pageable?.pageSize ?: 10)
+            .offset(pageable?.offset ?: 0)
+            .fetchInto(CompletionRateProcess::class.java)
 
         val total = context.fetchCount(COMPLETION_RATE_PROCESS, condition)
 
@@ -46,18 +49,19 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
 
     fun getAllProducts(): List<CompletionRateProcess> {
         return context.selectFrom(COMPLETION_RATE_PROCESS)
-                .fetchInto(CompletionRateProcess::class.java)
+            .fetchInto(CompletionRateProcess::class.java)
     }
+
     fun findByObjectId(objectId: String): CompletionRateProcess? {
         return context.selectFrom(COMPLETION_RATE_PROCESS).where(COMPLETION_RATE_PROCESS.ID.eq(objectId))
-                .fetchInto(CompletionRateProcess::class.java)
-                .firstOrNull()
+            .fetchInto(CompletionRateProcess::class.java)
+            .firstOrNull()
     }
 
     fun findByObjectId(objectIds: List<String>): List<CompletionRateProcess> {
         return context.selectFrom(COMPLETION_RATE_PROCESS)
-                .where(COMPLETION_RATE_PROCESS.ID.`in`(objectIds))
-                .fetchInto(CompletionRateProcess::class.java)
+            .where(COMPLETION_RATE_PROCESS.ID.`in`(objectIds))
+            .fetchInto(CompletionRateProcess::class.java)
     }
 
     fun add(model: CompletionRateProcess) {
@@ -66,7 +70,10 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
     }
 
     fun delete(id: String) {
-        context.deleteFrom(COMPLETION_RATE_PROCESS).where(COMPLETION_RATE_PROCESS.ID.eq(id)).execute()
+        context.update(COMPLETION_RATE_PROCESS)
+            .set(COMPLETION_RATE_PROCESS.IS_DELETED, true)
+            .where(COMPLETION_RATE_PROCESS.ID.eq(id))
+            .execute()
     }
 
 }

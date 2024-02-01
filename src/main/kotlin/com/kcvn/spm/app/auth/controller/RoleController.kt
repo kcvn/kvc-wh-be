@@ -48,7 +48,7 @@ class RoleController(private val roleService: RoleService) {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
-    fun createRole(@RequestBody request: @Valid RoleRequest?): ResponseEntity<*> {
+    fun createRole(@Valid @RequestBody request: RoleRequest?): ResponseEntity<*> {
         val role = roleService.createRole(request!!)
         return if (role == null) {
             ResponseEntity<MessageResponse>(
@@ -67,7 +67,7 @@ class RoleController(private val roleService: RoleService) {
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).UPDATE_ROLE.value) || hasRole('ADMIN')")
     fun updateRole(
         @PathVariable("id") id: String,
-        @RequestBody request: @Valid RoleRequest
+        @Valid @RequestBody request: RoleRequest
     ): ResponseEntity<*> {
         val role = roleService.updateRole(id, request)
         return ResponseEntity<MessageResponse>(

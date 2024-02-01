@@ -85,6 +85,22 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             "processConvertCode" -> {
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE
             }
+            "processCode" -> {
+                PRODUCT_PROCESS.PROCESS_CODE
+            }
+            "processName" -> {
+                PRODUCT_PROCESS.PROCESS_NAME
+            }
+            "processNameJp" -> {
+                PRODUCT_PROCESS.PROCESS_NAME_JP
+            }
+            "processStatisticCode" -> {
+                PRODUCT_PROCESS.PROCESS_STATISTIC_CODE
+            }
+            "processInventoryCode" -> {
+                PRODUCT_PROCESS.PROCESS_INVENTORY_CODE
+            }
+
             else -> {
                 val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
                 throw InvalidDataAccessApiUsageException(errorMessage)

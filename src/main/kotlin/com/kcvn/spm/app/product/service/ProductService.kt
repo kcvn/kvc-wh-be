@@ -2,6 +2,7 @@ package com.kcvn.spm.app.product.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.product.dto.LayerImportProductModel
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
@@ -11,6 +12,7 @@ import com.kcvn.spm.common.helper.jsonhelper.JsonConvert
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Product
+import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.CompletionRateProductRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
@@ -27,7 +29,8 @@ import java.nio.charset.StandardCharsets
 class ProductService(
     private val productRep: ProductRepository,
     private val productProcessRep: ProductProcessRepository,
-    private val completionRateProductRep: CompletionRateProductRepository
+    private val completionRateProductRep: CompletionRateProductRepository,
+    private val masterDataService: MasterDataService
 ) {
 
     fun getListProduct(request: ProductSearchRequest?, pageable: Pageable) : PagingProductResponse {
@@ -79,10 +82,21 @@ class ProductService(
         val productNames = data.mapNotNull { x -> x[0] }
         val productExists = productRep.getByName(productNames)
 
+        val masterData = masterDataService.getMasterDataSelection()
+
         var count = 0
 
         for(item in data) {
             try {
+                if (!masterData.exportTypeSelections.any { x -> x.value == item[1] }) continue
+                if (!masterData.frame1Selections.any { x -> x.value == item[3] }) continue
+                if (!masterData.frame2Selections.any { x -> x.value == item[4] }) continue
+                if (!masterData.moldSelections.any { x -> x.value == item[5] }) continue
+                if (!masterData.srNosrSelections.any { x -> x.value == item[7] }) continue
+                if (!masterData.ringJigSelections.any { x -> x.value == item[11] }) continue
+                if (!masterData.tapeCommonSelections.any { x -> x.value == item[14] }) continue
+                if (!masterData.tapeTypeSelections.any { x -> x.value == item[15] }) continue
+
                 val productExist = productExists.find { x -> x.name == item[0] }
 
                 if (productExist == null) {
@@ -115,7 +129,8 @@ class ProductService(
                     product.productLayerDetail = JsonConvert.serialize(layers)
 
                     productRep.add(product)
-                } else {
+                }
+                else {
                     productExist.exportType = item[1]
                     productExist.size = item[2]
                     productExist.frame_1 = item[3]

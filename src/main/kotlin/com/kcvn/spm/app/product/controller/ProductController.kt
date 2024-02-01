@@ -69,29 +69,48 @@ class ProductController(
         }
     }
 
+//    @GetMapping("/download-template-csv")
+//    fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
+//        try {
+//            var resource = ClassPathResource("media/template/ImportProductTemplate.csv")
+//            if (resource.exists()) throw BusinessException("Đường dẫn file không tồn tại")
+//            println(resource.file.absolutePath)
+//            val file = FileSystemResource(resource.file.absolutePath)
+//
+//            val streamingResponseBody = StreamingResponseBody { outputStream ->
+//                file.inputStream.use { input ->
+//                    input.copyTo(outputStream)
+//                }
+//            }
+//
+//            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+//            response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
+//            response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
+//            response.setContentLengthLong(1048576)
+//            return streamingResponseBody
+//        }
+//        catch (e: Exception) {
+//            e.printStackTrace()
+//            throw BusinessException(e.localizedMessage)
+//        }
+//    }
+
     @GetMapping("/download-template-csv")
     fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
-        try {
-            val filePath = "${System.getProperty("user.dir")}/target/classes/media/template/ImportProductTemplate.csv"
-            println(filePath)
-            val resource = FileSystemResource(filePath)
-
-            val streamingResponseBody = StreamingResponseBody { outputStream ->
-                resource.inputStream.use { input ->
-                    input.copyTo(outputStream)
-                }
+        val resource = ClassPathResource("media/template/ImportProductTemplate.csv")
+        println(resource.file.absolutePath)
+        val file = FileSystemResource(resource.file.absolutePath)
+        val streamingResponseBody = StreamingResponseBody { outputStream ->
+            file.inputStream.use { input ->
+                input.copyTo(outputStream)
             }
+        }
 
-            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
-            response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
-            response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
-            response.setContentLengthLong(1048576)
-            return streamingResponseBody
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            throw BusinessException(e.localizedMessage)
-        }
+        response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+        response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
+        response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
+        response.setContentLengthLong(resource.file.length())
+        return streamingResponseBody
     }
 
     @GetMapping("/export-excel")

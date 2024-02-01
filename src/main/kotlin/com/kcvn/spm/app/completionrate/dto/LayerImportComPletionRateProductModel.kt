@@ -2,7 +2,7 @@ package com.kcvn.spm.app.completionrate.dto
 import java.math.BigInteger;
 
 class LayerImportCompletionRateProductModel {
-    var productName: String? = null
+    var key: String? = null
     var rate: BigInteger? = null
-    var ErrorMessage: String? =null
+    var errorMessage: String? =null
 }

@@ -195,10 +195,10 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.build.directory}/classes</outputDirectory>
+							<outputDirectory>${project.build.directory}/classes/assets/template</outputDirectory>
 							<resources>
 								<resource>
-									<directory>src/main/resources/media/template</directory>
+									<directory>${project.basedir}/src/main/kotlin/com/kcvn/spm/assets/template</directory>
 									<includes>
 										<include>*.csv</include>
 									</includes>
@@ -258,14 +258,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-<!--		<resources>-->
-<!--			<resource>-->
-<!--				<directory>src/main/resources/media</directory>-->
-<!--				<includes>-->
-<!--					<include>**/*.csv</include>-->
-<!--				</includes>-->
-<!--			</resource>-->
-<!--		</resources>-->
 	</build>
 
 </project>

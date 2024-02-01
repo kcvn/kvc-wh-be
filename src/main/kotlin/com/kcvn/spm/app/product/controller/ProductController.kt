@@ -8,6 +8,7 @@ import com.kcvn.spm.app.product.payload.response.ProductResponse
 import com.kcvn.spm.app.product.service.ProductService
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.FileResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
@@ -15,9 +16,11 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.FileSystemResource
 import com.kcvn.spm.sample.service.ProductProcessService
+import com.opencsv.CSVReaderBuilder
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
+import org.springframework.http.ContentDisposition
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -26,9 +29,15 @@ import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import org.springframework.http.MediaType
 import java.io.BufferedReader
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileReader
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.io.OutputStream
 import java.nio.file.Files
+import java.util.Base64
 import kotlin.io.path.fileSize
 
 @RestController
@@ -47,7 +56,7 @@ class ProductController(
             ResponseEntity<PagingProductResponse>(data, HttpStatus.OK)
         } catch (e: Exception) {
             e.printStackTrace()
-            ResponseEntity<PagingProductResponse>(null, HttpStatus.OK)
+            ResponseEntity<PagingProductResponse>(null, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -69,31 +78,46 @@ class ProductController(
         }
     }
 
-    @GetMapping("/download-template-csv")
-    fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
-        try {
-//            val resource = ClassPathResource("target/classes/media/template/ImportProductTemplate.csv")
+//    @GetMapping("/download-template-csv")
+//    fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
+//        try {
+//            var resource = ClassPathResource("media/template/ImportProductTemplate.csv")
 //            if (resource.exists()) throw BusinessException("Đường dẫn file không tồn tại")
+//            println(resource.file.absolutePath)
 //            val file = FileSystemResource(resource.file.absolutePath)
-            val filePath = "target/classes/media/template/ImportProductTemplate.csv"
-            val inputStream = javaClass.classLoader.getResourceAsStream(filePath)
+//
+//            val streamingResponseBody = StreamingResponseBody { outputStream ->
+//                file.inputStream.use { input ->
+//                    input.copyTo(outputStream)
+//                }
+//            }
+//
+//            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+//            response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
+//            response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
+//            response.setContentLengthLong(1048576)
+//            return streamingResponseBody
+//        }
+//        catch (e: Exception) {
+//            e.printStackTrace()
+//            throw BusinessException(e.localizedMessage)
+//        }
+//    }
 
-            val streamingResponseBody = StreamingResponseBody { outputStream ->
-                inputStream.use { input ->
-                    input.copyTo(outputStream)
-                }
-            }
+    @GetMapping("/download-template-csv")
+    fun downloadTemplateCsv(response: HttpServletResponse) : ResponseEntity<BaseResponse<FileResponse>> {
 
-            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
-            response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
-            response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
-            response.setContentLengthLong(1048576)
-            return streamingResponseBody
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            throw BusinessException(e.localizedMessage)
-        }
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.csv"
+        val file = File(filePath)
+
+        val fileContent = Files.readAllBytes(file.toPath())
+        val data = FileResponse(
+                fileName = "ImportProductTemplate.csv",
+                contentType = "text/csv",
+                content = fileContent
+        )
+        val response = BaseResponse<FileResponse>(data)
+        return ResponseEntity(response, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")
@@ -107,7 +131,7 @@ class ProductController(
     }
 
     @GetMapping("/get-product-detail/{id}")
-    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<ProductAndProcessResponse?> {
+    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<ProductAndProcessResponse> {
         val dataProduct = productService.getProductDetail(id)
         val nameProduct = dataProduct?.name
         val dataProcess = productProcessService.getProductProcessDetail(nameProduct)
@@ -116,9 +140,9 @@ class ProductController(
             listProcess = dataProcess
         )
         return if (resultData.detail != null ) {
-            ResponseEntity<ProductAndProcessResponse?>(resultData, HttpStatus.OK)
+            ResponseEntity<ProductAndProcessResponse>(resultData, HttpStatus.OK)
         } else {
-            ResponseEntity<ProductAndProcessResponse?>(HttpStatus.NOT_FOUND)
+            ResponseEntity<ProductAndProcessResponse>(HttpStatus.NOT_FOUND)
         }
     }
 }

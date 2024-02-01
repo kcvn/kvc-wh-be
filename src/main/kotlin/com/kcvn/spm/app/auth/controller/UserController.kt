@@ -44,16 +44,11 @@ class UserController(
         @RequestParam(required = false) search: String?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable?
     ): ResponseEntity<*> {
-        return try {
-            val result = userService.getPaginatedUsers(search, pageable!!)
-            if (result.data.isEmpty())
-                ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-            else
-                ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)
-        }
+        val result = userService.getPaginatedUsers(search, pageable!!)
+        return if (result.data.isEmpty())
+            ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+        else
+            ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
     }
 
     @GetMapping("/{id}")

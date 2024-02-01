@@ -61,7 +61,7 @@ class ProductProcessService(
     }
 
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : List<ProductProcessResponse>? {
-        var dataResult: MutableList<ProductProcessResponse> = mutableListOf()
+        val dataResult: MutableList<ProductProcessResponse> = mutableListOf()
         for (item in request.listProcess!!){
             if(item.processInventoryCode == null){
                 throw BusinessException(CommonUtils.getMessage("Process Inventory Code Not Null"))

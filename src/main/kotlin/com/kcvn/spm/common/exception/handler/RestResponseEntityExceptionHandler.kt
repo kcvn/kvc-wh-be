@@ -55,13 +55,10 @@ class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
         status: HttpStatusCode,
         request: WebRequest
     ): ResponseEntity<Any>? {
-        val errors: MutableList<String> = ArrayList()
+        val firstErrorMessage = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage
 
-        ex.getAllErrors().forEach { err -> errors.add(err.getDefaultMessage()!!) }
+        val result: Map<String, String?> = mapOf("message" to firstErrorMessage)
 
-        val result: MutableMap<String, List<String>> = HashMap()
-        result["errors"] = errors
-
-        return ResponseEntity<Any>(result, HttpStatus.BAD_REQUEST)
+        return ResponseEntity(result, HttpStatus.BAD_REQUEST)
     }
 }

@@ -72,14 +72,12 @@ class ProductController(
     @GetMapping("/download-template-csv")
     fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
         try {
-//            val resource = ClassPathResource("target/classes/media/template/ImportProductTemplate.csv")
-//            if (resource.exists()) throw BusinessException("Đường dẫn file không tồn tại")
-//            val file = FileSystemResource(resource.file.absolutePath)
-            val filePath = "target/classes/media/template/ImportProductTemplate.csv"
-            val inputStream = javaClass.classLoader.getResourceAsStream(filePath)
+            val filePath = "${System.getProperty("user.dir")}/target/classes/media/template/ImportProductTemplate.csv"
+            println(filePath)
+            val resource = FileSystemResource(filePath)
 
             val streamingResponseBody = StreamingResponseBody { outputStream ->
-                inputStream.use { input ->
+                resource.inputStream.use { input ->
                     input.copyTo(outputStream)
                 }
             }

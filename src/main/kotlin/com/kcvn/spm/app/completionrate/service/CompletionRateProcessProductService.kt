@@ -1,4 +1,5 @@
 package com.kcvn.spm.app.completionrate.service
+
 import com.kcvn.spm.repository.CompletionRateProcessProductRepository
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
@@ -13,17 +14,17 @@ class CompletionRateProcessProductService(private val completionRateProcessProdu
     fun getPaginatedCompletionRateProcessesProduct(search: String?, pageable: Pageable?): PaginatedResponse {
         val result = completionRateProcessProductRepository.getPaginatedCompletionRateProcessesProduct(search, pageable)
         return PaginatedResponse(
-                data = result.first.map { item ->
-                    CompletionRateProcessProductResponse(
-                        id = item.id,
-                        key = item.key,
-                        productNameShortcut = item.productNameShortcut,
-                        processCode = item.processCode,
-                        layerCode = item.layerCode,
-                        rate = item.rate
+            data = result.first.map { item ->
+                CompletionRateProcessProductResponse(
+                    id = item.id,
+                    key = item.key,
+                    productNameShortcut = item.productNameShortcut,
+                    processCode = item.processCode,
+                    layerCode = item.layerCode,
+                    rate = item.rate
 
-                    )
-                }, result.second
+                )
+            }, result.second
         )
     }
 }

@@ -1,7 +1,6 @@
 package com.kcvn.spm.app.completionrate.payload.response
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 class CompletionRateProcessResponse(
         val id: String?,

@@ -201,6 +201,7 @@
 									<directory>${project.basedir}/src/main/kotlin/com/kcvn/spm/assets/template</directory>
 									<includes>
 										<include>*.csv</include>
+										<include>*.xlsx</include>
 									</includes>
 								</resource>
 							</resources>

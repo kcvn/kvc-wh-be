@@ -1,7 +1,5 @@
 package com.kcvn.spm.app.product.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.product.dto.LayerImportProductModel
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
@@ -9,18 +7,25 @@ import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.jsonhelper.JsonConvert
+import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Product
-import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.CompletionRateProductRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
+import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.jooq.tools.csv.CSVReader
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
@@ -34,7 +39,7 @@ class ProductService(
 ) {
 
     fun getListProduct(request: ProductSearchRequest?, pageable: Pageable) : PagingProductResponse {
-        val products = productRep.getList(request, pageable)
+        val products = productRep.getPagingList(request, pageable)
         val response = PagingProductResponse()
 
         if (products.first.isNotEmpty()) {
@@ -64,7 +69,7 @@ class ProductService(
                 lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
             ) }
             response.totalRecords = products.second
-            response.collumns = productProcesses.mapNotNull { x -> DropdownResponse(x.processCode,x.processName) }.distinct()
+            response.columns = productProcesses.mapNotNull { x -> DropdownResponse(x.processCode,x.processName) }.distinct()
         }
 
         return response
@@ -197,6 +202,65 @@ class ProductService(
                 process = query.process
             )
             return data
+        }
+    }
+
+    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
+        val products = productRep.getList(request, pageable)
+
+        val workbook = XSSFWorkbook()
+        val sheet = workbook.createSheet("Data")
+
+        val headerRow: Row = sheet.createRow(0)
+
+//        for (i in 0 until 16) {
+//            val cell: Cell = headerRow.createCell(i - 1)
+//            cell.setCellValue(metaData.getColumnName(i))
+//        }
+
+        var rowNumber = 1
+        for(item in products) {
+            val dataRow: Row = sheet.createRow(rowNumber++)
+
+            val cell: Cell = dataRow.createCell(0)
+            cell.setCellValue(item.name)
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Danh_sach_san_pham.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        return BaseResponse<FileContentModel>(response)
+    }
+
+    fun copySheet(sourceSheet: Sheet, targetSheet: Sheet) {
+        for (rowNum in 0 until sourceSheet.physicalNumberOfRows) {
+            val sourceRow = sourceSheet.getRow(rowNum)
+            val targetRow = targetSheet.getRow(rowNum) ?: targetSheet.createRow(rowNum)
+
+            for (cellNum in 0 until sourceRow.physicalNumberOfCells) {
+                val sourceCell = sourceRow.getCell(cellNum)
+                val targetCell = targetRow.createCell(cellNum)
+
+                targetCell.cellStyle = sourceCell.cellStyle
+
+                when (sourceCell.cellType) {
+                    CellType.NUMERIC -> targetCell.setCellValue(sourceCell.numericCellValue)
+                    CellType.STRING -> targetCell.setCellValue(sourceCell.stringCellValue)
+                    CellType.BOOLEAN -> targetCell.setCellValue(sourceCell.booleanCellValue)
+                    CellType.FORMULA -> targetCell.cellFormula = sourceCell.cellFormula
+                    CellType.BLANK -> targetCell.setCellValue("")
+                    CellType.ERROR -> targetCell.setCellValue("")
+                    else -> targetCell.setCellValue("")
+                }
+            }
         }
     }
 }

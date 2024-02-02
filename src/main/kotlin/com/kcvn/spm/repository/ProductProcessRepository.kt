@@ -47,14 +47,14 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
 
     fun  getByProductProcessDetail(productName: String?) : List<ProductProcess?>? {
         val data = context.selectFrom(PRODUCT_PROCESS)
-            .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)))
+            .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java)
         return  data
     }
 
     fun  getByProductProcessDetailById(id: String?) : ProductProcess? {
         val data = context.selectFrom(PRODUCT_PROCESS)
-            .where((PRODUCT_PROCESS.ID.eq(id)))
+            .where((PRODUCT_PROCESS.ID.eq(id)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java).firstOrNull()
         return  data
     }
@@ -64,7 +64,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
             .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
             .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
-            .where(PRODUCT_PROCESS.ID.eq(request.id))
+            .where(PRODUCT_PROCESS.ID.eq(request.id).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .returningResult(PRODUCT_PROCESS)
             .fetchAnyInto(ProductProcess::class.java)
         return  data;

@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.product.dto
+package com.kcvn.spm.app.product.payload.model
 
 data class LayerImportProductModel (
     var layerCode: String? = null,

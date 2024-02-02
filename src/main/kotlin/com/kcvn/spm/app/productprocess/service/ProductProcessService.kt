@@ -24,7 +24,7 @@ class ProductProcessService(
         val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
         val listProductName = result.first.map { it.productName }
         val  uniqueListProductName = listProductName.distinct()
-        val listProduct = productRepository.getProductByListName(uniqueListProductName);
+        val listProduct = productRepository.getByName(uniqueListProductName.filterNotNull())
         return PaginatedResponse(result.first.map {
             productProcess -> ProductProcessResponse(
                 id = productProcess.id,
@@ -36,7 +36,7 @@ class ProductProcessService(
                 processConvertCode = productProcess.processConvertCode,
                 processStatisticCode = productProcess.processStatisticCode,
                 processInventoryCode = productProcess.processInventoryCode,
-                productId = listProduct?.find { x -> x.name == productProcess.productName }?.id
+                productId = listProduct.find { x -> x.name == productProcess.productName }?.id
             )
         }, result.second)
     }

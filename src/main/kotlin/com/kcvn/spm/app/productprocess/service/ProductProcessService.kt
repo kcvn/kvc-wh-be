@@ -24,7 +24,7 @@ class ProductProcessService(
         val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
         val listProductName = result.first.map { it.productName }
         val  uniqueListProductName = listProductName.distinct()
-        val listProduct = productRepository.getProductByListName(uniqueListProductName);
+        val listProduct = productRepository.getByName(uniqueListProductName.filterNotNull())
         return PaginatedResponse(result.first.map {
             productProcess -> ProductProcessResponse(
                 id = productProcess.id,
@@ -36,7 +36,7 @@ class ProductProcessService(
                 processConvertCode = productProcess.processConvertCode,
                 processStatisticCode = productProcess.processStatisticCode,
                 processInventoryCode = productProcess.processInventoryCode,
-                productId = listProduct?.find { x -> x.name == productProcess.productName }?.id
+                productId = listProduct.find { x -> x.name == productProcess.productName }?.id
             )
         }, result.second)
     }
@@ -63,17 +63,8 @@ class ProductProcessService(
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : List<ProductProcessResponse>? {
         val dataResult: MutableList<ProductProcessResponse> = mutableListOf()
         for (item in request.listProcess!!){
-            if(item.processInventoryCode == null){
-                throw BusinessException(CommonUtils.getMessage("Process Inventory Code Not Null"))
-            }
-            if(item.processStatisticCode == null){
-                throw BusinessException(CommonUtils.getMessage("Process Statistic Code Not Null"))
-            }
-
             val productProcess = productProcessRep.getByProductProcessDetailById(item.id)
-            if(productProcess == null){
-                throw BusinessException(CommonUtils.getMessage("Product Process Not Found "))
-            }
+                ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
             productProcess.processConvertCode = item.processConvertCode;
             productProcess.processStatisticCode = item.processStatisticCode;
             productProcess.processInventoryCode = item.processInventoryCode;

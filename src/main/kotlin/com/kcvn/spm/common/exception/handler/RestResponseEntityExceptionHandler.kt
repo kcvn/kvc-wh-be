@@ -1,15 +1,19 @@
-package com.kcvn.spm.app.auth.controller.handler
+package com.kcvn.spm.common.exception.handler
 
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.servlet.http.HttpServletResponse
+import org.apache.commons.text.StringEscapeUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.ServletWebRequest
+import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 
 @ControllerAdvice
@@ -44,5 +48,18 @@ class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
             HttpStatus.BAD_REQUEST,
             request
         )
+    }
+
+    override fun handleMethodArgumentNotValid(
+        ex: MethodArgumentNotValidException,
+        headers: HttpHeaders,
+        status: HttpStatusCode,
+        request: WebRequest
+    ): ResponseEntity<Any>? {
+        val firstErrorMessage = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage.toString()
+
+        val result: Map<String, String?> = mapOf("message" to CommonUtils.getMessage(firstErrorMessage))
+
+        return ResponseEntity(result, HttpStatus.BAD_REQUEST)
     }
 }

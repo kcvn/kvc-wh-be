@@ -23,16 +23,11 @@ class RoleController(private val roleService: RoleService) {
         @RequestParam(required = false) search: String?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable?
     ): ResponseEntity<*> {
-        return try {
-            val result = roleService.findAllPaginated(search, pageable!!)
-            if (result.data.isEmpty())
-                ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-            else
-                ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)
-        }
+        val result = roleService.findAllPaginated(search, pageable!!)
+        return if (result.data.isEmpty())
+            ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+        else
+            ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
     }
 
     @GetMapping("/{id}")
@@ -48,7 +43,7 @@ class RoleController(private val roleService: RoleService) {
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
-    fun createRole(@RequestBody request: @Valid RoleRequest?): ResponseEntity<*> {
+    fun createRole(@Valid @RequestBody request: RoleRequest?): ResponseEntity<*> {
         val role = roleService.createRole(request!!)
         return if (role == null) {
             ResponseEntity<MessageResponse>(
@@ -67,7 +62,7 @@ class RoleController(private val roleService: RoleService) {
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).UPDATE_ROLE.value) || hasRole('ADMIN')")
     fun updateRole(
         @PathVariable("id") id: String,
-        @RequestBody request: @Valid RoleRequest
+        @Valid @RequestBody request: RoleRequest
     ): ResponseEntity<*> {
         val role = roleService.updateRole(id, request)
         return ResponseEntity<MessageResponse>(

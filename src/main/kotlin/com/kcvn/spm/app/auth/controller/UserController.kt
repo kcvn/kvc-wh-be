@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.auth.controller
 
 import com.kcvn.spm.app.auth.payload.request.PasswordRequest
+import com.kcvn.spm.app.auth.payload.request.UpdateUserRequest
 import com.kcvn.spm.app.auth.payload.request.UserRequest
 import com.kcvn.spm.app.auth.payload.response.UserResponse
 import com.kcvn.spm.app.auth.security.jwt.JwtUtils
@@ -44,16 +45,11 @@ class UserController(
         @RequestParam(required = false) search: String?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable?
     ): ResponseEntity<*> {
-        return try {
-            val result = userService.getPaginatedUsers(search, pageable!!)
-            if (result.data.isEmpty())
-                ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
-            else
-                ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)
-        }
+        val result = userService.getPaginatedUsers(search, pageable!!)
+        return if (result.data.isEmpty())
+            ResponseEntity<Any?>(HttpStatus.NO_CONTENT)
+        else
+            ResponseEntity<PaginatedResponse>(result, HttpStatus.OK)
     }
 
     @GetMapping("/{id}")
@@ -69,7 +65,7 @@ class UserController(
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_USER.value) || hasRole('ADMIN')")
-    fun createUser(@RequestBody userRequest: @Valid UserRequest?): ResponseEntity<*> {
+    fun createUser(@Valid @RequestBody userRequest: UserRequest?): ResponseEntity<*> {
         val user = userService.createUser(userRequest!!)
         return if (user != null) {
             ResponseEntity<MessageResponse>(
@@ -88,11 +84,11 @@ class UserController(
     @PreAuthorize("#id == principal.id || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).UPDATE_USER.value) || hasRole('ADMIN')")
     fun updateUser(
         @PathVariable("id") id: String,
-        @RequestBody userRequest: @Valid UserRequest
+        @Valid @RequestBody userRequest: UpdateUserRequest
     ): ResponseEntity<*> {
         val user = userService.updateInfo(id, userRequest)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded"), user),
+            MessageResponse(CommonUtils.getMessage("update.succeeded"), user),
             HttpStatus.OK
         )
     }
@@ -101,7 +97,7 @@ class UserController(
     @PreAuthorize("#id == principal.id || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).UPDATE_USER.value) || hasRole('ADMIN')")
     fun changePassword(
         @PathVariable("id") id: String,
-        @RequestBody passwordRequest: @Valid PasswordRequest,
+        @Valid @RequestBody passwordRequest: PasswordRequest,
         authentication: Authentication
     ): ResponseEntity<*> {
         val userDetails = authentication.principal as UserDetailsImpl
@@ -116,7 +112,7 @@ class UserController(
         }
         val user = userService.updatePassword(id, passwordRequest.password!!)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded"), user),
+            MessageResponse(CommonUtils.getMessage("update.succeeded"), user),
             HttpStatus.OK
         )
     }
@@ -126,7 +122,7 @@ class UserController(
     fun deleteUser(@PathVariable("id") id: String): ResponseEntity<*> {
         userService.deleteById(id)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            MessageResponse(CommonUtils.getMessage("delete.succeeded")),
             HttpStatus.OK
         )
     }

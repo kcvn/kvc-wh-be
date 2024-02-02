@@ -47,15 +47,15 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
 
     fun  getByProductProcessDetail(productName: String?) : List<ProductProcess?>? {
         val data = context.selectFrom(PRODUCT_PROCESS)
-            .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)))
+            .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java)
         return  data
     }
 
     fun  getByProductProcessDetailById(id: String?) : ProductProcess? {
         val data = context.selectFrom(PRODUCT_PROCESS)
-            .where((PRODUCT_PROCESS.ID.eq(id)))
-            .fetchAnyInto(ProductProcess::class.java)
+            .where((PRODUCT_PROCESS.ID.eq(id)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+            .fetchInto(ProductProcess::class.java).firstOrNull()
         return  data
     }
     fun updateProductDetail(request: ProductProcess) :  ProductProcess? {
@@ -64,9 +64,9 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
             .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
             .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
-            .where(PRODUCT_PROCESS.ID.eq(request.id))
+            .where(PRODUCT_PROCESS.ID.eq(request.id).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .returningResult(PRODUCT_PROCESS)
-            .fetchInto(ProductProcess::class.java).firstOrNull()
+            .fetchAnyInto(ProductProcess::class.java)
         return  data;
     }
 
@@ -85,6 +85,22 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             "processConvertCode" -> {
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE
             }
+            "processCode" -> {
+                PRODUCT_PROCESS.PROCESS_CODE
+            }
+            "processName" -> {
+                PRODUCT_PROCESS.PROCESS_NAME
+            }
+            "processNameJp" -> {
+                PRODUCT_PROCESS.PROCESS_NAME_JP
+            }
+            "processStatisticCode" -> {
+                PRODUCT_PROCESS.PROCESS_STATISTIC_CODE
+            }
+            "processInventoryCode" -> {
+                PRODUCT_PROCESS.PROCESS_INVENTORY_CODE
+            }
+
             else -> {
                 val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
                 throw InvalidDataAccessApiUsageException(errorMessage)

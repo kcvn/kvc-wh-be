@@ -41,11 +41,11 @@ class ProductProcessController(
 
     @PutMapping("/update-product-process-detail")
     fun updateRole(
-        @RequestBody request: @Valid UpdateProductProcessDetailRequest
+        @Valid @RequestBody request: UpdateProductProcessDetailRequest
     ): ResponseEntity<*> {
         val productProcess = productProcessService.updateProductProcessDetail(request)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded"), productProcess),
+            MessageResponse(CommonUtils.getMessage("update.succeeded"), productProcess),
             HttpStatus.OK
         )
     }

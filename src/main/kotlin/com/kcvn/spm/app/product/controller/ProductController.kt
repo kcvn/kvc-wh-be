@@ -1,44 +1,24 @@
 package com.kcvn.spm.app.product.controller
 
-import com.kcvn.spm.app.auth.payload.response.UserResponse
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductAndProcessResponse
-import com.kcvn.spm.app.product.payload.response.ProductResponse
 import com.kcvn.spm.app.product.service.ProductService
-import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
-import com.kcvn.spm.common.payload.FileResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.core.io.ClassPathResource
-import org.springframework.core.io.FileSystemResource
 import com.kcvn.spm.sample.service.ProductProcessService
-import com.opencsv.CSVReaderBuilder
-import org.springframework.core.io.InputStreamResource
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
-import org.springframework.http.ContentDisposition
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import org.springframework.http.MediaType
-import java.io.BufferedReader
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileReader
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.OutputStream
 import java.nio.file.Files
-import java.util.Base64
-import kotlin.io.path.fileSize
 
 @RestController
 @RequestMapping("/api/product")
@@ -105,24 +85,29 @@ class ProductController(
 //    }
 
     @GetMapping("/download-template-csv")
-    fun downloadTemplateCsv(response: HttpServletResponse) : ResponseEntity<BaseResponse<FileResponse>> {
+    fun downloadTemplateCsv(response: HttpServletResponse) : ResponseEntity<BaseResponse<FileContentModel>> {
 
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.csv"
+        println(filePath)
         val file = File(filePath)
 
         val fileContent = Files.readAllBytes(file.toPath())
-        val data = FileResponse(
+        val data = FileContentModel(
                 fileName = "ImportProductTemplate.csv",
                 contentType = "text/csv",
                 content = fileContent
         )
-        val response = BaseResponse<FileResponse>(data)
+        val response = BaseResponse<FileContentModel>(data)
         return ResponseEntity(response, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")
-    fun exportExcel(request: ProductSearchRequest?): StreamingResponseBody? {
-        return null
+    fun exportExcel(
+            request: ProductSearchRequest?,
+            @PageableDefault(size = 10, page = 0) pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productService.exportExcel(request, pageable)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @PostMapping("/sync")

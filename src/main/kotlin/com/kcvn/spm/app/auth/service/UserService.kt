@@ -83,6 +83,10 @@ class UserService(
             throw BusinessException(CommonUtils.getMessage("user.error.usernameTaken"))
         }
 
+        if (userRep.findByEmployeeCode(request.employeeCode!!) != null) {
+            throw BusinessException(CommonUtils.getMessage("user.error.usernameTaken"))
+        }
+
         // Create new user's account
         val user = AuthUser(
             null,

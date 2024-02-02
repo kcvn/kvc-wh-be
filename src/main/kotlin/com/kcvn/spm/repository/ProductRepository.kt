@@ -22,7 +22,7 @@ import java.time.ZoneOffset
 @Repository
 class ProductRepository (private val context: DSLContext) : SortingRepository(){
 
-    fun getList(request: ProductSearchRequest?, pageable: Pageable) : Pair<List<Product>, Int> {
+    fun getPagingList(request: ProductSearchRequest?, pageable: Pageable) : Pair<List<Product>, Int> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.search.isNullOrEmpty()) condition = condition.and(PRODUCT.NAME.contains(request.search))
@@ -39,7 +39,8 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
 
             if (!request.tapeType.isNullOrEmpty()) condition = condition.and(PRODUCT.TAPE_TYPE.eq(request.tapeType))
         }
-        var data = context.selectFrom(PRODUCT)
+
+        val data = context.selectFrom(PRODUCT)
             .where(condition.and(PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, PRODUCT.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
@@ -48,6 +49,31 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
         val total = context.fetchCount(PRODUCT, condition.and(PRODUCT.IS_DELETED.eq(false)))
 
         return Pair(data, total)
+    }
+
+    fun getList(request: ProductSearchRequest?, pageable: Pageable) : List<Product> {
+        var condition: Condition = DSL.noCondition()
+        if (request != null) {
+            if (!request.search.isNullOrEmpty()) condition = condition.and(PRODUCT.NAME.contains(request.search))
+
+            if (!request.frame_1.isNullOrEmpty()) condition = condition.and(PRODUCT.FRAME_1.eq(request.frame_1))
+
+            if (!request.frame_2.isNullOrEmpty()) condition = condition.and(PRODUCT.FRAME_1.eq(request.frame_2))
+
+            if (!request.mold.isNullOrEmpty()) condition = condition.and(PRODUCT.MOLD.eq(request.mold))
+
+            if (!request.exportType.isNullOrEmpty()) condition = condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
+
+            if (!request.srNosr.isNullOrEmpty()) condition = condition.and(PRODUCT.SR_NOSR.eq(request.srNosr))
+
+            if (!request.tapeType.isNullOrEmpty()) condition = condition.and(PRODUCT.TAPE_TYPE.eq(request.tapeType))
+        }
+
+        return context.selectFrom(PRODUCT)
+                .where(condition.and(PRODUCT.IS_DELETED.eq(false)))
+                .orderBy(getSortFields(pageable.sort, PRODUCT.CREATED_DATE))
+                .fetchInto(Product::class.java)
+
     }
 
     fun getProductDetail(request: String) : Product? {

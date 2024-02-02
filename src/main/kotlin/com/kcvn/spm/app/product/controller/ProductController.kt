@@ -1,35 +1,24 @@
 package com.kcvn.spm.app.product.controller
 
-import com.kcvn.spm.app.auth.payload.response.UserResponse
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductAndProcessResponse
-import com.kcvn.spm.app.product.payload.response.ProductResponse
 import com.kcvn.spm.app.product.service.ProductService
-import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.payload.BasePagingResponse
-import com.kcvn.spm.common.payload.FileResponse
+import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.core.io.ClassPathResource
-import org.springframework.core.io.FileSystemResource
 import com.kcvn.spm.sample.service.ProductProcessService
-import org.springframework.core.io.InputStreamResource
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import org.springframework.http.MediaType
-import java.io.BufferedReader
 import java.io.File
-import java.io.InputStreamReader
 import java.nio.file.Files
-import kotlin.io.path.fileSize
 
 @RestController
 @RequestMapping("/api/product")
@@ -47,7 +36,7 @@ class ProductController(
             ResponseEntity<PagingProductResponse>(data, HttpStatus.OK)
         } catch (e: Exception) {
             e.printStackTrace()
-            ResponseEntity<PagingProductResponse>(null, HttpStatus.OK)
+            ResponseEntity<PagingProductResponse>(null, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
 
@@ -96,26 +85,29 @@ class ProductController(
 //    }
 
     @GetMapping("/download-template-csv")
-    fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
-        val resource = ClassPathResource("media/template/ImportProductTemplate.csv")
-        println(resource.file.absolutePath)
-        val file = FileSystemResource(resource.file.absolutePath)
-        val streamingResponseBody = StreamingResponseBody { outputStream ->
-            file.inputStream.use { input ->
-                input.copyTo(outputStream)
-            }
-        }
+    fun downloadTemplateCsv(response: HttpServletResponse) : ResponseEntity<BaseResponse<FileContentModel>> {
 
-        response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
-        response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
-        response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
-        response.setContentLengthLong(resource.file.length())
-        return streamingResponseBody
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.csv"
+        println(filePath)
+        val file = File(filePath)
+
+        val fileContent = Files.readAllBytes(file.toPath())
+        val data = FileContentModel(
+                fileName = "ImportProductTemplate.csv",
+                contentType = "text/csv",
+                content = fileContent
+        )
+        val response = BaseResponse<FileContentModel>(data)
+        return ResponseEntity(response, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")
-    fun exportExcel(request: ProductSearchRequest?): StreamingResponseBody? {
-        return null
+    fun exportExcel(
+            request: ProductSearchRequest?,
+            @PageableDefault(size = 10, page = 0) pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productService.exportExcel(request, pageable)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @PostMapping("/sync")

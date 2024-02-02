@@ -39,7 +39,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
 
         val completionRateProcessesQuery = context.selectFrom(COMPLETION_RATE_PRODUCT)
             .where(condition)
-            .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PRODUCT.CREATED_DATE))
+            .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
             .limit(pageable?.pageSize)
             .offset(pageable?.offset)
             .fetchInto(CompletionRateProduct::class.java)

@@ -95,6 +95,26 @@ class CompletionRateController(
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @PostMapping(value = ["/process/import-csv"], consumes = ["multipart/form-data"])
+    fun importCsvCompletionRateProcess(@RequestPart("file") multipartFile: MultipartFile,
+                                               @RequestParam("effectivedate") effectiveDate: LocalDateTime,
+                                               @RequestParam("expirationdate") expirationDate: LocalDateTime?
+    ): ResponseEntity<*> {
+        try {
+            val data = completionRateService.importCsvProcess(multipartFile,effectiveDate,expirationDate)
+            return ResponseEntity<MessageResponse>(
+                MessageResponse(data),
+                HttpStatus.OK
+            )
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            return ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("import.failed")),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            )
+        }
+    }
 
 }
 

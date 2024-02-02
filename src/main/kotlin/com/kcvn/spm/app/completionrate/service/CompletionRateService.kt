@@ -7,6 +7,7 @@ import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductRes
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
 import com.kcvn.spm.repository.CompletionRateProcessProductRepository
@@ -108,7 +109,69 @@ class CompletionRateService(
     }
 
     // Service Process
+    fun importCsvProcess(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?): String {
+        if (file.isEmpty()) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
+        val inputStream = file.inputStream
+        val reader = CSVReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
+        var data = reader.readAll()
+        data = data.subList(1, data.size)
+        if (data.isEmpty() || data.size == 0) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+        val productKeys = data.mapNotNull { x -> x[0] }
+
+        val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productKeys)
+
+        var count = 0
+
+        for(item in data) {
+            try {
+                val productExist = productExists.find { x -> x.key == item[0] }
+
+                if (productExist == null) {
+                    val compleRateProduct = CompletionRateProcess(
+                        key = item[0],
+                        rate =  BigDecimal(item[1]),
+                        processCode = item[0].toString().take(6),
+                        layerCode = item[0].toString().substring(6, 7),
+                        expirationDate = expirationDate,
+                        effectiveDate = effectiveDate
+                    )
+
+                    val layers = mutableListOf<LayerImportCompletionRateProductModel>()
+                    for (i in 2 until item.size) {
+                        if (item[i].isNullOrEmpty()) continue
+                        val layer = LayerImportCompletionRateProductModel().apply {
+                            key = (i - 2).toString()
+                            rate = item[i]?.toBigInteger() ?: BigInteger.ZERO
+
+                        }
+                        layers.add(layer)
+                    }
+                    completionRateProcessRepository.add(compleRateProduct)
+                } else {
+                    productExist.key = item[0]
+                    productExist.rate =  BigDecimal(item[1])
+
+                    val layers = mutableListOf<LayerImportCompletionRateProductModel>()
+                    for (i in 2 until item.size) {
+                        if (item[i].isNullOrEmpty()) continue
+                        val layer = LayerImportCompletionRateProductModel().apply {
+                            key = (i - 2).toString()
+                            rate = item[i]?.toBigInteger() ?: BigInteger.ZERO
+                        }
+                    }
+                    completionRateProcessRepository.update(productExist)
+                }
+
+                count++
+            } catch (e: BusinessException) {
+                e.printStackTrace()
+            }
+        }
+
+        return CommonUtils.getMessage("import.success", arrayOf(count, data.size))
+    }
     fun getPaginatedCompletionRateProcesses(search: String?, pageable: Pageable?): PaginatedResponse {
         val result = completionRateProcessRepository.getPaginatedCompletionRateProcesses(search, pageable)
         return PaginatedResponse(

@@ -55,7 +55,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
     fun  getByProductProcessDetailById(id: String?) : ProductProcess? {
         val data = context.selectFrom(PRODUCT_PROCESS)
             .where((PRODUCT_PROCESS.ID.eq(id)))
-            .fetchAnyInto(ProductProcess::class.java)
+            .fetchInto(ProductProcess::class.java).firstOrNull()
         return  data
     }
     fun updateProductDetail(request: ProductProcess) :  ProductProcess? {

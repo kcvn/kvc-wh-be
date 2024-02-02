@@ -64,16 +64,12 @@ class ProductProcessService(
         val dataResult: MutableList<ProductProcessResponse> = mutableListOf()
         for (item in request.listProcess!!){
             if(item.processInventoryCode == null){
-                throw BusinessException(CommonUtils.getMessage("Process Inventory Code Not Null"))
-            }
-            if(item.processStatisticCode == null){
-                throw BusinessException(CommonUtils.getMessage("Process Statistic Code Not Null"))
+                throw BusinessException(CommonUtils.getMessage("processniventorycode.null"))
             }
 
+
             val productProcess = productProcessRep.getByProductProcessDetailById(item.id)
-            if(productProcess == null){
-                throw BusinessException(CommonUtils.getMessage("Product Process Not Found "))
-            }
+                ?: throw BusinessException(CommonUtils.getMessage("productprocess.null"))
             productProcess.processConvertCode = item.processConvertCode;
             productProcess.processStatisticCode = item.processStatisticCode;
             productProcess.processInventoryCode = item.processInventoryCode;

@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.auth.controller
 
 import com.kcvn.spm.app.auth.payload.request.PasswordRequest
+import com.kcvn.spm.app.auth.payload.request.UpdateUserRequest
 import com.kcvn.spm.app.auth.payload.request.UserRequest
 import com.kcvn.spm.app.auth.payload.response.UserResponse
 import com.kcvn.spm.app.auth.security.jwt.JwtUtils
@@ -88,11 +89,11 @@ class UserController(
     @PreAuthorize("#id == principal.id || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).UPDATE_USER.value) || hasRole('ADMIN')")
     fun updateUser(
         @PathVariable("id") id: String,
-        @Valid @RequestBody userRequest: UserRequest
+        @Valid @RequestBody userRequest: UpdateUserRequest
     ): ResponseEntity<*> {
         val user = userService.updateInfo(id, userRequest)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded"), user),
+            MessageResponse(CommonUtils.getMessage("update.succeeded"), user),
             HttpStatus.OK
         )
     }
@@ -116,7 +117,7 @@ class UserController(
         }
         val user = userService.updatePassword(id, passwordRequest.password!!)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded"), user),
+            MessageResponse(CommonUtils.getMessage("update.succeeded"), user),
             HttpStatus.OK
         )
     }
@@ -126,7 +127,7 @@ class UserController(
     fun deleteUser(@PathVariable("id") id: String): ResponseEntity<*> {
         userService.deleteById(id)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            MessageResponse(CommonUtils.getMessage("delete.succeeded")),
             HttpStatus.OK
         )
     }

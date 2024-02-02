@@ -132,8 +132,8 @@ class CompletionRateService(
                     val compleRateProduct = CompletionRateProcess(
                         key = item[0],
                         rate =  BigDecimal(item[1]),
-                        processCode = item[0].toString().take(7),
-                        layerCode = item[0].substring(7, 8),
+                        processCode = item[0].toString().take(6),
+                        layerCode = item[0].toString().substring(6, 7),
                         expirationDate = expirationDate,
                         effectiveDate = effectiveDate
                     )

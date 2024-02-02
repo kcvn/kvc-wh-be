@@ -15,10 +15,10 @@ import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.repository.CompletionRateProductRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
-import org.apache.poi.ss.usermodel.Cell
-import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.BorderStyle
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.jooq.tools.csv.CSVReader
 import org.springframework.data.domain.Pageable
@@ -26,6 +26,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
@@ -40,49 +42,24 @@ class ProductService(
 
     fun getListProduct(request: ProductSearchRequest?, pageable: Pageable) : PagingProductResponse {
         val products = productRep.getPagingList(request, pageable)
-        val response = PagingProductResponse()
+        var response = PagingProductResponse()
 
         if (products.first.isNotEmpty()) {
-            val productNames = products.first.mapNotNull { x -> x.name }
-            val completionRates = completionRateProductRep.getByProduct(productNames)
-            val productProcesses = productProcessRep.getByProduct(productNames)
-            val processGroups = productProcesses.groupBy { x -> Pair(x.productName, x.processCode) }
-
-            response.data = products.first.map { x -> ProductResponse(
-                id = x.id,
-                name = x.name,
-                exportType = x.exportType,
-                size = x.size,
-                frame_1 = x.frame_1,
-                frame_2 = x.frame_2,
-                mold = x.mold,
-                productLine = x.productLine,
-                srNosr = x.srNosr,
-                pcsSh = x.pcsSh,
-                shBlock = x.shBlock,
-                layerCount = x.layerCount,
-                ringJig = x.ringJig,
-                snapMold = x.snapMold,
-                tapeCommon = x.tapeCommon,
-                tapeType = x.tapeType,
-                completionRate = (completionRates.find { m -> m.productName == x.name }?.rate ?: 0.0).toDouble(),
-                lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
-            ) }
+            response = mappingProductResponse(products.first)
             response.totalRecords = products.second
-            response.columns = productProcesses.mapNotNull { x -> DropdownResponse(x.processCode,x.processName) }.distinct()
         }
 
         return response
     }
 
     fun importCsvProduct(file: MultipartFile): String {
-        if (file.isEmpty()) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (file.isEmpty) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         val inputStream = file.inputStream
         val reader = CSVReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
         var data = reader.readAll()
         data = data.subList(1, data.size)
-        if (data.isEmpty() || data.size == 0) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (data.isEmpty()) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         val productNames = data.mapNotNull { x -> x[0] }
         val productExists = productRep.getByName(productNames)
@@ -179,25 +156,67 @@ class ProductService(
 
     fun exportExcel(request: ProductSearchRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
         val products = productRep.getList(request, pageable)
+        val productMapping = mappingProductResponse(products)
 
-        val workbook = XSSFWorkbook()
-        val sheet = workbook.createSheet("Data")
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportProductTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
 
-        val headerRow: Row = sheet.createRow(0)
+        if (!productMapping.data.isNullOrEmpty()) {
+            val style: CellStyle = workbook.createCellStyle()
+            style.borderBottom = BorderStyle.THIN
+            style.borderTop = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.wrapText = true
 
-//        for (i in 0 until 16) {
-//            val cell: Cell = headerRow.createCell(i - 1)
-//            cell.setCellValue(metaData.getColumnName(i))
-//        }
+            val font: Font = workbook.createFont()
+            font.fontName = "Times New Roman"
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
 
-        var rowNumber = 1
-        for(item in products) {
-            val dataRow: Row = sheet.createRow(rowNumber++)
+            
 
-            val cell: Cell = dataRow.createCell(0)
-            cell.setCellValue(item.name)
+            var rowNumber = 2
+            for (item in productMapping.data!!) {
+                val dataRow: Row = sheet.createRow(rowNumber++)
+                dataRow.createCell(0).setCellValue(item.name)
+                dataRow.getCell(0).cellStyle = style
+
+                dataRow.createCell(1).setCellValue(item.exportType)
+                dataRow.getCell(1).cellStyle = style
+
+                dataRow.createCell(2).setCellValue(item.size)
+                dataRow.getCell(2).cellStyle = style
+
+                dataRow.createCell(3).setCellValue(item.frame_1)
+                dataRow.getCell(3).cellStyle = style
+
+                dataRow.createCell(4).setCellValue(item.frame_2)
+                dataRow.getCell(4).cellStyle = style
+
+                dataRow.createCell(5).setCellValue(item.mold)
+                dataRow.getCell(5).cellStyle = style
+
+                dataRow.createCell(6).setCellValue(item.productLine)
+                dataRow.getCell(6).cellStyle = style
+
+                dataRow.createCell(7).setCellValue(item.srNosr)
+                dataRow.getCell(7).cellStyle = style
+
+                dataRow.createCell(8).setCellValue(item.pcsSh?.toString() ?: "")
+                dataRow.getCell(8).cellStyle = style
+
+                dataRow.createCell(9).setCellValue(item.shBlock?.toString() ?: "")
+                dataRow.getCell(9).cellStyle = style
+
+                dataRow.createCell(10).setCellValue(item.layerCount?.toString() ?: "")
+                dataRow.getCell(10).cellStyle = style
+
+                dataRow.createCell(11).setCellValue(item.completionRate?.toString() ?: "")
+                dataRow.getCell(11).cellStyle = style
+            }
         }
-
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
@@ -209,30 +228,39 @@ class ProductService(
             content = excelBytes
         )
 
-        return BaseResponse<FileContentModel>(response)
+        return BaseResponse(response)
     }
 
-    fun copySheet(sourceSheet: Sheet, targetSheet: Sheet) {
-        for (rowNum in 0 until sourceSheet.physicalNumberOfRows) {
-            val sourceRow = sourceSheet.getRow(rowNum)
-            val targetRow = targetSheet.getRow(rowNum) ?: targetSheet.createRow(rowNum)
+    private fun mappingProductResponse(products: List<Product>) : PagingProductResponse {
+        val productNames = products.mapNotNull { x -> x.name }
+        val completionRates = completionRateProductRep.getByProduct(productNames)
+        val productProcesses = productProcessRep.getByProduct(productNames)
+        val processGroups = productProcesses.groupBy { x -> Pair(x.productName, x.processCode) }
 
-            for (cellNum in 0 until sourceRow.physicalNumberOfCells) {
-                val sourceCell = sourceRow.getCell(cellNum)
-                val targetCell = targetRow.createCell(cellNum)
+        val response = PagingProductResponse()
+        response.data = products.map { x -> ProductResponse(
+                id = x.id,
+                name = x.name,
+                exportType = x.exportType,
+                size = x.size,
+                frame_1 = x.frame_1,
+                frame_2 = x.frame_2,
+                mold = x.mold,
+                productLine = x.productLine,
+                srNosr = x.srNosr,
+                pcsSh = x.pcsSh,
+                shBlock = x.shBlock,
+                layerCount = x.layerCount,
+                ringJig = x.ringJig,
+                snapMold = x.snapMold,
+                tapeCommon = x.tapeCommon,
+                tapeType = x.tapeType,
+                completionRate = (completionRates.find { m -> m.productName == x.name }?.rate ?: 0.0).toDouble(),
+                lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
+        ) }
 
-                targetCell.cellStyle = sourceCell.cellStyle
+        response.columns = productProcesses.map { x -> DropdownResponse(x.processCode,x.processName) }.distinct()
 
-                when (sourceCell.cellType) {
-                    CellType.NUMERIC -> targetCell.setCellValue(sourceCell.numericCellValue)
-                    CellType.STRING -> targetCell.setCellValue(sourceCell.stringCellValue)
-                    CellType.BOOLEAN -> targetCell.setCellValue(sourceCell.booleanCellValue)
-                    CellType.FORMULA -> targetCell.cellFormula = sourceCell.cellFormula
-                    CellType.BLANK -> targetCell.setCellValue("")
-                    CellType.ERROR -> targetCell.setCellValue("")
-                    else -> targetCell.setCellValue("")
-                }
-            }
-        }
+        return response
     }
 }

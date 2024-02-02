@@ -3,6 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
+import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -17,12 +18,15 @@ import java.time.ZoneOffset
 class CompletionRateProcessProductRepository(private val context: DSLContext) : SortingRepository() {
 
 
+
+
     fun update(data: CompletionRateProcessProduct): CompletionRateProcessProduct? {
         return context
             .update(COMPLETION_RATE_PROCESS_PRODUCT)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT, data.productNameShortcut)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.RATE, data.rate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.CREATED_DATE, data.createdDate)
+            .set(COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE, data.layerCode)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
             .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .set(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED, data.isDeleted)
@@ -108,6 +112,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                     COMPLETION_RATE_PROCESS_PRODUCT.KEY,
                     COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT,
                     COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE,
+                    COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE,
                     COMPLETION_RATE_PROCESS_PRODUCT.RATE,
                     COMPLETION_RATE_PROCESS_PRODUCT.CREATED_DATE,
                     COMPLETION_RATE_PROCESS_PRODUCT.CREATED_BY,
@@ -122,12 +127,13 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                     data.key,
                     data.productNameShortcut,
                     data.processCode,
+                    data.layerCode,
                     data.rate,
                     data.createdDate ?: LocalDateTime.now(),
                     data.createdBy ?: "SYSTEM",
                     data.isDeleted ?: false,
                     data.updatedDate ?: LocalDateTime.now(),
-                    data.expirationDate,
+                    data.expirationDate ?: null,
                     data.effectiveDate
                 )
                 .returningResult(COMPLETION_RATE_PROCESS_PRODUCT)

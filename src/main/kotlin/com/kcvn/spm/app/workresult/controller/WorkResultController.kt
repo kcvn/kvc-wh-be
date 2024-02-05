@@ -1,9 +1,11 @@
 package com.kcvn.spm.app.workresult.controller
 
-import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
-import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
+import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
+import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
+import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.app.workresult.service.WorkResultService
+import com.kcvn.spm.common.payload.BasePagingResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -19,8 +21,8 @@ import org.springframework.web.bind.annotation.RestController
 class WorkResultController (
     private val workResultService: WorkResultService
 ) {
-    @GetMapping("/get-list")
-    fun getList(
+    @GetMapping("/get-list-work-result")
+    fun getListWorkResult(
         request: WorkResultSearchRequest?,
         @PageableDefault(size = 10, page = 0)
         @SortDefault.SortDefaults(
@@ -29,13 +31,35 @@ class WorkResultController (
             SortDefault(sort = ["layer_code"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["process_name"], direction = Sort.Direction.ASC)
         ) pageable: Pageable,
-    ): ResponseEntity<PagingWorkResultResponse> {
+    ): ResponseEntity<BasePagingResponse<WorkResultResponse>> {
         return try {
-            val data = workResultService.getListProductResult(request,pageable)
-            ResponseEntity<PagingWorkResultResponse>(data, HttpStatus.OK)
+            val data = workResultService.getListWorkResult(request,pageable)
+            ResponseEntity<BasePagingResponse<WorkResultResponse>>(data, HttpStatus.OK)
         } catch (e: Exception) {
             e.printStackTrace()
-            ResponseEntity<PagingWorkResultResponse>(null, HttpStatus.OK)
+            ResponseEntity<BasePagingResponse<WorkResultResponse>>(null, HttpStatus.OK)
+        }
+    }
+
+    @GetMapping("get-list-process-groups")
+    fun getListProcessGroups() : ResponseEntity<List<ProcessGroupResponse>>{
+        return try {
+            val data = workResultService.getListProcessGroup()
+            ResponseEntity<List<ProcessGroupResponse>>(data, HttpStatus.OK)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ResponseEntity<List<ProcessGroupResponse>>(null, HttpStatus.OK)
+        }
+    }
+
+    @GetMapping("get-list-process-by-group-code")
+    fun getListProcessByGroupCode(groupCode: String) : ResponseEntity<List<ProcessResponse>>{
+        return try {
+            val data = workResultService.getListProcessByGroupCode(groupCode)
+            ResponseEntity<List<ProcessResponse>>(data, HttpStatus.OK)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ResponseEntity<List<ProcessResponse>>(null, HttpStatus.OK)
         }
     }
 

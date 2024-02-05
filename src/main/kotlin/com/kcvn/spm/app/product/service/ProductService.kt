@@ -181,15 +181,18 @@ class ProductService(
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 
-        val headerCell = sheet.first().lastCellNum + 1
+        val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
-        val headerStyle = headerRow.getCell(0).cellStyle
-        headerRow.createCell(headerCell).setCellValue("Kết quả")
-        headerRow.getCell(headerCell).cellStyle = headerStyle
 
+        headerRow.createCell(headerCell).setCellValue("Kết quả")
+        val headerStyle = headerRow.getCell(0).cellStyle
+        headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
+        headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
+        headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        sheet.setColumnWidth(headerCell, 15000)
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            //val style = row.getCell(0).cellStyle
+            val style = row.getCell(1).cellStyle
             val name = ExcelHelper.getCellValue(row, 0)
             val messageResults = mutableListOf<String>()
             var check = true
@@ -293,9 +296,9 @@ class ProductService(
                     messageResults.add("Có lỗi xảy ra khi cập nhật dữ liệu sản phẩm")
                 }
             }
-            val result = messageResults.joinToString(separator = "\n")
+            val result = messageResults.joinToString(separator = "; ")
             row.createCell(row.lastCellNum + 0).setCellValue(result)
-            //row.getCell(row.lastCellNum + 1).cellStyle = style
+            row.getCell(row.lastCellNum - 1).cellStyle = style
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()

@@ -20,7 +20,7 @@ import org.jooq.Index
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row14
+import org.jooq.Row12
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -72,21 +72,6 @@ open class ProductProcess(
     val ID: TableField<ProductProcessRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
-     * The column <code>public.product_process.product_name</code>.
-     */
-    val PRODUCT_NAME: TableField<ProductProcessRecord, String?> = createField(DSL.name("product_name"), SQLDataType.VARCHAR(30).nullable(false), this, "")
-
-    /**
-     * The column <code>public.product_process.layer_code</code>.
-     */
-    val LAYER_CODE: TableField<ProductProcessRecord, String?> = createField(DSL.name("layer_code"), SQLDataType.VARCHAR(2).nullable(false), this, "")
-
-    /**
-     * The column <code>public.product_process.process_code</code>.
-     */
-    val PROCESS_CODE: TableField<ProductProcessRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
-
-    /**
      * The column <code>public.product_process.process_name</code>.
      */
     val PROCESS_NAME: TableField<ProductProcessRecord, String?> = createField(DSL.name("process_name"), SQLDataType.VARCHAR(100), this, "")
@@ -136,6 +121,12 @@ open class ProductProcess(
      */
     val IS_DELETED: TableField<ProductProcessRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column
+     * <code>public.product_process.process_procedure_structure_id</code>.
+     */
+    val PROCESS_PROCEDURE_STRUCTURE_ID: TableField<ProductProcessRecord, String?> = createField(DSL.name("process_procedure_structure_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
+
     private constructor(alias: Name, aliased: Table<ProductProcessRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<ProductProcessRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -178,18 +169,18 @@ open class ProductProcess(
     override fun rename(name: Table<*>): ProductProcess = ProductProcess(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row14 type methods
+    // Row12 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row14<String?, String?, String?, String?, String?, String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?> = super.fieldsRow() as Row14<String?, String?, String?, String?, String?, String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row12<String?, String?, String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?, String?> = super.fieldsRow() as Row12<String?, String?, String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

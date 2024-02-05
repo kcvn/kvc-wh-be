@@ -41,13 +41,13 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
 
     fun getByProduct(productNames: List<String>) : List<ProductProcess> {
         return context.selectFrom(PRODUCT_PROCESS)
-            .where(PRODUCT_PROCESS.PRODUCT_NAME.`in`(productNames).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+            //.where(PRODUCT_PROCESS.PRODUCT_NAME.`in`(productNames).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java)
     }
 
     fun  getByProductProcessDetail(productName: String?) : List<ProductProcess?>? {
         val data = context.selectFrom(PRODUCT_PROCESS)
-            .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+            //.where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java)
         return  data
     }
@@ -72,22 +72,22 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {
-            "default" -> {
-                PRODUCT_PROCESS.PROCESS_NAME
-                PRODUCT_PROCESS.LAYER_CODE
-            }
-            "productName" -> {
-                PRODUCT_PROCESS.PRODUCT_NAME
-            }
-            "layerCode" -> {
-                PRODUCT_PROCESS.LAYER_CODE
-            }
+//            "default" -> {
+//                PRODUCT_PROCESS.PROCESS_NAME
+//                PRODUCT_PROCESS.LAYER_CODE
+//            }
+//            "productName" -> {
+//                PRODUCT_PROCESS.PRODUCT_NAME
+//            }
+//            "layerCode" -> {
+//                PRODUCT_PROCESS.LAYER_CODE
+//            }
             "processConvertCode" -> {
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE
             }
-            "processCode" -> {
-                PRODUCT_PROCESS.PROCESS_CODE
-            }
+//            "processCode" -> {
+//                PRODUCT_PROCESS.PROCESS_CODE
+//            }
             "processName" -> {
                 PRODUCT_PROCESS.PROCESS_NAME
             }

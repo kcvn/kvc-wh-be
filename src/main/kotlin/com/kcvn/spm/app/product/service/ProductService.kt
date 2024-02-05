@@ -322,7 +322,7 @@ class ProductService(
         val productNames = products.mapNotNull { x -> x.name }
         val completionRates = completionRateProductRep.getByProduct(productNames)
         val productProcesses = productProcessRep.getByProduct(productNames)
-        val processGroups = productProcesses.groupBy { x -> Pair(x.productName, x.processCode) }
+        //val processGroups = productProcesses.groupBy { x -> Pair(x.productName, x.processCode) }
 
         val response = PagingProductResponse()
         response.data = products.map { x -> ProductResponse(
@@ -343,10 +343,10 @@ class ProductService(
                 tapeCommon = x.tapeCommon,
                 tapeType = x.tapeType,
                 completionRate = (completionRates.find { m -> m.productName == x.name }?.rate ?: 0.0).toDouble(),
-                lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
+                //lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
         ) }
 
-        response.columns = productProcesses.map { x -> DropdownResponse(x.processCode,x.processName) }.distinct()
+        //response.columns = productProcesses.map { x -> DropdownResponse(x.processCode,x.processName) }.distinct()
 
         return response
     }

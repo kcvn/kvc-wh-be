@@ -60,14 +60,17 @@ data class ProcessMaster(
     var plannedProcessCode: String? = null,
     var grpActualResult: String? = null,
     var grpCapitalPrice: String? = null,
-    var registerBy: String? = null,
-    var registerDate: LocalDateTime? = null,
-    var updateBy: String? = null,
-    var updateDate: LocalDateTime? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsExclusiveOrException")
     var isExclusiveOrException: Int? = null,
-    var workplaceCode: String? = null
+    var workplaceCode: String? = null,
+    var createdDate: LocalDateTime? = null,
+    var createdBy: String? = null,
+    var updatedDate: LocalDateTime? = null,
+    var updatedBy: String? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsDeleted")
+    var isDeleted: Boolean? = null
 ): Serializable {
 
 
@@ -343,30 +346,6 @@ data class ProcessMaster(
         }
         else if (this.grpCapitalPrice != o.grpCapitalPrice)
             return false
-        if (this.registerBy == null) {
-            if (o.registerBy != null)
-                return false
-        }
-        else if (this.registerBy != o.registerBy)
-            return false
-        if (this.registerDate == null) {
-            if (o.registerDate != null)
-                return false
-        }
-        else if (this.registerDate != o.registerDate)
-            return false
-        if (this.updateBy == null) {
-            if (o.updateBy != null)
-                return false
-        }
-        else if (this.updateBy != o.updateBy)
-            return false
-        if (this.updateDate == null) {
-            if (o.updateDate != null)
-                return false
-        }
-        else if (this.updateDate != o.updateDate)
-            return false
         if (this.isExclusiveOrException == null) {
             if (o.isExclusiveOrException != null)
                 return false
@@ -378,6 +357,36 @@ data class ProcessMaster(
                 return false
         }
         else if (this.workplaceCode != o.workplaceCode)
+            return false
+        if (this.createdDate == null) {
+            if (o.createdDate != null)
+                return false
+        }
+        else if (this.createdDate != o.createdDate)
+            return false
+        if (this.createdBy == null) {
+            if (o.createdBy != null)
+                return false
+        }
+        else if (this.createdBy != o.createdBy)
+            return false
+        if (this.updatedDate == null) {
+            if (o.updatedDate != null)
+                return false
+        }
+        else if (this.updatedDate != o.updatedDate)
+            return false
+        if (this.updatedBy == null) {
+            if (o.updatedBy != null)
+                return false
+        }
+        else if (this.updatedBy != o.updatedBy)
+            return false
+        if (this.isDeleted == null) {
+            if (o.isDeleted != null)
+                return false
+        }
+        else if (this.isDeleted != o.isDeleted)
             return false
         return true
     }
@@ -429,12 +438,13 @@ data class ProcessMaster(
         result = prime * result + (if (this.plannedProcessCode == null) 0 else this.plannedProcessCode.hashCode())
         result = prime * result + (if (this.grpActualResult == null) 0 else this.grpActualResult.hashCode())
         result = prime * result + (if (this.grpCapitalPrice == null) 0 else this.grpCapitalPrice.hashCode())
-        result = prime * result + (if (this.registerBy == null) 0 else this.registerBy.hashCode())
-        result = prime * result + (if (this.registerDate == null) 0 else this.registerDate.hashCode())
-        result = prime * result + (if (this.updateBy == null) 0 else this.updateBy.hashCode())
-        result = prime * result + (if (this.updateDate == null) 0 else this.updateDate.hashCode())
         result = prime * result + (if (this.isExclusiveOrException == null) 0 else this.isExclusiveOrException.hashCode())
         result = prime * result + (if (this.workplaceCode == null) 0 else this.workplaceCode.hashCode())
+        result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
+        result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
+        result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
+        result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         return result
     }
 
@@ -485,12 +495,13 @@ data class ProcessMaster(
         sb.append(", ").append(plannedProcessCode)
         sb.append(", ").append(grpActualResult)
         sb.append(", ").append(grpCapitalPrice)
-        sb.append(", ").append(registerBy)
-        sb.append(", ").append(registerDate)
-        sb.append(", ").append(updateBy)
-        sb.append(", ").append(updateDate)
         sb.append(", ").append(isExclusiveOrException)
         sb.append(", ").append(workplaceCode)
+        sb.append(", ").append(createdDate)
+        sb.append(", ").append(createdBy)
+        sb.append(", ").append(updatedDate)
+        sb.append(", ").append(updatedBy)
+        sb.append(", ").append(isDeleted)
 
         sb.append(")")
         return sb.toString()

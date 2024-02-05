@@ -153,31 +153,37 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
         set(value): Unit = set(32, value)
         get(): String? = get(32) as String?
 
-    open var registerBy: String?
-        set(value): Unit = set(33, value)
-        get(): String? = get(33) as String?
-
-    open var registerDate: LocalDateTime?
-        set(value): Unit = set(34, value)
-        get(): LocalDateTime? = get(34) as LocalDateTime?
-
-    open var updateBy: String?
-        set(value): Unit = set(35, value)
-        get(): String? = get(35) as String?
-
-    open var updateDate: LocalDateTime?
-        set(value): Unit = set(36, value)
-        get(): LocalDateTime? = get(36) as LocalDateTime?
-
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsExclusiveOrException")
     open var isExclusiveOrException: Int?
-        set(value): Unit = set(37, value)
-        get(): Int? = get(37) as Int?
+        set(value): Unit = set(33, value)
+        get(): Int? = get(33) as Int?
 
     open var workplaceCode: String?
+        set(value): Unit = set(34, value)
+        get(): String? = get(34) as String?
+
+    open var createdDate: LocalDateTime?
+        set(value): Unit = set(35, value)
+        get(): LocalDateTime? = get(35) as LocalDateTime?
+
+    open var createdBy: String?
+        set(value): Unit = set(36, value)
+        get(): String? = get(36) as String?
+
+    open var updatedDate: LocalDateTime?
+        set(value): Unit = set(37, value)
+        get(): LocalDateTime? = get(37) as LocalDateTime?
+
+    open var updatedBy: String?
         set(value): Unit = set(38, value)
         get(): String? = get(38) as String?
+
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsDeleted")
+    open var isDeleted: Boolean?
+        set(value): Unit = set(39, value)
+        get(): Boolean? = get(39) as Boolean?
 
     // -------------------------------------------------------------------------
     // Primary key information
@@ -188,7 +194,7 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
     /**
      * Create a detached, initialised ProcessProcedureStructureRecord
      */
-    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, remediationDirectiveNumber: String? = null, productCode: String? = null, layerCode: String? = null, processCode: String? = null, processSequence: Int? = null, processSequenceRev: Int? = null, machiningSequenceRev: String? = null, completionRate: BigDecimal? = null, finishedProductRate: BigDecimal? = null, printType: String? = null, processType: String? = null, displayProcessSequence: Int? = null, inputSystem: String? = null, isActualResult: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, standardProcedureType: String? = null, grpCheckProcess: String? = null, registerBy: String? = null, registerDate: LocalDateTime? = null, updateBy: String? = null, updateDate: LocalDateTime? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null): this() {
+    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, remediationDirectiveNumber: String? = null, productCode: String? = null, layerCode: String? = null, processCode: String? = null, processSequence: Int? = null, processSequenceRev: Int? = null, machiningSequenceRev: String? = null, completionRate: BigDecimal? = null, finishedProductRate: BigDecimal? = null, printType: String? = null, processType: String? = null, displayProcessSequence: Int? = null, inputSystem: String? = null, isActualResult: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, standardProcedureType: String? = null, grpCheckProcess: String? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null, createdDate: LocalDateTime? = null, createdBy: String? = null, updatedDate: LocalDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.objectId = objectId
         this.companyCode = companyCode
@@ -222,12 +228,13 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
         this.unfinishedProductQuantity = unfinishedProductQuantity
         this.standardProcedureType = standardProcedureType
         this.grpCheckProcess = grpCheckProcess
-        this.registerBy = registerBy
-        this.registerDate = registerDate
-        this.updateBy = updateBy
-        this.updateDate = updateDate
         this.isExclusiveOrException = isExclusiveOrException
         this.workplaceCode = workplaceCode
+        this.createdDate = createdDate
+        this.createdBy = createdBy
+        this.updatedDate = updatedDate
+        this.updatedBy = updatedBy
+        this.isDeleted = isDeleted
         resetChangedOnNotNull()
     }
 
@@ -269,12 +276,13 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
             this.unfinishedProductQuantity = value.unfinishedProductQuantity
             this.standardProcedureType = value.standardProcedureType
             this.grpCheckProcess = value.grpCheckProcess
-            this.registerBy = value.registerBy
-            this.registerDate = value.registerDate
-            this.updateBy = value.updateBy
-            this.updateDate = value.updateDate
             this.isExclusiveOrException = value.isExclusiveOrException
             this.workplaceCode = value.workplaceCode
+            this.createdDate = value.createdDate
+            this.createdBy = value.createdBy
+            this.updatedDate = value.updatedDate
+            this.updatedBy = value.updatedBy
+            this.isDeleted = value.isDeleted
             resetChangedOnNotNull()
         }
     }

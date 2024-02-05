@@ -14,9 +14,6 @@ import java.time.LocalDateTime
 @Suppress("UNCHECKED_CAST")
 data class ProductProcess(
     var id: String? = null,
-    var productName: String? = null,
-    var layerCode: String? = null,
-    var processCode: String? = null,
     var processName: String? = null,
     var processNameJp: String? = null,
     var processConvertCode: String? = null,
@@ -28,7 +25,8 @@ data class ProductProcess(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var processProcedureStructureId: String? = null
 ): Serializable {
 
 
@@ -45,24 +43,6 @@ data class ProductProcess(
                 return false
         }
         else if (this.id != o.id)
-            return false
-        if (this.productName == null) {
-            if (o.productName != null)
-                return false
-        }
-        else if (this.productName != o.productName)
-            return false
-        if (this.layerCode == null) {
-            if (o.layerCode != null)
-                return false
-        }
-        else if (this.layerCode != o.layerCode)
-            return false
-        if (this.processCode == null) {
-            if (o.processCode != null)
-                return false
-        }
-        else if (this.processCode != o.processCode)
             return false
         if (this.processName == null) {
             if (o.processName != null)
@@ -124,6 +104,12 @@ data class ProductProcess(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.processProcedureStructureId == null) {
+            if (o.processProcedureStructureId != null)
+                return false
+        }
+        else if (this.processProcedureStructureId != o.processProcedureStructureId)
+            return false
         return true
     }
 
@@ -131,9 +117,6 @@ data class ProductProcess(
         val prime = 31
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
-        result = prime * result + (if (this.productName == null) 0 else this.productName.hashCode())
-        result = prime * result + (if (this.layerCode == null) 0 else this.layerCode.hashCode())
-        result = prime * result + (if (this.processCode == null) 0 else this.processCode.hashCode())
         result = prime * result + (if (this.processName == null) 0 else this.processName.hashCode())
         result = prime * result + (if (this.processNameJp == null) 0 else this.processNameJp.hashCode())
         result = prime * result + (if (this.processConvertCode == null) 0 else this.processConvertCode.hashCode())
@@ -144,6 +127,7 @@ data class ProductProcess(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.processProcedureStructureId == null) 0 else this.processProcedureStructureId.hashCode())
         return result
     }
 
@@ -151,9 +135,6 @@ data class ProductProcess(
         val sb = StringBuilder("ProductProcess (")
 
         sb.append(id)
-        sb.append(", ").append(productName)
-        sb.append(", ").append(layerCode)
-        sb.append(", ").append(processCode)
         sb.append(", ").append(processName)
         sb.append(", ").append(processNameJp)
         sb.append(", ").append(processConvertCode)
@@ -164,6 +145,7 @@ data class ProductProcess(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(processProcedureStructureId)
 
         sb.append(")")
         return sb.toString()

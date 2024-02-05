@@ -34,21 +34,16 @@ data class WorkResult(
     var equipmentCode: String? = null,
     var equipmentName: String? = null,
     var tapeLotNo: String? = null,
-    var registerDate: LocalDateTime? = null,
     var completionType: String? = null,
     var seidenNo: String? = null,
     var version: String? = null,
     var furimukouType: String? = null,
-    var furimukouQuantity: Int? = null,
-    var productErrorQuantity: Int? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsExclusiveOrException")
     var isExclusiveOrException: Int? = null,
     var excessFraction: Int? = null,
-    var hifurimukouQuantity: Int? = null,
     var direction: String? = null,
     var itemQuantity: Int? = null,
-    var inventoryQuantity: Int? = null,
     var shipmentStatus: String? = null,
     var actualResultCode: String? = null,
     var actualResultDepartment: String? = null,
@@ -60,9 +55,17 @@ data class WorkResult(
     var projectCheck_3: String? = null,
     var companyCode: String? = null,
     var workStartBy: String? = null,
-    var lonQuantity: Int? = null,
     var managerCode: String? = null,
     var conversionFactor: BigDecimal? = null,
+    var lonQuantity: Int? = null,
+    var furimukouQuantity: Int? = null,
+    var errorItemQuantity: Int? = null,
+    var hifurimukouQuantity: Int? = null,
+    var inventoryItemQuantity: Int? = null,
+    var goodItemQuantity: Int? = null,
+    var regenerativeItemQuantity: Int? = null,
+    var totalItemQuantity: Int? = null,
+    var adjustmentItemQuantity: Int? = null,
     var furimukouTapeQuantity: Int? = null,
     var errorTapeQuantity: Int? = null,
     var hifurimukouTapeQuantity: Int? = null,
@@ -71,8 +74,8 @@ data class WorkResult(
     var regenerativeTapeQuantity: Int? = null,
     var totalTapeQuantity: Int? = null,
     var adjustmentTapeQuantity: Int? = null,
-    var errorSheetQuantity: Int? = null,
     var furimukouSheetQuantity: Int? = null,
+    var errorSheetQuantity: Int? = null,
     var hifurimukouSheetQuantity: Int? = null,
     var inventorySheetQuantity: Int? = null,
     var goodSheetQuantity: Int? = null,
@@ -80,19 +83,16 @@ data class WorkResult(
     var totalSheetQuantity: Int? = null,
     var adjustmentSheetQuantity: Int? = null,
     var shiftWork: String? = null,
-    var updateDate: LocalDateTime? = null,
-    var updateBy: String? = null,
     var inputUnit: String? = null,
-    var goodProductQuantity: Int? = null,
     var workCode_1: String? = null,
     var workCode_2: String? = null,
     var workCode_3: String? = null,
     var workDate: LocalDateTime? = null,
+    var workTime: LocalDateTime? = null,
     var workStartDate: LocalDateTime? = null,
     var workStartTime: LocalDateTime? = null,
     var workEndTime: LocalDateTime? = null,
     var workEndDate: LocalDateTime? = null,
-    var workTime: LocalDateTime? = null,
     var workPlaceCode: String? = null,
     var workPlaceName: String? = null,
     var team: String? = null,
@@ -113,7 +113,13 @@ data class WorkResult(
     var total: Int? = null,
     var price: BigDecimal? = null,
     var specialItem: String? = null,
-    var registerBy: String? = null
+    var createdDate: LocalDateTime? = null,
+    var createdBy: String? = null,
+    var updatedDate: LocalDateTime? = null,
+    var updatedBy: String? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsDeleted")
+    var isDeleted: Boolean? = null
 ): Serializable {
 
 
@@ -245,12 +251,6 @@ data class WorkResult(
         }
         else if (this.tapeLotNo != o.tapeLotNo)
             return false
-        if (this.registerDate == null) {
-            if (o.registerDate != null)
-                return false
-        }
-        else if (this.registerDate != o.registerDate)
-            return false
         if (this.completionType == null) {
             if (o.completionType != null)
                 return false
@@ -275,18 +275,6 @@ data class WorkResult(
         }
         else if (this.furimukouType != o.furimukouType)
             return false
-        if (this.furimukouQuantity == null) {
-            if (o.furimukouQuantity != null)
-                return false
-        }
-        else if (this.furimukouQuantity != o.furimukouQuantity)
-            return false
-        if (this.productErrorQuantity == null) {
-            if (o.productErrorQuantity != null)
-                return false
-        }
-        else if (this.productErrorQuantity != o.productErrorQuantity)
-            return false
         if (this.isExclusiveOrException == null) {
             if (o.isExclusiveOrException != null)
                 return false
@@ -299,12 +287,6 @@ data class WorkResult(
         }
         else if (this.excessFraction != o.excessFraction)
             return false
-        if (this.hifurimukouQuantity == null) {
-            if (o.hifurimukouQuantity != null)
-                return false
-        }
-        else if (this.hifurimukouQuantity != o.hifurimukouQuantity)
-            return false
         if (this.direction == null) {
             if (o.direction != null)
                 return false
@@ -316,12 +298,6 @@ data class WorkResult(
                 return false
         }
         else if (this.itemQuantity != o.itemQuantity)
-            return false
-        if (this.inventoryQuantity == null) {
-            if (o.inventoryQuantity != null)
-                return false
-        }
-        else if (this.inventoryQuantity != o.inventoryQuantity)
             return false
         if (this.shipmentStatus == null) {
             if (o.shipmentStatus != null)
@@ -389,12 +365,6 @@ data class WorkResult(
         }
         else if (this.workStartBy != o.workStartBy)
             return false
-        if (this.lonQuantity == null) {
-            if (o.lonQuantity != null)
-                return false
-        }
-        else if (this.lonQuantity != o.lonQuantity)
-            return false
         if (this.managerCode == null) {
             if (o.managerCode != null)
                 return false
@@ -406,6 +376,60 @@ data class WorkResult(
                 return false
         }
         else if (this.conversionFactor != o.conversionFactor)
+            return false
+        if (this.lonQuantity == null) {
+            if (o.lonQuantity != null)
+                return false
+        }
+        else if (this.lonQuantity != o.lonQuantity)
+            return false
+        if (this.furimukouQuantity == null) {
+            if (o.furimukouQuantity != null)
+                return false
+        }
+        else if (this.furimukouQuantity != o.furimukouQuantity)
+            return false
+        if (this.errorItemQuantity == null) {
+            if (o.errorItemQuantity != null)
+                return false
+        }
+        else if (this.errorItemQuantity != o.errorItemQuantity)
+            return false
+        if (this.hifurimukouQuantity == null) {
+            if (o.hifurimukouQuantity != null)
+                return false
+        }
+        else if (this.hifurimukouQuantity != o.hifurimukouQuantity)
+            return false
+        if (this.inventoryItemQuantity == null) {
+            if (o.inventoryItemQuantity != null)
+                return false
+        }
+        else if (this.inventoryItemQuantity != o.inventoryItemQuantity)
+            return false
+        if (this.goodItemQuantity == null) {
+            if (o.goodItemQuantity != null)
+                return false
+        }
+        else if (this.goodItemQuantity != o.goodItemQuantity)
+            return false
+        if (this.regenerativeItemQuantity == null) {
+            if (o.regenerativeItemQuantity != null)
+                return false
+        }
+        else if (this.regenerativeItemQuantity != o.regenerativeItemQuantity)
+            return false
+        if (this.totalItemQuantity == null) {
+            if (o.totalItemQuantity != null)
+                return false
+        }
+        else if (this.totalItemQuantity != o.totalItemQuantity)
+            return false
+        if (this.adjustmentItemQuantity == null) {
+            if (o.adjustmentItemQuantity != null)
+                return false
+        }
+        else if (this.adjustmentItemQuantity != o.adjustmentItemQuantity)
             return false
         if (this.furimukouTapeQuantity == null) {
             if (o.furimukouTapeQuantity != null)
@@ -455,17 +479,17 @@ data class WorkResult(
         }
         else if (this.adjustmentTapeQuantity != o.adjustmentTapeQuantity)
             return false
-        if (this.errorSheetQuantity == null) {
-            if (o.errorSheetQuantity != null)
-                return false
-        }
-        else if (this.errorSheetQuantity != o.errorSheetQuantity)
-            return false
         if (this.furimukouSheetQuantity == null) {
             if (o.furimukouSheetQuantity != null)
                 return false
         }
         else if (this.furimukouSheetQuantity != o.furimukouSheetQuantity)
+            return false
+        if (this.errorSheetQuantity == null) {
+            if (o.errorSheetQuantity != null)
+                return false
+        }
+        else if (this.errorSheetQuantity != o.errorSheetQuantity)
             return false
         if (this.hifurimukouSheetQuantity == null) {
             if (o.hifurimukouSheetQuantity != null)
@@ -509,29 +533,11 @@ data class WorkResult(
         }
         else if (this.shiftWork != o.shiftWork)
             return false
-        if (this.updateDate == null) {
-            if (o.updateDate != null)
-                return false
-        }
-        else if (this.updateDate != o.updateDate)
-            return false
-        if (this.updateBy == null) {
-            if (o.updateBy != null)
-                return false
-        }
-        else if (this.updateBy != o.updateBy)
-            return false
         if (this.inputUnit == null) {
             if (o.inputUnit != null)
                 return false
         }
         else if (this.inputUnit != o.inputUnit)
-            return false
-        if (this.goodProductQuantity == null) {
-            if (o.goodProductQuantity != null)
-                return false
-        }
-        else if (this.goodProductQuantity != o.goodProductQuantity)
             return false
         if (this.workCode_1 == null) {
             if (o.workCode_1 != null)
@@ -557,6 +563,12 @@ data class WorkResult(
         }
         else if (this.workDate != o.workDate)
             return false
+        if (this.workTime == null) {
+            if (o.workTime != null)
+                return false
+        }
+        else if (this.workTime != o.workTime)
+            return false
         if (this.workStartDate == null) {
             if (o.workStartDate != null)
                 return false
@@ -580,12 +592,6 @@ data class WorkResult(
                 return false
         }
         else if (this.workEndDate != o.workEndDate)
-            return false
-        if (this.workTime == null) {
-            if (o.workTime != null)
-                return false
-        }
-        else if (this.workTime != o.workTime)
             return false
         if (this.workPlaceCode == null) {
             if (o.workPlaceCode != null)
@@ -707,11 +713,35 @@ data class WorkResult(
         }
         else if (this.specialItem != o.specialItem)
             return false
-        if (this.registerBy == null) {
-            if (o.registerBy != null)
+        if (this.createdDate == null) {
+            if (o.createdDate != null)
                 return false
         }
-        else if (this.registerBy != o.registerBy)
+        else if (this.createdDate != o.createdDate)
+            return false
+        if (this.createdBy == null) {
+            if (o.createdBy != null)
+                return false
+        }
+        else if (this.createdBy != o.createdBy)
+            return false
+        if (this.updatedDate == null) {
+            if (o.updatedDate != null)
+                return false
+        }
+        else if (this.updatedDate != o.updatedDate)
+            return false
+        if (this.updatedBy == null) {
+            if (o.updatedBy != null)
+                return false
+        }
+        else if (this.updatedBy != o.updatedBy)
+            return false
+        if (this.isDeleted == null) {
+            if (o.isDeleted != null)
+                return false
+        }
+        else if (this.isDeleted != o.isDeleted)
             return false
         return true
     }
@@ -739,19 +769,14 @@ data class WorkResult(
         result = prime * result + (if (this.equipmentCode == null) 0 else this.equipmentCode.hashCode())
         result = prime * result + (if (this.equipmentName == null) 0 else this.equipmentName.hashCode())
         result = prime * result + (if (this.tapeLotNo == null) 0 else this.tapeLotNo.hashCode())
-        result = prime * result + (if (this.registerDate == null) 0 else this.registerDate.hashCode())
         result = prime * result + (if (this.completionType == null) 0 else this.completionType.hashCode())
         result = prime * result + (if (this.seidenNo == null) 0 else this.seidenNo.hashCode())
         result = prime * result + (if (this.version == null) 0 else this.version.hashCode())
         result = prime * result + (if (this.furimukouType == null) 0 else this.furimukouType.hashCode())
-        result = prime * result + (if (this.furimukouQuantity == null) 0 else this.furimukouQuantity.hashCode())
-        result = prime * result + (if (this.productErrorQuantity == null) 0 else this.productErrorQuantity.hashCode())
         result = prime * result + (if (this.isExclusiveOrException == null) 0 else this.isExclusiveOrException.hashCode())
         result = prime * result + (if (this.excessFraction == null) 0 else this.excessFraction.hashCode())
-        result = prime * result + (if (this.hifurimukouQuantity == null) 0 else this.hifurimukouQuantity.hashCode())
         result = prime * result + (if (this.direction == null) 0 else this.direction.hashCode())
         result = prime * result + (if (this.itemQuantity == null) 0 else this.itemQuantity.hashCode())
-        result = prime * result + (if (this.inventoryQuantity == null) 0 else this.inventoryQuantity.hashCode())
         result = prime * result + (if (this.shipmentStatus == null) 0 else this.shipmentStatus.hashCode())
         result = prime * result + (if (this.actualResultCode == null) 0 else this.actualResultCode.hashCode())
         result = prime * result + (if (this.actualResultDepartment == null) 0 else this.actualResultDepartment.hashCode())
@@ -763,9 +788,17 @@ data class WorkResult(
         result = prime * result + (if (this.projectCheck_3 == null) 0 else this.projectCheck_3.hashCode())
         result = prime * result + (if (this.companyCode == null) 0 else this.companyCode.hashCode())
         result = prime * result + (if (this.workStartBy == null) 0 else this.workStartBy.hashCode())
-        result = prime * result + (if (this.lonQuantity == null) 0 else this.lonQuantity.hashCode())
         result = prime * result + (if (this.managerCode == null) 0 else this.managerCode.hashCode())
         result = prime * result + (if (this.conversionFactor == null) 0 else this.conversionFactor.hashCode())
+        result = prime * result + (if (this.lonQuantity == null) 0 else this.lonQuantity.hashCode())
+        result = prime * result + (if (this.furimukouQuantity == null) 0 else this.furimukouQuantity.hashCode())
+        result = prime * result + (if (this.errorItemQuantity == null) 0 else this.errorItemQuantity.hashCode())
+        result = prime * result + (if (this.hifurimukouQuantity == null) 0 else this.hifurimukouQuantity.hashCode())
+        result = prime * result + (if (this.inventoryItemQuantity == null) 0 else this.inventoryItemQuantity.hashCode())
+        result = prime * result + (if (this.goodItemQuantity == null) 0 else this.goodItemQuantity.hashCode())
+        result = prime * result + (if (this.regenerativeItemQuantity == null) 0 else this.regenerativeItemQuantity.hashCode())
+        result = prime * result + (if (this.totalItemQuantity == null) 0 else this.totalItemQuantity.hashCode())
+        result = prime * result + (if (this.adjustmentItemQuantity == null) 0 else this.adjustmentItemQuantity.hashCode())
         result = prime * result + (if (this.furimukouTapeQuantity == null) 0 else this.furimukouTapeQuantity.hashCode())
         result = prime * result + (if (this.errorTapeQuantity == null) 0 else this.errorTapeQuantity.hashCode())
         result = prime * result + (if (this.hifurimukouTapeQuantity == null) 0 else this.hifurimukouTapeQuantity.hashCode())
@@ -774,8 +807,8 @@ data class WorkResult(
         result = prime * result + (if (this.regenerativeTapeQuantity == null) 0 else this.regenerativeTapeQuantity.hashCode())
         result = prime * result + (if (this.totalTapeQuantity == null) 0 else this.totalTapeQuantity.hashCode())
         result = prime * result + (if (this.adjustmentTapeQuantity == null) 0 else this.adjustmentTapeQuantity.hashCode())
-        result = prime * result + (if (this.errorSheetQuantity == null) 0 else this.errorSheetQuantity.hashCode())
         result = prime * result + (if (this.furimukouSheetQuantity == null) 0 else this.furimukouSheetQuantity.hashCode())
+        result = prime * result + (if (this.errorSheetQuantity == null) 0 else this.errorSheetQuantity.hashCode())
         result = prime * result + (if (this.hifurimukouSheetQuantity == null) 0 else this.hifurimukouSheetQuantity.hashCode())
         result = prime * result + (if (this.inventorySheetQuantity == null) 0 else this.inventorySheetQuantity.hashCode())
         result = prime * result + (if (this.goodSheetQuantity == null) 0 else this.goodSheetQuantity.hashCode())
@@ -783,19 +816,16 @@ data class WorkResult(
         result = prime * result + (if (this.totalSheetQuantity == null) 0 else this.totalSheetQuantity.hashCode())
         result = prime * result + (if (this.adjustmentSheetQuantity == null) 0 else this.adjustmentSheetQuantity.hashCode())
         result = prime * result + (if (this.shiftWork == null) 0 else this.shiftWork.hashCode())
-        result = prime * result + (if (this.updateDate == null) 0 else this.updateDate.hashCode())
-        result = prime * result + (if (this.updateBy == null) 0 else this.updateBy.hashCode())
         result = prime * result + (if (this.inputUnit == null) 0 else this.inputUnit.hashCode())
-        result = prime * result + (if (this.goodProductQuantity == null) 0 else this.goodProductQuantity.hashCode())
         result = prime * result + (if (this.workCode_1 == null) 0 else this.workCode_1.hashCode())
         result = prime * result + (if (this.workCode_2 == null) 0 else this.workCode_2.hashCode())
         result = prime * result + (if (this.workCode_3 == null) 0 else this.workCode_3.hashCode())
         result = prime * result + (if (this.workDate == null) 0 else this.workDate.hashCode())
+        result = prime * result + (if (this.workTime == null) 0 else this.workTime.hashCode())
         result = prime * result + (if (this.workStartDate == null) 0 else this.workStartDate.hashCode())
         result = prime * result + (if (this.workStartTime == null) 0 else this.workStartTime.hashCode())
         result = prime * result + (if (this.workEndTime == null) 0 else this.workEndTime.hashCode())
         result = prime * result + (if (this.workEndDate == null) 0 else this.workEndDate.hashCode())
-        result = prime * result + (if (this.workTime == null) 0 else this.workTime.hashCode())
         result = prime * result + (if (this.workPlaceCode == null) 0 else this.workPlaceCode.hashCode())
         result = prime * result + (if (this.workPlaceName == null) 0 else this.workPlaceName.hashCode())
         result = prime * result + (if (this.team == null) 0 else this.team.hashCode())
@@ -816,7 +846,11 @@ data class WorkResult(
         result = prime * result + (if (this.total == null) 0 else this.total.hashCode())
         result = prime * result + (if (this.price == null) 0 else this.price.hashCode())
         result = prime * result + (if (this.specialItem == null) 0 else this.specialItem.hashCode())
-        result = prime * result + (if (this.registerBy == null) 0 else this.registerBy.hashCode())
+        result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
+        result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
+        result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
+        result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         return result
     }
 
@@ -843,19 +877,14 @@ data class WorkResult(
         sb.append(", ").append(equipmentCode)
         sb.append(", ").append(equipmentName)
         sb.append(", ").append(tapeLotNo)
-        sb.append(", ").append(registerDate)
         sb.append(", ").append(completionType)
         sb.append(", ").append(seidenNo)
         sb.append(", ").append(version)
         sb.append(", ").append(furimukouType)
-        sb.append(", ").append(furimukouQuantity)
-        sb.append(", ").append(productErrorQuantity)
         sb.append(", ").append(isExclusiveOrException)
         sb.append(", ").append(excessFraction)
-        sb.append(", ").append(hifurimukouQuantity)
         sb.append(", ").append(direction)
         sb.append(", ").append(itemQuantity)
-        sb.append(", ").append(inventoryQuantity)
         sb.append(", ").append(shipmentStatus)
         sb.append(", ").append(actualResultCode)
         sb.append(", ").append(actualResultDepartment)
@@ -867,9 +896,17 @@ data class WorkResult(
         sb.append(", ").append(projectCheck_3)
         sb.append(", ").append(companyCode)
         sb.append(", ").append(workStartBy)
-        sb.append(", ").append(lonQuantity)
         sb.append(", ").append(managerCode)
         sb.append(", ").append(conversionFactor)
+        sb.append(", ").append(lonQuantity)
+        sb.append(", ").append(furimukouQuantity)
+        sb.append(", ").append(errorItemQuantity)
+        sb.append(", ").append(hifurimukouQuantity)
+        sb.append(", ").append(inventoryItemQuantity)
+        sb.append(", ").append(goodItemQuantity)
+        sb.append(", ").append(regenerativeItemQuantity)
+        sb.append(", ").append(totalItemQuantity)
+        sb.append(", ").append(adjustmentItemQuantity)
         sb.append(", ").append(furimukouTapeQuantity)
         sb.append(", ").append(errorTapeQuantity)
         sb.append(", ").append(hifurimukouTapeQuantity)
@@ -878,8 +915,8 @@ data class WorkResult(
         sb.append(", ").append(regenerativeTapeQuantity)
         sb.append(", ").append(totalTapeQuantity)
         sb.append(", ").append(adjustmentTapeQuantity)
-        sb.append(", ").append(errorSheetQuantity)
         sb.append(", ").append(furimukouSheetQuantity)
+        sb.append(", ").append(errorSheetQuantity)
         sb.append(", ").append(hifurimukouSheetQuantity)
         sb.append(", ").append(inventorySheetQuantity)
         sb.append(", ").append(goodSheetQuantity)
@@ -887,19 +924,16 @@ data class WorkResult(
         sb.append(", ").append(totalSheetQuantity)
         sb.append(", ").append(adjustmentSheetQuantity)
         sb.append(", ").append(shiftWork)
-        sb.append(", ").append(updateDate)
-        sb.append(", ").append(updateBy)
         sb.append(", ").append(inputUnit)
-        sb.append(", ").append(goodProductQuantity)
         sb.append(", ").append(workCode_1)
         sb.append(", ").append(workCode_2)
         sb.append(", ").append(workCode_3)
         sb.append(", ").append(workDate)
+        sb.append(", ").append(workTime)
         sb.append(", ").append(workStartDate)
         sb.append(", ").append(workStartTime)
         sb.append(", ").append(workEndTime)
         sb.append(", ").append(workEndDate)
-        sb.append(", ").append(workTime)
         sb.append(", ").append(workPlaceCode)
         sb.append(", ").append(workPlaceName)
         sb.append(", ").append(team)
@@ -920,7 +954,11 @@ data class WorkResult(
         sb.append(", ").append(total)
         sb.append(", ").append(price)
         sb.append(", ").append(specialItem)
-        sb.append(", ").append(registerBy)
+        sb.append(", ").append(createdDate)
+        sb.append(", ").append(createdBy)
+        sb.append(", ").append(updatedDate)
+        sb.append(", ").append(updatedBy)
+        sb.append(", ").append(isDeleted)
 
         sb.append(")")
         return sb.toString()

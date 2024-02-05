@@ -99,199 +99,199 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         set(value): Unit = set(19, value)
         get(): String? = get(19) as String?
 
-    open var registerDate: LocalDateTime?
-        set(value): Unit = set(20, value)
-        get(): LocalDateTime? = get(20) as LocalDateTime?
-
     open var completionType: String?
+        set(value): Unit = set(20, value)
+        get(): String? = get(20) as String?
+
+    open var seidenNo: String?
         set(value): Unit = set(21, value)
         get(): String? = get(21) as String?
 
-    open var seidenNo: String?
+    open var version: String?
         set(value): Unit = set(22, value)
         get(): String? = get(22) as String?
 
-    open var version: String?
+    open var furimukouType: String?
         set(value): Unit = set(23, value)
         get(): String? = get(23) as String?
-
-    open var furimukouType: String?
-        set(value): Unit = set(24, value)
-        get(): String? = get(24) as String?
-
-    open var furimukouQuantity: Int?
-        set(value): Unit = set(25, value)
-        get(): Int? = get(25) as Int?
-
-    open var productErrorQuantity: Int?
-        set(value): Unit = set(26, value)
-        get(): Int? = get(26) as Int?
 
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsExclusiveOrException")
     open var isExclusiveOrException: Int?
+        set(value): Unit = set(24, value)
+        get(): Int? = get(24) as Int?
+
+    open var excessFraction: Int?
+        set(value): Unit = set(25, value)
+        get(): Int? = get(25) as Int?
+
+    open var direction: String?
+        set(value): Unit = set(26, value)
+        get(): String? = get(26) as String?
+
+    open var itemQuantity: Int?
         set(value): Unit = set(27, value)
         get(): Int? = get(27) as Int?
 
-    open var excessFraction: Int?
+    open var shipmentStatus: String?
         set(value): Unit = set(28, value)
-        get(): Int? = get(28) as Int?
+        get(): String? = get(28) as String?
 
-    open var hifurimukouQuantity: Int?
+    open var actualResultCode: String?
         set(value): Unit = set(29, value)
-        get(): Int? = get(29) as Int?
+        get(): String? = get(29) as String?
 
-    open var direction: String?
+    open var actualResultDepartment: String?
         set(value): Unit = set(30, value)
         get(): String? = get(30) as String?
 
-    open var itemQuantity: Int?
+    open var summaryResultDate: LocalDateTime?
         set(value): Unit = set(31, value)
-        get(): Int? = get(31) as Int?
+        get(): LocalDateTime? = get(31) as LocalDateTime?
 
-    open var inventoryQuantity: Int?
+    open var enterActualResultType: String?
         set(value): Unit = set(32, value)
-        get(): Int? = get(32) as Int?
+        get(): String? = get(32) as String?
 
-    open var shipmentStatus: String?
+    open var actualResultType: String?
         set(value): Unit = set(33, value)
         get(): String? = get(33) as String?
 
-    open var actualResultCode: String?
+    open var projectCheck_1: String?
         set(value): Unit = set(34, value)
         get(): String? = get(34) as String?
 
-    open var actualResultDepartment: String?
+    open var projectCheck_2: String?
         set(value): Unit = set(35, value)
         get(): String? = get(35) as String?
 
-    open var summaryResultDate: LocalDateTime?
+    open var projectCheck_3: String?
         set(value): Unit = set(36, value)
-        get(): LocalDateTime? = get(36) as LocalDateTime?
+        get(): String? = get(36) as String?
 
-    open var enterActualResultType: String?
+    open var companyCode: String?
         set(value): Unit = set(37, value)
         get(): String? = get(37) as String?
 
-    open var actualResultType: String?
+    open var workStartBy: String?
         set(value): Unit = set(38, value)
         get(): String? = get(38) as String?
 
-    open var projectCheck_1: String?
+    open var managerCode: String?
         set(value): Unit = set(39, value)
         get(): String? = get(39) as String?
 
-    open var projectCheck_2: String?
+    open var conversionFactor: BigDecimal?
         set(value): Unit = set(40, value)
-        get(): String? = get(40) as String?
-
-    open var projectCheck_3: String?
-        set(value): Unit = set(41, value)
-        get(): String? = get(41) as String?
-
-    open var companyCode: String?
-        set(value): Unit = set(42, value)
-        get(): String? = get(42) as String?
-
-    open var workStartBy: String?
-        set(value): Unit = set(43, value)
-        get(): String? = get(43) as String?
+        get(): BigDecimal? = get(40) as BigDecimal?
 
     open var lonQuantity: Int?
+        set(value): Unit = set(41, value)
+        get(): Int? = get(41) as Int?
+
+    open var furimukouQuantity: Int?
+        set(value): Unit = set(42, value)
+        get(): Int? = get(42) as Int?
+
+    open var errorItemQuantity: Int?
+        set(value): Unit = set(43, value)
+        get(): Int? = get(43) as Int?
+
+    open var hifurimukouQuantity: Int?
         set(value): Unit = set(44, value)
         get(): Int? = get(44) as Int?
 
-    open var managerCode: String?
+    open var inventoryItemQuantity: Int?
         set(value): Unit = set(45, value)
-        get(): String? = get(45) as String?
+        get(): Int? = get(45) as Int?
 
-    open var conversionFactor: BigDecimal?
+    open var goodItemQuantity: Int?
         set(value): Unit = set(46, value)
-        get(): BigDecimal? = get(46) as BigDecimal?
+        get(): Int? = get(46) as Int?
 
-    open var furimukouTapeQuantity: Int?
+    open var regenerativeItemQuantity: Int?
         set(value): Unit = set(47, value)
         get(): Int? = get(47) as Int?
 
-    open var errorTapeQuantity: Int?
+    open var totalItemQuantity: Int?
         set(value): Unit = set(48, value)
         get(): Int? = get(48) as Int?
 
-    open var hifurimukouTapeQuantity: Int?
+    open var adjustmentItemQuantity: Int?
         set(value): Unit = set(49, value)
         get(): Int? = get(49) as Int?
 
-    open var inventoryTapeQuantity: Int?
+    open var furimukouTapeQuantity: Int?
         set(value): Unit = set(50, value)
         get(): Int? = get(50) as Int?
 
-    open var goodTapeQuantity: Int?
+    open var errorTapeQuantity: Int?
         set(value): Unit = set(51, value)
         get(): Int? = get(51) as Int?
 
-    open var regenerativeTapeQuantity: Int?
+    open var hifurimukouTapeQuantity: Int?
         set(value): Unit = set(52, value)
         get(): Int? = get(52) as Int?
 
-    open var totalTapeQuantity: Int?
+    open var inventoryTapeQuantity: Int?
         set(value): Unit = set(53, value)
         get(): Int? = get(53) as Int?
 
-    open var adjustmentTapeQuantity: Int?
+    open var goodTapeQuantity: Int?
         set(value): Unit = set(54, value)
         get(): Int? = get(54) as Int?
 
-    open var errorSheetQuantity: Int?
+    open var regenerativeTapeQuantity: Int?
         set(value): Unit = set(55, value)
         get(): Int? = get(55) as Int?
 
-    open var furimukouSheetQuantity: Int?
+    open var totalTapeQuantity: Int?
         set(value): Unit = set(56, value)
         get(): Int? = get(56) as Int?
 
-    open var hifurimukouSheetQuantity: Int?
+    open var adjustmentTapeQuantity: Int?
         set(value): Unit = set(57, value)
         get(): Int? = get(57) as Int?
 
-    open var inventorySheetQuantity: Int?
+    open var furimukouSheetQuantity: Int?
         set(value): Unit = set(58, value)
         get(): Int? = get(58) as Int?
 
-    open var goodSheetQuantity: Int?
+    open var errorSheetQuantity: Int?
         set(value): Unit = set(59, value)
         get(): Int? = get(59) as Int?
 
-    open var regenerativeSheetQuantity: Int?
+    open var hifurimukouSheetQuantity: Int?
         set(value): Unit = set(60, value)
         get(): Int? = get(60) as Int?
 
-    open var totalSheetQuantity: Int?
+    open var inventorySheetQuantity: Int?
         set(value): Unit = set(61, value)
         get(): Int? = get(61) as Int?
 
-    open var adjustmentSheetQuantity: Int?
+    open var goodSheetQuantity: Int?
         set(value): Unit = set(62, value)
         get(): Int? = get(62) as Int?
 
-    open var shiftWork: String?
+    open var regenerativeSheetQuantity: Int?
         set(value): Unit = set(63, value)
-        get(): String? = get(63) as String?
+        get(): Int? = get(63) as Int?
 
-    open var updateDate: LocalDateTime?
+    open var totalSheetQuantity: Int?
         set(value): Unit = set(64, value)
-        get(): LocalDateTime? = get(64) as LocalDateTime?
+        get(): Int? = get(64) as Int?
 
-    open var updateBy: String?
+    open var adjustmentSheetQuantity: Int?
         set(value): Unit = set(65, value)
-        get(): String? = get(65) as String?
+        get(): Int? = get(65) as Int?
 
-    open var inputUnit: String?
+    open var shiftWork: String?
         set(value): Unit = set(66, value)
         get(): String? = get(66) as String?
 
-    open var goodProductQuantity: Int?
+    open var inputUnit: String?
         set(value): Unit = set(67, value)
-        get(): Int? = get(67) as Int?
+        get(): String? = get(67) as String?
 
     open var workCode_1: String?
         set(value): Unit = set(68, value)
@@ -309,23 +309,23 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         set(value): Unit = set(71, value)
         get(): LocalDateTime? = get(71) as LocalDateTime?
 
-    open var workStartDate: LocalDateTime?
+    open var workTime: LocalDateTime?
         set(value): Unit = set(72, value)
         get(): LocalDateTime? = get(72) as LocalDateTime?
 
-    open var workStartTime: LocalDateTime?
+    open var workStartDate: LocalDateTime?
         set(value): Unit = set(73, value)
         get(): LocalDateTime? = get(73) as LocalDateTime?
 
-    open var workEndTime: LocalDateTime?
+    open var workStartTime: LocalDateTime?
         set(value): Unit = set(74, value)
         get(): LocalDateTime? = get(74) as LocalDateTime?
 
-    open var workEndDate: LocalDateTime?
+    open var workEndTime: LocalDateTime?
         set(value): Unit = set(75, value)
         get(): LocalDateTime? = get(75) as LocalDateTime?
 
-    open var workTime: LocalDateTime?
+    open var workEndDate: LocalDateTime?
         set(value): Unit = set(76, value)
         get(): LocalDateTime? = get(76) as LocalDateTime?
 
@@ -409,9 +409,27 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         set(value): Unit = set(96, value)
         get(): String? = get(96) as String?
 
-    open var registerBy: String?
+    open var createdDate: LocalDateTime?
         set(value): Unit = set(97, value)
-        get(): String? = get(97) as String?
+        get(): LocalDateTime? = get(97) as LocalDateTime?
+
+    open var createdBy: String?
+        set(value): Unit = set(98, value)
+        get(): String? = get(98) as String?
+
+    open var updatedDate: LocalDateTime?
+        set(value): Unit = set(99, value)
+        get(): LocalDateTime? = get(99) as LocalDateTime?
+
+    open var updatedBy: String?
+        set(value): Unit = set(100, value)
+        get(): String? = get(100) as String?
+
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsDeleted")
+    open var isDeleted: Boolean?
+        set(value): Unit = set(101, value)
+        get(): Boolean? = get(101) as Boolean?
 
     // -------------------------------------------------------------------------
     // Primary key information
@@ -422,7 +440,7 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
     /**
      * Create a detached, initialised WorkResultRecord
      */
-    constructor(id: String? = null, objectId: Int? = null, androidId: String? = null, description: String? = null, grpDepartments: String? = null, departmentCode: String? = null, departmentName: String? = null, orderCode: String? = null, code: String? = null, customerCode: String? = null, itemCode: String? = null, itemName: String? = null, layerCode: String? = null, processCode: String? = null, processGrp: String? = null, processName: String? = null, processType: String? = null, equipmentCode: String? = null, equipmentName: String? = null, tapeLotNo: String? = null, registerDate: LocalDateTime? = null, completionType: String? = null, seidenNo: String? = null, version: String? = null, furimukouType: String? = null, furimukouQuantity: Int? = null, productErrorQuantity: Int? = null, isExclusiveOrException: Int? = null, excessFraction: Int? = null, hifurimukouQuantity: Int? = null, direction: String? = null, itemQuantity: Int? = null, inventoryQuantity: Int? = null, shipmentStatus: String? = null, actualResultCode: String? = null, actualResultDepartment: String? = null, summaryResultDate: LocalDateTime? = null, enterActualResultType: String? = null, actualResultType: String? = null, projectCheck_1: String? = null, projectCheck_2: String? = null, projectCheck_3: String? = null, companyCode: String? = null, workStartBy: String? = null, lonQuantity: Int? = null, managerCode: String? = null, conversionFactor: BigDecimal? = null, furimukouTapeQuantity: Int? = null, errorTapeQuantity: Int? = null, hifurimukouTapeQuantity: Int? = null, inventoryTapeQuantity: Int? = null, goodTapeQuantity: Int? = null, regenerativeTapeQuantity: Int? = null, totalTapeQuantity: Int? = null, adjustmentTapeQuantity: Int? = null, errorSheetQuantity: Int? = null, furimukouSheetQuantity: Int? = null, hifurimukouSheetQuantity: Int? = null, inventorySheetQuantity: Int? = null, goodSheetQuantity: Int? = null, regenerativeSheetQuantity: Int? = null, totalSheetQuantity: Int? = null, adjustmentSheetQuantity: Int? = null, shiftWork: String? = null, updateDate: LocalDateTime? = null, updateBy: String? = null, inputUnit: String? = null, goodProductQuantity: Int? = null, workCode_1: String? = null, workCode_2: String? = null, workCode_3: String? = null, workDate: LocalDateTime? = null, workStartDate: LocalDateTime? = null, workStartTime: LocalDateTime? = null, workEndTime: LocalDateTime? = null, workEndDate: LocalDateTime? = null, workTime: LocalDateTime? = null, workPlaceCode: String? = null, workPlaceName: String? = null, team: String? = null, memoWork: String? = null, workType: String? = null, workImplementBy: String? = null, regenerativeCode: String? = null, regenerativeType: String? = null, regenerativeName: String? = null, regenerativeProcessCode: String? = null, regenerativeProcessName: String? = null, madeIn: String? = null, sheetFlag: String? = null, unfinishedQuantity: Int? = null, remediationDirectiveNumber: String? = null, deliverLotNo: String? = null, endDate: LocalDateTime? = null, total: Int? = null, price: BigDecimal? = null, specialItem: String? = null, registerBy: String? = null): this() {
+    constructor(id: String? = null, objectId: Int? = null, androidId: String? = null, description: String? = null, grpDepartments: String? = null, departmentCode: String? = null, departmentName: String? = null, orderCode: String? = null, code: String? = null, customerCode: String? = null, itemCode: String? = null, itemName: String? = null, layerCode: String? = null, processCode: String? = null, processGrp: String? = null, processName: String? = null, processType: String? = null, equipmentCode: String? = null, equipmentName: String? = null, tapeLotNo: String? = null, completionType: String? = null, seidenNo: String? = null, version: String? = null, furimukouType: String? = null, isExclusiveOrException: Int? = null, excessFraction: Int? = null, direction: String? = null, itemQuantity: Int? = null, shipmentStatus: String? = null, actualResultCode: String? = null, actualResultDepartment: String? = null, summaryResultDate: LocalDateTime? = null, enterActualResultType: String? = null, actualResultType: String? = null, projectCheck_1: String? = null, projectCheck_2: String? = null, projectCheck_3: String? = null, companyCode: String? = null, workStartBy: String? = null, managerCode: String? = null, conversionFactor: BigDecimal? = null, lonQuantity: Int? = null, furimukouQuantity: Int? = null, errorItemQuantity: Int? = null, hifurimukouQuantity: Int? = null, inventoryItemQuantity: Int? = null, goodItemQuantity: Int? = null, regenerativeItemQuantity: Int? = null, totalItemQuantity: Int? = null, adjustmentItemQuantity: Int? = null, furimukouTapeQuantity: Int? = null, errorTapeQuantity: Int? = null, hifurimukouTapeQuantity: Int? = null, inventoryTapeQuantity: Int? = null, goodTapeQuantity: Int? = null, regenerativeTapeQuantity: Int? = null, totalTapeQuantity: Int? = null, adjustmentTapeQuantity: Int? = null, furimukouSheetQuantity: Int? = null, errorSheetQuantity: Int? = null, hifurimukouSheetQuantity: Int? = null, inventorySheetQuantity: Int? = null, goodSheetQuantity: Int? = null, regenerativeSheetQuantity: Int? = null, totalSheetQuantity: Int? = null, adjustmentSheetQuantity: Int? = null, shiftWork: String? = null, inputUnit: String? = null, workCode_1: String? = null, workCode_2: String? = null, workCode_3: String? = null, workDate: LocalDateTime? = null, workTime: LocalDateTime? = null, workStartDate: LocalDateTime? = null, workStartTime: LocalDateTime? = null, workEndTime: LocalDateTime? = null, workEndDate: LocalDateTime? = null, workPlaceCode: String? = null, workPlaceName: String? = null, team: String? = null, memoWork: String? = null, workType: String? = null, workImplementBy: String? = null, regenerativeCode: String? = null, regenerativeType: String? = null, regenerativeName: String? = null, regenerativeProcessCode: String? = null, regenerativeProcessName: String? = null, madeIn: String? = null, sheetFlag: String? = null, unfinishedQuantity: Int? = null, remediationDirectiveNumber: String? = null, deliverLotNo: String? = null, endDate: LocalDateTime? = null, total: Int? = null, price: BigDecimal? = null, specialItem: String? = null, createdDate: LocalDateTime? = null, createdBy: String? = null, updatedDate: LocalDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.objectId = objectId
         this.androidId = androidId
@@ -443,19 +461,14 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         this.equipmentCode = equipmentCode
         this.equipmentName = equipmentName
         this.tapeLotNo = tapeLotNo
-        this.registerDate = registerDate
         this.completionType = completionType
         this.seidenNo = seidenNo
         this.version = version
         this.furimukouType = furimukouType
-        this.furimukouQuantity = furimukouQuantity
-        this.productErrorQuantity = productErrorQuantity
         this.isExclusiveOrException = isExclusiveOrException
         this.excessFraction = excessFraction
-        this.hifurimukouQuantity = hifurimukouQuantity
         this.direction = direction
         this.itemQuantity = itemQuantity
-        this.inventoryQuantity = inventoryQuantity
         this.shipmentStatus = shipmentStatus
         this.actualResultCode = actualResultCode
         this.actualResultDepartment = actualResultDepartment
@@ -467,9 +480,17 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         this.projectCheck_3 = projectCheck_3
         this.companyCode = companyCode
         this.workStartBy = workStartBy
-        this.lonQuantity = lonQuantity
         this.managerCode = managerCode
         this.conversionFactor = conversionFactor
+        this.lonQuantity = lonQuantity
+        this.furimukouQuantity = furimukouQuantity
+        this.errorItemQuantity = errorItemQuantity
+        this.hifurimukouQuantity = hifurimukouQuantity
+        this.inventoryItemQuantity = inventoryItemQuantity
+        this.goodItemQuantity = goodItemQuantity
+        this.regenerativeItemQuantity = regenerativeItemQuantity
+        this.totalItemQuantity = totalItemQuantity
+        this.adjustmentItemQuantity = adjustmentItemQuantity
         this.furimukouTapeQuantity = furimukouTapeQuantity
         this.errorTapeQuantity = errorTapeQuantity
         this.hifurimukouTapeQuantity = hifurimukouTapeQuantity
@@ -478,8 +499,8 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         this.regenerativeTapeQuantity = regenerativeTapeQuantity
         this.totalTapeQuantity = totalTapeQuantity
         this.adjustmentTapeQuantity = adjustmentTapeQuantity
-        this.errorSheetQuantity = errorSheetQuantity
         this.furimukouSheetQuantity = furimukouSheetQuantity
+        this.errorSheetQuantity = errorSheetQuantity
         this.hifurimukouSheetQuantity = hifurimukouSheetQuantity
         this.inventorySheetQuantity = inventorySheetQuantity
         this.goodSheetQuantity = goodSheetQuantity
@@ -487,19 +508,16 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         this.totalSheetQuantity = totalSheetQuantity
         this.adjustmentSheetQuantity = adjustmentSheetQuantity
         this.shiftWork = shiftWork
-        this.updateDate = updateDate
-        this.updateBy = updateBy
         this.inputUnit = inputUnit
-        this.goodProductQuantity = goodProductQuantity
         this.workCode_1 = workCode_1
         this.workCode_2 = workCode_2
         this.workCode_3 = workCode_3
         this.workDate = workDate
+        this.workTime = workTime
         this.workStartDate = workStartDate
         this.workStartTime = workStartTime
         this.workEndTime = workEndTime
         this.workEndDate = workEndDate
-        this.workTime = workTime
         this.workPlaceCode = workPlaceCode
         this.workPlaceName = workPlaceName
         this.team = team
@@ -520,7 +538,11 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         this.total = total
         this.price = price
         this.specialItem = specialItem
-        this.registerBy = registerBy
+        this.createdDate = createdDate
+        this.createdBy = createdBy
+        this.updatedDate = updatedDate
+        this.updatedBy = updatedBy
+        this.isDeleted = isDeleted
         resetChangedOnNotNull()
     }
 
@@ -549,19 +571,14 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
             this.equipmentCode = value.equipmentCode
             this.equipmentName = value.equipmentName
             this.tapeLotNo = value.tapeLotNo
-            this.registerDate = value.registerDate
             this.completionType = value.completionType
             this.seidenNo = value.seidenNo
             this.version = value.version
             this.furimukouType = value.furimukouType
-            this.furimukouQuantity = value.furimukouQuantity
-            this.productErrorQuantity = value.productErrorQuantity
             this.isExclusiveOrException = value.isExclusiveOrException
             this.excessFraction = value.excessFraction
-            this.hifurimukouQuantity = value.hifurimukouQuantity
             this.direction = value.direction
             this.itemQuantity = value.itemQuantity
-            this.inventoryQuantity = value.inventoryQuantity
             this.shipmentStatus = value.shipmentStatus
             this.actualResultCode = value.actualResultCode
             this.actualResultDepartment = value.actualResultDepartment
@@ -573,9 +590,17 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
             this.projectCheck_3 = value.projectCheck_3
             this.companyCode = value.companyCode
             this.workStartBy = value.workStartBy
-            this.lonQuantity = value.lonQuantity
             this.managerCode = value.managerCode
             this.conversionFactor = value.conversionFactor
+            this.lonQuantity = value.lonQuantity
+            this.furimukouQuantity = value.furimukouQuantity
+            this.errorItemQuantity = value.errorItemQuantity
+            this.hifurimukouQuantity = value.hifurimukouQuantity
+            this.inventoryItemQuantity = value.inventoryItemQuantity
+            this.goodItemQuantity = value.goodItemQuantity
+            this.regenerativeItemQuantity = value.regenerativeItemQuantity
+            this.totalItemQuantity = value.totalItemQuantity
+            this.adjustmentItemQuantity = value.adjustmentItemQuantity
             this.furimukouTapeQuantity = value.furimukouTapeQuantity
             this.errorTapeQuantity = value.errorTapeQuantity
             this.hifurimukouTapeQuantity = value.hifurimukouTapeQuantity
@@ -584,8 +609,8 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
             this.regenerativeTapeQuantity = value.regenerativeTapeQuantity
             this.totalTapeQuantity = value.totalTapeQuantity
             this.adjustmentTapeQuantity = value.adjustmentTapeQuantity
-            this.errorSheetQuantity = value.errorSheetQuantity
             this.furimukouSheetQuantity = value.furimukouSheetQuantity
+            this.errorSheetQuantity = value.errorSheetQuantity
             this.hifurimukouSheetQuantity = value.hifurimukouSheetQuantity
             this.inventorySheetQuantity = value.inventorySheetQuantity
             this.goodSheetQuantity = value.goodSheetQuantity
@@ -593,19 +618,16 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
             this.totalSheetQuantity = value.totalSheetQuantity
             this.adjustmentSheetQuantity = value.adjustmentSheetQuantity
             this.shiftWork = value.shiftWork
-            this.updateDate = value.updateDate
-            this.updateBy = value.updateBy
             this.inputUnit = value.inputUnit
-            this.goodProductQuantity = value.goodProductQuantity
             this.workCode_1 = value.workCode_1
             this.workCode_2 = value.workCode_2
             this.workCode_3 = value.workCode_3
             this.workDate = value.workDate
+            this.workTime = value.workTime
             this.workStartDate = value.workStartDate
             this.workStartTime = value.workStartTime
             this.workEndTime = value.workEndTime
             this.workEndDate = value.workEndDate
-            this.workTime = value.workTime
             this.workPlaceCode = value.workPlaceCode
             this.workPlaceName = value.workPlaceName
             this.team = value.team
@@ -626,7 +648,11 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
             this.total = value.total
             this.price = value.price
             this.specialItem = value.specialItem
-            this.registerBy = value.registerBy
+            this.createdDate = value.createdDate
+            this.createdBy = value.createdBy
+            this.updatedDate = value.updatedDate
+            this.updatedBy = value.updatedBy
+            this.isDeleted = value.isDeleted
             resetChangedOnNotNull()
         }
     }

@@ -197,31 +197,37 @@ open class ProcessMasterRecord() : UpdatableRecordImpl<ProcessMasterRecord>(Proc
         set(value): Unit = set(43, value)
         get(): String? = get(43) as String?
 
-    open var registerBy: String?
-        set(value): Unit = set(44, value)
-        get(): String? = get(44) as String?
-
-    open var registerDate: LocalDateTime?
-        set(value): Unit = set(45, value)
-        get(): LocalDateTime? = get(45) as LocalDateTime?
-
-    open var updateBy: String?
-        set(value): Unit = set(46, value)
-        get(): String? = get(46) as String?
-
-    open var updateDate: LocalDateTime?
-        set(value): Unit = set(47, value)
-        get(): LocalDateTime? = get(47) as LocalDateTime?
-
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsExclusiveOrException")
     open var isExclusiveOrException: Int?
-        set(value): Unit = set(48, value)
-        get(): Int? = get(48) as Int?
+        set(value): Unit = set(44, value)
+        get(): Int? = get(44) as Int?
 
     open var workplaceCode: String?
+        set(value): Unit = set(45, value)
+        get(): String? = get(45) as String?
+
+    open var createdDate: LocalDateTime?
+        set(value): Unit = set(46, value)
+        get(): LocalDateTime? = get(46) as LocalDateTime?
+
+    open var createdBy: String?
+        set(value): Unit = set(47, value)
+        get(): String? = get(47) as String?
+
+    open var updatedDate: LocalDateTime?
+        set(value): Unit = set(48, value)
+        get(): LocalDateTime? = get(48) as LocalDateTime?
+
+    open var updatedBy: String?
         set(value): Unit = set(49, value)
         get(): String? = get(49) as String?
+
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsDeleted")
+    open var isDeleted: Boolean?
+        set(value): Unit = set(50, value)
+        get(): Boolean? = get(50) as Boolean?
 
     // -------------------------------------------------------------------------
     // Primary key information
@@ -232,7 +238,7 @@ open class ProcessMasterRecord() : UpdatableRecordImpl<ProcessMasterRecord>(Proc
     /**
      * Create a detached, initialised ProcessMasterRecord
      */
-    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, processCode: String? = null, processName: String? = null, processNameJp: String? = null, grpProcess: String? = null, grpProcessSummary: String? = null, productRateByMaterial: BigDecimal? = null, completionRate: BigDecimal? = null, inputSystem: String? = null, isActualResult: String? = null, officeCode: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, productRateByMaterialSetting: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, printType: String? = null, unfinishedProcedureType: String? = null, standardProcedureType: String? = null, checkProcessCode: String? = null, actualResultType: String? = null, leadTimeMin: BigDecimal? = null, wsType: String? = null, wsCode: String? = null, persons: Int? = null, workTime: String? = null, grpQuantity: Int? = null, unit: String? = null, neckFlag: String? = null, plannedProcessCode: String? = null, grpActualResult: String? = null, grpCapitalPrice: String? = null, registerBy: String? = null, registerDate: LocalDateTime? = null, updateBy: String? = null, updateDate: LocalDateTime? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null): this() {
+    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, processCode: String? = null, processName: String? = null, processNameJp: String? = null, grpProcess: String? = null, grpProcessSummary: String? = null, productRateByMaterial: BigDecimal? = null, completionRate: BigDecimal? = null, inputSystem: String? = null, isActualResult: String? = null, officeCode: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, productRateByMaterialSetting: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, printType: String? = null, unfinishedProcedureType: String? = null, standardProcedureType: String? = null, checkProcessCode: String? = null, actualResultType: String? = null, leadTimeMin: BigDecimal? = null, wsType: String? = null, wsCode: String? = null, persons: Int? = null, workTime: String? = null, grpQuantity: Int? = null, unit: String? = null, neckFlag: String? = null, plannedProcessCode: String? = null, grpActualResult: String? = null, grpCapitalPrice: String? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null, createdDate: LocalDateTime? = null, createdBy: String? = null, updatedDate: LocalDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.objectId = objectId
         this.companyCode = companyCode
@@ -277,12 +283,13 @@ open class ProcessMasterRecord() : UpdatableRecordImpl<ProcessMasterRecord>(Proc
         this.plannedProcessCode = plannedProcessCode
         this.grpActualResult = grpActualResult
         this.grpCapitalPrice = grpCapitalPrice
-        this.registerBy = registerBy
-        this.registerDate = registerDate
-        this.updateBy = updateBy
-        this.updateDate = updateDate
         this.isExclusiveOrException = isExclusiveOrException
         this.workplaceCode = workplaceCode
+        this.createdDate = createdDate
+        this.createdBy = createdBy
+        this.updatedDate = updatedDate
+        this.updatedBy = updatedBy
+        this.isDeleted = isDeleted
         resetChangedOnNotNull()
     }
 
@@ -335,12 +342,13 @@ open class ProcessMasterRecord() : UpdatableRecordImpl<ProcessMasterRecord>(Proc
             this.plannedProcessCode = value.plannedProcessCode
             this.grpActualResult = value.grpActualResult
             this.grpCapitalPrice = value.grpCapitalPrice
-            this.registerBy = value.registerBy
-            this.registerDate = value.registerDate
-            this.updateBy = value.updateBy
-            this.updateDate = value.updateDate
             this.isExclusiveOrException = value.isExclusiveOrException
             this.workplaceCode = value.workplaceCode
+            this.createdDate = value.createdDate
+            this.createdBy = value.createdBy
+            this.updatedDate = value.updatedDate
+            this.updatedBy = value.updatedBy
+            this.isDeleted = value.isDeleted
             resetChangedOnNotNull()
         }
     }

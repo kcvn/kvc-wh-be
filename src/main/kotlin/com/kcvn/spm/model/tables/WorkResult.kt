@@ -160,11 +160,6 @@ open class WorkResult(
     val TAPE_LOT_NO: TableField<WorkResultRecord, String?> = createField(DSL.name("tape_lot_no"), SQLDataType.VARCHAR(21), this, "")
 
     /**
-     * The column <code>public.work_result.register_date</code>.
-     */
-    val REGISTER_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("register_date"), SQLDataType.LOCALDATETIME(6), this, "")
-
-    /**
      * The column <code>public.work_result.completion_type</code>.
      */
     val COMPLETION_TYPE: TableField<WorkResultRecord, String?> = createField(DSL.name("completion_type"), SQLDataType.VARCHAR(1), this, "")
@@ -185,16 +180,6 @@ open class WorkResult(
     val FURIMUKOU_TYPE: TableField<WorkResultRecord, String?> = createField(DSL.name("furimukou_type"), SQLDataType.VARCHAR(1), this, "")
 
     /**
-     * The column <code>public.work_result.furimukou_quantity</code>.
-     */
-    val FURIMUKOU_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("furimukou_quantity"), SQLDataType.INTEGER, this, "")
-
-    /**
-     * The column <code>public.work_result.product_error_quantity</code>.
-     */
-    val PRODUCT_ERROR_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("product_error_quantity"), SQLDataType.INTEGER, this, "")
-
-    /**
      * The column <code>public.work_result.is_exclusive_or_exception</code>.
      */
     val IS_EXCLUSIVE_OR_EXCEPTION: TableField<WorkResultRecord, Int?> = createField(DSL.name("is_exclusive_or_exception"), SQLDataType.INTEGER, this, "")
@@ -205,11 +190,6 @@ open class WorkResult(
     val EXCESS_FRACTION: TableField<WorkResultRecord, Int?> = createField(DSL.name("excess_fraction"), SQLDataType.INTEGER, this, "")
 
     /**
-     * The column <code>public.work_result.hifurimukou_quantity</code>.
-     */
-    val HIFURIMUKOU_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("hifurimukou_quantity"), SQLDataType.INTEGER, this, "")
-
-    /**
      * The column <code>public.work_result.direction</code>.
      */
     val DIRECTION: TableField<WorkResultRecord, String?> = createField(DSL.name("direction"), SQLDataType.VARCHAR(1), this, "")
@@ -218,11 +198,6 @@ open class WorkResult(
      * The column <code>public.work_result.item_quantity</code>.
      */
     val ITEM_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("item_quantity"), SQLDataType.INTEGER, this, "")
-
-    /**
-     * The column <code>public.work_result.inventory_quantity</code>.
-     */
-    val INVENTORY_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("inventory_quantity"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.work_result.shipment_status</code>.
@@ -280,11 +255,6 @@ open class WorkResult(
     val WORK_START_BY: TableField<WorkResultRecord, String?> = createField(DSL.name("work_start_by"), SQLDataType.VARCHAR(10), this, "")
 
     /**
-     * The column <code>public.work_result.lon_quantity</code>.
-     */
-    val LON_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("lon_quantity"), SQLDataType.INTEGER, this, "")
-
-    /**
      * The column <code>public.work_result.manager_code</code>.
      */
     val MANAGER_CODE: TableField<WorkResultRecord, String?> = createField(DSL.name("manager_code"), SQLDataType.VARCHAR(10), this, "")
@@ -293,6 +263,51 @@ open class WorkResult(
      * The column <code>public.work_result.conversion_factor</code>.
      */
     val CONVERSION_FACTOR: TableField<WorkResultRecord, BigDecimal?> = createField(DSL.name("conversion_factor"), SQLDataType.NUMERIC(8, 3), this, "")
+
+    /**
+     * The column <code>public.work_result.lon_quantity</code>.
+     */
+    val LON_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("lon_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.furimukou_quantity</code>.
+     */
+    val FURIMUKOU_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("furimukou_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.error_item_quantity</code>.
+     */
+    val ERROR_ITEM_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("error_item_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.hifurimukou_quantity</code>.
+     */
+    val HIFURIMUKOU_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("hifurimukou_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.inventory_item_quantity</code>.
+     */
+    val INVENTORY_ITEM_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("inventory_item_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.good_item_quantity</code>.
+     */
+    val GOOD_ITEM_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("good_item_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.regenerative_item_quantity</code>.
+     */
+    val REGENERATIVE_ITEM_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("regenerative_item_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.total_item_quantity</code>.
+     */
+    val TOTAL_ITEM_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("total_item_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.adjustment_item_quantity</code>.
+     */
+    val ADJUSTMENT_ITEM_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("adjustment_item_quantity"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.work_result.furimukou_tape_quantity</code>.
@@ -335,14 +350,14 @@ open class WorkResult(
     val ADJUSTMENT_TAPE_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("adjustment_tape_quantity"), SQLDataType.INTEGER, this, "")
 
     /**
-     * The column <code>public.work_result.error_sheet_quantity</code>.
-     */
-    val ERROR_SHEET_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("error_sheet_quantity"), SQLDataType.INTEGER, this, "")
-
-    /**
      * The column <code>public.work_result.furimukou_sheet_quantity</code>.
      */
     val FURIMUKOU_SHEET_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("furimukou_sheet_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.work_result.error_sheet_quantity</code>.
+     */
+    val ERROR_SHEET_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("error_sheet_quantity"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.work_result.hifurimukou_sheet_quantity</code>.
@@ -380,24 +395,9 @@ open class WorkResult(
     val SHIFT_WORK: TableField<WorkResultRecord, String?> = createField(DSL.name("shift_work"), SQLDataType.VARCHAR(4), this, "")
 
     /**
-     * The column <code>public.work_result.update_date</code>.
-     */
-    val UPDATE_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("update_date"), SQLDataType.LOCALDATETIME(6), this, "")
-
-    /**
-     * The column <code>public.work_result.update_by</code>.
-     */
-    val UPDATE_BY: TableField<WorkResultRecord, String?> = createField(DSL.name("update_by"), SQLDataType.VARCHAR(20), this, "")
-
-    /**
      * The column <code>public.work_result.input_unit</code>.
      */
     val INPUT_UNIT: TableField<WorkResultRecord, String?> = createField(DSL.name("input_unit"), SQLDataType.VARCHAR(1), this, "")
-
-    /**
-     * The column <code>public.work_result.good_product_quantity</code>.
-     */
-    val GOOD_PRODUCT_QUANTITY: TableField<WorkResultRecord, Int?> = createField(DSL.name("good_product_quantity"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.work_result.work_code_1</code>.
@@ -420,6 +420,11 @@ open class WorkResult(
     val WORK_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_date"), SQLDataType.LOCALDATETIME(6), this, "")
 
     /**
+     * The column <code>public.work_result.work_time</code>.
+     */
+    val WORK_TIME: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_time"), SQLDataType.LOCALDATETIME(6), this, "")
+
+    /**
      * The column <code>public.work_result.work_start_date</code>.
      */
     val WORK_START_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_start_date"), SQLDataType.LOCALDATETIME(6), this, "")
@@ -438,11 +443,6 @@ open class WorkResult(
      * The column <code>public.work_result.work_end_date</code>.
      */
     val WORK_END_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_end_date"), SQLDataType.LOCALDATETIME(6), this, "")
-
-    /**
-     * The column <code>public.work_result.work_time</code>.
-     */
-    val WORK_TIME: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_time"), SQLDataType.LOCALDATETIME(6), this, "")
 
     /**
      * The column <code>public.work_result.work_place_code</code>.
@@ -545,9 +545,29 @@ open class WorkResult(
     val SPECIAL_ITEM: TableField<WorkResultRecord, String?> = createField(DSL.name("special_item"), SQLDataType.VARCHAR(75), this, "")
 
     /**
-     * The column <code>public.work_result.register_by</code>.
+     * The column <code>public.work_result.created_date</code>.
      */
-    val REGISTER_BY: TableField<WorkResultRecord, String?> = createField(DSL.name("register_by"), SQLDataType.VARCHAR(20), this, "")
+    val CREATED_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+
+    /**
+     * The column <code>public.work_result.created_by</code>.
+     */
+    val CREATED_BY: TableField<WorkResultRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.work_result.updated_date</code>.
+     */
+    val UPDATED_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+
+    /**
+     * The column <code>public.work_result.updated_by</code>.
+     */
+    val UPDATED_BY: TableField<WorkResultRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.work_result.is_deleted</code>.
+     */
+    val IS_DELETED: TableField<WorkResultRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     private constructor(alias: Name, aliased: Table<WorkResultRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<WorkResultRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

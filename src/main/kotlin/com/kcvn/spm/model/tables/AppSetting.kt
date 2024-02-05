@@ -8,7 +8,7 @@ import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.APP_SETTING_PKEY
 import com.kcvn.spm.model.tables.records.AppSettingRecord
 
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 import java.util.function.Function
 
 import org.jooq.Field
@@ -85,7 +85,7 @@ open class AppSetting(
     /**
      * The column <code>public.app_setting.created_date</code>.
      */
-    val CREATED_DATE: TableField<AppSettingRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
+    val CREATED_DATE: TableField<AppSettingRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
 
     /**
      * The column <code>public.app_setting.created_by</code>.
@@ -95,7 +95,7 @@ open class AppSetting(
     /**
      * The column <code>public.app_setting.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<AppSettingRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
+    val UPDATED_DATE: TableField<AppSettingRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
 
     /**
      * The column <code>public.app_setting.updated_by</code>.
@@ -150,16 +150,16 @@ open class AppSetting(
     // -------------------------------------------------------------------------
     // Row9 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row9<String?, String?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row9<String?, String?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row9<String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?> = super.fieldsRow() as Row9<String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

@@ -1,6 +1,7 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS
 import org.jooq.Condition
@@ -9,10 +10,21 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import org.springframework.data.domain.Pageable
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Repository
 class CompletionRateProcessRepository(private val context: DSLContext) : SortingRepository() {
 
+    fun getListCompletionRateProcessByKey(productNames: List<String>): List<CompletionRateProcess> {
+        return context.selectFrom(COMPLETION_RATE_PROCESS)
+            .where(
+                COMPLETION_RATE_PROCESS.KEY.`in`(productNames)
+                    .and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false))
+            )
+            .fetchInto(CompletionRateProcess::class.java)
+    }
 
     fun getPaginatedCompletionRateProcesses(
         search: String?,
@@ -64,10 +76,44 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             .fetchInto(CompletionRateProcess::class.java)
     }
 
-    fun add(model: CompletionRateProcess) {
-        val record = context.newRecord(COMPLETION_RATE_PROCESS, model)
-        context.insertInto(COMPLETION_RATE_PROCESS).set(record).execute()
+    fun add(data: CompletionRateProcess): CompletionRateProcess? {
+       return try {
+            context
+                .insertInto(
+                    COMPLETION_RATE_PROCESS,
+                    COMPLETION_RATE_PROCESS.KEY,
+                    COMPLETION_RATE_PROCESS.PROCESS_CODE,
+                    COMPLETION_RATE_PROCESS.LAYER_CODE,
+                    COMPLETION_RATE_PROCESS.RATE,
+                    COMPLETION_RATE_PROCESS.CREATED_DATE,
+                    COMPLETION_RATE_PROCESS.CREATED_BY,
+                    COMPLETION_RATE_PROCESS.IS_DELETED,
+                    COMPLETION_RATE_PROCESS.UPDATED_DATE,
+                    COMPLETION_RATE_PROCESS.EXPIRATION_DATE,
+                    COMPLETION_RATE_PROCESS.EFFECTIVE_DATE
+                )
+                .values(
+
+                     data.key,
+                     data.processCode,
+                     data.layerCode,
+                     data.rate,
+                     data.createdDate ?: LocalDateTime.now(ZoneOffset.UTC),
+                     data.createdBy ?: "admin",
+                     data.isDeleted ?: false,
+                     data.updatedDate ?: LocalDateTime.now(ZoneOffset.UTC),
+                     data.expirationDate,
+                     data.effectiveDate
+                )
+                .returningResult(COMPLETION_RATE_PROCESS)
+                .fetchOne()
+                ?.into(CompletionRateProcess::class.java)
+        } catch (e: Exception) {
+           null
+        }
+        return data
     }
+
 
     fun delete(id: String) {
         context.update(COMPLETION_RATE_PROCESS)
@@ -75,5 +121,26 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             .where(COMPLETION_RATE_PROCESS.ID.eq(id))
             .execute()
     }
+
+
+    fun update(data: CompletionRateProcess): CompletionRateProcess? {
+        return context
+            .update(COMPLETION_RATE_PROCESS)
+            .set(COMPLETION_RATE_PROCESS.RATE, data.rate)
+            .set(COMPLETION_RATE_PROCESS.CREATED_DATE, data.createdDate)
+            .set(COMPLETION_RATE_PROCESS.LAYER_CODE, data.layerCode)
+            .set(COMPLETION_RATE_PROCESS.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
+            .set(COMPLETION_RATE_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(COMPLETION_RATE_PROCESS.IS_DELETED, data.isDeleted)
+            .set(COMPLETION_RATE_PROCESS.EXPIRATION_DATE, data.expirationDate)
+            .set(COMPLETION_RATE_PROCESS.EFFECTIVE_DATE, data.effectiveDate)
+            .set(COMPLETION_RATE_PROCESS.PROCESS_CODE, data.processCode)
+            .set(COMPLETION_RATE_PROCESS.KEY, data.key)
+            .where(COMPLETION_RATE_PROCESS.ID.eq(data.id)) // Assuming ID is the primary key
+            .returningResult(COMPLETION_RATE_PROCESS)
+            .fetchOne()
+            ?.into(CompletionRateProcess::class.java)
+    }
+
 
 }

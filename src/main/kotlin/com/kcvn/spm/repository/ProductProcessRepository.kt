@@ -1,8 +1,10 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
+import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
 import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -14,37 +16,39 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProductProcessRepository(private val context: DSLContext) : SortingRepository()  {
-    fun findByKeywordPaginated(keyword: String?,hasProcessConvertCode: Boolean, pageable: Pageable): Pair<List<ProductProcess>, Int>
+    fun findByKeywordPaginated(keyword: String?,hasProcessConvertCode: Boolean, pageable: Pageable): Pair<List<ProductProcessResponse>, Int>
     {
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
             val lowerKeyword = DSL.lower(keyword);
-            condition = condition.and(DSL.lower(PRODUCT_PROCESS.PRODUCT_NAME).contains(lowerKeyword))
+            condition = condition.and(DSL.lower(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE).contains(lowerKeyword))
         }
         if(hasProcessConvertCode){
             condition = condition.and(PRODUCT_PROCESS.PROCESS_CONVERT_CODE.isNull
                 .or(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.isNull))
 
         }
-        val productProcessQuery = context.selectFrom(PRODUCT_PROCESS)
+        val productProcessQuery = context.selectFrom(PRODUCT_PROCESS.join(PROCESS_PROCEDURE_STRUCTURE)
+            .on(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID
+                .eq(PROCESS_PROCEDURE_STRUCTURE.ID)))
             .where(condition.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE))
             .limit(pageable.pageSize)
             .offset(pageable.offset)
-            .fetchInto(ProductProcess::class.java)
+            .fetchInto(ProductProcessResponse::class.java)
         val total = context.fetchCount(PRODUCT_PROCESS, condition.and((PRODUCT_PROCESS.IS_DELETED.eq(false))));
         return  Pair(productProcessQuery, total);
     }
 
     fun getByProduct(productNames: List<String>) : List<ProductProcess> {
         return context.selectFrom(PRODUCT_PROCESS)
-            .where(PRODUCT_PROCESS.PRODUCT_NAME.`in`(productNames).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+            //.where(PRODUCT_PROCESS.PRODUCT_NAME.`in`(productNames).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java)
     }
 
     fun getByProductProcessDetail(productName: String?): List<ProductProcess?>? {
         return context.selectFrom(PRODUCT_PROCESS)
-            .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+          //  .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java)
     }
 
@@ -69,20 +73,20 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         val sortField: TableField<*, *> = when (sortFieldName) {
             "default" -> {
                 PRODUCT_PROCESS.PROCESS_NAME
-                PRODUCT_PROCESS.LAYER_CODE
+              //  PRODUCT_PROCESS.LAYER_CODE
             }
-            "productName" -> {
-                PRODUCT_PROCESS.PRODUCT_NAME
-            }
-            "layerCode" -> {
-                PRODUCT_PROCESS.LAYER_CODE
-            }
+           // "productName" -> {
+              //  PRODUCT_PROCESS.PRODUCT_NAME
+       //     }
+          //  "layerCode" -> {
+               // PRODUCT_PROCESS.LAYER_CODE
+          //  }
             "processConvertCode" -> {
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE
             }
-            "processCode" -> {
-                PRODUCT_PROCESS.PROCESS_CODE
-            }
+           // "processCode" -> {
+         //       PRODUCT_PROCESS.PROCESS_CODE
+         //   }
             "processName" -> {
                 PRODUCT_PROCESS.PROCESS_NAME
             }

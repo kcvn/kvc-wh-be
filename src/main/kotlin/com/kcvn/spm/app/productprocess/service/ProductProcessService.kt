@@ -23,22 +23,17 @@ class ProductProcessService(
     fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse>
     {
         val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
-        var response = BasePagingResponse<ProductProcessResponse>();
-        val listProductName = result.first.map { it.productName }
-        val  uniqueListProductName = listProductName.distinct()
-        val listProduct = productRepository.getByName(uniqueListProductName.filterNotNull())
+        val response = BasePagingResponse<ProductProcessResponse>();
             response.data = result.first.map { productProcess ->
                 ProductProcessResponse(
                     id = productProcess.id,
-                    productName = productProcess.productName,
-                    layerCode = productProcess.layerCode,
-                    processCode = productProcess.processCode,
                     processName = productProcess.processName,
                     processNameJp = productProcess.processNameJp,
                     processConvertCode = productProcess.processConvertCode,
                     processStatisticCode = productProcess.processStatisticCode,
                     processInventoryCode = productProcess.processInventoryCode,
-                    productId = listProduct.find { x -> x.name == productProcess.productName }?.id
+                    productName = productProcess.productName,
+                    productId = productProcess.productId
                 );
             }
             response.totalRecords = result.second;
@@ -52,9 +47,9 @@ class ProductProcessService(
             productProcess ->
             ProductProcessResponse(
                 id = productProcess?.id,
-                productName = productProcess?.productName,
-                layerCode = productProcess?.layerCode,
-                processCode = productProcess?.processCode,
+              //  productName = productProcess?.productName,
+              //  layerCode = productProcess?.layerCode,
+              //  processCode = productProcess?.processCode,
                 processName = productProcess?.processName,
                 processNameJp = productProcess?.processNameJp,
                 processConvertCode = productProcess?.processConvertCode,

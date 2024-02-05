@@ -14,6 +14,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.repository.CompletionRateProductRepository
+import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
 import org.apache.poi.ss.usermodel.*
@@ -31,6 +32,7 @@ import java.io.FileInputStream
 class ProductService(
     private val productRep: ProductRepository,
     private val productProcessRep: ProductProcessRepository,
+    private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val completionRateProductRep: CompletionRateProductRepository,
     private val masterDataService: MasterDataService
 ) {
@@ -321,8 +323,8 @@ class ProductService(
     private fun mappingProductResponse(products: List<Product>) : PagingProductResponse {
         val productNames = products.mapNotNull { x -> x.name }
         val completionRates = completionRateProductRep.getByProduct(productNames)
-        val productProcesses = productProcessRep.getByProduct(productNames)
-        //val processGroups = productProcesses.groupBy { x -> Pair(x.productName, x.processCode) }
+        val productProcesses = processProcedureStructureRep.getByProductName(productNames)
+        val processGroups = productProcesses.groupBy { x -> Pair(x.productCode, x.processCode) }
 
         val response = PagingProductResponse()
         response.data = products.map { x -> ProductResponse(
@@ -343,10 +345,10 @@ class ProductService(
                 tapeCommon = x.tapeCommon,
                 tapeType = x.tapeType,
                 completionRate = (completionRates.find { m -> m.productName == x.name }?.rate ?: 0.0).toDouble(),
-                //lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
+                lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
         ) }
 
-        //response.columns = productProcesses.map { x -> DropdownResponse(x.processCode,x.processName) }.distinct()
+        response.columns = productProcesses.map { x -> DropdownResponse(x.processCode,x.processCode) }.distinct()
 
         return response
     }

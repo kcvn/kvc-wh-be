@@ -19,7 +19,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
             val lowerKeyword = DSL.lower(keyword);
-            condition = condition.and(DSL.lower(PRODUCT_PROCESS.PROCESS_NAME).contains(lowerKeyword))
+            condition = condition.and(DSL.lower(PRODUCT_PROCESS.PRODUCT_NAME).contains(lowerKeyword))
         }
         if(hasProcessConvertCode){
             condition = condition.and(PRODUCT_PROCESS.PROCESS_CONVERT_CODE.isNull

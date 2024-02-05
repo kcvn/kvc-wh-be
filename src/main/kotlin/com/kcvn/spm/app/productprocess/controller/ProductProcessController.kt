@@ -13,7 +13,9 @@ import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.sample.service.ProductProcessService
 import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
+import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -28,7 +30,8 @@ class ProductProcessController(
     @GetMapping("/all")
     fun getAllProductProcess (
         request: ProductProcessSearchRequest,
-        @PageableDefault(size = 10, page = 0, sort = ["productName,asc","layerCode,asc","processCode,asc"]) pageable: Pageable?
+        @PageableDefault(size = 10, page = 0, sort = ["processName","layerCode","processCode"], direction = Sort.Direction.ASC)
+        pageable: Pageable?
     ): ResponseEntity<BasePagingResponse<ProductProcessResponse>>
     {
         val result = productProcessService.getPaginatedProductProcess(request.search,request.hasProcessConvertCode, pageable!!);

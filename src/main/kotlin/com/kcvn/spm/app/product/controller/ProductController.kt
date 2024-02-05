@@ -29,7 +29,7 @@ class ProductController(
     @GetMapping("/get-list")
     fun getList(
         request: ProductSearchRequest?,
-        @PageableDefault(size = 10, page = 0) pageable: Pageable
+        @PageableDefault(size = 10, page = 0, sort = ["createddate,desc"]) pageable: Pageable
     ): ResponseEntity<PagingProductResponse> {
         return try {
             val data = productService.getListProduct(request, pageable)
@@ -40,43 +40,22 @@ class ProductController(
         }
     }
 
-    @PostMapping(value = ["/import-csv"], consumes = ["multipart/form-data"])
-    fun importCsv(@RequestPart("file") file: MultipartFile): ResponseEntity<*> {
-        return try {
-            val data = productService.importCsvProduct(file)
-            ResponseEntity<MessageResponse>(
-                MessageResponse(data),
-                HttpStatus.OK
-            )
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("import.failed")),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            )
-        }
+    @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
+    fun importCsv(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productService.importExcelProduct(file)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @GetMapping("/download-template-csv")
-    fun downloadTemplateCsv(response: HttpServletResponse) : ResponseEntity<BaseResponse<FileContentModel>> {
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.csv"
-        val file = File(filePath)
-
-        val fileContent = Files.readAllBytes(file.toPath())
-        val data = FileContentModel(
-            fileName = "ImportProductTemplate.csv",
-            contentType = "text/csv",
-            content = fileContent
-        )
-        val result = BaseResponse(data)
-        return ResponseEntity(result, HttpStatus.OK)
+    @GetMapping("/download-template-excel")
+    fun downloadTemplateExcel() : ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productService.downloadTemplate()
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")
     fun exportExcel(
         request: ProductSearchRequest?,
-        @PageableDefault(size = 1000000, page = 0) pageable: Pageable
+        @PageableDefault(size = 1000000, page = 0, sort = ["createddate,desc"]) pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = productService.exportExcel(request, pageable)
         return ResponseEntity(data, HttpStatus.OK)

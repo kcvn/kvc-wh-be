@@ -31,7 +31,6 @@ import java.io.FileInputStream
 @Transactional
 class ProductService(
     private val productRep: ProductRepository,
-    private val productProcessRep: ProductProcessRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val completionRateProductRep: CompletionRateProductRepository,
     private val masterDataService: MasterDataService

@@ -29,7 +29,7 @@ class ProductController(
     @GetMapping("/get-list")
     fun getList(
         request: ProductSearchRequest?,
-        @PageableDefault(size = 10, page = 0) pageable: Pageable
+        @PageableDefault(size = 10, page = 0, sort = ["createddate,desc"]) pageable: Pageable
     ): ResponseEntity<PagingProductResponse> {
         return try {
             val data = productService.getListProduct(request, pageable)
@@ -40,71 +40,22 @@ class ProductController(
         }
     }
 
-    @PostMapping(value = ["/import-csv"], consumes = ["multipart/form-data"])
-    fun importCsv(@RequestPart("file") file: MultipartFile): ResponseEntity<*> {
-        try {
-            val data = productService.importCsvProduct(file)
-            return ResponseEntity<MessageResponse>(
-                MessageResponse(data),
-                HttpStatus.OK
-            )
-        }
-        catch (e: Exception) {
-            e.printStackTrace()
-            return ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("import.failed")),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            )
-        }
+    @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
+    fun importCsv(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productService.importExcelProduct(file)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
-//    @GetMapping("/download-template-csv")
-//    fun downloadTemplateCsv(response: HttpServletResponse): StreamingResponseBody {
-//        try {
-//            var resource = ClassPathResource("media/template/ImportProductTemplate.csv")
-//            if (resource.exists()) throw BusinessException("Đường dẫn file không tồn tại")
-//            println(resource.file.absolutePath)
-//            val file = FileSystemResource(resource.file.absolutePath)
-//
-//            val streamingResponseBody = StreamingResponseBody { outputStream ->
-//                file.inputStream.use { input ->
-//                    input.copyTo(outputStream)
-//                }
-//            }
-//
-//            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
-//            response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.csv")
-//            response.contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE
-//            response.setContentLengthLong(1048576)
-//            return streamingResponseBody
-//        }
-//        catch (e: Exception) {
-//            e.printStackTrace()
-//            throw BusinessException(e.localizedMessage)
-//        }
-//    }
-
-    @GetMapping("/download-template-csv")
-    fun downloadTemplateCsv(response: HttpServletResponse) : ResponseEntity<BaseResponse<FileContentModel>> {
-
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.csv"
-        println(filePath)
-        val file = File(filePath)
-
-        val fileContent = Files.readAllBytes(file.toPath())
-        val data = FileContentModel(
-                fileName = "ImportProductTemplate.csv",
-                contentType = "text/csv",
-                content = fileContent
-        )
-        val response = BaseResponse<FileContentModel>(data)
-        return ResponseEntity(response, HttpStatus.OK)
+    @GetMapping("/download-template-excel")
+    fun downloadTemplateExcel() : ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productService.downloadTemplate()
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")
     fun exportExcel(
-            request: ProductSearchRequest?,
-            @PageableDefault(size = 10, page = 0) pageable: Pageable
+        request: ProductSearchRequest?,
+        @PageableDefault(size = 1000000, page = 0, sort = ["createddate,desc"]) pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = productService.exportExcel(request, pageable)
         return ResponseEntity(data, HttpStatus.OK)

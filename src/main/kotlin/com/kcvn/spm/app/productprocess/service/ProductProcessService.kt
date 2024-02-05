@@ -22,21 +22,21 @@ class ProductProcessService(
     fun getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): PaginatedResponse
     {
         val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
-        val listProductName = result.first.map { it.productName }
-        val  uniqueListProductName = listProductName.distinct()
-        val listProduct = productRepository.getByName(uniqueListProductName.filterNotNull())
+        //val listProductName = result.first.map { it.productName }
+        //val  uniqueListProductName = listProductName.distinct()
+        //val listProduct = productRepository.getByName(uniqueListProductName.filterNotNull())
         return PaginatedResponse(result.first.map {
             productProcess -> ProductProcessResponse(
                 id = productProcess.id,
-                productName = productProcess.productName,
-                layerCode = productProcess.layerCode,
-                processCode = productProcess.processCode,
+//                productName = productProcess.productName,
+//                layerCode = productProcess.layerCode,
+//                processCode = productProcess.processCode,
                 processName = productProcess.processName,
                 processNameJp = productProcess.processNameJp,
                 processConvertCode = productProcess.processConvertCode,
                 processStatisticCode = productProcess.processStatisticCode,
                 processInventoryCode = productProcess.processInventoryCode,
-                productId = listProduct.find { x -> x.name == productProcess.productName }?.id
+                //productId = listProduct.find { x -> x.name == productProcess.productName }?.id
             )
         }, result.second)
     }
@@ -47,9 +47,9 @@ class ProductProcessService(
             productProcess ->
             ProductProcessResponse(
                 id = productProcess?.id,
-                productName = productProcess?.productName,
-                layerCode = productProcess?.layerCode,
-                processCode = productProcess?.processCode,
+//                productName = productProcess?.productName,
+//                layerCode = productProcess?.layerCode,
+//                processCode = productProcess?.processCode,
                 processName = productProcess?.processName,
                 processNameJp = productProcess?.processNameJp,
                 processConvertCode = productProcess?.processConvertCode,
@@ -72,9 +72,9 @@ class ProductProcessService(
             val data = productProcessRep.updateProductDetail(productProcess);
             val result = ProductProcessResponse(
                 id = data?.id,
-                productName = data?.productName,
-                layerCode = data?.layerCode,
-                processCode = data?.processCode,
+//                productName = data?.productName,
+//                layerCode = data?.layerCode,
+//                processCode = data?.processCode,
                 processName = data?.processName,
                 processNameJp = data?.processNameJp,
                 processConvertCode = data?.processConvertCode,

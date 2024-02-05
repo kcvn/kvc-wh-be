@@ -286,26 +286,6 @@ open class ProcessMaster(
     val GRP_CAPITAL_PRICE: TableField<ProcessMasterRecord, String?> = createField(DSL.name("grp_capital_price"), SQLDataType.VARCHAR(5), this, "")
 
     /**
-     * The column <code>public.process_master.register_by</code>.
-     */
-    val REGISTER_BY: TableField<ProcessMasterRecord, String?> = createField(DSL.name("register_by"), SQLDataType.VARCHAR(20), this, "")
-
-    /**
-     * The column <code>public.process_master.register_date</code>.
-     */
-    val REGISTER_DATE: TableField<ProcessMasterRecord, LocalDateTime?> = createField(DSL.name("register_date"), SQLDataType.LOCALDATETIME(6), this, "")
-
-    /**
-     * The column <code>public.process_master.update_by</code>.
-     */
-    val UPDATE_BY: TableField<ProcessMasterRecord, String?> = createField(DSL.name("update_by"), SQLDataType.VARCHAR(20), this, "")
-
-    /**
-     * The column <code>public.process_master.update_date</code>.
-     */
-    val UPDATE_DATE: TableField<ProcessMasterRecord, LocalDateTime?> = createField(DSL.name("update_date"), SQLDataType.LOCALDATETIME(6), this, "")
-
-    /**
      * The column <code>public.process_master.is_exclusive_or_exception</code>.
      */
     val IS_EXCLUSIVE_OR_EXCEPTION: TableField<ProcessMasterRecord, Int?> = createField(DSL.name("is_exclusive_or_exception"), SQLDataType.INTEGER, this, "")
@@ -314,6 +294,31 @@ open class ProcessMaster(
      * The column <code>public.process_master.workplace_code</code>.
      */
     val WORKPLACE_CODE: TableField<ProcessMasterRecord, String?> = createField(DSL.name("workplace_code"), SQLDataType.VARCHAR(5), this, "")
+
+    /**
+     * The column <code>public.process_master.created_date</code>.
+     */
+    val CREATED_DATE: TableField<ProcessMasterRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+
+    /**
+     * The column <code>public.process_master.created_by</code>.
+     */
+    val CREATED_BY: TableField<ProcessMasterRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.process_master.updated_date</code>.
+     */
+    val UPDATED_DATE: TableField<ProcessMasterRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+
+    /**
+     * The column <code>public.process_master.updated_by</code>.
+     */
+    val UPDATED_BY: TableField<ProcessMasterRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.process_master.is_deleted</code>.
+     */
+    val IS_DELETED: TableField<ProcessMasterRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     private constructor(alias: Name, aliased: Table<ProcessMasterRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<ProcessMasterRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

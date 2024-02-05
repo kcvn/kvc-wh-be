@@ -248,26 +248,6 @@ open class ProcessProcedureStructure(
     val GRP_CHECK_PROCESS: TableField<ProcessProcedureStructureRecord, String?> = createField(DSL.name("grp_check_process"), SQLDataType.VARCHAR(5), this, "")
 
     /**
-     * The column <code>public.process_procedure_structure.register_by</code>.
-     */
-    val REGISTER_BY: TableField<ProcessProcedureStructureRecord, String?> = createField(DSL.name("register_by"), SQLDataType.VARCHAR(20), this, "")
-
-    /**
-     * The column <code>public.process_procedure_structure.register_date</code>.
-     */
-    val REGISTER_DATE: TableField<ProcessProcedureStructureRecord, LocalDateTime?> = createField(DSL.name("register_date"), SQLDataType.LOCALDATETIME(6), this, "")
-
-    /**
-     * The column <code>public.process_procedure_structure.update_by</code>.
-     */
-    val UPDATE_BY: TableField<ProcessProcedureStructureRecord, String?> = createField(DSL.name("update_by"), SQLDataType.VARCHAR(20), this, "")
-
-    /**
-     * The column <code>public.process_procedure_structure.update_date</code>.
-     */
-    val UPDATE_DATE: TableField<ProcessProcedureStructureRecord, LocalDateTime?> = createField(DSL.name("update_date"), SQLDataType.LOCALDATETIME(6), this, "")
-
-    /**
      * The column
      * <code>public.process_procedure_structure.is_exclusive_or_exception</code>.
      */
@@ -278,6 +258,31 @@ open class ProcessProcedureStructure(
      * <code>public.process_procedure_structure.workplace_code</code>.
      */
     val WORKPLACE_CODE: TableField<ProcessProcedureStructureRecord, String?> = createField(DSL.name("workplace_code"), SQLDataType.VARCHAR(5), this, "")
+
+    /**
+     * The column <code>public.process_procedure_structure.created_date</code>.
+     */
+    val CREATED_DATE: TableField<ProcessProcedureStructureRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+
+    /**
+     * The column <code>public.process_procedure_structure.created_by</code>.
+     */
+    val CREATED_BY: TableField<ProcessProcedureStructureRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.process_procedure_structure.updated_date</code>.
+     */
+    val UPDATED_DATE: TableField<ProcessProcedureStructureRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+
+    /**
+     * The column <code>public.process_procedure_structure.updated_by</code>.
+     */
+    val UPDATED_BY: TableField<ProcessProcedureStructureRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.process_procedure_structure.is_deleted</code>.
+     */
+    val IS_DELETED: TableField<ProcessProcedureStructureRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     private constructor(alias: Name, aliased: Table<ProcessProcedureStructureRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<ProcessProcedureStructureRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

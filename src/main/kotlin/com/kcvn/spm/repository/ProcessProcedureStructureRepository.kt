@@ -1,9 +1,7 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
-import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
-import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -32,7 +30,7 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
 
     fun getByProductName(productNames: List<String>) : List<ProcessProcedureStructure> {
         return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE)
-                .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(productNames).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+                .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(productNames).and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
                 .fetchInto(ProcessProcedureStructure::class.java)
     }
 }

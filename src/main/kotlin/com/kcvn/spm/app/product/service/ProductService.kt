@@ -15,7 +15,6 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.repository.CompletionRateProductRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook

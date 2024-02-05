@@ -2,10 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.AuthRole
 import com.kcvn.spm.model.tables.pojos.ProductProcess
-import com.kcvn.spm.model.tables.references.AUTH_ROLE
-import com.kcvn.spm.model.tables.references.AUTH_USER
 import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -45,29 +42,27 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .fetchInto(ProductProcess::class.java)
     }
 
-    fun  getByProductProcessDetail(productName: String?) : List<ProductProcess?>? {
-        val data = context.selectFrom(PRODUCT_PROCESS)
+    fun getByProductProcessDetail(productName: String?): List<ProductProcess?>? {
+        return context.selectFrom(PRODUCT_PROCESS)
             .where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java)
-        return  data
     }
 
-    fun  getByProductProcessDetailById(id: String?) : ProductProcess? {
+    fun getByProductProcessDetailById(id: String?): ProductProcess? {
         val data = context.selectFrom(PRODUCT_PROCESS)
             .where((PRODUCT_PROCESS.ID.eq(id)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java).firstOrNull()
-        return  data
+        return data
     }
-    fun updateProductDetail(request: ProductProcess) :  ProductProcess? {
-        val data = context.update(PRODUCT_PROCESS)
+    fun updateProductDetail(request: ProductProcess): ProductProcess? {
+        return context.update(PRODUCT_PROCESS)
             .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, request.processConvertCode)
             .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
             .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
             .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .where(PRODUCT_PROCESS.ID.eq(request.id).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .returningResult(PRODUCT_PROCESS)
-            .fetchAnyInto(ProductProcess::class.java)
-        return  data;
+            .fetchAnyInto(ProductProcess::class.java);
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

@@ -5,7 +5,9 @@ import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
 import com.kcvn.spm.app.workresult.service.WorkResultService
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
+import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -20,7 +22,13 @@ class WorkResultController (
     @GetMapping("/get-list")
     fun getList(
         request: WorkResultSearchRequest?,
-        @PageableDefault(size = 10, page = 0, sort = ["summary_result_date,desc","item_name,asc","layer_code,asc","process_name,asc"]) pageable: Pageable
+        @PageableDefault(size = 10, page = 0)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["summary_result_date"], direction = Sort.Direction.DESC),
+            SortDefault(sort = ["item_name"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["layer_code"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["process_name"], direction = Sort.Direction.ASC)
+        ) pageable: Pageable,
     ): ResponseEntity<PagingWorkResultResponse> {
         return try {
             val data = workResultService.getListProductResult(request,pageable)

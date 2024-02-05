@@ -2,7 +2,11 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.model.tables.pojos.ProcessMaster
+import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.pojos.WorkResult
+import com.kcvn.spm.model.tables.references.PROCESS_MASTER
+import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
 import com.kcvn.spm.model.tables.references.WORK_RESULT
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -10,10 +14,22 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Repository
 
-class WorkResultRepository (private val context: DSLContext) : SortingRepository() {
-    fun getProductResults(request: WorkResultSearchRequest?, pageable: Pageable): Pair<List<WorkResult>, Int> {
+@Repository
+class WorkResultRepository (
+    private val context: DSLContext,
+    private val processMasterRepository: ProcessMasterRepository
+) : SortingRepository() {
+    fun getListWorkResult(request: WorkResultSearchRequest?, pageable: Pageable): Pair<List<WorkResult>, Int> {
         var condition : Condition = DSL.noCondition()
+
+        val listProcess = context.select().from(PROCESS_PROCEDURE_STRUCTURE)
+            .join(PROCESS_MASTER)
+            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+
+
+
         if (request!= null) {
             if(!request.order.isNullOrEmpty())
                 condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
@@ -27,7 +43,7 @@ class WorkResultRepository (private val context: DSLContext) : SortingRepository
                 }
             }
             else{
-                condition = condition.and(WORK_RESULT.PROCESS_GRP.isNull())
+
             }
 
             if(!request.listProcessName.isNullOrEmpty()){
@@ -36,7 +52,7 @@ class WorkResultRepository (private val context: DSLContext) : SortingRepository
                 }
             }
             else{
-                condition = condition.and(WORK_RESULT.PROCESS_NAME.isNull())
+
             }
 
             if(!request.tapeLot.isNullOrEmpty())

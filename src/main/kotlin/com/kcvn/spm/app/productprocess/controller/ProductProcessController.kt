@@ -30,16 +30,15 @@ class ProductProcessController(
     @GetMapping("/all")
     fun getAllProductProcess (
         request: ProductProcessSearchRequest,
-        @PageableDefault(size = 10, page = 0, sort = ["processName","layerCode","processCode"], direction = Sort.Direction.ASC)
+        @PageableDefault(size = 10, page = 0, sort = ["processName","layerCode","processSequence"], direction = Sort.Direction.ASC)
         pageable: Pageable?
     ): ResponseEntity<BasePagingResponse<ProductProcessResponse>>
     {
         val result = productProcessService.getPaginatedProductProcess(request.search,request.hasProcessConvertCode, pageable!!);
-       if(result.data.isNullOrEmpty()){
-           return  ResponseEntity(BasePagingResponse(),HttpStatus.NO_CONTENT)
-       }
-        else{
-            return  ResponseEntity(result,HttpStatus.OK)
+        return if(result.data.isNullOrEmpty()){
+            ResponseEntity(BasePagingResponse(),HttpStatus.NO_CONTENT)
+        } else{
+            ResponseEntity(result,HttpStatus.OK)
         }
     }
 

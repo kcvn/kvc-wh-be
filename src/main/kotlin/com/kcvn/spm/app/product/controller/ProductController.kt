@@ -71,6 +71,9 @@ class ProductController(
         val dataProduct = productService.getProductDetail(id)
         val nameProduct = dataProduct?.name
         val dataProcess = productProcessService.getProductProcessDetail(nameProduct)
+        dataProcess?.forEachIndexed{idx, data ->
+            data?.idx = idx
+        }
         val resultData = ProductAndProcessResponse(
             detail = dataProduct,
             listProcess = dataProcess

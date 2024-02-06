@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class ProductProcessService(
     private val productProcessRep : ProductProcessRepository,
-    private val productRepository: ProductRepository
 )
 {
     fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse>
@@ -33,31 +32,17 @@ class ProductProcessService(
                     processStatisticCode = productProcess.processStatisticCode,
                     processInventoryCode = productProcess.processInventoryCode,
                     productName = productProcess.productName,
-                    productId = productProcess.productId
+                    layerCode = productProcess.layerCode,
+                    processCode = productProcess.processCode
                 );
             }
-            response.totalRecords = result.second;
+            response.total = result.second;
 
         return response;
     }
 
     fun getProductProcessDetail(nameProduct: String?) : List<ProductProcessResponse?>?{
-        val result = productProcessRep.getByProductProcessDetail(nameProduct)
-        return result?.map {
-            productProcess ->
-            ProductProcessResponse(
-                id = productProcess?.id,
-              //  productName = productProcess?.productName,
-              //  layerCode = productProcess?.layerCode,
-              //  processCode = productProcess?.processCode,
-                processName = productProcess?.processName,
-                processNameJp = productProcess?.processNameJp,
-                processConvertCode = productProcess?.processConvertCode,
-                processStatisticCode = productProcess?.processStatisticCode,
-                processInventoryCode = productProcess?.processInventoryCode
-
-            )
-        }
+        return productProcessRep.getByProductProcessDetail(nameProduct)
     }
 
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : List<ProductProcess?> {
@@ -65,6 +50,13 @@ class ProductProcessService(
         for (item in request.listProcess!!){
             val productProcess = productProcessRep.getByProductProcessDetailById(item.id)
                 ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
+            if (item.processInventoryCode != null){
+               val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
+                if(productProcessAfter == null || (productProcessAfter.processCode != null && productProcessAfter.processCode != item.processInventoryCode) )
+                {
+                    throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+                }
+            }
             productProcess.processConvertCode = item.processConvertCode;
             productProcess.processStatisticCode = item.processStatisticCode;
             productProcess.processInventoryCode = item.processInventoryCode;

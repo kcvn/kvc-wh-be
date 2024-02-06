@@ -1,11 +1,10 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.AuthRole
 import com.kcvn.spm.model.tables.pojos.ProductProcess
-import com.kcvn.spm.model.tables.references.AUTH_ROLE
-import com.kcvn.spm.model.tables.references.AUTH_USER
+import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
 import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -17,26 +16,48 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProductProcessRepository(private val context: DSLContext) : SortingRepository()  {
-    fun findByKeywordPaginated(keyword: String?,hasProcessConvertCode: Boolean, pageable: Pageable): Pair<List<ProductProcess>, Int>
+    fun findByKeywordPaginated(keyword: String?,hasProcessConvertCode: Boolean, pageable: Pageable): Pair<List<ProductProcessResponse>, Int?>
     {
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
             val lowerKeyword = DSL.lower(keyword);
-            condition = condition.and(DSL.lower(PRODUCT_PROCESS.PROCESS_NAME).contains(lowerKeyword))
+            condition = condition.and(DSL.lower(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE).contains(lowerKeyword))
         }
         if(hasProcessConvertCode){
             condition = condition.and(PRODUCT_PROCESS.PROCESS_CONVERT_CODE.isNull
                 .or(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.isNull))
 
         }
-        val productProcessQuery = context.selectFrom(PRODUCT_PROCESS)
+        val productProcessQuery = context
+            .select(
+                PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
+                PRODUCT_PROCESS.ID.`as`("id"),
+                PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.`as`("layerCode"),
+                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.`as`("processCode"),
+                PRODUCT_PROCESS.PROCESS_NAME_JP.`as`("processNameJp"),
+                PRODUCT_PROCESS.PROCESS_NAME.`as`("processName"),
+                PRODUCT_PROCESS.PROCESS_CONVERT_CODE.`as`("processConvertCode"),
+                PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
+                PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
+            )
+            .from(PRODUCT_PROCESS.join(PROCESS_PROCEDURE_STRUCTURE)
+            .on(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID
+                .eq(PROCESS_PROCEDURE_STRUCTURE.ID)))
             .where(condition.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE))
             .limit(pageable.pageSize)
             .offset(pageable.offset)
-            .fetchInto(ProductProcess::class.java)
-        val total = context.fetchCount(PRODUCT_PROCESS, condition.and((PRODUCT_PROCESS.IS_DELETED.eq(false))));
-        return  Pair(productProcessQuery, total);
+            .fetchInto(ProductProcessResponse::class.java)
+        val queryTotal =  context
+        .selectCount()
+        .from(PRODUCT_PROCESS)
+        .join(PROCESS_PROCEDURE_STRUCTURE)
+        .on(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID
+            .eq(PROCESS_PROCEDURE_STRUCTURE.ID))
+        .where(condition.and(PRODUCT_PROCESS.IS_DELETED.eq(false))
+            .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+        val totalCount = context.fetchOne(queryTotal)?.value1()
+        return  Pair(productProcessQuery, totalCount);
     }
 
     fun getByProduct(productNames: List<String>) : List<ProductProcess> {
@@ -45,49 +66,58 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .fetchInto(ProductProcess::class.java)
     }
 
-    fun  getByProductProcessDetail(productName: String?) : List<ProductProcess?>? {
-        val data = context.selectFrom(PRODUCT_PROCESS)
-            //.where((PRODUCT_PROCESS.PRODUCT_NAME.eq(productName)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
-            .fetchInto(ProductProcess::class.java)
-        return  data
+    fun getByProductProcessDetail(productName: String?): List<ProductProcessResponse?>? {
+        return context.select(
+            PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
+            PRODUCT_PROCESS.ID.`as`("id"),
+            PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.`as`("layerCode"),
+            PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.`as`("processCode"),
+            PRODUCT_PROCESS.PROCESS_NAME_JP.`as`("processNameJp"),
+            PRODUCT_PROCESS.PROCESS_NAME.`as`("processName"),
+            PRODUCT_PROCESS.PROCESS_CONVERT_CODE.`as`("processConvertCode"),
+            PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
+            PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
+            PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE.`as`("processSequence"),
+        )
+            .from(PRODUCT_PROCESS.join(PROCESS_PROCEDURE_STRUCTURE)
+                .on(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID
+                    .eq(PROCESS_PROCEDURE_STRUCTURE.ID)))
+            .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(productName))
+            .orderBy(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE)
+            .fetchInto(ProductProcessResponse::class.java)
     }
 
-    fun  getByProductProcessDetailById(id: String?) : ProductProcess? {
+    fun getByProductProcessDetailById(id: String?): ProductProcess? {
         val data = context.selectFrom(PRODUCT_PROCESS)
             .where((PRODUCT_PROCESS.ID.eq(id)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java).firstOrNull()
-        return  data
+        return data
     }
-    fun updateProductDetail(request: ProductProcess) :  ProductProcess? {
-        val data = context.update(PRODUCT_PROCESS)
+    fun updateProductDetail(request: ProductProcess): ProductProcess? {
+        return context.update(PRODUCT_PROCESS)
             .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, request.processConvertCode)
             .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
             .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
             .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .where(PRODUCT_PROCESS.ID.eq(request.id).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .returningResult(PRODUCT_PROCESS)
-            .fetchAnyInto(ProductProcess::class.java)
-        return  data;
+            .fetchAnyInto(ProductProcess::class.java);
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {
-//            "default" -> {
-//                PRODUCT_PROCESS.PROCESS_NAME
-//                PRODUCT_PROCESS.LAYER_CODE
-//            }
-//            "productName" -> {
-//                PRODUCT_PROCESS.PRODUCT_NAME
-//            }
-//            "layerCode" -> {
-//                PRODUCT_PROCESS.LAYER_CODE
-//            }
+            "productName" -> {
+                PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE
+            }
+            "layerCode" -> {
+                PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
+            }
             "processConvertCode" -> {
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE
             }
-//            "processCode" -> {
-//                PRODUCT_PROCESS.PROCESS_CODE
-//            }
+            "processCode" -> {
+                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
+            }
             "processName" -> {
                 PRODUCT_PROCESS.PROCESS_NAME
             }
@@ -100,7 +130,9 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             "processInventoryCode" -> {
                 PRODUCT_PROCESS.PROCESS_INVENTORY_CODE
             }
-
+            "processSequence" -> {
+                PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE
+            }
             else -> {
                 val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
                 throw InvalidDataAccessApiUsageException(errorMessage)

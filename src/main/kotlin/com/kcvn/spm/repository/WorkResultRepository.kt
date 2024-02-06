@@ -33,13 +33,13 @@ class WorkResultRepository (
 
             if(!request.listProcessGroup.isNullOrEmpty()) {
                 request.listProcessGroup?.forEach { processGroup ->
-                    condition = condition.and(WORK_RESULT.PROCESS_GRP.eq(processGroup))
+                    condition = condition.or(WORK_RESULT.PROCESS_GRP.eq(processGroup))
                 }
             }
 
             if(!request.listProcessName.isNullOrEmpty()){
                 request.listProcessName?.forEach { processName ->
-                    condition = condition.and(WORK_RESULT.PROCESS_NAME.eq(processName))
+                    condition = condition.or(WORK_RESULT.PROCESS_NAME.eq(processName))
                 }
             }
 

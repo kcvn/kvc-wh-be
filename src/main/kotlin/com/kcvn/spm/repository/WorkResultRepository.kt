@@ -23,7 +23,7 @@ class WorkResultRepository (
 ) : SortingRepository() {
     fun getPagingListWorkResult(request: WorkResultSearchRequest?, pageable: Pageable): Pair<List<WorkResult>, Int> {
         var condition : Condition = DSL.noCondition()
-
+        condition = condition.and(WORK_RESULT.IS_DELETED.eq(false))
         if (request!= null) {
             if(!request.order.isNullOrEmpty())
                 condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
@@ -54,12 +54,12 @@ class WorkResultRepository (
         }
 
         val data = context.selectFrom(WORK_RESULT)
-            .where(condition.and(WORK_RESULT.IS_DELETED.eq(false)))
+            .where(condition)
             .orderBy(getSortFields(pageable.sort, WORK_RESULT.SUMMARY_RESULT_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(WorkResult::class.java)
 
-        val total = context.fetchCount(WORK_RESULT,condition.and(WORK_RESULT.IS_DELETED.eq(false)))
+        val total = context.fetchCount(WORK_RESULT,condition)
 
         return Pair(data,total)
     }
@@ -152,5 +152,43 @@ class WorkResultRepository (
         }
 
         return response
+    }
+
+    fun getList(request: WorkResultSearchRequest?, pageable: Pageable): List<WorkResult> {
+        var condition : Condition = DSL.noCondition()
+        condition = condition.and(WORK_RESULT.IS_DELETED.eq(false))
+        if (request!= null) {
+            if(!request.order.isNullOrEmpty())
+                condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
+
+            if(!request.itemName.isNullOrEmpty())
+                condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
+
+            if(!request.listProcessGroup.isNullOrEmpty()) {
+                request.listProcessGroup?.forEach { processGroup ->
+                    condition = condition.or(WORK_RESULT.PROCESS_GRP.eq(processGroup))
+                }
+            }
+
+            if(!request.listProcessName.isNullOrEmpty()){
+                request.listProcessName?.forEach { processName ->
+                    condition = condition.or(WORK_RESULT.PROCESS_NAME.eq(processName))
+                }
+            }
+
+            if(!request.tapeLot.isNullOrEmpty())
+                condition = condition.and(WORK_RESULT.TAPE_LOT_NO.contains(request.tapeLot))
+
+            if(!request.code.isNullOrEmpty())
+                condition = condition.and(WORK_RESULT.CODE.contains(request.code))
+
+            if(request.fromDate!=null &&request.toDate!=null)
+                condition = condition.and(WORK_RESULT.SUMMARY_RESULT_DATE.between(request.fromDate, request.toDate))
+        }
+
+        return context.selectFrom(WORK_RESULT)
+            .where(condition)
+            .orderBy(getSortFields(pageable.sort, WORK_RESULT.SUMMARY_RESULT_DATE))
+            .fetchInto(WorkResult::class.java)
     }
 }

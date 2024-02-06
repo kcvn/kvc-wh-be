@@ -13,6 +13,7 @@ data class WorkResultResponse (
     val totalSheetQuantity : Int? = null,
     val goodTapeQuantity : Int? = null,
     val goodSheetQuantity : Int? = null,
+    val performance : String? = null,
     val orderCode : String? = null,
     val tapeLotNo : String? = null,
     val code : String? = null,

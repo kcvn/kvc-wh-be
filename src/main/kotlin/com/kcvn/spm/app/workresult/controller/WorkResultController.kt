@@ -1,6 +1,5 @@
 package com.kcvn.spm.app.workresult.controller
 
-import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
 import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
@@ -9,7 +8,6 @@ import com.kcvn.spm.app.workresult.service.WorkResultService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
-import jakarta.validation.constraints.Size
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -38,13 +36,13 @@ class WorkResultController (
         ) pageable: Pageable,
     ): ResponseEntity<BasePagingResponse<WorkResultResponse>> {
         val data = workResultService.getListWorkResult(request,pageable)
-        return try ResponseEntity<BasePagingResponse<WorkResultResponse>>(data, HttpStatus.OK)
+        return ResponseEntity<BasePagingResponse<WorkResultResponse>>(data, HttpStatus.OK)
     }
 
     @GetMapping("get-list-process-groups")
     fun getListProcessGroups() : ResponseEntity<List<ProcessGroupResponse>>{
         val data = workResultService.getListProcessGroup()
-        return try ResponseEntity<List<ProcessGroupResponse>>(data, HttpStatus.OK)
+        return ResponseEntity<List<ProcessGroupResponse>>(data, HttpStatus.OK)
     }
 
     @GetMapping("get-list-process-by-group-code")

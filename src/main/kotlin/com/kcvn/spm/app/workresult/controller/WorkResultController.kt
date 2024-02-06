@@ -53,7 +53,7 @@ class WorkResultController (
     }
 
     @GetMapping("get-list-process-by-group-code")
-    fun getListProcessByGroupCode(groupCode: String) : ResponseEntity<List<ProcessResponse>>{
+    fun getListProcessByGroupCode(groupCode: Array<String>) : ResponseEntity<List<ProcessResponse>>{
         return try {
             val data = workResultService.getListProcessByGroupCode(groupCode)
             ResponseEntity<List<ProcessResponse>>(data, HttpStatus.OK)

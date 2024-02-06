@@ -1,12 +1,11 @@
 package com.kcvn.spm.app.workresult.service
 
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
-import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
 import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
+import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
 import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
-import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.WorkResultRepository
 import org.springframework.data.domain.Pageable
@@ -56,30 +55,12 @@ class WorkResultService (
     }
 
     fun getListProcessGroup(): List<ProcessGroupResponse> {
-        val processGroups = workResultRep.getListProcessGroup()
-//        var response = List<ProcessGroupResponse>()
-
-//        if (processGroups.isNotEmpty()) {
-//            response = mappingListProcessGroup(processGroups)
-//        }
-
-        return processGroups
+        return workResultRep.getListProcessGroup()
     }
 
-    private fun mappingListProcessGroup(processGroups: List<ProcessGroupResponse>): BaseResponse<List<ProcessGroupResponse>> {
-        var response = BaseResponse<List<ProcessGroupResponse>>()
-        response.data = processGroups.map { x -> ProcessGroupResponse(
-                grpProcess = x.grpProcess,
-                processName = x.processName
-        ) }
 
-        return response
-    }
-
-    fun getListProcessByGroupCode(groupCode: String): List<ProcessResponse> {
-        val listProcess = workResultRep.getListProcessByGroupCode(groupCode)
-
-        return listProcess
+    fun getListProcessByGroupCode(groupCode: Array<String>): List<ProcessResponse> {
+        return workResultRep.getListProcessByGroupCode(groupCode)
     }
 
 }

@@ -19,8 +19,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class WorkResultRepository (
-    private val context: DSLContext,
-    private val processMasterRepository: ProcessMasterRepository
+    private val context: DSLContext
 ) : SortingRepository() {
     fun getPagingListWorkResult(request: WorkResultSearchRequest?, pageable: Pageable): Pair<List<WorkResult>, Int> {
         var condition : Condition = DSL.noCondition()
@@ -33,14 +32,14 @@ class WorkResultRepository (
                 condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
 
             if(!request.listProcessGroup.isNullOrEmpty()) {
-                request.listProcessGroup.forEach { processGroup ->
-                    condition = condition.and(WORK_RESULT.PROCESS_GRP.eq(processGroup))
+                request.listProcessGroup?.forEach { processGroup ->
+                    condition = condition.or(WORK_RESULT.PROCESS_GRP.eq(processGroup))
                 }
             }
 
             if(!request.listProcessName.isNullOrEmpty()){
-                request.listProcessName.forEach { processName ->
-                    condition = condition.and(WORK_RESULT.PROCESS_NAME.eq(processName))
+                request.listProcessName?.forEach { processName ->
+                    condition = condition.or(WORK_RESULT.PROCESS_NAME.eq(processName))
                 }
             }
 
@@ -134,15 +133,24 @@ class WorkResultRepository (
         return x
     }
 
-    fun getListProcessByGroupCode(groupCode: String): List<ProcessResponse> {
-        val listProcess = context.select()
-            .from(PROCESS_MASTER)
-            .join(PROCESS_PROCEDURE_STRUCTURE)
-            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
-            .where(length(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).eq(12).and(PROCESS_MASTER.GRP_PROCESS.eq(groupCode)))
-            .orderBy(PROCESS_MASTER.PROCESS_NAME)
-            .fetchInto(ProcessResponse::class.java)
+    fun getListProcessByGroupCode(groupCode: Array<String>): List<ProcessResponse> {
+        val response : MutableList<ProcessResponse> = mutableListOf()
+        groupCode.forEach { code  ->
+            run {
+                val listProcess = context.select()
+                    .from(PROCESS_MASTER)
+                    .join(PROCESS_PROCEDURE_STRUCTURE)
+                    .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+                    .where(
+                        length(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).eq(12)
+                            .and(PROCESS_MASTER.GRP_PROCESS.eq(code))
+                    )
+                    .orderBy(PROCESS_MASTER.PROCESS_NAME)
+                    .fetchInto(ProcessResponse::class.java)
+                response.addAll(listProcess)
+            }
+        }
 
-        return listProcess
+        return response
     }
 }

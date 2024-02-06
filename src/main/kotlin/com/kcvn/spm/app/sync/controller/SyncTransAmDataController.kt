@@ -14,27 +14,15 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/sync")
 class SyncTransAmDataController (private val syncTransAmDataService: SyncTransAmDataService) {
-
-
     @PostMapping("/process-procedure-structure")
     fun syncProcessProcedureStructure(): ResponseEntity<*> {
-        return try {
-            syncTransAmDataService.syncProcessProcedureStructure()
-            ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("sync.finished")), HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)
-        }
+        syncTransAmDataService.syncProcessProcedureStructure()
+        return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("sync.finished")), HttpStatus.OK)
     }
 
     @GetMapping("/process-procedure-structure")
     fun syncProcessProcedureStructures(): ResponseEntity<*> {
-        return try {
-            syncTransAmDataService.syncProcessProcedureStructure()
-            ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("sync.finished")), HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<Any?>(e.localizedMessage, HttpStatus.INTERNAL_SERVER_ERROR)
-        }
+        syncTransAmDataService.syncProcessProcedureStructure()
+        return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("sync.finished")), HttpStatus.OK)
     }
 }

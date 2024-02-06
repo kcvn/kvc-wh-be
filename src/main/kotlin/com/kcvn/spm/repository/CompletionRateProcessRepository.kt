@@ -8,9 +8,8 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.springframework.stereotype.Repository
 import org.springframework.data.domain.Pageable
-import java.math.BigDecimal
+import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 

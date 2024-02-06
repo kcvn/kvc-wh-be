@@ -1,4 +1,5 @@
 package com.kcvn.spm.repository
+
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
@@ -11,7 +12,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.util.UUID
 
 @Repository
 class CompletionRateProductRepository(private val context: DSLContext) : SortingRepository() {

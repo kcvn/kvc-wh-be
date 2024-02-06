@@ -8,6 +8,5 @@ class CompletionRateProcessProductResponse(
     var productNameShortcut: String?,
     var processCode: String?,
     var layerCode: String?,
-    var rate: BigDecimal?,
-
-    )
+    var rate: BigDecimal?
+)

@@ -37,35 +37,20 @@ class WorkResultController (
             SortDefault(sort = ["process_name"], direction = Sort.Direction.ASC)
         ) pageable: Pageable,
     ): ResponseEntity<BasePagingResponse<WorkResultResponse>> {
-        return try {
-            val data = workResultService.getListWorkResult(request,pageable)
-            ResponseEntity<BasePagingResponse<WorkResultResponse>>(data, HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<BasePagingResponse<WorkResultResponse>>(null, HttpStatus.OK)
-        }
+        val data = workResultService.getListWorkResult(request,pageable)
+        return try ResponseEntity<BasePagingResponse<WorkResultResponse>>(data, HttpStatus.OK)
     }
 
     @GetMapping("get-list-process-groups")
     fun getListProcessGroups() : ResponseEntity<List<ProcessGroupResponse>>{
-        return try {
-            val data = workResultService.getListProcessGroup()
-            ResponseEntity<List<ProcessGroupResponse>>(data, HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<List<ProcessGroupResponse>>(null, HttpStatus.OK)
-        }
+        val data = workResultService.getListProcessGroup()
+        return try ResponseEntity<List<ProcessGroupResponse>>(data, HttpStatus.OK)
     }
 
     @GetMapping("get-list-process-by-group-code")
     fun getListProcessByGroupCode(groupCode: Array<String>) : ResponseEntity<List<ProcessResponse>>{
-        return try {
-            val data = workResultService.getListProcessByGroupCode(groupCode)
-            ResponseEntity<List<ProcessResponse>>(data, HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<List<ProcessResponse>>(null, HttpStatus.OK)
-        }
+        val data = workResultService.getListProcessByGroupCode(groupCode)
+        return ResponseEntity<List<ProcessResponse>>(data, HttpStatus.OK)
     }
 
     @GetMapping("export-excel")

@@ -3,23 +3,18 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
-import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.springframework.stereotype.Repository
 import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 @Repository
 class CompletionRateProcessProductRepository(private val context: DSLContext) : SortingRepository() {
-
-
-
-
     fun update(data: CompletionRateProcessProduct): CompletionRateProcessProduct? {
         return context
             .update(COMPLETION_RATE_PROCESS_PRODUCT)

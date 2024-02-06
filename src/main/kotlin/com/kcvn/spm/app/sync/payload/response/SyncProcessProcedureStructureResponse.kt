@@ -3,7 +3,6 @@ package com.kcvn.spm.app.sync.payload.response
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-
 data class SyncProcessProcedureStructureResponse(
     var OBJECT_ID: Int, //Object ID
     var KAISHA_CD: String, //Mã công ty

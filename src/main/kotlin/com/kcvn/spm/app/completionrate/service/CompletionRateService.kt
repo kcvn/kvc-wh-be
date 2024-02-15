@@ -1,11 +1,13 @@
 package com.kcvn.spm.app.completionrate.service
 
-import com.kcvn.spm.app.completionrate.dto.LayerImportCompletionRateProductModel
+import com.kcvn.spm.app.completionrate.payload.model.LayerImportCompletionRateProductModel
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
@@ -13,11 +15,19 @@ import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
 import com.kcvn.spm.repository.CompletionRateProcessProductRepository
 import com.kcvn.spm.repository.CompletionRateProcessRepository
 import com.kcvn.spm.repository.CompletionRateProductRepository
+import org.apache.poi.ss.usermodel.BorderStyle
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.jooq.tools.csv.CSVReader
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -33,6 +43,56 @@ class CompletionRateService(
 ) {
 
     //Service Product
+
+    fun exportCompletionRateProductExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
+        val products = completionRateProductRepository.findByKeywordPaginated(search, pageable)
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        if (products.first.isNotEmpty()) {
+            val style: CellStyle = workbook.createCellStyle()
+            style.borderBottom = BorderStyle.THIN
+            style.borderTop = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.wrapText = true
+
+            val font: Font = workbook.createFont()
+            font.fontName = "Times New Roman"
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
+
+
+            var rowNumber = 1
+            for (item in products.first) {
+                val dataRow: Row = sheet.createRow(rowNumber++)
+                dataRow.createCell(0).setCellValue(item.productName)
+                dataRow.getCell(0).cellStyle = style
+
+                dataRow.createCell(1).setCellValue(item.rate.toString())
+                dataRow.getCell(1).cellStyle = style
+
+
+            }
+        }
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Danh_sach_ti_le_dat_san_pham.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
+    }
+
     fun getPaginatedCompletionRateProduct(search: String?, pageable: Pageable?): PaginatedResponse {
         val result = completionRateProductRepository.getPaginatedCompletionRateProduct(search, pageable)
         return PaginatedResponse(
@@ -109,6 +169,56 @@ class CompletionRateService(
     }
 
     // Service Process
+
+    fun exportCompletionRateProcessExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
+        val products = completionRateProcessRepository.findByKeywordPaginated(search, pageable)
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        if (products.first.isNotEmpty()) {
+            val style: CellStyle = workbook.createCellStyle()
+            style.borderBottom = BorderStyle.THIN
+            style.borderTop = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.wrapText = true
+
+            val font: Font = workbook.createFont()
+            font.fontName = "Times New Roman"
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
+
+
+            var rowNumber = 1
+            for (item in products.first) {
+                val dataRow: Row = sheet.createRow(rowNumber++)
+                dataRow.createCell(0).setCellValue(item.key)
+                dataRow.getCell(0).cellStyle = style
+
+                dataRow.createCell(1).setCellValue(item.rate.toString())
+                dataRow.getCell(1).cellStyle = style
+
+
+            }
+        }
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Danh_sach_ti_le_dat_cong_doan.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
+    }
+
     fun importCsvProcess(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?): String {
         if (file.isEmpty()) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
@@ -270,5 +380,57 @@ class CompletionRateService(
         }
 
         return CommonUtils.getMessage("import.success", arrayOf(count, data.size))
+    }
+
+
+
+
+    fun exportCompletionRateProcessProductExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
+        val processproducts = completionRateProcessProductRepository.findByKeywordPaginated(search, pageable)
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        if (processproducts.first.isNotEmpty()) {
+            val style: CellStyle = workbook.createCellStyle()
+            style.borderBottom = BorderStyle.THIN
+            style.borderTop = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.wrapText = true
+
+            val font: Font = workbook.createFont()
+            font.fontName = "Times New Roman"
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
+
+
+            var rowNumber = 1
+            for (item in processproducts.first) {
+                val dataRow: Row = sheet.createRow(rowNumber++)
+                dataRow.createCell(0).setCellValue(item.key)
+                dataRow.getCell(0).cellStyle = style
+
+                dataRow.createCell(1).setCellValue(item.rate.toString())
+                dataRow.getCell(1).cellStyle = style
+
+
+            }
+        }
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Danh_sach_ti_le_dat_san_pham_cong_doan.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
     }
 }

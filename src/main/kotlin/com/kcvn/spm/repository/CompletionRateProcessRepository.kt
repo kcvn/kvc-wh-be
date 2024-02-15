@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
@@ -15,6 +16,36 @@ import java.time.ZoneOffset
 
 @Repository
 class CompletionRateProcessRepository(private val context: DSLContext) : SortingRepository() {
+
+
+    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<CompletionRateProcessResponse>, Int?>
+    {
+        var condition: Condition = DSL.noCondition()
+        if(keyword != null){
+            val lowerKeyword = DSL.lower(keyword);
+            condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS.KEY).contains(lowerKeyword))
+        }
+
+        val completionRateProcessQuery = context
+            .select(
+                COMPLETION_RATE_PROCESS.ID,
+                COMPLETION_RATE_PROCESS.KEY,
+                COMPLETION_RATE_PROCESS.RATE,
+            )
+            .from(COMPLETION_RATE_PROCESS)
+            .where(condition.and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)))
+            .orderBy(getSortFields(pageable.sort, COMPLETION_RATE_PROCESS.PROCESS_CODE))
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
+            .fetchInto(CompletionRateProcessResponse::class.java)
+        val queryTotal =  context
+            .selectCount()
+            .from(COMPLETION_RATE_PROCESS)
+            .where(condition.and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)))
+        val totalCount = context.fetchOne(queryTotal)?.value1()
+        return  Pair(completionRateProcessQuery, totalCount);
+    }
+
 
     fun getListCompletionRateProcessByKey(productNames: List<String>): List<CompletionRateProcess> {
         return context.selectFrom(COMPLETION_RATE_PROCESS)
@@ -37,7 +68,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
         }
 
         val completionRateProcessesQuery = context.selectFrom(COMPLETION_RATE_PROCESS)
-            .where(condition)
+            .where(condition.and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS.UPDATED_DATE))
             .limit(pageable?.pageSize ?: 10)
             .offset(pageable?.offset ?: 0)
@@ -110,7 +141,6 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
         } catch (e: Exception) {
            null
         }
-        return data
     }
 
 

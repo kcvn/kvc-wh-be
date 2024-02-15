@@ -52,19 +52,13 @@ class CompletionRateController(
 
     @PostMapping(value = ["/product/import-csv"], consumes = ["multipart/form-data"])
     fun importCsvCompletionRateProducts(@RequestPart("file") multipartFile: MultipartFile): ResponseEntity<*> {
-        return try {
+
             val data = completionRateService.importCsvCompletionRateProduct(multipartFile)
-            ResponseEntity<MessageResponse>(
+          return  ResponseEntity<MessageResponse>(
                 MessageResponse(data),
                 HttpStatus.OK
             )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("import.failed")),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            )
-        }
+
     }
 
 
@@ -103,19 +97,13 @@ class CompletionRateController(
         @RequestParam("effectivedate") effectiveDate: LocalDateTime,
         @RequestParam("expirationdate") expirationDate: LocalDateTime?
     ): ResponseEntity<*> {
-        return try {
-            val data = completionRateService.importCsvProcessProduct(multipartFile, effectiveDate, expirationDate)
-            ResponseEntity<MessageResponse>(
+
+         val data = completionRateService.importCsvProcessProduct(multipartFile, effectiveDate, expirationDate)
+        return  ResponseEntity<MessageResponse>(
                 MessageResponse(data),
                 HttpStatus.OK
             )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("import.failed")),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            )
-        }
+
     }
 
     //Process Function
@@ -151,19 +139,13 @@ class CompletionRateController(
         @RequestParam("effectivedate") effectiveDate: LocalDateTime,
         @RequestParam("expirationdate") expirationDate: LocalDateTime?
     ): ResponseEntity<*> {
-        return try {
+
             val data = completionRateService.importCsvProcess(multipartFile, effectiveDate, expirationDate)
-            ResponseEntity<MessageResponse>(
+           return ResponseEntity<MessageResponse>(
                 MessageResponse(data),
                 HttpStatus.OK
             )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("import.failed")),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            )
-        }
+        
     }
 
 }

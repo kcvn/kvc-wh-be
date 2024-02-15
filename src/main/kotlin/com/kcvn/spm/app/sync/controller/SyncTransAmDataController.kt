@@ -19,10 +19,4 @@ class SyncTransAmDataController (private val syncTransAmDataService: SyncTransAm
         syncTransAmDataService.syncProcessProcedureStructure()
         return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("sync.finished")), HttpStatus.OK)
     }
-
-    @GetMapping("/process-procedure-structure")
-    fun syncProcessProcedureStructures(): ResponseEntity<*> {
-        syncTransAmDataService.syncProcessProcedureStructure()
-        return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("sync.finished")), HttpStatus.OK)
-    }
 }

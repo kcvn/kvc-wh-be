@@ -7,5 +7,7 @@ class CompletionRateProcessResponse(
     val key: String?,
     val processCode: String?,
     val layerCode: String?,
-    val rate: BigDecimal?
+    val rate: BigDecimal?,
+    val processName: String?,
+    val processNameJp:String?
 )

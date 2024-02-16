@@ -74,7 +74,7 @@ open class ProductProcess(
     /**
      * The column <code>public.product_process.process_name</code>.
      */
-    val PROCESS_NAME: TableField<ProductProcessRecord, String?> = createField(DSL.name("process_name"), SQLDataType.VARCHAR(100), this, "")
+    val PROCESS_NAME: TableField<ProductProcessRecord, String?> = createField(DSL.name("process_name"), SQLDataType.VARCHAR(60), this, "")
 
     /**
      * The column <code>public.product_process.process_name_jp</code>.

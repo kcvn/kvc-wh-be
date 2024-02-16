@@ -75,7 +75,7 @@ open class CompletionRateProduct(
     /**
      * The column <code>public.completion_rate_product.product_name</code>.
      */
-    val PRODUCT_NAME: TableField<CompletionRateProductRecord, String?> = createField(DSL.name("product_name"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val PRODUCT_NAME: TableField<CompletionRateProductRecord, String?> = createField(DSL.name("product_name"), SQLDataType.VARCHAR(12).nullable(false), this, "")
 
     /**
      * The column <code>public.completion_rate_product.rate</code>.

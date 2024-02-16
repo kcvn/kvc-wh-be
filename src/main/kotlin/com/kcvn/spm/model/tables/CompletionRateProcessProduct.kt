@@ -76,19 +76,19 @@ open class CompletionRateProcessProduct(
     /**
      * The column <code>public.completion_rate_process_product.key</code>.
      */
-    val KEY: TableField<CompletionRateProcessProductRecord, String?> = createField(DSL.name("key"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val KEY: TableField<CompletionRateProcessProductRecord, String?> = createField(DSL.name("key"), SQLDataType.VARCHAR(14).nullable(false), this, "")
 
     /**
      * The column
      * <code>public.completion_rate_process_product.product_name_shortcut</code>.
      */
-    val PRODUCT_NAME_SHORTCUT: TableField<CompletionRateProcessProductRecord, String?> = createField(DSL.name("product_name_shortcut"), SQLDataType.VARCHAR(10).nullable(false), this, "")
+    val PRODUCT_NAME_SHORTCUT: TableField<CompletionRateProcessProductRecord, String?> = createField(DSL.name("product_name_shortcut"), SQLDataType.VARCHAR(7).nullable(false), this, "")
 
     /**
      * The column
      * <code>public.completion_rate_process_product.process_code</code>.
      */
-    val PROCESS_CODE: TableField<CompletionRateProcessProductRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(10).nullable(false), this, "")
+    val PROCESS_CODE: TableField<CompletionRateProcessProductRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
 
     /**
      * The column

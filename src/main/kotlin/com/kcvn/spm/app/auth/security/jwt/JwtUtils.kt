@@ -1,6 +1,9 @@
 package com.kcvn.spm.app.auth.security.jwt
 
 import com.kcvn.spm.app.auth.security.service.UserDetailsImpl
+import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.util.CommonUtils
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.MalformedJwtException
@@ -10,6 +13,7 @@ import io.jsonwebtoken.security.Keys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import java.security.Key
 import java.util.Date
@@ -27,6 +31,7 @@ class JwtUtils {
     fun generateJwtToken(authentication: Authentication): String {
         val userPrincipal = authentication.principal as UserDetailsImpl
         return Jwts.builder()
+            .claim(Constants.CLAIM_TYPE_USER_ID, userPrincipal.getId())
             .setSubject(userPrincipal.username)
             .setIssuedAt(Date())
             .setExpiration(Date(Date().time + jwtExpirationMs.toLong()))
@@ -43,6 +48,11 @@ class JwtUtils {
             .parseClaimsJws(token).body.subject
     }
 
+    fun getUserIdFromJwtToken(token: String): String {
+        return Jwts.parserBuilder().setSigningKey(key()).build()
+            .parseClaimsJws(token).body[Constants.CLAIM_TYPE_USER_ID].toString()
+    }
+
     fun validateJwtToken(authToken: String): Boolean {
         try {
             Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken)
@@ -57,5 +67,15 @@ class JwtUtils {
             logger.error("JWT claims string is empty: {}", e.message)
         }
         return false
+    }
+
+    fun getCurrentUser(): UserDetailsImpl {
+        val authentication: Authentication = SecurityContextHolder.getContext().authentication
+
+        if (authentication.isAuthenticated && authentication.principal is UserDetailsImpl) {
+            return authentication.principal as UserDetailsImpl
+        }
+
+        throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
     }
 }

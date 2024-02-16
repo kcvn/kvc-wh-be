@@ -1,0 +1,263 @@
+package com.kcvn.spm.sample.service
+
+import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
+import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
+import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
+import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
+import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
+import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.ProductProcess
+import com.kcvn.spm.repository.ProductProcessRepository
+import org.apache.poi.ss.usermodel.*
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+
+@Service
+@Transactional
+class ProductProcessService(
+    private val productProcessRep : ProductProcessRepository
+) {
+    fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse>
+    {
+        val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
+        val response = BasePagingResponse<ProductProcessResponse>();
+            response.data = result.first.map { productProcess ->
+                ProductProcessResponse(
+                    processId = productProcess.processId,
+                    processName = productProcess.processName,
+                    processNameJp = productProcess.processNameJp,
+                    processConvertCode = productProcess.processConvertCode,
+                    processStatisticCode = productProcess.processStatisticCode,
+                    processInventoryCode = productProcess.processInventoryCode,
+                    productName = productProcess.productName,
+                    layerCode = productProcess.layerCode,
+                    processCode = productProcess.processCode,
+                    productId = productProcess.productId,
+                );
+            }
+            response.total = result.second;
+
+        return response;
+    }
+
+    fun getProductProcessDetail(nameProduct: String?) : List<ProductProcessResponse?>?{
+        return productProcessRep.getByProductProcessDetail(nameProduct)
+    }
+
+    fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : List<ProductProcess?> {
+        val dataResult: MutableList<ProductProcess?> = mutableListOf()
+        for (item in request.listProcess!!){
+            val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
+                ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
+            if (item.processInventoryCode != null){
+               val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
+                if((productProcessAfter?.processCode != null &&  productProcessAfter.processCode != item.processInventoryCode) )
+                {
+                    throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+                }
+            }
+            productProcess.processConvertCode = item.processConvertCode;
+            productProcess.processStatisticCode = item.processStatisticCode;
+            productProcess.processInventoryCode = item.processInventoryCode;
+
+            val data = productProcessRep.updateProductDetail(productProcess);
+            dataResult.add(data)
+        }
+        return  dataResult
+    }
+
+    fun exportExcel(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable) : BaseResponse<FileContentModel> {
+        val products = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode, pageable)
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportProductProcessTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        if (products.first.isNotEmpty()) {
+            val style: CellStyle = workbook.createCellStyle()
+            style.borderBottom = BorderStyle.THIN
+            style.borderTop = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.wrapText = true
+
+            val font: Font = workbook.createFont()
+            font.fontName = "Times New Roman"
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
+
+
+            var rowNumber = 2
+            for (item in products.first) {
+                val dataRow: Row = sheet.createRow(rowNumber++)
+                dataRow.createCell(0).setCellValue(item.productName)
+                dataRow.getCell(0).cellStyle = style
+
+                dataRow.createCell(1).setCellValue(item.layerCode)
+                dataRow.getCell(1).cellStyle = style
+
+                dataRow.createCell(2).setCellValue(item.processCode)
+                dataRow.getCell(2).cellStyle = style
+
+                dataRow.createCell(3).setCellValue(item.processName)
+                dataRow.getCell(3).cellStyle = style
+
+                dataRow.createCell(4).setCellValue(item.processNameJp)
+                dataRow.getCell(4).cellStyle = style
+
+                dataRow.createCell(5).setCellValue(item.processConvertCode)
+                dataRow.getCell(5).cellStyle = style
+
+                dataRow.createCell(6).setCellValue(item.processInventoryCode)
+                dataRow.getCell(6).cellStyle = style
+
+                dataRow.createCell(7).setCellValue(item.processStatisticCode)
+                dataRow.getCell(7).cellStyle = style
+            }
+        }
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Danh_sach_cong_doan.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
+    }
+
+    fun downloadTemplate() : BaseResponse<FileContentModel> {
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx"
+        val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "ImportProductTemplate.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        return BaseResponse(response)
+    }
+
+    fun importExcelProduct(file: MultipartFile) : BaseResponse<FileContentModel> {
+        val workbook = WorkbookFactory.create(file.inputStream)
+        val sheet = workbook.getSheetAt(0)
+        val rowIndex = 1
+
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        var count = 0
+        val total = sheet.lastRowNum - rowIndex
+
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        if (!checkColResult) {
+            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
+            headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
+            headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            sheet.setColumnWidth(headerCell, 15000)
+        }
+
+        for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+            val style = row.getCell(1).cellStyle
+            val name = ExcelHelper.getCellValue(row, 0)
+            val messageResults = mutableListOf<String>()
+            var check = true
+            if(row.getCell(0) == null){
+                check = false
+                messageResults.add("Tên sản phẩm không được để trống")
+            }
+            if(row.getCell(1) == null){
+                check = false
+                messageResults.add("Mã công đoạn không được để trống")
+            }
+            if(row.getCell((2)) == null){
+                check = false
+                messageResults.add("Lớp số không được để trống")
+            }
+            if(row.getCell(3) == null){
+                check = false
+                messageResults.add("Mã chuyển đổi không được để trống")
+            }
+            if(row.getCell(5) == null){
+                check = false
+                messageResults.add("Mã thống kê không được để trống")
+            }
+
+           try {
+               if (check) {
+                   val filter = ImportProcessRequest(
+                       productName = ExcelHelper.getCellValue(row, 0),
+                       processCode = ExcelHelper.getCellValue(row, 1),
+                       layerCode = ExcelHelper.getCellValue(row, 2)
+                   )
+                   val query = productProcessRep.getProductByFilter(filter)
+                   if(query == null){
+                       messageResults.add("Không tìm thấy dữ liệu vui lòng kiểm tra lại")
+                   }
+                   else {
+                       val requestImportUpdate = ProductProcess(
+                           id = query.id,
+                           processConvertCode = ExcelHelper.getCellValue(row, 3),
+                           processInventoryCode = ExcelHelper.getCellValue(row, 4),
+                           processStatisticCode = ExcelHelper.getCellValue(row, 5)
+                       )
+                       productProcessRep.updateProductDetail(requestImportUpdate)
+                       messageResults.add("OK")
+                       count++
+                   }
+               }
+           }
+           catch (e: Exception){
+               messageResults.add("Có lỗi xảy ra khi cập nhật dữ liệu công đoạn")
+           }
+            val result = messageResults.joinToString(separator = "; ")
+
+            if (!checkColResult) {
+                row.createCell(row.lastCellNum + 0).setCellValue(result)
+                row.getCell(row.lastCellNum - 1).cellStyle = style
+            }
+            else{
+                row.getCell(row.lastCellNum - 1).setCellValue(result)
+            }
+        }
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Ket_qua_import_cong_doan.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+        workbook.close()
+
+        return BaseResponse(
+            response,
+            if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
+        )
+    }
+}

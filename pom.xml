@@ -17,8 +17,9 @@
 		<java.version>17</java.version>
 		<kotlin.version>1.8.22</kotlin.version>
 		<postgres.driver.version>42.6.0</postgres.driver.version>
-		<flyway.version>9.20.0</flyway.version>
+		<flyway.version>10.6.0</flyway.version>
 		<apache.poi.version>5.2.0</apache.poi.version>
+		<sonar.qualitygate.wait>true</sonar.qualitygate.wait>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -46,6 +47,11 @@
 			<artifactId>spring-boot-starter-batch</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>5.9</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>${apache.poi.version}</version>
@@ -53,7 +59,7 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>${apache.poi.version}</version>
+			<version>5.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
@@ -61,7 +67,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<version>${flyway.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -118,6 +125,11 @@
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle.database.jdbc</groupId>
+			<artifactId>ojdbc10</artifactId>
+			<version>19.8.0.0</version>
 		</dependency>
     </dependencies>
 	<build>
@@ -177,6 +189,32 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/classes/assets/template</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/src/main/kotlin/com/kcvn/spm/assets/template</directory>
+									<includes>
+										<include>*.csv</include>
+										<include>*.xlsx</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>org.jooq</groupId>
 				<artifactId>jooq-codegen-maven</artifactId>
 				<executions>
@@ -196,6 +234,9 @@
 						<url>${spring.datasource.url}</url>
 						<user>${spring.datasource.username}</user>
 						<password>${spring.datasource.password}</password>
+						<!--<url>jdbc:postgresql://192.168.1.147:31792/kcvn-spm</url>-->
+						<!--<user>postgres</user>-->
+						<!--<password>db-password</password>-->
 					</jdbc>
 					<generator>
 						<name>org.jooq.codegen.KotlinGenerator</name>

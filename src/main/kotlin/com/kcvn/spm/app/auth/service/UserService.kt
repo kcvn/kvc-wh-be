@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.auth.service
 
+import com.kcvn.spm.app.auth.payload.request.UpdateUserRequest
 import com.kcvn.spm.common.enums.EPermission
 import com.kcvn.spm.common.enums.EUserStatus
 import com.kcvn.spm.common.exception.BusinessException
@@ -82,6 +83,10 @@ class UserService(
             throw BusinessException(CommonUtils.getMessage("user.error.usernameTaken"))
         }
 
+        if (userRep.findByEmployeeCode(request.employeeCode!!) != null) {
+            throw BusinessException(CommonUtils.getMessage("user.error.usernameTaken"))
+        }
+
         // Create new user's account
         val user = AuthUser(
             null,
@@ -114,7 +119,7 @@ class UserService(
         } else null
     }
 
-    fun updateInfo(userId: String, request: com.kcvn.spm.app.auth.payload.request.UserRequest): com.kcvn.spm.app.auth.payload.response.UserResponse {
+    fun updateInfo(userId: String, request: UpdateUserRequest): com.kcvn.spm.app.auth.payload.response.UserResponse {
         val user = userRep.findById(userId) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
         user.employeeCode = request.employeeCode
         user.email = request.email

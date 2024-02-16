@@ -65,17 +65,17 @@ open class AuthRole(
     /**
      * The column <code>public.auth_role.id</code>.
      */
-    val ID: TableField<AuthRoleRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR.nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
+    val ID: TableField<AuthRoleRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.auth_role.name</code>.
      */
-    val NAME: TableField<AuthRoleRecord, String?> = createField(DSL.name("name"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val NAME: TableField<AuthRoleRecord, String?> = createField(DSL.name("name"), SQLDataType.VARCHAR(300).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_role.description</code>.
      */
-    val DESCRIPTION: TableField<AuthRoleRecord, String?> = createField(DSL.name("description"), SQLDataType.VARCHAR, this, "")
+    val DESCRIPTION: TableField<AuthRoleRecord, String?> = createField(DSL.name("description"), SQLDataType.VARCHAR(1000), this, "")
 
     /**
      * The column <code>public.auth_role.created_date</code>.
@@ -85,7 +85,7 @@ open class AuthRole(
     /**
      * The column <code>public.auth_role.created_by</code>.
      */
-    val CREATED_BY: TableField<AuthRoleRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val CREATED_BY: TableField<AuthRoleRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_role.updated_date</code>.
@@ -95,7 +95,7 @@ open class AuthRole(
     /**
      * The column <code>public.auth_role.updated_by</code>.
      */
-    val UPDATED_BY: TableField<AuthRoleRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR, this, "")
+    val UPDATED_BY: TableField<AuthRoleRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.auth_role.is_deleted</code>.

@@ -64,13 +64,11 @@ abstract class AbstractExcelItemReader<T> :
         if (noInput) {
             return null
         }
-        if (rs == null || !rs!!.next()) {
-            if (!nextSheet()) {
-                if (logger.isDebugEnabled) {
-                    logger.debug("No more sheets in '" + resource!!.description + "'.")
-                }
-                return null
+        if ((rs == null || !rs!!.next()) && !nextSheet()) {
+            if (logger.isDebugEnabled) {
+                logger.debug("No more sheets in '" + resource!!.description + "'.")
             }
+            return null
         }
 
         // skip all the blank row from which content has been deleted but still a valid row

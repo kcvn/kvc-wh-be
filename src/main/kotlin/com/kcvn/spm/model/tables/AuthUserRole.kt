@@ -69,12 +69,12 @@ open class AuthUserRole(
     /**
      * The column <code>public.auth_user_role.user_id</code>.
      */
-    val USER_ID: TableField<AuthUserRoleRecord, String?> = createField(DSL.name("user_id"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val USER_ID: TableField<AuthUserRoleRecord, String?> = createField(DSL.name("user_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_user_role.role_id</code>.
      */
-    val ROLE_ID: TableField<AuthUserRoleRecord, String?> = createField(DSL.name("role_id"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val ROLE_ID: TableField<AuthUserRoleRecord, String?> = createField(DSL.name("role_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_user_role.created_date</code>.
@@ -84,7 +84,7 @@ open class AuthUserRole(
     /**
      * The column <code>public.auth_user_role.created_by</code>.
      */
-    val CREATED_BY: TableField<AuthUserRoleRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val CREATED_BY: TableField<AuthUserRoleRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_user_role.updated_date</code>.
@@ -94,7 +94,7 @@ open class AuthUserRole(
     /**
      * The column <code>public.auth_user_role.updated_by</code>.
      */
-    val UPDATED_BY: TableField<AuthUserRoleRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR, this, "")
+    val UPDATED_BY: TableField<AuthUserRoleRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.auth_user_role.is_deleted</code>.

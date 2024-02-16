@@ -11,8 +11,16 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.CommonCategory
+import com.kcvn.spm.model.tables.CompletionRateProcess
+import com.kcvn.spm.model.tables.CompletionRateProcessProduct
+import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
+import com.kcvn.spm.model.tables.Product
+import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.WorkResult
 
 
 
@@ -52,11 +60,51 @@ val AUTH_USER_CLAIM: AuthUserClaim = AuthUserClaim.AUTH_USER_CLAIM
 val AUTH_USER_ROLE: AuthUserRole = AuthUserRole.AUTH_USER_ROLE
 
 /**
+ * The table <code>public.common_category</code>.
+ */
+val COMMON_CATEGORY: CommonCategory = CommonCategory.COMMON_CATEGORY
+
+/**
+ * The table <code>public.completion_rate_process</code>.
+ */
+val COMPLETION_RATE_PROCESS: CompletionRateProcess = CompletionRateProcess.COMPLETION_RATE_PROCESS
+
+/**
+ * The table <code>public.completion_rate_process_product</code>.
+ */
+val COMPLETION_RATE_PROCESS_PRODUCT: CompletionRateProcessProduct = CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT
+
+/**
+ * The table <code>public.completion_rate_product</code>.
+ */
+val COMPLETION_RATE_PRODUCT: CompletionRateProduct = CompletionRateProduct.COMPLETION_RATE_PRODUCT
+
+/**
+ * The table <code>public.process_master</code>.
+ */
+val PROCESS_MASTER: ProcessMaster = ProcessMaster.PROCESS_MASTER
+
+/**
  * The table <code>public.process_procedure_structure</code>.
  */
 val PROCESS_PROCEDURE_STRUCTURE: ProcessProcedureStructure = ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE
 
 /**
+ * The table <code>public.product</code>.
+ */
+val PRODUCT: Product = Product.PRODUCT
+
+/**
+ * The table <code>public.product_process</code>.
+ */
+val PRODUCT_PROCESS: ProductProcess = ProductProcess.PRODUCT_PROCESS
+
+/**
  * The table <code>public.sync_history</code>.
  */
 val SYNC_HISTORY: SyncHistory = SyncHistory.SYNC_HISTORY
+
+/**
+ * The table <code>public.work_result</code>.
+ */
+val WORK_RESULT: WorkResult = WorkResult.WORK_RESULT

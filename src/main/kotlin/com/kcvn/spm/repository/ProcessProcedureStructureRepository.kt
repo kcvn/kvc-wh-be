@@ -27,4 +27,10 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
     fun delete(id: String) {
         context.deleteFrom(PROCESS_PROCEDURE_STRUCTURE).where(PROCESS_PROCEDURE_STRUCTURE.ID.eq(id)).execute()
     }
+
+    fun getByProductName(productNames: List<String>) : List<ProcessProcedureStructure> {
+        return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE)
+                .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(productNames).and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+                .fetchInto(ProcessProcedureStructure::class.java)
+    }
 }

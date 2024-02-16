@@ -5,5 +5,6 @@ import jakarta.validation.constraints.NotBlank
 class PasswordRequest {
     var token: String? = null
     var oldPassword: String? = null
-    var password: @NotBlank String? = null
+    @field:NotBlank(message = "password must not be blank")
+    var password: String? = null
 }

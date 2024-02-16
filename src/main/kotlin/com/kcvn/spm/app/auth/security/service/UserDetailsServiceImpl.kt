@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.auth.security.service
 
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.repository.RoleRepository
 import com.kcvn.spm.repository.UserRepository
@@ -18,8 +19,9 @@ class UserDetailsServiceImpl(
     override fun loadUserByUsername(username: String): UserDetails {
         val user = userRep.findByUsername(username)
             ?: throw UsernameNotFoundException(CommonUtils.getMessage("login.error.wrongUsername"))
+        val position = userRep.getUserClaim(user.id!!, Constants.CLAIM_TYPE_POSITION.lowercase()).firstOrNull()
         val roles = roleRep.findByUserId(user.id!!)
         val permissions = roleRep.findPermissionsByRoleIds(roles.map { it.id!! })
-        return UserDetailsImpl.build(user, roles, permissions)
+        return UserDetailsImpl.build(user, roles, permissions, position?.claimValue)
     }
 }

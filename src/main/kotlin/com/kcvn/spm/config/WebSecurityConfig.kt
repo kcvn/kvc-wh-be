@@ -42,7 +42,7 @@ class WebSecurityConfig(
         val authProvider = DaoAuthenticationProvider()
         authProvider.setUserDetailsService(userDetailsService)
         authProvider.setPasswordEncoder(passwordEncoder())
-        authProvider.isHideUserNotFoundExceptions = false
+//        authProvider.isHideUserNotFoundExceptions = false
         return authProvider
     }
 
@@ -81,6 +81,12 @@ class WebSecurityConfig(
                 auth.requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/user/**").authenticated()
                     .requestMatchers("/api/role/**").authenticated()
+                    .requestMatchers("/api/product/**").authenticated()
+                    .requestMatchers("/api/sync/**").authenticated()
+                    .requestMatchers("/api/md/**").authenticated()
+                    .requestMatchers("/api/product-process/**").authenticated()
+                    .requestMatchers("/api/work-result/**").authenticated()
+                    .requestMatchers("/api/completion-rate/**").authenticated()
                     .anyRequest().permitAll()
             }
             .authenticationProvider(authenticationProvider())

@@ -1,17 +1,20 @@
 project 23-KCVN-SPM-BE
 
-- Framework: Spring Boot
+- Framework: Spring Boot 3.1.5
 - Language: Kotlin
 - JDK: 17
 - DB: PostgreSQL 15
 - Migration: Flyway 9.20.0
-- Data access layer: jOOQ
+- Data access layer: jOOQ 3.18.7
 - Builder: Maven
 
 Commands:
+In case running on Local DB, must run the following commands to generate table
 - Init/Migrate DB: `mvn -Dflyway.configFiles=src/main/resources/application.properties flyway:migrate`
 - Clean, install & generate models: `mvn clean install`
 - Generate models only: `mvn jooq-codegen:generate` (you have to change jooq codegen jdbc config in pom.xml)
+
+To run the project use the following command:
 - Run project: `mvn spring-boot:run`
 
 Swagger: http://localhost:8080/swagger-ui/index.html

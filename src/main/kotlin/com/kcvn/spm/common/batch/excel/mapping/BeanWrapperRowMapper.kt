@@ -163,7 +163,7 @@ class BeanWrapperRowMapper<T> : DefaultPropertyEditorRegistrar(),
      * @see .createBinder
      */
     protected fun initBinder(binder: DataBinder?) {
-
+        //function
     }
 
     private val bean: T

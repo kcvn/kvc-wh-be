@@ -26,44 +26,44 @@ import java.util.*
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
-    private val authenticationManager: AuthenticationManager,
-    private val jwtUtils: JwtUtils,
-    private val userService: UserService
+        private val authenticationManager: AuthenticationManager,
+        private val jwtUtils: JwtUtils,
+        private val userService: UserService
 ) {
     @PostMapping("/signin")
-    fun authenticateUser(@RequestBody loginRequest: @Valid LoginRequest?): ResponseEntity<*> {
-        val authentication: Authentication = authenticationManager.authenticate(
-            UsernamePasswordAuthenticationToken(loginRequest?.username, loginRequest?.password)
-        )
-        SecurityContextHolder.getContext().authentication = authentication
-        val jwt = jwtUtils.generateJwtToken(authentication)
-        val userDetails = authentication.principal as UserDetailsImpl
-        return ResponseEntity.ok(
-            JwtResponse(
-                jwt,
-                userDetails.getId(),
-                userDetails.username
+    fun authenticateUser(@Valid @RequestBody loginRequest: LoginRequest?): ResponseEntity<*> {
+            val authentication: Authentication = authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken(loginRequest?.username, loginRequest?.password)
             )
-        )
+            SecurityContextHolder.getContext().authentication = authentication
+            val jwt = jwtUtils.generateJwtToken(authentication)
+            val userDetails = authentication.principal as UserDetailsImpl
+            return ResponseEntity.ok(
+                    JwtResponse(
+                            jwt,
+                            userDetails.getId(),
+                            userDetails.username
+                    )
+            )
     }
 
     @PostMapping("/forgot-password")
-    fun forgotPassword(@RequestBody request: @Valid ForgotPasswordRequest?): ResponseEntity<*> {
+    fun forgotPassword(@Valid @RequestBody request: ForgotPasswordRequest?): ResponseEntity<*> {
         userService.createPasswordResetToken(request!!.email!!, request.url!!)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded")),
-            HttpStatus.OK
+                MessageResponse(CommonUtils.getMessage("action.succeeded")),
+                HttpStatus.OK
         )
     }
 
     @PostMapping("/reset-password")
-    fun resetPassword(locale: Locale?, @RequestBody passwordRequest: @Valid PasswordRequest): ResponseEntity<*> {
+    fun resetPassword(locale: Locale?, @Valid @RequestBody passwordRequest: PasswordRequest): ResponseEntity<*> {
         userService.validatePasswordResetToken(passwordRequest.token!!)
         val user = userService.getUserByPasswordResetToken(passwordRequest.token!!)
         userService.updatePassword(user.id!!, passwordRequest.password!!)
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded")),
-            HttpStatus.OK
+                MessageResponse(CommonUtils.getMessage("action.succeeded")),
+                HttpStatus.OK
         )
     }
 }

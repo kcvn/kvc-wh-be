@@ -33,15 +33,30 @@ class ExportUserExcelJobConfiguration(private val dslContext: DSLContext) {
     ): UserExcelItemWriter {
         val writer = UserExcelItemWriter()
         writer.setResource(FileSystemResource(pathToFile))
-        writer.setHeaders(listOf("id", "username", "password", "employeeCode", "email", "phoneNumber", "fullName", "fullNameUnsigned", "dateOfBirth", "status"))
+        writer.setHeaders(
+            listOf(
+                "id",
+                "username",
+                "password",
+                "employeeCode",
+                "email",
+                "phoneNumber",
+                "fullName",
+                "fullNameUnsigned",
+                "dateOfBirth",
+                "status"
+            )
+        )
         return writer
     }
 
     @Bean
-    fun exportExcelUserStep(jobRepository: JobRepository,
-                          transactionManager: JdbcTransactionManager,
-                          itemReaderDB2: UserJooqItemReader,
-                          itemExcelWriter: UserExcelItemWriter): Step {
+    fun exportExcelUserStep(
+        jobRepository: JobRepository,
+        transactionManager: JdbcTransactionManager,
+        itemReaderDB2: UserJooqItemReader,
+        itemExcelWriter: UserExcelItemWriter
+    ): Step {
         return StepBuilder("step1", jobRepository).chunk<AuthUser, AuthUser>(3, transactionManager)
             .reader(itemReaderDB2)
             .writer(itemExcelWriter)

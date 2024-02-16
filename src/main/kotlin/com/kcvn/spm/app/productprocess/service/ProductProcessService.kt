@@ -60,7 +60,7 @@ class ProductProcessService(
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : List<ProductProcess?> {
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
         for (item in request.listProcess!!){
-            val productProcess = productProcessRep.getByProductProcessDetailById(item.id)
+            val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                 ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
             if (item.processInventoryCode != null){
                val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }

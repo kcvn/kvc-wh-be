@@ -1,4 +1,5 @@
-package com.kcvn.spm.app.completionrate.dto
+package com.kcvn.spm.app.completionrate.payload.model
+
 import java.math.BigInteger;
 
 class LayerImportCompletionRateProductModel {

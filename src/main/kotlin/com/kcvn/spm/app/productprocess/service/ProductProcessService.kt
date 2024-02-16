@@ -28,9 +28,8 @@ import java.io.FileInputStream
 @Service
 @Transactional
 class ProductProcessService(
-    private val productProcessRep : ProductProcessRepository,
-)
-{
+    private val productProcessRep : ProductProcessRepository
+) {
     fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse>
     {
         val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);

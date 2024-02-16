@@ -3,22 +3,18 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.model.tables.pojos.Product
-import com.kcvn.spm.model.tables.references.AUTH_ROLE
-import com.kcvn.spm.model.tables.references.AUTH_USER
 import com.kcvn.spm.model.tables.references.PRODUCT
-import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-//
+
+
 @Repository
 class ProductRepository (private val context: DSLContext) : SortingRepository(){
 

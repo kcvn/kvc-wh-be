@@ -28,7 +28,7 @@ class SyncTransAmDataService(
         propertiesConfig.tranAmDbUrl,
         propertiesConfig.tranAmDbUser,
         propertiesConfig.tranAmDbPassword,
-        SQLDialect.POSTGRES
+        SQLDialect.DEFAULT
     )
 
     fun syncProcessProcedureStructure() {

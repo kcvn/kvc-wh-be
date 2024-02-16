@@ -13,12 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 class MasterDataController (private val masterDataService: MasterDataService) {
     @GetMapping("/dropdown")
     fun getDropdownCommon(): ResponseEntity<MasterDataSelectionResponse> {
-        return try {
-            val data = masterDataService.getMasterDataSelection()
-            ResponseEntity<MasterDataSelectionResponse>(data, HttpStatus.OK)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResponseEntity<MasterDataSelectionResponse>(null, HttpStatus.OK)
-        }
+        val data = masterDataService.getMasterDataSelection()
+        return ResponseEntity<MasterDataSelectionResponse>(data, HttpStatus.OK)
     }
 }

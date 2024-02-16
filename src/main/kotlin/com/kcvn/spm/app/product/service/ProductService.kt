@@ -183,12 +183,15 @@ class ProductService(
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
 
-        headerRow.createCell(headerCell).setCellValue("Kết quả")
-        val headerStyle = headerRow.getCell(0).cellStyle
-        headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
-        headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
-        headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-        sheet.setColumnWidth(headerCell, 15000)
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        if (!checkColResult) {
+            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
+            headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
+            headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            sheet.setColumnWidth(headerCell, 15000)
+        }
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
@@ -296,8 +299,14 @@ class ProductService(
                 }
             }
             val result = messageResults.joinToString(separator = "; ")
-            row.createCell(row.lastCellNum + 0).setCellValue(result)
-            row.getCell(row.lastCellNum - 1).cellStyle = style
+
+            if (!checkColResult) {
+                row.createCell(row.lastCellNum + 0).setCellValue(result)
+                row.getCell(row.lastCellNum - 1).cellStyle = style
+            }
+            else{
+                row.getCell(row.lastCellNum - 1).setCellValue(result)
+            }
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()

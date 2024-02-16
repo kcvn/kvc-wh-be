@@ -1,24 +1,49 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
-import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.springframework.stereotype.Repository
 import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 @Repository
 class CompletionRateProcessProductRepository(private val context: DSLContext) : SortingRepository() {
 
+    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<CompletionRateProcessProductResponse>, Int?>
+    {
+        var condition: Condition = DSL.noCondition()
+        if(keyword != null){
+            val lowerKeyword = DSL.lower(keyword);
+            condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.KEY).contains(lowerKeyword))
+        }
 
-
+        val completionRateProcessProductQuery = context
+            .select(
+                COMPLETION_RATE_PROCESS_PRODUCT.ID,
+                COMPLETION_RATE_PROCESS_PRODUCT.KEY,
+                COMPLETION_RATE_PROCESS_PRODUCT.RATE,
+            )
+            .from(COMPLETION_RATE_PROCESS_PRODUCT)
+            .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
+            .orderBy(getSortFields(pageable.sort, COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT))
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
+            .fetchInto(CompletionRateProcessProductResponse::class.java)
+        val queryTotal =  context
+            .selectCount()
+            .from(COMPLETION_RATE_PROCESS_PRODUCT)
+            .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
+        val totalCount = context.fetchOne(queryTotal)?.value1()
+        return  Pair(completionRateProcessProductQuery, totalCount);
+    }
 
     fun update(data: CompletionRateProcessProduct): CompletionRateProcessProduct? {
         return context
@@ -62,7 +87,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
         }
 
         val completionRateProcessesQuery = context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
-            .where(condition)
+            .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE))
             .limit(pageable?.pageSize ?: 10)
             .offset(pageable?.offset ?: 0)
@@ -99,7 +124,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
 
     fun findByObjectId(objectIds: List<String>): List<CompletionRateProcessProduct> {
         return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
-            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.`in`(objectIds))
+            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.`in`(objectIds).and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
             .fetchInto(CompletionRateProcessProduct::class.java)
     }
 
@@ -108,7 +133,6 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             context
                 .insertInto(
                     COMPLETION_RATE_PROCESS_PRODUCT,
-                    COMPLETION_RATE_PROCESS_PRODUCT.ID,
                     COMPLETION_RATE_PROCESS_PRODUCT.KEY,
                     COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT,
                     COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE,
@@ -122,8 +146,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                     COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE
                 )
                 .values(
-//                    data.id ?: UUID.randomUUID().toString(),
-                    data.id ?: data.key,
+
                     data.key,
                     data.productNameShortcut,
                     data.processCode,

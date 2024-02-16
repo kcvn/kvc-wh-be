@@ -6,6 +6,8 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
+import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
+import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -79,7 +81,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
     fun getPaginatedCompletionRateProcessesProduct(
         search: CompletionRateProcessProductRequest?,
         pageable: Pageable?
-    ): Pair<List<CompletionRateProcessProduct>, Int> {
+    ): Pair<List<CompletionRateProcessProductResponse>, Int> {
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
@@ -94,12 +96,26 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             }
         }
 
-        val completionRateProcessesQuery = context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
+        val completionRateProcessesQuery = context.select(
+            COMPLETION_RATE_PROCESS_PRODUCT.ID,
+            COMPLETION_RATE_PROCESS_PRODUCT.KEY,
+            COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE,
+            COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE,
+            COMPLETION_RATE_PROCESS_PRODUCT.RATE,
+            COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT,
+            PRODUCT_PROCESS.PROCESS_NAME,
+            PRODUCT_PROCESS.PROCESS_NAME_JP
+        )
+            .from(
+                COMPLETION_RATE_PROCESS_PRODUCT.join(
+                    PROCESS_PROCEDURE_STRUCTURE.join(PRODUCT_PROCESS)
+                .on(PROCESS_PROCEDURE_STRUCTURE.ID.eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)))
+                .on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE)))
             .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE))
             .limit(pageable?.pageSize ?: 10)
             .offset(pageable?.offset ?: 0)
-            .fetchInto(CompletionRateProcessProduct::class.java)
+            .fetchInto(CompletionRateProcessProductResponse::class.java)
 
         val total = context.fetchCount(COMPLETION_RATE_PROCESS_PRODUCT, condition)
 

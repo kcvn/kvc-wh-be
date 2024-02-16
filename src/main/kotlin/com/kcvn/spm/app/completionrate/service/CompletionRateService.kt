@@ -268,7 +268,8 @@ class CompletionRateService(
                     processCode = item.processCode,
                     layerCode = item.layerCode,
                     rate = item.rate,
-
+                    processName = item.processName,
+                    processNameJp =item.processNameJp
                     )
             }, result.second
         )
@@ -386,12 +387,16 @@ class CompletionRateService(
                     productNameShortcut = item.productNameShortcut,
                     processCode = item.processCode,
                     layerCode = item.layerCode,
-                    rate = item.rate
+                    rate = item.rate,
+                    processName = item.processName,
+                    processNameJp = item.processNameJp
 
                 )
             }, result.second
         )
     }
+
+
 
     fun importExcelProcessProduct(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?): BaseResponse<FileContentModel>{
         val workbook = WorkbookFactory.create(file.inputStream)

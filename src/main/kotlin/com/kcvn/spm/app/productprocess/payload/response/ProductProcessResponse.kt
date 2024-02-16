@@ -1,7 +1,7 @@
 package com.kcvn.spm.app.productprocess.payload.response
 
 data class ProductProcessResponse (
-    var id: String? = null,
+    var processId: String? = null,
     var productName: String? = null,
     var layerCode: String? = null,
     var processCode: String? = null,
@@ -10,6 +10,7 @@ data class ProductProcessResponse (
     var processConvertCode: String? = null,
     var processStatisticCode: String? = null,
     var processInventoryCode: String? = null,
-    var idx: Int? = 0
+    var idx: Int? = 0,
+    var productId: String? = null
 )
 

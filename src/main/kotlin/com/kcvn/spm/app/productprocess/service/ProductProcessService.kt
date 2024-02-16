@@ -1,18 +1,14 @@
 package com.kcvn.spm.sample.service
 
-import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
-import com.kcvn.spm.app.productprocess.payload.request.ProductProcessSearchRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
-import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.ProductProcessRepository
-import com.kcvn.spm.repository.ProductRepository
 import org.apache.poi.ss.usermodel.BorderStyle
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Font
@@ -36,7 +32,7 @@ class ProductProcessService(
         val response = BasePagingResponse<ProductProcessResponse>();
             response.data = result.first.map { productProcess ->
                 ProductProcessResponse(
-                    id = productProcess.id,
+                    processId = productProcess.processId,
                     processName = productProcess.processName,
                     processNameJp = productProcess.processNameJp,
                     processConvertCode = productProcess.processConvertCode,
@@ -44,7 +40,8 @@ class ProductProcessService(
                     processInventoryCode = productProcess.processInventoryCode,
                     productName = productProcess.productName,
                     layerCode = productProcess.layerCode,
-                    processCode = productProcess.processCode
+                    processCode = productProcess.processCode,
+                    productId = productProcess.productId,
                 );
             }
             response.total = result.second;
@@ -59,11 +56,11 @@ class ProductProcessService(
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : List<ProductProcess?> {
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
         for (item in request.listProcess!!){
-            val productProcess = productProcessRep.getByProductProcessDetailById(item.id)
+            val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                 ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
             if (item.processInventoryCode != null){
                val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
-                if(productProcessAfter == null || (productProcessAfter.processCode != null && productProcessAfter.processCode != item.processInventoryCode) )
+                if((productProcessAfter?.processCode != null && productProcessAfter.processCode != item.processInventoryCode) )
                 {
                     throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
                 }

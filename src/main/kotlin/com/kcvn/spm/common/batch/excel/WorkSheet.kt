@@ -30,5 +30,6 @@ interface WorkSheet : Iterable<Array<String>?>, AutoCloseable {
 
     @Throws(Exception::class)
     override fun close() {
+        //close function
     }
 }

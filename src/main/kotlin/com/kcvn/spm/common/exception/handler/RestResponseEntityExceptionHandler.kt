@@ -3,7 +3,6 @@ package com.kcvn.spm.common.exception.handler
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.servlet.http.HttpServletResponse
-import org.apache.commons.text.StringEscapeUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode

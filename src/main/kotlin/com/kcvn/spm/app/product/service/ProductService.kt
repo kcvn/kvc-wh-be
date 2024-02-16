@@ -338,24 +338,24 @@ class ProductService(
 
         val response = PagingProductResponse()
         response.data = products.map { x -> ProductResponse(
-                id = x.id,
-                name = x.name,
-                exportType = x.exportType,
-                size = x.size,
-                frame_1 = x.frame_1,
-                frame_2 = x.frame_2,
-                mold = x.mold,
-                productLine = x.productLine,
-                srNosr = x.srNosr,
-                pcsSh = x.pcsSh,
-                shBlock = x.shBlock,
-                layerCount = x.layerCount,
-                ringJig = x.ringJig,
-                snapMold = x.snapMold,
-                tapeCommon = x.tapeCommon,
-                tapeType = x.tapeType,
-                completionRate = (completionRates.find { m -> m.productName == x.name }?.rate ?: 0.0).toDouble(),
-                lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
+            id = x.id,
+            name = x.name,
+            exportType = x.exportType,
+            size = x.size,
+            frame_1 = x.frame_1,
+            frame_2 = x.frame_2,
+            mold = x.mold,
+            productLine = x.productLine,
+            srNosr = x.srNosr,
+            pcsSh = x.pcsSh,
+            shBlock = x.shBlock,
+            layerCount = x.layerCount,
+            ringJig = x.ringJig,
+            snapMold = x.snapMold,
+            tapeCommon = x.tapeCommon,
+            tapeType = x.tapeType,
+            completionRate = (completionRates.find { m -> m.productName == x.name }?.rate ?: 0.0).toDouble(),
+            lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
         ) }
 
         response.columns = productProcesses.map { x -> DropdownResponse(x.processCode,x.processCode) }.distinct()

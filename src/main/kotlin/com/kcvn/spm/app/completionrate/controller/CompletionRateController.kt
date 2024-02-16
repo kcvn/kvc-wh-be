@@ -12,6 +12,7 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
@@ -26,6 +27,7 @@ class CompletionRateController(
 
 
     @GetMapping("/product/export-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProductExcel(
         request: CompletionRateSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
@@ -42,6 +44,7 @@ class CompletionRateController(
     }
 
     @GetMapping("/product/all")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProducts(
         @RequestParam(required = false) search: String?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable
@@ -51,25 +54,16 @@ class CompletionRateController(
     }
 
     @PostMapping(value = ["/product/import-excel"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun importExcel(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.importExcelCompletionRateProduct(file)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @PostMapping(value = ["/product/import-csv"], consumes = ["multipart/form-data"])
-    fun importCsvCompletionRateProducts(@RequestPart("file") multipartFile: MultipartFile): ResponseEntity<*> {
-
-            val data = completionRateService.importCsvCompletionRateProduct(multipartFile)
-          return  ResponseEntity<MessageResponse>(
-                MessageResponse(data),
-                HttpStatus.OK
-            )
-
-    }
-
 
     //Process Product Function
     @GetMapping("/process-product/export-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProcessProductExcel(
         request: CompletionRateSearchRequest,
         @PageableDefault(size = 1000000, page = 0)
@@ -87,6 +81,7 @@ class CompletionRateController(
 
 
     @GetMapping("/process-product/all")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProcessProducts(
         @RequestParam(required = false) search: CompletionRateProcessProductRequest?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable
@@ -97,26 +92,20 @@ class CompletionRateController(
     }
 
 
-    @PostMapping(value = ["/process-product/import-csv"], consumes = ["multipart/form-data"])
-    fun importCsvCompletionRateProcessProducts(
-        @RequestPart("file") multipartFile: MultipartFile,
-        @RequestParam("effectivedate") effectiveDate: LocalDateTime,
-        @RequestParam("expirationdate") expirationDate: LocalDateTime?
-    ): ResponseEntity<*> {
-
-         val data = completionRateService.importCsvProcessProduct(multipartFile, effectiveDate, expirationDate)
-        return  ResponseEntity<MessageResponse>(
-                MessageResponse(data),
-                HttpStatus.OK
-            )
-
+    @PostMapping(value = ["/process-product/import-excel"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
+    fun importExcelCompletionProcessProduct(@RequestPart("file") file: MultipartFile,
+                    @RequestParam("effectivedate") effectiveDate: LocalDateTime,
+                    @RequestParam("expirationdate") expirationDate: LocalDateTime?): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = completionRateService.importExcelProcessProduct(file,effectiveDate,expirationDate)
+        return ResponseEntity(data, HttpStatus.OK)
     }
-
     //Process Function
 
 
     @PostMapping(value = ["/process/import-excel"], consumes = ["multipart/form-data"])
-    fun importExcel(@RequestPart("file") file: MultipartFile,
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
+    fun importExcelCompletionProcess(@RequestPart("file") file: MultipartFile,
         @RequestParam("effectivedate") effectiveDate: LocalDateTime,
         @RequestParam("expirationdate") expirationDate: LocalDateTime?): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.importExcelCompletionRateProcess(file,effectiveDate,expirationDate)
@@ -124,6 +113,7 @@ class CompletionRateController(
     }
 
     @GetMapping("/process/export-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProcessExcel(
         request: CompletionRateSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
@@ -140,6 +130,7 @@ class CompletionRateController(
     }
 
     @GetMapping("/process/all")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllProcess(
         @RequestParam(required = false) search: String?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable
@@ -148,20 +139,7 @@ class CompletionRateController(
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @PostMapping(value = ["/process/import-csv"], consumes = ["multipart/form-data"])
-    fun importCsvCompletionRateProcess(
-        @RequestPart("file") multipartFile: MultipartFile,
-        @RequestParam("effectivedate") effectiveDate: LocalDateTime,
-        @RequestParam("expirationdate") expirationDate: LocalDateTime?
-    ): ResponseEntity<*> {
 
-            val data = completionRateService.importCsvProcess(multipartFile, effectiveDate, expirationDate)
-           return ResponseEntity<MessageResponse>(
-                MessageResponse(data),
-                HttpStatus.OK
-            )
-        
-    }
 
 }
 

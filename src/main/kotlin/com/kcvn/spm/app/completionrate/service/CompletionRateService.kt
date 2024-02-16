@@ -110,66 +110,6 @@ class CompletionRateService(
         )
     }
 
-    fun importCsvCompletionRateProduct(file: MultipartFile): String {
-        if (file.isEmpty()) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-
-        val inputStream = file.inputStream
-        val reader = CSVReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
-        var data = reader.readAll()
-        data = data.subList(1, data.size)
-        if (data.isEmpty() || data.size == 0) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-
-        val productNames = data.mapNotNull { x -> x[0] }
-
-        //wong here
-        val productExists = completionRateProductRepository.getByProduct(productNames)
-
-        var count = 0
-
-        for(item in data) {
-            try {
-                val productExist = productExists.find { x -> x.productName == item[0] }
-
-                if (productExist == null) {
-                    val compleRateProduct = CompletionRateProduct(
-                        productName = item[0],
-                        rate =  BigDecimal(item[1])
-                    )
-
-                    val layers = mutableListOf<LayerImportCompletionRateProductModel>()
-                    for (i in 2 until item.size) {
-                        if (item[i].isNullOrEmpty()) continue
-                        val layer = LayerImportCompletionRateProductModel().apply {
-                            key = (i - 2).toString()
-                            rate = item[i]?.toBigInteger() ?: BigInteger.ZERO
-                        }
-                        layers.add(layer)
-                    }
-                    completionRateProductRepository.add(compleRateProduct)
-                } else {
-                    productExist.productName = item[0]
-                    productExist.rate =  BigDecimal(item[1])
-
-                    val layers = mutableListOf<LayerImportCompletionRateProductModel>()
-                    for (i in 2 until item.size) {
-                        if (item[i].isNullOrEmpty()) continue
-                        val layer = LayerImportCompletionRateProductModel().apply {
-                            key = (i - 2).toString()
-                            rate = item[i]?.toBigInteger() ?: BigInteger.ZERO
-                        }
-                    }
-                    completionRateProductRepository.update(productExist)
-                }
-
-                count++
-            } catch (e: BusinessException) {
-                e.printStackTrace()
-            }
-        }
-
-        return CommonUtils.getMessage("import.success", arrayOf(count, data.size))
-    }
-
     fun importExcelCompletionRateProduct(file: MultipartFile) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
@@ -318,69 +258,6 @@ class CompletionRateService(
         return BaseResponse(response)
     }
 
-    fun importCsvProcess(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?): String {
-        if (file.isEmpty()) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-
-        val inputStream = file.inputStream
-        val reader = CSVReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
-        var data = reader.readAll()
-        data = data.subList(1, data.size)
-        if (data.isEmpty() || data.size == 0) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-
-        val productKeys = data.mapNotNull { x -> x[0] }
-
-        val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productKeys)
-
-        var count = 0
-
-        for(item in data) {
-            try {
-                val productExist = productExists.find { x -> x.key == item[0] }
-
-                if (productExist == null) {
-                    val compleRateProduct = CompletionRateProcess(
-                        key = item[0],
-                        rate =  BigDecimal(item[1]),
-                        processCode = item[0].toString().take(6),
-                        layerCode = item[0].toString().substring(6, 7),
-                        expirationDate = expirationDate,
-                        effectiveDate = effectiveDate
-                    )
-
-                    val layers = mutableListOf<LayerImportCompletionRateProductModel>()
-                    for (i in 2 until item.size) {
-                        if (item[i].isNullOrEmpty()) continue
-                        val layer = LayerImportCompletionRateProductModel().apply {
-                            key = (i - 2).toString()
-                            rate = item[i]?.toBigInteger() ?: BigInteger.ZERO
-
-                        }
-                        layers.add(layer)
-                    }
-                    completionRateProcessRepository.add(compleRateProduct)
-                } else {
-                    productExist.key = item[0]
-                    productExist.rate =  BigDecimal(item[1])
-
-                    val layers = mutableListOf<LayerImportCompletionRateProductModel>()
-                    for (i in 2 until item.size) {
-                        if (item[i].isNullOrEmpty()) continue
-                        val layer = LayerImportCompletionRateProductModel().apply {
-                            key = (i - 2).toString()
-                            rate = item[i]?.toBigInteger() ?: BigInteger.ZERO
-                        }
-                    }
-                    completionRateProcessRepository.update(productExist)
-                }
-
-                count++
-            } catch (e: BusinessException) {
-                e.printStackTrace()
-            }
-        }
-
-        return CommonUtils.getMessage("import.success", arrayOf(count, data.size))
-    }
     fun getPaginatedCompletionRateProcesses(search: String?, pageable: Pageable?): PaginatedResponse {
         val result = completionRateProcessRepository.getPaginatedCompletionRateProcesses(search, pageable)
         return PaginatedResponse(
@@ -516,71 +393,107 @@ class CompletionRateService(
         )
     }
 
-    fun importCsvProcessProduct(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?): String {
-        if (file.isEmpty()) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+    fun importExcelProcessProduct(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?): BaseResponse<FileContentModel>{
+        val workbook = WorkbookFactory.create(file.inputStream)
+        val sheet = workbook.getSheetAt(0)
+        val rowIndex = 1
 
-        val inputStream = file.inputStream
-        val reader = CSVReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
-        var data = reader.readAll()
-        data = data.subList(1, data.size)
-        if (data.isEmpty() || data.size == 0) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-        val productKeys = data.mapNotNull { x -> x[0] }
-
+        val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)
-
         var count = 0
+        val total = sheet.lastRowNum - rowIndex
 
-        for(item in data) {
-            try {
-                val productExist = productExists.find { x -> x.key == item[0] }
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
 
-                if (productExist == null) {
-                    val compleRateProduct = CompletionRateProcessProduct(
-                        key = item[0],
-                        rate =  BigDecimal(item[1]),
-                        productNameShortcut = item[0].toString().take(7),
-                        processCode = item[0].substring(7, 13),
-                        layerCode = item[0].substring(13, 14),
-                        expirationDate = expirationDate,
-                        effectiveDate = effectiveDate
-                    )
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        if (!checkColResult) {
+            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
+            headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
+            headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            sheet.setColumnWidth(headerCell, 15000)
+        }
 
-                    val layers = mutableListOf<LayerImportCompletionRateProductModel>()
-                    for (i in 2 until item.size) {
-                        if (item[i].isNullOrEmpty()) continue
-                        val layer = LayerImportCompletionRateProductModel().apply {
-                            key = (i - 2).toString()
-                            rate = item[i]?.toBigInteger() ?: BigInteger.ZERO
+        for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+            val style = row.getCell(1).cellStyle
+            val key = ExcelHelper.getCellValue(row, 0)
+            val errorMessages = mutableListOf<String>()
 
-                        }
-                        layers.add(layer)
-                    }
-                    completionRateProcessProductRepository.add(compleRateProduct)
-                } else {
-                    productExist.key = item[0]
-                    productExist.rate =  BigDecimal(item[1])
+            val productExist = productExists.find { x -> x.key == key }
 
-                    val layers = mutableListOf<LayerImportCompletionRateProductModel>()
-                    for (i in 2 until item.size) {
-                        if (item[i].isNullOrEmpty()) continue
-                        val layer = LayerImportCompletionRateProductModel().apply {
-                            key = (i - 2).toString()
-                            rate = item[i]?.toBigInteger() ?: BigInteger.ZERO
-                        }
-                    }
-                    completionRateProcessProductRepository.update(productExist)
+            if (productExist == null) {
+                if (key.length != 14) {
+                    errorMessages.add("Key phải có đúng 14 ký tự")
                 }
 
-                count++
-            } catch (e: BusinessException) {
-                e.printStackTrace()
+                try {
+                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                    if (rate.scale() > 2) {
+                        errorMessages.add("Tỉ lệ chỉ được tối đa 2 chữ số thập phân")
+                    }
+                } catch (e: NumberFormatException) {
+                    errorMessages.add("Lỗi định dạng số trong cột tỉ lệ")
+                }
+            }
+
+            if (errorMessages.isEmpty()) {
+                try {
+                    if (productExist == null) {
+                        val compleRateProcessProduct = CompletionRateProcessProduct(
+                            key = key,
+                            rate =  BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                            productNameShortcut = key.toString().take(7),
+                            processCode = key.toString().substring(7, 13),
+                            layerCode = key.toString().substring(13, 14),
+                            expirationDate = expirationDate,
+                            effectiveDate = effectiveDate
+
+                        )
+
+                        completionRateProcessProductRepository.add(compleRateProcessProduct)
+                    } else {
+                        productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+
+                        completionRateProcessProductRepository.update(productExist)
+                    }
+                    errorMessages.add("OK")
+                    count++
+                } catch (e: Exception) {
+                    errorMessages.add("Có lỗi xảy ra khi cập nhật dữ liệu sản phẩm công đoạn")
+                }
+            }
+
+            val result = errorMessages.joinToString(separator = "; ")
+            if (!checkColResult) {
+                row.createCell(row.lastCellNum + 0).setCellValue(result)
+                row.getCell(row.lastCellNum - 1).cellStyle = style
+            } else {
+                row.getCell(row.lastCellNum - 1).setCellValue(result)
             }
         }
 
-        return CommonUtils.getMessage("import.success", arrayOf(count, data.size))
-    }
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
 
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Ket_qua_import_san_pham.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(
+            response,
+            if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total+1))
+        )
+    }
 
 
 

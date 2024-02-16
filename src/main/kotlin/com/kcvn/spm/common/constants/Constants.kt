@@ -3,7 +3,8 @@ package com.kcvn.spm.common.constants
 class Constants {
     companion object {
         //Sync type
-        const val SYNC_PROCESS_PROCEDURE_STRUCTURE = "SYNC_PROCESS_PROCEDURE_STRUCTURE"
+        const val PROCESS_PROCEDURE_STRUCTURE = "PROCESS_PROCEDURE_STRUCTURE"
+        const val PROCESS_MASTER = "PROCESS_MASTER"
 
         //jwt
         const val CLAIM_TYPE_USER_ID = "UserId"

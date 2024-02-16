@@ -1,18 +1,14 @@
 package com.kcvn.spm.sample.service
 
-import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
-import com.kcvn.spm.app.productprocess.payload.request.ProductProcessSearchRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
-import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.ProductProcessRepository
-import com.kcvn.spm.repository.ProductRepository
 import org.apache.poi.ss.usermodel.BorderStyle
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Font

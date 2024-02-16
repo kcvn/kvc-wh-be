@@ -18,7 +18,9 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/product-process")
@@ -26,6 +28,7 @@ class ProductProcessController(
     private val productProcessService: ProductProcessService
 ) {
     @GetMapping("/all")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PROCESS.value) || hasRole('ADMIN')")
     fun getAllProductProcess(
         request: ProductProcessSearchRequest,
         @PageableDefault(size = 10, page = 0)
@@ -46,6 +49,7 @@ class ProductProcessController(
     }
 
     @PutMapping("/update-product-process-detail")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).U_PROCESS.value) || hasRole('ADMIN')")
     fun updateProductProcess(
         @Valid @RequestBody request: UpdateProductProcessDetailRequest
     ): ResponseEntity<BaseResponse<List<ProductProcess?>>> {
@@ -57,6 +61,7 @@ class ProductProcessController(
     }
 
     @GetMapping("/export-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_PROCESS.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: ProductProcessSearchRequest,
         @PageableDefault(size = 1000000, page = 0)
@@ -75,33 +80,16 @@ class ProductProcessController(
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @PostMapping("/xls")
-    fun generateXlsReport(
-        request: ProductProcessSearchRequest,
-        @PageableDefault(size = 1000000, page = 0)
-        @SortDefault.SortDefaults(
-            SortDefault(sort = ["processName"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["processSequence"], direction = Sort.Direction.ASC)
-        )
-        pageable: Pageable
-    )
-            : ResponseEntity<ByteArray> {
-        val report = productProcessService.exportExcel(
-            request.search,
-            request.hasProcessConvertCode,
-            pageable
-        );
-
-        return createResponseEntity(report.data?.content, "test.xls")
+    @GetMapping("/download-template-excel")
+    fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productProcessService.downloadTemplate()
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
-    private fun createResponseEntity(
-        report: ByteArray?,
-        fileName: String
-    ): ResponseEntity<ByteArray> =
-        ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$fileName\"")
-            .body(report)
+    @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PROCESS.value) || hasRole('ADMIN')")
+    fun importCsv(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productProcessService.importExcelProduct(file)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
 }

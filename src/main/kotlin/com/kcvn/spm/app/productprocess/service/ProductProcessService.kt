@@ -1,22 +1,22 @@
 package com.kcvn.spm.sample.service
 
+import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.ProductProcessRepository
-import org.apache.poi.ss.usermodel.BorderStyle
-import org.apache.poi.ss.usermodel.CellStyle
-import org.apache.poi.ss.usermodel.Font
-import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -60,7 +60,7 @@ class ProductProcessService(
                 ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
             if (item.processInventoryCode != null){
                val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
-                if((productProcessAfter?.processCode != null && productProcessAfter.processCode != item.processInventoryCode) )
+                if((productProcessAfter?.processCode == null ||  productProcessAfter.processCode != item.processInventoryCode) )
                 {
                     throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
                 }
@@ -138,5 +138,126 @@ class ProductProcessService(
         workbook.close()
 
         return BaseResponse(response)
+    }
+
+    fun downloadTemplate() : BaseResponse<FileContentModel> {
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx"
+        val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "ImportProductTemplate.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        return BaseResponse(response)
+    }
+
+    fun importExcelProduct(file: MultipartFile) : BaseResponse<FileContentModel> {
+        val workbook = WorkbookFactory.create(file.inputStream)
+        val sheet = workbook.getSheetAt(0)
+        val rowIndex = 1
+
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        var count = 0
+        val total = sheet.lastRowNum - rowIndex
+
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        if (!checkColResult) {
+            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
+            headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
+            headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            sheet.setColumnWidth(headerCell, 15000)
+        }
+
+        for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+            val style = row.getCell(1).cellStyle
+            val name = ExcelHelper.getCellValue(row, 0)
+            val messageResults = mutableListOf<String>()
+            var check = true
+            if(row.getCell(0) == null){
+                check = false
+                messageResults.add("Tên sản phẩm không được để trống")
+            }
+            if(row.getCell(1) == null){
+                check = false
+                messageResults.add("Mã công đoạn không được để trống")
+            }
+            if(row.getCell((2)) == null){
+                check = false
+                messageResults.add("Lớp số không được để trống")
+            }
+            if(row.getCell(3) == null){
+                check = false
+                messageResults.add("Mã chuyển đổi không được để trống")
+            }
+            if(row.getCell(5) == null){
+                check = false
+                messageResults.add("Mã thống kê không được để trống")
+            }
+
+           try {
+               if (check) {
+                   val filter = ImportProcessRequest(
+                       productName = ExcelHelper.getCellValue(row, 0),
+                       processCode = ExcelHelper.getCellValue(row, 1),
+                       layerCode = ExcelHelper.getCellValue(row, 2)
+                   )
+                   val query = productProcessRep.getProductByFilter(filter)
+                   if(query == null){
+                       messageResults.add("Không tìm thấy dữ liệu vui lòng kiểm tra lại")
+                   }
+                   else {
+                       val requestImportUpdate = ProductProcess(
+                           id = query.id,
+                           processConvertCode = ExcelHelper.getCellValue(row, 3),
+                           processInventoryCode = ExcelHelper.getCellValue(row, 4),
+                           processStatisticCode = ExcelHelper.getCellValue(row, 5)
+                       )
+                       productProcessRep.updateProductDetail(requestImportUpdate)
+                       messageResults.add("OK")
+                       count++
+                   }
+               }
+           }
+           catch (e: Exception){
+               messageResults.add("Có lỗi xảy ra khi cập nhật dữ liệu công đoạn")
+           }
+            val result = messageResults.joinToString(separator = "; ")
+
+            if (!checkColResult) {
+                row.createCell(row.lastCellNum + 0).setCellValue(result)
+                row.getCell(row.lastCellNum - 1).cellStyle = style
+            }
+            else{
+                row.getCell(row.lastCellNum - 1).setCellValue(result)
+            }
+        }
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Ket_qua_import_cong_doan.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+        workbook.close()
+
+        return BaseResponse(
+            response,
+            if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
+        )
     }
 }

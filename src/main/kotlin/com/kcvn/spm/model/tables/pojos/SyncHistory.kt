@@ -5,7 +5,7 @@ package com.kcvn.spm.model.tables.pojos
 
 
 import java.io.Serializable
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 
 
 /**
@@ -17,9 +17,9 @@ data class SyncHistory(
     var source: String? = null,
     var destination: String? = null,
     var type: String? = null,
-    var createdDate: OffsetDateTime? = null,
+    var createdDate: LocalDateTime? = null,
     var createdBy: String? = null,
-    var updatedDate: OffsetDateTime? = null,
+    var updatedDate: LocalDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")

@@ -75,12 +75,12 @@ open class CompletionRateProcess(
     /**
      * The column <code>public.completion_rate_process.key</code>.
      */
-    val KEY: TableField<CompletionRateProcessRecord, String?> = createField(DSL.name("key"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val KEY: TableField<CompletionRateProcessRecord, String?> = createField(DSL.name("key"), SQLDataType.VARCHAR(7).nullable(false), this, "")
 
     /**
      * The column <code>public.completion_rate_process.process_code</code>.
      */
-    val PROCESS_CODE: TableField<CompletionRateProcessRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(10).nullable(false), this, "")
+    val PROCESS_CODE: TableField<CompletionRateProcessRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
 
     /**
      * The column <code>public.completion_rate_process.layer_code</code>.

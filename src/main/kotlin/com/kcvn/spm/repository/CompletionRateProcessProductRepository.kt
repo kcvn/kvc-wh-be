@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -76,14 +77,21 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
 
 
     fun getPaginatedCompletionRateProcessesProduct(
-        search: String?,
+        search: CompletionRateProcessProductRequest?,
         pageable: Pageable?
     ): Pair<List<CompletionRateProcessProduct>, Int> {
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
-            val lowerSearch = DSL.lower(search)
-            condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.KEY).contains(lowerSearch))
+            if(search.productNameShortCut !=null){
+                val lowerProductNameShortCutSearch = DSL.lower(search.productNameShortCut)
+                condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT).contains(lowerProductNameShortCutSearch))
+            }
+
+            if(search.processCode !=null){
+                val lowerProcessCodeSearch = DSL.lower(search.processCode)
+                condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).contains(lowerProcessCodeSearch))
+            }
         }
 
         val completionRateProcessesQuery = context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)

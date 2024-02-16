@@ -1,6 +1,10 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.model.tables.pojos.SyncHistory
+import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
+import com.kcvn.spm.model.tables.references.PRODUCT
 import com.kcvn.spm.model.tables.references.SYNC_HISTORY
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -13,6 +17,16 @@ class SyncHistoryRepository (private val context: DSLContext) {
             .orderBy(SYNC_HISTORY.CREATED_DATE.sort(SortOrder.DESC))
             .fetchInto(SyncHistory::class.java)
             .firstOrNull()
+    }
+
+    fun add(data: SyncHistory): SyncHistory? {
+        return context.insertInto(
+            SYNC_HISTORY,
+            SYNC_HISTORY.SOURCE, SYNC_HISTORY.DESTINATION, SYNC_HISTORY.TYPE, SYNC_HISTORY.CREATED_BY
+        ).values(
+            data.source, data.destination, data.type,
+            CommonUtils.loggedInUser() ?: "SYSTEM"
+        ).returningResult(SYNC_HISTORY).fetchInto(SyncHistory::class.java).firstOrNull()
     }
 
 }

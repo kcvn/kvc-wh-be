@@ -37,7 +37,7 @@ class ProductProcessService(
         val response = BasePagingResponse<ProductProcessResponse>();
             response.data = result.first.map { productProcess ->
                 ProductProcessResponse(
-                    id = productProcess.id,
+                    processId = productProcess.processId,
                     processName = productProcess.processName,
                     processNameJp = productProcess.processNameJp,
                     processConvertCode = productProcess.processConvertCode,
@@ -45,7 +45,8 @@ class ProductProcessService(
                     processInventoryCode = productProcess.processInventoryCode,
                     productName = productProcess.productName,
                     layerCode = productProcess.layerCode,
-                    processCode = productProcess.processCode
+                    processCode = productProcess.processCode,
+                    productId = productProcess.productId,
                 );
             }
             response.total = result.second;

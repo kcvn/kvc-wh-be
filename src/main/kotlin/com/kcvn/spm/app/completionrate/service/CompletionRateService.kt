@@ -1,10 +1,14 @@
 package com.kcvn.spm.app.completionrate.service
 
 import com.kcvn.spm.app.completionrate.payload.model.LayerImportCompletionRateProductModel
+import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
+import com.kcvn.spm.app.product.payload.model.LayerImportProductModel
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
+import com.kcvn.spm.common.helper.jsonhelper.JsonConvert
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -12,13 +16,11 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
+import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.repository.CompletionRateProcessProductRepository
 import com.kcvn.spm.repository.CompletionRateProcessRepository
 import com.kcvn.spm.repository.CompletionRateProductRepository
-import org.apache.poi.ss.usermodel.BorderStyle
-import org.apache.poi.ss.usermodel.CellStyle
-import org.apache.poi.ss.usermodel.Font
-import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.jooq.tools.csv.CSVReader
 import org.springframework.data.domain.Pageable
@@ -168,6 +170,103 @@ class CompletionRateService(
         return CommonUtils.getMessage("import.success", arrayOf(count, data.size))
     }
 
+    fun importExcelCompletionRateProduct(file: MultipartFile) : BaseResponse<FileContentModel> {
+        val workbook = WorkbookFactory.create(file.inputStream)
+        val sheet = workbook.getSheetAt(0)
+        val rowIndex = 1
+
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+        val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
+        val productExists = completionRateProductRepository.getByProduct(productNames)
+        var count = 0
+        val total = sheet.lastRowNum - rowIndex
+
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        if (!checkColResult) {
+            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
+            headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
+            headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            sheet.setColumnWidth(headerCell, 15000)
+        }
+
+        for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+            val style = row.getCell(1).cellStyle
+            val name = ExcelHelper.getCellValue(row, 0)
+            val errorMessages = mutableListOf<String>()
+
+            val productExist = productExists.find { x -> x.productName == name }
+
+            if (productExist == null) {
+                if (name.length != 12) {
+                    errorMessages.add("Tên sản phẩm phải có đúng 12 ký tự")
+                }
+
+                try {
+                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                    if (rate.scale() > 2) {
+                        errorMessages.add("Tỉ lệ chỉ được tối đa 2 chữ số thập phân")
+                    }
+                } catch (e: NumberFormatException) {
+                    errorMessages.add("Lỗi định dạng số trong cột tỉ lệ")
+                }
+            }
+
+            if (errorMessages.isEmpty()) {
+                try {
+                    if (productExist == null) {
+                        val compleRateProduct = CompletionRateProduct(
+                            productName = name,
+                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                        )
+
+                        completionRateProductRepository.add(compleRateProduct)
+                    } else {
+                        productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+
+                        completionRateProductRepository.update(productExist)
+                    }
+                    errorMessages.add("OK")
+                    count++
+                } catch (e: Exception) {
+                    errorMessages.add("Có lỗi xảy ra khi cập nhật dữ liệu sản phẩm")
+                }
+            }
+
+            val result = errorMessages.joinToString(separator = "; ")
+            if (!checkColResult) {
+                row.createCell(row.lastCellNum + 0).setCellValue(result)
+                row.getCell(row.lastCellNum - 1).cellStyle = style
+            } else {
+                row.getCell(row.lastCellNum - 1).setCellValue(result)
+            }
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Ket_qua_import_san_pham.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(
+            response,
+            if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total+1))
+        )
+    }
+
+
     // Service Process
 
     fun exportCompletionRateProcessExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
@@ -298,9 +397,109 @@ class CompletionRateService(
         )
     }
 
+    fun importExcelCompletionRateProcess(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?) : BaseResponse<FileContentModel> {
+        val workbook = WorkbookFactory.create(file.inputStream)
+        val sheet = workbook.getSheetAt(0)
+        val rowIndex = 1
+
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+        val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
+        val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
+        var count = 0
+        val total = sheet.lastRowNum - rowIndex
+
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        if (!checkColResult) {
+            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
+            headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
+            headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            sheet.setColumnWidth(headerCell, 15000)
+        }
+
+        for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+            val style = row.getCell(1).cellStyle
+            val key = ExcelHelper.getCellValue(row, 0)
+            val errorMessages = mutableListOf<String>()
+
+            val productExist = productExists.find { x -> x.key == key }
+
+            if (productExist == null) {
+                if (key.length != 7) {
+                    errorMessages.add("Key phải có đúng 7 ký tự")
+                }
+
+                try {
+                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                    if (rate.scale() > 2) {
+                        errorMessages.add("Tỉ lệ chỉ được tối đa 2 chữ số thập phân")
+                    }
+                } catch (e: NumberFormatException) {
+                    errorMessages.add("Lỗi định dạng số trong cột tỉ lệ")
+                }
+            }
+
+            if (errorMessages.isEmpty()) {
+                try {
+                    if (productExist == null) {
+                        val compleRateProduct = CompletionRateProcess(
+                            key = key,
+                            rate =  BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                            processCode = key.toString().take(6),
+                            layerCode = key.toString().substring(6, 7),
+                            expirationDate = expirationDate,
+                            effectiveDate = effectiveDate
+                        )
+
+                        completionRateProcessRepository.add(compleRateProduct)
+                    } else {
+                        productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+
+                        completionRateProcessRepository.update(productExist)
+                    }
+                    errorMessages.add("OK")
+                    count++
+                } catch (e: Exception) {
+                    errorMessages.add("Có lỗi xảy ra khi cập nhật dữ liệu công đoạn")
+                }
+            }
+
+            val result = errorMessages.joinToString(separator = "; ")
+            if (!checkColResult) {
+                row.createCell(row.lastCellNum + 0).setCellValue(result)
+                row.getCell(row.lastCellNum - 1).cellStyle = style
+            } else {
+                row.getCell(row.lastCellNum - 1).setCellValue(result)
+            }
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "Ket_qua_import_san_pham.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(
+            response,
+            if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total+1))
+        )
+    }
+
 
     //Service Process Product
-    fun getPaginatedCompletionRateProcessesProduct(search: String?, pageable: Pageable?): PaginatedResponse {
+    fun getPaginatedCompletionRateProcessesProduct(search: CompletionRateProcessProductRequest?, pageable: Pageable?): PaginatedResponse {
         val result = completionRateProcessProductRepository.getPaginatedCompletionRateProcessesProduct(search, pageable)
         return PaginatedResponse(
             data = result.first.map { item ->

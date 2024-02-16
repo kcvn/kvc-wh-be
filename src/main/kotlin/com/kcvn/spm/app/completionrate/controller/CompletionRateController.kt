@@ -1,12 +1,12 @@
 package com.kcvn.spm.app.completionrate.controller
 
+import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateSearchRequest
 import com.kcvn.spm.app.completionrate.service.CompletionRateService
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
-import com.kcvn.spm.common.util.CommonUtils
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
@@ -27,7 +27,7 @@ class CompletionRateController(
 
     @GetMapping("/product/export-excel")
     fun exportCompletionRateProductExcel(
-        request: CompletionRateSearchRequest,
+        request: CompletionRateSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
         @SortDefault.SortDefaults(
 //            SortDefault(sort = ["product_name"], direction = Sort.Direction.ASC),
@@ -35,7 +35,7 @@ class CompletionRateController(
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.exportCompletionRateProductExcel(
-            request.search,
+            request?.search,
             pageable
         )
         return ResponseEntity(data, HttpStatus.OK)
@@ -48,6 +48,12 @@ class CompletionRateController(
     ): ResponseEntity<PaginatedResponse> {
         val result = completionRateService.getPaginatedCompletionRateProduct(search, pageable)
         return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @PostMapping(value = ["/product/import-excel"], consumes = ["multipart/form-data"])
+    fun importExcel(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = completionRateService.importExcelCompletionRateProduct(file)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @PostMapping(value = ["/product/import-csv"], consumes = ["multipart/form-data"])
@@ -82,7 +88,7 @@ class CompletionRateController(
 
     @GetMapping("/process-product/all")
     fun getAllCompletionRateProcessProducts(
-        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) search: CompletionRateProcessProductRequest?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result =
@@ -108,9 +114,18 @@ class CompletionRateController(
 
     //Process Function
 
+
+    @PostMapping(value = ["/process/import-excel"], consumes = ["multipart/form-data"])
+    fun importExcel(@RequestPart("file") file: MultipartFile,
+        @RequestParam("effectivedate") effectiveDate: LocalDateTime,
+        @RequestParam("expirationdate") expirationDate: LocalDateTime?): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = completionRateService.importExcelCompletionRateProcess(file,effectiveDate,expirationDate)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
     @GetMapping("/process/export-excel")
     fun exportCompletionRateProcessExcel(
-        request: CompletionRateSearchRequest,
+        request: CompletionRateSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
         @SortDefault.SortDefaults(
 //            SortDefault(sort = ["product_name"], direction = Sort.Direction.ASC),
@@ -118,7 +133,7 @@ class CompletionRateController(
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.exportCompletionRateProcessExcel(
-            request.search,
+            request?.search,
             pageable
         )
         return ResponseEntity(data, HttpStatus.OK)

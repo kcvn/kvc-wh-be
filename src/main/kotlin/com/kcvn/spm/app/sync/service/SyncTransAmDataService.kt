@@ -56,8 +56,8 @@ class SyncTransAmDataService(
                 }
                 processProcedureStructureRep.add(dataProcess)
             }
-            catch (ex: Exception) {
-
+            catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

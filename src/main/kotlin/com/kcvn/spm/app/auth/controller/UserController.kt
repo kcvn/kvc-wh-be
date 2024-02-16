@@ -101,14 +101,11 @@ class UserController(
         authentication: Authentication
     ): ResponseEntity<*> {
         val userDetails = authentication.principal as UserDetailsImpl
-        if (userDetails.getId() == id) {
-            // user change password him/herself, validate old password first
-            if (!userService.validateOldPassword(id, passwordRequest.oldPassword!!)) {
-                return ResponseEntity<MessageResponse>(
-                    MessageResponse(CommonUtils.getMessage("login.error.wrongPassword")),
-                    HttpStatus.BAD_REQUEST
-                )
-            }
+        if (userDetails.getId() == id && !userService.validateOldPassword(id, passwordRequest.oldPassword!!)) {
+            return ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("login.error.wrongPassword")),
+                HttpStatus.BAD_REQUEST
+            )
         }
         val user = userService.updatePassword(id, passwordRequest.password!!)
         return ResponseEntity<MessageResponse>(

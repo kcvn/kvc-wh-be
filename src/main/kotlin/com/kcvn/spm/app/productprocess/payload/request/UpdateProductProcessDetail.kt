@@ -5,7 +5,7 @@ data class UpdateProductProcessDetailRequest(
 )
 
 data class ItemUpdateProductProcessDetailRequest(
-    var id: String? = null,
+    var processId: String? = null,
     var productName: String? = null,
     var layerCode: String? = null,
     var processCode: String? = null,

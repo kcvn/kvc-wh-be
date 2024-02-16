@@ -64,7 +64,7 @@ class ProductProcessService(
                 ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
             if (item.processInventoryCode != null){
                val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
-                if(productProcessAfter == null || (productProcessAfter.processCode != null && productProcessAfter.processCode != item.processInventoryCode) )
+                if((productProcessAfter?.processCode != null && productProcessAfter.processCode != item.processInventoryCode) )
                 {
                     throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
                 }

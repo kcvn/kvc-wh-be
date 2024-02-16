@@ -26,6 +26,7 @@ enum class EPermission(val value: String) {
     V_PROCESS("process.v"),
     I_PROCESS("process.i"),
     E_PROCESS("process.e"),
+    U_PROCESS("process.u"),
 
     // completion - rate
     V_COMPLETION_RATE("com_rate.v"),

@@ -19,13 +19,14 @@ enum class EPermission(val value: String) {
     // products
     V_PRODUCT("product.v"),
     I_PRODUCT("product.i"),
-    SY_PRODUCT("product.sy"),
     E_PRODUCT("product.e"),
 
     // process
     V_PROCESS("process.v"),
     I_PROCESS("process.i"),
     E_PROCESS("process.e"),
+    SY_PROCESS_CATALOG("process_catalog.sy"),
+    SY_PROCESS_PRODUCT("process_product.sy"),
 
     // completion - rate
     V_COMPLETION_RATE("com_rate.v"),

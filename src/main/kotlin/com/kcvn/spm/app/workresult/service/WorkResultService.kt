@@ -2,11 +2,11 @@ package com.kcvn.spm.app.workresult.service
 
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
-import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
 import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.WorkResultRepository
@@ -73,13 +73,33 @@ class WorkResultService (
         return response
     }
 
-    fun getListProcessGroup(): List<ProcessGroupResponse> {
-        return workResultRep.getListProcessGroup()
+    fun getListProcessGroup(): BaseResponse<List<DropdownResponse>> {
+        val listProcessGroup = workResultRep.getListProcessGroup()
+
+        // Map each ProcessGroupResponse to a DropDownResponse
+        val dropDownList: List<DropdownResponse> = listProcessGroup.map { processGroupResponse ->
+            DropdownResponse(
+                processGroupResponse.grpProcess,
+                "${processGroupResponse.grpProcess} - ${processGroupResponse.processName}"
+            )
+        }
+
+        return BaseResponse(data = dropDownList, message = "List Process Group")
     }
 
 
-    fun getListProcessByGroupCode(groupCode: Array<String>): List<ProcessResponse> {
-        return workResultRep.getListProcessByGroupCode(groupCode)
+    fun getListProcessByGroupCode(groupCode: Array<String>): BaseResponse<List<DropdownResponse>> {
+        val listProcessByGroupCode = workResultRep.getListProcessByGroupCode(groupCode)
+
+        // Map each ProcessResponse to a DropdownResponse
+        val dropDownList: List<DropdownResponse> = listProcessByGroupCode.map { processResponse ->
+            DropdownResponse(
+                processResponse.processCode,
+                "${processResponse.processCode} - ${processResponse.processName}"
+            )
+        }
+
+        return BaseResponse(data = dropDownList, message = "List Process")
     }
 
     fun exportExcel(request: WorkResultSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {

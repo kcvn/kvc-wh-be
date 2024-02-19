@@ -11,7 +11,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 
@@ -134,7 +134,7 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
             .set(PRODUCT.TAPE_TYPE, data.tapeType)
             .set(PRODUCT.PRODUCT_LAYER_DETAIL, data.productLayerDetail)
             .set(PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
-            .set(PRODUCT.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
+            .set(PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .where(PRODUCT.ID.eq(data.id))
             .returningResult(PRODUCT)
             .fetchInto(Product::class.java).firstOrNull()

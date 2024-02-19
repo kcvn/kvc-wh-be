@@ -5,7 +5,7 @@ package com.kcvn.spm.model.tables.pojos
 
 
 import java.io.Serializable
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 
 /**
@@ -17,9 +17,9 @@ data class AppSetting(
     var key: String? = null,
     var value: String? = null,
     var description: String? = null,
-    var createdDate: LocalDateTime? = null,
+    var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
-    var updatedDate: LocalDateTime? = null,
+    var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")

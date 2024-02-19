@@ -111,7 +111,7 @@ open class AuthUser(
     /**
      * The column <code>public.auth_user.avatar</code>.
      */
-    val AVATAR: TableField<AuthUserRecord, String?> = createField(DSL.name("avatar"), SQLDataType.VARCHAR(1000), this, "")
+    val AVATAR: TableField<AuthUserRecord, String?> = createField(DSL.name("avatar"), SQLDataType.VARCHAR, this, "")
 
     /**
      * The column <code>public.auth_user.status</code>.

@@ -10,7 +10,7 @@ import org.jooq.SQLDialect
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.concurrent.TimeUnit
 
@@ -30,7 +30,7 @@ class DemoSyncScheduler(
         val hour = timeRunning.value!!.split(":")[0].toInt()
         val minute = timeRunning.value!!.split(":")[1].toInt()
 
-        val dt = LocalDateTime.now(ZoneOffset.UTC).plusHours(7)
+        val dt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(7)
         if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) <= 5) {
             val dslContext = DSLContextExtension.createDSLContext(
                 propertiesConfig.tranAmDbUrl,

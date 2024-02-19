@@ -1,10 +1,10 @@
 package com.kcvn.spm.app.completionrate.payload.request
 
-class CompletionRateProcessProductRequest {
+data class CompletionRateProcessProductRequest (
 
 
-    var productNameShortCut: String? = null
+    var productNameShortCut: String? ,
 
-    var processCode: String? = null
+    var processCode: String?
 
-}
+)

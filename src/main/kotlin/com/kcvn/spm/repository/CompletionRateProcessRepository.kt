@@ -67,7 +67,12 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
 
         if (search != null) {
             val lowerSearch = DSL.lower(search)
-            condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS.KEY).contains(lowerSearch))
+            val searchCondition = DSL.lower(COMPLETION_RATE_PROCESS.PROCESS_CODE).contains(lowerSearch)
+                .or(DSL.lower(PRODUCT_PROCESS.PROCESS_NAME).contains(lowerSearch))
+                .or(DSL.lower(PRODUCT_PROCESS.PROCESS_NAME_JP).contains(lowerSearch))
+            condition = condition.and(searchCondition)
+
+
         }
 
         val completionRateProcessesQuery = context.select(
@@ -88,7 +93,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             .offset(pageable?.offset ?: 0)
             .fetchInto(CompletionRateProcessProductResponse::class.java)
 
-        val total = context.fetchCount(COMPLETION_RATE_PROCESS, condition)
+        val total = context.fetchCount(COMPLETION_RATE_PROCESS, COMPLETION_RATE_PROCESS.IS_DELETED.eq(false))
 
         return Pair(completionRateProcessesQuery, total)
     }

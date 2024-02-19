@@ -35,7 +35,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         val productProcessQuery = context
             .select(
                 PRODUCT.NAME.`as`("productName"),
-                PRODUCT_PROCESS.ID.`as`("productProcessId"),
+                PRODUCT_PROCESS.ID.`as`("processId"),
                 PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.`as`("layerCode"),
                 PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.`as`("processCode"),
                 PRODUCT_PROCESS.PROCESS_NAME_JP.`as`("processNameJp"),
@@ -43,7 +43,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE.`as`("processConvertCode"),
                 PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
                 PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
-                PRODUCT.ID.`as`("productId")
+                PRODUCT.ID.`as`("productId"),
             )
             .from(PRODUCT_PROCESS
                 .join(PROCESS_PROCEDURE_STRUCTURE)

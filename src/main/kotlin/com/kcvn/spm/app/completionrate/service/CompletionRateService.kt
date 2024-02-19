@@ -36,6 +36,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Service
 @Transactional
@@ -316,6 +317,7 @@ class CompletionRateService(
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
         var count = 0
+        val currentDate = LocalDateTime.now(ZoneOffset.UTC)
         val total = sheet.lastRowNum - rowIndex
 
         val headerCell = sheet.first().lastCellNum + 0
@@ -341,6 +343,10 @@ class CompletionRateService(
             val productExist = productExists.find { x -> x.key == key }
 
             val processExist = processCodeExist.find { x -> x == key.take(6) }
+            if (effectiveDate <= currentDate) {
+                errorMessages.add("Ngày áp dụng phải lớn hơn ngày hiện tại")
+
+            }
             if(processExist == null){
                 errorMessages.add("Mã công đoạn không tồn tại")
             }
@@ -445,6 +451,8 @@ class CompletionRateService(
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)
         val processCodeExist = processProcedureStructureRepository.getListProcessCode()
+        val currentDate = LocalDateTime.now(ZoneOffset.UTC)
+
 
         var count = 0
         val total = sheet.lastRowNum - rowIndex
@@ -470,6 +478,10 @@ class CompletionRateService(
             val productExist = productExists.find { x -> x.key == key }
 
             val processExist = processCodeExist.find {x -> x == key.substring(7, 13)}
+            if (effectiveDate <= currentDate) {
+                errorMessages.add("Ngày áp dụng phải lớn hơn ngày hiện tại")
+
+            }
             if(processExist == null){
                 errorMessages.add("Mã công đoạn không phù hợp")
             }

@@ -93,8 +93,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
 
 
     fun add(data: CompletionRateProduct): CompletionRateProduct? {
-        return try {
-            context
+        return context
                 .insertInto(
                     COMPLETION_RATE_PRODUCT,
                     COMPLETION_RATE_PRODUCT.PRODUCT_NAME,
@@ -115,10 +114,6 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                 .returningResult(COMPLETION_RATE_PRODUCT)
                 .fetchOne()
                 ?.into(CompletionRateProduct::class.java)
-        } catch (e: Exception) {
-            // Handle the exception as needed
-            null
-        }
     }
 
 

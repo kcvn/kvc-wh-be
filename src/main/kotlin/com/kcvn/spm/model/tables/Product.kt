@@ -9,7 +9,7 @@ import com.kcvn.spm.model.indexes.IDX_UNIQUE_PRODUCT_NAME
 import com.kcvn.spm.model.keys.PRODUCT_PKEY
 import com.kcvn.spm.model.tables.records.ProductRecord
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 import kotlin.collections.List
 
@@ -155,7 +155,7 @@ open class Product(
     /**
      * The column <code>public.product.created_date</code>.
      */
-    val CREATED_DATE: TableField<ProductRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+    val CREATED_DATE: TableField<ProductRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.product.created_by</code>.
@@ -165,7 +165,7 @@ open class Product(
     /**
      * The column <code>public.product.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<ProductRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val UPDATED_DATE: TableField<ProductRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.product.updated_by</code>.

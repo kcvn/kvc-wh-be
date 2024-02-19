@@ -10,7 +10,7 @@ import com.kcvn.spm.model.keys.COMPLETION_RATE_PROCESS_PKEY
 import com.kcvn.spm.model.tables.records.CompletionRateProcessRecord
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.function.Function
 
 import kotlin.collections.List
@@ -95,17 +95,17 @@ open class CompletionRateProcess(
     /**
      * The column <code>public.completion_rate_process.effective_date</code>.
      */
-    val EFFECTIVE_DATE: TableField<CompletionRateProcessRecord, LocalDateTime?> = createField(DSL.name("effective_date"), SQLDataType.LOCALDATETIME(6).nullable(false), this, "")
+    val EFFECTIVE_DATE: TableField<CompletionRateProcessRecord, OffsetDateTime?> = createField(DSL.name("effective_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
 
     /**
      * The column <code>public.completion_rate_process.expiration_date</code>.
      */
-    val EXPIRATION_DATE: TableField<CompletionRateProcessRecord, LocalDateTime?> = createField(DSL.name("expiration_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val EXPIRATION_DATE: TableField<CompletionRateProcessRecord, OffsetDateTime?> = createField(DSL.name("expiration_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.completion_rate_process.created_date</code>.
      */
-    val CREATED_DATE: TableField<CompletionRateProcessRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+    val CREATED_DATE: TableField<CompletionRateProcessRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.completion_rate_process.created_by</code>.
@@ -115,7 +115,7 @@ open class CompletionRateProcess(
     /**
      * The column <code>public.completion_rate_process.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<CompletionRateProcessRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val UPDATED_DATE: TableField<CompletionRateProcessRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.completion_rate_process.updated_by</code>.
@@ -173,16 +173,16 @@ open class CompletionRateProcess(
     // -------------------------------------------------------------------------
     // Row12 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row12<String?, String?, String?, String?, BigDecimal?, LocalDateTime?, LocalDateTime?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?> = super.fieldsRow() as Row12<String?, String?, String?, String?, BigDecimal?, LocalDateTime?, LocalDateTime?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row12<String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row12<String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, BigDecimal?, LocalDateTime?, LocalDateTime?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, BigDecimal?, LocalDateTime?, LocalDateTime?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

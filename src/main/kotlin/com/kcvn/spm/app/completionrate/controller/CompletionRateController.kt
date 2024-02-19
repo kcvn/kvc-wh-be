@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 @RestController
 @RequestMapping("/api/completion-rate")
@@ -95,8 +95,8 @@ class CompletionRateController(
     @PostMapping(value = ["/process-product/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun importExcelCompletionProcessProduct(@RequestPart("file") file: MultipartFile,
-                    @RequestParam("effectivedate") effectiveDate: LocalDateTime,
-                    @RequestParam("expirationdate") expirationDate: LocalDateTime?): ResponseEntity<BaseResponse<FileContentModel>> {
+                    @RequestParam("effectivedate") effectiveDate: OffsetDateTime,
+                    @RequestParam("expirationdate") expirationDate: OffsetDateTime?): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.importExcelProcessProduct(file,effectiveDate,expirationDate)
         return ResponseEntity(data, HttpStatus.OK)
     }
@@ -106,8 +106,8 @@ class CompletionRateController(
     @PostMapping(value = ["/process/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun importExcelCompletionProcess(@RequestPart("file") file: MultipartFile,
-        @RequestParam("effectivedate") effectiveDate: LocalDateTime,
-        @RequestParam("expirationdate") expirationDate: LocalDateTime?): ResponseEntity<BaseResponse<FileContentModel>> {
+        @RequestParam("effectivedate") effectiveDate: OffsetDateTime,
+        @RequestParam("expirationdate") expirationDate: OffsetDateTime?): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.importExcelCompletionRateProcess(file,effectiveDate,expirationDate)
         return ResponseEntity(data, HttpStatus.OK)
     }

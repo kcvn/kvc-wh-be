@@ -19,6 +19,13 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
             .fetchInto(ProcessProcedureStructure::class.java)
     }
 
+    fun getListProcessCode(): List<String> {
+        return context.select(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE)
+            .from(PROCESS_PROCEDURE_STRUCTURE)
+            .where(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+            .fetchInto(String::class.java)
+    }
+
     fun add(model: ProcessProcedureStructure) {
         val record = context.newRecord(PROCESS_PROCEDURE_STRUCTURE, model)
         context.insertInto(PROCESS_PROCEDURE_STRUCTURE).set(record).execute()

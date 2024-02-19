@@ -53,19 +53,15 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .update(COMPLETION_RATE_PROCESS_PRODUCT)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT, data.productNameShortcut)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.RATE, data.rate)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.CREATED_DATE, data.createdDate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE, data.layerCode)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
             .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED, data.isDeleted)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE, data.expirationDate)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
+            .set(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE, LocalDateTime.now(ZoneOffset.UTC))
             .set(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE, data.processCode)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.KEY, data.key)
-            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(data.id)) // Assuming ID is the primary key
+            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(data.id))
             .returningResult(COMPLETION_RATE_PROCESS_PRODUCT)
-            .fetchOne()
-            ?.into(CompletionRateProcessProduct::class.java)
+            .fetchInto(CompletionRateProcessProduct::class.java).firstOrNull()
     }
 
     fun getListProductByKey(productKeys: List<String>): List<CompletionRateProcessProduct> {

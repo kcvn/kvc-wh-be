@@ -235,11 +235,11 @@ class ProductProcessService(
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.length"))
             }
 
-            if (!masterData.ringJigSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
+            if (!masterData.processConvertCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.does.not.exist"))
             }
-            if (!masterData.tapeCommonSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
+            if (!masterData.processStatisticCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.inventory.code.does.not.exist"))
             }

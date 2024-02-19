@@ -23,7 +23,6 @@ class WorkResultRepository (
 ) : SortingRepository() {
     fun getPagingListWorkResult(request: WorkResultSearchRequest?, pageable: Pageable): Pair<List<WorkResult>, Int> {
         var condition : Condition = DSL.noCondition()
-        condition = condition.and(WORK_RESULT.IS_DELETED.eq(false))
         if (request!= null) {
             if(!request.order.isNullOrEmpty())
                 condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
@@ -37,9 +36,9 @@ class WorkResultRepository (
                 }
             }
 
-            if(!request.listProcessName.isNullOrEmpty()){
-                request.listProcessName?.forEach { processName ->
-                    condition = condition.or(WORK_RESULT.PROCESS_NAME.eq(processName))
+            if(!request.listProcessCode.isNullOrEmpty()){
+                request.listProcessCode?.forEach { processCode ->
+                    condition = condition.or(WORK_RESULT.PROCESS_CODE.eq(processCode))
                 }
             }
 
@@ -54,12 +53,12 @@ class WorkResultRepository (
         }
 
         val data = context.selectFrom(WORK_RESULT)
-            .where(condition)
+            .where(condition.and(WORK_RESULT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, WORK_RESULT.SUMMARY_RESULT_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(WorkResult::class.java)
 
-        val total = context.fetchCount(WORK_RESULT,condition)
+        val total = context.fetchCount(WORK_RESULT,condition.and(WORK_RESULT.IS_DELETED.eq(false)))
 
         return Pair(data,total)
     }
@@ -156,7 +155,6 @@ class WorkResultRepository (
 
     fun getList(request: WorkResultSearchRequest?, pageable: Pageable): List<WorkResult> {
         var condition : Condition = DSL.noCondition()
-        condition = condition.and(WORK_RESULT.IS_DELETED.eq(false))
         if (request!= null) {
             if(!request.order.isNullOrEmpty())
                 condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
@@ -170,9 +168,9 @@ class WorkResultRepository (
                 }
             }
 
-            if(!request.listProcessName.isNullOrEmpty()){
-                request.listProcessName?.forEach { processName ->
-                    condition = condition.or(WORK_RESULT.PROCESS_NAME.eq(processName))
+            if(!request.listProcessCode.isNullOrEmpty()){
+                request.listProcessCode?.forEach { processCode ->
+                    condition = condition.or(WORK_RESULT.PROCESS_CODE.eq(processCode))
                 }
             }
 
@@ -187,7 +185,7 @@ class WorkResultRepository (
         }
 
         return context.selectFrom(WORK_RESULT)
-            .where(condition)
+            .where(condition.and(WORK_RESULT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, WORK_RESULT.SUMMARY_RESULT_DATE))
             .fetchInto(WorkResult::class.java)
     }

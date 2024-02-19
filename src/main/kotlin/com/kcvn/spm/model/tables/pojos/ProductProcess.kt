@@ -5,7 +5,7 @@ package com.kcvn.spm.model.tables.pojos
 
 
 import java.io.Serializable
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 
 /**
@@ -19,9 +19,9 @@ data class ProductProcess(
     var processConvertCode: String? = null,
     var processStatisticCode: String? = null,
     var processInventoryCode: String? = null,
-    var createdDate: LocalDateTime? = null,
+    var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
-    var updatedDate: LocalDateTime? = null,
+    var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")

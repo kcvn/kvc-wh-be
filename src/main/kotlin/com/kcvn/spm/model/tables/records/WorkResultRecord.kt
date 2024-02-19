@@ -7,7 +7,7 @@ package com.kcvn.spm.model.tables.records
 import com.kcvn.spm.model.tables.WorkResult
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 import org.jooq.Record1
 import org.jooq.impl.UpdatableRecordImpl
@@ -145,9 +145,9 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         set(value): Unit = set(30, value)
         get(): String? = get(30) as String?
 
-    open var summaryResultDate: LocalDateTime?
+    open var summaryResultDate: OffsetDateTime?
         set(value): Unit = set(31, value)
-        get(): LocalDateTime? = get(31) as LocalDateTime?
+        get(): OffsetDateTime? = get(31) as OffsetDateTime?
 
     open var enterActualResultType: String?
         set(value): Unit = set(32, value)
@@ -305,29 +305,29 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         set(value): Unit = set(70, value)
         get(): String? = get(70) as String?
 
-    open var workDate: LocalDateTime?
+    open var workDate: OffsetDateTime?
         set(value): Unit = set(71, value)
-        get(): LocalDateTime? = get(71) as LocalDateTime?
+        get(): OffsetDateTime? = get(71) as OffsetDateTime?
 
-    open var workTime: LocalDateTime?
+    open var workTime: OffsetDateTime?
         set(value): Unit = set(72, value)
-        get(): LocalDateTime? = get(72) as LocalDateTime?
+        get(): OffsetDateTime? = get(72) as OffsetDateTime?
 
-    open var workStartDate: LocalDateTime?
+    open var workStartDate: OffsetDateTime?
         set(value): Unit = set(73, value)
-        get(): LocalDateTime? = get(73) as LocalDateTime?
+        get(): OffsetDateTime? = get(73) as OffsetDateTime?
 
-    open var workStartTime: LocalDateTime?
+    open var workStartTime: OffsetDateTime?
         set(value): Unit = set(74, value)
-        get(): LocalDateTime? = get(74) as LocalDateTime?
+        get(): OffsetDateTime? = get(74) as OffsetDateTime?
 
-    open var workEndTime: LocalDateTime?
+    open var workEndTime: OffsetDateTime?
         set(value): Unit = set(75, value)
-        get(): LocalDateTime? = get(75) as LocalDateTime?
+        get(): OffsetDateTime? = get(75) as OffsetDateTime?
 
-    open var workEndDate: LocalDateTime?
+    open var workEndDate: OffsetDateTime?
         set(value): Unit = set(76, value)
-        get(): LocalDateTime? = get(76) as LocalDateTime?
+        get(): OffsetDateTime? = get(76) as OffsetDateTime?
 
     open var workPlaceCode: String?
         set(value): Unit = set(77, value)
@@ -393,9 +393,9 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         set(value): Unit = set(92, value)
         get(): String? = get(92) as String?
 
-    open var endDate: LocalDateTime?
+    open var endDate: OffsetDateTime?
         set(value): Unit = set(93, value)
-        get(): LocalDateTime? = get(93) as LocalDateTime?
+        get(): OffsetDateTime? = get(93) as OffsetDateTime?
 
     open var total: Int?
         set(value): Unit = set(94, value)
@@ -409,17 +409,17 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
         set(value): Unit = set(96, value)
         get(): String? = get(96) as String?
 
-    open var createdDate: LocalDateTime?
+    open var createdDate: OffsetDateTime?
         set(value): Unit = set(97, value)
-        get(): LocalDateTime? = get(97) as LocalDateTime?
+        get(): OffsetDateTime? = get(97) as OffsetDateTime?
 
     open var createdBy: String?
         set(value): Unit = set(98, value)
         get(): String? = get(98) as String?
 
-    open var updatedDate: LocalDateTime?
+    open var updatedDate: OffsetDateTime?
         set(value): Unit = set(99, value)
-        get(): LocalDateTime? = get(99) as LocalDateTime?
+        get(): OffsetDateTime? = get(99) as OffsetDateTime?
 
     open var updatedBy: String?
         set(value): Unit = set(100, value)
@@ -440,7 +440,7 @@ open class WorkResultRecord() : UpdatableRecordImpl<WorkResultRecord>(WorkResult
     /**
      * Create a detached, initialised WorkResultRecord
      */
-    constructor(id: String? = null, objectId: Int? = null, androidId: String? = null, description: String? = null, grpDepartments: String? = null, departmentCode: String? = null, departmentName: String? = null, orderCode: String? = null, code: String? = null, customerCode: String? = null, itemCode: String? = null, itemName: String? = null, layerCode: String? = null, processCode: String? = null, processGrp: String? = null, processName: String? = null, processType: String? = null, equipmentCode: String? = null, equipmentName: String? = null, tapeLotNo: String? = null, completionType: String? = null, seidenNo: String? = null, version: String? = null, furimukouType: String? = null, isExclusiveOrException: Int? = null, excessFraction: Int? = null, direction: String? = null, itemQuantity: Int? = null, shipmentStatus: String? = null, actualResultCode: String? = null, actualResultDepartment: String? = null, summaryResultDate: LocalDateTime? = null, enterActualResultType: String? = null, actualResultType: String? = null, projectCheck_1: String? = null, projectCheck_2: String? = null, projectCheck_3: String? = null, companyCode: String? = null, workStartBy: String? = null, managerCode: String? = null, conversionFactor: BigDecimal? = null, lonQuantity: Int? = null, furimukouQuantity: Int? = null, errorItemQuantity: Int? = null, hifurimukouQuantity: Int? = null, inventoryItemQuantity: Int? = null, goodItemQuantity: Int? = null, regenerativeItemQuantity: Int? = null, totalItemQuantity: Int? = null, adjustmentItemQuantity: Int? = null, furimukouTapeQuantity: Int? = null, errorTapeQuantity: Int? = null, hifurimukouTapeQuantity: Int? = null, inventoryTapeQuantity: Int? = null, goodTapeQuantity: Int? = null, regenerativeTapeQuantity: Int? = null, totalTapeQuantity: Int? = null, adjustmentTapeQuantity: Int? = null, furimukouSheetQuantity: Int? = null, errorSheetQuantity: Int? = null, hifurimukouSheetQuantity: Int? = null, inventorySheetQuantity: Int? = null, goodSheetQuantity: Int? = null, regenerativeSheetQuantity: Int? = null, totalSheetQuantity: Int? = null, adjustmentSheetQuantity: Int? = null, shiftWork: String? = null, inputUnit: String? = null, workCode_1: String? = null, workCode_2: String? = null, workCode_3: String? = null, workDate: LocalDateTime? = null, workTime: LocalDateTime? = null, workStartDate: LocalDateTime? = null, workStartTime: LocalDateTime? = null, workEndTime: LocalDateTime? = null, workEndDate: LocalDateTime? = null, workPlaceCode: String? = null, workPlaceName: String? = null, team: String? = null, memoWork: String? = null, workType: String? = null, workImplementBy: String? = null, regenerativeCode: String? = null, regenerativeType: String? = null, regenerativeName: String? = null, regenerativeProcessCode: String? = null, regenerativeProcessName: String? = null, madeIn: String? = null, sheetFlag: String? = null, unfinishedQuantity: Int? = null, remediationDirectiveNumber: String? = null, deliverLotNo: String? = null, endDate: LocalDateTime? = null, total: Int? = null, price: BigDecimal? = null, specialItem: String? = null, createdDate: LocalDateTime? = null, createdBy: String? = null, updatedDate: LocalDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
+    constructor(id: String? = null, objectId: Int? = null, androidId: String? = null, description: String? = null, grpDepartments: String? = null, departmentCode: String? = null, departmentName: String? = null, orderCode: String? = null, code: String? = null, customerCode: String? = null, itemCode: String? = null, itemName: String? = null, layerCode: String? = null, processCode: String? = null, processGrp: String? = null, processName: String? = null, processType: String? = null, equipmentCode: String? = null, equipmentName: String? = null, tapeLotNo: String? = null, completionType: String? = null, seidenNo: String? = null, version: String? = null, furimukouType: String? = null, isExclusiveOrException: Int? = null, excessFraction: Int? = null, direction: String? = null, itemQuantity: Int? = null, shipmentStatus: String? = null, actualResultCode: String? = null, actualResultDepartment: String? = null, summaryResultDate: OffsetDateTime? = null, enterActualResultType: String? = null, actualResultType: String? = null, projectCheck_1: String? = null, projectCheck_2: String? = null, projectCheck_3: String? = null, companyCode: String? = null, workStartBy: String? = null, managerCode: String? = null, conversionFactor: BigDecimal? = null, lonQuantity: Int? = null, furimukouQuantity: Int? = null, errorItemQuantity: Int? = null, hifurimukouQuantity: Int? = null, inventoryItemQuantity: Int? = null, goodItemQuantity: Int? = null, regenerativeItemQuantity: Int? = null, totalItemQuantity: Int? = null, adjustmentItemQuantity: Int? = null, furimukouTapeQuantity: Int? = null, errorTapeQuantity: Int? = null, hifurimukouTapeQuantity: Int? = null, inventoryTapeQuantity: Int? = null, goodTapeQuantity: Int? = null, regenerativeTapeQuantity: Int? = null, totalTapeQuantity: Int? = null, adjustmentTapeQuantity: Int? = null, furimukouSheetQuantity: Int? = null, errorSheetQuantity: Int? = null, hifurimukouSheetQuantity: Int? = null, inventorySheetQuantity: Int? = null, goodSheetQuantity: Int? = null, regenerativeSheetQuantity: Int? = null, totalSheetQuantity: Int? = null, adjustmentSheetQuantity: Int? = null, shiftWork: String? = null, inputUnit: String? = null, workCode_1: String? = null, workCode_2: String? = null, workCode_3: String? = null, workDate: OffsetDateTime? = null, workTime: OffsetDateTime? = null, workStartDate: OffsetDateTime? = null, workStartTime: OffsetDateTime? = null, workEndTime: OffsetDateTime? = null, workEndDate: OffsetDateTime? = null, workPlaceCode: String? = null, workPlaceName: String? = null, team: String? = null, memoWork: String? = null, workType: String? = null, workImplementBy: String? = null, regenerativeCode: String? = null, regenerativeType: String? = null, regenerativeName: String? = null, regenerativeProcessCode: String? = null, regenerativeProcessName: String? = null, madeIn: String? = null, sheetFlag: String? = null, unfinishedQuantity: Int? = null, remediationDirectiveNumber: String? = null, deliverLotNo: String? = null, endDate: OffsetDateTime? = null, total: Int? = null, price: BigDecimal? = null, specialItem: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.objectId = objectId
         this.androidId = androidId

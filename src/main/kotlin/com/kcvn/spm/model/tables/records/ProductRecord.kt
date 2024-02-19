@@ -6,7 +6,7 @@ package com.kcvn.spm.model.tables.records
 
 import com.kcvn.spm.model.tables.Product
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 import org.jooq.Record1
 import org.jooq.impl.UpdatableRecordImpl
@@ -90,17 +90,17 @@ open class ProductRecord() : UpdatableRecordImpl<ProductRecord>(Product.PRODUCT)
         set(value): Unit = set(17, value)
         get(): String? = get(17) as String?
 
-    open var createdDate: LocalDateTime?
+    open var createdDate: OffsetDateTime?
         set(value): Unit = set(18, value)
-        get(): LocalDateTime? = get(18) as LocalDateTime?
+        get(): OffsetDateTime? = get(18) as OffsetDateTime?
 
     open var createdBy: String?
         set(value): Unit = set(19, value)
         get(): String? = get(19) as String?
 
-    open var updatedDate: LocalDateTime?
+    open var updatedDate: OffsetDateTime?
         set(value): Unit = set(20, value)
-        get(): LocalDateTime? = get(20) as LocalDateTime?
+        get(): OffsetDateTime? = get(20) as OffsetDateTime?
 
     open var updatedBy: String?
         set(value): Unit = set(21, value)
@@ -121,7 +121,7 @@ open class ProductRecord() : UpdatableRecordImpl<ProductRecord>(Product.PRODUCT)
     /**
      * Create a detached, initialised ProductRecord
      */
-    constructor(id: String? = null, name: String? = null, exportType: String? = null, size: String? = null, frame_1: String? = null, frame_2: String? = null, mold: String? = null, productLine: String? = null, srNosr: String? = null, pcsSh: Int? = null, shBlock: Int? = null, layerCount: Int? = null, ringJig: String? = null, process: Int? = null, snapMold: String? = null, tapeCommon: String? = null, tapeType: String? = null, productLayerDetail: String? = null, createdDate: LocalDateTime? = null, createdBy: String? = null, updatedDate: LocalDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
+    constructor(id: String? = null, name: String? = null, exportType: String? = null, size: String? = null, frame_1: String? = null, frame_2: String? = null, mold: String? = null, productLine: String? = null, srNosr: String? = null, pcsSh: Int? = null, shBlock: Int? = null, layerCount: Int? = null, ringJig: String? = null, process: Int? = null, snapMold: String? = null, tapeCommon: String? = null, tapeType: String? = null, productLayerDetail: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.name = name
         this.exportType = exportType

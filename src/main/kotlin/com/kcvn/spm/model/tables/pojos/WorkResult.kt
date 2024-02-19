@@ -6,7 +6,7 @@ package com.kcvn.spm.model.tables.pojos
 
 import java.io.Serializable
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 
 /**
@@ -47,7 +47,7 @@ data class WorkResult(
     var shipmentStatus: String? = null,
     var actualResultCode: String? = null,
     var actualResultDepartment: String? = null,
-    var summaryResultDate: LocalDateTime? = null,
+    var summaryResultDate: OffsetDateTime? = null,
     var enterActualResultType: String? = null,
     var actualResultType: String? = null,
     var projectCheck_1: String? = null,
@@ -87,12 +87,12 @@ data class WorkResult(
     var workCode_1: String? = null,
     var workCode_2: String? = null,
     var workCode_3: String? = null,
-    var workDate: LocalDateTime? = null,
-    var workTime: LocalDateTime? = null,
-    var workStartDate: LocalDateTime? = null,
-    var workStartTime: LocalDateTime? = null,
-    var workEndTime: LocalDateTime? = null,
-    var workEndDate: LocalDateTime? = null,
+    var workDate: OffsetDateTime? = null,
+    var workTime: OffsetDateTime? = null,
+    var workStartDate: OffsetDateTime? = null,
+    var workStartTime: OffsetDateTime? = null,
+    var workEndTime: OffsetDateTime? = null,
+    var workEndDate: OffsetDateTime? = null,
     var workPlaceCode: String? = null,
     var workPlaceName: String? = null,
     var team: String? = null,
@@ -109,13 +109,13 @@ data class WorkResult(
     var unfinishedQuantity: Int? = null,
     var remediationDirectiveNumber: String? = null,
     var deliverLotNo: String? = null,
-    var endDate: LocalDateTime? = null,
+    var endDate: OffsetDateTime? = null,
     var total: Int? = null,
     var price: BigDecimal? = null,
     var specialItem: String? = null,
-    var createdDate: LocalDateTime? = null,
+    var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
-    var updatedDate: LocalDateTime? = null,
+    var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")

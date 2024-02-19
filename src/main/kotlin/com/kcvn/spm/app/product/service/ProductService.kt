@@ -77,7 +77,7 @@ class ProductService(
                 val headerRow: Row = sheet.getRow(1)
                 val headerStyle = headerRow.getCell(11).cellStyle
                 for (col in productMapping.columns!!) {
-                    headerRow.createCell(headerCol).setCellValue(col.value)
+                    headerRow.createCell(headerCol).setCellValue(col.label)
                     headerRow.getCell(headerCol).cellStyle = headerStyle
                     headerCol++
                 }
@@ -125,8 +125,8 @@ class ProductService(
                 if (!productMapping.columns.isNullOrEmpty()) {
                     var cellIndex = 12
                     for (col in productMapping.columns!!) {
-                        val cellValue = item.lstProcess.find { x -> x.key == col.key }
-                        dataRow.createCell(cellIndex).setCellValue(cellValue?.value ?: "")
+                        val cellValue = item.lstProcess.find { x -> x.value == col.value }
+                        dataRow.createCell(cellIndex).setCellValue(cellValue?.label ?: "")
                         dataRow.getCell(cellIndex).cellStyle = style
                         cellIndex++
                     }
@@ -198,35 +198,35 @@ class ProductService(
             val name = ExcelHelper.getCellValue(row, 0)
             val messageResults = mutableListOf<String>()
             var check = true
-            if (!masterData.exportTypeSelections.any { x -> x.value == ExcelHelper.getCellValue(row, 1) }) {
+            if (!masterData.exportTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) }) {
                 check = false
                 messageResults.add("Loại xuất hàng không tồn tại")
             }
-            if (!masterData.frame1Selections.any { x -> x.value == ExcelHelper.getCellValue(row, 3) }) {
+            if (!masterData.frame1Selections.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
                 check = false
                 messageResults.add("Khung 1 không tồn tại")
             }
-            if (!masterData.frame2Selections.any { x -> x.value == ExcelHelper.getCellValue(row, 4) }) {
+            if (!masterData.frame2Selections.any { x -> x.label == ExcelHelper.getCellValue(row, 4) }) {
                 check = false
                 messageResults.add("Khung 2 không tồn tại")
             }
-            if (!masterData.moldSelections.any { x -> x.value == ExcelHelper.getCellValue(row, 5) }) {
+            if (!masterData.moldSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
                 check = false
                 messageResults.add("Khuôn đục không tồn tại")
             }
-            if (!masterData.srNosrSelections.any { x -> x.value == ExcelHelper.getCellValue(row, 7) }) {
+            if (!masterData.srNosrSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 7) }) {
                 check = false
                 messageResults.add("S.R/No S.R không tồn tại")
             }
-            if (!masterData.ringJigSelections.any { x -> x.value == ExcelHelper.getCellValue(row, 11) }) {
+            if (!masterData.ringJigSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 11) }) {
                 check = false
                 messageResults.add("RING/JIG không tồn tại")
             }
-            if (!masterData.tapeCommonSelections.any { x -> x.value == ExcelHelper.getCellValue(row, 14) }) {
+            if (!masterData.tapeCommonSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 14) }) {
                 check = false
                 messageResults.add("Tape dùng chung không tồn tại")
             }
-            if (!masterData.tapeTypeSelections.any { x -> x.value == ExcelHelper.getCellValue(row, 15) }) {
+            if (!masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 15) }) {
                 check = false
                 messageResults.add("Loại tape không tồn tại")
             }

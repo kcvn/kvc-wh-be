@@ -8,7 +8,7 @@ import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.SYNC_HISTORY_PKEY
 import com.kcvn.spm.model.tables.records.SyncHistoryRecord
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.function.Function
 
 import org.jooq.Field
@@ -65,7 +65,7 @@ open class SyncHistory(
     /**
      * The column <code>public.sync_history.id</code>.
      */
-    val ID: TableField<SyncHistoryRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR.nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
+    val ID: TableField<SyncHistoryRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.sync_history.source</code>.
@@ -85,22 +85,22 @@ open class SyncHistory(
     /**
      * The column <code>public.sync_history.created_date</code>.
      */
-    val CREATED_DATE: TableField<SyncHistoryRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+    val CREATED_DATE: TableField<SyncHistoryRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.sync_history.created_by</code>.
      */
-    val CREATED_BY: TableField<SyncHistoryRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val CREATED_BY: TableField<SyncHistoryRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
      * The column <code>public.sync_history.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<SyncHistoryRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val UPDATED_DATE: TableField<SyncHistoryRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.sync_history.updated_by</code>.
      */
-    val UPDATED_BY: TableField<SyncHistoryRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR, this, "")
+    val UPDATED_BY: TableField<SyncHistoryRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.sync_history.is_deleted</code>.
@@ -150,16 +150,16 @@ open class SyncHistory(
     // -------------------------------------------------------------------------
     // Row9 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row9<String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?> = super.fieldsRow() as Row9<String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row9<String?, String?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row9<String?, String?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

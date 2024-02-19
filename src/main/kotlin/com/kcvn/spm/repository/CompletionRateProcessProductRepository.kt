@@ -15,6 +15,7 @@ import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
@@ -54,10 +55,10 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .set(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT, data.productNameShortcut)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.RATE, data.rate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE, data.layerCode)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
+            .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .set(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE, data.expirationDate)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE, LocalDateTime.now(ZoneOffset.UTC))
+            .set(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE, data.processCode)
             .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(data.id))
             .returningResult(COMPLETION_RATE_PROCESS_PRODUCT)
@@ -156,10 +157,10 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                     data.processCode,
                     data.layerCode,
                     data.rate,
-                    data.createdDate ?: LocalDateTime.now(),
+                    data.createdDate ?: OffsetDateTime.now(),
                     data.createdBy ?: "SYSTEM",
                     data.isDeleted ?: false,
-                    data.updatedDate ?: LocalDateTime.now(),
+                    data.updatedDate ?: OffsetDateTime.now(),
                     data.expirationDate ?: null,
                     data.effectiveDate
                 )

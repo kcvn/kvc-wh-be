@@ -1,14 +1,11 @@
 package com.kcvn.spm.app.completionrate.service
 
-import com.kcvn.spm.app.completionrate.payload.model.LayerImportCompletionRateProductModel
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
-import com.kcvn.spm.app.product.payload.model.LayerImportProductModel
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
-import com.kcvn.spm.common.helper.jsonhelper.JsonConvert
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -16,14 +13,12 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
-import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.repository.CompletionRateProcessProductRepository
 import com.kcvn.spm.repository.CompletionRateProcessRepository
 import com.kcvn.spm.repository.CompletionRateProductRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import org.jooq.tools.csv.CSVReader
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -31,12 +26,8 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.io.InputStreamReader
 import java.math.BigDecimal
-import java.math.BigInteger
-import java.nio.charset.StandardCharsets
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.OffsetDateTime
 
 @Service
 @Transactional
@@ -307,7 +298,7 @@ class CompletionRateService(
         )
     }
 
-    fun importExcelCompletionRateProcess(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?) : BaseResponse<FileContentModel> {
+    fun importExcelCompletionRateProcess(file: MultipartFile, effectiveDate: OffsetDateTime, expirationDate: OffsetDateTime?) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -317,7 +308,6 @@ class CompletionRateService(
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
         var count = 0
-        val currentDate = LocalDateTime.now(ZoneOffset.UTC)
         val total = sheet.lastRowNum - rowIndex
 
         val headerCell = sheet.first().lastCellNum + 0
@@ -343,10 +333,6 @@ class CompletionRateService(
             val productExist = productExists.find { x -> x.key == key }
 
             val processExist = processCodeExist.find { x -> x == key.take(6) }
-            if (effectiveDate <= currentDate) {
-                errorMessages.add("Ngày áp dụng phải lớn hơn ngày hiện tại")
-
-            }
             if(processExist == null){
                 errorMessages.add("Mã công đoạn không tồn tại")
             }
@@ -441,7 +427,7 @@ class CompletionRateService(
 
 
 
-    fun importExcelProcessProduct(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?): BaseResponse<FileContentModel>{
+    fun importExcelProcessProduct(file: MultipartFile, effectiveDate: OffsetDateTime, expirationDate: OffsetDateTime?): BaseResponse<FileContentModel>{
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -451,8 +437,6 @@ class CompletionRateService(
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)
         val processCodeExist = processProcedureStructureRepository.getListProcessCode()
-        val currentDate = LocalDateTime.now(ZoneOffset.UTC)
-
 
         var count = 0
         val total = sheet.lastRowNum - rowIndex
@@ -478,10 +462,6 @@ class CompletionRateService(
             val productExist = productExists.find { x -> x.key == key }
 
             val processExist = processCodeExist.find {x -> x == key.substring(7, 13)}
-            if (effectiveDate <= currentDate) {
-                errorMessages.add("Ngày áp dụng phải lớn hơn ngày hiện tại")
-
-            }
             if(processExist == null){
                 errorMessages.add("Mã công đoạn không phù hợp")
             }

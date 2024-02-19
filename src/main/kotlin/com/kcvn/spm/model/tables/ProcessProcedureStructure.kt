@@ -9,7 +9,7 @@ import com.kcvn.spm.model.keys.PROCESS_PROCEDURE_STRUCTURE_PKEY
 import com.kcvn.spm.model.tables.records.ProcessProcedureStructureRecord
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 import org.jooq.Field
 import org.jooq.ForeignKey
@@ -262,7 +262,7 @@ open class ProcessProcedureStructure(
     /**
      * The column <code>public.process_procedure_structure.created_date</code>.
      */
-    val CREATED_DATE: TableField<ProcessProcedureStructureRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+    val CREATED_DATE: TableField<ProcessProcedureStructureRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.process_procedure_structure.created_by</code>.
@@ -272,7 +272,7 @@ open class ProcessProcedureStructure(
     /**
      * The column <code>public.process_procedure_structure.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<ProcessProcedureStructureRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val UPDATED_DATE: TableField<ProcessProcedureStructureRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.process_procedure_structure.updated_by</code>.

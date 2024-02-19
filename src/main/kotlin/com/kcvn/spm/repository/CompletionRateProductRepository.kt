@@ -10,7 +10,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
@@ -106,10 +106,10 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                 .values(
                     data.productName,
                     data.rate,
-                    data.createdDate ?: LocalDateTime.now(),
+                    data.createdDate ?: OffsetDateTime.now(),
                     data.createdBy ?: "SYSTEM",
                     data.isDeleted ?: false,
-                    data.updatedDate ?: LocalDateTime.now()
+                    data.updatedDate ?: OffsetDateTime.now()
                 )
                 .returningResult(COMPLETION_RATE_PRODUCT)
                 .fetchOne()
@@ -124,7 +124,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             .set(COMPLETION_RATE_PRODUCT.PRODUCT_NAME, data.productName)
             .set(COMPLETION_RATE_PRODUCT.RATE, data.rate)
             .set(COMPLETION_RATE_PRODUCT.CREATED_DATE, data.createdDate)
-            .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
+            .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .set(COMPLETION_RATE_PRODUCT.IS_DELETED, data.isDeleted)
             .where(COMPLETION_RATE_PRODUCT.ID.eq(data.id)) // Assuming ID is the primary key

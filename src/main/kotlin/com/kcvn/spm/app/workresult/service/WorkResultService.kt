@@ -88,8 +88,18 @@ class WorkResultService (
     }
 
 
-    fun getListProcessByGroupCode(groupCode: Array<String>): List<ProcessResponse> {
-        return workResultRep.getListProcessByGroupCode(groupCode)
+    fun getListProcessByGroupCode(groupCode: Array<String>): BaseResponse<List<DropdownResponse>> {
+        val listProcessByGroupCode = workResultRep.getListProcessByGroupCode(groupCode)
+
+        // Map each ProcessResponse to a DropdownResponse
+        val dropDownList: List<DropdownResponse> = listProcessByGroupCode.map { processResponse ->
+            DropdownResponse(
+                processResponse.processCode,
+                "${processResponse.processCode} - ${processResponse.processName}"
+            )
+        }
+
+        return BaseResponse(data = dropDownList, message = "List Process")
     }
 
     fun exportExcel(request: WorkResultSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {

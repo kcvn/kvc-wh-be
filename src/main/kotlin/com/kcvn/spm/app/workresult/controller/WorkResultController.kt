@@ -47,9 +47,9 @@ class WorkResultController (
     }
 
     @GetMapping("get-list-process-by-group-code")
-    fun getListProcessByGroupCode(groupCode: Array<String>) : ResponseEntity<List<ProcessResponse>>{
+    fun getListProcessByGroupCode(groupCode: Array<String>) : ResponseEntity<BaseResponse<List<DropdownResponse>>>{
         val data = workResultService.getListProcessByGroupCode(groupCode)
-        return ResponseEntity<List<ProcessResponse>>(data, HttpStatus.OK)
+        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 
     @GetMapping("export-excel")

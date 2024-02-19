@@ -31,15 +31,19 @@ class WorkResultRepository (
                 condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
 
             if(!request.listProcessGroup.isNullOrEmpty()) {
+                var condition1 : Condition = DSL.noCondition()
                 request.listProcessGroup?.forEach { processGroup ->
-                    condition = condition.or(WORK_RESULT.PROCESS_GRP.eq(processGroup))
+                    condition1 = condition1.or(WORK_RESULT.PROCESS_GRP.eq(processGroup))
                 }
+                condition = condition.and(condition1)
             }
 
             if(!request.listProcessCode.isNullOrEmpty()){
+                var condition2 : Condition = DSL.noCondition()
                 request.listProcessCode?.forEach { processCode ->
-                    condition = condition.or(WORK_RESULT.PROCESS_CODE.eq(processCode))
+                    condition2 = condition2.or(WORK_RESULT.PROCESS_CODE.eq(processCode))
                 }
+                condition = condition.and(condition2)
             }
 
             if(!request.tapeLot.isNullOrEmpty())

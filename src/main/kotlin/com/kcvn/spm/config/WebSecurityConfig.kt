@@ -87,6 +87,7 @@ class WebSecurityConfig(
                     .requestMatchers("/api/product-process/**").authenticated()
                     .requestMatchers("/api/work-result/**").authenticated()
                     .requestMatchers("/api/completion-rate/**").authenticated()
+                    .requestMatchers("/api/order/**").authenticated()
                     .anyRequest().permitAll()
             }
             .authenticationProvider(authenticationProvider())

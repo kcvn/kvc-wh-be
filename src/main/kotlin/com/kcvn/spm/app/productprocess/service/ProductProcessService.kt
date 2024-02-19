@@ -1,5 +1,6 @@
 package com.kcvn.spm.sample.service
 
+import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
@@ -24,7 +25,8 @@ import java.io.FileInputStream
 @Service
 @Transactional
 class ProductProcessService(
-    private val productProcessRep : ProductProcessRepository
+    private val productProcessRep : ProductProcessRepository,
+    private val masterDataService : MasterDataService
 ) {
     fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse>
     {
@@ -130,7 +132,7 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "Danh_sach_cong_doan.xlsx",
+            fileName = CommonUtils.getMessage("export.excel.process"),
             contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
@@ -167,6 +169,8 @@ class ProductProcessService(
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 
+        val masterData = masterDataService.getMasterDataSelection()
+
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
 
@@ -187,23 +191,57 @@ class ProductProcessService(
             var check = true
             if(row.getCell(0) == null){
                 check = false
-                messageResults.add("Tên sản phẩm không được để trống")
+                messageResults.add(CommonUtils.getMessage("validate.excel.product.null"))
             }
             if(row.getCell(1) == null){
                 check = false
-                messageResults.add("Mã công đoạn không được để trống")
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.code.null"))
             }
             if(row.getCell((2)) == null){
                 check = false
-                messageResults.add("Lớp số không được để trống")
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.null"))
             }
             if(row.getCell(3) == null){
                 check = false
-                messageResults.add("Mã chuyển đổi không được để trống")
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.null"))
             }
             if(row.getCell(5) == null){
                 check = false
-                messageResults.add("Mã thống kê không được để trống")
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.null"))
+            }
+
+            if(row.getCell(0) != null && row.getCell(0).stringCellValue.length > 60){
+                check = false
+                messageResults.add(CommonUtils.getMessage("validate.excel.product.length"))
+            }
+            if(row.getCell(1) !=null && row.getCell(1).stringCellValue.length > 6){
+                check = false
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.code.length"))
+            }
+            if(row.getCell((2)) != null && row.getCell(2).stringCellValue.length > 2){
+                check = false
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.length"))
+            }
+            if(row.getCell(3) != null && row.getCell(3).stringCellValue.length > 10){
+                check = false
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.length"))
+            }
+            if(row.getCell(4) != null && row.getCell(4).stringCellValue.length > 10){
+                check = false
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.inventory.code.length"))
+            }
+            if(row.getCell(5) != null && row.getCell(5).stringCellValue.length > 10){
+                check = false
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.length"))
+            }
+
+            if (!masterData.processConvertCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
+                check = false
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.does.not.exist"))
+            }
+            if (!masterData.processStatisticCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
+                check = false
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.inventory.code.does.not.exist"))
             }
 
            try {
@@ -215,7 +253,7 @@ class ProductProcessService(
                    )
                    val query = productProcessRep.getProductByFilter(filter)
                    if(query == null){
-                       messageResults.add("Không tìm thấy dữ liệu vui lòng kiểm tra lại")
+                       messageResults.add(CommonUtils.getMessage("validate.excel.process.data.null"))
                    }
                    else {
                        val requestImportUpdate = ProductProcess(
@@ -231,7 +269,7 @@ class ProductProcessService(
                }
            }
            catch (e: Exception){
-               messageResults.add("Có lỗi xảy ra khi cập nhật dữ liệu công đoạn")
+               messageResults.add(CommonUtils.getMessage("validate.excel.process.data.update.err"))
            }
             val result = messageResults.joinToString(separator = "; ")
 
@@ -249,7 +287,7 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "Ket_qua_import_cong_doan.xlsx",
+            fileName = CommonUtils.getMessage("export.excel.result.import"),
             contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )

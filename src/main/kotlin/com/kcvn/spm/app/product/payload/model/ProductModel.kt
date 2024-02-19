@@ -1,8 +1,8 @@
-package com.kcvn.spm.app.product.payload.response
+package com.kcvn.spm.app.product.payload.model
 
-import com.kcvn.spm.common.payload.DropdownResponse
+import com.kcvn.spm.common.payload.KeyValueResponse
 
-data class ProductResponse (
+data class ProductModel (
     var id: String? = null,
     var name: String? = null,
     var exportType: String? = null,
@@ -22,5 +22,5 @@ data class ProductResponse (
     var completionRate: Double? = 0.0,
     var productLayerDetail: String? = null,
     var process : Int? = 0,
-    var lstProcess: List<DropdownResponse> = listOf()
+    var lstProcess: List<KeyValueResponse> = listOf()
 )

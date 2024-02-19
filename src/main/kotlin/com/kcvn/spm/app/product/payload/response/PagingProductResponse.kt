@@ -1,8 +1,9 @@
 package com.kcvn.spm.app.product.payload.response
 
+import com.kcvn.spm.app.product.payload.model.ProductModel
 import com.kcvn.spm.common.payload.BasePagingResponse
-import com.kcvn.spm.common.payload.DropdownResponse
+import com.kcvn.spm.common.payload.KeyValueResponse
 
 data class PagingProductResponse (
-    var columns: List<DropdownResponse>? = null
-) : BasePagingResponse<ProductResponse>()
+    var columns: List<KeyValueResponse>? = null
+) : BasePagingResponse<ProductModel>()

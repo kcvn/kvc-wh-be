@@ -4,12 +4,13 @@ import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.product.payload.model.LayerImportProductModel
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
-import com.kcvn.spm.app.product.payload.response.ProductResponse
+import com.kcvn.spm.app.product.payload.model.ProductModel
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
 import com.kcvn.spm.common.helper.jsonhelper.JsonConvert
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
+import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Product
@@ -77,7 +78,7 @@ class ProductService(
                 val headerRow: Row = sheet.getRow(1)
                 val headerStyle = headerRow.getCell(11).cellStyle
                 for (col in productMapping.columns!!) {
-                    headerRow.createCell(headerCol).setCellValue(col.label)
+                    headerRow.createCell(headerCol).setCellValue(col.value)
                     headerRow.getCell(headerCol).cellStyle = headerStyle
                     headerCol++
                 }
@@ -125,8 +126,8 @@ class ProductService(
                 if (!productMapping.columns.isNullOrEmpty()) {
                     var cellIndex = 12
                     for (col in productMapping.columns!!) {
-                        val cellValue = item.lstProcess.find { x -> x.value == col.value }
-                        dataRow.createCell(cellIndex).setCellValue(cellValue?.label ?: "")
+                        val cellValue = item.lstProcess.find { x -> x.key == col.key }
+                        dataRow.createCell(cellIndex).setCellValue(cellValue?.value ?: "")
                         dataRow.getCell(cellIndex).cellStyle = style
                         cellIndex++
                     }
@@ -337,7 +338,7 @@ class ProductService(
         val processGroups = productProcesses.groupBy { x -> Pair(x.productCode, x.processCode) }
 
         val response = PagingProductResponse()
-        response.data = products.map { x -> ProductResponse(
+        response.data = products.map { x -> ProductModel(
             id = x.id,
             name = x.name,
             exportType = x.exportType,
@@ -355,10 +356,10 @@ class ProductService(
             tapeCommon = x.tapeCommon,
             tapeType = x.tapeType,
             completionRate = (completionRates.find { m -> m.productName == x.name }?.rate ?: 0.0).toDouble(),
-            lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> DropdownResponse(m.key.second, m.value.size.toString()) }
+            lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> KeyValueResponse(m.key.second, m.value.size.toString()) }
         ) }
 
-        response.columns = productProcesses.map { x -> DropdownResponse(x.processCode,x.processCode) }.distinct()
+        response.columns = productProcesses.map { x -> KeyValueResponse(x.processCode,x.processCode) }.distinct()
 
         return response
     }

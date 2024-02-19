@@ -8,6 +8,7 @@ import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 
@@ -24,6 +25,7 @@ import org.jooq.impl.Internal
 val IDX_UNIQUE_COMPLETION_RATE_PROCESS: Index = Internal.createIndex(DSL.name("idx_unique_completion_rate_process"), CompletionRateProcess.COMPLETION_RATE_PROCESS, arrayOf(CompletionRateProcess.COMPLETION_RATE_PROCESS.KEY, CompletionRateProcess.COMPLETION_RATE_PROCESS.PROCESS_CODE, CompletionRateProcess.COMPLETION_RATE_PROCESS.LAYER_CODE), true)
 val IDX_UNIQUE_COMPLETION_RATE_PROCESS_PRODUCT: Index = Internal.createIndex(DSL.name("idx_unique_completion_rate_process_product"), CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT, arrayOf(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.KEY, CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT, CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE, CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE), true)
 val IDX_UNIQUE_COMPLETION_RATE_PRODUCT: Index = Internal.createIndex(DSL.name("idx_unique_completion_rate_product"), CompletionRateProduct.COMPLETION_RATE_PRODUCT, arrayOf(CompletionRateProduct.COMPLETION_RATE_PRODUCT.PRODUCT_NAME), true)
+val IDX_UNIQUE_ORDER: Index = Internal.createIndex(DSL.name("idx_unique_order"), Order.ORDER, arrayOf(Order.ORDER.ORDER_CODE, Order.ORDER.START_DATE, Order.ORDER.END_DATE, Order.ORDER.VERSION), true)
 val IDX_UNIQUE_PRODUCT_NAME: Index = Internal.createIndex(DSL.name("idx_unique_product_name"), Product.PRODUCT, arrayOf(Product.PRODUCT.NAME), true)
 val IDX_UNIQUE_PRODUCT_PROCESS: Index = Internal.createIndex(DSL.name("idx_unique_product_process"), ProductProcess.PRODUCT_PROCESS, arrayOf(ProductProcess.PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID), true)
 val IDX_UNIQUE_TYPE_VALUE: Index = Internal.createIndex(DSL.name("idx_unique_type_value"), CommonCategory.COMMON_CATEGORY, arrayOf(CommonCategory.COMMON_CATEGORY.TYPE, CommonCategory.COMMON_CATEGORY.VALUE), true)

@@ -241,7 +241,7 @@ class ProductProcessService(
             }
             if (!masterData.processStatisticCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.inventory.code.does.not.exist"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.does.not.exist"))
             }
 
            try {

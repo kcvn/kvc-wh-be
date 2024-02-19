@@ -206,7 +206,7 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "Ket_qua_import_san_pham.xlsx",
+            fileName = "Ket_qua_import_ti_le_dat_san_pham.xlsx",
             contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
@@ -309,6 +309,7 @@ class CompletionRateService(
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
         var count = 0
         val total = sheet.lastRowNum - rowIndex
+        val currentDate =OffsetDateTime.now();
 
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
@@ -333,6 +334,10 @@ class CompletionRateService(
             val productExist = productExists.find { x -> x.key == key }
 
             val processExist = processCodeExist.find { x -> x == key.take(6) }
+            if (effectiveDate <= currentDate) {
+                errorMessages.add("Ngày áp dụng phải lớn hơn ngày hiện tại")
+
+            }
             if(processExist == null){
                 errorMessages.add("Mã công đoạn không tồn tại")
             }
@@ -391,7 +396,7 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "Ket_qua_import_san_pham.xlsx",
+            fileName = "Ket_qua_import_ti_le_dat_quy_trinh.xlsx",
             contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
@@ -437,7 +442,7 @@ class CompletionRateService(
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)
         val processCodeExist = processProcedureStructureRepository.getListProcessCode()
-
+        val currentDate =OffsetDateTime.now();
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 
@@ -464,6 +469,10 @@ class CompletionRateService(
             val processExist = processCodeExist.find {x -> x == key.substring(7, 13)}
             if(processExist == null){
                 errorMessages.add("Mã công đoạn không phù hợp")
+            }
+            if (effectiveDate <= currentDate) {
+                errorMessages.add("Ngày áp dụng phải lớn hơn ngày hiện tại")
+
             }
             if (productExist == null) {
                 if (key.length != 14) {
@@ -522,7 +531,7 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "Ket_qua_import_san_pham.xlsx",
+            fileName = "Ket_qua_import_san_pham_cong_doan.xlsx",
             contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )

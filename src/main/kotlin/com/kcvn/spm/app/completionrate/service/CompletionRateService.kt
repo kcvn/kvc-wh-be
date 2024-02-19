@@ -44,6 +44,25 @@ class CompletionRateService(
     private val completionRateProcessRepository: CompletionRateProcessRepository
 ) {
 
+    fun downloadTemplate() : BaseResponse<FileContentModel> {
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
+        val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = "ImportCompletionTemplate.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content = excelBytes
+        )
+
+        return BaseResponse(response)
+    }
+
+
     //Service Product
 
     fun exportCompletionRateProductExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
@@ -210,9 +229,9 @@ class CompletionRateService(
     // Service Process
 
     fun exportCompletionRateProcessExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
-        val products = completionRateProcessRepository.findByKeywordPaginated(search, pageable)
+        val products = completionRateProcessRepository.getPaginatedCompletionRateProcesses(search, pageable)
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx")
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompletionRateProcessTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
@@ -236,8 +255,18 @@ class CompletionRateService(
                 dataRow.createCell(0).setCellValue(item.key)
                 dataRow.getCell(0).cellStyle = style
 
-                dataRow.createCell(1).setCellValue(item.rate.toString())
+
+                dataRow.createCell(1).setCellValue(item.processCode)
                 dataRow.getCell(1).cellStyle = style
+
+                dataRow.createCell(2).setCellValue(item.processName)
+                dataRow.getCell(2).cellStyle = style
+
+                dataRow.createCell(3).setCellValue(item.processNameJp)
+                dataRow.getCell(3).cellStyle = style
+
+                dataRow.createCell(4).setCellValue(item.rate.toString()+"%")
+                dataRow.getCell(4).cellStyle = style
 
 
             }
@@ -268,7 +297,8 @@ class CompletionRateService(
                     processCode = item.processCode,
                     layerCode = item.layerCode,
                     rate = item.rate,
-
+                    processName = item.processName,
+                    processNameJp =item.processNameJp
                     )
             }, result.second
         )
@@ -386,12 +416,16 @@ class CompletionRateService(
                     productNameShortcut = item.productNameShortcut,
                     processCode = item.processCode,
                     layerCode = item.layerCode,
-                    rate = item.rate
+                    rate = item.rate,
+                    processName = item.processName,
+                    processNameJp = item.processNameJp
 
                 )
             }, result.second
         )
     }
+
+
 
     fun importExcelProcessProduct(file: MultipartFile, effectiveDate: OffsetDateTime, expirationDate: OffsetDateTime?): BaseResponse<FileContentModel>{
         val workbook = WorkbookFactory.create(file.inputStream)
@@ -497,10 +531,10 @@ class CompletionRateService(
 
 
 
-    fun exportCompletionRateProcessProductExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
-        val processproducts = completionRateProcessProductRepository.findByKeywordPaginated(search, pageable)
+    fun exportCompletionRateProcessProductExcel(search: CompletionRateProcessProductRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
+        val processproducts = completionRateProcessProductRepository.getPaginatedCompletionRateProcessesProduct(search, pageable)
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx")
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompletionProcessProductRateTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
@@ -524,7 +558,19 @@ class CompletionRateService(
                 dataRow.createCell(0).setCellValue(item.key)
                 dataRow.getCell(0).cellStyle = style
 
-                dataRow.createCell(1).setCellValue(item.rate.toString())
+                dataRow.createCell(1).setCellValue(item.processCode)
+                dataRow.getCell(1).cellStyle = style
+
+                dataRow.createCell(2).setCellValue(item.processName)
+                dataRow.getCell(2).cellStyle = style
+
+                dataRow.createCell(3).setCellValue(item.processNameJp)
+                dataRow.getCell(3).cellStyle = style
+
+                dataRow.createCell(4).setCellValue(item.layerCode)
+                dataRow.getCell(4).cellStyle = style
+
+                dataRow.createCell(1).setCellValue(item.rate.toString()+"%")
                 dataRow.getCell(1).cellStyle = style
 
 

@@ -9,7 +9,7 @@ import com.kcvn.spm.model.indexes.IDX_UNIQUE_TYPE_VALUE
 import com.kcvn.spm.model.keys.COMMON_CATEGORY_PKEY
 import com.kcvn.spm.model.tables.records.CommonCategoryRecord
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.function.Function
 
 import kotlin.collections.List
@@ -94,7 +94,7 @@ open class CommonCategory(
     /**
      * The column <code>public.common_category.created_date</code>.
      */
-    val CREATED_DATE: TableField<CommonCategoryRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+    val CREATED_DATE: TableField<CommonCategoryRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.common_category.created_by</code>.
@@ -104,7 +104,7 @@ open class CommonCategory(
     /**
      * The column <code>public.common_category.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<CommonCategoryRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val UPDATED_DATE: TableField<CommonCategoryRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.common_category.updated_by</code>.
@@ -160,16 +160,16 @@ open class CommonCategory(
     // -------------------------------------------------------------------------
     // Row10 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row10<String?, String?, String?, String?, Int?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?> = super.fieldsRow() as Row10<String?, String?, String?, String?, Int?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row10<String?, String?, String?, String?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row10<String?, String?, String?, String?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, Int?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, Int?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

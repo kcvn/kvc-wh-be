@@ -1,6 +1,6 @@
 package com.kcvn.spm.app.workresult.payload.request
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 class WorkResultSearchRequest {
     var order : String ? = null
@@ -9,6 +9,6 @@ class WorkResultSearchRequest {
     var listProcessName : Array<String>? = null
     var tapeLot : String? = null
     var code : String? = null
-    var fromDate : LocalDateTime? = null
-    var toDate : LocalDateTime? = null
+    var fromDate : OffsetDateTime? = null
+    var toDate : OffsetDateTime? = null
 }

@@ -14,7 +14,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
@@ -55,7 +55,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .set(COMPLETION_RATE_PROCESS_PRODUCT.RATE, data.rate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.CREATED_DATE, data.createdDate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE, data.layerCode)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
+            .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .set(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED, data.isDeleted)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE, data.expirationDate)
@@ -109,8 +109,8 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .from(
                 COMPLETION_RATE_PROCESS_PRODUCT.join(
                     PROCESS_PROCEDURE_STRUCTURE.join(PRODUCT_PROCESS)
-                .on(PROCESS_PROCEDURE_STRUCTURE.ID.eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)))
-                .on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE)))
+                .on(PROCESS_PROCEDURE_STRUCTURE.ID.eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+                .on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE)).and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
             .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE))
             .limit(pageable?.pageSize ?: 10)
@@ -134,23 +134,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
         }
     }
 
-    fun getAllProducts(): List<CompletionRateProcessProduct> {
-        return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
-            .fetchInto(CompletionRateProcessProduct::class.java)
-    }
 
-    fun findByObjectId(objectId: String): CompletionRateProcessProduct? {
-        return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
-            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(objectId))
-            .fetchInto(CompletionRateProcessProduct::class.java)
-            .firstOrNull()
-    }
-
-    fun findByObjectId(objectIds: List<String>): List<CompletionRateProcessProduct> {
-        return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
-            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.`in`(objectIds).and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
-            .fetchInto(CompletionRateProcessProduct::class.java)
-    }
 
     fun add(data: CompletionRateProcessProduct) : CompletionRateProcessProduct? {
         return try {
@@ -176,10 +160,10 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                     data.processCode,
                     data.layerCode,
                     data.rate,
-                    data.createdDate ?: LocalDateTime.now(),
+                    data.createdDate ?: OffsetDateTime.now(),
                     data.createdBy ?: "SYSTEM",
                     data.isDeleted ?: false,
-                    data.updatedDate ?: LocalDateTime.now(),
+                    data.updatedDate ?: OffsetDateTime.now(),
                     data.expirationDate ?: null,
                     data.effectiveDate
                 )

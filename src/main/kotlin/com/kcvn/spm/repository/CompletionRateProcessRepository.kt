@@ -14,7 +14,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
@@ -80,8 +80,8 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             PRODUCT_PROCESS.PROCESS_NAME_JP
         )
             .from(COMPLETION_RATE_PROCESS.join(PROCESS_PROCEDURE_STRUCTURE.join(PRODUCT_PROCESS)
-                .on(PROCESS_PROCEDURE_STRUCTURE.ID.eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)))
-                .on(COMPLETION_RATE_PROCESS.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE)))
+                .on(PROCESS_PROCEDURE_STRUCTURE.ID.eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+                .on(COMPLETION_RATE_PROCESS.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE)).and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
             .where(condition.and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS.UPDATED_DATE))
             .limit(pageable?.pageSize ?: 10)
@@ -142,10 +142,10 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
                      data.processCode,
                      data.layerCode,
                      data.rate,
-                     data.createdDate ?: LocalDateTime.now(ZoneOffset.UTC),
+                     data.createdDate ?: OffsetDateTime.now(ZoneOffset.UTC),
                      data.createdBy ?: "admin",
                      data.isDeleted ?: false,
-                     data.updatedDate ?: LocalDateTime.now(ZoneOffset.UTC),
+                     data.updatedDate ?: OffsetDateTime.now(ZoneOffset.UTC),
                      data.expirationDate,
                      data.effectiveDate
                 )
@@ -172,7 +172,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             .set(COMPLETION_RATE_PROCESS.RATE, data.rate)
             .set(COMPLETION_RATE_PROCESS.CREATED_DATE, data.createdDate)
             .set(COMPLETION_RATE_PROCESS.LAYER_CODE, data.layerCode)
-            .set(COMPLETION_RATE_PROCESS.UPDATED_DATE, LocalDateTime.now(ZoneOffset.UTC))
+            .set(COMPLETION_RATE_PROCESS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .set(COMPLETION_RATE_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .set(COMPLETION_RATE_PROCESS.IS_DELETED, data.isDeleted)
             .set(COMPLETION_RATE_PROCESS.EXPIRATION_DATE, data.expirationDate)

@@ -7,7 +7,7 @@ package com.kcvn.spm.model.tables.records
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 import org.jooq.Record1
 import org.jooq.impl.UpdatableRecordImpl
@@ -163,17 +163,17 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
         set(value): Unit = set(34, value)
         get(): String? = get(34) as String?
 
-    open var createdDate: LocalDateTime?
+    open var createdDate: OffsetDateTime?
         set(value): Unit = set(35, value)
-        get(): LocalDateTime? = get(35) as LocalDateTime?
+        get(): OffsetDateTime? = get(35) as OffsetDateTime?
 
     open var createdBy: String?
         set(value): Unit = set(36, value)
         get(): String? = get(36) as String?
 
-    open var updatedDate: LocalDateTime?
+    open var updatedDate: OffsetDateTime?
         set(value): Unit = set(37, value)
-        get(): LocalDateTime? = get(37) as LocalDateTime?
+        get(): OffsetDateTime? = get(37) as OffsetDateTime?
 
     open var updatedBy: String?
         set(value): Unit = set(38, value)
@@ -194,7 +194,7 @@ open class ProcessProcedureStructureRecord() : UpdatableRecordImpl<ProcessProced
     /**
      * Create a detached, initialised ProcessProcedureStructureRecord
      */
-    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, remediationDirectiveNumber: String? = null, productCode: String? = null, layerCode: String? = null, processCode: String? = null, processSequence: Int? = null, processSequenceRev: Int? = null, machiningSequenceRev: String? = null, completionRate: BigDecimal? = null, finishedProductRate: BigDecimal? = null, printType: String? = null, processType: String? = null, displayProcessSequence: Int? = null, inputSystem: String? = null, isActualResult: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, standardProcedureType: String? = null, grpCheckProcess: String? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null, createdDate: LocalDateTime? = null, createdBy: String? = null, updatedDate: LocalDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
+    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, remediationDirectiveNumber: String? = null, productCode: String? = null, layerCode: String? = null, processCode: String? = null, processSequence: Int? = null, processSequenceRev: Int? = null, machiningSequenceRev: String? = null, completionRate: BigDecimal? = null, finishedProductRate: BigDecimal? = null, printType: String? = null, processType: String? = null, displayProcessSequence: Int? = null, inputSystem: String? = null, isActualResult: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, standardProcedureType: String? = null, grpCheckProcess: String? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.objectId = objectId
         this.companyCode = companyCode

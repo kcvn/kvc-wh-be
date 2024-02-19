@@ -206,6 +206,31 @@ class ProductProcessService(
                 messageResults.add("Mã thống kê không được để trống")
             }
 
+            if(row.getCell(0) != null && row.getCell(0).stringCellValue.length > 60){
+                check = false
+                messageResults.add("Tên sản phẩm quá dài")
+            }
+            if(row.getCell(1) !=null && row.getCell(1).stringCellValue.length > 6){
+                check = false
+                messageResults.add("Mã công đoạn quá dài")
+            }
+            if(row.getCell((2)) != null && row.getCell(2).stringCellValue.length > 2){
+                check = false
+                messageResults.add("Lớp số quá dài")
+            }
+            if(row.getCell(3) != null && row.getCell(3).stringCellValue.length > 10){
+                check = false
+                messageResults.add("Mã chuyển đổi quá dài")
+            }
+            if(row.getCell(4) == null && row.getCell(4).stringCellValue.length > 10){
+                check = false
+                messageResults.add("Mã tồn kho quá dài")
+            }
+            if(row.getCell(5) == null && row.getCell(5).stringCellValue.length > 10){
+                check = false
+                messageResults.add("Mã thống kê quá dài")
+            }
+
            try {
                if (check) {
                    val filter = ImportProcessRequest(

@@ -22,6 +22,15 @@ import java.time.LocalDateTime
 class CompletionRateController(
     private val completionRateService: CompletionRateService
 ) {
+
+
+    @GetMapping("/download-template-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
+    fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = completionRateService.downloadTemplate()
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
     //Product Function
 
 
@@ -65,7 +74,7 @@ class CompletionRateController(
     @GetMapping("/process-product/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProcessProductExcel(
-        request: CompletionRateSearchRequest,
+        request: CompletionRateProcessProductRequest?,
         @PageableDefault(size = 1000000, page = 0)
         @SortDefault.SortDefaults(
 //            SortDefault(sort = ["product_name"], direction = Sort.Direction.ASC),
@@ -73,7 +82,7 @@ class CompletionRateController(
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.exportCompletionRateProcessProductExcel(
-            request.search,
+            request,
             pageable
         )
         return ResponseEntity(data, HttpStatus.OK)

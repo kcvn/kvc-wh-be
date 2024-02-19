@@ -9,7 +9,7 @@ import com.kcvn.spm.model.keys.WORK_RESULT_PKEY
 import com.kcvn.spm.model.tables.records.WorkResultRecord
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 import org.jooq.Field
 import org.jooq.ForeignKey
@@ -217,7 +217,7 @@ open class WorkResult(
     /**
      * The column <code>public.work_result.summary_result_date</code>.
      */
-    val SUMMARY_RESULT_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("summary_result_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val SUMMARY_RESULT_DATE: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("summary_result_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.enter_actual_result_type</code>.
@@ -417,32 +417,32 @@ open class WorkResult(
     /**
      * The column <code>public.work_result.work_date</code>.
      */
-    val WORK_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val WORK_DATE: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("work_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.work_time</code>.
      */
-    val WORK_TIME: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_time"), SQLDataType.LOCALDATETIME(6), this, "")
+    val WORK_TIME: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("work_time"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.work_start_date</code>.
      */
-    val WORK_START_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_start_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val WORK_START_DATE: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("work_start_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.work_start_time</code>.
      */
-    val WORK_START_TIME: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_start_time"), SQLDataType.LOCALDATETIME(6), this, "")
+    val WORK_START_TIME: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("work_start_time"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.work_end_time</code>.
      */
-    val WORK_END_TIME: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_end_time"), SQLDataType.LOCALDATETIME(6), this, "")
+    val WORK_END_TIME: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("work_end_time"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.work_end_date</code>.
      */
-    val WORK_END_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("work_end_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val WORK_END_DATE: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("work_end_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.work_place_code</code>.
@@ -527,7 +527,7 @@ open class WorkResult(
     /**
      * The column <code>public.work_result.end_date</code>.
      */
-    val END_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("end_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val END_DATE: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("end_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.total</code>.
@@ -547,7 +547,7 @@ open class WorkResult(
     /**
      * The column <code>public.work_result.created_date</code>.
      */
-    val CREATED_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+    val CREATED_DATE: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.work_result.created_by</code>.
@@ -557,7 +557,7 @@ open class WorkResult(
     /**
      * The column <code>public.work_result.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<WorkResultRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val UPDATED_DATE: TableField<WorkResultRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.work_result.updated_by</code>.

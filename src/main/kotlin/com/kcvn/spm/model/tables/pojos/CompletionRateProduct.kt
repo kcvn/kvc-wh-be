@@ -6,7 +6,7 @@ package com.kcvn.spm.model.tables.pojos
 
 import java.io.Serializable
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 
 /**
@@ -17,9 +17,9 @@ data class CompletionRateProduct(
     var id: String? = null,
     var productName: String? = null,
     var rate: BigDecimal? = null,
-    var createdDate: LocalDateTime? = null,
+    var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
-    var updatedDate: LocalDateTime? = null,
+    var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")

@@ -34,7 +34,7 @@ import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 @Service
 @Transactional
@@ -304,7 +304,7 @@ class CompletionRateService(
         )
     }
 
-    fun importExcelCompletionRateProcess(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?) : BaseResponse<FileContentModel> {
+    fun importExcelCompletionRateProcess(file: MultipartFile, effectiveDate: OffsetDateTime, expirationDate: OffsetDateTime?) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -427,7 +427,7 @@ class CompletionRateService(
 
 
 
-    fun importExcelProcessProduct(file: MultipartFile, effectiveDate: LocalDateTime, expirationDate: LocalDateTime?): BaseResponse<FileContentModel>{
+    fun importExcelProcessProduct(file: MultipartFile, effectiveDate: OffsetDateTime, expirationDate: OffsetDateTime?): BaseResponse<FileContentModel>{
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1

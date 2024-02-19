@@ -1,7 +1,7 @@
 package com.kcvn.spm.app.sync.payload.response
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 data class SyncProcessMasterResponse (
         var OBJECT_ID: Int, //Object ID
@@ -48,9 +48,9 @@ data class SyncProcessMasterResponse (
         var JISSEKI_GRP: String?, //GRP thành quả thực tế
         var GENKA_GRP: String?, //GRP giá vốn
         var TOROKUSHA: String?, //Người đăng ký
-        var TOROKU_DATE: LocalDateTime?, //Ngày đăng ký
+        var TOROKU_DATE: OffsetDateTime?, //Ngày đăng ký
         var KOSHINSHA: String?, //Người update
-        var KOSHIN_DATE: LocalDateTime?, //Ngày update
+        var KOSHIN_DATE: OffsetDateTime?, //Ngày update
         var HAITA_FLG: Int?, //Flag độc quyền/ Flag ngoại lệ
         var SAGYOBA_CD: String?, //Mã nơi làm việc
 )

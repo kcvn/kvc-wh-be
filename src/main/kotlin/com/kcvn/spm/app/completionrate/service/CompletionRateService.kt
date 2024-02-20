@@ -36,6 +36,9 @@ class CompletionRateService(
     private val processMasterRepository : ProcessMasterRepository
 ) {
 
+    val completionRateResultKey = CommonUtils.getMessage("validate.excel.complition.rate.result")
+    val completionValidateFormatError = CommonUtils.getMessage("validate.excel.complition.rate.format.error")
+
     fun downloadTemplate() : BaseResponse<FileContentModel> {
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
@@ -136,7 +139,7 @@ class CompletionRateService(
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("validate.excel.complition.rate.result")
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == completionRateResultKey
         if (!checkColResult) {
             headerRow.createCell(headerCell).setCellValue("Kết quả")
             val headerStyle = headerRow.getCell(0).cellStyle
@@ -163,7 +166,7 @@ class CompletionRateService(
                         errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.product.rate"))
                     }
                 } catch (e: NumberFormatException) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.format.error"))
+                    errorMessages.add(completionValidateFormatError)
                 }
             }
 
@@ -314,9 +317,9 @@ class CompletionRateService(
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("validate.excel.complition.rate.result")
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == completionRateResultKey
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("validate.excel.complition.rate.result"))
+            headerRow.createCell(headerCell).setCellValue(completionRateResultKey)
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
@@ -347,10 +350,10 @@ class CompletionRateService(
                 try {
                     val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                     if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.format.error"))
+                        errorMessages.add(completionValidateFormatError)
                     }
                 } catch (e: NumberFormatException) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.format.error"))
+                    errorMessages.add(completionValidateFormatError)
                 }
             }
 
@@ -450,9 +453,9 @@ class CompletionRateService(
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("validate.excel.complition.rate.result")
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == completionRateResultKey
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("validate.excel.complition.rate.result"))
+            headerRow.createCell(headerCell).setCellValue(completionRateResultKey)
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
@@ -481,10 +484,10 @@ class CompletionRateService(
                 try {
                     val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                     if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.format.error"))
+                        errorMessages.add(completionValidateFormatError)
                     }
                 } catch (e: NumberFormatException) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.format.error"))
+                    errorMessages.add(completionValidateFormatError)
                 }
             }
 

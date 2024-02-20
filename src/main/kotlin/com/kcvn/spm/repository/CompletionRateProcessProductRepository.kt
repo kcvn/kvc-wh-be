@@ -5,9 +5,7 @@ import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessPro
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
-import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
-import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
-import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
+import com.kcvn.spm.model.tables.references.*
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -100,14 +98,14 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE,
             COMPLETION_RATE_PROCESS_PRODUCT.RATE,
             COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT,
-            PRODUCT_PROCESS.PROCESS_NAME,
-            PRODUCT_PROCESS.PROCESS_NAME_JP
+            PROCESS_MASTER.PROCESS_NAME,
+            PROCESS_MASTER.PROCESS_NAME_JP
         )
             .from(
-                COMPLETION_RATE_PROCESS_PRODUCT.join(
-                    PROCESS_PROCEDURE_STRUCTURE.join(PRODUCT_PROCESS)
-                .on(PROCESS_PROCEDURE_STRUCTURE.ID.eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
-                .on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE)).and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+                COMPLETION_RATE_PROCESS_PRODUCT
+                    .join(PROCESS_MASTER).on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+                    .where(PROCESS_MASTER.IS_DELETED.eq(false))
+            )
             .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE))
             .limit(pageable?.pageSize ?: 10)

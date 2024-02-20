@@ -8,6 +8,7 @@ import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.WorkResultRepository
 import org.apache.poi.ss.usermodel.BorderStyle
@@ -84,7 +85,7 @@ class WorkResultService (
             )
         }
 
-        return BaseResponse(data = dropDownList, message = "List Process Group")
+        return BaseResponse(data = dropDownList, message = CommonUtils.getMessage("data.process.group.all"))
     }
 
 
@@ -99,7 +100,7 @@ class WorkResultService (
             )
         }
 
-        return BaseResponse(data = dropDownList, message = "List Process")
+        return BaseResponse(data = dropDownList, message = CommonUtils.getMessage("data.process.by.group.code"))
     }
 
     fun exportExcel(request: WorkResultSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {

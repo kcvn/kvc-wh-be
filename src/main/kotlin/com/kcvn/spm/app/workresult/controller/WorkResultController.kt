@@ -71,6 +71,7 @@ class WorkResultController (
     }
 
     @PostMapping("/export-excel-to-download")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_WORK_RESULT.value) || hasRole('ADMIN')")
     fun generateXlsReport(
         request: WorkResultSearchRequest?,
         @PageableDefault(size = 1000000, page = 0) pageable: Pageable

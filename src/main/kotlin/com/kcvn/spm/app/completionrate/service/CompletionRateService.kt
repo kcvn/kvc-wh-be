@@ -308,7 +308,9 @@ class CompletionRateService(
         var count = 0
         val total = sheet.lastRowNum - rowIndex
         val utcOffset = ZoneOffset.ofHours(7)
-        val currentDate =OffsetDateTime.now(utcOffset)
+        val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
+            .withMinute(0)
+            .withSecond(0)
 
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
@@ -444,7 +446,9 @@ class CompletionRateService(
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)
         val processCodeExist = processMasterRepository.getListProcessCode()
         val utcOffset = ZoneOffset.ofHours(7)
-        val currentDate =OffsetDateTime.now(utcOffset)
+        val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
+            .withMinute(0)
+            .withSecond(0)
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 

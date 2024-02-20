@@ -8,6 +8,7 @@ import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
@@ -39,9 +40,9 @@ class CompletionRateController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProductExcel(
         request: CompletionRateSearchRequest?,
-        @PageableDefault(size = 1000000, page = 0)
+        @PageableDefault(size = 100000, page = 0)
         @SortDefault.SortDefaults(
-//            SortDefault(sort = ["product_name"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["productname"], direction = Sort.Direction.ASC)
         )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
@@ -56,7 +57,11 @@ class CompletionRateController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProducts(
         @RequestParam(required = false) search: String?,
-        @PageableDefault(size = 10, page = 0) pageable: Pageable
+        @PageableDefault(size = 100000, page = 0)
+            @SortDefault.SortDefaults(
+            SortDefault(sort = ["productname"], direction = Sort.Direction.ASC)
+            )
+            pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result = completionRateService.getPaginatedCompletionRateProduct(search, pageable)
         return ResponseEntity(result, HttpStatus.OK)
@@ -75,9 +80,11 @@ class CompletionRateController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProcessProductExcel(
         request: CompletionRateProcessProductRequest?,
-        @PageableDefault(size = 1000000, page = 0)
+        @PageableDefault(size = 100000, page = 0)
         @SortDefault.SortDefaults(
-//            SortDefault(sort = ["product_name"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["product_name_shortcut"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["process_code"], direction = Sort.Direction.ASC),
         )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
@@ -92,7 +99,7 @@ class CompletionRateController(
     @GetMapping("/process-product/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProcessProducts(
-        @RequestParam(required = false) search: CompletionRateProcessProductRequest?,
+         search: CompletionRateProcessProductRequest?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result =
@@ -127,8 +134,10 @@ class CompletionRateController(
         request: CompletionRateSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
         @SortDefault.SortDefaults(
-//            SortDefault(sort = ["product_name"], direction = Sort.Direction.ASC),
-        )
+            SortDefault(sort = ["processCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
+
+            )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.exportCompletionRateProcessExcel(
@@ -142,7 +151,12 @@ class CompletionRateController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllProcess(
         @RequestParam(required = false) search: String?,
-        @PageableDefault(size = 10, page = 0) pageable: Pageable
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["processCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
+
+            )
+        pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result = completionRateService.getPaginatedCompletionRateProcesses(search, pageable)
         return ResponseEntity(result, HttpStatus.OK)

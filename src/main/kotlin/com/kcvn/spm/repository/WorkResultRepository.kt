@@ -193,4 +193,20 @@ class WorkResultRepository (
             .orderBy(getSortFields(pageable.sort, WORK_RESULT.SUMMARY_RESULT_DATE))
             .fetchInto(WorkResult::class.java)
     }
+
+    fun findByObjectId(objectIds: List<Int>): List<WorkResult> {
+        return context.selectFrom(WORK_RESULT)
+         .where(WORK_RESULT.ID.`in`(objectIds))
+         .fetchInto(WorkResult::class.java)
+    }
+
+
+    fun add(model: WorkResult) {
+        val record = context.newRecord(WORK_RESULT,model)
+        context.insertInto(WORK_RESULT).set(record).execute()
+    }
+
+    fun delete(id: String) {
+        context.deleteFrom(WORK_RESULT).where(WORK_RESULT.ID.eq(id)).execute()
+    }
 }

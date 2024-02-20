@@ -129,7 +129,11 @@ class CompletionRateService(
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
 
-        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        val lastRowIndex = sheet.lastRowNum
+        if (lastRowIndex < 1) {
+            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        }
+//        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProductRepository.getByProduct(productNames)
@@ -301,9 +305,13 @@ class CompletionRateService(
     fun importExcelCompletionRateProcess(file: MultipartFile, effectiveDate: OffsetDateTime, expirationDate: OffsetDateTime?) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
-        val rowIndex = 1
 
-        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        val rowIndex = 1
+        val lastRowIndex = sheet.lastRowNum
+        if (lastRowIndex < 1) {
+            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        }
+//        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
@@ -438,7 +446,11 @@ class CompletionRateService(
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
 
-        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        val lastRowIndex = sheet.lastRowNum
+        if (lastRowIndex < 1) {
+            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        }
+//        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)

@@ -33,6 +33,11 @@ enum class EPermission(val value: String) {
     I_COMPLETION_RATE("com_rate.i"),
     E_COMPLETION_RATE("com_rate.e"),
 
+    // work results
+    V_WORK_RESULT("work_result.v"),
+    E_WORK_RESULT("work_result.e"),
+    SY_WORK_RESULT("work_result.sy"),
+
     // the - order
     V_ORDER("order.v"),
 

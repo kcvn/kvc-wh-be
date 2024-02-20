@@ -152,7 +152,7 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "ImportProductTemplate.xlsx",
+            fileName = "ImportProcessTemplate.xlsx",
             contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
@@ -210,27 +210,27 @@ class ProductProcessService(
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.null"))
             }
 
-            if(row.getCell(0) != null && row.getCell(0).stringCellValue.length > 60){
+            if(row.getCell(0) != null && row.getCell(0).toString().length > 60){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.product.length"))
             }
-            if(row.getCell(1) !=null && row.getCell(1).stringCellValue.length > 6){
+            if(row.getCell(1) !=null && row.getCell(1).toString().length > 6){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.code.length"))
             }
-            if(row.getCell((2)) != null && row.getCell(2).stringCellValue.length > 2){
+            if(row.getCell((2)) != null && row.getCell(2).toString().length > 2){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.length"))
             }
-            if(row.getCell(3) != null && row.getCell(3).stringCellValue.length > 10){
+            if(row.getCell(3) != null && row.getCell(3).toString().length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.length"))
             }
-            if(row.getCell(4) != null && row.getCell(4).stringCellValue.length > 10){
+            if(row.getCell(4) != null && row.getCell(4).toString().length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.inventory.code.length"))
             }
-            if(row.getCell(5) != null && row.getCell(5).stringCellValue.length > 10){
+            if(row.getCell(5) != null && row.getCell(5).toString().length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.length"))
             }

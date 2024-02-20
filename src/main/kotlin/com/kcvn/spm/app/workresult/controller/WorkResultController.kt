@@ -15,6 +15,7 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -26,6 +27,7 @@ class WorkResultController (
     private val workResultService: WorkResultService
 ) {
     @GetMapping("/get-list-work-result")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_RESULT.value) || hasRole('ADMIN')")
     fun getListWorkResult(
         request: WorkResultSearchRequest?,
         @PageableDefault(size = 10, page = 0)
@@ -53,6 +55,7 @@ class WorkResultController (
     }
 
     @GetMapping("export-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_WORK_RESULT.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: WorkResultSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
@@ -68,6 +71,7 @@ class WorkResultController (
     }
 
     @PostMapping("/export-excel-to-download")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_WORK_RESULT.value) || hasRole('ADMIN')")
     fun generateXlsReport(
         request: WorkResultSearchRequest?,
         @PageableDefault(size = 1000000, page = 0) pageable: Pageable

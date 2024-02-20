@@ -2,16 +2,14 @@ package com.kcvn.spm.app.sync.service
 
 import com.kcvn.spm.app.sync.payload.response.SyncProcessMasterResponse
 import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureResponse
+import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.TransAmTable
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
-import com.kcvn.spm.model.tables.pojos.ProcessMaster
-import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
-import com.kcvn.spm.model.tables.pojos.SyncHistory
-import com.kcvn.spm.repository.ProcessMasterRepository
-import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import com.kcvn.spm.repository.SyncHistoryRepository
+import com.kcvn.spm.model.tables.pojos.*
+import com.kcvn.spm.repository.*
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -19,6 +17,8 @@ import org.jooq.Table
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 
 @Service
@@ -27,7 +27,9 @@ class SyncTransAmDataService(
     private val propertiesConfig: PropertiesConfig,
     private val syncHistoryRep: SyncHistoryRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
-    private val processMasterRep: ProcessMasterRepository
+    private val processMasterRep: ProcessMasterRepository,
+    private val workResultRep: WorkResultRepository,
+    private val productProcessRep : ProductProcessRepository
 ) {
     private val transAmDSLContext: DSLContext = DSLContextExtension.createDSLContext(
         propertiesConfig.tranAmDbUrl,
@@ -40,12 +42,12 @@ class SyncTransAmDataService(
         val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_PROCEDURE_STRUCTURE)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
         var condition: Condition = DSL.noCondition()
-        if (syncHistory != null) {
-            condition = condition.and(
-                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate)
-                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate))
-            )
-        }
+//        if (syncHistory != null) {
+//            condition = condition.and(
+//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+//                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+//            )
+//        }
         val processFlows = this.transAmDSLContext.select().from(table).where(condition)
             .fetchInto(SyncProcessProcedureStructureResponse::class.java)
         val objectIds = processFlows.mapNotNull { x -> x.OBJECT_ID }
@@ -60,6 +62,9 @@ class SyncTransAmDataService(
                     processProcedureStructureRep.delete(exist.id!!)
                 }
                 processProcedureStructureRep.add(dataProcess)
+
+                val productProcess = createModelProductProcess(dataProcess)
+                productProcessRep.add(productProcess)
             }
             catch (e: Exception) {
                 e.printStackTrace()
@@ -73,16 +78,28 @@ class SyncTransAmDataService(
         )
     }
 
+    private fun createModelProductProcess(item: ProcessProcedureStructure): ProductProcess {
+        val processCode = item.processCode
+        val processProcedureStructure = processProcedureStructureRep.findByFilter(item)
+        val processMaster = processMasterRep.findByProcessCode(processCode)
+        return ProductProcess(
+            processProcedureStructureId = processProcedureStructure?.id,
+            processName = processMaster?.processName,
+            processNameJp = processMaster?.processNameJp,
+            updatedBy = CommonUtils.loggedInUser() ?: "SYSTEM"
+        )
+    }
+
     fun syncProcessMaster() {
         val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_MASTER)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
         var condition: Condition = DSL.noCondition()
-        if (syncHistory != null) {
-            condition = condition.and(
-                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate)
-                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate))
-            )
-        }
+//        if (syncHistory != null) {
+//            condition = condition.and(
+//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+//                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+//            )
+//        }
         val processMaster = this.transAmDSLContext.select().from(table).where(condition)
             .fetchInto(SyncProcessMasterResponse::class.java)
         val objectIds = processMaster.mapNotNull { x -> x.OBJECT_ID }
@@ -107,6 +124,152 @@ class SyncTransAmDataService(
             TransAmTable.PROCESS_MASTER,
             Constants.PROCESS_MASTER,
             Constants.PROCESS_MASTER
+        )
+    }
+
+
+    fun syncWorkResult() {
+        val syncHistory = syncHistoryRep.findByType(Constants.WORK_RESULT)
+        val table: Table<*> = DSL.table(DSL.name(TransAmTable.WORK_RESULT))
+        var condition: Condition = DSL.noCondition()
+//        if (syncHistory!= null) {
+//            condition = condition.and(
+//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+//                  .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+//            )
+//        }
+        // Define your datetime range
+        val startDate = LocalDateTime.of(2020, 2, 1, 0, 0, 0)
+        condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))
+
+        val workResult = this.transAmDSLContext.select().from(table).where(condition)
+            .fetchInto(SyncWorkResultResponse::class.java)
+
+        val objectIds = workResult.mapNotNull { x -> x.OBJECT_ID }
+        val workResultDatas = workResultRep.findByObjectId(objectIds)
+        for (item in workResult) {
+            val exist = workResultDatas.find { x -> x.objectId == item.OBJECT_ID }
+            try {
+                val data = createModelWorkResult(item)
+                if (exist!= null) {
+                    workResultRep.delete(exist.id!!)
+                }
+                workResultRep.add(data)
+            }
+            catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        insertSyncHistory(
+            TransAmTable.WORK_RESULT,
+            Constants.WORK_RESULT,
+            Constants.WORK_RESULT
+        )
+    }
+
+    private fun createModelWorkResult(request: SyncWorkResultResponse): WorkResult {
+        return WorkResult(
+            objectId = request.OBJECT_ID,
+            androidId = request.ANDROID_ID,
+            description = request.BIKO,
+            grpDepartments = request.BUMON_GRP,
+            departmentCode = request.BUSHO_CD,
+            departmentName = request.BUSHO_MEI,
+            orderCode = request.SEIZO_ORDER_NO,
+            code = request.KANRI_NO,
+            customerCode = request.KYAKUSAKI_CD,
+            itemCode = request.HINMOKU_CD,
+            itemName = request.KC_HINMEI,
+            layerCode = request.SO_NO,
+            processCode = request.KOTEI_CD,
+            processGrp = request.KOTEI_GRP,
+            processName = request.KOTEI_MEI,
+            processType = request.KOTEI_SHUBETSU,
+            equipmentCode = request.SHIGEN_CD,
+            equipmentName = request.SHIGEN_MEI,
+            tapeLotNo = request.TAPE_LOT_NO,
+            completionType = request.CHAKKAN_KBN,
+            seidenNo = request.DAIHYO_SEIDEN_NO,
+            version = request.EDABAN,
+            furimukouType = request.FURIMUKE_KBN,
+            isExclusiveOrException = request.HAITA_FLG,
+            excessFraction = request.HASU,
+            direction = request.HOKO,
+            itemQuantity = request.HON_SU,
+            shipmentStatus = request.SHUKKA_LOT_NO,
+            actualResultCode = request.JISSEKI_CD,
+            actualResultDepartment = request.JISSEKI_KANRI_BUMON_GRP,
+            summaryResultDate = request.JISSEKI_KEIJO_DATE,
+            enterActualResultType = request.JISSEKI_NYURYOKU_KBN,
+            actualResultType = request.JISSEKI_SHIKIBETSU,
+            projectCheck_1 = request.JOKEN_CHECK_KOMOKU_1,
+            projectCheck_2 = request.JOKEN_CHECK_KOMOKU_2,
+            projectCheck_3 = request.JOKEN_CHECK_KOMOKU_3,
+            companyCode = request.KAISHA_CD,
+            workStartBy = request.KAISHI_SAGYOSHA,
+            managerCode = request.KANRISHA_CD,
+            conversionFactor = request.KANZAN_JOSU,
+            lonQuantity = request.KAN_SU,
+            furimukouQuantity = request.FURIMUKE_SU,
+            errorItemQuantity = request.FURYO_SU,
+            hifurimukouQuantity = request.HIFURIMUKE_SU,
+            inventoryItemQuantity = request.HORYU_SU,
+            goodItemQuantity = request.RYOHIN_SU,
+            regenerativeItemQuantity = request.SAISEI_SU,
+            totalItemQuantity = request.SHORI_SU,
+            adjustmentItemQuantity = request.TYOSEI_SU,
+            furimukouTapeQuantity = request.KIBAN_FURIMUKE_SU,
+            errorTapeQuantity = request.KIBAN_FURYO_SU,
+            hifurimukouTapeQuantity = request.KIBAN_HIFURIMUKE_SU,
+            inventoryTapeQuantity = request.KIBAN_HORYU_SU,
+            goodTapeQuantity = request.KIBAN_RYOHIN_SU,
+            regenerativeTapeQuantity = request.KIBAN_SAISEI_SU,
+            totalTapeQuantity = request.KIBAN_SHORI_SU,
+            adjustmentTapeQuantity = request.KIBAN_TYOSEI_SU,
+            furimukouSheetQuantity = request.SHEET_FURIMUKE_SU,
+            errorSheetQuantity = request.SHEET_FURYO_SU,
+            hifurimukouSheetQuantity = request.SHEET_HIFURIMUKE_SU,
+            inventorySheetQuantity = request.SHEET_HORYU_SU,
+            goodSheetQuantity = request.SHEET_RYOHIN_SU,
+            regenerativeSheetQuantity = request.SHEET_SAISEI_SU,
+            totalSheetQuantity = request.SHEET_SHORI_SU,
+            adjustmentSheetQuantity = request.SHEET_TYOSEI_SU,
+            shiftWork = request.KINMUTAI_SHIFT,
+            inputUnit = request.NYURYOKU_TANI,
+            workCode_1 = request.SAGYO_CD1,
+            workCode_2 = request.SAGYO_CD2,
+            workCode_3 = request.SAGYO_CD3,
+            workDate = request.SAGYO_DATE,
+            workTime = request.SAGYO_TIME,
+            workStartDate = request.SAGYO_KAISHI_DATE,
+            workStartTime = request.SAGYO_KAISHI_TIME,
+            workEndTime = request.SAGYO_SHURYO_TIME,
+            workEndDate = request.SAGYO_SYURYO_DATE,
+            workPlaceCode = request.SAGYOBA_CD,
+            workPlaceName = request.SAGYOBA_MEI,
+            team = request.SAGYO_JISSHI_HAN,
+            memoWork = request.SAGYO_MEMO,
+            workType = request.SAGYOKBN_CD,
+            workImplementBy = request.SAGYOSHA_CD,
+            regenerativeCode = request.SAISEI_CD,
+            regenerativeType = request.SAISEI_KBN,
+            regenerativeName = request.SAISEI_MEI,
+            regenerativeProcessCode = request.SAISEISAKI_KOTEI_CD,
+            regenerativeProcessName = request.SAISEISAKI_KOTEI_MEI,
+            madeIn = request.SEIZOSAKI_CD,
+            sheetFlag = request.SHEET_FLAG,
+            unfinishedQuantity = request.SHIKAKARI_NYURYOKU_SU,
+            remediationDirectiveNumber = request.SHOCHISHIJI_NO,
+            deliverLotNo = request.SHUKKA_LOT_NO,
+            endDate = request.SHURYO_GAPPI,
+            total = request.SO_KOSU,
+            price = request.TANKA,
+            specialItem = request.TOKKI_JIKOU,
+            createdDate = request.TOROKU_DATE,
+            createdBy = request.TOROKUSHA,
+            updatedDate = request.KOSHIN_DATE,
+            updatedBy = request.KOSHINSHA
         )
     }
 

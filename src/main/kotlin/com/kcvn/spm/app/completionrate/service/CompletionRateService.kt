@@ -13,10 +13,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
-import com.kcvn.spm.repository.CompletionRateProcessProductRepository
-import com.kcvn.spm.repository.CompletionRateProcessRepository
-import com.kcvn.spm.repository.CompletionRateProductRepository
-import com.kcvn.spm.repository.ProcessProcedureStructureRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
@@ -35,7 +32,7 @@ class CompletionRateService(
     private val completionRateProductRepository: CompletionRateProductRepository,
     private val completionRateProcessProductRepository: CompletionRateProcessProductRepository,
     private val completionRateProcessRepository: CompletionRateProcessRepository,
-    private val processProcedureStructureRepository : ProcessProcedureStructureRepository
+    private val processMasterRepository : ProcessMasterRepository
 ) {
 
     fun downloadTemplate() : BaseResponse<FileContentModel> {
@@ -324,7 +321,7 @@ class CompletionRateService(
             sheet.setColumnWidth(headerCell, 15000)
         }
 
-        val processCodeExist = processProcedureStructureRepository.getListProcessCode()
+        val processCodeExist = processMasterRepository.getListProcessCode()
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
@@ -371,7 +368,9 @@ class CompletionRateService(
                         completionRateProcessRepository.add(compleRateProduct)
                     } else {
                         productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-
+                        productExist.effectiveDate = effectiveDate
+                        if(expirationDate !=null)
+                            productExist.expirationDate = expirationDate
                         completionRateProcessRepository.update(productExist)
                     }
                     errorMessages.add("OK")
@@ -441,7 +440,7 @@ class CompletionRateService(
 
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)
-        val processCodeExist = processProcedureStructureRepository.getListProcessCode()
+        val processCodeExist = processMasterRepository.getListProcessCode()
         val currentDate =OffsetDateTime.now();
         var count = 0
         val total = sheet.lastRowNum - rowIndex
@@ -506,7 +505,9 @@ class CompletionRateService(
                         completionRateProcessProductRepository.add(compleRateProcessProduct)
                     } else {
                         productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-
+                        productExist.effectiveDate = effectiveDate
+                        if(expirationDate !=null)
+                        productExist.expirationDate = expirationDate
                         completionRateProcessProductRepository.update(productExist)
                     }
                     errorMessages.add("OK")

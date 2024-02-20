@@ -35,4 +35,9 @@ class ProcessMasterRepository (
         context.deleteFrom(PROCESS_MASTER).where(PROCESS_MASTER.ID.eq(id)).execute()
     }
 
+    fun findByProcessCode(processCode: String?): ProcessMaster? {
+        return context.selectFrom(PROCESS_MASTER).where(PROCESS_MASTER.PROCESS_CODE.eq(processCode)).fetchAnyInto(ProcessMaster::class.java)
+
+    }
+
 }

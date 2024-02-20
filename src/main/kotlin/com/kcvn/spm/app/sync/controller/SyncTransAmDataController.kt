@@ -25,4 +25,10 @@ class SyncTransAmDataController (private val syncTransAmDataService: SyncTransAm
         syncTransAmDataService.syncProcessMaster()
         return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("sync.finished")), HttpStatus.OK)
     }
+
+    @PostMapping("/work-result")
+    fun syncWorkResult(): ResponseEntity<MessageResponse> {
+        syncTransAmDataService.syncWorkResult()
+        return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("sync.finished")), HttpStatus.OK)
+    }
 }

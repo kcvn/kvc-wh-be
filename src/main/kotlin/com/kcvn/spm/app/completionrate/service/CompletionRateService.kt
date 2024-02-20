@@ -25,6 +25,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.math.BigDecimal
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Service
 @Transactional
@@ -306,7 +307,8 @@ class CompletionRateService(
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
         var count = 0
         val total = sheet.lastRowNum - rowIndex
-        val currentDate =OffsetDateTime.now();
+        val utcOffset = ZoneOffset.ofHours(7)
+        val currentDate =OffsetDateTime.now(utcOffset)
 
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
@@ -441,7 +443,8 @@ class CompletionRateService(
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)
         val processCodeExist = processMasterRepository.getListProcessCode()
-        val currentDate =OffsetDateTime.now();
+        val utcOffset = ZoneOffset.ofHours(7)
+        val currentDate =OffsetDateTime.now(utcOffset)
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 

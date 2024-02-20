@@ -16,6 +16,7 @@ import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.jooq.impl.QOM.IsNull
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
@@ -50,7 +52,10 @@ class WorkResultService (
         response.data = workResults.map { x ->
             val result = (x.goodSheetQuantity?.toDouble())?.div(x.totalSheetQuantity!!)
             val percentage = result?.times(100)
-            val performance = "%.2f%%".format(percentage)
+            var performance = "%.2f%%".format(percentage)
+            if (result == null){
+                performance = ""
+            }
             WorkResultResponse(
             id = x.id,
             summaryResultDate = x.summaryResultDate,
@@ -148,7 +153,9 @@ class WorkResultService (
                 dataRow.createCell(5).setCellValue(totalTapeQuantity)
                 dataRow.getCell(5).cellStyle = style
 
-                dataRow.createCell(6).setCellValue(item.totalSheetQuantity.toString())
+                val totalSheetQuantity = item.totalSheetQuantity?.toString() ?: ""
+
+                dataRow.createCell(6).setCellValue(totalSheetQuantity)
                 dataRow.getCell(6).cellStyle = style
 
                 val goodTapeQuantity = item.goodTapeQuantity?.toString() ?: ""
@@ -156,14 +163,20 @@ class WorkResultService (
                 dataRow.createCell(7).setCellValue(goodTapeQuantity)
                 dataRow.getCell(7).cellStyle = style
 
-                dataRow.createCell(8).setCellValue(item.goodSheetQuantity.toString())
+                val goodSheetQuantity = item.goodSheetQuantity?.toString() ?: ""
+
+                dataRow.createCell(8).setCellValue(goodSheetQuantity)
                 dataRow.getCell(8).cellStyle = style
 
                 val result = (item.goodSheetQuantity?.toDouble())?.div(item.totalSheetQuantity!!)
 
                 val percentage = result?.times(100)
 
-                val performance = "%.2f%%".format(percentage)
+                var performance = "%.2f%%".format(percentage)
+
+                if (result == null) {
+                    performance = ""
+                }
 
                 dataRow.createCell(9).setCellValue(performance)
                 dataRow.getCell(9).cellStyle = style
@@ -188,8 +201,9 @@ class WorkResultService (
         workBook.write(byteArrayOutputStream)
 
         val excelBytes = byteArrayOutputStream.toByteArray()
+        val date = OffsetDateTime.now().toLocalDate().toString()
         val response = FileContentModel(
-            fileName = "Danh_sach_ket_qua_san_xuat.xlsx",
+            fileName = "Danh_sach_ket_qua_san_xuat_${date}.xlsx",
             contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )

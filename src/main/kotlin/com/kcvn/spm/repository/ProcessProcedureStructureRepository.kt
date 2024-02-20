@@ -2,7 +2,9 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -39,5 +41,13 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
         return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE)
                 .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(productNames).and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
                 .fetchInto(ProcessProcedureStructure::class.java)
+    }
+
+    fun findByFilter(item: ProcessProcedureStructure): ProcessProcedureStructure? {
+        var condition: Condition = DSL.noCondition()
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(item.productCode))
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.eq(item.layerCode))
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(item.processCode))
+        return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE).where(condition).fetchAnyInto(ProcessProcedureStructure::class.java)
     }
 }

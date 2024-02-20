@@ -5,6 +5,7 @@ class Constants {
         //Sync type
         const val PROCESS_PROCEDURE_STRUCTURE = "PROCESS_PROCEDURE_STRUCTURE"
         const val PROCESS_MASTER = "PROCESS_MASTER"
+        const val WORK_RESULT = "WORK_RESULT"
 
         //jwt
         const val CLAIM_TYPE_USER_ID = "UserId"

@@ -38,7 +38,7 @@ class ProductController(
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
-    fun importCsv(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+    fun importExcel(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = productService.importExcelProduct(file)
         return ResponseEntity(data, HttpStatus.OK)
     }

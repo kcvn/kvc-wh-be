@@ -15,6 +15,8 @@ import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.Order
+import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
@@ -78,6 +80,16 @@ val COMPLETION_RATE_PROCESS_PRODUCT: CompletionRateProcessProduct = CompletionRa
  * The table <code>public.completion_rate_product</code>.
  */
 val COMPLETION_RATE_PRODUCT: CompletionRateProduct = CompletionRateProduct.COMPLETION_RATE_PRODUCT
+
+/**
+ * The table <code>public.order</code>.
+ */
+val ORDER: Order = Order.ORDER
+
+/**
+ * The table <code>public.order_detail</code>.
+ */
+val ORDER_DETAIL: OrderDetail = OrderDetail.ORDER_DETAIL
 
 /**
  * The table <code>public.process_master</code>.

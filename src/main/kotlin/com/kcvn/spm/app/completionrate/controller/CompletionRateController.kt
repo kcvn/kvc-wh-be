@@ -92,7 +92,7 @@ class CompletionRateController(
     @GetMapping("/process-product/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProcessProducts(
-        @RequestParam(required = false) search: CompletionRateProcessProductRequest?,
+         search: CompletionRateProcessProductRequest?,
         @PageableDefault(size = 10, page = 0) pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result =

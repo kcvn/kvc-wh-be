@@ -7,6 +7,7 @@ import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.app.workresult.service.WorkResultService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -40,15 +41,15 @@ class WorkResultController (
     }
 
     @GetMapping("get-list-process-groups")
-    fun getListProcessGroups() : ResponseEntity<List<ProcessGroupResponse>>{
+    fun getListProcessGroups() : ResponseEntity<BaseResponse<List<DropdownResponse>>>{
         val data = workResultService.getListProcessGroup()
-        return ResponseEntity<List<ProcessGroupResponse>>(data, HttpStatus.OK)
+        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 
     @GetMapping("get-list-process-by-group-code")
-    fun getListProcessByGroupCode(groupCode: Array<String>) : ResponseEntity<List<ProcessResponse>>{
+    fun getListProcessByGroupCode(groupCode: Array<String>) : ResponseEntity<BaseResponse<List<DropdownResponse>>>{
         val data = workResultService.getListProcessByGroupCode(groupCode)
-        return ResponseEntity<List<ProcessResponse>>(data, HttpStatus.OK)
+        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 
     @GetMapping("export-excel")

@@ -1,10 +1,11 @@
 package com.kcvn.spm.app.sync.payload.response
 
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.time.OffsetDateTime
 
 data class SyncProcessMasterResponse (
-        var OBJECT_ID: Int, //Object ID
+        var OBJECT_ID: Long, //Object ID
         var KAISHA_CD: String, //Mã công ty
         var BUMON_GRP: String, //Phòng ban GRP
         var KOTEI_CD: String, //Mã quy trình

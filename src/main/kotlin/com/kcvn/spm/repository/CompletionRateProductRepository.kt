@@ -102,6 +102,8 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                     COMPLETION_RATE_PRODUCT.CREATED_BY,
                     COMPLETION_RATE_PRODUCT.IS_DELETED,
                     COMPLETION_RATE_PRODUCT.UPDATED_DATE,
+                    COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE,
+                    COMPLETION_RATE_PRODUCT.EXPIRATION_DATE
                 )
                 .values(
                     data.productName,
@@ -109,7 +111,9 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                     data.createdDate ?: OffsetDateTime.now(),
                     data.createdBy ?: "SYSTEM",
                     data.isDeleted ?: false,
-                    data.updatedDate ?: OffsetDateTime.now()
+                    data.updatedDate ?: OffsetDateTime.now(),
+                    data.effectiveDate,
+                    data.expirationDate
                 )
                 .returningResult(COMPLETION_RATE_PRODUCT)
                 .fetchOne()
@@ -127,6 +131,8 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .set(COMPLETION_RATE_PRODUCT.IS_DELETED, data.isDeleted)
+            .set(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
+            .set(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE, data.expirationDate)
             .where(COMPLETION_RATE_PRODUCT.ID.eq(data.id)) // Assuming ID is the primary key
             .returningResult(COMPLETION_RATE_PRODUCT)
             .fetchOne()

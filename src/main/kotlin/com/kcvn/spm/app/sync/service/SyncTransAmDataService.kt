@@ -42,12 +42,12 @@ class SyncTransAmDataService(
         val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_PROCEDURE_STRUCTURE)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
         var condition: Condition = DSL.noCondition()
-//        if (syncHistory != null) {
-//            condition = condition.and(
-//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
-//                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
-//            )
-//        }
+        if (syncHistory != null) {
+            condition = condition.and(
+                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+            )
+        }
         val processFlows = this.transAmDSLContext.select().from(table).where(condition)
             .fetchInto(SyncProcessProcedureStructureResponse::class.java)
         val objectIds = processFlows.mapNotNull { x -> x.OBJECT_ID }
@@ -62,9 +62,6 @@ class SyncTransAmDataService(
                     processProcedureStructureRep.delete(exist.id!!)
                 }
                 processProcedureStructureRep.add(dataProcess)
-
-                val productProcess = createModelProductProcess(dataProcess)
-                productProcessRep.add(productProcess)
             }
             catch (e: Exception) {
                 e.printStackTrace()
@@ -94,12 +91,12 @@ class SyncTransAmDataService(
         val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_MASTER)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
         var condition: Condition = DSL.noCondition()
-//        if (syncHistory != null) {
-//            condition = condition.and(
-//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
-//                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
-//            )
-//        }
+        if (syncHistory != null) {
+            condition = condition.and(
+                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+            )
+        }
         val processMaster = this.transAmDSLContext.select().from(table).where(condition)
             .fetchInto(SyncProcessMasterResponse::class.java)
         val objectIds = processMaster.mapNotNull { x -> x.OBJECT_ID }
@@ -132,12 +129,12 @@ class SyncTransAmDataService(
         val syncHistory = syncHistoryRep.findByType(Constants.WORK_RESULT)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.WORK_RESULT))
         var condition: Condition = DSL.noCondition()
-//        if (syncHistory!= null) {
-//            condition = condition.and(
-//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
-//                  .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
-//            )
-//        }
+        if (syncHistory!= null) {
+            condition = condition.and(
+                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+                  .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+            )
+        }
         // Define your datetime range
         val startDate = LocalDateTime.of(2020, 2, 1, 0, 0, 0)
         condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))

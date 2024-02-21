@@ -31,16 +31,18 @@ class WorkResultRepository (
                 condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
 
             if(!request.listProcessGroup.isNullOrEmpty()) {
+                val processGroupCodes = request.listProcessGroup!!.split(",")
                 var condition1 : Condition = DSL.noCondition()
-                request.listProcessGroup?.forEach { processGroup ->
+                processGroupCodes.forEach { processGroup ->
                     condition1 = condition1.or(WORK_RESULT.PROCESS_GRP.eq(processGroup))
                 }
                 condition = condition.and(condition1)
             }
 
             if(!request.listProcessCode.isNullOrEmpty()){
+                val processCodes = request.listProcessCode!!.split(",")
                 var condition2 : Condition = DSL.noCondition()
-                request.listProcessCode?.forEach { processCode ->
+                processCodes.forEach { processCode ->
                     condition2 = condition2.or(WORK_RESULT.PROCESS_CODE.eq(processCode))
                 }
                 condition = condition.and(condition2)
@@ -136,8 +138,9 @@ class WorkResultRepository (
         return x
     }
 
-    fun getListProcessByGroupCode(groupCode: Array<String>): List<ProcessResponse> {
+    fun getListProcessByGroupCode(groupCodes: String): List<ProcessResponse> {
         val response : MutableList<ProcessResponse> = mutableListOf()
+        val groupCode = groupCodes.split(",")
         groupCode.forEach { code  ->
             run {
                 val listProcess = context.select()
@@ -150,7 +153,8 @@ class WorkResultRepository (
                     )
                     .orderBy(PROCESS_MASTER.PROCESS_NAME)
                     .fetchInto(ProcessResponse::class.java)
-                response.addAll(listProcess)
+                val result = listProcess.distinctBy { x -> x.processCode }
+                response.addAll(result)
             }
         }
 
@@ -167,15 +171,21 @@ class WorkResultRepository (
                 condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
 
             if(!request.listProcessGroup.isNullOrEmpty()) {
-                request.listProcessGroup?.forEach { processGroup ->
-                    condition = condition.or(WORK_RESULT.PROCESS_GRP.eq(processGroup))
+                val processGroupCodes = request.listProcessGroup!!.split(",")
+                var condition1 : Condition = DSL.noCondition()
+                processGroupCodes.forEach { processGroup ->
+                    condition1 = condition1.or(WORK_RESULT.PROCESS_GRP.eq(processGroup))
                 }
+                condition = condition.and(condition1)
             }
 
             if(!request.listProcessCode.isNullOrEmpty()){
-                request.listProcessCode?.forEach { processCode ->
-                    condition = condition.or(WORK_RESULT.PROCESS_CODE.eq(processCode))
+                val processCodes = request.listProcessCode!!.split(",")
+                var condition2 : Condition = DSL.noCondition()
+                processCodes.forEach { processCode ->
+                    condition2 = condition2.or(WORK_RESULT.PROCESS_CODE.eq(processCode))
                 }
+                condition = condition.and(condition2)
             }
 
             if(!request.tapeLot.isNullOrEmpty())

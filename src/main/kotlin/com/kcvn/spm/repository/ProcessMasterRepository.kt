@@ -20,7 +20,7 @@ class ProcessMasterRepository (
             .where(PROCESS_MASTER.IS_DELETED.eq(false))
             .fetchInto(String::class.java)
     }
-    fun findByObjectId(objectIds: List<Int>): List<ProcessMaster> {
+    fun findByObjectId(objectIds: List<Long>): List<ProcessMaster> {
         return context.selectFrom(PROCESS_MASTER)
             .where(PROCESS_MASTER.OBJECT_ID.`in`(objectIds))
             .fetchInto(ProcessMaster::class.java)

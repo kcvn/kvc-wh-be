@@ -191,5 +191,10 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         }
         return sortField
     }
+
+    fun add(productProcess: ProductProcess) {
+        val record = context.newRecord(PRODUCT_PROCESS, productProcess)
+        context.insertInto(PRODUCT_PROCESS).set(record).execute()
+    }
 }
 

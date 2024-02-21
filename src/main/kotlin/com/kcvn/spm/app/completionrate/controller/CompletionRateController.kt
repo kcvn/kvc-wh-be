@@ -4,7 +4,6 @@ import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProd
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateSearchRequest
 import com.kcvn.spm.app.completionrate.service.CompletionRateService
 import com.kcvn.spm.common.payload.BaseResponse
-import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable

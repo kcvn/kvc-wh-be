@@ -5,17 +5,11 @@ import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureRespo
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.TransAmTable
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
-import com.kcvn.spm.model.tables.pojos.ProcessMaster
-import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
-import com.kcvn.spm.model.tables.pojos.SyncHistory
-import com.kcvn.spm.model.tables.pojos.WorkResult
-import com.kcvn.spm.model.tables.references.WORK_RESULT
-import com.kcvn.spm.repository.ProcessMasterRepository
-import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import com.kcvn.spm.repository.SyncHistoryRepository
-import com.kcvn.spm.repository.WorkResultRepository
+import com.kcvn.spm.model.tables.pojos.*
+import com.kcvn.spm.repository.*
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -23,11 +17,8 @@ import org.jooq.Table
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Date
-import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 
 @Service
@@ -38,6 +29,7 @@ class SyncTransAmDataService(
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val processMasterRep: ProcessMasterRepository,
     private val workResultRep: WorkResultRepository,
+    private val productProcessRep : ProductProcessRepository
 ) {
     private val transAmDSLContext: DSLContext = DSLContextExtension.createDSLContext(
         propertiesConfig.tranAmDbUrl,
@@ -50,12 +42,12 @@ class SyncTransAmDataService(
         val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_PROCEDURE_STRUCTURE)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
         var condition: Condition = DSL.noCondition()
-        if (syncHistory != null) {
-            condition = condition.and(
-                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate)
-                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate))
-            )
-        }
+//        if (syncHistory != null) {
+//            condition = condition.and(
+//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+//                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+//            )
+//        }
         val processFlows = this.transAmDSLContext.select().from(table).where(condition)
             .fetchInto(SyncProcessProcedureStructureResponse::class.java)
         val objectIds = processFlows.mapNotNull { x -> x.OBJECT_ID }
@@ -70,6 +62,9 @@ class SyncTransAmDataService(
                     processProcedureStructureRep.delete(exist.id!!)
                 }
                 processProcedureStructureRep.add(dataProcess)
+
+                val productProcess = createModelProductProcess(dataProcess)
+                productProcessRep.add(productProcess)
             }
             catch (e: Exception) {
                 e.printStackTrace()
@@ -83,16 +78,28 @@ class SyncTransAmDataService(
         )
     }
 
+    private fun createModelProductProcess(item: ProcessProcedureStructure): ProductProcess {
+        val processCode = item.processCode
+        val processProcedureStructure = processProcedureStructureRep.findByFilter(item)
+        val processMaster = processMasterRep.findByProcessCode(processCode)
+        return ProductProcess(
+            processProcedureStructureId = processProcedureStructure?.id,
+            processName = processMaster?.processName,
+            processNameJp = processMaster?.processNameJp,
+            updatedBy = CommonUtils.loggedInUser() ?: "SYSTEM"
+        )
+    }
+
     fun syncProcessMaster() {
         val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_MASTER)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
         var condition: Condition = DSL.noCondition()
-        if (syncHistory != null) {
-            condition = condition.and(
-                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate)
-                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate))
-            )
-        }
+//        if (syncHistory != null) {
+//            condition = condition.and(
+//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+//                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+//            )
+//        }
         val processMaster = this.transAmDSLContext.select().from(table).where(condition)
             .fetchInto(SyncProcessMasterResponse::class.java)
         val objectIds = processMaster.mapNotNull { x -> x.OBJECT_ID }
@@ -125,12 +132,12 @@ class SyncTransAmDataService(
         val syncHistory = syncHistoryRep.findByType(Constants.WORK_RESULT)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.WORK_RESULT))
         var condition: Condition = DSL.noCondition()
-        if (syncHistory!= null) {
-            condition = condition.and(
-                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate)
-                  .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate))
-            )
-        }
+//        if (syncHistory!= null) {
+//            condition = condition.and(
+//                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+//                  .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+//            )
+//        }
         // Define your datetime range
         val startDate = LocalDateTime.of(2020, 2, 1, 0, 0, 0)
         condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))

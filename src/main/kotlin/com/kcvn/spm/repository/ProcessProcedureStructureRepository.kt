@@ -5,6 +5,7 @@ import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
 import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -49,5 +50,6 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
                 .and(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.eq(request.layerCode))
                 .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(request.processCode)))
             .fetchAnyInto(ProcessProcedureStructure::class.java)
+
     }
 }

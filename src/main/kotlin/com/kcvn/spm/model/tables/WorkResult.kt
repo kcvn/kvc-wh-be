@@ -202,7 +202,7 @@ open class WorkResult(
     /**
      * The column <code>public.work_result.shipment_status</code>.
      */
-    val SHIPMENT_STATUS: TableField<WorkResultRecord, String?> = createField(DSL.name("shipment_status"), SQLDataType.VARCHAR(1), this, "")
+    val SHIPMENT_STATUS: TableField<WorkResultRecord, String?> = createField(DSL.name("shipment_status"), SQLDataType.VARCHAR(10), this, "")
 
     /**
      * The column <code>public.work_result.actual_result_code</code>.

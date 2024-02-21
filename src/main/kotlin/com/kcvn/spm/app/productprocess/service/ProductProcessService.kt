@@ -11,6 +11,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
+import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -21,11 +22,14 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 @Service
 @Transactional
 class ProductProcessService(
     private val productProcessRep : ProductProcessRepository,
+    private val processProcedureRep : ProcessProcedureStructureRepository,
     private val masterDataService : MasterDataService
 ) {
     fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse>
@@ -71,7 +75,7 @@ class ProductProcessService(
             productProcess.processStatisticCode = item.processStatisticCode;
             productProcess.processInventoryCode = item.processInventoryCode;
 
-            val data = productProcessRep.updateProductDetail(productProcess);
+            val data = productProcessRep.updateProcessDetail(productProcess);
             dataResult.add(data)
         }
         return  dataResult
@@ -186,7 +190,6 @@ class ProductProcessService(
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
-            val name = ExcelHelper.getCellValue(row, 0)
             val messageResults = mutableListOf<String>()
             var check = true
             if(row.getCell(0) == null){
@@ -214,11 +217,11 @@ class ProductProcessService(
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.product.length"))
             }
-            if(row.getCell(1) !=null && row.getCell(1).toString().length > 6){
+            if(row.getCell(1) !=null && row.getCell(1).toString().length > 8){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.code.length"))
             }
-            if(row.getCell((2)) != null && row.getCell(2).toString().length > 2){
+            if(row.getCell((2)) != null && row.getCell(2).toString().length >4){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.length"))
             }
@@ -246,23 +249,49 @@ class ProductProcessService(
 
            try {
                if (check) {
+                   val cellProcessCode = row.getCell(1)
+                   var processCode = ""
+                   if(cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
+                       processCode = cellProcessCode.numericCellValue.toInt().toString()
+                   else {
+                       processCode = ExcelHelper.getCellValue(row, 1)
+                   }
+
+                   val cellLayerCode = row.getCell(2)
+                   var layerCode = ""
+                   if(cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0)
+                       layerCode = cellLayerCode.numericCellValue.toInt().toString()
+                   else {
+                       processCode = ExcelHelper.getCellValue(row, 2)
+                   }
                    val filter = ImportProcessRequest(
                        productName = ExcelHelper.getCellValue(row, 0),
-                       processCode = ExcelHelper.getCellValue(row, 1),
-                       layerCode = ExcelHelper.getCellValue(row, 2)
+                       processCode = processCode,
+                       layerCode = layerCode
                    )
-                   val query = productProcessRep.getProductByFilter(filter)
-                   if(query == null){
+                   val filterCheckProcessProcedure = processProcedureRep.getByFilterProcessStructure(filter)
+                   if(filterCheckProcessProcedure == null)
+                   {
                        messageResults.add(CommonUtils.getMessage("validate.excel.process.data.null"))
                    }
                    else {
-                       val requestImportUpdate = ProductProcess(
-                           id = query.id,
+                       val requestImport = ProductProcess(
+                           processProcedureStructureId = filterCheckProcessProcedure.id,
                            processConvertCode = ExcelHelper.getCellValue(row, 3),
                            processInventoryCode = ExcelHelper.getCellValue(row, 4),
-                           processStatisticCode = ExcelHelper.getCellValue(row, 5)
+                           processStatisticCode = ExcelHelper.getCellValue(row, 5),
                        )
-                       productProcessRep.updateProductDetail(requestImportUpdate)
+                       val checkProductProcess = productProcessRep.findByIdProductProcedureStructure(filterCheckProcessProcedure.id)
+                       if(checkProductProcess == null){
+                           requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+                           requestImport.createdBy = CommonUtils.loggedInUser() ?: "SYSTEM"
+                           productProcessRep.insertProductProcess(requestImport)
+                       }
+                       else {
+                           requestImport.updatedBy = CommonUtils.loggedInUser() ?: "SYSTEM"
+                           requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+                           productProcessRep.updateProcessDetail(requestImport)
+                       }
                        messageResults.add("OK")
                        count++
                    }

@@ -38,7 +38,9 @@ class CompletionRateService(
 
     val completionRateResultKey = CommonUtils.getMessage("validate.excel.complition.rate.result")
     val completionValidateFormatError = CommonUtils.getMessage("validate.excel.complition.rate.format.error")
-
+    val completionRateFileEmpty = CommonUtils.getMessage("import.file.empty")
+    val completionRateFileWrongFormat = CommonUtils.getMessage("import.file.invalidFormat")
+    val keyRate = "TLD(rate)"
     fun downloadTemplate() : BaseResponse<FileContentModel> {
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
@@ -131,14 +133,14 @@ class CompletionRateService(
 
         val lastRowIndex = sheet.lastRowNum
         if (lastRowIndex < 1) {
-            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+            throw BusinessException(completionRateFileEmpty)
         }else{
             val firstRow = sheet.getRow(0)
             val cellAValue = firstRow.getCell(0)?.stringCellValue
             val cellBValue = firstRow.getCell(1)?.stringCellValue
 
-            if (cellAValue != "Key" || cellBValue != "TLD(rate)") {
-                throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
+            if (cellAValue != "Key" || cellBValue != keyRate) {
+                throw BusinessException(completionRateFileWrongFormat)
             }
 
         }
@@ -318,14 +320,14 @@ class CompletionRateService(
         val rowIndex = 1
         val lastRowIndex = sheet.lastRowNum
         if (lastRowIndex < 1) {
-            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+            throw BusinessException(completionRateFileEmpty)
         }else{
             val firstRow = sheet.getRow(0)
             val cellAValue = firstRow.getCell(0)?.stringCellValue
             val cellBValue = firstRow.getCell(1)?.stringCellValue
 
-            if (cellAValue != "Key" || cellBValue != "TLD(rate)") {
-                throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
+            if (cellAValue != "Key" || cellBValue != keyRate) {
+                throw BusinessException(completionRateFileWrongFormat)
             }
 
         }
@@ -466,14 +468,14 @@ class CompletionRateService(
 
         val lastRowIndex = sheet.lastRowNum
         if (lastRowIndex < 1) {
-            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+            throw BusinessException(completionRateFileEmpty)
         } else{
             val firstRow = sheet.getRow(0)
             val cellAValue = firstRow.getCell(0)?.stringCellValue
             val cellBValue = firstRow.getCell(1)?.stringCellValue
 
-            if (cellAValue != "Key" || cellBValue != "TLD(rate)") {
-                throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
+            if (cellAValue != "Key" || cellBValue != keyRate) {
+                throw BusinessException(completionRateFileWrongFormat)
             }
 
         }

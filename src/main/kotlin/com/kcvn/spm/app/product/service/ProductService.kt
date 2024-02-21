@@ -1,15 +1,16 @@
 package com.kcvn.spm.app.product.service
 
+import com.kcvn.spm.app.masterdata.payload.response.MasterDataSelectionResponse
 import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.product.payload.model.LayerImportProductModel
+import com.kcvn.spm.app.product.payload.model.ProductModel
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
-import com.kcvn.spm.app.product.payload.model.ProductModel
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
 import com.kcvn.spm.common.helper.jsonhelper.JsonConvert
 import com.kcvn.spm.common.payload.BaseResponse
-import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
@@ -26,6 +27,8 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -69,7 +72,7 @@ class ProductService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = "Times New Roman"
+            font.fontName = Constants.EXCEL_FONT_NAME
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -140,8 +143,8 @@ class ProductService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "Danh_sach_san_pham.xlsx",
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName = CommonUtils.getMessage("fileName.exportListProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -160,8 +163,8 @@ class ProductService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "ImportProductTemplate.xlsx",
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName = CommonUtils.getMessage("fileName.importProductTemplate"),
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -179,60 +182,32 @@ class ProductService(
         val productExists = productRep.getByName(productNames)
         val masterData = masterDataService.getMasterDataSelection()
         var count = 0
-        val total = sheet.lastRowNum - rowIndex
+        var total = 0
 
-        val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
-        if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue("Kết quả")
-            val headerStyle = headerRow.getCell(0).cellStyle
-            headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
-            headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
-            headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-            sheet.setColumnWidth(headerCell, 15000)
+        val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
+
+        if (colResult == null) {
+            headerRow.createCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
         }
+        else {
+            headerRow.getCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+        }
+        val headerStyle = headerRow.getCell(0).cellStyle
+        headerRow.getCell(colIndexResult).cellStyle.cloneStyleFrom(headerStyle)
+        headerRow.getCell(colIndexResult).cellStyle.fillForegroundColor = IndexedColors.RED.index
+        headerRow.getCell(colIndexResult).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        sheet.setColumnWidth(colIndexResult, 15000)
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val name = ExcelHelper.getCellValue(row, 0)
-            val messageResults = mutableListOf<String>()
-            var check = true
-            if (!masterData.exportTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) }) {
-                check = false
-                messageResults.add("Loại xuất hàng không tồn tại")
-            }
-            if (!masterData.frame1Selections.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
-                check = false
-                messageResults.add("Khung 1 không tồn tại")
-            }
-            if (!masterData.frame2Selections.any { x -> x.label == ExcelHelper.getCellValue(row, 4) }) {
-                check = false
-                messageResults.add("Khung 2 không tồn tại")
-            }
-            if (!masterData.moldSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
-                check = false
-                messageResults.add("Khuôn đục không tồn tại")
-            }
-            if (!masterData.srNosrSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 7) }) {
-                check = false
-                messageResults.add("S.R/No S.R không tồn tại")
-            }
-            if (!masterData.ringJigSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 11) }) {
-                check = false
-                messageResults.add("RING/JIG không tồn tại")
-            }
-            if (!masterData.tapeCommonSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 14) }) {
-                check = false
-                messageResults.add("Tape dùng chung không tồn tại")
-            }
-            if (!masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 15) }) {
-                check = false
-                messageResults.add("Loại tape không tồn tại")
-            }
-
-            if (check) {
+            val messageResults = validateImportProduct(row, headerRow, masterData)
+            total++
+            if (messageResults.isEmpty()) {
                 val productExist = productExists.find { x -> x.name == name }
                 try {
                     if (productExist == null) {
@@ -245,20 +220,20 @@ class ProductService(
                             mold = ExcelHelper.getCellValue(row, 5),
                             productLine = ExcelHelper.getCellValue(row, 6),
                             srNosr = ExcelHelper.getCellValue(row, 7),
-                            pcsSh = ExcelHelper.getCellValue(row, 8).toInt(),
-                            shBlock = ExcelHelper.getCellValue(row, 9).toInt(),
-                            layerCount = ExcelHelper.getCellValue(row, 10).toInt(),
+                            pcsSh = ExcelHelper.getCellValue(row, 8).toBigDecimal().toInt(),
+                            shBlock = ExcelHelper.getCellValue(row, 9).toBigDecimal().toInt(),
+                            layerCount = ExcelHelper.getCellValue(row, 10).toBigDecimal().toInt(),
                             ringJig = ExcelHelper.getCellValue(row, 11),
-                            process = ExcelHelper.getCellValue(row, 12).toInt(),
+                            process = ExcelHelper.getCellValue(row, 12).toBigDecimal().toInt(),
                             snapMold = ExcelHelper.getCellValue(row, 13),
                             tapeCommon = ExcelHelper.getCellValue(row, 14),
                             tapeType = ExcelHelper.getCellValue(row, 15),
                         )
 
                         val layers = mutableListOf<LayerImportProductModel>()
-                        for (i in 16 until row.lastCellNum) {
+                        for (i in 16 until colIndexResult) {
                             if (ExcelHelper.getCellValue(row, i).isEmpty()) continue
-                            val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toInt())
+                            val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toBigDecimal().toInt())
                             layers.add(layer)
                         }
 
@@ -273,19 +248,19 @@ class ProductService(
                         productExist.mold = ExcelHelper.getCellValue(row, 5)
                         productExist.productLine = ExcelHelper.getCellValue(row, 6)
                         productExist.srNosr = ExcelHelper.getCellValue(row, 7)
-                        productExist.pcsSh = ExcelHelper.getCellValue(row, 8).toInt()
-                        productExist.shBlock = ExcelHelper.getCellValue(row, 9).toInt()
-                        productExist.layerCount = ExcelHelper.getCellValue(row, 10).toInt()
+                        productExist.pcsSh = ExcelHelper.getCellValue(row, 8).toBigDecimal().toInt()
+                        productExist.shBlock = ExcelHelper.getCellValue(row, 9).toBigDecimal().toInt()
+                        productExist.layerCount = ExcelHelper.getCellValue(row, 10).toBigDecimal().toInt()
                         productExist.ringJig = ExcelHelper.getCellValue(row, 11)
-                        productExist.process = ExcelHelper.getCellValue(row, 12).toInt()
+                        productExist.process = ExcelHelper.getCellValue(row, 12).toBigDecimal().toInt()
                         productExist.snapMold = ExcelHelper.getCellValue(row, 13)
                         productExist.tapeCommon = ExcelHelper.getCellValue(row, 14)
                         productExist.tapeType = ExcelHelper.getCellValue(row, 15)
 
                         val layers = mutableListOf<LayerImportProductModel>()
-                        for (i in 16 until row.lastCellNum) {
-                            if (row.getCell(i).stringCellValue.isNullOrEmpty()) continue
-                            val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toInt())
+                        for (i in 16 until colIndexResult) {
+                            if (ExcelHelper.getCellValue(row, i).isEmpty()) continue
+                            val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toBigDecimal().toInt())
                             layers.add(layer)
                         }
 
@@ -293,21 +268,19 @@ class ProductService(
 
                         productRep.update(productExist)
                     }
-                    messageResults.add("OK")
+                    messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
                     count++
                 } catch (e: Exception) {
-                    messageResults.add("Có lỗi xảy ra khi cập nhật dữ liệu sản phẩm")
+                    messageResults.add(CommonUtils.getMessage("validate.excel.updateDataError"))
                 }
             }
             val result = messageResults.joinToString(separator = "; ")
 
-            if (!checkColResult) {
-                row.createCell(row.lastCellNum + 0).setCellValue(result)
-                row.getCell(row.lastCellNum - 1).cellStyle = style
+            if (row.getCell(colIndexResult) == null) {
+                row.createCell(colIndexResult)
             }
-            else{
-                row.getCell(row.lastCellNum - 1).setCellValue(result)
-            }
+            row.getCell(colIndexResult).setCellValue(result)
+            row.getCell(colIndexResult).cellStyle = style
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -316,8 +289,8 @@ class ProductService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "Ket_qua_import_san_pham.xlsx",
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName = CommonUtils.getMessage("fileName.resultImportProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -328,8 +301,6 @@ class ProductService(
             if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
         )
     }
-
-
 
     private fun mappingProductResponse(products: List<Product>) : PagingProductResponse {
         val productNames = products.mapNotNull { x -> x.name }
@@ -362,5 +333,77 @@ class ProductService(
         response.columns = productProcesses.map { x -> KeyValueResponse(x.processCode,x.processCode) }.distinct()
 
         return response
+    }
+
+    private fun validateImportProduct(row: Row, headerRow: Row, masterData: MasterDataSelectionResponse) : MutableList<String> {
+        val messageResults = mutableListOf<String>()
+        if (ExcelHelper.getCellValue(row, 0).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
+        }
+        else {
+            if (ExcelHelper.getCellValue(row, 0).length != 12)
+                messageResults.add(CommonUtils.getMessage("validate.excel.length", arrayOf(ExcelHelper.getCellValue(headerRow, 0), "12")))
+        }
+        if (ExcelHelper.getCellValue(row, 1).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
+        }
+        else {
+            if (!masterData.exportTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) })
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
+        }
+        if (ExcelHelper.getCellValue(row, 2).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
+        }
+        if (ExcelHelper.getCellValue(row, 3).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
+        }
+        else {
+            if (!masterData.frame1Selections.any { x -> x.label == ExcelHelper.getCellValue(row, 3) })
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
+        }
+        if (ExcelHelper.getCellValue(row, 4).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
+        }
+        else {
+            if (!masterData.frame2Selections.any { x -> x.label == ExcelHelper.getCellValue(row, 4) })
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
+        }
+        if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
+        }
+        else {
+            if (!masterData.moldSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 5) })
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
+        }
+        if (ExcelHelper.getCellValue(row, 7).isNotEmpty() && !masterData.srNosrSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 7) }) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 7))))
+        }
+        if (ExcelHelper.getCellValue(row, 8).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 8))))
+        }
+        if (ExcelHelper.getCellValue(row, 9).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 9))))
+        }
+        if (ExcelHelper.getCellValue(row, 10).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 10))))
+        }
+        if (ExcelHelper.getCellValue(row, 11).isNotEmpty() && !masterData.ringJigSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 11) }) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 11))))
+        }
+        if (ExcelHelper.getCellValue(row, 12).isNotEmpty() && ExcelHelper.getCellValue(row, 12).toBigDecimalOrNull() == null) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, 12))))
+        }
+        if (ExcelHelper.getCellValue(row, 14).isNotEmpty() && !masterData.tapeCommonSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 14) }) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 14))))
+        }
+        if (ExcelHelper.getCellValue(row, 15).isEmpty()) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
+        }
+        else {
+            if (!masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 15) }) {
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
+            }
+        }
+        return messageResults.map { x -> x.replace("\"", "") }.toMutableList()
     }
 }

@@ -94,8 +94,8 @@ class WorkResultService (
     }
 
 
-    fun getListProcessByGroupCode(groupCode: Array<String>): BaseResponse<List<DropdownResponse>> {
-        val listProcessByGroupCode = workResultRep.getListProcessByGroupCode(groupCode)
+    fun getListProcessByGroupCode(groupCodes: String): BaseResponse<List<DropdownResponse>> {
+        val listProcessByGroupCode = workResultRep.getListProcessByGroupCode(groupCodes)
 
         // Map each ProcessResponse to a DropdownResponse
         val dropDownList: List<DropdownResponse> = listProcessByGroupCode.map { processResponse ->

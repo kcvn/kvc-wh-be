@@ -21,7 +21,7 @@ import org.jooq.Index
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row8
+import org.jooq.Row10
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -107,6 +107,16 @@ open class CompletionRateProduct(
      */
     val IS_DELETED: TableField<CompletionRateProductRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.completion_rate_product.effective_date</code>.
+     */
+    val EFFECTIVE_DATE: TableField<CompletionRateProductRecord, OffsetDateTime?> = createField(DSL.name("effective_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
+
+    /**
+     * The column <code>public.completion_rate_product.expiration_date</code>.
+     */
+    val EXPIRATION_DATE: TableField<CompletionRateProductRecord, OffsetDateTime?> = createField(DSL.name("expiration_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
+
     private constructor(alias: Name, aliased: Table<CompletionRateProductRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<CompletionRateProductRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -151,18 +161,18 @@ open class CompletionRateProduct(
     override fun rename(name: Table<*>): CompletionRateProduct = CompletionRateProduct(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row8 type methods
+    // Row10 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row8<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row8<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row10<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, OffsetDateTime?, OffsetDateTime?> = super.fieldsRow() as Row10<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, OffsetDateTime?, OffsetDateTime?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, OffsetDateTime?, OffsetDateTime?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, OffsetDateTime?, OffsetDateTime?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

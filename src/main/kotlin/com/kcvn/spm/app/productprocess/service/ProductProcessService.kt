@@ -50,7 +50,7 @@ class ProductProcessService(
                     productId = productProcess.productId,
                 );
             }
-            response.total = result.second;
+            response.totalRecords = result.second ?: 0
 
         return response;
     }

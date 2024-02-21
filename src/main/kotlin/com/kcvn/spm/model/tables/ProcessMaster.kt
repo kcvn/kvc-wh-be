@@ -67,7 +67,7 @@ open class ProcessMaster(
     /**
      * The column <code>public.process_master.object_id</code>.
      */
-    val OBJECT_ID: TableField<ProcessMasterRecord, Int?> = createField(DSL.name("object_id"), SQLDataType.INTEGER.nullable(false), this, "")
+    val OBJECT_ID: TableField<ProcessMasterRecord, Long?> = createField(DSL.name("object_id"), SQLDataType.BIGINT.nullable(false), this, "")
 
     /**
      * The column <code>public.process_master.company_code</code>.

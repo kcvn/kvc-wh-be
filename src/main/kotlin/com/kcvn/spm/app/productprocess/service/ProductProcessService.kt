@@ -194,28 +194,28 @@ class ProductProcessService(
             var check = true
             if(row.getCell(0) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.product.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
             }
             if(row.getCell(1) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
             }
             if(row.getCell((2)) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
             }
             if(row.getCell(3) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
             }
             if(row.getCell(5) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
             }
 
             if(row.getCell(0) != null && row.getCell(0).toString().length > 60){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.product.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength"))
             }
             if(row.getCell(1) !=null && row.getCell(1).toString().length > 8){
                 check = false
@@ -240,11 +240,11 @@ class ProductProcessService(
 
             if (!masterData.processConvertCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.does.not.exist"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist",arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
             }
             if (!masterData.processStatisticCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.does.not.exist"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist",arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
             }
 
            try {

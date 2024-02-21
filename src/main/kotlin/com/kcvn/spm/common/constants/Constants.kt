@@ -22,5 +22,9 @@ class Constants {
         const val TAPE_DUNG_CHUNG = "TAPE_DUNG_CHUNG"
         const val MACHUYENDOI = "MA_CHUYEN_DOI"
         const val MATHONGKE = "MA_THONG_KE"
+
+        //Excel
+        const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        const val EXCEL_FONT_NAME = "Times New Roman"
     }
 }

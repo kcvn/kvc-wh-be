@@ -54,24 +54,24 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).and(PRODUCT.IS_DELETED.eq(false)))
             .leftJoin(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE).and(PROCESS_MASTER.IS_DELETED.eq(false)))
-            .where(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)) // Điều kiện cho bảng PROCESS_PROCEDURE_STRUCTURE
+            .where(condition.and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))) // Điều kiện cho bảng PROCESS_PROCEDURE_STRUCTURE
             .orderBy(getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE))
             .limit(pageable.pageSize)
             .offset(pageable.offset)
             .fetchInto(ProductProcessResponse::class.java)
 
 
-        val queryTotal =  context
-        .selectCount()
-        .from(PROCESS_PROCEDURE_STRUCTURE)
+        val queryTotal = context
+            .selectCount()
+            .from(PROCESS_PROCEDURE_STRUCTURE)
             .leftJoin(PRODUCT_PROCESS)
-        .on(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID
-            .eq(PROCESS_PROCEDURE_STRUCTURE.ID))
+            .on(PROCESS_PROCEDURE_STRUCTURE.ID.eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .leftJoin(PRODUCT)
-            .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE))
-        .where(condition.and(PRODUCT_PROCESS.IS_DELETED.eq(false))
-            .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+            .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).and(PRODUCT.IS_DELETED.eq(false)))
+            .where(condition.and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+
         val totalCount = context.fetchOne(queryTotal)?.value1()
+
         return  Pair(productProcessQuery, totalCount);
     }
 

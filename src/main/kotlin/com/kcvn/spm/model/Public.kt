@@ -15,6 +15,7 @@ import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.ProcessMaster
@@ -100,6 +101,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val COMPLETION_RATE_PRODUCT: CompletionRateProduct get() = CompletionRateProduct.COMPLETION_RATE_PRODUCT
 
     /**
+     * The table <code>public.inventory_product</code>.
+     */
+    val INVENTORY_PRODUCT: InventoryProduct get() = InventoryProduct.INVENTORY_PRODUCT
+
+    /**
      * The table <code>public.order</code>.
      */
     val ORDER: Order get() = Order.ORDER
@@ -153,6 +159,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         CompletionRateProcess.COMPLETION_RATE_PROCESS,
         CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,
         CompletionRateProduct.COMPLETION_RATE_PRODUCT,
+        InventoryProduct.INVENTORY_PRODUCT,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,
         ProcessMaster.PROCESS_MASTER,

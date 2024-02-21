@@ -127,11 +127,15 @@ class CompletionRateService(
         )
     }
 
-    fun importExcelCompletionRateProduct(file: MultipartFile) : BaseResponse<FileContentModel> {
+    fun importExcelCompletionRateProduct(file: MultipartFile,effectiveDate: OffsetDateTime) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
-
+        val utcOffset = ZoneOffset.ofHours(7)
+        val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
+            .withMinute(0)
+            .withSecond(0)
+            .withNano(0)
         val lastRowIndex = sheet.lastRowNum
         if (lastRowIndex < 1) {
             throw BusinessException(completionRateFileEmpty)
@@ -177,6 +181,10 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("product.not.exist"))
 
             }
+            if (effectiveDate <= currentDate) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.exdate"))
+
+            }
             if (productExist == null) {
                 if (name.length != 12) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.product.key"))
@@ -197,13 +205,17 @@ class CompletionRateService(
                     if (productExist == null) {
                         val compleRateProduct = CompletionRateProduct(
                             productName = name,
-                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                            effectiveDate = effectiveDate,
+                            expirationDate = null
+
                         )
 
                         completionRateProductRepository.add(compleRateProduct)
                     } else {
                         productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-
+                        productExist.effectiveDate = effectiveDate
+                        productExist.expirationDate = effectiveDate.minusDays(1)
                         completionRateProductRepository.update(productExist)
                     }
                     errorMessages.add("OK")
@@ -348,6 +360,7 @@ class CompletionRateService(
         val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
             .withMinute(0)
             .withSecond(0)
+            .withNano(0)
 
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
@@ -494,6 +507,8 @@ class CompletionRateService(
         val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
             .withMinute(0)
             .withSecond(0)
+            .withNano(0)
+
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 
@@ -548,7 +563,7 @@ class CompletionRateService(
                             processCode = key.substring(7, 13),
                             layerCode = key.substring(13, 14),
                             expirationDate = null,
-                            effectiveDate = effectiveDate.minusDays(1)
+                            effectiveDate = effectiveDate
 
 
                         )

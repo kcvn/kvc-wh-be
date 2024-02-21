@@ -93,7 +93,7 @@ open class InventoryProduct(
     /**
      * The column <code>public.inventory_product.raw_material_batch</code>.
      */
-    val RAW_MATERIAL_BATCH: TableField<InventoryProductRecord, Int?> = createField(DSL.name("raw_material_batch"), SQLDataType.INTEGER, this, "")
+    val RAW_MATERIAL_BATCH: TableField<InventoryProductRecord, String?> = createField(DSL.name("raw_material_batch"), SQLDataType.VARCHAR(50), this, "")
 
     /**
      * The column <code>public.inventory_product.management_number</code>.
@@ -174,16 +174,16 @@ open class InventoryProduct(
     // -------------------------------------------------------------------------
     // Row13 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row13<String?, LocalDate?, Int?, Int?, String?, Int?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?> = super.fieldsRow() as Row13<String?, LocalDate?, Int?, Int?, String?, Int?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row13<String?, LocalDate?, Int?, Int?, String?, String?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?> = super.fieldsRow() as Row13<String?, LocalDate?, Int?, Int?, String?, String?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, LocalDate?, Int?, Int?, String?, Int?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, LocalDate?, Int?, Int?, String?, String?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, LocalDate?, Int?, Int?, String?, Int?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, LocalDate?, Int?, Int?, String?, String?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

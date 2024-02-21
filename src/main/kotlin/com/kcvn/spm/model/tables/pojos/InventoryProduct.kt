@@ -19,7 +19,7 @@ data class InventoryProduct(
     var processedProductsNumber: Int? = null,
     var rawMaterialSheetsNumber: Int? = null,
     var purchaseOrder: String? = null,
-    var rawMaterialBatch: Int? = null,
+    var rawMaterialBatch: String? = null,
     var managementNumber: Int? = null,
     var processProcedureStructureId: String? = null,
     var createdDate: LocalDateTime? = null,

@@ -23,9 +23,9 @@ open class ProcessMasterRecord() : UpdatableRecordImpl<ProcessMasterRecord>(Proc
         set(value): Unit = set(0, value)
         get(): String? = get(0) as String?
 
-    open var objectId: Int?
+    open var objectId: Long?
         set(value): Unit = set(1, value)
-        get(): Int? = get(1) as Int?
+        get(): Long? = get(1) as Long?
 
     open var companyCode: String?
         set(value): Unit = set(2, value)
@@ -238,7 +238,7 @@ open class ProcessMasterRecord() : UpdatableRecordImpl<ProcessMasterRecord>(Proc
     /**
      * Create a detached, initialised ProcessMasterRecord
      */
-    constructor(id: String? = null, objectId: Int? = null, companyCode: String? = null, grpDepartments: String? = null, processCode: String? = null, processName: String? = null, processNameJp: String? = null, grpProcess: String? = null, grpProcessSummary: String? = null, productRateByMaterial: BigDecimal? = null, completionRate: BigDecimal? = null, inputSystem: String? = null, isActualResult: String? = null, officeCode: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, productRateByMaterialSetting: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, printType: String? = null, unfinishedProcedureType: String? = null, standardProcedureType: String? = null, checkProcessCode: String? = null, actualResultType: String? = null, leadTimeMin: BigDecimal? = null, wsType: String? = null, wsCode: String? = null, persons: Int? = null, workTime: String? = null, grpQuantity: Int? = null, unit: String? = null, neckFlag: String? = null, plannedProcessCode: String? = null, grpActualResult: String? = null, grpCapitalPrice: String? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
+    constructor(id: String? = null, objectId: Long? = null, companyCode: String? = null, grpDepartments: String? = null, processCode: String? = null, processName: String? = null, processNameJp: String? = null, grpProcess: String? = null, grpProcessSummary: String? = null, productRateByMaterial: BigDecimal? = null, completionRate: BigDecimal? = null, inputSystem: String? = null, isActualResult: String? = null, officeCode: String? = null, shipmentSize: Int? = null, conversionFactor: BigDecimal? = null, unitConversionFactor: String? = null, conversionFactorsErrorType: String? = null, conversionFactorAdjustmentType: String? = null, planLeadTimeNormally: BigDecimal? = null, workLeadTimeNormally: BigDecimal? = null, transportLeadTimeNormally: BigDecimal? = null, planLeadTimeUrgently: BigDecimal? = null, workLeadTimeUrgently: BigDecimal? = null, transportLeadTimeUrgently: BigDecimal? = null, productRateByMaterialSetting: BigDecimal? = null, backlogType: String? = null, unfinishedProductQuantity: Int? = null, printType: String? = null, unfinishedProcedureType: String? = null, standardProcedureType: String? = null, checkProcessCode: String? = null, actualResultType: String? = null, leadTimeMin: BigDecimal? = null, wsType: String? = null, wsCode: String? = null, persons: Int? = null, workTime: String? = null, grpQuantity: Int? = null, unit: String? = null, neckFlag: String? = null, plannedProcessCode: String? = null, grpActualResult: String? = null, grpCapitalPrice: String? = null, isExclusiveOrException: Int? = null, workplaceCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.objectId = objectId
         this.companyCode = companyCode

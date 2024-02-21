@@ -1,0 +1,2 @@
+ALTER TABLE public.process_master ALTER COLUMN object_id TYPE bigint USING object_id::bigint;
+ALTER TABLE public.work_result ALTER COLUMN shipment_status TYPE varchar(10) USING shipment_status::varchar(10);

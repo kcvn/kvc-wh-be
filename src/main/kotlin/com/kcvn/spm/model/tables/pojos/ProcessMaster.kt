@@ -15,7 +15,7 @@ import java.time.OffsetDateTime
 @Suppress("UNCHECKED_CAST")
 data class ProcessMaster(
     var id: String? = null,
-    var objectId: Int? = null,
+    var objectId: Long? = null,
     var companyCode: String? = null,
     var grpDepartments: String? = null,
     var processCode: String? = null,

@@ -23,7 +23,9 @@ data class CompletionRateProduct(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var effectiveDate: OffsetDateTime? = null,
+    var expirationDate: OffsetDateTime? = null
 ): Serializable {
 
 
@@ -83,6 +85,18 @@ data class CompletionRateProduct(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.effectiveDate == null) {
+            if (o.effectiveDate != null)
+                return false
+        }
+        else if (this.effectiveDate != o.effectiveDate)
+            return false
+        if (this.expirationDate == null) {
+            if (o.expirationDate != null)
+                return false
+        }
+        else if (this.expirationDate != o.expirationDate)
+            return false
         return true
     }
 
@@ -97,6 +111,8 @@ data class CompletionRateProduct(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.effectiveDate == null) 0 else this.effectiveDate.hashCode())
+        result = prime * result + (if (this.expirationDate == null) 0 else this.expirationDate.hashCode())
         return result
     }
 
@@ -111,6 +127,8 @@ data class CompletionRateProduct(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(effectiveDate)
+        sb.append(", ").append(expirationDate)
 
         sb.append(")")
         return sb.toString()

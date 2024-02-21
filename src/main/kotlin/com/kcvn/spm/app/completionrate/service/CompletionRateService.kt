@@ -132,6 +132,15 @@ class CompletionRateService(
         val lastRowIndex = sheet.lastRowNum
         if (lastRowIndex < 1) {
             throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        }else{
+            val firstRow = sheet.getRow(0)
+            val cellAValue = firstRow.getCell(0)?.stringCellValue
+            val cellBValue = firstRow.getCell(1)?.stringCellValue
+
+            if (cellAValue != "Key" || cellBValue != "TLD(rate)") {
+                throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
+            }
+
         }
 //        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
@@ -310,6 +319,15 @@ class CompletionRateService(
         val lastRowIndex = sheet.lastRowNum
         if (lastRowIndex < 1) {
             throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        }else{
+            val firstRow = sheet.getRow(0)
+            val cellAValue = firstRow.getCell(0)?.stringCellValue
+            val cellBValue = firstRow.getCell(1)?.stringCellValue
+
+            if (cellAValue != "Key" || cellBValue != "TLD(rate)") {
+                throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
+            }
+
         }
 //        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
@@ -449,6 +467,15 @@ class CompletionRateService(
         val lastRowIndex = sheet.lastRowNum
         if (lastRowIndex < 1) {
             throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        } else{
+            val firstRow = sheet.getRow(0)
+            val cellAValue = firstRow.getCell(0)?.stringCellValue
+            val cellBValue = firstRow.getCell(1)?.stringCellValue
+
+            if (cellAValue != "Key" || cellBValue != "TLD(rate)") {
+                throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
+            }
+
         }
 //        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 

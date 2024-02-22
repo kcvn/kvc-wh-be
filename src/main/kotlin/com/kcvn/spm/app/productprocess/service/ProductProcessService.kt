@@ -187,64 +187,71 @@ class ProductProcessService(
             headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             sheet.setColumnWidth(headerCell, 15000)
         }
-
+        if(ExcelHelper.getCellValue(headerRow, 0) != "Tên sản phẩm"
+            || ExcelHelper.getCellValue(headerRow, 1) != "Mã công đoạn"
+            || ExcelHelper.getCellValue(headerRow, 2) != "Lớp số"
+            || ExcelHelper.getCellValue(headerRow, 3) != "Mã chuyển đổi"
+            || ExcelHelper.getCellValue(headerRow, 4) != "Mã công đoạn tính gộp tồn kho"
+            || ExcelHelper.getCellValue(headerRow, 5) != "Mã thống kê"){
+            throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
+        }
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
             if(row.getCell(0) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.product.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
             }
             if(row.getCell(1) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
             }
             if(row.getCell((2)) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
             }
             if(row.getCell(3) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
             }
             if(row.getCell(5) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
             }
 
-            if(row.getCell(0) != null && row.getCell(0).toString().length > 60){
+            if(row.getCell(0) != null && row.getCell(0).toString().length > 12){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.product.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
             }
             if(row.getCell(1) !=null && row.getCell(1).toString().length > 8){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
             }
             if(row.getCell((2)) != null && row.getCell(2).toString().length >4){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
             }
             if(row.getCell(3) != null && row.getCell(3).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
             }
             if(row.getCell(4) != null && row.getCell(4).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.inventory.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
             }
             if(row.getCell(5) != null && row.getCell(5).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
             }
 
             if (!masterData.processConvertCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.does.not.exist"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist",arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
             }
             if (!masterData.processStatisticCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.does.not.exist"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist",arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
             }
 
            try {
@@ -272,7 +279,7 @@ class ProductProcessService(
                    val filterCheckProcessProcedure = processProcedureRep.getByFilterProcessStructure(filter)
                    if(filterCheckProcessProcedure == null)
                    {
-                       messageResults.add(CommonUtils.getMessage("validate.excel.process.data.null"))
+                       messageResults.add(CommonUtils.getMessage("validate.excel.process.dataNull"))
                    }
                    else {
                        val requestImport = ProductProcess(

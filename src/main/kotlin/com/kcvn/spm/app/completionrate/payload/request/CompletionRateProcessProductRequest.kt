@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.inventoryproduct.completionrate.payload.request
+package com.kcvn.spm.app.completionrate.payload.request
 
 data class CompletionRateProcessProductRequest (
 

@@ -187,7 +187,14 @@ class ProductProcessService(
             headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             sheet.setColumnWidth(headerCell, 15000)
         }
-
+        if(ExcelHelper.getCellValue(headerRow, 0) != "Tên sản phẩm"
+            || ExcelHelper.getCellValue(headerRow, 1) != "Mã công đoạn"
+            || ExcelHelper.getCellValue(headerRow, 2) != "Lớp số"
+            || ExcelHelper.getCellValue(headerRow, 3) != "Mã chuyển đổi"
+            || ExcelHelper.getCellValue(headerRow, 4) != "Mã công đoạn tính gộp tồn kho"
+            || ExcelHelper.getCellValue(headerRow, 5) != "Mã thống kê"){
+            throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
+        }
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()

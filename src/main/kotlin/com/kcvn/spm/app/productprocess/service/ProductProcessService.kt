@@ -1,4 +1,4 @@
-package com.kcvn.spm.sample.service
+package com.kcvn.spm.app.productprocess.service
 
 import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
@@ -201,25 +201,51 @@ class ProductProcessService(
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
-            if(row.getCell(0) == null){
+            if (ExcelHelper.getCellValue(row, 0).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                    )
+                )
             }
-            if(row.getCell(1) == null){
+            if (ExcelHelper.getCellValue(row, 1).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                    )
+                )
             }
-            if(row.getCell((2)) == null){
+            if (ExcelHelper.getCellValue(row, 2).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
+                    )
+                )
             }
-            if(row.getCell(3) == null){
+            if (ExcelHelper.getCellValue(row, 3).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
+                    )
+                )
             }
-            if(row.getCell(5) == null){
+
+            if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
+                    )
+                )
             }
 
             if(row.getCell(0) != null && row.getCell(0).toString().length > 12){
@@ -316,7 +342,7 @@ class ProductProcessService(
                 row.getCell(row.lastCellNum - 1).cellStyle = style
             }
             else{
-                row.getCell(row.lastCellNum - 1).setCellValue(result)
+                row.getCell(row.lastCellNum - 2).setCellValue(result)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

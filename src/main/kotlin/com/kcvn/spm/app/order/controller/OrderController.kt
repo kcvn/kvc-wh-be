@@ -1,18 +1,11 @@
 package com.kcvn.spm.app.order.controller
 
-import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
-import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
-import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
-import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
-import com.kcvn.spm.repository.OrderDetailRepository
-import com.kcvn.spm.repository.OrderRepository
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault

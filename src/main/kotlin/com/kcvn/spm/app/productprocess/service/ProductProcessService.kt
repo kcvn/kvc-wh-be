@@ -187,6 +187,7 @@ class ProductProcessService(
             headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             sheet.setColumnWidth(headerCell, 15000)
         }
+        var test = ExcelHelper.getCellValue(headerRow, 0)
         if(ExcelHelper.getCellValue(headerRow, 0) != "Tên sản phẩm"
             || ExcelHelper.getCellValue(headerRow, 1) != "Mã công đoạn"
             || ExcelHelper.getCellValue(headerRow, 2) != "Lớp số"

@@ -1,4 +1,5 @@
 package com.kcvn.spm.app.inventoryproduct.payload.response
 
-class CheckInventoryDateResponse {
-}
+ data class CheckInventoryDateResponse (
+    var hasInventoryDate: Boolean = false
+)

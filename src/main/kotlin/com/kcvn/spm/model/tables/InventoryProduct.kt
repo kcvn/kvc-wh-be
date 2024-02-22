@@ -8,8 +8,7 @@ import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.INVENTORY_PRODUCT_PKEY
 import com.kcvn.spm.model.tables.records.InventoryProductRecord
 
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.function.Function
 
 import org.jooq.Field
@@ -69,36 +68,14 @@ open class InventoryProduct(
     val ID: TableField<InventoryProductRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
+     * The column <code>public.inventory_product.code</code>.
+     */
+    val CODE: TableField<InventoryProductRecord, String?> = createField(DSL.name("code"), SQLDataType.VARCHAR(50).nullable(false), this, "")
+
+    /**
      * The column <code>public.inventory_product.inventory_date</code>.
      */
-    val INVENTORY_DATE: TableField<InventoryProductRecord, LocalDate?> = createField(DSL.name("inventory_date"), SQLDataType.LOCALDATE.nullable(false), this, "")
-
-    /**
-     * The column
-     * <code>public.inventory_product.processed_products_number</code>.
-     */
-    val PROCESSED_PRODUCTS_NUMBER: TableField<InventoryProductRecord, Int?> = createField(DSL.name("processed_products_number"), SQLDataType.INTEGER, this, "")
-
-    /**
-     * The column
-     * <code>public.inventory_product.raw_material_sheets_number</code>.
-     */
-    val RAW_MATERIAL_SHEETS_NUMBER: TableField<InventoryProductRecord, Int?> = createField(DSL.name("raw_material_sheets_number"), SQLDataType.INTEGER, this, "")
-
-    /**
-     * The column <code>public.inventory_product.purchase_order</code>.
-     */
-    val PURCHASE_ORDER: TableField<InventoryProductRecord, String?> = createField(DSL.name("purchase_order"), SQLDataType.VARCHAR(255), this, "")
-
-    /**
-     * The column <code>public.inventory_product.raw_material_batch</code>.
-     */
-    val RAW_MATERIAL_BATCH: TableField<InventoryProductRecord, String?> = createField(DSL.name("raw_material_batch"), SQLDataType.VARCHAR(50), this, "")
-
-    /**
-     * The column <code>public.inventory_product.management_number</code>.
-     */
-    val MANAGEMENT_NUMBER: TableField<InventoryProductRecord, Int?> = createField(DSL.name("management_number"), SQLDataType.INTEGER, this, "")
+    val INVENTORY_DATE: TableField<InventoryProductRecord, OffsetDateTime?> = createField(DSL.name("inventory_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
 
     /**
      * The column
@@ -107,9 +84,29 @@ open class InventoryProduct(
     val PROCESS_PROCEDURE_STRUCTURE_ID: TableField<InventoryProductRecord, String?> = createField(DSL.name("process_procedure_structure_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     /**
+     * The column <code>public.inventory_product.product_quantity</code>.
+     */
+    val PRODUCT_QUANTITY: TableField<InventoryProductRecord, Int?> = createField(DSL.name("product_quantity"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+
+    /**
+     * The column <code>public.inventory_product.sheet_quantity</code>.
+     */
+    val SHEET_QUANTITY: TableField<InventoryProductRecord, Int?> = createField(DSL.name("sheet_quantity"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+
+    /**
+     * The column <code>public.inventory_product.order_code</code>.
+     */
+    val ORDER_CODE: TableField<InventoryProductRecord, String?> = createField(DSL.name("order_code"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.inventory_product.tape_lot_no</code>.
+     */
+    val TAPE_LOT_NO: TableField<InventoryProductRecord, String?> = createField(DSL.name("tape_lot_no"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
      * The column <code>public.inventory_product.created_date</code>.
      */
-    val CREATED_DATE: TableField<InventoryProductRecord, LocalDateTime?> = createField(DSL.name("created_date"), SQLDataType.LOCALDATETIME(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.LOCALDATETIME)), this, "")
+    val CREATED_DATE: TableField<InventoryProductRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.inventory_product.created_by</code>.
@@ -119,7 +116,7 @@ open class InventoryProduct(
     /**
      * The column <code>public.inventory_product.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<InventoryProductRecord, LocalDateTime?> = createField(DSL.name("updated_date"), SQLDataType.LOCALDATETIME(6), this, "")
+    val UPDATED_DATE: TableField<InventoryProductRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
      * The column <code>public.inventory_product.updated_by</code>.
@@ -174,16 +171,16 @@ open class InventoryProduct(
     // -------------------------------------------------------------------------
     // Row13 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row13<String?, LocalDate?, Int?, Int?, String?, String?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?> = super.fieldsRow() as Row13<String?, LocalDate?, Int?, Int?, String?, String?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row13<String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row13<String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, LocalDate?, Int?, Int?, String?, String?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, LocalDate?, Int?, Int?, String?, String?, Int?, String?, LocalDateTime?, String?, LocalDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

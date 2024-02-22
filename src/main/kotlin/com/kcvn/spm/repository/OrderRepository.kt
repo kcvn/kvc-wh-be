@@ -47,7 +47,7 @@ class OrderRepository (private val context: DSLContext,
             condition = condition.and(ORDER.VERSION.eq(version))
         }
         val completionRateProcessesQuery = context.select(
-            ORDER.ID,
+            ORDER_DETAIL.ID,
             ORDER.QUANTITY,
             PRODUCT.FRAME_1,
             PRODUCT.LAYER_COUNT,

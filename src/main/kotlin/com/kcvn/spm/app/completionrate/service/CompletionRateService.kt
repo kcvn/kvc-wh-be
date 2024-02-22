@@ -171,11 +171,12 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("product.not.exist"))
 
             }
-            if (effectiveDate <= currentDate) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
-            }
             if (productExist == null) {
+                if (effectiveDate <= currentDate) {
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+
+                }
                 if (name.length != 12) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.key"))
                 }
@@ -366,14 +367,15 @@ class CompletionRateService(
             val productExist = productExists.find { x -> x.key == key }
 
             val processExist = processCodeExist.find { x -> x == key.take(6) }
-            if (effectiveDate <= currentDate) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
-            }
             if(processExist == null){
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
             if (productExist == null) {
+                if (effectiveDate <= currentDate) {
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+
+                }
                 if (key.length != 7) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
                 }
@@ -509,11 +511,12 @@ class CompletionRateService(
             if(processExist == null){
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
-            if (effectiveDate <= currentDate) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
-            }
             if (productExist == null) {
+                if (effectiveDate <= currentDate) {
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+
+                }
                 if (key.length != 14) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
                 }

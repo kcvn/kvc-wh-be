@@ -1,7 +1,7 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.request.CompletionRateProcessProductRequest
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct

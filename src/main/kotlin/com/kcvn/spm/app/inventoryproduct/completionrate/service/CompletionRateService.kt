@@ -1,9 +1,9 @@
-package com.kcvn.spm.app.completionrate.service
+package com.kcvn.spm.app.inventoryproduct.completionrate.service
 
-import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.request.CompletionRateProcessProductRequest
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.response.CompletionRateProcessProductResponse
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.response.CompletionRateProcessResponse
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.response.CompletionRateProductResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
 import com.kcvn.spm.common.payload.BaseResponse

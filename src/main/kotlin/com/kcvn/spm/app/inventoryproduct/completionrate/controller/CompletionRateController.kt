@@ -1,8 +1,8 @@
-package com.kcvn.spm.app.completionrate.controller
+package com.kcvn.spm.app.inventoryproduct.completionrate.controller
 
-import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
-import com.kcvn.spm.app.completionrate.payload.request.CompletionRateSearchRequest
-import com.kcvn.spm.app.completionrate.service.CompletionRateService
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.request.CompletionRateProcessProductRequest
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.request.CompletionRateSearchRequest
+import com.kcvn.spm.app.inventoryproduct.completionrate.service.CompletionRateService
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel

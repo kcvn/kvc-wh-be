@@ -411,6 +411,24 @@ class ProductService(
                 messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
             }
         }
+        val frame1 = ExcelHelper.getCellValue(row, 3)
+        val mold = ExcelHelper.getCellValue(row, 5)
+        if (frame1.isNotEmpty() && mold.isNotEmpty()) {
+            when (frame1) {
+                Constants.KHUNG1_ML -> {
+                    if(mold != Constants.KHUONDUC_ML)
+                        messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
+                }
+                Constants.KHUNG1_MU -> {
+                    if(mold != Constants.KHUONDUC_KVC && mold != Constants.KHUONDUC_SKE)
+                        messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
+                }
+                Constants.KHUNG1_SWR -> {
+                    if(mold != Constants.KHUONDUC_SWR && mold != Constants.KHUONDUC_SUR)
+                        messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
+                }
+            }
+        }
         return messageResults
     }
 

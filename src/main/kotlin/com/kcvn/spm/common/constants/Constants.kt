@@ -25,6 +25,6 @@ class Constants {
 
         //Excel
         const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        const val EXCEL_FONT_NAME = "Times New Roman"
+        const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
     }
 }

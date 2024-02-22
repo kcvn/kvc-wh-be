@@ -72,7 +72,7 @@ class ProductService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.EXCEL_FONT_NAME
+            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 

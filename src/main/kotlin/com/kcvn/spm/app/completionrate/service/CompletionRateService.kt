@@ -40,7 +40,7 @@ class CompletionRateService(
     val completionRateResultKey = CommonUtils.getMessage("validate.excel.complition.rate.result")
     val completionValidateFormatError = CommonUtils.getMessage("validate.excel.complition.rate.format.error")
     val completionRateFileEmpty = CommonUtils.getMessage("import.file.empty")
-    val completionRateFileWrongFormat = CommonUtils.getMessage("import.file.invalidFormat")
+    val completionRateFileWrongFormat = CommonUtils.getMessage("validate.excel.invalidFormat")
     val keyRate = "TLD(rate)"
     fun downloadTemplate() : BaseResponse<FileContentModel> {
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"

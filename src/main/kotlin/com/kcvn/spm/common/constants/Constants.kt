@@ -26,5 +26,17 @@ class Constants {
         //Excel
         const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
+
+        //KHUON_DUC
+        const val KHUONDUC_KVC = "KVC"
+        const val KHUONDUC_ML = "ML"
+        const val KHUONDUC_SKE = "SKE"
+        const val KHUONDUC_SWR = "SWR"
+        const val KHUONDUC_SUR = "SUR"
+
+        //KHUNG 1
+        const val KHUNG1_MU = "MU"
+        const val KHUNG1_ML = "ML"
+        const val KHUNG1_SWR = "SWR"
     }
 }

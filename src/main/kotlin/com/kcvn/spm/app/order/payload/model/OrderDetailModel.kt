@@ -3,6 +3,7 @@ package com.kcvn.spm.app.order.payload.model
 import com.kcvn.spm.common.payload.KeyValueResponse
 
 data class OrderDetailModel (
+    var id:String,
     var productShortcutName: String? = null,
     var productName: String? = null,
     var quantity: Int? = null,
@@ -12,5 +13,5 @@ data class OrderDetailModel (
     var shBlock: Int? = null,
     var srNosr: String? = null,
     var version: String? = null,
-    var quantityByCalendars : List<KeyValueResponse> = listOf()
+    var quantityByCalendars : List<KeyValueResponse>? = listOf()
 )

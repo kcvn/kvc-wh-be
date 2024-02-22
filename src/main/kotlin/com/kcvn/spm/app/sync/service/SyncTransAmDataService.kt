@@ -5,11 +5,16 @@ import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureRespo
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.TransAmTable
-import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
-import com.kcvn.spm.model.tables.pojos.*
-import com.kcvn.spm.repository.*
+import com.kcvn.spm.model.tables.pojos.ProcessMaster
+import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
+import com.kcvn.spm.model.tables.pojos.SyncHistory
+import com.kcvn.spm.model.tables.pojos.WorkResult
+import com.kcvn.spm.repository.ProcessMasterRepository
+import com.kcvn.spm.repository.ProcessProcedureStructureRepository
+import com.kcvn.spm.repository.SyncHistoryRepository
+import com.kcvn.spm.repository.WorkResultRepository
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -18,18 +23,16 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 
 
 @Service
 @Transactional
 class SyncTransAmDataService(
-    private val propertiesConfig: PropertiesConfig,
+    propertiesConfig: PropertiesConfig,
     private val syncHistoryRep: SyncHistoryRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val processMasterRep: ProcessMasterRepository,
-    private val workResultRep: WorkResultRepository,
-    private val productProcessRep : ProductProcessRepository
+    private val workResultRep: WorkResultRepository
 ) {
     private val transAmDSLContext: DSLContext = DSLContextExtension.createDSLContext(
         propertiesConfig.tranAmDbUrl,
@@ -55,7 +58,7 @@ class SyncTransAmDataService(
         val processFlowDatas = processProcedureStructureRep.findByObjectId(objectIds)
 
         for (item in processFlows) {
-            var exist = processFlowDatas.find { x -> x.objectId == item.OBJECT_ID }
+            val exist = processFlowDatas.find { x -> x.objectId == item.OBJECT_ID }
             try {
                 val dataProcess = createModelProcessProcedureStructure(item)
                 if (exist != null) {
@@ -72,18 +75,6 @@ class SyncTransAmDataService(
             TransAmTable.PROCESS_PROCEDURE_STRUCTURE,
             Constants.PROCESS_PROCEDURE_STRUCTURE,
             Constants.PROCESS_PROCEDURE_STRUCTURE
-        )
-    }
-
-    private fun createModelProductProcess(item: ProcessProcedureStructure): ProductProcess {
-        val processCode = item.processCode
-        val processProcedureStructure = processProcedureStructureRep.findByFilter(item)
-        val processMaster = processMasterRep.findByProcessCode(processCode)
-        return ProductProcess(
-            processProcedureStructureId = processProcedureStructure?.id,
-            processName = processMaster?.processName,
-            processNameJp = processMaster?.processNameJp,
-            updatedBy = CommonUtils.loggedInUser() ?: "SYSTEM"
         )
     }
 
@@ -104,7 +95,7 @@ class SyncTransAmDataService(
         val processMasterDatas = processMasterRep.findByObjectId(objectIds)
 
         for (item in processMaster) {
-            var exist = processMasterDatas.find { x -> x.objectId == item.OBJECT_ID }
+            val exist = processMasterDatas.find { x -> x.objectId == item.OBJECT_ID }
             try {
                 val data = createModelProcessMaster(item)
                 if (exist != null) {

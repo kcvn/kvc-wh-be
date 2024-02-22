@@ -24,6 +24,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -48,6 +49,7 @@ class ProductProcessService(
                     layerCode = productProcess.layerCode,
                     processCode = productProcess.processCode,
                     productId = productProcess.productId,
+                    processProcedureStructureId = productProcess.processProcedureStructureId
                 );
             }
             response.totalRecords = result.second ?: 0
@@ -187,15 +189,14 @@ class ProductProcessService(
             headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             sheet.setColumnWidth(headerCell, 15000)
         }
-        var test = ExcelHelper.getCellValue(headerRow, 0)
-        if(ExcelHelper.getCellValue(headerRow, 0) != "Tên sản phẩm"
-            || ExcelHelper.getCellValue(headerRow, 1) != "Mã công đoạn"
-            || ExcelHelper.getCellValue(headerRow, 2) != "Lớp số"
-            || ExcelHelper.getCellValue(headerRow, 3) != "Mã chuyển đổi"
-            || ExcelHelper.getCellValue(headerRow, 4) != "Mã công đoạn tính gộp tồn kho"
-            || ExcelHelper.getCellValue(headerRow, 5) != "Mã thống kê"){
-            throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
-        }
+
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx"
+
+        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
+            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()
@@ -324,7 +325,8 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.result.import"),
+            fileName = CommonUtils.getMessage("export.excel.result.import",arrayOf(LocalDateTime.now().format(
+                DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )

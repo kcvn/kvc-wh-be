@@ -4,6 +4,7 @@ import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductAndProcessResponse
 import com.kcvn.spm.app.product.service.ProductService
+import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
@@ -62,11 +63,10 @@ class ProductController(
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @GetMapping("/get-product-detail/{id}")
+    @GetMapping("/get-product-detail/{name}")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
-    fun getProductDetail(@PathVariable("id") id: String): ResponseEntity<BaseResponse<ProductAndProcessResponse>> {
-        val dataProduct = productService.getProductDetail(id)
-        val nameProduct = dataProduct?.name
+    fun getProductDetail(@PathVariable("name") nameProduct: String?): ResponseEntity<BaseResponse<ProductAndProcessResponse>> {
+        val dataProduct = productService.getProductDetail(nameProduct)
         val dataProcess = productProcessService.getProductProcessDetail(nameProduct)
         dataProcess?.forEachIndexed { idx, data ->
             data?.idx = idx
@@ -75,7 +75,7 @@ class ProductController(
             detail = dataProduct,
             listProcess = dataProcess
         )
-        return if (resultData.detail != null) {
+        return if (resultData.detail != null || resultData.listProcess != null) {
             ResponseEntity(
                 BaseResponse(data = resultData, message = CommonUtils.getMessage("data.success")),
                 HttpStatus.OK

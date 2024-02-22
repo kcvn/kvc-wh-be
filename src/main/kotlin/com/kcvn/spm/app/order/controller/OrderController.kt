@@ -7,6 +7,7 @@ import com.kcvn.spm.app.order.service.OrderService
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.repository.OrderDetailRepository
@@ -62,6 +63,26 @@ class OrderController (private val orderService: OrderService,
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = BaseResponse<FileContentModel>(data = null, message = "Export file thành công")
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @GetMapping("/list-order-code-by-year")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
+    fun getListOrderCode(year: String): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val check = mutableListOf<DropdownResponse>()
+        check.add(DropdownResponse("1", "Label 1"))
+        check.add(DropdownResponse("2", "Label 2"))
+        val data = BaseResponse<List<DropdownResponse>>(data = check, message = "Lấy mã đơn hàng thành công")
+
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+    @GetMapping("/list-version-by-order-code")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
+    fun getListVersion(orderCode: String): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val check = mutableListOf<DropdownResponse>()
+        check.add(DropdownResponse("1", "Label 1"))
+        check.add(DropdownResponse("2", "Label 2"))
+        val data = BaseResponse<List<DropdownResponse>>(data = check, message = "Lấy version thành công")
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

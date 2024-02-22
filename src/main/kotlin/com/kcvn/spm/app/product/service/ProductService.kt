@@ -51,7 +51,7 @@ class ProductService(
         return response
     }
 
-    fun getProductDetail(request: String): Product? {
+    fun getProductDetail(request: String?): Product? {
         return productRep.getProductDetail(request)
     }
 

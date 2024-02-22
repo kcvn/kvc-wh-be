@@ -1,12 +1,17 @@
 package com.kcvn.spm.app.order.controller
 
+import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
+import com.kcvn.spm.repository.OrderDetailRepository
+import com.kcvn.spm.repository.OrderRepository
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -18,17 +23,19 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/order")
-class OrderController (private val orderService: OrderService) {
+class OrderController (private val orderService: OrderService,
+) {
+
 
     @GetMapping("/get-list")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(
         request: OrderSearchRequest?,
         @PageableDefault(size = 10, page = 0)
-        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
+//        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
         pageable: Pageable
     ): ResponseEntity<PagingOrderResponse> {
-        val data = PagingOrderResponse()
+        val data = orderService.getPaginatedCompletionRateProduct(request,pageable)
         return ResponseEntity<PagingOrderResponse>(data, HttpStatus.OK)
     }
 

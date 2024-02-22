@@ -52,10 +52,10 @@ class OrderController (private val orderService: OrderService,
     fun exportExcel(
         request: OrderSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
-        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
+//        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = BaseResponse<FileContentModel>(data = null, message = "Export file thành công")
+        val data = orderService.exportOrderExcel(request,pageable)
         return ResponseEntity(data, HttpStatus.OK)
     }
 

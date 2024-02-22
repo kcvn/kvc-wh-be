@@ -1,10 +1,9 @@
-package com.kcvn.spm.app.completionrate.service
+package com.kcvn.spm.app.inventoryproduct.completionrate.service
 
-import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
-import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.request.CompletionRateProcessProductRequest
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.response.CompletionRateProcessProductResponse
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.response.CompletionRateProcessResponse
+import com.kcvn.spm.app.inventoryproduct.completionrate.payload.response.CompletionRateProductResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
 import com.kcvn.spm.common.payload.BaseResponse
@@ -25,10 +24,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.math.BigDecimal
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -39,6 +36,12 @@ class CompletionRateService(
     private val processMasterRepository : ProcessMasterRepository,
     private val productRepository : ProductRepository
 ) {
+
+    val completionRateResultKey = CommonUtils.getMessage("validate.excel.complition.rate.result")
+    val completionValidateFormatError = CommonUtils.getMessage("validate.excel.complition.rate.format.error")
+    val completionRateFileEmpty = CommonUtils.getMessage("import.file.empty")
+    val completionRateFileWrongFormat = CommonUtils.getMessage("validate.excel.invalidFormat")
+    val keyRate = "TLD(rate)"
     fun downloadTemplate() : BaseResponse<FileContentModel> {
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
@@ -49,8 +52,8 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.importCompletionRateTemplate"),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            fileName = "ImportCompletionTemplate.xlsx",
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
 
@@ -76,7 +79,7 @@ class CompletionRateService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = "Times New Roman"
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -99,8 +102,8 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportCompletionRateProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            fileName = CommonUtils.getMessage("export.file.completion.rate.product"),
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
 
@@ -128,31 +131,38 @@ class CompletionRateService(
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
-
-        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-
         val utcOffset = ZoneOffset.ofHours(7)
         val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
             .withMinute(0)
             .withSecond(0)
             .withNano(0)
+        val lastRowIndex = sheet.lastRowNum
+        if (lastRowIndex < 1) {
+            throw BusinessException(completionRateFileEmpty)
+        }else{
+            val firstRow = sheet.getRow(0)
+            val cellAValue = firstRow.getCell(0)?.stringCellValue
+            val cellBValue = firstRow.getCell(1)?.stringCellValue
 
-        val headerCell = sheet.first().lastCellNum + 0
-        val headerRow = sheet.getRow(0)
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            if (cellAValue != "Key" || cellBValue != keyRate) {
+                throw BusinessException(completionRateFileWrongFormat)
+            }
 
-        val productMaster = productRepository.getListNameProduct()
+        }
+//        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+        val productMaster = productRepository.getListNameProduct();
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProductRepository.getByProduct(productNames)
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == completionRateResultKey
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            headerRow.createCell(headerCell).setCellValue("Kết quả")
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
@@ -172,21 +182,21 @@ class CompletionRateService(
 
             }
             if (effectiveDate <= currentDate) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.exdate"))
 
             }
             if (productExist == null) {
                 if (name.length != 12) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.key"))
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.product.key"))
                 }
 
                 try {
                     val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                     if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.rate"))
+                        errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.product.rate"))
                     }
                 } catch (e: NumberFormatException) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                    errorMessages.add(completionValidateFormatError)
                 }
             }
 
@@ -208,10 +218,10 @@ class CompletionRateService(
                         productExist.expirationDate = effectiveDate.minusDays(1)
                         completionRateProductRepository.update(productExist)
                     }
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.importSuccess"))
+                    errorMessages.add("OK")
                     count++
                 } catch (e: Exception) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.updateDataError"))
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.product.error"))
                 }
             }
 
@@ -230,8 +240,8 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.resultImportCompletionRateProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            fileName = CommonUtils.getMessage("import.file.completion.rate.product"),
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
 
@@ -262,7 +272,7 @@ class CompletionRateService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = "Times New Roman"
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -295,8 +305,8 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportCompletionRateProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            fileName = CommonUtils.getMessage("export.file.completion.rate.process"),
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
 
@@ -327,16 +337,20 @@ class CompletionRateService(
         val sheet = workbook.getSheetAt(0)
 
         val rowIndex = 1
+        val lastRowIndex = sheet.lastRowNum
+        if (lastRowIndex < 1) {
+            throw BusinessException(completionRateFileEmpty)
+        }else{
+            val firstRow = sheet.getRow(0)
+            val cellAValue = firstRow.getCell(0)?.stringCellValue
+            val cellBValue = firstRow.getCell(1)?.stringCellValue
 
-        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+            if (cellAValue != "Key" || cellBValue != keyRate) {
+                throw BusinessException(completionRateFileWrongFormat)
+            }
 
-        val headerCell = sheet.first().lastCellNum + 0
-        val headerRow = sheet.getRow(0)
-
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+        }
+//        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
@@ -348,9 +362,12 @@ class CompletionRateService(
             .withSecond(0)
             .withNano(0)
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == completionRateResultKey
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            headerRow.createCell(headerCell).setCellValue(completionRateResultKey)
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
@@ -367,24 +384,24 @@ class CompletionRateService(
 
             val processExist = processCodeExist.find { x -> x == key.take(6) }
             if (effectiveDate <= currentDate) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.exdate"))
 
             }
             if(processExist == null){
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
+                errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.processcode"))
             }
             if (productExist == null) {
                 if (key.length != 7) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.key.process.product"))
                 }
 
                 try {
                     val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                     if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                        errorMessages.add(completionValidateFormatError)
                     }
                 } catch (e: NumberFormatException) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                    errorMessages.add(completionValidateFormatError)
                 }
             }
 
@@ -410,7 +427,7 @@ class CompletionRateService(
                     errorMessages.add("OK")
                     count++
                 } catch (e: Exception) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.process.error"))
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.product.process.error"))
                 }
             }
 
@@ -429,8 +446,8 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.resultImportCompletionRateProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            fileName = CommonUtils.getMessage("import.file.completion.rate.process"),
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
 
@@ -468,15 +485,20 @@ class CompletionRateService(
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
 
-        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        val lastRowIndex = sheet.lastRowNum
+        if (lastRowIndex < 1) {
+            throw BusinessException(completionRateFileEmpty)
+        } else{
+            val firstRow = sheet.getRow(0)
+            val cellAValue = firstRow.getCell(0)?.stringCellValue
+            val cellBValue = firstRow.getCell(1)?.stringCellValue
 
-        val headerCell = sheet.first().lastCellNum + 0
-        val headerRow = sheet.getRow(0)
+            if (cellAValue != "Key" || cellBValue != keyRate) {
+                throw BusinessException(completionRateFileWrongFormat)
+            }
 
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+        }
+//        if (!sheet.any { x -> x.rowNum > rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProductByKey(productKeys)
@@ -490,9 +512,12 @@ class CompletionRateService(
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == completionRateResultKey
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            headerRow.createCell(headerCell).setCellValue(completionRateResultKey)
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
@@ -507,24 +532,24 @@ class CompletionRateService(
 
             val processExist = processCodeExist.find {x -> x == key.substring(7, 13)}
             if(processExist == null){
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
+                errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.processcode"))
             }
             if (effectiveDate <= currentDate) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.exdate"))
 
             }
             if (productExist == null) {
                 if (key.length != 14) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.key.process"))
                 }
 
                 try {
                     val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                     if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                        errorMessages.add(completionValidateFormatError)
                     }
                 } catch (e: NumberFormatException) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                    errorMessages.add(completionValidateFormatError)
                 }
             }
 
@@ -554,7 +579,7 @@ class CompletionRateService(
                     errorMessages.add("OK")
                     count++
                 } catch (e: Exception) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.process.error"))
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.complition.rate.process.error"))
                 }
             }
 
@@ -573,8 +598,8 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.resultImportCompletionRateProductProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            fileName = CommonUtils.getMessage("import.file.completion.rate.process.product"),
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
 
@@ -602,7 +627,7 @@ class CompletionRateService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = "Times New Roman"
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -637,8 +662,8 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportCompletionRateProductProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            fileName = CommonUtils.getMessage("export.file.completion.rate.process.product"),
+            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             content = excelBytes
         )
 

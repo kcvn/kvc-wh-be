@@ -11,6 +11,7 @@ data class ProductProcessResponse (
     var processStatisticCode: String? = null,
     var processInventoryCode: String? = null,
     var idx: Int? = 0,
-    var productId: String? = null
+    var productId: String? = null,
+    var processProcedureStructureId: String? = null,
 )
 

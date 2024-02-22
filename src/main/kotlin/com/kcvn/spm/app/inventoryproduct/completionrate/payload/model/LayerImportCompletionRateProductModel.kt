@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.completionrate.payload.model
+package com.kcvn.spm.app.inventoryproduct.completionrate.payload.model
 
 import java.math.BigInteger;
 

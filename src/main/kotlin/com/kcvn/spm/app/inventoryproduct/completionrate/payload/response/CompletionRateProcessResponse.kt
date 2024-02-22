@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.completionrate.payload.response
+package com.kcvn.spm.app.inventoryproduct.completionrate.payload.response
 
 import java.math.BigDecimal
 

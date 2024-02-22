@@ -2,7 +2,6 @@ package com.kcvn.spm.app.workresult.service
 
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
-import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -17,7 +16,6 @@ import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import org.jooq.impl.QOM.IsNull
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -28,7 +26,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
@@ -127,7 +124,7 @@ class WorkResultService (
             style.wrapText = true
 
             val font: Font = workBook.createFont()
-            font.fontName = Constants.EXCEL_FONT_NAME
+            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 

@@ -74,8 +74,8 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
 
 
     fun getPaginatedCompletionRateProcessesProduct(
-        search: CompletionRateProcessProductRequest?,
-        pageable: Pageable?
+            search: CompletionRateProcessProductRequest?,
+            pageable: Pageable?
     ): Pair<List<CompletionRateProcessProductResponse>, Int> {
         var condition: Condition = DSL.noCondition()
 

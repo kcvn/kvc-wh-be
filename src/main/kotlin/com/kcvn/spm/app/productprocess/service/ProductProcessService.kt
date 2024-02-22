@@ -4,6 +4,7 @@ import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -24,6 +25,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -48,6 +50,7 @@ class ProductProcessService(
                     layerCode = productProcess.layerCode,
                     processCode = productProcess.processCode,
                     productId = productProcess.productId,
+                    processProcedureStructureId = productProcess.processProcedureStructureId
                 );
             }
             response.totalRecords = result.second ?: 0
@@ -97,7 +100,7 @@ class ProductProcessService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = "Times New Roman"
+            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -137,7 +140,7 @@ class ProductProcessService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("export.excel.process"),
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -157,7 +160,7 @@ class ProductProcessService(
 
         val response = FileContentModel(
             fileName = "ImportProcessTemplate.xlsx",
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -170,17 +173,24 @@ class ProductProcessService(
         val rowIndex = 1
 
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx"
+
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
+            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 
         val masterData = masterDataService.getMasterDataSelection()
 
-        val headerCell = sheet.first().lastCellNum + 0
-        val headerRow = sheet.getRow(0)
-
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
@@ -194,57 +204,57 @@ class ProductProcessService(
             var check = true
             if(row.getCell(0) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.product.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
             }
             if(row.getCell(1) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
             }
             if(row.getCell((2)) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
             }
             if(row.getCell(3) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
             }
             if(row.getCell(5) == null){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.null"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
             }
 
-            if(row.getCell(0) != null && row.getCell(0).toString().length > 60){
+            if(row.getCell(0) != null && row.getCell(0).toString().length > 12){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.product.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
             }
             if(row.getCell(1) !=null && row.getCell(1).toString().length > 8){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
             }
             if(row.getCell((2)) != null && row.getCell(2).toString().length >4){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
             }
             if(row.getCell(3) != null && row.getCell(3).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
             }
             if(row.getCell(4) != null && row.getCell(4).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.inventory.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
             }
             if(row.getCell(5) != null && row.getCell(5).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
             }
 
             if (!masterData.processConvertCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.does.not.exist"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist",arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
             }
             if (!masterData.processStatisticCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.does.not.exist"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.notExist",arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
             }
 
            try {
@@ -272,7 +282,7 @@ class ProductProcessService(
                    val filterCheckProcessProcedure = processProcedureRep.getByFilterProcessStructure(filter)
                    if(filterCheckProcessProcedure == null)
                    {
-                       messageResults.add(CommonUtils.getMessage("validate.excel.process.data.null"))
+                       messageResults.add(CommonUtils.getMessage("validate.excel.process.dataNull"))
                    }
                    else {
                        val requestImport = ProductProcess(
@@ -292,7 +302,7 @@ class ProductProcessService(
                            requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
                            productProcessRep.updateProcessDetail(requestImport)
                        }
-                       messageResults.add("OK")
+                       messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
                        count++
                    }
                }
@@ -316,8 +326,9 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.result.import"),
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName = CommonUtils.getMessage("export.excel.result.import",arrayOf(LocalDateTime.now().format(
+                DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
         workbook.close()

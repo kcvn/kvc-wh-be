@@ -26,7 +26,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
             val lowerKeyword = DSL.lower(keyword);
-            condition = condition.and(DSL.lower(PRODUCT.NAME).contains(lowerKeyword))
+            condition = condition.and(DSL.lower(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).contains(lowerKeyword))
         }
         if(hasProcessConvertCode){
             condition = condition.and(PRODUCT_PROCESS.PROCESS_CONVERT_CODE.isNull
@@ -45,6 +45,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
                 PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
                 PRODUCT.ID.`as`("productId"),
+                PROCESS_PROCEDURE_STRUCTURE.ID.`as`("processProcedureStructureId"),
             )
             .from(PROCESS_PROCEDURE_STRUCTURE)
             .leftJoin(PRODUCT_PROCESS)
@@ -87,20 +88,25 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             PRODUCT_PROCESS.ID.`as`("processId"),
             PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.`as`("layerCode"),
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.`as`("processCode"),
-            PRODUCT_PROCESS.PROCESS_NAME_JP.`as`("processNameJp"),
-            PRODUCT_PROCESS.PROCESS_NAME.`as`("processName"),
+            PROCESS_MASTER.PROCESS_NAME_JP.`as`("processNameJp"),
+            PROCESS_MASTER.PROCESS_NAME.`as`("processName"),
             PRODUCT_PROCESS.PROCESS_CONVERT_CODE.`as`("processConvertCode"),
             PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
             PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE.`as`("processSequence"),
         )
-            .from(PRODUCT_PROCESS
-                .join(PROCESS_PROCEDURE_STRUCTURE)
-                .on(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID
-                    .eq(PROCESS_PROCEDURE_STRUCTURE.ID)))
+            .from(PROCESS_PROCEDURE_STRUCTURE
+                .leftJoin(PRODUCT_PROCESS)
+                .on(PROCESS_PROCEDURE_STRUCTURE.ID
+                    .eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID))
+                .leftJoin(PROCESS_MASTER)
+                .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
+                    .eq(PROCESS_MASTER.PROCESS_CODE))
+                )
             .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(productName)
-                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-                .and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+               // .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+               //.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+            )
             .orderBy(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE)
             .fetchInto(ProductProcessResponse::class.java)
     }

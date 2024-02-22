@@ -55,7 +55,7 @@ class RoleService(private val roleRep: RoleRepository) {
         val roleId = roleRep.save(role)
         return if (roleId != null) {
             roleRep.saveRolePermissions(roleId, permissionCodes)
-            com.kcvn.spm.app.auth.payload.response.RoleResponse(
+            RoleResponse(
                 roleId,
                 role.name!!,
                 role.description,

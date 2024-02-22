@@ -12,7 +12,9 @@ import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
+import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -28,7 +30,6 @@ class UserController(
 {
 
     @GetMapping("/profile")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).VIEW_USER.value) || hasRole('ADMIN')")
     fun getUserProfile(): ResponseEntity<UserResponse?> {
         val userId = jwtUtils.getCurrentUser().getId()
         val user = userService.findById(userId)
@@ -43,7 +44,9 @@ class UserController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).VIEW_USER.value) || hasRole('ADMIN')")
     fun getAllUsers(
         @RequestParam(required = false) search: String?,
-        @PageableDefault(size = 10, page = 0) pageable: Pageable?
+        @PageableDefault(size = 10, page = 0)
+        @SortDefault.SortDefaults(SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC))
+        pageable: Pageable?
     ): ResponseEntity<*> {
         val result = userService.getPaginatedUsers(search, pageable!!)
         return if (result.data.isEmpty())
@@ -103,7 +106,7 @@ class UserController(
         val userDetails = authentication.principal as UserDetailsImpl
         if (userDetails.getId() == id && !userService.validateOldPassword(id, passwordRequest.oldPassword!!)) {
             return ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("login.error.wrongPassword")),
+                MessageResponse(CommonUtils.getMessage("user.changePassword.oldPasswordIncorrect")),
                 HttpStatus.BAD_REQUEST
             )
         }

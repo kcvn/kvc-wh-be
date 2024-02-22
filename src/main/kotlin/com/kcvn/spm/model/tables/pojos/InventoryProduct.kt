@@ -5,8 +5,7 @@ package com.kcvn.spm.model.tables.pojos
 
 
 import java.io.Serializable
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 
 /**
@@ -15,16 +14,16 @@ import java.time.LocalDateTime
 @Suppress("UNCHECKED_CAST")
 data class InventoryProduct(
     var id: String? = null,
-    var inventoryDate: LocalDate? = null,
-    var processedProductsNumber: Int? = null,
-    var rawMaterialSheetsNumber: Int? = null,
-    var purchaseOrder: String? = null,
-    var rawMaterialBatch: String? = null,
-    var managementNumber: Int? = null,
+    var code: String? = null,
+    var inventoryDate: OffsetDateTime? = null,
     var processProcedureStructureId: String? = null,
-    var createdDate: LocalDateTime? = null,
+    var productQuantity: Int? = null,
+    var sheetQuantity: Int? = null,
+    var orderCode: String? = null,
+    var tapeLotNo: String? = null,
+    var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
-    var updatedDate: LocalDateTime? = null,
+    var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
@@ -46,47 +45,47 @@ data class InventoryProduct(
         }
         else if (this.id != o.id)
             return false
+        if (this.code == null) {
+            if (o.code != null)
+                return false
+        }
+        else if (this.code != o.code)
+            return false
         if (this.inventoryDate == null) {
             if (o.inventoryDate != null)
                 return false
         }
         else if (this.inventoryDate != o.inventoryDate)
             return false
-        if (this.processedProductsNumber == null) {
-            if (o.processedProductsNumber != null)
-                return false
-        }
-        else if (this.processedProductsNumber != o.processedProductsNumber)
-            return false
-        if (this.rawMaterialSheetsNumber == null) {
-            if (o.rawMaterialSheetsNumber != null)
-                return false
-        }
-        else if (this.rawMaterialSheetsNumber != o.rawMaterialSheetsNumber)
-            return false
-        if (this.purchaseOrder == null) {
-            if (o.purchaseOrder != null)
-                return false
-        }
-        else if (this.purchaseOrder != o.purchaseOrder)
-            return false
-        if (this.rawMaterialBatch == null) {
-            if (o.rawMaterialBatch != null)
-                return false
-        }
-        else if (this.rawMaterialBatch != o.rawMaterialBatch)
-            return false
-        if (this.managementNumber == null) {
-            if (o.managementNumber != null)
-                return false
-        }
-        else if (this.managementNumber != o.managementNumber)
-            return false
         if (this.processProcedureStructureId == null) {
             if (o.processProcedureStructureId != null)
                 return false
         }
         else if (this.processProcedureStructureId != o.processProcedureStructureId)
+            return false
+        if (this.productQuantity == null) {
+            if (o.productQuantity != null)
+                return false
+        }
+        else if (this.productQuantity != o.productQuantity)
+            return false
+        if (this.sheetQuantity == null) {
+            if (o.sheetQuantity != null)
+                return false
+        }
+        else if (this.sheetQuantity != o.sheetQuantity)
+            return false
+        if (this.orderCode == null) {
+            if (o.orderCode != null)
+                return false
+        }
+        else if (this.orderCode != o.orderCode)
+            return false
+        if (this.tapeLotNo == null) {
+            if (o.tapeLotNo != null)
+                return false
+        }
+        else if (this.tapeLotNo != o.tapeLotNo)
             return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
@@ -125,13 +124,13 @@ data class InventoryProduct(
         val prime = 31
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
+        result = prime * result + (if (this.code == null) 0 else this.code.hashCode())
         result = prime * result + (if (this.inventoryDate == null) 0 else this.inventoryDate.hashCode())
-        result = prime * result + (if (this.processedProductsNumber == null) 0 else this.processedProductsNumber.hashCode())
-        result = prime * result + (if (this.rawMaterialSheetsNumber == null) 0 else this.rawMaterialSheetsNumber.hashCode())
-        result = prime * result + (if (this.purchaseOrder == null) 0 else this.purchaseOrder.hashCode())
-        result = prime * result + (if (this.rawMaterialBatch == null) 0 else this.rawMaterialBatch.hashCode())
-        result = prime * result + (if (this.managementNumber == null) 0 else this.managementNumber.hashCode())
         result = prime * result + (if (this.processProcedureStructureId == null) 0 else this.processProcedureStructureId.hashCode())
+        result = prime * result + (if (this.productQuantity == null) 0 else this.productQuantity.hashCode())
+        result = prime * result + (if (this.sheetQuantity == null) 0 else this.sheetQuantity.hashCode())
+        result = prime * result + (if (this.orderCode == null) 0 else this.orderCode.hashCode())
+        result = prime * result + (if (this.tapeLotNo == null) 0 else this.tapeLotNo.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -144,13 +143,13 @@ data class InventoryProduct(
         val sb = StringBuilder("InventoryProduct (")
 
         sb.append(id)
+        sb.append(", ").append(code)
         sb.append(", ").append(inventoryDate)
-        sb.append(", ").append(processedProductsNumber)
-        sb.append(", ").append(rawMaterialSheetsNumber)
-        sb.append(", ").append(purchaseOrder)
-        sb.append(", ").append(rawMaterialBatch)
-        sb.append(", ").append(managementNumber)
         sb.append(", ").append(processProcedureStructureId)
+        sb.append(", ").append(productQuantity)
+        sb.append(", ").append(sheetQuantity)
+        sb.append(", ").append(orderCode)
+        sb.append(", ").append(tapeLotNo)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

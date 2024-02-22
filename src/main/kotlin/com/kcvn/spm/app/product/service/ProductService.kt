@@ -51,7 +51,7 @@ class ProductService(
         return response
     }
 
-    fun getProductDetail(request: String): Product? {
+    fun getProductDetail(request: String?): Product? {
         return productRep.getProductDetail(request)
     }
 
@@ -72,7 +72,7 @@ class ProductService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.EXCEL_FONT_NAME
+            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -177,6 +177,7 @@ class ProductService(
         val rowIndex = 1
 
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = productRep.getByName(productNames)
@@ -185,6 +186,10 @@ class ProductService(
         var total = 0
 
         val headerRow = sheet.getRow(0)
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.xlsx"
+
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16))
+            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
@@ -220,11 +225,11 @@ class ProductService(
                             mold = ExcelHelper.getCellValue(row, 5),
                             productLine = ExcelHelper.getCellValue(row, 6),
                             srNosr = ExcelHelper.getCellValue(row, 7),
-                            pcsSh = ExcelHelper.getCellValue(row, 8).toBigDecimal().toInt(),
-                            shBlock = ExcelHelper.getCellValue(row, 9).toBigDecimal().toInt(),
-                            layerCount = ExcelHelper.getCellValue(row, 10).toBigDecimal().toInt(),
+                            pcsSh = ExcelHelper.getCellValue(row, 8).toBigDecimalOrNull()?.toInt(),
+                            shBlock = ExcelHelper.getCellValue(row, 9).toBigDecimalOrNull()?.toInt(),
+                            layerCount = ExcelHelper.getCellValue(row, 10).toBigDecimalOrNull()?.toInt(),
                             ringJig = ExcelHelper.getCellValue(row, 11),
-                            process = ExcelHelper.getCellValue(row, 12).toBigDecimal().toInt(),
+                            process = ExcelHelper.getCellValue(row, 12).toBigDecimalOrNull()?.toInt(),
                             snapMold = ExcelHelper.getCellValue(row, 13),
                             tapeCommon = ExcelHelper.getCellValue(row, 14),
                             tapeType = ExcelHelper.getCellValue(row, 15),
@@ -233,7 +238,7 @@ class ProductService(
                         val layers = mutableListOf<LayerImportProductModel>()
                         for (i in 16 until colIndexResult) {
                             if (ExcelHelper.getCellValue(row, i).isEmpty()) continue
-                            val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toBigDecimal().toInt())
+                            val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toBigDecimalOrNull()?.toInt())
                             layers.add(layer)
                         }
 
@@ -248,11 +253,11 @@ class ProductService(
                         productExist.mold = ExcelHelper.getCellValue(row, 5)
                         productExist.productLine = ExcelHelper.getCellValue(row, 6)
                         productExist.srNosr = ExcelHelper.getCellValue(row, 7)
-                        productExist.pcsSh = ExcelHelper.getCellValue(row, 8).toBigDecimal().toInt()
-                        productExist.shBlock = ExcelHelper.getCellValue(row, 9).toBigDecimal().toInt()
-                        productExist.layerCount = ExcelHelper.getCellValue(row, 10).toBigDecimal().toInt()
+                        productExist.pcsSh = ExcelHelper.getCellValue(row, 8).toBigDecimalOrNull()?.toInt()
+                        productExist.shBlock = ExcelHelper.getCellValue(row, 9).toBigDecimalOrNull()?.toInt()
+                        productExist.layerCount = ExcelHelper.getCellValue(row, 10).toBigDecimalOrNull()?.toInt()
                         productExist.ringJig = ExcelHelper.getCellValue(row, 11)
-                        productExist.process = ExcelHelper.getCellValue(row, 12).toBigDecimal().toInt()
+                        productExist.process = ExcelHelper.getCellValue(row, 12).toBigDecimalOrNull()?.toInt()
                         productExist.snapMold = ExcelHelper.getCellValue(row, 13)
                         productExist.tapeCommon = ExcelHelper.getCellValue(row, 14)
                         productExist.tapeType = ExcelHelper.getCellValue(row, 15)
@@ -260,7 +265,7 @@ class ProductService(
                         val layers = mutableListOf<LayerImportProductModel>()
                         for (i in 16 until colIndexResult) {
                             if (ExcelHelper.getCellValue(row, i).isEmpty()) continue
-                            val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toBigDecimal().toInt())
+                            val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toBigDecimalOrNull()?.toInt())
                             layers.add(layer)
                         }
 
@@ -282,6 +287,8 @@ class ProductService(
             row.getCell(colIndexResult).setCellValue(result)
             row.getCell(colIndexResult).cellStyle = style
         }
+
+
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
@@ -326,7 +333,7 @@ class ProductService(
             snapMold = x.snapMold,
             tapeCommon = x.tapeCommon,
             tapeType = x.tapeType,
-            completionRate = (completionRates.find { m -> m.productName == x.name }?.rate ?: 0.0).toDouble(),
+            completionRate = completionRates.find { m -> m.productName == x.name }?.rate?.toDouble(),
             lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> KeyValueResponse(m.key.second, m.value.size.toString()) }
         ) }
 
@@ -404,6 +411,26 @@ class ProductService(
                 messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
             }
         }
-        return messageResults.map { x -> x.replace("\"", "") }.toMutableList()
+        val frame1 = ExcelHelper.getCellValue(row, 3)
+        val mold = ExcelHelper.getCellValue(row, 5)
+        if (frame1.isNotEmpty() && mold.isNotEmpty()) {
+            when (frame1) {
+                Constants.KHUNG1_ML -> {
+                    if(mold != Constants.KHUONDUC_ML)
+                        messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
+                }
+                Constants.KHUNG1_MU -> {
+                    if(mold != Constants.KHUONDUC_KVC && mold != Constants.KHUONDUC_SKE)
+                        messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
+                }
+                Constants.KHUNG1_SWR -> {
+                    if(mold != Constants.KHUONDUC_SWR && mold != Constants.KHUONDUC_SUR)
+                        messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
+                }
+            }
+        }
+        return messageResults
     }
+
+
 }

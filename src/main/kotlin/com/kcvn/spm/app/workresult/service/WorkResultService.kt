@@ -4,6 +4,7 @@ import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
 import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -90,7 +92,7 @@ class WorkResultService (
             )
         }
 
-        return BaseResponse(data = dropDownList, message = CommonUtils.getMessage("data.process.group.all"))
+        return BaseResponse(data = dropDownList)
     }
 
 
@@ -105,7 +107,7 @@ class WorkResultService (
             )
         }
 
-        return BaseResponse(data = dropDownList, message = CommonUtils.getMessage("data.process.by.group.code"))
+        return BaseResponse(data = dropDownList)
     }
 
     fun exportExcel(request: WorkResultSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
@@ -125,7 +127,7 @@ class WorkResultService (
             style.wrapText = true
 
             val font: Font = workBook.createFont()
-            font.fontName = "Times New Roman"
+            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -201,10 +203,9 @@ class WorkResultService (
         workBook.write(byteArrayOutputStream)
 
         val excelBytes = byteArrayOutputStream.toByteArray()
-        val date = OffsetDateTime.now().toLocalDate().toString()
         val response = FileContentModel(
-            fileName = "Danh_sach_ket_qua_san_xuat_${date}.xlsx",
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName = CommonUtils.getMessage("fileName.exportListWorkResult", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 

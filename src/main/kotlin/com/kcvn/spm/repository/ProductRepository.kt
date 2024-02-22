@@ -72,9 +72,9 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
 
     }
 
-    fun getProductDetail(request: String) : Product? {
+    fun getProductDetail(request: String?) : Product? {
         val data = context.selectFrom((PRODUCT))
-            .where(PRODUCT.ID.eq(request).and(PRODUCT.IS_DELETED.eq(false)))
+            .where(PRODUCT.NAME.eq(request).and(PRODUCT.IS_DELETED.eq(false)))
             .orderBy(PRODUCT.LAYER_COUNT)
             .fetchAnyInto(Product::class.java)
         return data;

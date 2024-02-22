@@ -213,29 +213,29 @@ class ProductProcessService(
                 messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
             }
 
-            if(row.getCell(0) != null && row.getCell(0).toString().length > 60){
+            if(row.getCell(0) != null && row.getCell(0).toString().length > 12){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
             }
             if(row.getCell(1) !=null && row.getCell(1).toString().length > 8){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
             }
             if(row.getCell((2)) != null && row.getCell(2).toString().length >4){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.layer.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
             }
             if(row.getCell(3) != null && row.getCell(3).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.convert.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
             }
             if(row.getCell(4) != null && row.getCell(4).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.inventory.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
             }
             if(row.getCell(5) != null && row.getCell(5).toString().length > 10){
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.process.statistic.code.length"))
+                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
             }
 
             if (!masterData.processConvertCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
@@ -272,7 +272,7 @@ class ProductProcessService(
                    val filterCheckProcessProcedure = processProcedureRep.getByFilterProcessStructure(filter)
                    if(filterCheckProcessProcedure == null)
                    {
-                       messageResults.add(CommonUtils.getMessage("validate.excel.process.data.null"))
+                       messageResults.add(CommonUtils.getMessage("validate.excel.process.dataNull"))
                    }
                    else {
                        val requestImport = ProductProcess(

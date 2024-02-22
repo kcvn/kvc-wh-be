@@ -4,6 +4,7 @@ import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -24,6 +25,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -48,6 +50,7 @@ class ProductProcessService(
                     layerCode = productProcess.layerCode,
                     processCode = productProcess.processCode,
                     productId = productProcess.productId,
+                    processProcedureStructureId = productProcess.processProcedureStructureId
                 );
             }
             response.totalRecords = result.second ?: 0
@@ -97,7 +100,7 @@ class ProductProcessService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = "Times New Roman"
+            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -137,7 +140,7 @@ class ProductProcessService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("export.excel.process"),
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -157,7 +160,7 @@ class ProductProcessService(
 
         val response = FileContentModel(
             fileName = "ImportProcessTemplate.xlsx",
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -170,31 +173,31 @@ class ProductProcessService(
         val rowIndex = 1
 
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+        val headerCell = sheet.first().lastCellNum + 0
+        val headerRow = sheet.getRow(0)
+
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx"
+
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
+            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+
         var count = 0
         val total = sheet.lastRowNum - rowIndex
 
         val masterData = masterDataService.getMasterDataSelection()
 
-        val headerCell = sheet.first().lastCellNum + 0
-        val headerRow = sheet.getRow(0)
-
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
             headerRow.getCell(headerCell).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             sheet.setColumnWidth(headerCell, 15000)
         }
-        if(ExcelHelper.getCellValue(headerRow, 0) != "Tên sản phẩm"
-            || ExcelHelper.getCellValue(headerRow, 1) != "Mã công đoạn"
-            || ExcelHelper.getCellValue(headerRow, 2) != "Lớp số"
-            || ExcelHelper.getCellValue(headerRow, 3) != "Mã chuyển đổi"
-            || ExcelHelper.getCellValue(headerRow, 4) != "Mã công đoạn tính gộp tồn kho"
-            || ExcelHelper.getCellValue(headerRow, 5) != "Mã thống kê"){
-            throw BusinessException(CommonUtils.getMessage("import.file.invalidFormat"))
-        }
+
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()
@@ -299,7 +302,7 @@ class ProductProcessService(
                            requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
                            productProcessRep.updateProcessDetail(requestImport)
                        }
-                       messageResults.add("OK")
+                       messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
                        count++
                    }
                }
@@ -323,8 +326,9 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.result.import"),
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName = CommonUtils.getMessage("export.excel.result.import",arrayOf(LocalDateTime.now().format(
+                DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
         workbook.close()

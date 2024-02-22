@@ -3,8 +3,6 @@ package com.kcvn.spm.app.order.controller
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
-import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
-import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -19,17 +17,19 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/order")
-class OrderController (private val orderService: OrderService) {
+class OrderController (private val orderService: OrderService,
+) {
+
 
     @GetMapping("/get-list")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(
         request: OrderSearchRequest?,
         @PageableDefault(size = 10, page = 0)
-        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
+//        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
         pageable: Pageable
     ): ResponseEntity<PagingOrderResponse> {
-        val data = PagingOrderResponse()
+        val data = orderService.getPaginatedCompletionRateProduct(request,pageable)
         return ResponseEntity<PagingOrderResponse>(data, HttpStatus.OK)
     }
 
@@ -59,8 +59,6 @@ class OrderController (private val orderService: OrderService) {
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-
-
     @GetMapping("/list-order-code-by-year")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
     fun getListOrderCode(year: String): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
@@ -80,5 +78,4 @@ class OrderController (private val orderService: OrderService) {
         val data = BaseResponse<List<DropdownResponse>>(data = check, message = "Lấy version thành công")
         return ResponseEntity(data, HttpStatus.OK)
     }
-
 }

@@ -106,7 +106,7 @@ class UserController(
         val userDetails = authentication.principal as UserDetailsImpl
         if (userDetails.getId() == id && !userService.validateOldPassword(id, passwordRequest.oldPassword!!)) {
             return ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("login.error.wrongPassword")),
+                MessageResponse(CommonUtils.getMessage("user.changePassword.oldPasswordIncorrect")),
                 HttpStatus.BAD_REQUEST
             )
         }

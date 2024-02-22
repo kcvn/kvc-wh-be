@@ -179,17 +179,17 @@ class ProductService(
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-        val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
-        val productExists = productRep.getByName(productNames)
-        val masterData = masterDataService.getMasterDataSelection()
-        var count = 0
-        var total = 0
-
         val headerRow = sheet.getRow(0)
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.xlsx"
 
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+
+        val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
+        val productExists = productRep.getByName(productNames)
+        val masterData = masterDataService.getMasterDataSelection()
+        var count = 0
+        var total = 0
 
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }

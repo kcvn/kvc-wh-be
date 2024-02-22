@@ -38,8 +38,8 @@ class CompletionRateController(
     @GetMapping("/product/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProductExcel(
-        request: CompletionRateSearchRequest?,
-        @PageableDefault(size = 100000, page = 0)
+            request: CompletionRateSearchRequest?,
+            @PageableDefault(size = 100000, page = 0)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productname"], direction = Sort.Direction.ASC)
         )
@@ -79,8 +79,8 @@ class CompletionRateController(
     @GetMapping("/process-product/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProcessProductExcel(
-        request: CompletionRateProcessProductRequest?,
-        @PageableDefault(size = 100000, page = 0)
+            request: CompletionRateProcessProductRequest?,
+            @PageableDefault(size = 100000, page = 0)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["product_name_shortcut"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
@@ -99,8 +99,8 @@ class CompletionRateController(
     @GetMapping("/process-product/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProcessProducts(
-        search: CompletionRateProcessProductRequest?,
-        @PageableDefault(size = 10, page = 0) pageable: Pageable
+            search: CompletionRateProcessProductRequest?,
+            @PageableDefault(size = 10, page = 0) pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result =
             completionRateService.getPaginatedCompletionRateProcessesProduct(search, pageable)
@@ -131,8 +131,8 @@ class CompletionRateController(
     @GetMapping("/process/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProcessExcel(
-        request: CompletionRateSearchRequest?,
-        @PageableDefault(size = 1000000, page = 0)
+            request: CompletionRateSearchRequest?,
+            @PageableDefault(size = 1000000, page = 0)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["processCode"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),

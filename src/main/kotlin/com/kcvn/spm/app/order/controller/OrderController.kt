@@ -7,9 +7,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
-import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,7 +15,8 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/order")
-class OrderController (private val orderService: OrderService,
+class OrderController(
+    private val orderService: OrderService
 ) {
 
 
@@ -29,7 +28,7 @@ class OrderController (private val orderService: OrderService,
 //        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
         pageable: Pageable
     ): ResponseEntity<PagingOrderResponse> {
-        val data = orderService.getPaginatedCompletionRateProduct(request,pageable)
+        val data = orderService.getPaginatedOrder(request, pageable)
         return ResponseEntity<PagingOrderResponse>(data, HttpStatus.OK)
     }
 
@@ -55,7 +54,7 @@ class OrderController (private val orderService: OrderService,
 //        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = orderService.exportOrderExcel(request,pageable)
+        val data = orderService.exportOrderExcel(request, pageable)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
@@ -69,6 +68,7 @@ class OrderController (private val orderService: OrderService,
 
         return ResponseEntity(data, HttpStatus.OK)
     }
+
     @GetMapping("/list-version-by-order-code")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
     fun getListVersion(orderCode: String): ResponseEntity<BaseResponse<List<DropdownResponse>>> {

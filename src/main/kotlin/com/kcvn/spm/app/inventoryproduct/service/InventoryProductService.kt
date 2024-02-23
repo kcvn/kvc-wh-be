@@ -1,9 +1,12 @@
 package com.kcvn.spm.app.inventoryproduct.service
 
+import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.CheckInventoryDateResponse
+import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
+import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
@@ -12,6 +15,7 @@ import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -358,6 +362,28 @@ class InventoryProductService(
             response,
             if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
         )
+    }
+
+    fun getListInventoryProduct(request: InventoryProductRequest? , pageable: Pageable) : BasePagingResponse<InventoryProductResponse> {
+        val result = inventoryProductRepository.finByKeywordPaginated(request,pageable)
+        val response = BasePagingResponse<InventoryProductResponse>()
+        response.data = result.first.map { inventoryProduct ->
+            InventoryProductResponse(
+                inventoryDate = inventoryProduct.inventoryDate,
+                productQuantity = inventoryProduct.productQuantity,
+                sheetQuantity = inventoryProduct.sheetQuantity,
+                orderCode = inventoryProduct.orderCode,
+                tapeLotNo = inventoryProduct.tapeLotNo,
+                processCode = inventoryProduct.processCode,
+                productName = inventoryProduct.productName,
+                processName = inventoryProduct.processName,
+                code = inventoryProduct.code,
+                pcsSh = inventoryProduct.pcsSh,
+                layerCode = inventoryProduct.layerCode,
+            )
+        }
+        response.totalRecords = result.second ?: 0
+        return  response
     }
 }
 

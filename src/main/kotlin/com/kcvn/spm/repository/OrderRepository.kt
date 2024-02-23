@@ -13,11 +13,13 @@ import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import org.jooq.impl.DSL.substring
-@Repository
-class OrderRepository (private val context: DSLContext,
-                       private val orderDetailRepository: OrderDetailRepository) : SortingRepository(){
 
-    fun getPaginatedCompletionRateProduct(
+@Repository
+class OrderRepository(
+    private val context: DSLContext,
+    private val orderDetailRepository: OrderDetailRepository
+) : SortingRepository() {
+    fun getPaginatedOrder(
         request: OrderSearchRequest?,
         pageable: Pageable?
     ): Pair<List<OrderDetailModel>, Int> {
@@ -37,9 +39,6 @@ class OrderRepository (private val context: DSLContext,
                     .and(ORDER.END_DATE.lessOrEqual(request.endDate))
             )
         }
-//        request?.year?.let { year ->
-//            condition = condition.and(DSL.year(ORDER.START_DATE.).eq(year))
-//        }
         if (!request?.orderCode.isNullOrBlank()) {
             condition = condition.and(ORDER.ORDER_CODE.eq(request?.orderCode))
         }
@@ -56,12 +55,14 @@ class OrderRepository (private val context: DSLContext,
             PRODUCT.SR_NOSR,
             ORDER.VERSION,
             PRODUCT.NAME.`as`("productName"),
-            substring(PRODUCT.NAME,6,10).`as`("productShortcutName")
-
+            substring(PRODUCT.NAME, 6, 10).`as`("productShortcutName"),
+            ORDER.ID.`as`("orderId"),
+            ORDER_DETAIL.PRODUCT_ID.`as`("productId")
         )
-            .from(ORDER.join(ORDER_DETAIL).on(ORDER.ID.eq(ORDER_DETAIL.ORDER_ID))
-                .join(PRODUCT).on(ORDER_DETAIL.PRODUCT_ID.eq(PRODUCT.ID)))
-
+            .from(
+                ORDER.join(ORDER_DETAIL).on(ORDER.ID.eq(ORDER_DETAIL.ORDER_ID))
+                    .join(PRODUCT).on(ORDER_DETAIL.PRODUCT_ID.eq(PRODUCT.ID))
+            )
             .where(
                 condition.and(ORDER_DETAIL.IS_DELETED.eq(false))
                     .and(PRODUCT.IS_DELETED.eq(false))
@@ -71,17 +72,11 @@ class OrderRepository (private val context: DSLContext,
             .limit(pageable?.pageSize ?: 10)
             .offset(pageable?.offset ?: 0)
             .fetchInto(OrderDetailModel::class.java)
-        val additionalData = completionRateProcessesQuery.map { orderDetailModel ->
-            orderDetailRepository.GetCalenderOrderDetailByOrder(orderDetailModel.id)
-        }
-        completionRateProcessesQuery.forEachIndexed { index, orderDetailModel ->
-            orderDetailModel.quantityByCalendars = additionalData[index]
-        }
-        val total = context.fetchCount(ORDER, ORDER.IS_DELETED.eq(false))
-        return Pair(completionRateProcessesQuery, total)
+        val uniqueOrderProductPairs = completionRateProcessesQuery
+            .distinctBy { it.orderId to it.productId }
+        val total = context.fetchCount(ORDER_DETAIL, ORDER_DETAIL.IS_DELETED.eq(false))
+        return Pair(uniqueOrderProductPairs, total)
     }
-
-
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         return when (sortFieldName) {

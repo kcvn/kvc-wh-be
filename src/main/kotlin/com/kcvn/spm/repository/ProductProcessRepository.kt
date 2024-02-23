@@ -21,7 +21,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProductProcessRepository(private val context: DSLContext) : SortingRepository()  {
-    fun findByKeywordPaginated(keyword: String?,hasProcessConvertCode: Boolean, pageable: Pageable): Pair<List<ProductProcessResponse>, Int?>
+    fun findByKeywordPaginated(keyword: String?,hasProcessConvertCode: Boolean, pageable: Pageable): Pair<List<ProductProcessResponse?>, Int?>
     {
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
@@ -123,7 +123,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
             .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
             .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
-            .where(PRODUCT_PROCESS.ID.eq(request.id).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+            .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(request.processProcedureStructureId).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .returningResult(PRODUCT_PROCESS)
             .fetchAnyInto(ProductProcess::class.java);
     }

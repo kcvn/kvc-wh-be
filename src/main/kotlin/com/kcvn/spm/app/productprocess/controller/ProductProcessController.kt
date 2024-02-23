@@ -36,14 +36,11 @@ class ProductProcessController(
             SortDefault(sort = ["processSequence"], direction = Sort.Direction.ASC)
         )
         pageable: Pageable?
-    ): ResponseEntity<BasePagingResponse<ProductProcessResponse>> {
+    ): ResponseEntity<BasePagingResponse<ProductProcessResponse?>> {
         val result =
             productProcessService.getPaginatedProductProcess(request.search, request.hasProcessConvertCode, pageable!!);
-        return if (result.data.isNullOrEmpty()) {
-            ResponseEntity(BasePagingResponse(), HttpStatus.NO_CONTENT)
-        } else {
-            ResponseEntity(result, HttpStatus.OK)
-        }
+            return  ResponseEntity(result, HttpStatus.OK)
+
     }
 
     @PutMapping("/update-product-process-detail")

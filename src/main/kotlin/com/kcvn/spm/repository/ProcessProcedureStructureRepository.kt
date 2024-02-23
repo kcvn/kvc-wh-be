@@ -46,7 +46,7 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
                 .fetchInto(ProcessProcedureStructure::class.java)
     }
 
-    fun getByFilterProcessStructure(request: ImportProcessRequest) : ProcessProcedureStructure?{
+    fun getByFilterProcessStructureByInventoryProduct(request: ImportProcessRequest) : ProcessProcedureStructure?{
         return context.select()
             .from(PROCESS_PROCEDURE_STRUCTURE.join(PRODUCT)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PRODUCT.NAME)))
@@ -56,6 +56,17 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
             .fetchAnyInto(ProcessProcedureStructure::class.java)
 
     }
+
+    fun getByFilterProcessStructure(request: ImportProcessRequest) : ProcessProcedureStructure?{
+        return context
+            .selectFrom(PROCESS_PROCEDURE_STRUCTURE)
+            .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(request.productName)
+                .and(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.eq(request.layerCode))
+                .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(request.processCode)))
+            .fetchAnyInto(ProcessProcedureStructure::class.java)
+
+    }
+
 
     fun findByFilter(item: ProcessProcedureStructure): ProcessProcedureStructure? {
         var condition: Condition = DSL.noCondition()

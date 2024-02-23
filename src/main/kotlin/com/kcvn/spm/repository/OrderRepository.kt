@@ -2,6 +2,8 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
+import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.model.tables.references.ORDER
 import com.kcvn.spm.model.tables.references.ORDER_DETAIL
@@ -87,4 +89,49 @@ class OrderRepository(
     }
 
 
+    fun getOrderCode(year: String): List<OrderCodeResponse> {
+        val orders = context.select(
+            ORDER.ORDER_CODE,
+            ORDER.VERSION,
+            ORDER.START_DATE,
+            ORDER.END_DATE
+        )
+            .from(ORDER)
+            .where(
+                ORDER.IS_DELETED.eq(false)
+            )
+            .fetch()
+
+        // Tạo một Map để lưu trữ danh sách các VERSION cho mỗi ORDER_CODE
+        val versionMap = mutableMapOf<String, MutableList<String>>()
+        for (order in orders) {
+            val orderCode = order[ORDER.ORDER_CODE]
+            val version = order[ORDER.VERSION]
+            if (orderCode != null) {
+                versionMap.computeIfAbsent(orderCode) { mutableListOf() }.add(version.toString())
+            }
+        }
+
+        // Tạo danh sách OrderCodeResponse và điền thông tin từ versionMap
+        val orderCodeResponses = mutableListOf<OrderCodeResponse>()
+        for ((orderCode, versions) in versionMap) {
+            val dropdownResponses = versions.map { DropdownResponse(it, it.toString()) }
+            orderCodeResponses.add(OrderCodeResponse(orderCode, orderCode, dropdownResponses))
+        }
+
+        return orderCodeResponses
+    }
+
+    fun getVersionByOrderCode(orderCode: String): List<DropdownResponse> {
+        val versions = context.select(ORDER.VERSION)
+            .from(ORDER)
+            .where(
+                ORDER.IS_DELETED.eq(false),
+                ORDER.ORDER_CODE.eq(orderCode)
+            )
+            .fetch()
+            .map { it[ORDER.VERSION] }
+
+        return versions.map { DropdownResponse(it.toString(), it.toString()) }
+    }
 }

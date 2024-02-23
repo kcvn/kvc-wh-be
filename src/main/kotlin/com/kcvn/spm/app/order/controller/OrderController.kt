@@ -1,6 +1,8 @@
 package com.kcvn.spm.app.order.controller
 
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
+import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
+import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
 import com.kcvn.spm.common.payload.BaseResponse
@@ -60,22 +62,10 @@ class OrderController(
 
     @GetMapping("/list-order-code-by-year")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
-    fun getListOrderCode(year: String): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
-        val check = mutableListOf<DropdownResponse>()
-        check.add(DropdownResponse("1", "Label 1"))
-        check.add(DropdownResponse("2", "Label 2"))
-        val data = BaseResponse<List<DropdownResponse>>(data = check, message = "Lấy mã đơn hàng thành công")
-
+    fun getListOrderCode(year: String): ResponseEntity<BaseResponse<List<OrderCodeResponse>>> {
+        val result = orderService.getOrderCode(year)
+        val data = BaseResponse<List<OrderCodeResponse>>(data = result, message = "Lấy mã đơn hàng thành công")
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @GetMapping("/list-version-by-order-code")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
-    fun getListVersion(orderCode: String): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
-        val check = mutableListOf<DropdownResponse>()
-        check.add(DropdownResponse("1", "Label 1"))
-        check.add(DropdownResponse("2", "Label 2"))
-        val data = BaseResponse<List<DropdownResponse>>(data = check, message = "Lấy version thành công")
-        return ResponseEntity(data, HttpStatus.OK)
-    }
 }

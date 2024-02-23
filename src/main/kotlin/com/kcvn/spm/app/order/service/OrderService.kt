@@ -2,6 +2,7 @@ package com.kcvn.spm.app.order.service
 
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
+import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.payload.BaseResponse
@@ -172,6 +173,10 @@ class OrderService(
         workbook.close()
 
         return BaseResponse(response)
+    }
+
+    fun getOrderCode(year: String): List<OrderCodeResponse>{
+        return orderRep.getOrderCode(year)
     }
 
 }

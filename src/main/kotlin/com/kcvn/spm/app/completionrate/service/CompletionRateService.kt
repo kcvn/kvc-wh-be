@@ -193,7 +193,6 @@ class CompletionRateService(
 
             if (errorMessages.isEmpty()) {
                 try {
-                    if (productExist == null) {
                         val compleRateProduct = CompletionRateProduct(
                                 productName = name,
                                 rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
@@ -203,15 +202,10 @@ class CompletionRateService(
                         )
 
                         completionRateProductRepository.add(compleRateProduct)
-                    } else {
+                        if (productExist != null) {
                         productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                         productExist.expirationDate = effectiveDate.minusDays(1)
                         completionRateProductRepository.update(productExist)
-
-                        productExist.effectiveDate = effectiveDate
-                        productExist.expirationDate = null
-                        productExist.id = null
-                        completionRateProductRepository.add(productExist)
 
                     }
                     errorMessages.add(CommonUtils.getMessage("validate.excel.importSuccess"))
@@ -397,7 +391,7 @@ class CompletionRateService(
 
             if (errorMessages.isEmpty()) {
                 try {
-                    if (productExist == null) {
+
                         val compleRateProduct = CompletionRateProcess(
                                 key = key,
                                 rate =  BigDecimal(ExcelHelper.getCellValue(row, 1)),
@@ -408,16 +402,13 @@ class CompletionRateService(
                         )
 
                         completionRateProcessRepository.add(compleRateProduct)
-                    } else {
+                        if (productExist != null){
                         productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                         productExist.effectiveDate = effectiveDate
                         productExist.expirationDate = effectiveDate.minusDays(1)
                         completionRateProcessRepository.update(productExist)
 
-                        productExist.effectiveDate = effectiveDate
-                        productExist.expirationDate = null
-                        productExist.id = null
-                        completionRateProcessRepository.add(productExist)
+
 
                     }
                     errorMessages.add("OK")
@@ -544,7 +535,7 @@ class CompletionRateService(
 
             if (errorMessages.isEmpty()) {
                 try {
-                    if (productExist == null) {
+
                         val compleRateProcessProduct = CompletionRateProcessProduct(
                                 key = key,
                                 rate =  BigDecimal(ExcelHelper.getCellValue(row, 1)),
@@ -556,19 +547,14 @@ class CompletionRateService(
 
 
                         )
-
                         completionRateProcessProductRepository.add(compleRateProcessProduct)
-                    } else {
+
+                        if (productExist != null){
                         productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                         productExist.effectiveDate = effectiveDate
                         productExist.expirationDate = effectiveDate.minusDays(1)
                         completionRateProcessProductRepository.update(productExist)
 
-                        productExist.effectiveDate = effectiveDate
-                        productExist.expirationDate = null
-                        productExist.id = null
-
-                        completionRateProcessProductRepository.add(productExist)
 
                     }
                     errorMessages.add("OK")

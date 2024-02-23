@@ -4,11 +4,13 @@ import com.kcvn.spm.app.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.app.quantityreport.payload.response.CalculateQuantityResponse
 import com.kcvn.spm.app.quantityreport.service.QuantityReportService
 import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -28,4 +30,11 @@ class QuantityReportController(
         val data = quantityReportService.calculateQuantity(request)
         return ResponseEntity<BasePagingResponse<CalculateQuantityResponse>>(data, HttpStatus.OK)
     }
+
+    @GetMapping("/locked-quantity")
+    fun LockedQuantity(request: String) : ResponseEntity<BaseResponse<Boolean>> {
+        val result = quantityReportService.lockedQuantity(request)
+        return ResponseEntity<BaseResponse<Boolean>>(result,HttpStatus.OK)
+    }
+
 }

@@ -205,9 +205,14 @@ class CompletionRateService(
                         completionRateProductRepository.add(compleRateProduct)
                     } else {
                         productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                        productExist.effectiveDate = effectiveDate
                         productExist.expirationDate = effectiveDate.minusDays(1)
                         completionRateProductRepository.update(productExist)
+
+                        productExist.effectiveDate = effectiveDate
+                        productExist.expirationDate = null
+                        productExist.id = null
+                        completionRateProductRepository.add(productExist)
+
                     }
                     errorMessages.add(CommonUtils.getMessage("validate.excel.importSuccess"))
                     count++
@@ -408,6 +413,12 @@ class CompletionRateService(
                         productExist.effectiveDate = effectiveDate
                         productExist.expirationDate = effectiveDate.minusDays(1)
                         completionRateProcessRepository.update(productExist)
+
+                        productExist.effectiveDate = effectiveDate
+                        productExist.expirationDate = null
+                        productExist.id = null
+                        completionRateProcessRepository.add(productExist)
+
                     }
                     errorMessages.add("OK")
                     count++
@@ -550,9 +561,15 @@ class CompletionRateService(
                     } else {
                         productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                         productExist.effectiveDate = effectiveDate
-
                         productExist.expirationDate = effectiveDate.minusDays(1)
                         completionRateProcessProductRepository.update(productExist)
+
+                        productExist.effectiveDate = effectiveDate
+                        productExist.expirationDate = null
+                        productExist.id = null
+
+                        completionRateProcessProductRepository.add(productExist)
+
                     }
                     errorMessages.add("OK")
                     count++

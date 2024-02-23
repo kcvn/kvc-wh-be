@@ -3,6 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
+import com.kcvn.spm.model.tables.references.PRODUCT
 import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -46,8 +47,10 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
     }
 
     fun getByFilterProcessStructure(request: ImportProcessRequest) : ProcessProcedureStructure?{
-        return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE)
-            .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(request.productName)
+        return context.select()
+            .from(PROCESS_PROCEDURE_STRUCTURE.join(PRODUCT)
+            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PRODUCT.NAME)))
+            .where(PRODUCT.NAME.eq(request.productName)
                 .and(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.eq(request.layerCode))
                 .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(request.processCode)))
             .fetchAnyInto(ProcessProcedureStructure::class.java)

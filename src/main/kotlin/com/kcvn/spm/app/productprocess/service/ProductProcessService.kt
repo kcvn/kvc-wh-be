@@ -139,7 +139,7 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.process"),
+            fileName = CommonUtils.getMessage("export.excel.process",arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -198,6 +198,10 @@ class ProductProcessService(
             sheet.setColumnWidth(headerCell, 15000)
         }
 
+        val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
+
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()
@@ -249,27 +253,27 @@ class ProductProcessService(
                 )
             }
 
-            if(row.getCell(0) != null && row.getCell(0).toString().length > 12){
+            if(ExcelHelper.getCellValue(row, 0).isNotEmpty() && ExcelHelper.getCellValue(row, 0).length > 12){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
             }
-            if(row.getCell(1) !=null && row.getCell(1).toString().length > 8){
+            if(ExcelHelper.getCellValue(row, 1).isNotEmpty() && ExcelHelper.getCellValue(row, 1).length > 8){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
             }
-            if(row.getCell((2)) != null && row.getCell(2).toString().length >4){
+            if(ExcelHelper.getCellValue(row, 2).isNotEmpty() && ExcelHelper.getCellValue(row, 2).length >4){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
             }
-            if(row.getCell(3) != null && row.getCell(3).toString().length > 10){
+            if(ExcelHelper.getCellValue(row, 3).isNotEmpty() && ExcelHelper.getCellValue(row, 3).length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
             }
-            if(row.getCell(4) != null && row.getCell(4).toString().length > 10){
+            if(ExcelHelper.getCellValue(row, 4).isNotEmpty() && ExcelHelper.getCellValue(row, 4).length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
             }
-            if(row.getCell(5) != null && row.getCell(5).toString().length > 10){
+            if(ExcelHelper.getCellValue(row, 5).isNotEmpty() && ExcelHelper.getCellValue(row, 5).length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
             }
@@ -338,13 +342,11 @@ class ProductProcessService(
            }
             val result = messageResults.joinToString(separator = "; ")
 
-            if (!checkColResult) {
-                row.createCell(row.lastCellNum + 0).setCellValue(result)
-                row.getCell(row.lastCellNum - 1).cellStyle = style
+            if (row.getCell(colIndexResult) == null) {
+                row.createCell(colIndexResult)
             }
-            else{
-                row.getCell(row.lastCellNum - 2).setCellValue(result)
-            }
+            row.getCell(colIndexResult - 1).setCellValue(result)
+            row.getCell(colIndexResult - 1).cellStyle = style
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)

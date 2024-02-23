@@ -321,7 +321,7 @@ class InventoryProductService(
                             requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
                             inventoryProductRepository.updateInventoryProduct(requestImport)
                         }
-                        messageResults.add("OK")
+                        messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
                         count++
                     }
                 }
@@ -394,7 +394,7 @@ class InventoryProductService(
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportInventoryProduct.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
-
+        val headerRow = sheet.getRow(0)
         if (inventoryProduct.first.isNotEmpty()) {
             val style: CellStyle = workbook.createCellStyle()
             style.borderBottom = BorderStyle.THIN
@@ -407,6 +407,10 @@ class InventoryProductService(
             font.fontName = Constants.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
+
+            val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+            val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+            val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
 
             var rowNumber = 1
@@ -448,7 +452,16 @@ class InventoryProductService(
                 dataRow.createCell(10).setCellValue(item?.code)
                 dataRow.getCell(10).cellStyle = style
             }
+            val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+            for (row in resultRows) {
+                val rowNum = row.rowNum
+                sheet.removeRow(row)
+                if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                    sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+                }
+            }
         }
+
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 

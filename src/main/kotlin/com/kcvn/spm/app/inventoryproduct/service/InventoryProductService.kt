@@ -20,6 +20,7 @@ import java.io.FileInputStream
 import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 
 @Service
@@ -91,7 +92,9 @@ class InventoryProductService(
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy");
+        val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
@@ -178,16 +181,16 @@ class InventoryProductService(
                     )
                 )
             }
-            if (row.getCell(0) != null && !isDateTime(row.getCell(0).toString(), dateFormat)) {
+            if (ExcelHelper.getCellValue(row, 8).isNotEmpty() && !isDateValid(ExcelHelper.getCellValue(row, 0))) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.invalidDatetime",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
                     )
                 )
             }
-            if (row.getCell(1) != null && row.getCell(1).toString().length > 8) {
+            if (ExcelHelper.getCellValue(row, 1).isNotEmpty() && row.getCell(1).toString().length > 8) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -196,7 +199,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (row.getCell((2)) != null && row.getCell(2).toString().length > 50) {
+            if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && row.getCell(2).toString().length > 50) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -205,7 +208,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (row.getCell(3) != null && row.getCell(3).toString().length > 4) {
+            if (ExcelHelper.getCellValue(row, 3).isNotEmpty() && row.getCell(3).toString().length > 4) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -214,7 +217,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (row.getCell(4) != null && row.getCell(4).toString().length > 100) {
+            if (ExcelHelper.getCellValue(row, 3).isNotEmpty() && row.getCell(4).toString().length > 100) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -223,7 +226,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (row.getCell(5) != null && row.getCell(5).toString().length > 12) {
+            if (ExcelHelper.getCellValue(row, 5).isNotEmpty() && row.getCell(5).toString().length > 12) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -232,7 +235,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (row.getCell(6) != null && row.getCell(6).toString().length > 50) {
+            if (ExcelHelper.getCellValue(row, 6).isNotEmpty() && row.getCell(6).toString().length > 50) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -241,7 +244,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (row.getCell(7) != null && row.getCell(7).cellType != CellType.NUMERIC) {
+            if (ExcelHelper.getCellValue(row, 7).isNotEmpty() && row.getCell(7).cellType != CellType.NUMERIC) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -250,7 +253,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (row.getCell(8) != null && row.getCell(8).cellType != CellType.NUMERIC) {
+            if (ExcelHelper.getCellValue(row, 8).isNotEmpty() && row.getCell(8).cellType != CellType.NUMERIC) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -322,14 +325,22 @@ class InventoryProductService(
             }
             val result = messageResults.joinToString(separator = "; ")
 
-            if (!checkColResult) {
-                row.createCell(row.lastCellNum + 0).setCellValue(result)
-                row.getCell(row.lastCellNum - 1).cellStyle = style
+            if (row.getCell(colIndexResult) == null) {
+                row.createCell(colIndexResult)
             }
-            else{
-                row.getCell(row.lastCellNum - 2).setCellValue(result)
+            row.getCell(colIndexResult).setCellValue(result)
+            row.getCell(colIndexResult).cellStyle = style
+        }
+
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        for (row in resultRows) {
+            val rowNum = row.rowNum
+            sheet.removeRow(row)
+            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
             }
         }
+
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
@@ -350,12 +361,13 @@ class InventoryProductService(
     }
 }
 
-fun isDateTime(input: String, dateFormat: SimpleDateFormat): Boolean {
-    dateFormat.isLenient = false
+fun isDateValid(dateStr: String): Boolean {
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     return try {
-        dateFormat.parse(input)
-        true
-    } catch (e: Exception) {
-        false
+        formatter.parse(dateStr)
+        true // Nếu không có lỗi, định dạng là hợp lệ
+    } catch (e: DateTimeParseException) {
+        var test = e.message;
+        false // Nếu có lỗi, định dạng không hợp lệ
     }
 }

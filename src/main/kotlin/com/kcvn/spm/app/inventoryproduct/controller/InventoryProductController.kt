@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/api/inventory-product")
@@ -21,9 +22,12 @@ class InventoryProductController(
     fun checkInventoryDate(date: OffsetDateTime
     ) : ResponseEntity<BaseResponse<CheckInventoryDateResponse>>{
         val data = inventoryProductService.checkInventoryDate(date)
+        val localDate = date.toLocalDate() // Chuyển đổi OffsetDateTime thành LocalDate
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy") // Định dạng của chuỗi
+        val formattedDate = localDate.format(formatter) // Định dạng lại LocalDate thành chuỗi
         if(data!= null && data.hasInventoryDate){
             return ResponseEntity(
-                BaseResponse(data = data, message = CommonUtils.getMessage("check.inventoryDateProduct",arrayOf(data.toString()))),
+                BaseResponse(data = data, message = CommonUtils.getMessage("check.inventoryDateProduct",arrayOf(formattedDate.toString()))),
                 HttpStatus.OK
             )
         }else{

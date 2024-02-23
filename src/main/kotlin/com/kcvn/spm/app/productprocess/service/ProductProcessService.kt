@@ -70,19 +70,18 @@ class ProductProcessService(
             if (item.processInventoryCode != null){
                 val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
                 val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
-                if((productProcessAfter?.processCode!!.isNotEmpty() &&  productProcessAfter.processCode != item.processInventoryCode && productProcessAfter.layerCode != item.layerCode)
-                    || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode != item.processInventoryCode && productProcessPrev.layerCode != item.layerCode ))
+                if((productProcessAfter?.processCode!!.isNotEmpty() &&  productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
+                    || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode ))
                 {
-                    throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+                    productProcess.processConvertCode = item.processConvertCode;
+                    productProcess.processStatisticCode = item.processStatisticCode;
+                    productProcess.processInventoryCode = item.processInventoryCode;
+
+                    val data = productProcessRep.updateProcessDetail(productProcess);
+                    dataResult.add(data)
                 }
-
+                throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
             }
-            productProcess.processConvertCode = item.processConvertCode;
-            productProcess.processStatisticCode = item.processStatisticCode;
-            productProcess.processInventoryCode = item.processInventoryCode;
-
-            val data = productProcessRep.updateProcessDetail(productProcess);
-            dataResult.add(data)
         }
         return  dataResult
     }

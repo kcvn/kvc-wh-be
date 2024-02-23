@@ -39,7 +39,9 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
 
     fun updateInventoryProduct(request: InventoryProduct)  {
         val record = context.newRecord(INVENTORY_PRODUCT, request)
-        context.update(INVENTORY_PRODUCT).set(record).execute()
+        context.update(INVENTORY_PRODUCT).set(record)
+            .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
+                .eq(record.processProcedureStructureId)).execute()
     }
 
     fun finByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{

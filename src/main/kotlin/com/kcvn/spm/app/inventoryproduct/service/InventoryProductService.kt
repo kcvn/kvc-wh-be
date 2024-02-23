@@ -391,7 +391,7 @@ class InventoryProductService(
     fun exportExcel(request: InventoryProductRequest? , pageable: Pageable) : BaseResponse<FileContentModel>{
         val inventoryProduct = inventoryProductRepository.finByKeywordPaginated(request,pageable)
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProduct.xlsx")
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportInventoryProduct.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
@@ -409,7 +409,7 @@ class InventoryProductService(
             style.setFont(font)
 
 
-            var rowNumber = 2
+            var rowNumber = 1
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 val localDate = item?.inventoryDate?.toLocalDate() // Chuyển đổi OffsetDateTime thành LocalDate

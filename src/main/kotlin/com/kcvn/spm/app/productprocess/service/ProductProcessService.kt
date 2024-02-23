@@ -68,11 +68,14 @@ class ProductProcessService(
             val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                 ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
             if (item.processInventoryCode != null){
-               val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
-                if((productProcessAfter?.processCode != null &&  productProcessAfter.processCode != item.processInventoryCode) )
+                val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
+                val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
+                if((productProcessAfter?.processCode!!.isNotEmpty() &&  productProcessAfter.processCode != item.processInventoryCode && productProcessAfter.layerCode != item.layerCode)
+                    || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode != item.processInventoryCode && productProcessPrev.layerCode != item.layerCode ))
                 {
                     throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
                 }
+
             }
             productProcess.processConvertCode = item.processConvertCode;
             productProcess.processStatisticCode = item.processStatisticCode;

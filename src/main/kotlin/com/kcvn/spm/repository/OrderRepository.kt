@@ -56,7 +56,8 @@ class OrderRepository (private val context: DSLContext,
             PRODUCT.SR_NOSR,
             ORDER.VERSION,
             PRODUCT.NAME.`as`("productName"),
-            substring(PRODUCT.NAME,6,10).`as`("productShortcutName")
+            substring(PRODUCT.NAME,6,10).`as`("productShortcutName"),
+            ORDER.ID.`as`("orderId")
 
         )
             .from(ORDER.join(ORDER_DETAIL).on(ORDER.ID.eq(ORDER_DETAIL.ORDER_ID))
@@ -72,7 +73,7 @@ class OrderRepository (private val context: DSLContext,
             .offset(pageable?.offset ?: 0)
             .fetchInto(OrderDetailModel::class.java)
         val additionalData = completionRateProcessesQuery.map { orderDetailModel ->
-            orderDetailRepository.GetCalenderOrderDetailByOrder(orderDetailModel.id)
+            orderDetailRepository.GetCalenderOrderDetailByOrder(orderDetailModel.orderId)
         }
         completionRateProcessesQuery.forEachIndexed { index, orderDetailModel ->
             orderDetailModel.quantityByCalendars = additionalData[index]

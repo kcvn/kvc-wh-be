@@ -186,7 +186,7 @@ class ProductProcessService(
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         var count = 0
-        val total = sheet.lastRowNum - rowIndex
+        val total = sheet.lastRowNum
 
         val masterData = masterDataService.getMasterDataSelection()
 
@@ -349,6 +349,15 @@ class ProductProcessService(
             }
             row.getCell(colIndexResult ).setCellValue(result)
             row.getCell(colIndexResult ).cellStyle = style
+        }
+
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        for (row in resultRows) {
+            val rowNum = row.rowNum
+            sheet.removeRow(row)
+            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+            }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)

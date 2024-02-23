@@ -176,14 +176,18 @@ class ProductService(
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
 
-        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex)) {
+            workbook.close()
+            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        }
 
         val headerRow = sheet.getRow(0)
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.xlsx"
 
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16))
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16)){
+            workbook.close()
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+        }
 
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = productRep.getByName(productNames)
@@ -288,7 +292,19 @@ class ProductService(
             row.getCell(colIndexResult).cellStyle = style
         }
 
+        if (count == total) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
+        }
 
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        for (row in resultRows) {
+            val rowNum = row.rowNum
+            sheet.removeRow(row)
+            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+            }
+        }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)

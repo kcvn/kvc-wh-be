@@ -4,6 +4,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.CheckInventoryDateResponse
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.inventoryproduct.service.InventoryProductService
+import com.kcvn.spm.app.productprocess.payload.request.ProductProcessSearchRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -70,12 +71,25 @@ class InventoryProductController(
             SortDefault(sort = ["processName"], direction = Sort.Direction.ASC)
         )
         pageable: Pageable?
-    ) :  ResponseEntity<BasePagingResponse<InventoryProductResponse>> {
-        val result = inventoryProductService.getListInventoryProduct(request,pageable!!)
-        return if (result.data.isNullOrEmpty()) {
-            ResponseEntity(BasePagingResponse(), HttpStatus.NO_CONTENT)
-        } else {
-            ResponseEntity(result, HttpStatus.OK)
-        }
+    ) :  ResponseEntity<BasePagingResponse<InventoryProductResponse?>> {
+         val result = inventoryProductService.getListInventoryProduct(request,pageable!!)
+
+        return   ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/export-excel")
+    fun exportExcel(
+        request: InventoryProductRequest,
+        @PageableDefault(size = 1000000, page = 0)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["inventoryDate"], direction = Sort.Direction.DESC),
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["processName"], direction = Sort.Direction.ASC)
+        )
+        pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = inventoryProductService.exportExcel(request,pageable)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 }

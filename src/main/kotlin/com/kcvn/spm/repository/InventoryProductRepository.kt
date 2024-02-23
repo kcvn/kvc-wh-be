@@ -42,7 +42,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         context.update(INVENTORY_PRODUCT).set(record).execute()
     }
 
-    fun finByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse>, Int?>{
+    fun finByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
         var condition: Condition = DSL.noCondition()
 
         if(request != null){

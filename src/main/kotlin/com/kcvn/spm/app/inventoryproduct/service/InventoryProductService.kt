@@ -291,7 +291,7 @@ class InventoryProductService(
                         processCode = processCode,
                         layerCode = layerCode
                     )
-                    val filterCheckProcessProcedure = processProcedureRep.getByFilterProcessStructure(filter)
+                    val filterCheckProcessProcedure = processProcedureRep.getByFilterProcessStructureByInventoryProduct(filter)
                     if(filterCheckProcessProcedure == null)
                     {
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
@@ -334,8 +334,8 @@ class InventoryProductService(
             if (row.getCell(colIndexResult) == null) {
                 row.createCell(colIndexResult)
             }
-            row.getCell(colIndexResult - 1).setCellValue(result)
-            row.getCell(colIndexResult - 1).cellStyle = style
+            row.getCell(colIndexResult ).setCellValue(result)
+            row.getCell(colIndexResult ).cellStyle = style
         }
 
         val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }

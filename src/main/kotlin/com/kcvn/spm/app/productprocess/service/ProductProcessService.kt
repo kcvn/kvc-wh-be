@@ -34,23 +34,23 @@ class ProductProcessService(
     private val processProcedureRep : ProcessProcedureStructureRepository,
     private val masterDataService : MasterDataService
 ) {
-    fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse>
+    fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse?>
     {
         val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
-        val response = BasePagingResponse<ProductProcessResponse>();
+        val response = BasePagingResponse<ProductProcessResponse?>();
             response.data = result.first.map { productProcess ->
                 ProductProcessResponse(
-                    processId = productProcess.processId,
-                    processName = productProcess.processName,
-                    processNameJp = productProcess.processNameJp,
-                    processConvertCode = productProcess.processConvertCode,
-                    processStatisticCode = productProcess.processStatisticCode,
-                    processInventoryCode = productProcess.processInventoryCode,
-                    productName = productProcess.productName,
-                    layerCode = productProcess.layerCode,
-                    processCode = productProcess.processCode,
-                    productId = productProcess.productId,
-                    processProcedureStructureId = productProcess.processProcedureStructureId
+                    processId = productProcess?.processId,
+                    processName = productProcess?.processName,
+                    processNameJp = productProcess?.processNameJp,
+                    processConvertCode = productProcess?.processConvertCode,
+                    processStatisticCode = productProcess?.processStatisticCode,
+                    processInventoryCode = productProcess?.processInventoryCode,
+                    productName = productProcess?.productName,
+                    layerCode = productProcess?.layerCode,
+                    processCode = productProcess?.processCode,
+                    productId = productProcess?.productId,
+                    processProcedureStructureId = productProcess?.processProcedureStructureId
                 );
             }
             response.totalRecords = result.second ?: 0
@@ -108,28 +108,28 @@ class ProductProcessService(
             var rowNumber = 2
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                dataRow.createCell(0).setCellValue(item.productName)
+                dataRow.createCell(0).setCellValue(item?.productName)
                 dataRow.getCell(0).cellStyle = style
 
-                dataRow.createCell(1).setCellValue(item.layerCode)
+                dataRow.createCell(1).setCellValue(item?.layerCode)
                 dataRow.getCell(1).cellStyle = style
 
-                dataRow.createCell(2).setCellValue(item.processCode)
+                dataRow.createCell(2).setCellValue(item?.processCode)
                 dataRow.getCell(2).cellStyle = style
 
-                dataRow.createCell(3).setCellValue(item.processName)
+                dataRow.createCell(3).setCellValue(item?.processName)
                 dataRow.getCell(3).cellStyle = style
 
-                dataRow.createCell(4).setCellValue(item.processNameJp)
+                dataRow.createCell(4).setCellValue(item?.processNameJp)
                 dataRow.getCell(4).cellStyle = style
 
-                dataRow.createCell(5).setCellValue(item.processConvertCode)
+                dataRow.createCell(5).setCellValue(item?.processConvertCode)
                 dataRow.getCell(5).cellStyle = style
 
-                dataRow.createCell(6).setCellValue(item.processInventoryCode)
+                dataRow.createCell(6).setCellValue(item?.processInventoryCode)
                 dataRow.getCell(6).cellStyle = style
 
-                dataRow.createCell(7).setCellValue(item.processStatisticCode)
+                dataRow.createCell(7).setCellValue(item?.processStatisticCode)
                 dataRow.getCell(7).cellStyle = style
             }
         }
@@ -345,8 +345,8 @@ class ProductProcessService(
             if (row.getCell(colIndexResult) == null) {
                 row.createCell(colIndexResult)
             }
-            row.getCell(colIndexResult - 1).setCellValue(result)
-            row.getCell(colIndexResult - 1).cellStyle = style
+            row.getCell(colIndexResult ).setCellValue(result)
+            row.getCell(colIndexResult ).cellStyle = style
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)

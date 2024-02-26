@@ -43,27 +43,40 @@ class OrderService(
         pageable: Pageable?
     ): PagingOrderResponse {
         val calendarResponses = mutableListOf<CalendarValueResponse>()
-        if (request?.startDate != null && request.endDate != null) {
+        if (request != null) {
+            if (request.filterType != null && request.filterType ==  1&& request.orderCode !=null) {
 
-            var currentDate = request.startDate
-            while (!currentDate!!.isAfter(request.endDate)) {
-                val response = CalendarValueResponse(
-                    key = currentDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
-                    value = currentDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
-                    isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
-                )
-                calendarResponses.add(response)
+                val order = request.version?.let { orderRep.getByOrderByCodeAndVersion(request.orderCode!!, it) }
+                if(order !=null){
+                    request.startDate = order.startDate
+                    request.endDate = order.endDate
+                }
 
-                currentDate = currentDate.plusDays(1)
+            }
+
+            if (request.startDate != null && request.endDate != null) {
+
+                var currentDate = request.startDate
+                while (!currentDate!!.isAfter(request.endDate)) {
+                    val response = CalendarValueResponse(
+                        key = currentDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
+                        value = currentDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
+                        isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
+                    )
+                    calendarResponses.add(response)
+
+                    currentDate = currentDate.plusDays(1)
+                }
             }
         }
+
         val pagingOrderResponse = PagingOrderResponse()
         pagingOrderResponse.columns = calendarResponses
         val listOrderResponse = orderRep.getPaginatedOrder(request, pageable)
         pagingOrderResponse.data = listOrderResponse.first
-        var count = 0
+        var count = 0;
         for (item in listOrderResponse.first) {
-            val calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
+            var calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
             item.quantityByCalendars = calender
             if (calender != null) {
                 for (number in calender) {

@@ -48,9 +48,9 @@ class OrderRepository(
         if (!request?.orderCode.isNullOrBlank()) {
             condition = condition.and(ORDER.ORDER_CODE.eq(request?.orderCode))
         }
-        request?.version?.let { version ->
-            condition = condition.and(ORDER.VERSION.eq(version))
-        }
+//        request?.version?.let { version ->
+//            condition = condition.and(ORDER.VERSION.eq(version))
+//        }
         val completionRateProcessesQuery = context.select(
             ORDER_DETAIL.ID,
             ORDER.QUANTITY,
@@ -154,6 +154,11 @@ class OrderRepository(
     fun getByOrderCode(orderCode: String) : Order? {
         return context.selectFrom(ORDER).where(ORDER.ORDER_CODE.eq(orderCode)).and(ORDER.IS_DELETED.eq(false))
             .orderBy(ORDER.VERSION.sort(SortOrder.DESC))
+            .fetchInto(Order::class.java).firstOrNull()
+    }
+
+    fun getByOrderByCodeAndVersion(orderCode: String, version: Int) : Order? {
+        return context.selectFrom(ORDER).where(ORDER.ORDER_CODE.eq(orderCode)).and(ORDER.IS_DELETED.eq(false).and(ORDER.VERSION.eq(version)))
             .fetchInto(Order::class.java).firstOrNull()
     }
 }

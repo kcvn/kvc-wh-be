@@ -9,6 +9,7 @@ import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.datetimehelper.DateTimeHelper
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
@@ -137,40 +138,40 @@ class OrderService(
             var rowNumberFill = 1
             if (listOrder != null) {
                 for (item in listOrder) {
-                    val dataRow: Row = sheet.createRow(rowNumberFill++)
-                    dataRow.createCell(0).setCellValue(item.productShortcutName)
-                    dataRow.getCell(0).cellStyle = style
+                    val row: Row = sheet.createRow(rowNumberFill++)
+                    row.createCell(0).setCellValue(item.productShortcutName)
+                    row.getCell(0).cellStyle = style
 
-                    dataRow.createCell(1).setCellValue(item.productName)
-                    dataRow.getCell(1).cellStyle = style
+                    row.createCell(1).setCellValue(item.productName)
+                    row.getCell(1).cellStyle = style
 
-                    dataRow.createCell(2).setCellValue(item.quantity.toString())
-                    dataRow.getCell(2).cellStyle = style
+                    row.createCell(2).setCellValue(item.quantity.toString())
+                    row.getCell(2).cellStyle = style
 
-                    dataRow.createCell(3).setCellValue(item.frame_1)
-                    dataRow.getCell(3).cellStyle = style
+                    row.createCell(3).setCellValue(item.frame_1)
+                    row.getCell(3).cellStyle = style
 
-                    dataRow.createCell(4).setCellValue(item.pcsSh.toString())
-                    dataRow.getCell(4).cellStyle = style
+                    row.createCell(4).setCellValue(item.pcsSh.toString())
+                    row.getCell(4).cellStyle = style
 
-                    dataRow.createCell(5).setCellValue(item.shBlock.toString())
-                    dataRow.getCell(5).cellStyle = style
+                    row.createCell(5).setCellValue(item.shBlock.toString())
+                    row.getCell(5).cellStyle = style
 
-                    dataRow.createCell(6).setCellValue(item.shBlock.toString())
-                    dataRow.getCell(6).cellStyle = style
+                    row.createCell(6).setCellValue(item.shBlock.toString())
+                    row.getCell(6).cellStyle = style
 
-                    dataRow.createCell(7).setCellValue(item.srNosr)
-                    dataRow.getCell(7).cellStyle = style
+                    row.createCell(7).setCellValue(item.srNosr)
+                    row.getCell(7).cellStyle = style
 
-                    dataRow.createCell(8).setCellValue("v" + item.version + ".0")
-                    dataRow.getCell(8).cellStyle = style
+                    row.createCell(8).setCellValue("v${item.version}.0")
+                    row.getCell(8).cellStyle = style
 
                     for (odetail in item.quantityByCalendars!!) {
                         val check = keyValueList.find { x -> x.key == odetail.key }
                         if (check != null) {
-                            check.value?.let { dataRow.createCell(it.toInt()).setCellValue(odetail.value) }
+                            check.value?.let { row.createCell(it.toInt()).setCellValue(odetail.value) }
                             check.value?.let {
-                                val cell = dataRow.getCell(it.toInt())
+                                val cell = row.getCell(it.toInt())
                                 cell?.cellStyle = style
                             }
                         }
@@ -196,8 +197,34 @@ class OrderService(
         return BaseResponse(response)
     }
 
-    fun getOrderCode(year: String): List<OrderCodeResponse> {
-        return orderRep.getOrderCode(year)
+    fun getOrderCode(year: String?): List<OrderCodeResponse> {
+        var startDate = OffsetDateTime.of(DateTimeHelper.getFirstDayOfQuarterInYear(LocalDateTime.now()), ZoneOffset.UTC)
+        var endDate: OffsetDateTime? = null
+        if (!year.isNullOrEmpty()) {
+            startDate = OffsetDateTime.of(year.toInt(), 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
+            endDate = OffsetDateTime.of(year.toInt(), 12, 31, 23, 59, 59, 0, ZoneOffset.UTC)
+        }
+        val orders = orderRep.getOrderCode(startDate, endDate)
+
+        // Tạo một Map để lưu trữ danh sách các VERSION cho mỗi ORDER_CODE
+        val versionMap = mutableMapOf<String, MutableList<String>>()
+        for (order in orders) {
+            val orderCode = order.orderCode
+            val version = order.version
+            if (orderCode != null) {
+                versionMap.computeIfAbsent(orderCode) { mutableListOf() }.add(version.toString())
+            }
+        }
+
+        // Tạo danh sách OrderCodeResponse và điền thông tin từ versionMap
+        val orderCodeResponses = mutableListOf<OrderCodeResponse>()
+        for ((orderCode, versions) in versionMap) {
+            var dropdownResponses = versions.map { DropdownResponse(it, "v${it}.0") }.sortedByDescending { x -> x.value }
+            if (year.isNullOrEmpty()) dropdownResponses = listOf(dropdownResponses.first())
+            orderCodeResponses.add(OrderCodeResponse(orderCode, orderCode, dropdownResponses))
+        }
+
+        return orderCodeResponses
     }
 
     fun importExcelOrder(file: MultipartFile, orderCodeSelected: String?): BaseResponse<FileContentModel> {
@@ -214,12 +241,7 @@ class OrderService(
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportOrderTemplate.xlsx"
 
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
-        val colResult = headerRow.firstOrNull { x ->
-            ExcelHelper.getCellValue(
-                headerRow,
-                x.columnIndex
-            ) == CommonUtils.getMessage("excel.colResultName")
-        }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
         val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
         if (colResult == null) {
@@ -254,11 +276,7 @@ class OrderService(
         val startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
         val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1).split("/")
         val endDate = LocalDateTime.of(year, arrEndDate[0].toInt(), arrEndDate[1].toInt(), 0, 0)
-        val orderCode = "${startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}-${
-            endDate.format(
-                DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            )
-        }"
+        val orderCode = "${startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}-${endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}"
         var startDateUtc = OffsetDateTime.of(startDate, ZoneOffset.UTC)
         val endDateUtc = OffsetDateTime.of(endDate, ZoneOffset.UTC)
         var version = 1
@@ -300,22 +318,12 @@ class OrderService(
                     throw BusinessException(CommonUtils.getMessage("validate.order.hasWorkResult"))
                 }
                 val workResultDate = workResult.summaryResultDate!!.plusDays(1)
-                startDateUtc = OffsetDateTime.of(
-                    year,
-                    workResultDate.monthValue,
-                    workResultDate.dayOfMonth,
-                    0,
-                    0,
-                    0,
-                    0,
-                    ZoneOffset.UTC
-                )
+                startDateUtc = OffsetDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0, 0, 0, ZoneOffset.UTC)
             }
             version = (orderExist.version ?: 0) + 1
         }
 
-        val productNames =
-            sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
+        val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = productRep.getByName(productNames)
 
         val orderDetails = mutableListOf<OrderDetail>()
@@ -344,18 +352,13 @@ class OrderService(
                     try {
                         val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol).split("/")
                         val orderDate = LocalDateTime.of(year, arrOrderDate[0].toInt(), arrOrderDate[1].toInt(), 0, 0)
-                        var strQuantity = ExcelHelper.getCellValue(row, iCol)
+                        val strQuantity = ExcelHelper.getCellValue(row, iCol)
                         if (strQuantity.isEmpty()) {
                             continue
                         } else {
                             if (strQuantity.toBigDecimalOrNull() == null) {
                                 isBreak = true
-                                messageResults.add(
-                                    CommonUtils.getMessage(
-                                        "validate.excel.isNumber",
-                                        arrayOf(ExcelHelper.getCellValue(headerRow, iCol))
-                                    )
-                                )
+                                messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, iCol))))
                                 break
                             }
                         }
@@ -403,10 +406,7 @@ class OrderService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage(
-                "fileName.resultImportOrder",
-                arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))
-            ),
+            fileName = CommonUtils.getMessage("fileName.resultImportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -415,10 +415,7 @@ class OrderService(
 
         return BaseResponse(
             response,
-            if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage(
-                "import.success",
-                arrayOf(count, total)
-            )
+            if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
         )
     }
 

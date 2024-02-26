@@ -2,7 +2,6 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
-import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -13,6 +12,7 @@ import com.kcvn.spm.model.tables.references.ORDER_DETAIL
 import com.kcvn.spm.model.tables.references.PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.SortOrder
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.*
@@ -93,37 +93,18 @@ class OrderRepository(
     }
 
 
-    fun getOrderCode(year: String): List<OrderCodeResponse> {
-        val orders = context.select(
+    fun getOrderCode(startDate: OffsetDateTime, endDate: OffsetDateTime?): List<Order> {
+        var condition = DSL.noCondition()
+        if (endDate != null) {
+            condition = condition.and(ORDER.END_DATE.le(endDate))
+        }
+        condition = condition.and(ORDER.START_DATE.ge(startDate)).and(ORDER.IS_DELETED.eq(false))
+        return context.select(
             ORDER.ORDER_CODE,
             ORDER.VERSION,
             ORDER.START_DATE,
             ORDER.END_DATE
-        )
-            .from(ORDER)
-            .where(
-                ORDER.IS_DELETED.eq(false)
-            )
-            .fetch()
-
-        // Tạo một Map để lưu trữ danh sách các VERSION cho mỗi ORDER_CODE
-        val versionMap = mutableMapOf<String, MutableList<String>>()
-        for (order in orders) {
-            val orderCode = order[ORDER.ORDER_CODE]
-            val version = order[ORDER.VERSION]
-            if (orderCode != null) {
-                versionMap.computeIfAbsent(orderCode) { mutableListOf() }.add(version.toString())
-            }
-        }
-
-        // Tạo danh sách OrderCodeResponse và điền thông tin từ versionMap
-        val orderCodeResponses = mutableListOf<OrderCodeResponse>()
-        for ((orderCode, versions) in versionMap) {
-            val dropdownResponses = versions.map { DropdownResponse(it, it.toString()) }
-            orderCodeResponses.add(OrderCodeResponse(orderCode, orderCode, dropdownResponses))
-        }
-
-        return orderCodeResponses
+        ).from(ORDER).where(condition).fetchInto(Order::class.java)
     }
 
     fun getVersionByOrderCode(orderCode: String): List<DropdownResponse> {
@@ -172,6 +153,7 @@ class OrderRepository(
 
     fun getByOrderCode(orderCode: String) : Order? {
         return context.selectFrom(ORDER).where(ORDER.ORDER_CODE.eq(orderCode)).and(ORDER.IS_DELETED.eq(false))
+            .orderBy(ORDER.VERSION.sort(SortOrder.DESC))
             .fetchInto(Order::class.java).firstOrNull()
     }
 

@@ -1,10 +1,7 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.model.tables.pojos.SyncHistory
-import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
-import com.kcvn.spm.model.tables.references.PRODUCT
 import com.kcvn.spm.model.tables.references.SYNC_HISTORY
 import org.jooq.DSLContext
 import org.jooq.SortOrder

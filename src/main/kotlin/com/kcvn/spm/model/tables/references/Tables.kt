@@ -11,6 +11,7 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.CalculateQuantity
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
@@ -61,6 +62,11 @@ val AUTH_USER_CLAIM: AuthUserClaim = AuthUserClaim.AUTH_USER_CLAIM
  * The table <code>public.auth_user_role</code>.
  */
 val AUTH_USER_ROLE: AuthUserRole = AuthUserRole.AUTH_USER_ROLE
+
+/**
+ * The table <code>public.calculate_quantity</code>.
+ */
+val CALCULATE_QUANTITY: CalculateQuantity = CalculateQuantity.CALCULATE_QUANTITY
 
 /**
  * The table <code>public.common_category</code>.

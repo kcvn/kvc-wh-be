@@ -61,7 +61,7 @@ class CompletionRateService(
     //Service Product
 
     fun exportCompletionRateProductExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
-        val products = completionRateProductRepository.findByKeywordPaginated(search, pageable)
+        val products = completionRateProductRepository.getPaginatedCompletionRateProduct(search, pageable)
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
@@ -180,36 +180,62 @@ class CompletionRateService(
                 if (name.length != 12) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.key"))
                 }
-
-                try {
-                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                    if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.rate"))
-                    }
-                } catch (e: NumberFormatException) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+            }
+            try {
+                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate.scale() > 2) {
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.rate"))
                 }
+            } catch (e: NumberFormatException) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
             }
 
             if (errorMessages.isEmpty()) {
                 try {
+                    if (productExist == null) {
                         val compleRateProduct = CompletionRateProduct(
+                            productName = name,
+                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                            effectiveDate = effectiveDate,
+                            expirationDate = null
+
+                        )
+                        completionRateProductRepository.add(compleRateProduct)
+                        count++
+
+                    }
+                    else {
+                        val productExistSameDate =
+                            productExists.find { x -> (x.productName == name && x.effectiveDate?.toLocalDate() == effectiveDate.toLocalDate()) }
+                        if (productExistSameDate != null) {
+                            productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                            productExistSameDate.expirationDate = effectiveDate.minusDays(1)
+                            completionRateProductRepository.update(productExistSameDate)
+                            count++
+                        } else if (currentDate > effectiveDate) {
+                            errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                        } else {
+                            val compleRateProduct = CompletionRateProduct(
                                 productName = name,
                                 rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
                                 effectiveDate = effectiveDate,
                                 expirationDate = null
 
-                        )
-
-                        completionRateProductRepository.add(compleRateProduct)
-                        if (productExist != null) {
-                        productExist.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                        productExist.expirationDate = effectiveDate.minusDays(1)
-                        completionRateProductRepository.update(productExist)
-
+                            )
+                            completionRateProductRepository.add(compleRateProduct)
+                            val completionRateUpdate =
+                                completionRateProductRepository.getCompletionRateProductWithMaxEffectivedateByName(name)
+                            if (completionRateUpdate != null) {
+                                completionRateUpdate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                                completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
+                                completionRateProductRepository.update(completionRateUpdate)
+                            }
+                            count++
+                        }
                     }
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.importSuccess"))
-                    count++
+                    if(errorMessages.isEmpty()){
+                        errorMessages.add(CommonUtils.getMessage("validate.excel.importSuccess"))
+                    }
                 } catch (e: Exception) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.updateDataError"))
                 }
@@ -222,6 +248,10 @@ class CompletionRateService(
             } else {
                 row.getCell(row.lastCellNum - 1).setCellValue(result)
             }
+        }
+        if (count == total+1) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -375,18 +405,18 @@ class CompletionRateService(
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
                 }
-                if (key.length != 7) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
-                }
 
-                try {
-                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                    if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
-                    }
-                } catch (e: NumberFormatException) {
+            }
+            if (key.length != 7) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
+            }
+            try {
+                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate.scale() > 2) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
                 }
+            } catch (e: NumberFormatException) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
             }
 
             if (errorMessages.isEmpty()) {
@@ -427,6 +457,10 @@ class CompletionRateService(
             }
         }
 
+        if (count == total+1) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
+        }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
@@ -460,7 +494,8 @@ class CompletionRateService(
                             layerCode = item.layerCode,
                             rate = item.rate,
                             processName = item.processName,
-                            processNameJp = item.processNameJp
+                            processNameJp = item.processNameJp,
+                            effectiveDate = item.effectiveDate
 
                     )
                 }, result.second
@@ -509,7 +544,7 @@ class CompletionRateService(
 
             val productExist = productExists.find { x -> x.key == key }
 
-            val processExist = processCodeExist.find {x -> x == key.substring(7, 13)}
+            val processExist = processCodeExist.find {x -> x ==  key.take(6)}
             if(processExist == null){
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
@@ -519,18 +554,18 @@ class CompletionRateService(
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
                 }
-                if (key.length != 14) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
-                }
+            }
+            if (key.length != 14) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
+            }
 
-                try {
-                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                    if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
-                    }
-                } catch (e: NumberFormatException) {
+            try {
+                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate.scale() > 2) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
                 }
+            } catch (e: NumberFormatException) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
             }
 
             if (errorMessages.isEmpty()) {
@@ -539,8 +574,8 @@ class CompletionRateService(
                         val compleRateProcessProduct = CompletionRateProcessProduct(
                                 key = key,
                                 rate =  BigDecimal(ExcelHelper.getCellValue(row, 1)),
-                                productNameShortcut = key.take(7),
-                                processCode = key.substring(7, 13),
+                                productNameShortcut = key.substring(6, 13),
+                                processCode = key.take(6),
                                 layerCode = key.substring(13, 14),
                                 expirationDate = null,
                                 effectiveDate = effectiveDate
@@ -571,6 +606,10 @@ class CompletionRateService(
             } else {
                 row.getCell(row.lastCellNum - 1).setCellValue(result)
             }
+        }
+        if (count == total+1) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()

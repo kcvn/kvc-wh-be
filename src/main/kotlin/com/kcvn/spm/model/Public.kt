@@ -11,6 +11,7 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.CalculateQuantity
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
@@ -79,6 +80,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.auth_user_role</code>.
      */
     val AUTH_USER_ROLE: AuthUserRole get() = AuthUserRole.AUTH_USER_ROLE
+
+    /**
+     * The table <code>public.calculate_quantity</code>.
+     */
+    val CALCULATE_QUANTITY: CalculateQuantity get() = CalculateQuantity.CALCULATE_QUANTITY
 
     /**
      * The table <code>public.common_category</code>.
@@ -155,6 +161,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         AuthUser.AUTH_USER,
         AuthUserClaim.AUTH_USER_CLAIM,
         AuthUserRole.AUTH_USER_ROLE,
+        CalculateQuantity.CALCULATE_QUANTITY,
         CommonCategory.COMMON_CATEGORY,
         CompletionRateProcess.COMPLETION_RATE_PROCESS,
         CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,

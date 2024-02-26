@@ -58,10 +58,10 @@ class WorkResultController (
         request: WorkResultSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["summary_result_date"], direction = Sort.Direction.DESC),
-            SortDefault(sort = ["item_name"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["layer_code"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["process_name"], direction = Sort.Direction.ASC)
+            SortDefault(sort = ["summaryResultDate"], direction = Sort.Direction.DESC),
+            SortDefault(sort = ["itemName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["processName"], direction = Sort.Direction.ASC)
         ) pageable: Pageable,
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = workResultService.exportExcel(request,pageable)

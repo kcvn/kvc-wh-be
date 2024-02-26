@@ -127,5 +127,18 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             ?.into(CompletionRateProduct::class.java)
     }
 
+    fun getCompletionRateProductWithMaxEffectivedateByName(name: String): CompletionRateProduct? {
+
+        val record = context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(
+                COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)
+                    .and(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.eq(name))
+            )
+            .orderBy(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.desc())
+            .limit(1)
+            .fetchOne()
+        return record?.into(CompletionRateProduct::class.java)
+
+    }
 
 }

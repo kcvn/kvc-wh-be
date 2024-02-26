@@ -19,34 +19,6 @@ import java.time.ZoneOffset
 @Repository
 class CompletionRateProcessProductRepository(private val context: DSLContext) : SortingRepository() {
 
-    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<CompletionRateProcessProductResponse>, Int?>
-    {
-        var condition: Condition = DSL.noCondition()
-        if(keyword != null){
-            val lowerKeyword = DSL.lower(keyword);
-            condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.KEY).contains(lowerKeyword))
-        }
-
-        val completionRateProcessProductQuery = context
-            .select(
-                COMPLETION_RATE_PROCESS_PRODUCT.ID,
-                COMPLETION_RATE_PROCESS_PRODUCT.KEY,
-                COMPLETION_RATE_PROCESS_PRODUCT.RATE,
-            )
-            .from(COMPLETION_RATE_PROCESS_PRODUCT)
-            .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
-            .orderBy(getSortFields(pageable.sort, COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT))
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .fetchInto(CompletionRateProcessProductResponse::class.java)
-        val queryTotal =  context
-            .selectCount()
-            .from(COMPLETION_RATE_PROCESS_PRODUCT)
-            .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
-        val totalCount = context.fetchOne(queryTotal)?.value1()
-        return  Pair(completionRateProcessProductQuery, totalCount);
-    }
-
     fun update(data: CompletionRateProcessProduct): CompletionRateProcessProduct? {
         return context
             .update(COMPLETION_RATE_PROCESS_PRODUCT)
@@ -74,22 +46,24 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
 
 
     fun getPaginatedCompletionRateProcessesProduct(
-            search: CompletionRateProcessProductRequest?,
-            pageable: Pageable?
+        search: CompletionRateProcessProductRequest?,
+        pageable: Pageable?
     ): Pair<List<CompletionRateProcessProductResponse>, Int> {
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
-            if(search.productNameShortCut !=null){
+            if (search.productNameShortCut != null) {
                 val lowerProductNameShortCutSearch = DSL.lower(search.productNameShortCut)
                 condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT).contains(lowerProductNameShortCutSearch))
             }
 
-            if(search.processCode !=null){
+            if (search.processCode != null) {
                 val lowerProcessCodeSearch = DSL.lower(search.processCode)
                 condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).contains(lowerProcessCodeSearch))
             }
         }
+
+        val maxEffectiveDatesMap = mutableMapOf<String, OffsetDateTime?>()
 
         val completionRateProcessesQuery = context.select(
             COMPLETION_RATE_PROCESS_PRODUCT.ID,
@@ -98,6 +72,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE,
             COMPLETION_RATE_PROCESS_PRODUCT.RATE,
             COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT,
+            COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE,
             PROCESS_MASTER.PROCESS_NAME,
             PROCESS_MASTER.PROCESS_NAME_JP
         )
@@ -112,10 +87,23 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .offset(pageable?.offset ?: 0)
             .fetchInto(CompletionRateProcessProductResponse::class.java)
 
+        completionRateProcessesQuery.forEach { product ->
+            val currentMaxEffectiveDate = maxEffectiveDatesMap[product.key]
+            if (currentMaxEffectiveDate == null || (product.effectiveDate != null && product.effectiveDate > currentMaxEffectiveDate)) {
+                maxEffectiveDatesMap[product.key!!] = product.effectiveDate
+            }
+        }
+
+        val filteredList = completionRateProcessesQuery.filter { product ->
+            val maxEffectiveDate = maxEffectiveDatesMap[product.key]
+            product.effectiveDate != null && product.effectiveDate == maxEffectiveDate
+        }
+
         val total = context.fetchCount(COMPLETION_RATE_PROCESS_PRODUCT, condition)
 
-        return Pair(completionRateProcessesQuery, total)
+        return Pair(filteredList, total)
     }
+
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         return when (sortFieldName) {

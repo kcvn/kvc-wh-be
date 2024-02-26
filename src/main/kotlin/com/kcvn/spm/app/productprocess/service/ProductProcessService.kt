@@ -50,9 +50,12 @@ class ProductProcessService(
                     layerCode = productProcess?.layerCode,
                     processCode = productProcess?.processCode,
                     productId = productProcess?.productId,
-                    processProcedureStructureId = productProcess?.processProcedureStructureId
+                    processProcedureStructureId = productProcess?.processProcedureStructureId,
+                    layerCodeInt = productProcess?.layerCode!!.toInt(),
+                    processSequence = productProcess.processSequence
                 );
             }
+        response.data = (response.data as List<ProductProcessResponse?>).sortedWith(compareBy<ProductProcessResponse?> {it?.productName}.thenBy { it?.layerCodeInt }.thenBy { it?.processSequence })
             response.totalRecords = result.second ?: 0
 
         return response;

@@ -76,15 +76,15 @@ class ProductProcessService(
                 if((productProcessAfter?.processCode!!.isNotEmpty() &&  productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
                     || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode ))
                 {
-                    productProcess.processConvertCode = item.processConvertCode;
                     productProcess.processStatisticCode = item.processStatisticCode;
-                    productProcess.processInventoryCode = item.processInventoryCode;
-
-                    val data = productProcessRep.updateProcessDetail(productProcess);
-                    dataResult.add(data)
+                }else {
+                    throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
                 }
-                throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
             }
+            productProcess.processConvertCode = item.processConvertCode;
+            productProcess.processInventoryCode = item.processInventoryCode;
+            val data = productProcessRep.updateProcessDetail(productProcess);
+            dataResult.add(data)
         }
         return  dataResult
     }
@@ -164,7 +164,7 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "ImportProcessTemplate.xlsx",
+            fileName = "Import_Danhsachcongdoan_Template.xlsx",
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )

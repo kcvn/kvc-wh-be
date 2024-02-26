@@ -149,6 +149,9 @@ class CompletionRateService(
         val productExists = completionRateProductRepository.getByProduct(productNames)
         var count = 0
         val total = sheet.lastRowNum - rowIndex
+        val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
         val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
         if (!checkColResult) {
@@ -253,7 +256,14 @@ class CompletionRateService(
             workbook.close()
             return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total+1)))
         }
-
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        for (row in resultRows) {
+            val rowNum = row.rowNum
+            sheet.removeRow(row)
+            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+            }
+        }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
@@ -363,6 +373,9 @@ class CompletionRateService(
 
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
+        val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
@@ -487,6 +500,14 @@ class CompletionRateService(
             workbook.close()
             return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total+1)))
         }
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        for (row in resultRows) {
+            val rowNum = row.rowNum
+            sheet.removeRow(row)
+            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+            }
+        }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
@@ -554,6 +575,9 @@ class CompletionRateService(
 
         var count = 0
         val total = sheet.lastRowNum - rowIndex
+        val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
         val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
         if (!checkColResult) {
@@ -666,7 +690,14 @@ class CompletionRateService(
             workbook.close()
             return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total+1)))
         }
-
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        for (row in resultRows) {
+            val rowNum = row.rowNum
+            sheet.removeRow(row)
+            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+            }
+        }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 

@@ -61,7 +61,7 @@ class CompletionRateService(
     //Service Product
 
     fun exportCompletionRateProductExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
-        val products = completionRateProductRepository.findByKeywordPaginated(search, pageable)
+        val products = completionRateProductRepository.getPaginatedCompletionRateProduct(search, pageable)
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
@@ -374,18 +374,18 @@ class CompletionRateService(
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
                 }
-                if (key.length != 7) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
-                }
 
-                try {
-                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                    if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
-                    }
-                } catch (e: NumberFormatException) {
+            }
+            if (key.length != 7) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
+            }
+            try {
+                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate.scale() > 2) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
                 }
+            } catch (e: NumberFormatException) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
             }
 
             if (errorMessages.isEmpty()) {
@@ -459,7 +459,8 @@ class CompletionRateService(
                             layerCode = item.layerCode,
                             rate = item.rate,
                             processName = item.processName,
-                            processNameJp = item.processNameJp
+                            processNameJp = item.processNameJp,
+                            effectiveDate = item.effectiveDate
 
                     )
                 }, result.second
@@ -508,7 +509,7 @@ class CompletionRateService(
 
             val productExist = productExists.find { x -> x.key == key }
 
-            val processExist = processCodeExist.find {x -> x == key.substring(7, 13)}
+            val processExist = processCodeExist.find {x -> x ==  key.take(6)}
             if(processExist == null){
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
@@ -518,18 +519,18 @@ class CompletionRateService(
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
                 }
-                if (key.length != 14) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
-                }
+            }
+            if (key.length != 14) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
+            }
 
-                try {
-                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                    if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
-                    }
-                } catch (e: NumberFormatException) {
+            try {
+                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate.scale() > 2) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
                 }
+            } catch (e: NumberFormatException) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
             }
 
             if (errorMessages.isEmpty()) {
@@ -538,8 +539,8 @@ class CompletionRateService(
                         val compleRateProcessProduct = CompletionRateProcessProduct(
                                 key = key,
                                 rate =  BigDecimal(ExcelHelper.getCellValue(row, 1)),
-                                productNameShortcut = key.take(7),
-                                processCode = key.substring(7, 13),
+                                productNameShortcut = key.substring(6, 13),
+                                processCode = key.take(6),
                                 layerCode = key.substring(13, 14),
                                 expirationDate = null,
                                 effectiveDate = effectiveDate

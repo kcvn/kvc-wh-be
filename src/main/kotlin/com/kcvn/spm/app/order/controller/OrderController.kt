@@ -34,7 +34,7 @@ class OrderController(
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
-    fun importExcel(orderCode: String, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+    fun importExcel(orderCode: String?, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = orderService.importExcelOrder(file, orderCode)
         return ResponseEntity(data, HttpStatus.OK)
     }

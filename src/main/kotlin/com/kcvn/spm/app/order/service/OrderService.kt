@@ -227,7 +227,7 @@ class OrderService(
             throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidCalendar"))
         }
 
-        if (checkContinuousDate(headerRow, 1, colIndexResult - 1)) {
+        if (!checkContinuousDate(headerRow, 1, colIndexResult - 1)) {
             workbook.close()
             throw BusinessException(CommonUtils.getMessage("validate.excel.date.notContinuous"))
         }
@@ -314,15 +314,20 @@ class OrderService(
                     try {
                         val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol).split("/")
                         val orderDate = LocalDateTime.of(year, arrOrderDate[0].toInt(), arrOrderDate[1].toInt(), 0, 0)
-                        if (ExcelHelper.getCellValue(row, iCol).toBigDecimalOrNull() == null) {
-                            isBreak = true
-                            messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, iCol))))
-                            break
+                        var strQuantity = ExcelHelper.getCellValue(row, iCol)
+                        if (strQuantity.isEmpty()) {
+                            continue
+                        } else {
+                            if (strQuantity.toBigDecimalOrNull() == null) {
+                                isBreak = true
+                                messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, iCol))))
+                                break
+                            }
                         }
                         val orderDetail = OrderDetail(
-                                productId = product!!.id,
-                                orderDate = OffsetDateTime.of(orderDate, ZoneOffset.UTC),
-                                quantity = ExcelHelper.getCellValue(row, iCol).toBigDecimalOrNull()?.toInt()
+                            productId = product!!.id,
+                            orderDate = OffsetDateTime.of(orderDate, ZoneOffset.UTC),
+                            quantity = strQuantity.toBigDecimalOrNull()?.toInt()
                         )
                         orderDetails.add(orderDetail)
                     } catch (e: Exception) {

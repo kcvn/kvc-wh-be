@@ -454,6 +454,8 @@ class CompletionRateService(
                             productExistSameDate.effectiveDate = effectiveDate
                             productExistSameDate.expirationDate = effectiveDate.minusDays(1)
                             completionRateProcessRepository.update(productExist)
+                            count++
+
                         } else if (currentDate > effectiveDate) {
                             errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                         }
@@ -633,6 +635,7 @@ class CompletionRateService(
 
                         )
                         completionRateProcessProductRepository.add(compleRateProcessProduct)
+                        count++
                     }
                         else{
                         val productExistSameDate =

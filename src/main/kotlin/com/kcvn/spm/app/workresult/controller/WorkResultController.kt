@@ -32,10 +32,10 @@ class WorkResultController (
         request: WorkResultSearchRequest?,
         @PageableDefault(size = 10, page = 0)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["summary_result_date"], direction = Sort.Direction.DESC),
-            SortDefault(sort = ["item_name"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["layer_code"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["process_name"], direction = Sort.Direction.ASC)
+            SortDefault(sort = ["summaryResultDate"], direction = Sort.Direction.DESC),
+            SortDefault(sort = ["itemName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["processName"], direction = Sort.Direction.ASC)
         ) pageable: Pageable,
     ): ResponseEntity<BasePagingResponse<WorkResultResponse>> {
         val data = workResultService.getListWorkResult(request,pageable)

@@ -10,12 +10,14 @@ import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
 import com.kcvn.spm.model.tables.references.WORK_RESULT
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.SortOrder
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.length
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
 
 @Repository
 class WorkResultRepository (
@@ -218,5 +220,13 @@ class WorkResultRepository (
 
     fun delete(id: String) {
         context.deleteFrom(WORK_RESULT).where(WORK_RESULT.ID.eq(id)).execute()
+    }
+
+    fun getMaxByDate(startDate: OffsetDateTime, endDate: OffsetDateTime) : WorkResult? {
+        return context.selectFrom(WORK_RESULT)
+            .where(WORK_RESULT.SUMMARY_RESULT_DATE.ge(startDate).and(WORK_RESULT.SUMMARY_RESULT_DATE.le(endDate)).and(WORK_RESULT.IS_DELETED.eq(false)))
+            .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.DESC))
+            .fetchInto(WorkResult::class.java)
+            .firstOrNull()
     }
 }

@@ -13,5 +13,7 @@ data class ProductProcessResponse (
     var idx: Int? = 0,
     var productId: String? = null,
     var processProcedureStructureId: String? = null,
+    var layerCodeInt: Int? = null,
+    var processSequence: String? = null
 )
 

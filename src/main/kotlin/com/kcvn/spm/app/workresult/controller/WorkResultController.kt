@@ -1,8 +1,6 @@
 package com.kcvn.spm.app.workresult.controller
 
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
-import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
-import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.app.workresult.service.WorkResultService
 import com.kcvn.spm.common.payload.BasePagingResponse

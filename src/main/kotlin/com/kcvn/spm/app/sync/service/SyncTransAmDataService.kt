@@ -127,7 +127,7 @@ class SyncTransAmDataService(
             )
         }
         // Define your datetime range
-        val startDate = LocalDateTime.of(2020, 2, 1, 0, 0, 0)
+        val startDate = LocalDateTime.of(2020, 1, 1, 0, 0, 0)
         condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))
 
         val workResult = this.transAmDSLContext.select().from(table).where(condition)

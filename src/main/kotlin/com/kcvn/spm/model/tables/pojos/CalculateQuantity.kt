@@ -14,13 +14,13 @@ import java.time.OffsetDateTime
 @Suppress("UNCHECKED_CAST")
 data class CalculateQuantity(
     var id: String? = null,
-    var monthProductionPlan: String? = null,
+    var monthProductionPlan: OffsetDateTime? = null,
     var orderDate: String? = null,
     var status: Boolean? = null,
     var calculateBy: String? = null,
     var calculateDate: OffsetDateTime? = null,
-    var determinedBy: String? = null,
-    var determinedDate: OffsetDateTime? = null
+    var lockedBy: String? = null,
+    var lockedDate: OffsetDateTime? = null
 ): Serializable {
 
 
@@ -68,17 +68,17 @@ data class CalculateQuantity(
         }
         else if (this.calculateDate != o.calculateDate)
             return false
-        if (this.determinedBy == null) {
-            if (o.determinedBy != null)
+        if (this.lockedBy == null) {
+            if (o.lockedBy != null)
                 return false
         }
-        else if (this.determinedBy != o.determinedBy)
+        else if (this.lockedBy != o.lockedBy)
             return false
-        if (this.determinedDate == null) {
-            if (o.determinedDate != null)
+        if (this.lockedDate == null) {
+            if (o.lockedDate != null)
                 return false
         }
-        else if (this.determinedDate != o.determinedDate)
+        else if (this.lockedDate != o.lockedDate)
             return false
         return true
     }
@@ -92,8 +92,8 @@ data class CalculateQuantity(
         result = prime * result + (if (this.status == null) 0 else this.status.hashCode())
         result = prime * result + (if (this.calculateBy == null) 0 else this.calculateBy.hashCode())
         result = prime * result + (if (this.calculateDate == null) 0 else this.calculateDate.hashCode())
-        result = prime * result + (if (this.determinedBy == null) 0 else this.determinedBy.hashCode())
-        result = prime * result + (if (this.determinedDate == null) 0 else this.determinedDate.hashCode())
+        result = prime * result + (if (this.lockedBy == null) 0 else this.lockedBy.hashCode())
+        result = prime * result + (if (this.lockedDate == null) 0 else this.lockedDate.hashCode())
         return result
     }
 
@@ -106,8 +106,8 @@ data class CalculateQuantity(
         sb.append(", ").append(status)
         sb.append(", ").append(calculateBy)
         sb.append(", ").append(calculateDate)
-        sb.append(", ").append(determinedBy)
-        sb.append(", ").append(determinedDate)
+        sb.append(", ").append(lockedBy)
+        sb.append(", ").append(lockedDate)
 
         sb.append(")")
         return sb.toString()

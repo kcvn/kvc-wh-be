@@ -68,7 +68,7 @@ open class CalculateQuantity(
     /**
      * The column <code>public.calculate_quantity.month_production_plan</code>.
      */
-    val MONTH_PRODUCTION_PLAN: TableField<CalculateQuantityRecord, String?> = createField(DSL.name("month_production_plan"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val MONTH_PRODUCTION_PLAN: TableField<CalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("month_production_plan"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
 
     /**
      * The column <code>public.calculate_quantity.order_date</code>.
@@ -78,27 +78,27 @@ open class CalculateQuantity(
     /**
      * The column <code>public.calculate_quantity.status</code>.
      */
-    val STATUS: TableField<CalculateQuantityRecord, Boolean?> = createField(DSL.name("status"), SQLDataType.BOOLEAN.nullable(false), this, "")
+    val STATUS: TableField<CalculateQuantityRecord, Boolean?> = createField(DSL.name("status"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     /**
      * The column <code>public.calculate_quantity.calculate_by</code>.
      */
-    val CALCULATE_BY: TableField<CalculateQuantityRecord, String?> = createField(DSL.name("calculate_by"), SQLDataType.VARCHAR(20), this, "")
+    val CALCULATE_BY: TableField<CalculateQuantityRecord, String?> = createField(DSL.name("calculate_by"), SQLDataType.VARCHAR(30), this, "")
 
     /**
      * The column <code>public.calculate_quantity.calculate_date</code>.
      */
-    val CALCULATE_DATE: TableField<CalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("calculate_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
+    val CALCULATE_DATE: TableField<CalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("calculate_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
-     * The column <code>public.calculate_quantity.determined_by</code>.
+     * The column <code>public.calculate_quantity.locked_by</code>.
      */
-    val DETERMINED_BY: TableField<CalculateQuantityRecord, String?> = createField(DSL.name("determined_by"), SQLDataType.VARCHAR(20), this, "")
+    val LOCKED_BY: TableField<CalculateQuantityRecord, String?> = createField(DSL.name("locked_by"), SQLDataType.VARCHAR(30), this, "")
 
     /**
-     * The column <code>public.calculate_quantity.determined_date</code>.
+     * The column <code>public.calculate_quantity.locked_date</code>.
      */
-    val DETERMINED_DATE: TableField<CalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("determined_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
+    val LOCKED_DATE: TableField<CalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("locked_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     private constructor(alias: Name, aliased: Table<CalculateQuantityRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<CalculateQuantityRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
@@ -142,16 +142,16 @@ open class CalculateQuantity(
     // -------------------------------------------------------------------------
     // Row8 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row8<String?, String?, String?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?> = super.fieldsRow() as Row8<String?, String?, String?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?>
+    override fun fieldsRow(): Row8<String?, OffsetDateTime?, String?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?> = super.fieldsRow() as Row8<String?, OffsetDateTime?, String?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, OffsetDateTime?, String?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, OffsetDateTime?, String?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

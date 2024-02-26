@@ -11,13 +11,13 @@ import java.time.format.DateTimeFormatter
 class OrderDetailRepository (private val context: DSLContext) {
 
 
-    fun GetCalenderOrderDetailByOrder(orderId: String): List<KeyValueResponse> {
+    fun GetCalenderOrderDetail(orderId: String, productId: String): List<KeyValueResponse> {
         val result = context.select(
             ORDER_DETAIL.ORDER_DATE,
             ORDER_DETAIL.QUANTITY
         )
             .from(ORDER_DETAIL)
-            .where(ORDER_DETAIL.ORDER_ID.eq(orderId))
+            .where(ORDER_DETAIL.ORDER_ID.eq(orderId).and(ORDER_DETAIL.PRODUCT_ID.eq(productId)))
             .fetch()
 
         return result.map { record ->

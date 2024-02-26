@@ -1,4 +1,4 @@
-package com.kcvn.spm.sample.service
+package com.kcvn.spm.app.productprocess.service
 
 import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
@@ -34,25 +34,28 @@ class ProductProcessService(
     private val processProcedureRep : ProcessProcedureStructureRepository,
     private val masterDataService : MasterDataService
 ) {
-    fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse>
+    fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse?>
     {
         val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
-        val response = BasePagingResponse<ProductProcessResponse>();
+        val response = BasePagingResponse<ProductProcessResponse?>();
             response.data = result.first.map { productProcess ->
                 ProductProcessResponse(
-                    processId = productProcess.processId,
-                    processName = productProcess.processName,
-                    processNameJp = productProcess.processNameJp,
-                    processConvertCode = productProcess.processConvertCode,
-                    processStatisticCode = productProcess.processStatisticCode,
-                    processInventoryCode = productProcess.processInventoryCode,
-                    productName = productProcess.productName,
-                    layerCode = productProcess.layerCode,
-                    processCode = productProcess.processCode,
-                    productId = productProcess.productId,
-                    processProcedureStructureId = productProcess.processProcedureStructureId
+                    processId = productProcess?.processId,
+                    processName = productProcess?.processName,
+                    processNameJp = productProcess?.processNameJp,
+                    processConvertCode = productProcess?.processConvertCode,
+                    processStatisticCode = productProcess?.processStatisticCode,
+                    processInventoryCode = productProcess?.processInventoryCode,
+                    productName = productProcess?.productName,
+                    layerCode = productProcess?.layerCode,
+                    processCode = productProcess?.processCode,
+                    productId = productProcess?.productId,
+                    processProcedureStructureId = productProcess?.processProcedureStructureId,
+                    layerCodeInt = productProcess?.layerCode!!.toInt(),
+                    processSequence = productProcess.processSequence
                 );
             }
+        response.data = (response.data as List<ProductProcessResponse?>).sortedWith(compareBy<ProductProcessResponse?> {it?.productName}.thenBy { it?.layerCodeInt }.thenBy { it?.processSequence })
             response.totalRecords = result.second ?: 0
 
         return response;
@@ -68,18 +71,20 @@ class ProductProcessService(
             val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                 ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
             if (item.processInventoryCode != null){
-               val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
-                if((productProcessAfter?.processCode != null &&  productProcessAfter.processCode != item.processInventoryCode) )
+                val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
+                val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
+                if((productProcessAfter?.processCode!!.isNotEmpty() &&  productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
+                    || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode ))
                 {
-                    throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
-                }
-            }
-            productProcess.processConvertCode = item.processConvertCode;
-            productProcess.processStatisticCode = item.processStatisticCode;
-            productProcess.processInventoryCode = item.processInventoryCode;
+                    productProcess.processConvertCode = item.processConvertCode;
+                    productProcess.processStatisticCode = item.processStatisticCode;
+                    productProcess.processInventoryCode = item.processInventoryCode;
 
-            val data = productProcessRep.updateProcessDetail(productProcess);
-            dataResult.add(data)
+                    val data = productProcessRep.updateProcessDetail(productProcess);
+                    dataResult.add(data)
+                }
+                throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+            }
         }
         return  dataResult
     }
@@ -108,28 +113,28 @@ class ProductProcessService(
             var rowNumber = 2
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                dataRow.createCell(0).setCellValue(item.productName)
+                dataRow.createCell(0).setCellValue(item?.productName)
                 dataRow.getCell(0).cellStyle = style
 
-                dataRow.createCell(1).setCellValue(item.layerCode)
+                dataRow.createCell(1).setCellValue(item?.layerCode)
                 dataRow.getCell(1).cellStyle = style
 
-                dataRow.createCell(2).setCellValue(item.processCode)
+                dataRow.createCell(2).setCellValue(item?.processCode)
                 dataRow.getCell(2).cellStyle = style
 
-                dataRow.createCell(3).setCellValue(item.processName)
+                dataRow.createCell(3).setCellValue(item?.processName)
                 dataRow.getCell(3).cellStyle = style
 
-                dataRow.createCell(4).setCellValue(item.processNameJp)
+                dataRow.createCell(4).setCellValue(item?.processNameJp)
                 dataRow.getCell(4).cellStyle = style
 
-                dataRow.createCell(5).setCellValue(item.processConvertCode)
+                dataRow.createCell(5).setCellValue(item?.processConvertCode)
                 dataRow.getCell(5).cellStyle = style
 
-                dataRow.createCell(6).setCellValue(item.processInventoryCode)
+                dataRow.createCell(6).setCellValue(item?.processInventoryCode)
                 dataRow.getCell(6).cellStyle = style
 
-                dataRow.createCell(7).setCellValue(item.processStatisticCode)
+                dataRow.createCell(7).setCellValue(item?.processStatisticCode)
                 dataRow.getCell(7).cellStyle = style
             }
         }
@@ -139,7 +144,7 @@ class ProductProcessService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.process"),
+            fileName = CommonUtils.getMessage("export.excel.process",arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -184,7 +189,7 @@ class ProductProcessService(
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         var count = 0
-        val total = sheet.lastRowNum - rowIndex
+        val total = sheet.lastRowNum
 
         val masterData = masterDataService.getMasterDataSelection()
 
@@ -198,52 +203,82 @@ class ProductProcessService(
             sheet.setColumnWidth(headerCell, 15000)
         }
 
+        val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
+
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
-            if(row.getCell(0) == null){
+            if (ExcelHelper.getCellValue(row, 0).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                    )
+                )
             }
-            if(row.getCell(1) == null){
+            if (ExcelHelper.getCellValue(row, 1).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                    )
+                )
             }
-            if(row.getCell((2)) == null){
+            if (ExcelHelper.getCellValue(row, 2).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
+                    )
+                )
             }
-            if(row.getCell(3) == null){
+            if (ExcelHelper.getCellValue(row, 3).isEmpty()) {
                 check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
-            }
-            if(row.getCell(5) == null){
-                check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
+                    )
+                )
             }
 
-            if(row.getCell(0) != null && row.getCell(0).toString().length > 12){
+            if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
+                check = false
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
+                    )
+                )
+            }
+
+            if(ExcelHelper.getCellValue(row, 0).isNotEmpty() && ExcelHelper.getCellValue(row, 0).length > 12){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
             }
-            if(row.getCell(1) !=null && row.getCell(1).toString().length > 8){
+            if(ExcelHelper.getCellValue(row, 1).isNotEmpty() && ExcelHelper.getCellValue(row, 1).length > 8){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
             }
-            if(row.getCell((2)) != null && row.getCell(2).toString().length >4){
+            if(ExcelHelper.getCellValue(row, 2).isNotEmpty() && ExcelHelper.getCellValue(row, 2).length >4){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
             }
-            if(row.getCell(3) != null && row.getCell(3).toString().length > 10){
+            if(ExcelHelper.getCellValue(row, 3).isNotEmpty() && ExcelHelper.getCellValue(row, 3).length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
             }
-            if(row.getCell(4) != null && row.getCell(4).toString().length > 10){
+            if(ExcelHelper.getCellValue(row, 4).isNotEmpty() && ExcelHelper.getCellValue(row, 4).length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
             }
-            if(row.getCell(5) != null && row.getCell(5).toString().length > 10){
+            if(ExcelHelper.getCellValue(row, 5).isNotEmpty() && ExcelHelper.getCellValue(row, 5).length > 10){
                 check = false
                 messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
             }
@@ -312,12 +347,19 @@ class ProductProcessService(
            }
             val result = messageResults.joinToString(separator = "; ")
 
-            if (!checkColResult) {
-                row.createCell(row.lastCellNum + 0).setCellValue(result)
-                row.getCell(row.lastCellNum - 1).cellStyle = style
+            if (row.getCell(colIndexResult) == null) {
+                row.createCell(colIndexResult)
             }
-            else{
-                row.getCell(row.lastCellNum - 1).setCellValue(result)
+            row.getCell(colIndexResult ).setCellValue(result)
+            row.getCell(colIndexResult ).cellStyle = style
+        }
+
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        for (row in resultRows) {
+            val rowNum = row.rowNum
+            sheet.removeRow(row)
+            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

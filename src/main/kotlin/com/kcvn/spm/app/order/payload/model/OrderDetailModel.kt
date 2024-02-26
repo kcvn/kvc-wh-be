@@ -4,6 +4,8 @@ import com.kcvn.spm.common.payload.KeyValueResponse
 
 data class OrderDetailModel (
     var id:String,
+    var orderId: String,
+    var productId:String?= null,
     var productShortcutName: String? = null,
     var productName: String? = null,
     var quantity: Int? = null,
@@ -14,4 +16,5 @@ data class OrderDetailModel (
     var srNosr: String? = null,
     var version: String? = null,
     var quantityByCalendars : List<KeyValueResponse>? = listOf()
+
 )

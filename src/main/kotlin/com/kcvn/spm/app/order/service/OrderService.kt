@@ -2,6 +2,7 @@ package com.kcvn.spm.app.order.service
 
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
+import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.payload.BaseResponse
@@ -24,17 +25,15 @@ import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
-class OrderService (
+class OrderService(
     private val orderRep: OrderRepository,
     private val orderDetailRep: OrderDetailRepository
 ) {
-    fun getPaginatedCompletionRateProduct(
+    fun getPaginatedOrder(
         request: OrderSearchRequest?,
         pageable: Pageable?
-    ): PagingOrderResponse
-    {
+    ): PagingOrderResponse {
         val calendarResponses = mutableListOf<CalendarValueResponse>()
-
         if (request?.startDate != null && request.endDate != null) {
 
             var currentDate = request.startDate
@@ -49,25 +48,30 @@ class OrderService (
                 currentDate = currentDate.plusDays(1)
             }
         }
-
         val pagingOrderResponse = PagingOrderResponse()
         pagingOrderResponse.columns = calendarResponses
-
-        val listOrderResponse = orderRep.getPaginatedCompletionRateProduct(request,pageable)
+        val listOrderResponse = orderRep.getPaginatedOrder(request, pageable)
         pagingOrderResponse.data = listOrderResponse.first
+        var count = 0;
+        for (item in listOrderResponse.first) {
+            var calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
+            item.quantityByCalendars = calender
+            if (calender != null) {
+                for (number in calender) {
+                    count += number.value?.toInt() ?: 0
+                }
+            }
+            item.quantity = count
+
+        }
         pagingOrderResponse.totalRecords = listOrderResponse.second
-
-
-
         return pagingOrderResponse
-
     }
 
-
-
-    fun exportOrderExcel(request: OrderSearchRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
-        val listOrderResponse = getPaginatedCompletionRateProduct(request,pageable)
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportOrderTemplate.xlsx")
+    fun exportOrderExcel(request: OrderSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
+        val listOrderResponse = getPaginatedOrder(request, pageable)
+        val fileTemplate =
+            File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportOrderTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
@@ -95,22 +99,22 @@ class OrderService (
                 val cellStyle: CellStyle = workbook.createCellStyle()
                 cellStyle.cloneStyleFrom(style)
                 if (column.isHoliday) {
-                    cellStyle.fillForegroundColor  = IndexedColors.PINK.index
+                    cellStyle.fillForegroundColor = IndexedColors.PINK.index
                 } else {
-                    cellStyle.fillForegroundColor  = IndexedColors.LIGHT_GREEN.index
+                    cellStyle.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
                 }
 
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
 
                 cell.cellStyle = cellStyle
                 val indexColumn = (columnNumber + index).toString()
-                keyValueList.add(CalendarValueResponse(column.key,indexColumn,column.isHoliday))
+                keyValueList.add(CalendarValueResponse(column.key, indexColumn, column.isHoliday))
             }
 
-            val listOrder =listOrderResponse.data
+            val listOrder = listOrderResponse.data
 
             var rowNumberFill = 1
-            if(listOrder !=null){
+            if (listOrder != null) {
                 for (item in listOrder) {
                     val dataRow: Row = sheet.createRow(rowNumberFill++)
                     dataRow.createCell(0).setCellValue(item.productShortcutName)
@@ -137,14 +141,12 @@ class OrderService (
                     dataRow.createCell(7).setCellValue(item.srNosr)
                     dataRow.getCell(7).cellStyle = style
 
-                    dataRow.createCell(8).setCellValue("v"+item.version+".0")
+                    dataRow.createCell(8).setCellValue("v" + item.version + ".0")
                     dataRow.getCell(8).cellStyle = style
 
-                    for(odetail in item.quantityByCalendars!!){
-
-
-                        val check = keyValueList.find { x-> x.key == odetail.key }
-                        if(check !=null){
+                    for (odetail in item.quantityByCalendars!!) {
+                        val check = keyValueList.find { x -> x.key == odetail.key }
+                        if (check != null) {
                             check.value?.let { dataRow.createCell(it.toInt()).setCellValue(odetail.value) }
                             check.value?.let {
                                 val cell = dataRow.getCell(it.toInt())
@@ -155,19 +157,15 @@ class OrderService (
                     }
                 }
             }
-
-
-
         }
-
-
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
-
         val excelBytes = byteArrayOutputStream.toByteArray()
-
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportCompletionRateProductProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            fileName = CommonUtils.getMessage(
+                "fileName.exportOrder",
+                arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))
+            ),
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -175,6 +173,10 @@ class OrderService (
         workbook.close()
 
         return BaseResponse(response)
+    }
+
+    fun getOrderCode(year: String): List<OrderCodeResponse>{
+        return orderRep.getOrderCode(year)
     }
 
 }

@@ -50,9 +50,12 @@ class ProductProcessService(
                     layerCode = productProcess?.layerCode,
                     processCode = productProcess?.processCode,
                     productId = productProcess?.productId,
-                    processProcedureStructureId = productProcess?.processProcedureStructureId
+                    processProcedureStructureId = productProcess?.processProcedureStructureId,
+                    layerCodeInt = productProcess?.layerCode!!.toInt(),
+                    processSequence = productProcess.processSequence
                 );
             }
+        response.data = (response.data as List<ProductProcessResponse?>).sortedWith(compareBy<ProductProcessResponse?> {it?.productName}.thenBy { it?.layerCodeInt }.thenBy { it?.processSequence })
             response.totalRecords = result.second ?: 0
 
         return response;
@@ -68,18 +71,20 @@ class ProductProcessService(
             val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                 ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
             if (item.processInventoryCode != null){
-               val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
-                if((productProcessAfter?.processCode != null &&  productProcessAfter.processCode != item.processInventoryCode) )
+                val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
+                val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
+                if((productProcessAfter?.processCode!!.isNotEmpty() &&  productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
+                    || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode ))
                 {
-                    throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
-                }
-            }
-            productProcess.processConvertCode = item.processConvertCode;
-            productProcess.processStatisticCode = item.processStatisticCode;
-            productProcess.processInventoryCode = item.processInventoryCode;
+                    productProcess.processConvertCode = item.processConvertCode;
+                    productProcess.processStatisticCode = item.processStatisticCode;
+                    productProcess.processInventoryCode = item.processInventoryCode;
 
-            val data = productProcessRep.updateProcessDetail(productProcess);
-            dataResult.add(data)
+                    val data = productProcessRep.updateProcessDetail(productProcess);
+                    dataResult.add(data)
+                }
+                throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+            }
         }
         return  dataResult
     }
@@ -184,7 +189,7 @@ class ProductProcessService(
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         var count = 0
-        val total = sheet.lastRowNum - rowIndex
+        val total = sheet.lastRowNum
 
         val masterData = masterDataService.getMasterDataSelection()
 
@@ -347,6 +352,15 @@ class ProductProcessService(
             }
             row.getCell(colIndexResult ).setCellValue(result)
             row.getCell(colIndexResult ).cellStyle = style
+        }
+
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        for (row in resultRows) {
+            val rowNum = row.rowNum
+            sheet.removeRow(row)
+            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+            }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)

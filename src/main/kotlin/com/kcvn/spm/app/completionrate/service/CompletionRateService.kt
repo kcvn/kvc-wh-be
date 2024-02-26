@@ -222,6 +222,10 @@ class CompletionRateService(
                 row.getCell(row.lastCellNum - 1).setCellValue(result)
             }
         }
+        if (count == total+1) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
+        }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
@@ -426,6 +430,10 @@ class CompletionRateService(
             }
         }
 
+        if (count == total+1) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
+        }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
@@ -571,6 +579,10 @@ class CompletionRateService(
             } else {
                 row.getCell(row.lastCellNum - 1).setCellValue(result)
             }
+        }
+        if (count == total+1) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()

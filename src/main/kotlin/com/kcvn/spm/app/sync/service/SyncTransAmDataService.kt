@@ -7,10 +7,8 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.TransAmTable
 import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
-import com.kcvn.spm.model.tables.pojos.ProcessMaster
-import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
-import com.kcvn.spm.model.tables.pojos.SyncHistory
-import com.kcvn.spm.model.tables.pojos.WorkResult
+import com.kcvn.spm.model.tables.pojos.*
+import com.kcvn.spm.model.tables.references.APP_SETTING
 import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.SyncHistoryRepository
@@ -22,7 +20,8 @@ import org.jooq.Table
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 @Service
@@ -32,7 +31,8 @@ class SyncTransAmDataService(
     private val syncHistoryRep: SyncHistoryRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val processMasterRep: ProcessMasterRepository,
-    private val workResultRep: WorkResultRepository
+    private val workResultRep: WorkResultRepository,
+    private val context: DSLContext
 ) {
     private val transAmDSLContext: DSLContext = DSLContextExtension.createDSLContext(
         propertiesConfig.tranAmDbUrl,
@@ -127,7 +127,12 @@ class SyncTransAmDataService(
             )
         }
         // Define your datetime range
-        val startDate = LocalDateTime.of(2020, 2, 1, 0, 0, 0)
+        val key = "DATE_SYNC_DATA_FROM_TRANS_AM"
+        val setting = context.selectFrom(APP_SETTING).where(APP_SETTING.KEY.eq(key)).fetchAnyInto(AppSetting::class.java)
+        val value = setting?.value
+        val date = LocalDate.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val startDate = date.atStartOfDay()
+
         condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))
 
         val workResult = this.transAmDSLContext.select().from(table).where(condition)

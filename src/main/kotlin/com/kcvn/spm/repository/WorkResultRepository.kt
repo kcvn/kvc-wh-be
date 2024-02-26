@@ -4,6 +4,7 @@ import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
 import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.model.tables.references.PROCESS_MASTER
 import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
@@ -118,7 +119,7 @@ class WorkResultRepository (
             }
 
             else -> {
-                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
+                val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
                 throw InvalidDataAccessApiUsageException(errorMessage)
                 }
         }

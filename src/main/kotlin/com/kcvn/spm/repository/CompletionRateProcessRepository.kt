@@ -1,7 +1,6 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
@@ -177,5 +176,19 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             ?.into(CompletionRateProcess::class.java)
     }
 
+
+    fun getCompletionRateProcessWithMaxEffectivedateByName(name: String): CompletionRateProcess? {
+
+        val record = context.selectFrom(COMPLETION_RATE_PROCESS)
+            .where(
+                COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)
+                    .and(COMPLETION_RATE_PROCESS.KEY.eq(name))
+            )
+            .orderBy(COMPLETION_RATE_PROCESS.EFFECTIVE_DATE.desc())
+            .limit(1)
+            .fetchOne()
+        return record?.into(CompletionRateProcess::class.java)
+
+    }
 
 }

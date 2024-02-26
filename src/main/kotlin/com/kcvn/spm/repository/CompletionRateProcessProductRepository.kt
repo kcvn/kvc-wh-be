@@ -12,7 +12,6 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -165,4 +164,20 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(id))
             .execute()
     }
+
+
+    fun getCompletionRateProcessProductWithMaxEffectivedateByName(name: String): CompletionRateProcessProduct? {
+
+        val record = context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
+            .where(
+                COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)
+                    .and(COMPLETION_RATE_PROCESS_PRODUCT.KEY.eq(name))
+            )
+            .orderBy(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE.desc())
+            .limit(1)
+            .fetchOne()
+        return record?.into(CompletionRateProcessProduct::class.java)
+
+    }
+
 }

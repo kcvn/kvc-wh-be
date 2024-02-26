@@ -72,46 +72,46 @@ class WorkResultRepository (
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "summaryResultDate" -> {
+            "summaryresultdate" -> {
                 WORK_RESULT.SUMMARY_RESULT_DATE
             }
-            "itemName" -> {
+            "itemname" -> {
                 WORK_RESULT.ITEM_NAME
             }
-            "processName" -> {
+            "processname" -> {
                 WORK_RESULT.PROCESS_NAME
             }
-            "processCode" -> {
+            "processcode" -> {
                 WORK_RESULT.PROCESS_CODE
             }
-            "layerCode" -> {
+            "layercode" -> {
                 WORK_RESULT.LAYER_CODE
             }
-            "totalTapeQuantity" -> {
+            "totaltapequantity" -> {
                 WORK_RESULT.TOTAL_TAPE_QUANTITY
             }
-            "totalSheetQuantity" -> {
+            "totalsheetquantity" -> {
                 WORK_RESULT.TOTAL_SHEET_QUANTITY
             }
-            "goodTapeQuantity" -> {
+            "goodtapequantity" -> {
                 WORK_RESULT.GOOD_TAPE_QUANTITY
             }
-            "goodSheetQuantity" -> {
+            "goodsheetquantity" -> {
                 WORK_RESULT.GOOD_SHEET_QUANTITY
             }
-            "orderCode" -> {
+            "ordercode" -> {
                 WORK_RESULT.ORDER_CODE
             }
-            "tapeLotNo" -> {
+            "tapelotno" -> {
                 WORK_RESULT.TAPE_LOT_NO
             }
             "code" -> {
                 WORK_RESULT.CODE
             }
-            "workImplementBy" -> {
+            "workimplementby" -> {
                 WORK_RESULT.WORK_IMPLEMENT_BY
             }
-            "equipmentName" -> {
+            "equipmentname" -> {
                 WORK_RESULT.EQUIPMENT_NAME
             }
 

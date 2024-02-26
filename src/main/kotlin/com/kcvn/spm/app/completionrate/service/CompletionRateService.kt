@@ -180,15 +180,14 @@ class CompletionRateService(
                 if (name.length != 12) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.key"))
                 }
-
-                try {
-                    val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                    if (rate.scale() > 2) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.rate"))
-                    }
-                } catch (e: NumberFormatException) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+            }
+            try {
+                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate.scale() > 2) {
+                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.rate"))
                 }
+            } catch (e: NumberFormatException) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
             }
 
             if (errorMessages.isEmpty()) {

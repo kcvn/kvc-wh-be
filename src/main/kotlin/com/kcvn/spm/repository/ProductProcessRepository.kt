@@ -162,40 +162,20 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
-        val sortField: TableField<*, *> = when (sortFieldName) {
-            "productName" -> {
-                PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE
-            }
-            "layerCode" -> {
-                PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
-            }
-            "processConvertCode" -> {
-                PRODUCT_PROCESS.PROCESS_CONVERT_CODE
-            }
-            "processCode" -> {
-                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
-            }
-            "processName" -> {
-                PRODUCT_PROCESS.PROCESS_NAME
-            }
-            "processNameJp" -> {
-                PRODUCT_PROCESS.PROCESS_NAME_JP
-            }
-            "processStatisticCode" -> {
-                PRODUCT_PROCESS.PROCESS_STATISTIC_CODE
-            }
-            "processInventoryCode" -> {
-                PRODUCT_PROCESS.PROCESS_INVENTORY_CODE
-            }
-            "processSequence" -> {
-                PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE
-            }
-            else -> {
-                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
-                throw InvalidDataAccessApiUsageException(errorMessage)
-            }
+        val sortField: TableField<*, *>? = when (sortFieldName) {
+            "productName" -> PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE
+            "layerCode" -> PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
+            "processConvertCode" -> PRODUCT_PROCESS.PROCESS_CONVERT_CODE
+            "processCode" -> PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
+            "processName" -> PRODUCT_PROCESS.PROCESS_NAME
+            "processNameJp" -> PRODUCT_PROCESS.PROCESS_NAME_JP
+            "processStatisticCode" -> PRODUCT_PROCESS.PROCESS_STATISTIC_CODE
+            "processInventoryCode" -> PRODUCT_PROCESS.PROCESS_INVENTORY_CODE
+            "processSequence" -> PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE
+            else -> null
         }
-        return sortField
+
+        return sortField ?: throw InvalidDataAccessApiUsageException("Could not find table field: $sortFieldName")
     }
 
     fun add(productProcess: ProductProcess) {

@@ -1,12 +1,10 @@
 package com.kcvn.spm.app.order.controller
 
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
-import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
 import com.kcvn.spm.common.payload.BaseResponse
-import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -36,15 +34,15 @@ class OrderController(
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
-    fun importExcel(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = BaseResponse<FileContentModel>(data = null, message = "Import file thành công")
+    fun importExcel(orderCode: String?, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = orderService.importExcelOrder(file, orderCode)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/download-template-excel")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
     fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = BaseResponse<FileContentModel>(data = null, message = "Download file thành công")
+        val data = orderService.downloadTemplate()
         return ResponseEntity(data, HttpStatus.OK)
     }
 

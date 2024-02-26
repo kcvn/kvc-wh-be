@@ -5,6 +5,9 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.Order
+import com.kcvn.spm.model.tables.pojos.OrderDetail
 import com.kcvn.spm.model.tables.references.ORDER
 import com.kcvn.spm.model.tables.references.ORDER_DETAIL
 import com.kcvn.spm.model.tables.references.PRODUCT
@@ -12,9 +15,10 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.*
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
-import org.jooq.impl.DSL.substring
+import java.time.OffsetDateTime
 
 @Repository
 class OrderRepository(
@@ -133,5 +137,41 @@ class OrderRepository(
             .map { it[ORDER.VERSION] }
 
         return versions.map { DropdownResponse(it.toString(), it.toString()) }
+    }
+
+    fun addOrder(order: Order, orderDetails: List<OrderDetail>) {
+        startTransaction()
+        try {
+            val orderInsert = context.insertInto(ORDER, ORDER.ORDER_CODE, ORDER.START_DATE, ORDER.END_DATE, ORDER.VERSION, ORDER.CREATED_BY)
+                .values(order.orderCode, order.startDate, order.endDate, order.version, CommonUtils.loggedInUser() ?: "SYSTEM")
+                .returningResult(ORDER).fetchInto(Order::class.java).firstOrNull()
+
+            if (orderInsert != null) {
+                for (orderDetail in orderDetails) {
+                    context.insertInto(ORDER_DETAIL, ORDER_DETAIL.ORDER_ID, ORDER_DETAIL.PRODUCT_ID, ORDER_DETAIL.ORDER_DATE, ORDER_DETAIL.QUANTITY, ORDER_DETAIL.CREATED_BY)
+                        .values(orderInsert.id, orderDetail.productId, orderDetail.orderDate, orderDetail.quantity, CommonUtils.loggedInUser() ?: "SYSTEM")
+                        .returningResult(ORDER_DETAIL).fetchInto(OrderDetail::class.java).firstOrNull()
+                }
+            }
+        }
+        catch (e: Exception) {
+            rollback()
+        }
+    }
+
+
+    fun getOverlapOrderDate(startDate: OffsetDateTime, endDate: OffsetDateTime, orderCode: String) : Order? {
+        var condition = DSL.noCondition()
+        condition = condition.and(ORDER.ORDER_CODE.notEqual(orderCode)).and(ORDER.IS_DELETED.eq(false))
+            .and(
+                (ORDER.END_DATE.ge(startDate).and(ORDER.END_DATE.lt(endDate)))
+                .or(ORDER.START_DATE.le(endDate).and(ORDER.END_DATE.gt(endDate)))
+            )
+        return context.selectFrom(ORDER).where(condition).fetchInto(Order::class.java).firstOrNull()
+    }
+
+    fun getByOrderCode(orderCode: String) : Order? {
+        return context.selectFrom(ORDER).where(ORDER.ORDER_CODE.eq(orderCode)).and(ORDER.IS_DELETED.eq(false))
+            .fetchInto(Order::class.java).firstOrNull()
     }
 }

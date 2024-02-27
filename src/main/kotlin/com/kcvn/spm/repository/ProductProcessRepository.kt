@@ -5,12 +5,10 @@ import com.kcvn.spm.app.productprocess.payload.response.ImportProcessResponse
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.pojos.ProductProcess
-import com.kcvn.spm.model.tables.references.PROCESS_MASTER
-import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
-import com.kcvn.spm.model.tables.references.PRODUCT
-import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
+import com.kcvn.spm.model.tables.references.*
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -98,14 +96,16 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .from(PROCESS_PROCEDURE_STRUCTURE
                 .leftJoin(PRODUCT_PROCESS)
                 .on(PROCESS_PROCEDURE_STRUCTURE.ID
-                    .eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID))
+                    .eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)
+                    .and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
                 .leftJoin(PROCESS_MASTER)
                 .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
-                    .eq(PROCESS_MASTER.PROCESS_CODE))
+                    .eq(PROCESS_MASTER.PROCESS_CODE)
+                    .and(PROCESS_MASTER.IS_DELETED.eq(false)))
                 )
             .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(productName)
-               // .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-               //.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+               //.and(PRODUCT_PROCESS.IS_DELETED.eq(false))
             )
             .orderBy(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE)
             .fetchInto(ProductProcessResponse::class.java)
@@ -133,6 +133,20 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         context.insertInto(PRODUCT_PROCESS).set(record).execute()
     }
 
+    fun addProductProcess(request: ProductProcess?) : ProductProcess?{
+        return context.insertInto(PRODUCT_PROCESS,
+            PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
+            PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
+            PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
+            PRODUCT_PROCESS.CREATED_BY,
+            PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)
+            .values(request?.processConvertCode,
+                request?.processInventoryCode,
+                request?.processStatisticCode,
+                CommonUtils.loggedInUser() ?: "SYSTEM",
+                request?.processProcedureStructureId)
+            .returningResult(PRODUCT_PROCESS).fetchInto(ProductProcess::class.java).firstOrNull()
+    }
     fun getProcessByFilter (request: ImportProcessRequest): ImportProcessResponse? {
             return  context.select(
                 PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),

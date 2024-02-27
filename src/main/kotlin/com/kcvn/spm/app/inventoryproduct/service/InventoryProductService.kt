@@ -366,7 +366,7 @@ class InventoryProductService(
     }
 
     fun getListInventoryProduct(request: InventoryProductRequest? , pageable: Pageable) : BasePagingResponse<InventoryProductResponse?> {
-        val result = inventoryProductRepository.finByKeywordPaginated(request,pageable)
+        val result = inventoryProductRepository.findByKeywordPaginated(request,pageable)
         val response = BasePagingResponse<InventoryProductResponse?>()
         response.data = result.first.map { inventoryProduct ->
             InventoryProductResponse(
@@ -388,7 +388,7 @@ class InventoryProductService(
     }
 
     fun exportExcel(request: InventoryProductRequest? , pageable: Pageable) : BaseResponse<FileContentModel>{
-        val inventoryProduct = inventoryProductRepository.finByKeywordPaginated(request,pageable)
+        val inventoryProduct = inventoryProductRepository.findByKeywordPaginated(request,pageable)
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportInventoryProduct.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }

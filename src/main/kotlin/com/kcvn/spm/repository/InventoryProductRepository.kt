@@ -8,6 +8,7 @@ import com.kcvn.spm.model.tables.pojos.InventoryProduct
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.model.tables.references.*
+import org.apache.commons.lang3.StringUtils.substring
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -22,13 +23,15 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
 {
     fun findDateInventoryProduct (date: OffsetDateTime) : InventoryProduct?{
         return context.selectFrom(INVENTORY_PRODUCT)
-            .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date))
+            .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)
+                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
             .fetchAnyInto(InventoryProduct::class.java)
     }
 
     fun findInventoryProduct(id: String?) : InventoryProduct? {
         return  context.selectFrom(INVENTORY_PRODUCT)
-            .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(id))
+            .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(id)
+                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
             .fetchAnyInto(InventoryProduct::class.java)
     }
 
@@ -44,7 +47,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 .eq(record.processProcedureStructureId)).execute()
     }
 
-    fun finByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
+    fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
         var condition: Condition = DSL.noCondition()
 
         if(request != null){
@@ -52,7 +55,8 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 condition = condition.and(INVENTORY_PRODUCT.ORDER_CODE.contains(request.orderCode))
             }
             if(!request.productName.isNullOrEmpty()){
-                condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.contains(request.productName))
+                val productNameStep12 = substring(request.productName,1,12)
+                condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.contains(productNameStep12))
             }
             if(!request.listProcessGroup.isNullOrEmpty()){
                 val processGroupCodes = request.listProcessGroup!!.split(",")
@@ -96,11 +100,14 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         )
             .from(INVENTORY_PRODUCT
             .join(PROCESS_PROCEDURE_STRUCTURE)
-            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID))
+            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
             .join(PROCESS_MASTER)
-            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                .and(PROCESS_MASTER.IS_DELETED.eq(false)))
             .join(PRODUCT)
-            .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)))
+            .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                .and(PRODUCT.IS_DELETED.eq(false))))
             .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, INVENTORY_PRODUCT.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
@@ -110,9 +117,14 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .selectCount()
             .from(INVENTORY_PRODUCT
             .join(PROCESS_PROCEDURE_STRUCTURE)
-            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID))
+            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
             .join(PROCESS_MASTER)
-            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)))
+            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                .and(PROCESS_MASTER.IS_DELETED.eq(false)))
+            .join(PRODUCT)
+            .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                .and(PRODUCT.IS_DELETED.eq(false))))
             .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
         val total = context.fetchOne(totalData)?.value1()
         return  Pair(data, total)

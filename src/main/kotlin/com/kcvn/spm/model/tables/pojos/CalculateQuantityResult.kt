@@ -21,7 +21,12 @@ data class CalculateQuantityResult(
     var calculateDate: OffsetDateTime? = null,
     var lockedBy: String? = null,
     var lockedDate: OffsetDateTime? = null,
-    var orderDateTo: OffsetDateTime? = null
+    var orderDateTo: OffsetDateTime? = null,
+    var updatedDate: OffsetDateTime? = null,
+    var updatedBy: String? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsDeleted")
+    var isDeleted: Boolean? = null
 ): Serializable {
 
 
@@ -87,6 +92,24 @@ data class CalculateQuantityResult(
         }
         else if (this.orderDateTo != o.orderDateTo)
             return false
+        if (this.updatedDate == null) {
+            if (o.updatedDate != null)
+                return false
+        }
+        else if (this.updatedDate != o.updatedDate)
+            return false
+        if (this.updatedBy == null) {
+            if (o.updatedBy != null)
+                return false
+        }
+        else if (this.updatedBy != o.updatedBy)
+            return false
+        if (this.isDeleted == null) {
+            if (o.isDeleted != null)
+                return false
+        }
+        else if (this.isDeleted != o.isDeleted)
+            return false
         return true
     }
 
@@ -102,6 +125,9 @@ data class CalculateQuantityResult(
         result = prime * result + (if (this.lockedBy == null) 0 else this.lockedBy.hashCode())
         result = prime * result + (if (this.lockedDate == null) 0 else this.lockedDate.hashCode())
         result = prime * result + (if (this.orderDateTo == null) 0 else this.orderDateTo.hashCode())
+        result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
+        result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         return result
     }
 
@@ -117,6 +143,9 @@ data class CalculateQuantityResult(
         sb.append(", ").append(lockedBy)
         sb.append(", ").append(lockedDate)
         sb.append(", ").append(orderDateTo)
+        sb.append(", ").append(updatedDate)
+        sb.append(", ").append(updatedBy)
+        sb.append(", ").append(isDeleted)
 
         sb.append(")")
         return sb.toString()

@@ -44,6 +44,7 @@ class ProductProcessController(
     }
 
     @PutMapping("/update-product-process-detail")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).U_PRODUCT.value) || hasRole('ADMIN')")
     fun updateProductProcess(
         @Valid @RequestBody request: UpdateProductProcessDetailRequest
     ): ResponseEntity<BaseResponse<List<ProductProcess?>>> {

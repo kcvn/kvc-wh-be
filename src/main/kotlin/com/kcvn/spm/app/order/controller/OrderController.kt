@@ -54,7 +54,7 @@ class OrderController(
     }
 
     @GetMapping("/export-excel")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: OrderSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)

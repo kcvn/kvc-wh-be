@@ -49,10 +49,12 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
     fun getByFilterProcessStructureByInventoryProduct(request: ImportProcessRequest) : ProcessProcedureStructure?{
         return context.select()
             .from(PROCESS_PROCEDURE_STRUCTURE.join(PRODUCT)
-            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PRODUCT.NAME)))
+            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PRODUCT.NAME)
+                .and(PRODUCT.IS_DELETED.eq(false))))
             .where(PRODUCT.NAME.eq(request.productName)
                 .and(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.eq(request.layerCode))
-                .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(request.processCode)))
+                .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(request.processCode))
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
             .fetchAnyInto(ProcessProcedureStructure::class.java)
 
     }
@@ -62,18 +64,9 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
             .selectFrom(PROCESS_PROCEDURE_STRUCTURE)
             .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(request.productName)
                 .and(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.eq(request.layerCode))
-                .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(request.processCode)))
+                .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(request.processCode))
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
             .fetchAnyInto(ProcessProcedureStructure::class.java)
 
-    }
-
-
-    fun findByFilter(item: ProcessProcedureStructure): ProcessProcedureStructure? {
-        var condition: Condition = DSL.noCondition()
-        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(item.productCode))
-        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.eq(item.layerCode))
-        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(item.processCode))
-        return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE).where(condition)
-            .fetchAnyInto(ProcessProcedureStructure::class.java)
     }
 }

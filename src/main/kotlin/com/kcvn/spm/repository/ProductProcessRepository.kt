@@ -96,14 +96,16 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .from(PROCESS_PROCEDURE_STRUCTURE
                 .leftJoin(PRODUCT_PROCESS)
                 .on(PROCESS_PROCEDURE_STRUCTURE.ID
-                    .eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID))
+                    .eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)
+                    .and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
                 .leftJoin(PROCESS_MASTER)
                 .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
-                    .eq(PROCESS_MASTER.PROCESS_CODE))
+                    .eq(PROCESS_MASTER.PROCESS_CODE)
+                    .and(PROCESS_MASTER.IS_DELETED.eq(false)))
                 )
             .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(productName)
-               // .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-               //.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+               //.and(PRODUCT_PROCESS.IS_DELETED.eq(false))
             )
             .orderBy(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE)
             .fetchInto(ProductProcessResponse::class.java)

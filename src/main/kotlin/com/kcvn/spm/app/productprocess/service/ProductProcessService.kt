@@ -359,11 +359,11 @@ class ProductProcessService(
                        val checkProductProcess = productProcessRep.findByIdProductProcedureStructure(filterCheckProcessProcedure.id)
                        if(checkProductProcess == null){
                            requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
-                           requestImport.createdBy = CommonUtils.loggedInUser() ?: "SYSTEM"
+                           requestImport.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                            productProcessRep.insertProductProcess(requestImport)
                        }
                        else {
-                           requestImport.updatedBy = CommonUtils.loggedInUser() ?: "SYSTEM"
+                           requestImport.updatedBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                            requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
                            productProcessRep.updateProcessDetail(requestImport)
                        }

@@ -4,25 +4,20 @@ import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.CheckInventoryDateResponse
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.inventoryproduct.service.InventoryProductService
-import com.kcvn.spm.app.productprocess.payload.request.ProductProcessSearchRequest
-import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
-import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTime
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToString
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.InventoryProduct
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/api/inventory-product")
@@ -34,7 +29,7 @@ class InventoryProductController(
     ) : ResponseEntity<BaseResponse<CheckInventoryDateResponse>>{
         val data = inventoryProductService.checkInventoryDate(date)
 
-        val formattedDate = convertOffSetDateTime(date) // Định dạng lại LocalDate thành chuỗi
+        val formattedDate = convertOffSetDateTimeToString(date) // Định dạng lại LocalDate thành chuỗi
 
         return if( data!= null && data.hasInventoryDate){
             ResponseEntity(

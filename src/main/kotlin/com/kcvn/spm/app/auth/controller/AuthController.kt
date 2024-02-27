@@ -26,9 +26,9 @@ import java.util.*
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
-        private val authenticationManager: AuthenticationManager,
-        private val jwtUtils: JwtUtils,
-        private val userService: UserService
+    private val authenticationManager: AuthenticationManager,
+    private val jwtUtils: JwtUtils,
+    private val userService: UserService
 ) {
     @PostMapping("/signin")
     fun authenticateUser(@Valid @RequestBody loginRequest: LoginRequest?): ResponseEntity<*> {

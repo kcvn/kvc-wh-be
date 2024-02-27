@@ -88,6 +88,8 @@ class OrderRepository(
         return when (sortFieldName) {
             "id" -> ORDER.ID
             "createddate" -> ORDER.CREATED_DATE
+            "version" -> ORDER.VERSION
+            "productname"-> PRODUCT.NAME
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }
     }

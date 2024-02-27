@@ -25,10 +25,10 @@ class DateTimeHelper {
             }
         }
 
-        fun convertOffSetDateTimeToString(date: OffsetDateTime) : String? {
-            val localDate = date.toLocalDate() // Chuyển đổi OffsetDateTime thành LocalDate
+        fun convertOffSetDateTimeToString(date: OffsetDateTime?) : String? {
+            val localDate = date?.toLocalDate() // Chuyển đổi OffsetDateTime thành LocalDate
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.DATE_FORMAT) // Định dạng của chuỗi
-            val formattedDate = localDate.format(formatter) // Định dạng lại LocalDate thành chuỗi
+            val formattedDate = localDate?.format(formatter) // Định dạng lại LocalDate thành chuỗi
             return formattedDate
         }
 

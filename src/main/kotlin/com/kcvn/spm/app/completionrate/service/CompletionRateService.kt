@@ -207,15 +207,15 @@ class CompletionRateService(
                         count++
 
                     }
+                    // ton tai
                     else {
                         val productExistSameDate =
                             productExists.find { x -> (x.productName == name && x.effectiveDate?.toLocalDate() == effectiveDate.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                            productExistSameDate.expirationDate = effectiveDate.minusDays(1)
                             completionRateProductRepository.update(productExistSameDate)
                             count++
-                        } else if (currentDate > effectiveDate) {
+                        } else if (currentDate.toLocalDate() > effectiveDate.toLocalDate()) {
                             errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                         } else {
                             val completionRateUpdate =

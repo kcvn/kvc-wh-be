@@ -6,6 +6,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToString
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertStringToOffSetDateTime
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -415,9 +416,7 @@ class InventoryProductService(
             var rowNumber = 1
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                val localDate = item?.inventoryDate?.toLocalDate() // Chuyển đổi OffsetDateTime thành LocalDate
-                val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy") // Định dạng của chuỗi
-                val formattedDate = localDate?.format(formatter) // Định dạng lại LocalDate thành chuỗi
+                val formattedDate = convertOffSetDateTimeToString(item?.inventoryDate)
                 dataRow.createCell(0).setCellValue(formattedDate)
                 dataRow.getCell(0).cellStyle = style
 

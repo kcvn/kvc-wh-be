@@ -47,13 +47,31 @@ class OrderService(
         if (request != null) {
             if (request.filterType != null && request.filterType == 1 && request.orderCode != null) {
 
-                val order = request.version?.let { orderRep.getByOrderByCodeAndVersion(request.orderCode!!, it) }
-                if (order != null) {
-                    request.startDate = order.startDate
-                    request.endDate = order.endDate
-                }
+                val versionArray = request.version?.split(",")
+                var minStartDate: OffsetDateTime? = null
+                var maxEndDate: OffsetDateTime? = null
 
+                if (versionArray != null) {
+                    for (version in versionArray) {
+                        val versionInt = version.trim().toIntOrNull()
+                        versionInt?.let { versionValue ->
+                            val order = orderRep.getByOrderByCodeAndVersion(request.orderCode!!, versionValue)
+
+                            order?.let {
+                                if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
+                                    minStartDate = order.startDate
+                                }
+                                if (maxEndDate == null || order.endDate?.isAfter(maxEndDate) == true) {
+                                    maxEndDate = order.endDate
+                                }
+                            }
+                        }
+                    }
+                }
+                request.startDate = minStartDate
+                request.endDate = maxEndDate
             }
+
 
             if (request.startDate != null && request.endDate != null) {
 
@@ -204,7 +222,6 @@ class OrderService(
         }
         val orders = orderRep.getOrderCode(startDate, endDate)
 
-        // Tạo một Map để lưu trữ danh sách các VERSION cho mỗi ORDER_CODE
         val versionMap = mutableMapOf<String, MutableList<String>>()
         for (order in orders) {
             val orderCode = order.orderCode
@@ -214,7 +231,6 @@ class OrderService(
             }
         }
 
-        // Tạo danh sách OrderCodeResponse và điền thông tin từ versionMap
         val orderCodeResponses = mutableListOf<OrderCodeResponse>()
         for ((orderCode, versions) in versionMap) {
             var dropdownResponses = versions.map { DropdownResponse(it, "v${it}.0") }.sortedByDescending { x -> x.value }

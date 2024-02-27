@@ -38,5 +38,8 @@ class Constants {
         const val KHUNG1_MU = "MU"
         const val KHUNG1_ML = "ML"
         const val KHUNG1_SWR = "SWR"
+
+        // login null
+        const val SYSTEM = "SYSTEM"
     }
 }

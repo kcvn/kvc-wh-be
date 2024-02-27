@@ -6,6 +6,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertStringToOffSetDateTime
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -76,9 +77,9 @@ class InventoryProductService(
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == "Kết quả"
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) ==  CommonUtils.getMessage("excel.colResultName")
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue("Kết quả")
+            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             headerRow.getCell(headerCell).cellStyle.fillForegroundColor = IndexedColors.RED.index
@@ -296,9 +297,8 @@ class InventoryProductService(
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
                     }else {
                         val inventoryDate = ExcelHelper.getCellValue(row, 0)
-                        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy") // Định dạng của chuỗi
-                        val localDate = LocalDate.parse(inventoryDate, formatter) // Chuyển đổi chuỗi thành LocalDate
-                        val offsetDateTime = OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
+                        val offsetDateTime = convertStringToOffSetDateTime(inventoryDate)
+
                         val requestImport = InventoryProduct(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = offsetDateTime,
@@ -313,10 +313,10 @@ class InventoryProductService(
 
                         if(checkInventoryProduct == null) {
                             requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
-                            requestImport.createdBy = CommonUtils.loggedInUser() ?: "SYSTEM"
+                            requestImport.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                             inventoryProductRepository.insertInventoryProduct(requestImport)
                         }else {
-                            requestImport.updatedBy = CommonUtils.loggedInUser() ?: "SYSTEM"
+                            requestImport.updatedBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                             requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
                             inventoryProductRepository.updateInventoryProduct(requestImport)
                         }

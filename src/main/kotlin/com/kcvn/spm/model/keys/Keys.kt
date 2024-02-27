@@ -11,10 +11,12 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
@@ -31,10 +33,12 @@ import com.kcvn.spm.model.tables.records.AuthRoleRecord
 import com.kcvn.spm.model.tables.records.AuthUserClaimRecord
 import com.kcvn.spm.model.tables.records.AuthUserRecord
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
+import com.kcvn.spm.model.tables.records.CalculateQuantityResultRecord
 import com.kcvn.spm.model.tables.records.CommonCategoryRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProcessProductRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProcessRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProductRecord
+import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
 import com.kcvn.spm.model.tables.records.InventoryProductRecord
 import com.kcvn.spm.model.tables.records.OrderDetailRecord
 import com.kcvn.spm.model.tables.records.OrderRecord
@@ -63,10 +67,12 @@ val AUTH_ROLE_CLAIM_PKEY: UniqueKey<AuthRoleClaimRecord> = Internal.createUnique
 val AUTH_USER_PKEY: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_pkey"), arrayOf(AuthUser.AUTH_USER.ID), true)
 val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUniqueKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_pkey"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.ID), true)
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
+val CALCULATE_QUANTITY_RESULT_PKEY: UniqueKey<CalculateQuantityResultRecord> = Internal.createUniqueKey(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT, DSL.name("calculate_quantity_result_pkey"), arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
 val COMMON_CATEGORY_PKEY: UniqueKey<CommonCategoryRecord> = Internal.createUniqueKey(CommonCategory.COMMON_CATEGORY, DSL.name("common_category_pkey"), arrayOf(CommonCategory.COMMON_CATEGORY.ID), true)
 val COMPLETION_RATE_PROCESS_PKEY: UniqueKey<CompletionRateProcessRecord> = Internal.createUniqueKey(CompletionRateProcess.COMPLETION_RATE_PROCESS, DSL.name("completion_rate_process_pkey"), arrayOf(CompletionRateProcess.COMPLETION_RATE_PROCESS.ID), true)
 val COMPLETION_RATE_PROCESS_PRODUCT_PKEY: UniqueKey<CompletionRateProcessProductRecord> = Internal.createUniqueKey(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT, DSL.name("completion_rate_process_product_pkey"), arrayOf(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.ID), true)
 val COMPLETION_RATE_PRODUCT_PKEY: UniqueKey<CompletionRateProductRecord> = Internal.createUniqueKey(CompletionRateProduct.COMPLETION_RATE_PRODUCT, DSL.name("completion_rate_product_pkey"), arrayOf(CompletionRateProduct.COMPLETION_RATE_PRODUCT.ID), true)
+val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityRecord> = Internal.createUniqueKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantity_pk"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)
 val INVENTORY_PRODUCT_PKEY: UniqueKey<InventoryProductRecord> = Internal.createUniqueKey(InventoryProduct.INVENTORY_PRODUCT, DSL.name("inventory_product_pkey"), arrayOf(InventoryProduct.INVENTORY_PRODUCT.ID), true)
 val ORDER_PKEY: UniqueKey<OrderRecord> = Internal.createUniqueKey(Order.ORDER, DSL.name("order_pkey"), arrayOf(Order.ORDER.ID), true)
 val ORDER_DETAIL_PKEY: UniqueKey<OrderDetailRecord> = Internal.createUniqueKey(OrderDetail.ORDER_DETAIL, DSL.name("order_detail_pkey"), arrayOf(OrderDetail.ORDER_DETAIL.ID), true)

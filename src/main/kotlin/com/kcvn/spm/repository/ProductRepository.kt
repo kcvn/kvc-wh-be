@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.ProductDetailResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
@@ -132,7 +133,7 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
             data.tapeCommon,
             data.tapeType,
             data.productLayerDetail,
-            CommonUtils.loggedInUser() ?: "SYSTEM"
+            CommonUtils.loggedInUser() ?: Constants.SYSTEM
         ).returningResult(PRODUCT).fetchInto(Product::class.java).firstOrNull()
     }
 
@@ -155,7 +156,7 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
             .set(PRODUCT.TAPE_COMMON, data.tapeCommon)
             .set(PRODUCT.TAPE_TYPE, data.tapeType)
             .set(PRODUCT.PRODUCT_LAYER_DETAIL, data.productLayerDetail)
-            .set(PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .set(PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .where(PRODUCT.ID.eq(data.id))
             .returningResult(PRODUCT)

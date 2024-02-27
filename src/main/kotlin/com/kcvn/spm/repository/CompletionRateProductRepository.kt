@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
@@ -56,7 +57,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             product.effectiveDate == maxEffectiveDate
         }
 
-        val total = context.fetchCount(COMPLETION_RATE_PRODUCT, condition)
+        val total = filteredList.count()
 
         return Pair(filteredList, total)
     }
@@ -117,7 +118,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             .set(COMPLETION_RATE_PRODUCT.RATE, data.rate)
             .set(COMPLETION_RATE_PRODUCT.CREATED_DATE, data.createdDate)
             .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .set(COMPLETION_RATE_PRODUCT.IS_DELETED, data.isDeleted)
             .set(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
             .set(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE, data.expirationDate)

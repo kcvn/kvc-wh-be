@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.AuthUser
@@ -82,7 +83,7 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
             user.dateOfBirth,
             user.avatar,
             user.status,
-            CommonUtils.loggedInUser() ?: "SYSTEM"
+            CommonUtils.loggedInUser() ?: Constants.SYSTEM
         )
         .returningResult(AUTH_USER)
         .fetchInto(AuthUser::class.java).firstOrNull()
@@ -96,21 +97,21 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
         .set(AUTH_USER.DATE_OF_BIRTH, user.dateOfBirth)
         .set(AUTH_USER.AVATAR, user.avatar)
         .set(AUTH_USER.STATUS, user.status)
-        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
         .where(AUTH_USER.ID.eq(user.id))
         .returningResult(AUTH_USER)
         .fetchInto(AuthUser::class.java).firstOrNull()
 
     fun updatePassword(user: AuthUser): AuthUser? = context.update(AUTH_USER)
         .set(AUTH_USER.PASSWORD, user.password)
-        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
         .where(AUTH_USER.ID.eq(user.id))
         .returningResult(AUTH_USER)
         .fetchInto(AuthUser::class.java).firstOrNull()
 
     fun deleteById(id: String) = context.update(AUTH_USER)
         .set(AUTH_USER.IS_DELETED, true)
-        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+        .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
         .where(AUTH_USER.ID.eq(id)).execute()
 
     fun findPositions(userIds: List<String>): Map<String, List<String>> =
@@ -138,7 +139,7 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
                 userId,
                 POSITION_TYPE,
                 it,
-                CommonUtils.loggedInUser() ?: "SYSTEM"
+                CommonUtils.loggedInUser() ?: Constants.SYSTEM
             ).execute()
         }
     }

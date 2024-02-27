@@ -11,11 +11,12 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
-import com.kcvn.spm.model.tables.CalculateQuantity
+import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
@@ -64,9 +65,9 @@ val AUTH_USER_CLAIM: AuthUserClaim = AuthUserClaim.AUTH_USER_CLAIM
 val AUTH_USER_ROLE: AuthUserRole = AuthUserRole.AUTH_USER_ROLE
 
 /**
- * The table <code>public.calculate_quantity</code>.
+ * The table <code>public.calculate_quantity_result</code>.
  */
-val CALCULATE_QUANTITY: CalculateQuantity = CalculateQuantity.CALCULATE_QUANTITY
+val CALCULATE_QUANTITY_RESULT: CalculateQuantityResult = CalculateQuantityResult.CALCULATE_QUANTITY_RESULT
 
 /**
  * The table <code>public.common_category</code>.
@@ -87,6 +88,11 @@ val COMPLETION_RATE_PROCESS_PRODUCT: CompletionRateProcessProduct = CompletionRa
  * The table <code>public.completion_rate_product</code>.
  */
 val COMPLETION_RATE_PRODUCT: CompletionRateProduct = CompletionRateProduct.COMPLETION_RATE_PRODUCT
+
+/**
+ * The table <code>public.information_calculate_quantity</code>.
+ */
+val INFORMATION_CALCULATE_QUANTITY: InformationCalculateQuantity = InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY
 
 /**
  * The table <code>public.inventory_product</code>.

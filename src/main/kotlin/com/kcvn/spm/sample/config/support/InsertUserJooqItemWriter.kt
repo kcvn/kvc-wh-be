@@ -1,6 +1,7 @@
 package com.kcvn.spm.sample.config.support
 
 import com.kcvn.spm.common.batch.db.AbstractJooqItemWriter
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.AuthUser
 import com.kcvn.spm.model.tables.references.AUTH_USER
@@ -29,7 +30,7 @@ class InsertUserJooqItemWriter(private val dsl: DSLContext) : AbstractJooqItemWr
                     user.dateOfBirth,
                     user.avatar,
                     user.status,
-                    CommonUtils.loggedInUser() ?: "SYSTEM"
+                    CommonUtils.loggedInUser() ?: Constants.SYSTEM
                 ).execute()
         }
     }

@@ -1,6 +1,7 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
@@ -164,7 +165,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             .set(COMPLETION_RATE_PROCESS.CREATED_DATE, data.createdDate)
             .set(COMPLETION_RATE_PROCESS.LAYER_CODE, data.layerCode)
             .set(COMPLETION_RATE_PROCESS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .set(COMPLETION_RATE_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(COMPLETION_RATE_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .set(COMPLETION_RATE_PROCESS.IS_DELETED, data.isDeleted)
             .set(COMPLETION_RATE_PROCESS.EXPIRATION_DATE, data.expirationDate)
             .set(COMPLETION_RATE_PROCESS.EFFECTIVE_DATE, data.effectiveDate)

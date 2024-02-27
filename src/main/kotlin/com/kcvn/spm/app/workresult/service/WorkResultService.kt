@@ -30,11 +30,14 @@ import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
-class WorkResultService (
-    private val workResultRep: WorkResultRepository
+class WorkResultService(
+    private val workResultRep: WorkResultRepository,
 ) {
-    fun getListWorkResult(request: WorkResultSearchRequest?, pageable: Pageable): BasePagingResponse<WorkResultResponse> {
-        val workResults = workResultRep.getPagingListWorkResult(request,pageable)
+    fun getListWorkResult(
+        request: WorkResultSearchRequest?,
+        pageable: Pageable,
+    ): BasePagingResponse<WorkResultResponse> {
+        val workResults = workResultRep.getPagingListWorkResult(request, pageable)
         var response = BasePagingResponse<WorkResultResponse>()
 
         if (workResults.first.isNotEmpty()) {
@@ -52,27 +55,27 @@ class WorkResultService (
             val result = (x.goodSheetQuantity?.toDouble())?.div(x.totalSheetQuantity!!)
             val percentage = result?.times(100)
             var performance = "%.2f%%".format(percentage)
-            if (result == null){
+            if (result == null || x.goodSheetQuantity == 0 || x.totalSheetQuantity == 0) {
                 performance = ""
             }
             WorkResultResponse(
-            id = x.id,
-            summaryResultDate = x.summaryResultDate,
-            itemName = x.itemName,
-            processName = x.processName,
-            processCode = x.processCode,
-            layerCode = x.layerCode,
-            totalTapeQuantity = x.totalTapeQuantity,
-            totalSheetQuantity = x.totalSheetQuantity,
-            goodTapeQuantity = x.goodTapeQuantity,
-            goodSheetQuantity = x.goodSheetQuantity,
-            performance = performance ,
-            orderCode = x.orderCode,
-            tapeLotNo = x.tapeLotNo,
-            code = x.code,
-            workImplementBy = x.workImplementBy,
-            equipmentName = x.equipmentName
-        )
+                id = x.id,
+                summaryResultDate = x.summaryResultDate,
+                itemName = x.itemName,
+                processName = x.processName,
+                processCode = x.processCode,
+                layerCode = x.layerCode,
+                totalTapeQuantity = x.totalTapeQuantity,
+                totalSheetQuantity = x.totalSheetQuantity,
+                goodTapeQuantity = x.goodTapeQuantity,
+                goodSheetQuantity = x.goodSheetQuantity,
+                performance = performance,
+                orderCode = x.orderCode,
+                tapeLotNo = x.tapeLotNo,
+                code = x.code,
+                workImplementBy = x.workImplementBy,
+                equipmentName = x.equipmentName
+            )
         }
 
         return response
@@ -108,14 +111,15 @@ class WorkResultService (
     }
 
     fun exportExcel(request: WorkResultSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
-        val workResults = workResultRep.getList(request,pageable)
+        val workResults = workResultRep.getList(request, pageable)
         val workResultMapping = mappingWorkResultResponse(workResults)
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportWorkResultTemplate.xlsx")
+        val fileTemplate =
+            File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportWorkResultTemplate.xlsx")
         val workBook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workBook.getSheetAt(0)
 
-        if (!workResultMapping.data.isNullOrEmpty()){
+        if (!workResultMapping.data.isNullOrEmpty()) {
             val style: CellStyle = workBook.createCellStyle()
             style.borderBottom = BorderStyle.THIN
             style.borderTop = BorderStyle.THIN
@@ -129,8 +133,8 @@ class WorkResultService (
             style.setFont(font)
 
             var rowNumber = 2
-            for (item in workResultMapping.data!!){
-                val dataRow : Row = sheet.createRow(rowNumber++)
+            for (item in workResultMapping.data!!) {
+                val dataRow: Row = sheet.createRow(rowNumber++)
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 dataRow.createCell(0).setCellValue(item.summaryResultDate?.format(formatter).toString())
                 dataRow.getCell(0).cellStyle = style
@@ -173,7 +177,7 @@ class WorkResultService (
 
                 var performance = "%.2f%%".format(percentage)
 
-                if (result == null) {
+                if (result == null || item.goodSheetQuantity == 0 || item.totalSheetQuantity == 0) {
                     performance = ""
                 }
 
@@ -201,7 +205,10 @@ class WorkResultService (
 
         val excelBytes = byteArrayOutputStream.toByteArray()
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportListWorkResult", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            fileName = CommonUtils.getMessage(
+                "fileName.exportListWorkResult",
+                arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))
+            ),
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -214,7 +221,7 @@ class WorkResultService (
 
     fun createResponseEntity(
         report: ByteArray?,
-        fileName: String?
+        fileName: String?,
     ): ResponseEntity<ByteArray> =
         ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_OCTET_STREAM)

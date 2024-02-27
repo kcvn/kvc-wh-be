@@ -58,12 +58,11 @@ class OrderController(
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @GetMapping("/list-order-code-by-year")
+    @GetMapping("/order-code-dropdown")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
-    fun getListOrderCode(year: String): ResponseEntity<BaseResponse<List<OrderCodeResponse>>> {
+    fun getListOrderCode(year: String?): ResponseEntity<BaseResponse<List<OrderCodeResponse>>> {
         val result = orderService.getOrderCode(year)
-        val data = BaseResponse<List<OrderCodeResponse>>(data = result, message = "Lấy mã đơn hàng thành công")
+        val data = BaseResponse(result)
         return ResponseEntity(data, HttpStatus.OK)
     }
-
 }

@@ -11,5 +11,5 @@ class OrderSearchRequest {
     var endDate: OffsetDateTime? = null
     var year: Int? = null
     var orderCode: String? = null
-    var version: Int? = null
+    var version: String? = null
 }

@@ -20,9 +20,9 @@ import kotlin.math.max
 
 
 @Repository
-class ProductRepository (private val context: DSLContext) : SortingRepository(){
+class ProductRepository(private val context: DSLContext) : SortingRepository() {
 
-    fun getPagingList(request: ProductSearchRequest?, pageable: Pageable) : Pair<List<Product>, Int> {
+    fun getPagingList(request: ProductSearchRequest?, pageable: Pageable): Pair<List<Product>, Int> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.search.isNullOrEmpty()) condition = condition.and(PRODUCT.NAME.containsIgnoreCase(request.search?.lowercase()))
@@ -51,7 +51,7 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
         return Pair(data, total)
     }
 
-    fun getList(request: ProductSearchRequest?, pageable: Pageable) : List<Product> {
+    fun getList(request: ProductSearchRequest?, pageable: Pageable): List<Product> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.search.isNullOrEmpty()) condition = condition.and(PRODUCT.NAME.contains(request.search))
@@ -70,32 +70,34 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
         }
 
         return context.selectFrom(PRODUCT)
-                .where(condition.and(PRODUCT.IS_DELETED.eq(false)))
-                .orderBy(getSortFields(pageable.sort, PRODUCT.CREATED_DATE))
-                .fetchInto(Product::class.java)
+            .where(condition.and(PRODUCT.IS_DELETED.eq(false)))
+            .orderBy(getSortFields(pageable.sort, PRODUCT.CREATED_DATE))
+            .fetchInto(Product::class.java)
 
     }
 
     fun getProductDetail(request: String?) : ProductDetailResponse? {
-        val data = context.selectFrom(PRODUCT
-            .leftJoin(COMPLETION_RATE_PRODUCT)
-            .on(PRODUCT.NAME.eq(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)))
-            .where(PRODUCT.NAME.eq(request)
-                .and(PRODUCT.IS_DELETED.eq(false))
-                )
+        val data = context.selectFrom(
+            PRODUCT
+                .leftJoin(COMPLETION_RATE_PRODUCT)
+                .on(PRODUCT.NAME.eq(COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
+        )
+            .where(
+                PRODUCT.NAME.eq(request)
+                    .and(PRODUCT.IS_DELETED.eq(false))
+            )
             .orderBy(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.desc())
             .limit(1)
             .fetchAnyInto(ProductDetailResponse::class.java)
-        return data;
+        return data
     }
+
 
     fun getByName(names: List<String>): List<Product> {
         return context.selectFrom(PRODUCT)
             .where(PRODUCT.NAME.`in`(names).and(PRODUCT.IS_DELETED.eq(false)))
             .fetchInto(Product::class.java)
     }
-
-
 
 
     fun getListNameProduct(): List<String> {
@@ -106,7 +108,7 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
     }
 
 
-    fun add(data: Product) : Product? {
+    fun add(data: Product): Product? {
         return context.insertInto(
             PRODUCT,
             PRODUCT.NAME, PRODUCT.EXPORT_TYPE, PRODUCT.SIZE, PRODUCT.FRAME_1, PRODUCT.FRAME_2, PRODUCT.MOLD, PRODUCT.PRODUCT_LINE,
@@ -134,7 +136,7 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
         ).returningResult(PRODUCT).fetchInto(Product::class.java).firstOrNull()
     }
 
-    fun update(data: Product) : Product? {
+    fun update(data: Product): Product? {
         return context.update(PRODUCT)
             .set(PRODUCT.NAME, data.name)
             .set(PRODUCT.EXPORT_TYPE, data.exportType)
@@ -163,18 +165,54 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "name" -> { PRODUCT.NAME }
-            "exporttype" -> { PRODUCT.EXPORT_TYPE }
-            "size" -> { PRODUCT.SIZE }
-            "createdDate" -> { PRODUCT.CREATED_DATE }
-            "frame_1" -> { PRODUCT.FRAME_1 }
-            "frame_2" -> { PRODUCT.FRAME_2 }
-            "mold" -> { PRODUCT.MOLD }
-            "productline" -> { PRODUCT.PRODUCT_LINE }
-            "srnosr" -> { PRODUCT.SR_NOSR }
-            "pcssh" -> { PRODUCT.PCS_SH }
-            "blocksh" -> { PRODUCT.SH_BLOCK }
-            "layercount" -> { PRODUCT.LAYER_COUNT }
+            "name" -> {
+                PRODUCT.NAME
+            }
+
+            "exporttype" -> {
+                PRODUCT.EXPORT_TYPE
+            }
+
+            "size" -> {
+                PRODUCT.SIZE
+            }
+
+            "createdDate" -> {
+                PRODUCT.CREATED_DATE
+            }
+
+            "frame_1" -> {
+                PRODUCT.FRAME_1
+            }
+
+            "frame_2" -> {
+                PRODUCT.FRAME_2
+            }
+
+            "mold" -> {
+                PRODUCT.MOLD
+            }
+
+            "productline" -> {
+                PRODUCT.PRODUCT_LINE
+            }
+
+            "srnosr" -> {
+                PRODUCT.SR_NOSR
+            }
+
+            "pcssh" -> {
+                PRODUCT.PCS_SH
+            }
+
+            "blocksh" -> {
+                PRODUCT.SH_BLOCK
+            }
+
+            "layercount" -> {
+                PRODUCT.LAYER_COUNT
+            }
+
             else -> {
                 //val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
                 //throw InvalidDataAccessApiUsageException(errorMessage)

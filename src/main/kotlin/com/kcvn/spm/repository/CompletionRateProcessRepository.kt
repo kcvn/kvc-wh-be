@@ -79,7 +79,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             product.effectiveDate != null && product.effectiveDate == maxEffectiveDate
         }
 
-        val total = context.fetchCount(COMPLETION_RATE_PROCESS, COMPLETION_RATE_PROCESS.IS_DELETED.eq(false))
+        val total = filteredList.count()
 
         return Pair(filteredList, total)
     }

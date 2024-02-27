@@ -8,28 +8,29 @@ import com.kcvn.spm.app.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.app.quantityreport.payload.response.CalculateQuantityResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.repository.CalculateQuantityReportRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.OffsetDateTime
 
 @Service
 @Transactional
 class QuantityReportService(
     private val orderService: OrderService,
     private val productService: ProductService,
-    private val productProcessService : ProductProcessService,
-    private val completionRateService : CompletionRateService
+    private val productProcessService: ProductProcessService,
+    private val completionRateService: CompletionRateService,
+    private val calculateQuantityReportRep: CalculateQuantityReportRepository,
 ) {
     fun calculateQuantity(request: CalculateQuantityRequest): BasePagingResponse<CalculateQuantityResponse> {
         TODO("Not yet implemented")
     }
 
     fun lockedQuantity(request: String): BaseResponse<Boolean> {
-        try {
-
-        }catch(e: IllegalStateException){
-
-        }
-        return BaseResponse(true)
+        val calculateQuantityReport = calculateQuantityReportRep.findById(request)
+        calculateQuantityReportRep.update(calculateQuantityReport)
+        return BaseResponse(true, message = CommonUtils.getMessage("locked.success"))
     }
 
 }

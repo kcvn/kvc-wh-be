@@ -69,12 +69,12 @@ open class AuthPasswordResetToken(
     /**
      * The column <code>public.auth_password_reset_token.id</code>.
      */
-    val ID: TableField<AuthPasswordResetTokenRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR.nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
+    val ID: TableField<AuthPasswordResetTokenRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.auth_password_reset_token.user_id</code>.
      */
-    val USER_ID: TableField<AuthPasswordResetTokenRecord, String?> = createField(DSL.name("user_id"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val USER_ID: TableField<AuthPasswordResetTokenRecord, String?> = createField(DSL.name("user_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_password_reset_token.token</code>.
@@ -94,7 +94,7 @@ open class AuthPasswordResetToken(
     /**
      * The column <code>public.auth_password_reset_token.created_by</code>.
      */
-    val CREATED_BY: TableField<AuthPasswordResetTokenRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val CREATED_BY: TableField<AuthPasswordResetTokenRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_password_reset_token.updated_date</code>.
@@ -104,7 +104,7 @@ open class AuthPasswordResetToken(
     /**
      * The column <code>public.auth_password_reset_token.updated_by</code>.
      */
-    val UPDATED_BY: TableField<AuthPasswordResetTokenRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR, this, "")
+    val UPDATED_BY: TableField<AuthPasswordResetTokenRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.auth_password_reset_token.is_deleted</code>.

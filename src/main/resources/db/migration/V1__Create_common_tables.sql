@@ -26,10 +26,7 @@ CREATE TABLE auth_user
     updated_date TIMESTAMP WITH TIME ZONE,
     updated_by VARCHAR,
     is_deleted boolean NOT NULL DEFAULT false,
-    CONSTRAINT auth_user_pkey PRIMARY KEY (id),
-    CONSTRAINT auth_user_uniq_username UNIQUE (username, is_deleted),
-    CONSTRAINT auth_user_uniq_employee_code UNIQUE (employee_code, is_deleted),
-    CONSTRAINT auth_user_uniq_email UNIQUE (email, is_deleted)
+    CONSTRAINT auth_user_pkey PRIMARY KEY (id)
 );
 
 -- Trigger: auth_user_stamp
@@ -51,8 +48,7 @@ CREATE TABLE auth_role
     updated_date TIMESTAMP WITH TIME ZONE,
     updated_by VARCHAR,
     is_deleted boolean NOT NULL DEFAULT false,
-    CONSTRAINT auth_role_pkey PRIMARY KEY (id),
-    CONSTRAINT auth_role_uniq_name UNIQUE (name, is_deleted)
+    CONSTRAINT auth_role_pkey PRIMARY KEY (id)
 );
 
 -- Trigger: auth_role_stamp

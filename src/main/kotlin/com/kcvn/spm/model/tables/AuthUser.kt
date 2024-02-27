@@ -6,16 +6,11 @@ package com.kcvn.spm.model.tables
 
 import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.AUTH_USER_PKEY
-import com.kcvn.spm.model.keys.AUTH_USER_UNIQ_EMAIL
-import com.kcvn.spm.model.keys.AUTH_USER_UNIQ_EMPLOYEE_CODE
-import com.kcvn.spm.model.keys.AUTH_USER_UNIQ_USERNAME
 import com.kcvn.spm.model.tables.records.AuthUserRecord
 
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.function.Function
-
-import kotlin.collections.List
 
 import org.jooq.Field
 import org.jooq.ForeignKey
@@ -71,42 +66,42 @@ open class AuthUser(
     /**
      * The column <code>public.auth_user.id</code>.
      */
-    val ID: TableField<AuthUserRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR.nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
+    val ID: TableField<AuthUserRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.auth_user.username</code>.
      */
-    val USERNAME: TableField<AuthUserRecord, String?> = createField(DSL.name("username"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val USERNAME: TableField<AuthUserRecord, String?> = createField(DSL.name("username"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_user.password</code>.
      */
-    val PASSWORD: TableField<AuthUserRecord, String?> = createField(DSL.name("password"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val PASSWORD: TableField<AuthUserRecord, String?> = createField(DSL.name("password"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_user.employee_code</code>.
      */
-    val EMPLOYEE_CODE: TableField<AuthUserRecord, String?> = createField(DSL.name("employee_code"), SQLDataType.VARCHAR, this, "")
+    val EMPLOYEE_CODE: TableField<AuthUserRecord, String?> = createField(DSL.name("employee_code"), SQLDataType.VARCHAR(20), this, "")
 
     /**
      * The column <code>public.auth_user.email</code>.
      */
-    val EMAIL: TableField<AuthUserRecord, String?> = createField(DSL.name("email"), SQLDataType.VARCHAR, this, "")
+    val EMAIL: TableField<AuthUserRecord, String?> = createField(DSL.name("email"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.auth_user.phone_number</code>.
      */
-    val PHONE_NUMBER: TableField<AuthUserRecord, String?> = createField(DSL.name("phone_number"), SQLDataType.VARCHAR, this, "")
+    val PHONE_NUMBER: TableField<AuthUserRecord, String?> = createField(DSL.name("phone_number"), SQLDataType.VARCHAR(20), this, "")
 
     /**
      * The column <code>public.auth_user.full_name</code>.
      */
-    val FULL_NAME: TableField<AuthUserRecord, String?> = createField(DSL.name("full_name"), SQLDataType.VARCHAR, this, "")
+    val FULL_NAME: TableField<AuthUserRecord, String?> = createField(DSL.name("full_name"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.auth_user.full_name_unsigned</code>.
      */
-    val FULL_NAME_UNSIGNED: TableField<AuthUserRecord, String?> = createField(DSL.name("full_name_unsigned"), SQLDataType.VARCHAR, this, "")
+    val FULL_NAME_UNSIGNED: TableField<AuthUserRecord, String?> = createField(DSL.name("full_name_unsigned"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.auth_user.date_of_birth</code>.
@@ -136,7 +131,7 @@ open class AuthUser(
     /**
      * The column <code>public.auth_user.created_by</code>.
      */
-    val CREATED_BY: TableField<AuthUserRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val CREATED_BY: TableField<AuthUserRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_user.updated_date</code>.
@@ -146,7 +141,7 @@ open class AuthUser(
     /**
      * The column <code>public.auth_user.updated_by</code>.
      */
-    val UPDATED_BY: TableField<AuthUserRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR, this, "")
+    val UPDATED_BY: TableField<AuthUserRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.auth_user.is_deleted</code>.
@@ -174,7 +169,6 @@ open class AuthUser(
     constructor(child: Table<out Record>, key: ForeignKey<out Record, AuthUserRecord>): this(Internal.createPathAlias(child, key), child, key, AUTH_USER, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<AuthUserRecord> = AUTH_USER_PKEY
-    override fun getUniqueKeys(): List<UniqueKey<AuthUserRecord>> = listOf(AUTH_USER_UNIQ_USERNAME, AUTH_USER_UNIQ_EMPLOYEE_CODE, AUTH_USER_UNIQ_EMAIL)
     override fun `as`(alias: String): AuthUser = AuthUser(DSL.name(alias), this)
     override fun `as`(alias: Name): AuthUser = AuthUser(alias, this)
     override fun `as`(alias: Table<*>): AuthUser = AuthUser(alias.getQualifiedName(), this)

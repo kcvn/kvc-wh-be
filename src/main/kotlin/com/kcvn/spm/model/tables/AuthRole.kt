@@ -6,13 +6,10 @@ package com.kcvn.spm.model.tables
 
 import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.AUTH_ROLE_PKEY
-import com.kcvn.spm.model.keys.AUTH_ROLE_UNIQ_NAME
 import com.kcvn.spm.model.tables.records.AuthRoleRecord
 
 import java.time.OffsetDateTime
 import java.util.function.Function
-
-import kotlin.collections.List
 
 import org.jooq.Field
 import org.jooq.ForeignKey
@@ -68,17 +65,17 @@ open class AuthRole(
     /**
      * The column <code>public.auth_role.id</code>.
      */
-    val ID: TableField<AuthRoleRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR.nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
+    val ID: TableField<AuthRoleRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.auth_role.name</code>.
      */
-    val NAME: TableField<AuthRoleRecord, String?> = createField(DSL.name("name"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val NAME: TableField<AuthRoleRecord, String?> = createField(DSL.name("name"), SQLDataType.VARCHAR(300).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_role.description</code>.
      */
-    val DESCRIPTION: TableField<AuthRoleRecord, String?> = createField(DSL.name("description"), SQLDataType.VARCHAR, this, "")
+    val DESCRIPTION: TableField<AuthRoleRecord, String?> = createField(DSL.name("description"), SQLDataType.VARCHAR(1000), this, "")
 
     /**
      * The column <code>public.auth_role.created_date</code>.
@@ -88,7 +85,7 @@ open class AuthRole(
     /**
      * The column <code>public.auth_role.created_by</code>.
      */
-    val CREATED_BY: TableField<AuthRoleRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR.nullable(false), this, "")
+    val CREATED_BY: TableField<AuthRoleRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
      * The column <code>public.auth_role.updated_date</code>.
@@ -98,7 +95,7 @@ open class AuthRole(
     /**
      * The column <code>public.auth_role.updated_by</code>.
      */
-    val UPDATED_BY: TableField<AuthRoleRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR, this, "")
+    val UPDATED_BY: TableField<AuthRoleRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.auth_role.is_deleted</code>.
@@ -126,7 +123,6 @@ open class AuthRole(
     constructor(child: Table<out Record>, key: ForeignKey<out Record, AuthRoleRecord>): this(Internal.createPathAlias(child, key), child, key, AUTH_ROLE, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<AuthRoleRecord> = AUTH_ROLE_PKEY
-    override fun getUniqueKeys(): List<UniqueKey<AuthRoleRecord>> = listOf(AUTH_ROLE_UNIQ_NAME)
     override fun `as`(alias: String): AuthRole = AuthRole(DSL.name(alias), this)
     override fun `as`(alias: Name): AuthRole = AuthRole(alias, this)
     override fun `as`(alias: Table<*>): AuthRole = AuthRole(alias.getQualifiedName(), this)

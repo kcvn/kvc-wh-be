@@ -1,15 +1,14 @@
 package com.kcvn.spm.config
 
-import com.kcvn.spm.auth.security.jwt.AuthEntryPointJwt
-import com.kcvn.spm.auth.security.jwt.AuthTokenFilter
-import com.kcvn.spm.auth.security.service.UserDetailsServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
+import com.kcvn.spm.app.auth.security.jwt.AuthEntryPointJwt
+import com.kcvn.spm.app.auth.security.jwt.AuthTokenFilter
+import com.kcvn.spm.app.auth.security.jwt.JwtUtils
+import com.kcvn.spm.app.auth.security.service.UserDetailsServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.web.config.EnableSpringDataWebSupport
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
-import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -28,16 +27,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableMethodSecurity
 @EnableSpringDataWebSupport
-class WebSecurityConfig {
-    @Autowired
-    var userDetailsService: UserDetailsServiceImpl? = null
-
-    @Autowired
-    private val unauthorizedHandler: AuthEntryPointJwt? = null
-
+class WebSecurityConfig(
+    private val userDetailsService: UserDetailsServiceImpl,
+    private val unauthorizedHandler: AuthEntryPointJwt,
+    private val jwtUtils: JwtUtils
+) {
     @Bean
     fun authenticationJwtTokenFilter(): AuthTokenFilter {
-        return AuthTokenFilter()
+        return AuthTokenFilter(jwtUtils, userDetailsService)
     }
 
     @Bean
@@ -45,7 +42,7 @@ class WebSecurityConfig {
         val authProvider = DaoAuthenticationProvider()
         authProvider.setUserDetailsService(userDetailsService)
         authProvider.setPasswordEncoder(passwordEncoder())
-        authProvider.isHideUserNotFoundExceptions = false
+//        authProvider.isHideUserNotFoundExceptions = false
         return authProvider
     }
 
@@ -79,15 +76,20 @@ class WebSecurityConfig {
                 )
             }
             // Set permissions on endpoints
-            .authorizeHttpRequests(
-                Customizer { auth ->
-                    // ROLE_ is automatically prepended when using hasRole
-                    auth.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/user/**").authenticated()
-                        .requestMatchers("/api/role/**").authenticated()
-                        .anyRequest().permitAll()
-                }
-            )
+            .authorizeHttpRequests { auth ->
+                // ROLE_ is automatically prepended when using hasRole
+                auth.requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/user/**").authenticated()
+                    .requestMatchers("/api/role/**").authenticated()
+                    .requestMatchers("/api/product/**").authenticated()
+                    .requestMatchers("/api/sync/**").authenticated()
+                    .requestMatchers("/api/md/**").authenticated()
+                    .requestMatchers("/api/product-process/**").authenticated()
+                    .requestMatchers("/api/work-result/**").authenticated()
+                    .requestMatchers("/api/completion-rate/**").authenticated()
+                    .requestMatchers("/api/order/**").authenticated()
+                    .anyRequest().permitAll()
+            }
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter::class.java)
         return http.build()

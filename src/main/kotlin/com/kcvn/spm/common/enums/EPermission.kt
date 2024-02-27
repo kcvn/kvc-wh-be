@@ -40,6 +40,8 @@ enum class EPermission(val value: String) {
 
     // the - order
     V_ORDER("order.v"),
+    I_ORDER("order.i"),
+    E_ORDER("order.e"),
 
     //production plan
     V_PRODUCTTION_PLAN("product_plan.v"),

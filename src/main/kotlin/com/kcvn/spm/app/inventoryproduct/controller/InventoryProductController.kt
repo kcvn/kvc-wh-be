@@ -35,7 +35,8 @@ class InventoryProductController(
         val localDate = date.toLocalDate() // Chuyển đổi OffsetDateTime thành LocalDate
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy") // Định dạng của chuỗi
         val formattedDate = localDate.format(formatter) // Định dạng lại LocalDate thành chuỗi
-        if(data!= null && data.hasInventoryDate){
+
+        if( data!= null && data.hasInventoryDate){
             return ResponseEntity(
                 BaseResponse(data = data, message = CommonUtils.getMessage("check.inventoryDateProduct",arrayOf(formattedDate.toString()))),
                 HttpStatus.OK

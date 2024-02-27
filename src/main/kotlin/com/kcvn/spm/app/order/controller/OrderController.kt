@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.order.controller
 
+import com.kcvn.spm.app.order.payload.model.CheckWorkResultModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
@@ -53,7 +54,7 @@ class OrderController(
     }
 
     @GetMapping("/export-excel")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_PRODUCT.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: OrderSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
@@ -71,6 +72,13 @@ class OrderController(
     fun getListOrderCode(year: String?): ResponseEntity<BaseResponse<List<OrderCodeResponse>>> {
         val result = orderService.getOrderCode(year)
         val data = BaseResponse(result)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @GetMapping("/check-work-result")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
+    fun checkWorkResult(orderCode: String): ResponseEntity<BaseResponse<CheckWorkResultModel>> {
+        val data = orderService.checkWorkResult(orderCode)
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

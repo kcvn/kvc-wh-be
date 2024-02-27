@@ -38,5 +38,8 @@ class Constants {
         const val KHUNG1_MU = "MU"
         const val KHUNG1_ML = "ML"
         const val KHUNG1_SWR = "SWR"
+
+        //PROCESS_STATISTIC_CODE
+        const val PROCESS_STATISTIC_CODE_KO = "KO"
     }
 }

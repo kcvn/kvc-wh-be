@@ -3,6 +3,7 @@ package com.kcvn.spm.app.product.service
 import com.kcvn.spm.app.masterdata.payload.response.MasterDataSelectionResponse
 import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.product.payload.model.LayerImportProductModel
+import com.kcvn.spm.app.product.payload.model.ProcessGroupModel
 import com.kcvn.spm.app.product.payload.model.ProductModel
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
@@ -16,9 +17,7 @@ import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Product
-import com.kcvn.spm.repository.CompletionRateProductRepository
-import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
@@ -37,10 +36,12 @@ class ProductService(
     private val productRep: ProductRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val completionRateProductRep: CompletionRateProductRepository,
-    private val masterDataService: MasterDataService
+    private val masterDataService: MasterDataService,
+    private val productProcessRep: ProductProcessRepository,
+    private val processMasterRep: ProcessMasterRepository
 ) {
 
-    fun getListProduct(request: ProductSearchRequest?, pageable: Pageable) : PagingProductResponse {
+    fun getListProduct(request: ProductSearchRequest?, pageable: Pageable): PagingProductResponse {
         val products = productRep.getPagingList(request, pageable)
         var response = PagingProductResponse()
 
@@ -56,7 +57,7 @@ class ProductService(
         return productRep.getProductDetail(request)
     }
 
-    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
+    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
         val products = productRep.getList(request, pageable)
         val productMapping = mappingProductResponse(products)
 
@@ -154,7 +155,7 @@ class ProductService(
         return BaseResponse(response)
     }
 
-    fun downloadTemplate() : BaseResponse<FileContentModel> {
+    fun downloadTemplate(): BaseResponse<FileContentModel> {
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
 
@@ -172,7 +173,7 @@ class ProductService(
         return BaseResponse(response)
     }
 
-    fun importExcelProduct(file: MultipartFile) : BaseResponse<FileContentModel> {
+    fun importExcelProduct(file: MultipartFile): BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -185,7 +186,7 @@ class ProductService(
         val headerRow = sheet.getRow(0)
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProductTemplate.xlsx"
 
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16)){
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16)) {
             workbook.close()
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
         }
@@ -202,8 +203,7 @@ class ProductService(
 
         if (colResult == null) {
             headerRow.createCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
-        }
-        else {
+        } else {
             headerRow.getCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
         }
         val headerStyle = headerRow.getCell(0).cellStyle
@@ -298,7 +298,7 @@ class ProductService(
             return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
         }
 
-        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        val resultRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
         for (row in resultRows) {
             val rowNum = row.rowNum
             sheet.removeRow(row)
@@ -322,56 +322,77 @@ class ProductService(
 
         return BaseResponse(
             response,
-            if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
+            if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
         )
     }
 
-    private fun mappingProductResponse(products: List<Product>) : PagingProductResponse {
+    private fun mappingProductResponse(products: List<Product>): PagingProductResponse {
         val productNames = products.mapNotNull { x -> x.name }
         val completionRates = completionRateProductRep.getByProduct(productNames)
-        val productProcesses = processProcedureStructureRep.getByProductName(productNames)
-        val processGroups = productProcesses.groupBy { x -> Pair(x.productCode, x.processCode) }
+        val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
+        val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
+        val processCodes = productProcedureStructures.mapNotNull { x -> x.processCode }
+        val processMasters = processMasterRep.getByProcessCode(processCodes)
+        val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
+        val processGroups = productProcesses.filter {
+            x -> !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != Constants.PROCESS_STATISTIC_CODE_KO
+        }.map { x ->
+            val procedureStructure = productProcedureStructures.find { m -> m.id == x.processProcedureStructureId }
+            if (procedureStructure == null) ProcessGroupModel()
+            else ProcessGroupModel(procedureStructure.productCode, x.processStatisticCode)
+        }.filter { x -> !x.processStatisticCode.isNullOrEmpty() && !x.productName.isNullOrEmpty() }
+        .groupBy { x -> Pair(x.productName, x.processStatisticCode) }
 
         val response = PagingProductResponse()
-        response.data = products.map { x -> ProductModel(
-            id = x.id,
-            name = x.name,
-            exportType = x.exportType,
-            size = x.size,
-            frame_1 = x.frame_1,
-            frame_2 = x.frame_2,
-            mold = x.mold,
-            productLine = x.productLine,
-            srNosr = x.srNosr,
-            pcsSh = x.pcsSh,
-            shBlock = x.shBlock,
-            layerCount = x.layerCount,
-            ringJig = x.ringJig,
-            snapMold = x.snapMold,
-            tapeCommon = x.tapeCommon,
-            tapeType = x.tapeType,
-            completionRate = completionRates.find { m -> m.productName == x.name }?.rate?.toDouble(),
-            lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> KeyValueResponse(m.key.second, m.value.size.toString()) }
-        ) }
+        response.data = products.map { x ->
+            ProductModel(
+                id = x.id,
+                name = x.name,
+                exportType = x.exportType,
+                size = x.size,
+                frame_1 = x.frame_1,
+                frame_2 = x.frame_2,
+                mold = x.mold,
+                productLine = x.productLine,
+                srNosr = x.srNosr,
+                pcsSh = x.pcsSh,
+                shBlock = x.shBlock,
+                layerCount = x.layerCount,
+                ringJig = x.ringJig,
+                snapMold = x.snapMold,
+                tapeCommon = x.tapeCommon,
+                tapeType = x.tapeType,
+                completionRate = completionRates.find { m -> m.productName == x.name }?.rate?.toDouble(),
+                lstProcess = processGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> KeyValueResponse(m.key.second, m.value.size.toString()) }
+            )
+        }
 
-        response.columns = productProcesses.map { x -> KeyValueResponse(x.processCode,x.processCode) }.distinct()
+        response.columns = productProcesses.filter {
+            x -> !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != Constants.PROCESS_STATISTIC_CODE_KO
+        }.map { x ->
+            val procedureStructure = productProcedureStructures.find { m -> m.id == x.processProcedureStructureId }
+            if (procedureStructure == null) KeyValueResponse()
+            else {
+                val process = processMasters.find { m -> m.processCode == procedureStructure.processCode }
+                if (process == null) KeyValueResponse()
+                else KeyValueResponse(x.processStatisticCode, process.processName)
+            }
+        }.filter { x -> !x.key.isNullOrEmpty() && !x.value.isNullOrEmpty() }.distinct()
 
         return response
     }
 
-    private fun validateImportProduct(row: Row, headerRow: Row, masterData: MasterDataSelectionResponse) : MutableList<String> {
+    private fun validateImportProduct(row: Row, headerRow: Row, masterData: MasterDataSelectionResponse): MutableList<String> {
         val messageResults = mutableListOf<String>()
         if (ExcelHelper.getCellValue(row, 0).isEmpty()) {
             messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
-        }
-        else {
+        } else {
             if (ExcelHelper.getCellValue(row, 0).length != 12)
                 messageResults.add(CommonUtils.getMessage("validate.excel.length", arrayOf(ExcelHelper.getCellValue(headerRow, 0), "12")))
         }
         if (ExcelHelper.getCellValue(row, 1).isEmpty()) {
             messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
-        }
-        else {
+        } else {
             if (!masterData.exportTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) })
                 messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
         }
@@ -380,22 +401,19 @@ class ProductService(
         }
         if (ExcelHelper.getCellValue(row, 3).isEmpty()) {
             messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
-        }
-        else {
+        } else {
             if (!masterData.frame1Selections.any { x -> x.label == ExcelHelper.getCellValue(row, 3) })
                 messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
         }
         if (ExcelHelper.getCellValue(row, 4).isEmpty()) {
             messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
-        }
-        else {
+        } else {
             if (!masterData.frame2Selections.any { x -> x.label == ExcelHelper.getCellValue(row, 4) })
                 messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
         }
         if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
             messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
-        }
-        else {
+        } else {
             if (!masterData.moldSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 5) })
                 messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
         }
@@ -422,8 +440,7 @@ class ProductService(
         }
         if (ExcelHelper.getCellValue(row, 15).isEmpty()) {
             messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
-        }
-        else {
+        } else {
             if (!masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 15) }) {
                 messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
             }
@@ -433,15 +450,17 @@ class ProductService(
         if (frame1.isNotEmpty() && mold.isNotEmpty()) {
             when (frame1) {
                 Constants.KHUNG1_ML -> {
-                    if(mold != Constants.KHUONDUC_ML)
+                    if (mold != Constants.KHUONDUC_ML)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
                 }
+
                 Constants.KHUNG1_MU -> {
-                    if(mold != Constants.KHUONDUC_KVC && mold != Constants.KHUONDUC_SKE)
+                    if (mold != Constants.KHUONDUC_KVC && mold != Constants.KHUONDUC_SKE)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
                 }
+
                 Constants.KHUNG1_SWR -> {
-                    if(mold != Constants.KHUONDUC_SWR && mold != Constants.KHUONDUC_SUR)
+                    if (mold != Constants.KHUONDUC_SWR && mold != Constants.KHUONDUC_SUR)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
                 }
             }

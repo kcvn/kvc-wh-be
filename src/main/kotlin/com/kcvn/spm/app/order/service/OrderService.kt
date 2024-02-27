@@ -463,7 +463,7 @@ class OrderService(
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         return BaseResponse(CheckWorkResultModel(
             hasWorkResult,
-            if (hasWorkResult) CommonUtils.getMessage("validate.order.hasWorkResult", arrayOf(workResult?.summaryResultDate!!.format(formatter))) else null
+            if (hasWorkResult) CommonUtils.getMessage("import.order.messageCheckWorkResult", arrayOf(workResult?.summaryResultDate!!.format(formatter))) else null
         ))
     }
 

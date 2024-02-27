@@ -1,6 +1,8 @@
 package com.kcvn.spm.common.helper
 
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 class DateTimeHelper {
     companion object {
@@ -21,6 +23,13 @@ class DateTimeHelper {
                 12 -> LocalDateTime.of(year, 10, 1, 0, 0)
                 else -> null
             }
+        }
+
+        fun convertOffSetDateTime(date: OffsetDateTime) : String? {
+            val localDate = date.toLocalDate() // Chuyển đổi OffsetDateTime thành LocalDate
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy") // Định dạng của chuỗi
+            val formattedDate = localDate.format(formatter) // Định dạng lại LocalDate thành chuỗi
+            return formattedDate
         }
     }
 }

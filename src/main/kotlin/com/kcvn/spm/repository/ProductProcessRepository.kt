@@ -3,6 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.app.productprocess.payload.response.ImportProcessResponse
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
@@ -96,14 +97,16 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .from(PROCESS_PROCEDURE_STRUCTURE
                 .leftJoin(PRODUCT_PROCESS)
                 .on(PROCESS_PROCEDURE_STRUCTURE.ID
-                    .eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID))
+                    .eq(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)
+                    .and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
                 .leftJoin(PROCESS_MASTER)
                 .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
-                    .eq(PROCESS_MASTER.PROCESS_CODE))
+                    .eq(PROCESS_MASTER.PROCESS_CODE)
+                    .and(PROCESS_MASTER.IS_DELETED.eq(false)))
                 )
             .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(productName)
-               // .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-               //.and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+               //.and(PRODUCT_PROCESS.IS_DELETED.eq(false))
             )
             .orderBy(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE)
             .fetchInto(ProductProcessResponse::class.java)
@@ -120,7 +123,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, request.processConvertCode)
             .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
             .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
-            .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(request.processProcedureStructureId).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .returningResult(PRODUCT_PROCESS)
             .fetchAnyInto(ProductProcess::class.java);
@@ -141,7 +144,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .values(request?.processConvertCode,
                 request?.processInventoryCode,
                 request?.processStatisticCode,
-                CommonUtils.loggedInUser() ?: "SYSTEM",
+                CommonUtils.loggedInUser() ?: Constants.SYSTEM,
                 request?.processProcedureStructureId)
             .returningResult(PRODUCT_PROCESS).fetchInto(ProductProcess::class.java).firstOrNull()
     }

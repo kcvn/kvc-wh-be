@@ -14,7 +14,7 @@ class UserRequest {
     @field:NotBlank(message = "user.password.notblank")
     @field:Size(min = 6, message = "user.password.size")
     @field:Pattern(
-        regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=.])(?=\\S+\$).{6,}\$",
+        regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=.*])(?=\\S+\$).{6,}\$",
         message = "user.password.pattern"
     )
     var password: @NotBlank String? = null

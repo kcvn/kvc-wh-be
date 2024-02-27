@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
@@ -25,7 +26,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .set(COMPLETION_RATE_PROCESS_PRODUCT.RATE, data.rate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE, data.layerCode)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE, data.expirationDate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
             .set(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE, data.processCode)
@@ -98,7 +99,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             product.effectiveDate != null && product.effectiveDate == maxEffectiveDate
         }
 
-        val total = context.fetchCount(COMPLETION_RATE_PROCESS_PRODUCT, condition)
+        val total = filteredList.count()
 
         return Pair(filteredList, total)
     }

@@ -41,5 +41,8 @@ class Constants {
 
         //PROCESS_STATISTIC_CODE
         const val PROCESS_STATISTIC_CODE_KO = "KO"
+	
+	// SYSTEM
+        const val SYSTEM = "SYSTEM"
     }
 }

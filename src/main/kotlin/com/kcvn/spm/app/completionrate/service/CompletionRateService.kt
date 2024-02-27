@@ -218,6 +218,12 @@ class CompletionRateService(
                         } else if (currentDate > effectiveDate) {
                             errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                         } else {
+                            val completionRateUpdate =
+                                completionRateProductRepository.getCompletionRateProductWithMaxEffectivedateByName(name)
+                            if (completionRateUpdate != null) {
+                                completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
+                                completionRateProductRepository.update(completionRateUpdate)
+                            }
                             val compleRateProduct = CompletionRateProduct(
                                 productName = name,
                                 rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
@@ -226,13 +232,7 @@ class CompletionRateService(
 
                             )
                             completionRateProductRepository.add(compleRateProduct)
-                            val completionRateUpdate =
-                                completionRateProductRepository.getCompletionRateProductWithMaxEffectivedateByName(name)
-                            if (completionRateUpdate != null) {
-                                completionRateUpdate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                                completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
-                                completionRateProductRepository.update(completionRateUpdate)
-                            }
+
                             count++
                         }
                     }
@@ -460,6 +460,13 @@ class CompletionRateService(
                             errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                         }
                         else{
+                            val completionRateUpdate =
+                                completionRateProcessRepository.getCompletionRateProcessWithMaxEffectivedateByName(key)
+
+                            if (completionRateUpdate != null) {
+                                completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
+                                completionRateProcessRepository.update(completionRateUpdate)
+                            }
                             val compleRateProduct = CompletionRateProcess(
                                 key = key,
                                 rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
@@ -469,15 +476,7 @@ class CompletionRateService(
                                 effectiveDate = effectiveDate
                             )
                             completionRateProcessRepository.add(compleRateProduct)
-                            val completionRateUpdate =
-                                completionRateProcessRepository.getCompletionRateProcessWithMaxEffectivedateByName(key)
 
-                            if (completionRateUpdate != null) {
-                                completionRateUpdate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                                completionRateUpdate.effectiveDate = effectiveDate
-                                completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
-                                completionRateProcessRepository.update(completionRateUpdate)
-                            }
                             count++
                         }
                     }
@@ -650,6 +649,13 @@ class CompletionRateService(
                             errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                         }
                         else{
+                            val completionRateUpdate =
+                                completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectivedateByName(key)
+                            if (completionRateUpdate != null) {
+                                completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
+                                completionRateProcessProductRepository.update(completionRateUpdate)
+                            }
+
                             val compleRateProcessProduct = CompletionRateProcessProduct(
                                 key = key,
                                 rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
@@ -660,14 +666,7 @@ class CompletionRateService(
                                 effectiveDate = effectiveDate
                             )
                             completionRateProcessProductRepository.add(compleRateProcessProduct)
-                            val completionRateUpdate =
-                                completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectivedateByName(key)
-                            if (completionRateUpdate != null) {
-                                completionRateUpdate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                                completionRateUpdate.effectiveDate = effectiveDate
-                                completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
-                                completionRateProcessProductRepository.update(completionRateUpdate)
-                            }
+
                             count++
                         }
 

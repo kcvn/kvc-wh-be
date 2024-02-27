@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -126,13 +127,13 @@ class OrderRepository(
         startTransaction()
         try {
             val orderInsert = context.insertInto(ORDER, ORDER.ORDER_CODE, ORDER.START_DATE, ORDER.END_DATE, ORDER.VERSION, ORDER.CREATED_BY)
-                .values(order.orderCode, order.startDate, order.endDate, order.version, CommonUtils.loggedInUser() ?: "SYSTEM")
+                .values(order.orderCode, order.startDate, order.endDate, order.version, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .returningResult(ORDER).fetchInto(Order::class.java).firstOrNull()
 
             if (orderInsert != null) {
                 for (orderDetail in orderDetails) {
                     context.insertInto(ORDER_DETAIL, ORDER_DETAIL.ORDER_ID, ORDER_DETAIL.PRODUCT_ID, ORDER_DETAIL.ORDER_DATE, ORDER_DETAIL.QUANTITY, ORDER_DETAIL.CREATED_BY)
-                        .values(orderInsert.id, orderDetail.productId, orderDetail.orderDate, orderDetail.quantity, CommonUtils.loggedInUser() ?: "SYSTEM")
+                        .values(orderInsert.id, orderDetail.productId, orderDetail.orderDate, orderDetail.quantity, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                         .returningResult(ORDER_DETAIL).fetchInto(OrderDetail::class.java).firstOrNull()
                 }
             }

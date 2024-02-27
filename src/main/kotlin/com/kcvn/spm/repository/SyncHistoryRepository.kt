@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.SyncHistory
 import com.kcvn.spm.model.tables.references.SYNC_HISTORY
@@ -22,7 +23,7 @@ class SyncHistoryRepository (private val context: DSLContext) {
             SYNC_HISTORY.SOURCE, SYNC_HISTORY.DESTINATION, SYNC_HISTORY.TYPE, SYNC_HISTORY.CREATED_BY
         ).values(
             data.source, data.destination, data.type,
-            CommonUtils.loggedInUser() ?: "SYSTEM"
+            CommonUtils.loggedInUser() ?: Constants.SYSTEM
         ).returningResult(SYNC_HISTORY).fetchInto(SyncHistory::class.java).firstOrNull()
     }
 

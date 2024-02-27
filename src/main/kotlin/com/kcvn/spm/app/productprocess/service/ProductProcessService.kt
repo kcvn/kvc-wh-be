@@ -73,7 +73,7 @@ class ProductProcessService(
             if(item.processId != null) {
                 val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                     ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
-                if (item.processInventoryCode != null) {
+                if (!item.processInventoryCode.isNullOrEmpty()) {
                     val productProcessAfter = request.listProcess!!.find { it.idx == item.idx + 1 }
                     val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
                     if ((productProcessAfter?.processCode!!.isNotEmpty() && productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)

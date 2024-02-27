@@ -1,9 +1,12 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
+import com.kcvn.spm.app.product.payload.response.ProductDetailResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
 import com.kcvn.spm.model.tables.pojos.Product
+import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PRODUCT
 import com.kcvn.spm.model.tables.references.PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -13,6 +16,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlin.math.max
 
 
 @Repository
@@ -72,11 +76,16 @@ class ProductRepository (private val context: DSLContext) : SortingRepository(){
 
     }
 
-    fun getProductDetail(request: String?) : Product? {
-        val data = context.selectFrom((PRODUCT))
-            .where(PRODUCT.NAME.eq(request).and(PRODUCT.IS_DELETED.eq(false)))
-            .orderBy(PRODUCT.LAYER_COUNT)
-            .fetchAnyInto(Product::class.java)
+    fun getProductDetail(request: String?) : ProductDetailResponse? {
+        val data = context.selectFrom(PRODUCT
+            .leftJoin(COMPLETION_RATE_PRODUCT)
+            .on(PRODUCT.NAME.eq(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)))
+            .where(PRODUCT.NAME.eq(request)
+                .and(PRODUCT.IS_DELETED.eq(false))
+                )
+            .orderBy(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.desc())
+            .limit(1)
+            .fetchAnyInto(ProductDetailResponse::class.java)
         return data;
     }
 

@@ -11,6 +11,7 @@ import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
@@ -67,24 +68,53 @@ class ProductProcessService(
 
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest) : List<ProductProcess?> {
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
+
         for (item in request.listProcess!!){
-            val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
-                ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
-            if (item.processInventoryCode != null){
-                val productProcessAfter =  request.listProcess!!.find {  it.idx == item.idx + 1 }
-                val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
-                if((productProcessAfter?.processCode!!.isNotEmpty() &&  productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
-                    || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode ))
-                {
-                    productProcess.processStatisticCode = item.processStatisticCode;
-                }else {
-                    throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+            if(item.processId!!.isNotEmpty()) {
+                val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
+                    ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
+                if (item.processInventoryCode != null) {
+                    val productProcessAfter = request.listProcess!!.find { it.idx == item.idx + 1 }
+                    val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
+                    if ((productProcessAfter?.processCode!!.isNotEmpty() && productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
+                        || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode)
+                    ) {
+                        productProcess.processInventoryCode = item.processInventoryCode;
+                    } else {
+                        throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+                    }
                 }
+                productProcess.processConvertCode = item.processConvertCode;
+                productProcess.processStatisticCode = item.processStatisticCode;
+                val data = productProcessRep.updateProcessDetail(productProcess);
+                dataResult.add(data)
+            }else {
+                /// tìm id bảng structure để thêm vào bảng process
+                val requestProcessProcedureStructure = ImportProcessRequest()
+                requestProcessProcedureStructure.productName = item.productName
+                requestProcessProcedureStructure.layerCode = item.layerCode
+                requestProcessProcedureStructure.processCode = item.processCode
+                val queryProcessProcedureStructure = processProcedureRep.getByFilterProcessStructure(requestProcessProcedureStructure)
+                /// tạo values bảng product process
+                val requestAddProcess = ProductProcess()
+                requestAddProcess.processProcedureStructureId = queryProcessProcedureStructure?.id
+                requestAddProcess.processConvertCode = item.processConvertCode
+                requestAddProcess.processStatisticCode = item.processStatisticCode
+                /// check điều kiện mã tồn kho khi khác null
+                if (item.processInventoryCode != null) {
+                    val productProcessAfter = request.listProcess!!.find { it.idx == item.idx + 1 }
+                    val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
+                    if ((productProcessAfter?.processCode!!.isNotEmpty() && productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
+                        || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode)
+                    ) {
+                        requestAddProcess.processInventoryCode = item.processInventoryCode;
+                    } else {
+                        throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+                    }
+                }
+                val data = productProcessRep.addProductProcess(requestAddProcess)
+                dataResult.add(data)
             }
-            productProcess.processConvertCode = item.processConvertCode;
-            productProcess.processInventoryCode = item.processInventoryCode;
-            val data = productProcessRep.updateProcessDetail(productProcess);
-            dataResult.add(data)
         }
         return  dataResult
     }

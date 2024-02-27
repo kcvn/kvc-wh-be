@@ -6,6 +6,7 @@ import com.kcvn.spm.app.product.payload.model.LayerImportProductModel
 import com.kcvn.spm.app.product.payload.model.ProductModel
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
+import com.kcvn.spm.app.product.payload.response.ProductDetailResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
@@ -51,7 +52,7 @@ class ProductService(
         return response
     }
 
-    fun getProductDetail(request: String?): Product? {
+    fun getProductDetail(request: String?): ProductDetailResponse? {
         return productRep.getProductDetail(request)
     }
 

@@ -70,7 +70,7 @@ class ProductProcessService(
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
 
         for (item in request.listProcess!!){
-            if(item.processId!!.isNotEmpty()) {
+            if(item.processId != null) {
                 val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                     ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
                 if (item.processInventoryCode != null) {

@@ -1,4 +1,4 @@
-package com.kcvn.spm.common.helper.datetimehelper
+package com.kcvn.spm.common.helper
 
 import java.time.LocalDateTime
 

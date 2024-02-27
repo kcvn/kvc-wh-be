@@ -1,13 +1,14 @@
 package com.kcvn.spm.app.order.service
 
+import com.kcvn.spm.app.order.payload.model.CheckWorkResultModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.helper.datetimehelper.DateTimeHelper
-import com.kcvn.spm.common.helper.excelhelper.ExcelHelper
+import com.kcvn.spm.common.helper.DateTimeHelper
+import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -44,10 +45,10 @@ class OrderService(
     ): PagingOrderResponse {
         val calendarResponses = mutableListOf<CalendarValueResponse>()
         if (request != null) {
-            if (request.filterType != null && request.filterType ==  1&& request.orderCode !=null) {
+            if (request.filterType != null && request.filterType == 1 && request.orderCode != null) {
 
                 val order = request.version?.let { orderRep.getByOrderByCodeAndVersion(request.orderCode!!, it) }
-                if(order !=null){
+                if (order != null) {
                     request.startDate = order.startDate
                     request.endDate = order.endDate
                 }
@@ -74,9 +75,9 @@ class OrderService(
         pagingOrderResponse.columns = calendarResponses
         val listOrderResponse = orderRep.getPaginatedOrder(request, pageable)
         pagingOrderResponse.data = listOrderResponse.first
-        var count = 0;
+        var count = 0
         for (item in listOrderResponse.first) {
-            var calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
+            val calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
             item.quantityByCalendars = calender
             if (calender != null) {
                 for (number in calender) {
@@ -166,10 +167,10 @@ class OrderService(
                     row.createCell(8).setCellValue("v${item.version}.0")
                     row.getCell(8).cellStyle = style
 
-                    for (odetail in item.quantityByCalendars!!) {
-                        val check = keyValueList.find { x -> x.key == odetail.key }
+                    for (orderDetail in item.quantityByCalendars!!) {
+                        val check = keyValueList.find { x -> x.key == orderDetail.key }
                         if (check != null) {
-                            check.value?.let { row.createCell(it.toInt()).setCellValue(odetail.value) }
+                            check.value?.let { row.createCell(it.toInt()).setCellValue(orderDetail.value) }
                             check.value?.let {
                                 val cell = row.getCell(it.toInt())
                                 cell?.cellStyle = style
@@ -184,10 +185,7 @@ class OrderService(
         workbook.write(byteArrayOutputStream)
         val excelBytes = byteArrayOutputStream.toByteArray()
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage(
-                "fileName.exportOrder",
-                arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))
-            ),
+            fileName = CommonUtils.getMessage("fileName.exportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -435,6 +433,22 @@ class OrderService(
         )
 
         return BaseResponse(response)
+    }
+
+    fun checkWorkResult(orderCode: String) : BaseResponse<CheckWorkResultModel> {
+        val orderExist = orderRep.getByOrderCode(orderCode)
+            ?: throw BusinessException(CommonUtils.getMessage("validate.orderNotExist"))
+
+        var hasWorkResult = false
+        val workResult = workResultRep.getMaxByDate(orderExist.startDate!!, orderExist.endDate!!)
+        if (workResult?.summaryResultDate != null) {
+            hasWorkResult = true
+        }
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        return BaseResponse(CheckWorkResultModel(
+            hasWorkResult,
+            if (hasWorkResult) CommonUtils.getMessage("validate.order.hasWorkResult", arrayOf(workResult?.summaryResultDate!!.format(formatter))) else null
+        ))
     }
 
     private fun checkContinuousDate(headerRow: Row, startCol: Int, endCol: Int): Boolean {

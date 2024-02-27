@@ -10,6 +10,7 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -21,6 +22,7 @@ class QuantityReportController(
     private val quantityReportService: QuantityReportService,
 ) {
     @PostMapping("/calculate-quantity")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_RESULT.value) || hasRole('ADMIN')")
     fun CalculateQuantity(
         request: CalculateQuantityRequest,
         @PageableDefault(size = 10, page = 0)
@@ -32,6 +34,7 @@ class QuantityReportController(
     }
 
     @GetMapping("/locked-quantity")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_RESULT.value) || hasRole('ADMIN')")
     fun LockedQuantity(request: String) : ResponseEntity<BaseResponse<Boolean>> {
         val result = quantityReportService.lockedQuantity(request)
         return ResponseEntity<BaseResponse<Boolean>>(result,HttpStatus.OK)

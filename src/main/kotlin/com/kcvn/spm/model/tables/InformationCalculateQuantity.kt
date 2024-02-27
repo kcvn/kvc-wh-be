@@ -5,6 +5,7 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
+import com.kcvn.spm.model.keys.INFORMATION_CALCULATE_QUANTITY_PK
 import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
 
 import java.math.BigDecimal
@@ -16,12 +17,13 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row12
+import org.jooq.Row15
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
+import org.jooq.UniqueKey
 import org.jooq.impl.DSL
 import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
@@ -130,6 +132,22 @@ open class InformationCalculateQuantity(
      */
     val CREATED_BY: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(50), this, "")
 
+    /**
+     * The column
+     * <code>public.information_calculate_quantity.updated_date</code>.
+     */
+    val UPDATED_DATE: TableField<InformationCalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
+
+    /**
+     * The column <code>public.information_calculate_quantity.updated_by</code>.
+     */
+    val UPDATED_BY: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.information_calculate_quantity.is_deleted</code>.
+     */
+    val IS_DELETED: TableField<InformationCalculateQuantityRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
     private constructor(alias: Name, aliased: Table<InformationCalculateQuantityRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<InformationCalculateQuantityRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -153,6 +171,7 @@ open class InformationCalculateQuantity(
 
     constructor(child: Table<out Record>, key: ForeignKey<out Record, InformationCalculateQuantityRecord>): this(Internal.createPathAlias(child, key), child, key, INFORMATION_CALCULATE_QUANTITY, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
+    override fun getPrimaryKey(): UniqueKey<InformationCalculateQuantityRecord> = INFORMATION_CALCULATE_QUANTITY_PK
     override fun `as`(alias: String): InformationCalculateQuantity = InformationCalculateQuantity(DSL.name(alias), this)
     override fun `as`(alias: Name): InformationCalculateQuantity = InformationCalculateQuantity(alias, this)
     override fun `as`(alias: Table<*>): InformationCalculateQuantity = InformationCalculateQuantity(alias.getQualifiedName(), this)
@@ -173,18 +192,18 @@ open class InformationCalculateQuantity(
     override fun rename(name: Table<*>): InformationCalculateQuantity = InformationCalculateQuantity(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row12 type methods
+    // Row15 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row12<String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?> = super.fieldsRow() as Row12<String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?>
+    override fun fieldsRow(): Row15<String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row15<String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

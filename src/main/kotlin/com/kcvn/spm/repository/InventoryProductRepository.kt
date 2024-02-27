@@ -8,6 +8,7 @@ import com.kcvn.spm.model.tables.pojos.InventoryProduct
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.model.tables.references.*
+import org.apache.commons.lang3.StringUtils.substring
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -44,7 +45,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 .eq(record.processProcedureStructureId)).execute()
     }
 
-    fun finByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
+    fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
         var condition: Condition = DSL.noCondition()
 
         if(request != null){
@@ -52,7 +53,8 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 condition = condition.and(INVENTORY_PRODUCT.ORDER_CODE.contains(request.orderCode))
             }
             if(!request.productName.isNullOrEmpty()){
-                condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.contains(request.productName))
+                val productNameStep12 = substring(request.productName,1,12)
+                condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.contains(productNameStep12))
             }
             if(!request.listProcessGroup.isNullOrEmpty()){
                 val processGroupCodes = request.listProcessGroup!!.split(",")

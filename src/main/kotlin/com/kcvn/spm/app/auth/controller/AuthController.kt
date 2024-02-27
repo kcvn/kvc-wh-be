@@ -26,34 +26,25 @@ import java.util.*
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
-        private val authenticationManager: AuthenticationManager,
-        private val jwtUtils: JwtUtils,
-        private val userService: UserService
+    private val authenticationManager: AuthenticationManager,
+    private val jwtUtils: JwtUtils,
+    private val userService: UserService
 ) {
     @PostMapping("/signin")
     fun authenticateUser(@Valid @RequestBody loginRequest: LoginRequest?): ResponseEntity<*> {
-            val authentication: Authentication = authenticationManager.authenticate(
-                    UsernamePasswordAuthenticationToken(loginRequest?.username, loginRequest?.password)
-            )
-            SecurityContextHolder.getContext().authentication = authentication
-            val jwt = jwtUtils.generateJwtToken(authentication)
-            val userDetails = authentication.principal as UserDetailsImpl
-            return ResponseEntity.ok(
-                    JwtResponse(
-                            jwt,
-                            userDetails.getId(),
-                            userDetails.username
-                    )
-            )
+        val authentication: Authentication = authenticationManager.authenticate(
+            UsernamePasswordAuthenticationToken(loginRequest?.username, loginRequest?.password)
+        )
+        SecurityContextHolder.getContext().authentication = authentication
+        val jwt = jwtUtils.generateJwtToken(authentication)
+        val userDetails = authentication.principal as UserDetailsImpl
+        return ResponseEntity.ok(JwtResponse(jwt, userDetails.getId(), userDetails.username))
     }
 
     @PostMapping("/forgot-password")
     fun forgotPassword(@Valid @RequestBody request: ForgotPasswordRequest?): ResponseEntity<*> {
         userService.createPasswordResetToken(request!!.email!!, request.url!!)
-        return ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("action.succeeded")),
-                HttpStatus.OK
-        )
+        return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("action.succeeded")), HttpStatus.OK)
     }
 
     @PostMapping("/reset-password")
@@ -61,9 +52,6 @@ class AuthController(
         userService.validatePasswordResetToken(passwordRequest.token!!)
         val user = userService.getUserByPasswordResetToken(passwordRequest.token!!)
         userService.updatePassword(user.id!!, passwordRequest.password!!)
-        return ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("action.succeeded")),
-                HttpStatus.OK
-        )
+        return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("action.succeeded")), HttpStatus.OK)
     }
 }

@@ -20,6 +20,7 @@ import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
+import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
@@ -42,6 +43,7 @@ import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
 import com.kcvn.spm.model.tables.records.InventoryProductRecord
 import com.kcvn.spm.model.tables.records.OrderDetailRecord
 import com.kcvn.spm.model.tables.records.OrderRecord
+import com.kcvn.spm.model.tables.records.ProcessGroupRecord
 import com.kcvn.spm.model.tables.records.ProcessMasterRecord
 import com.kcvn.spm.model.tables.records.ProcessProcedureStructureRecord
 import com.kcvn.spm.model.tables.records.ProductProcessRecord
@@ -76,6 +78,7 @@ val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityRec
 val INVENTORY_PRODUCT_PKEY: UniqueKey<InventoryProductRecord> = Internal.createUniqueKey(InventoryProduct.INVENTORY_PRODUCT, DSL.name("inventory_product_pkey"), arrayOf(InventoryProduct.INVENTORY_PRODUCT.ID), true)
 val ORDER_PKEY: UniqueKey<OrderRecord> = Internal.createUniqueKey(Order.ORDER, DSL.name("order_pkey"), arrayOf(Order.ORDER.ID), true)
 val ORDER_DETAIL_PKEY: UniqueKey<OrderDetailRecord> = Internal.createUniqueKey(OrderDetail.ORDER_DETAIL, DSL.name("order_detail_pkey"), arrayOf(OrderDetail.ORDER_DETAIL.ID), true)
+val PROCESS_GROUP_PKEY: UniqueKey<ProcessGroupRecord> = Internal.createUniqueKey(ProcessGroup.PROCESS_GROUP, DSL.name("process_group_pkey"), arrayOf(ProcessGroup.PROCESS_GROUP.ID), true)
 val PROCESS_MASTER_PKEY: UniqueKey<ProcessMasterRecord> = Internal.createUniqueKey(ProcessMaster.PROCESS_MASTER, DSL.name("process_master_pkey"), arrayOf(ProcessMaster.PROCESS_MASTER.ID), true)
 val PROCESS_PROCEDURE_STRUCTURE_PKEY: UniqueKey<ProcessProcedureStructureRecord> = Internal.createUniqueKey(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE, DSL.name("process_procedure_structure_pkey"), arrayOf(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE.ID), true)
 val PRODUCT_PKEY: UniqueKey<ProductRecord> = Internal.createUniqueKey(Product.PRODUCT, DSL.name("product_pkey"), arrayOf(Product.PRODUCT.ID), true)

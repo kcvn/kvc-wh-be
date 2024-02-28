@@ -75,9 +75,9 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         return  Pair(productProcessQuery, totalCount);
     }
 
-    fun getByProduct(productNames: List<String>) : List<ProductProcess> {
+    fun getByProcessProcedureStructure(procedureStructureIds: List<String>) : List<ProductProcess> {
         return context.selectFrom(PRODUCT_PROCESS)
-            //.where(PRODUCT_PROCESS.PRODUCT_NAME.`in`(productNames).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+            .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.`in`(procedureStructureIds).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(ProductProcess::class.java)
     }
 

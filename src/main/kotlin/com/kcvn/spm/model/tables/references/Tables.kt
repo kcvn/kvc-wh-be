@@ -20,6 +20,7 @@ import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
+import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
@@ -108,6 +109,11 @@ val ORDER: Order = Order.ORDER
  * The table <code>public.order_detail</code>.
  */
 val ORDER_DETAIL: OrderDetail = OrderDetail.ORDER_DETAIL
+
+/**
+ * The table <code>public.process_group</code>.
+ */
+val PROCESS_GROUP: ProcessGroup = ProcessGroup.PROCESS_GROUP
 
 /**
  * The table <code>public.process_master</code>.

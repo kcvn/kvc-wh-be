@@ -402,17 +402,19 @@ class OrderService(
             row.getCell(colIndexResult).setCellValue(result)
             row.getCell(colIndexResult).cellStyle = style
 
-            if (isBreak) break
+            //if (isBreak) break
         }
 
-        val order = Order(
-            orderCode = orderCodeSelected ?: orderCode,
-            startDate = startDateUtc,
-            endDate = endDateUtc,
-            version = version
-        )
+        if (!isBreak) {
+            val order = Order(
+                orderCode = orderCodeSelected ?: orderCode,
+                startDate = startDateUtc,
+                endDate = endDateUtc,
+                version = version
+            )
 
-        orderRep.addOrder(order, orderDetails)
+            orderRep.addOrder(order, orderDetails)
+        }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)

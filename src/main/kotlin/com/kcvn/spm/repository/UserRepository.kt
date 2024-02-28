@@ -26,9 +26,11 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
         if (keyword != null) {
             condition = condition.and(
                 AUTH_USER.USERNAME.ne("admin")
-                    .and(AUTH_USER.USERNAME.contains(keyword)
-                        .or(AUTH_USER.FULL_NAME.contains(keyword))
-                        .or(AUTH_USER.FULL_NAME_UNSIGNED.contains(keyword)))
+                    .and(AUTH_USER.USERNAME.containsIgnoreCase(keyword)
+                        .or(AUTH_USER.FULL_NAME.containsIgnoreCase(keyword))
+                        .or(AUTH_USER.FULL_NAME_UNSIGNED.containsIgnoreCase(keyword))
+
+                    )
             )
         }else {
             condition = condition.and(AUTH_USER.USERNAME.ne("admin"))

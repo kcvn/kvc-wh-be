@@ -20,6 +20,7 @@ import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
+import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
@@ -128,6 +129,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val ORDER_DETAIL: OrderDetail get() = OrderDetail.ORDER_DETAIL
 
     /**
+     * The table <code>public.process_group</code>.
+     */
+    val PROCESS_GROUP: ProcessGroup get() = ProcessGroup.PROCESS_GROUP
+
+    /**
      * The table <code>public.process_master</code>.
      */
     val PROCESS_MASTER: ProcessMaster get() = ProcessMaster.PROCESS_MASTER
@@ -176,6 +182,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         InventoryProduct.INVENTORY_PRODUCT,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,
+        ProcessGroup.PROCESS_GROUP,
         ProcessMaster.PROCESS_MASTER,
         ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE,
         Product.PRODUCT,

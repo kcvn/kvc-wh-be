@@ -1,18 +1,23 @@
 package com.kcvn.spm.common.helper
 
 import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.DateUtil
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
+import java.text.SimpleDateFormat
 
 class ExcelHelper {
     companion object {
-        fun getCellValue(row: Row, colIdx: Int): String {
+        fun getCellValue(row: Row, colIdx: Int, format: String? = null): String {
             try {
                 val cell = row.getCell(colIdx)
+                if (!format.isNullOrEmpty() && cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                    val dateFormat = SimpleDateFormat(format)
+                    val date = cell.dateCellValue
+                    return dateFormat.format(date)
+                }
                 return when (cell.cellType) {
                     CellType.STRING -> cell.stringCellValue
                     CellType.NUMERIC -> cell.numericCellValue.toString()
@@ -60,22 +65,12 @@ class ExcelHelper {
             return isEmpty
         }
 
-        fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int, formats: Array<String>) : Boolean {
+        fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int) : Boolean {
             for (i in startCol until endCol+1) {
-                val cellValue = getCellValue(headerRowImport, i)
-                if (cellValue.isEmpty()) return false
-                var isDate = false
-                for (format in formats) {
-                    val formatter = DateTimeFormatter.ofPattern(format)
-                    try {
-                        formatter.parse(cellValue)
-                        isDate = true
-                        break
-                    } catch (e: DateTimeParseException) {
-                        continue
-                    }
+                val cellValue = headerRowImport.getCell(i)
+                if (!(cellValue.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellValue))) {
+                    return false
                 }
-                if (!isDate) return false
             }
             return true
         }

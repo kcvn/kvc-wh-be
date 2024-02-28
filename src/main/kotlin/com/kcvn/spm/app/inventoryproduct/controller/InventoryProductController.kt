@@ -15,6 +15,7 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
@@ -45,18 +46,21 @@ class InventoryProductController(
     }
 
     @GetMapping("/download-template-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = inventoryProductService.downloadTemplate()
         return ResponseEntity(data, HttpStatus.OK)
     }
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun importCsv(date:OffsetDateTime ,@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = inventoryProductService.importExelInventoryProduct(date,file)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun  getAllInventoryProduct (
         request: InventoryProductRequest,
         @PageableDefault(size = 10, page = 0)
@@ -74,6 +78,7 @@ class InventoryProductController(
     }
 
     @GetMapping("/export-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_INVENTORY.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: InventoryProductRequest,
         @PageableDefault(size = 1000000, page = 0)

@@ -7,6 +7,8 @@ import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 class ExcelHelper {
     companion object {
@@ -65,14 +67,29 @@ class ExcelHelper {
             return isEmpty
         }
 
-        fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int) : Boolean {
+        fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int, formats: Array<String>) : Boolean {
             for (i in startCol until endCol+1) {
-                val cellValue = headerRowImport.getCell(i)
-                if (!(cellValue.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cellValue))) {
-                    return false
+                val cell = headerRowImport.getCell(i)
+                if (cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                    continue
                 }
+                val cellValue = getCellValue(headerRowImport, i)
+                if (cellValue.isEmpty()) return false
+                var isDate = false
+                for (format in formats) {
+                    val formatter = DateTimeFormatter.ofPattern(format)
+                    try {
+                        formatter.parse(cellValue)
+                        isDate = true
+                        break
+                    } catch (e: DateTimeParseException) {
+                        continue
+                    }
+                }
+                if (!isDate) return false
             }
             return true
         }
+
     }
 }

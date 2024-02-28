@@ -63,7 +63,7 @@ class ProcessStatisticCodeConstants {
         const val TAN = "TAN"
         const val ZEN = "ZEN"
         const val HP_TAN = "HP TAN"
-        const val HP_ZEN = "HP ZEN"
+        const val HP_ALL = "HP ALL"
         const val M = "M"
         const val M_ALL = "M ALL"
         const val M_TAN = "M TAN"

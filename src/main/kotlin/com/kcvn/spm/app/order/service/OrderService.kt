@@ -56,7 +56,7 @@ class OrderService(
                     for (version in versionArray) {
                         val versionInt = version.trim().toIntOrNull()
                         versionInt?.let { versionValue ->
-                            val order = orderRep.getByOrderByCodeAndVersion(request.orderCode!!, versionValue)
+                            val order = orderRep.getOrderByCodeAndVersion(request.orderCode!!, versionValue)
 
                             order?.let {
                                 if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
@@ -77,10 +77,11 @@ class OrderService(
             if (request.startDate != null && request.endDate != null) {
 
                 var currentDate = request.startDate
+                val key = currentDate?.let { DateTimeHelper.formatDate(it) }
                 while (!currentDate!!.isAfter(request.endDate)) {
                     val response = CalendarValueResponse(
-                        key = currentDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
-                        value = currentDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
+                        key = key,
+                        value = key,
                         isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
                     )
                     calendarResponses.add(response)

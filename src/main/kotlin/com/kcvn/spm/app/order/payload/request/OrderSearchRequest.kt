@@ -9,7 +9,6 @@ class OrderSearchRequest {
     var filterType: Int? = 0
     var startDate: OffsetDateTime? = null
     var endDate: OffsetDateTime? = null
-    var year: Int? = null
     var orderCode: String? = null
     var version: String? = null
 }

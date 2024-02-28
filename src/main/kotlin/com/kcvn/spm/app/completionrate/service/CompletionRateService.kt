@@ -7,6 +7,7 @@ import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductRes
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -408,7 +409,8 @@ class CompletionRateService(
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
-            val key = ExcelHelper.getCellValue(row, 0)
+            val key = StringHelper().removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
+
             val errorMessages = mutableListOf<String>()
 
             val productExist = productExists.find { x -> x.key == key }

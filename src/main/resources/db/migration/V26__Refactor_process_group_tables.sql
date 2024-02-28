@@ -1,0 +1,21 @@
+delete from process_group;
+
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('W', 'Dán khung', 1, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('T', 'Đục lỗ', 2, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('U', 'Điền mực', 3, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('INLO', 'In lỗ', 4, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('HP TAN', 'In lỗ đơn lớp', 5, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('HP ALL', 'In lỗ đa lớp', 6, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('INMACH', 'In mạch', 7, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('TAN', 'In mạch đơn lớp', 8, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('ZEN', 'In mạch đa lớp', 9, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('K', 'Gia áp', 10, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('GHEPLOP', 'Ghép lớp thường', 11, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('M TAN', 'Ghép lớp thường đơn lớp', 12, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('M ALL', 'Ghép lớp thường tất cả các lớp', 13, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('M 熱圧着', 'Ghép lớp gia áp nhiệt', 14, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('TK', 'Tháo khung', 15, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('PET+', 'Dán PET', 16, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('PET-', 'Tháo PET', 17, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('SHN', 'Sấy hồng ngoại', 18, 'SYSTEM');
+insert into process_group (process_statistic_code, description, sort_order, created_by) VALUES ('SNAP', 'Snap', 19, 'SYSTEM');

@@ -52,6 +52,8 @@ enum class EPermission(val value: String) {
 
     // inventory
     V_INVENTORY("inventory.v"),
+    E_INVENTORY("inventory.e"),
+    I_INVENTORY("inventory.i"),
 
     // report
     V_REPORT_ASVERAGE_OUTPUT_OF_TWO_MONTHS("rp.aootm.v"),

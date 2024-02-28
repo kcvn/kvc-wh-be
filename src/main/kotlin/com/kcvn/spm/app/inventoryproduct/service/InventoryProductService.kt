@@ -6,6 +6,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToString
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -414,7 +415,7 @@ class InventoryProductService(
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 if (item?.inventoryDate != null) {
-                    val formattedDate = convertOffSetDateTimeUtc7ToString(item.inventoryDate!!)
+                    val formattedDate = convertOffSetDateTimeToString(item.inventoryDate!!)
                     dataRow.createCell(0).setCellValue(formattedDate)
                     dataRow.getCell(0).cellStyle = style
                 }

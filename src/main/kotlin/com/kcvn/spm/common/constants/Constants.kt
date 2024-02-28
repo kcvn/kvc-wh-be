@@ -46,7 +46,11 @@ class Constants {
 
 class DateTimeFormat {
     companion object {
-        const val DATE_FORMAT = "dd/MM/yyyy"
+        const val dd_MM_yyyy = "dd/MM/yyyy"
+        const val yyyyMMdd = "yyyyMMdd"
+        const val MM_dd = "MM/dd"
+        const val MM_dd_yyyy = "MM/dd/yyyy"
+        const val yyyy_MM_dd_HH_mm_ss = "yyyy_MM_dd_HH_mm_ss"
     }
 }
 
@@ -62,6 +66,7 @@ class ProcessStatisticCodeConstants {
         const val HP_ZEN = "HP ZEN"
         const val M = "M"
         const val M_ALL = "M ALL"
+        const val M_TAN = "M TAN"
         const val GHEPLOP_GIAAPNHIET = "M 熱圧着"
     }
 }

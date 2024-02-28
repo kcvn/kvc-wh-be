@@ -6,6 +6,7 @@ import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -274,8 +275,7 @@ class OrderService(
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
         }
 
-        val formatDates = arrayOf("MM/dd", "M/d", "M/dd", "MM/dd/yyyy", "M/d/yyyy", "M/dd/yyyy")
-        if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1, formatDates)) {
+        if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1)) {
             workbook.close()
             throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidCalendar"))
         }
@@ -286,11 +286,11 @@ class OrderService(
         }
 
         val year = LocalDateTime.now().year
-        val arrStartDate = ExcelHelper.getCellValue(headerRow, 1).split("/")
+        val arrStartDate = ExcelHelper.getCellValue(headerRow, 1, DateTimeFormat.MM_dd).split("/")
         val startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
-        val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1).split("/")
+        val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1, DateTimeFormat.MM_dd).split("/")
         val endDate = LocalDateTime.of(year, arrEndDate[0].toInt(), arrEndDate[1].toInt(), 0, 0)
-        val orderCode = "${startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}-${endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}"
+        val orderCode = "${startDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}-${endDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}"
         var startDateUtc = OffsetDateTime.of(startDate, ZoneOffset.UTC)
         val endDateUtc = OffsetDateTime.of(endDate, ZoneOffset.UTC)
         var version = 1
@@ -364,7 +364,7 @@ class OrderService(
             if (check) {
                 for (iCol in 1 until colIndexResult) {
                     try {
-                        val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol).split("/")
+                        val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol, DateTimeFormat.MM_dd).split("/")
                         val orderDate = LocalDateTime.of(year, arrOrderDate[0].toInt(), arrOrderDate[1].toInt(), 0, 0)
                         val strQuantity = ExcelHelper.getCellValue(row, iCol)
                         if (strQuantity.isEmpty()) {
@@ -389,7 +389,7 @@ class OrderService(
                 }
                 if (!isBreak) {
                     productImports.add(name)
-                    messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
+                    messageResults.add(CommonUtils.getMessage("validate.excel.checked"))
                     count++
                 }
             }
@@ -406,14 +406,24 @@ class OrderService(
         }
 
         if (!isBreak) {
-            val order = Order(
-                orderCode = orderCodeSelected ?: orderCode,
-                startDate = startDateUtc,
-                endDate = endDateUtc,
-                version = version
-            )
+            try {
+                val order = Order(
+                    orderCode = orderCodeSelected ?: orderCode,
+                    startDate = startDateUtc,
+                    endDate = endDateUtc,
+                    version = version
+                )
 
-            orderRep.addOrder(order, orderDetails)
+                orderRep.addOrder(order, orderDetails)
+
+                workbook.close()
+
+                return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
+
+            } catch (e: Exception) {
+                workbook.close()
+                throw e
+            }
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -422,7 +432,7 @@ class OrderService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.resultImportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            fileName = CommonUtils.getMessage("fileName.resultImportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateTimeFormat.yyyy_MM_dd_HH_mm_ss)))),
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -462,7 +472,7 @@ class OrderService(
         if (workResult?.summaryResultDate != null) {
             hasWorkResult = true
         }
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
         return BaseResponse(CheckWorkResultModel(
             hasWorkResult,
             if (hasWorkResult) CommonUtils.getMessage("import.order.messageCheckWorkResult", arrayOf(workResult?.summaryResultDate!!.format(formatter))) else null
@@ -474,14 +484,14 @@ class OrderService(
             .mapNotNull { x ->
                 LocalDateTime.of(
                     LocalDateTime.now().year,
-                    ExcelHelper.getCellValue(headerRow, x.columnIndex).split("/")[0].toInt(),
-                    ExcelHelper.getCellValue(headerRow, x.columnIndex).split("/")[1].toInt(),
+                    ExcelHelper.getCellValue(headerRow, x.columnIndex, DateTimeFormat.MM_dd).split("/")[0].toInt(),
+                    ExcelHelper.getCellValue(headerRow, x.columnIndex, DateTimeFormat.MM_dd).split("/")[1].toInt(),
                     0, 0
                 )
             }
         for (i in days.indices) {
             if (i == 0) continue
-            val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+            val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.yyyyMMdd)
             if (days[i - 1].plusDays(1).format(formatter) != days[i].format(formatter)) return false
         }
         return true

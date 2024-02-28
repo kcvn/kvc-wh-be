@@ -51,8 +51,8 @@ class InventoryProductController(
     }
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
-    fun importCsv(@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = inventoryProductService.importExelInventoryProduct(file)
+    fun importCsv(date:OffsetDateTime ,@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = inventoryProductService.importExelInventoryProduct(date,file)
         return ResponseEntity(data, HttpStatus.OK)
     }
 

@@ -25,7 +25,9 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.time.*
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
@@ -58,14 +60,14 @@ class InventoryProductService(
 
         val response = FileContentModel(
             fileName = "ImportInventoryProduct.xlsx",
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
         return BaseResponse(response)
     }
 
-    fun importExelInventoryProduct(file: MultipartFile) : BaseResponse<FileContentModel> {
+    fun importExelInventoryProduct(date: OffsetDateTime,file: MultipartFile) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -188,12 +190,12 @@ class InventoryProductService(
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 8).isNotEmpty() && !isDateValid(ExcelHelper.getCellValue(row, 0))) {
+            if (ExcelHelper.getCellValue(row, 8).isNotEmpty() && row.getCell(1).toString().length > 50) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
-                        "validate.excel.invalidDatetime",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 50))
                     )
                 )
             }
@@ -272,20 +274,20 @@ class InventoryProductService(
 
             try {
                 if(check) {
-                    val cellProcessCode = row.getCell(1)
-                    var processCode = ""
-                    if(cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
-                        processCode = cellProcessCode.numericCellValue.toInt().toString()
+                    val cellProcessCode = row.getCell(0)
+
+                    val processCode = if(cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
+                        cellProcessCode.numericCellValue.toInt().toString()
                     else {
-                        processCode = ExcelHelper.getCellValue(row, 1)
+                        ExcelHelper.getCellValue(row, 0)
                     }
 
                     val cellLayerCode = row.getCell(3)
-                    var layerCode = ""
-                    if(cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0)
-                        layerCode = cellLayerCode.numericCellValue.toInt().toString()
+
+                    val layerCode = if(cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0)
+                        cellLayerCode.numericCellValue.toInt().toString()
                     else {
-                        layerCode = ExcelHelper.getCellValue(row, 3)
+                        ExcelHelper.getCellValue(row, 3)
                     }
                     val filter = ImportProcessRequest(
                         productName = ExcelHelper.getCellValue(row, 5),
@@ -297,12 +299,10 @@ class InventoryProductService(
                     {
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
                     }else {
-                        val inventoryDate = ExcelHelper.getCellValue(row, 0)
-                        val offsetDateTime = convertStringToOffSetDateTime(inventoryDate)
 
                         val requestImport = InventoryProduct(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
-                            inventoryDate = offsetDateTime,
+                            inventoryDate = date,
                             code = ExcelHelper.getCellValue(row, 2),
                             tapeLotNo = ExcelHelper.getCellValue(row, 4),
                             orderCode = ExcelHelper.getCellValue(row, 6),
@@ -353,9 +353,8 @@ class InventoryProductService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.result.import",arrayOf(LocalDateTime.now().format(
-                DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName = CommonUtils.getMessage("export.excel.result.import",arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
         workbook.close()
@@ -416,9 +415,11 @@ class InventoryProductService(
             var rowNumber = 1
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                val formattedDate = convertOffSetDateTimeToString(item?.inventoryDate)
-                dataRow.createCell(0).setCellValue(formattedDate)
-                dataRow.getCell(0).cellStyle = style
+                if (item?.inventoryDate != null) {
+                    val formattedDate = convertOffSetDateTimeToString(item.inventoryDate!!)
+                    dataRow.createCell(0).setCellValue(formattedDate)
+                    dataRow.getCell(0).cellStyle = style
+                }
 
                 dataRow.createCell(1).setCellValue(item?.productName)
                 dataRow.getCell(1).cellStyle = style
@@ -477,13 +478,3 @@ class InventoryProductService(
     }
 }
 
-fun isDateValid(dateStr: String): Boolean {
-    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    return try {
-        formatter.parse(dateStr)
-        true // Nếu không có lỗi, định dạng là hợp lệ
-    } catch (e: DateTimeParseException) {
-        var test = e.message;
-        false // Nếu có lỗi, định dạng không hợp lệ
-    }
-}

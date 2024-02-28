@@ -6,23 +6,25 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class ProcessMasterRepository (
+class ProcessMasterRepository(
     private val context: DSLContext
 ) {
     fun getListProcessMaster(): List<ProcessMaster> {
         return context.selectFrom(PROCESS_MASTER)
-         .fetchInto(ProcessMaster::class.java)
+            .where(PROCESS_MASTER.IS_DELETED.eq(false))
+            .fetchInto(ProcessMaster::class.java)
     }
 
     fun getListProcessCode(): List<String> {
         return context.select(PROCESS_MASTER.PROCESS_CODE)
             .from(PROCESS_MASTER)
-            .where(PROCESS_MASTER.IS_DELETED.eq(false))
+            .where(PROCESS_MASTER.IS_DELETED.eq(false)).and(PROCESS_MASTER.IS_DELETED.eq(false))
             .fetchInto(String::class.java)
     }
+
     fun findByObjectId(objectIds: List<Long>): List<ProcessMaster> {
         return context.selectFrom(PROCESS_MASTER)
-            .where(PROCESS_MASTER.OBJECT_ID.`in`(objectIds))
+            .where(PROCESS_MASTER.OBJECT_ID.`in`(objectIds)).and(PROCESS_MASTER.IS_DELETED.eq(false))
             .fetchInto(ProcessMaster::class.java)
     }
 
@@ -36,8 +38,14 @@ class ProcessMasterRepository (
     }
 
     fun findByProcessCode(processCode: String?): ProcessMaster? {
-        return context.selectFrom(PROCESS_MASTER).where(PROCESS_MASTER.PROCESS_CODE.eq(processCode)).fetchAnyInto(ProcessMaster::class.java)
-
+        return context.selectFrom(PROCESS_MASTER)
+            .where(PROCESS_MASTER.PROCESS_CODE.eq(processCode).and(PROCESS_MASTER.IS_DELETED.eq(false)))
+            .fetchAnyInto(ProcessMaster::class.java)
     }
 
+    fun getByProcessCode(processCodes: List<String>): List<ProcessMaster> {
+        return context.selectFrom(PROCESS_MASTER)
+            .where(PROCESS_MASTER.PROCESS_CODE.`in`(processCodes).and(PROCESS_MASTER.IS_DELETED.eq(false)))
+            .fetchInto(ProcessMaster::class.java)
+    }
 }

@@ -406,7 +406,7 @@ class CompletionRateService(
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
-            val key = StringHelper().removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
+            val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
 
             val errorMessages = mutableListOf<String>()
 

@@ -67,7 +67,7 @@ class InventoryProductService(
         return BaseResponse(response)
     }
 
-    fun importExelInventoryProduct(file: MultipartFile) : BaseResponse<FileContentModel> {
+    fun importExelInventoryProduct(date: OffsetDateTime,file: MultipartFile) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -190,12 +190,12 @@ class InventoryProductService(
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 8).isNotEmpty() && !isDateValid(ExcelHelper.getCellValue(row, 0))) {
+            if (ExcelHelper.getCellValue(row, 8).isNotEmpty() && row.getCell(1).toString().length > 50) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
-                        "validate.excel.invalidDatetime",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 50))
                     )
                 )
             }
@@ -299,12 +299,10 @@ class InventoryProductService(
                     {
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
                     }else {
-                        val inventoryDate = ExcelHelper.getCellValue(row, 0)
-                        val offsetDateTime = convertStringToOffSetDateTime(inventoryDate)
 
                         val requestImport = InventoryProduct(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
-                            inventoryDate = offsetDateTime,
+                            inventoryDate = date,
                             code = ExcelHelper.getCellValue(row, 2),
                             tapeLotNo = ExcelHelper.getCellValue(row, 4),
                             orderCode = ExcelHelper.getCellValue(row, 6),
@@ -480,12 +478,3 @@ class InventoryProductService(
     }
 }
 
-fun isDateValid(dateStr: String): Boolean {
-    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    return try {
-        formatter.parse(dateStr)
-        true
-    } catch (e: DateTimeParseException) {
-        false
-    }
-}

@@ -25,10 +25,10 @@ class DateTimeHelper {
             }
         }
 
-        fun convertOffSetDateTimeToString(date: OffsetDateTime) : String? {
-            val localDate = date.toLocalDate()
+        fun convertOffSetDateTimeToString(date: OffsetDateTime?) : String? {
+            val localDate = date?.toLocalDate()
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.DATE_FORMAT)
-            val formattedDate = localDate.format(formatter)
+            val formattedDate = localDate?.format(formatter)
             return formattedDate
         }
 

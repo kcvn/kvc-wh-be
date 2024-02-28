@@ -39,10 +39,29 @@ class Constants {
         const val KHUNG1_ML = "ML"
         const val KHUNG1_SWR = "SWR"
 
-        //PROCESS_STATISTIC_CODE
-        const val PROCESS_STATISTIC_CODE_KO = "KO"
-	
 	// SYSTEM
         const val SYSTEM = "SYSTEM"
+    }
+}
+
+class DateTimeFormat {
+    companion object {
+        const val DATE_FORMAT = "dd/MM/yyyy"
+    }
+}
+
+class ProcessStatisticCodeConstants {
+    companion object {
+        const val KO = "KO"
+        const val IN_MACH = "INMACH"
+        const val IN_LO = "INLO"
+        const val GHEP_LOP = "GHEPLOP"
+        const val TAN = "TAN"
+        const val ZEN = "ZEN"
+        const val HP_TAN = "HP TAN"
+        const val HP_ZEN = "HP ZEN"
+        const val M = "M"
+        const val M_ALL = "M ALL"
+        const val GHEPLOP_GIAAPNHIET = "M 熱圧着"
     }
 }

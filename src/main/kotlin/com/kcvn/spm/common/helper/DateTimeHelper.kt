@@ -63,5 +63,9 @@ class DateTimeHelper {
             return  offsetDateTime.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
 
         }
+        fun convertDateUtc7(date: OffsetDateTime?): OffsetDateTime? {
+            return date?.plusHours(7)
+        }
+
     }
 }

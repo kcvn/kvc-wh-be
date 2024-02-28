@@ -76,9 +76,12 @@ class OrderService(
 
             if (request.startDate != null && request.endDate != null) {
 
+                request.startDate = DateTimeHelper.convertDateUtc7(request.startDate)
+                request.endDate = DateTimeHelper.convertDateUtc7(request.endDate)
                 var currentDate = request.startDate
-                val key = currentDate?.let { DateTimeHelper.formatDate(it) }
+
                 while (!currentDate!!.isAfter(request.endDate)) {
+                    val key = currentDate.let { DateTimeHelper.formatDate(it) }
                     val response = CalendarValueResponse(
                         key = key,
                         value = key,

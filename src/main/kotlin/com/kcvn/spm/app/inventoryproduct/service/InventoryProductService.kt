@@ -274,12 +274,12 @@ class InventoryProductService(
 
             try {
                 if(check) {
-                    val cellProcessCode = row.getCell(1)
+                    val cellProcessCode = row.getCell(0)
 
                     val processCode = if(cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
                         cellProcessCode.numericCellValue.toInt().toString()
                     else {
-                        ExcelHelper.getCellValue(row, 1)
+                        ExcelHelper.getCellValue(row, 0)
                     }
 
                     val cellLayerCode = row.getCell(3)

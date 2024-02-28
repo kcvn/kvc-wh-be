@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.quantityreport.payload.request
+package com.kcvn.spm.app.report.quantityreport.payload.request
 
 import java.time.OffsetDateTime
 

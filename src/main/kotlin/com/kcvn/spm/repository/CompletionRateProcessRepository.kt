@@ -6,6 +6,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS
+import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
 import com.kcvn.spm.model.tables.references.PROCESS_MASTER
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -43,7 +44,13 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             condition = condition.and(searchCondition)
         }
 
-        val maxEffectiveDatesMap = mutableMapOf<String, OffsetDateTime?>()
+        val crpSubquery = context.select(
+            COMPLETION_RATE_PROCESS.KEY.`as`("key_map"),
+            COMPLETION_RATE_PROCESS.PROCESS_CODE,
+            DSL.max(COMPLETION_RATE_PROCESS.EFFECTIVE_DATE).`as`("max_date")
+        )
+            .from(COMPLETION_RATE_PROCESS)
+            .groupBy(COMPLETION_RATE_PROCESS.KEY, COMPLETION_RATE_PROCESS.PROCESS_CODE)
 
         val completionRateProcessesQuery = context.select(
             COMPLETION_RATE_PROCESS.ID,
@@ -58,30 +65,28 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             .from(
                 COMPLETION_RATE_PROCESS
                     .join(PROCESS_MASTER).on(COMPLETION_RATE_PROCESS.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
-                    .where(PROCESS_MASTER.IS_DELETED.eq(false))
+                    .join(crpSubquery)
+                    .on(COMPLETION_RATE_PROCESS.KEY.eq(crpSubquery.field("key_map", String::class.java))
+                        .and(COMPLETION_RATE_PROCESS.EFFECTIVE_DATE.eq(crpSubquery.field("max_date", OffsetDateTime::class.java))))
+                    .where(PROCESS_MASTER.IS_DELETED.eq(false)
+                        .and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)))
             )
-            .where(condition.and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS.UPDATED_DATE))
             .limit(pageable?.pageSize ?: 10)
             .offset(pageable?.offset ?: 0)
             .fetchInto(CompletionRateProcessProductResponse::class.java)
 
-        // Lọc ra các bản ghi có effectiveDate lớn nhất cho mỗi KEY
-        completionRateProcessesQuery.forEach { product ->
-            val currentMaxEffectiveDate = maxEffectiveDatesMap[product.key]
-            if (currentMaxEffectiveDate == null || (product.effectiveDate != null && product.effectiveDate!! > currentMaxEffectiveDate)) {
-                maxEffectiveDatesMap[product.key!!] = product.effectiveDate
-            }
-        }
 
-        val filteredList = completionRateProcessesQuery.filter { product ->
-            val maxEffectiveDate = maxEffectiveDatesMap[product.key]
-            product.effectiveDate != null && product.effectiveDate == maxEffectiveDate
-        }
-
-        val total = filteredList.count()
-
-        return Pair(filteredList, total)
+        val total = context.selectDistinct(COMPLETION_RATE_PROCESS.KEY)
+            .from(
+                COMPLETION_RATE_PROCESS
+                    .join(PROCESS_MASTER)
+                    .on(COMPLETION_RATE_PROCESS.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+                    .where(condition)
+            )
+            .fetch()
+            .size
+        return Pair(completionRateProcessesQuery, total)
     }
 
 

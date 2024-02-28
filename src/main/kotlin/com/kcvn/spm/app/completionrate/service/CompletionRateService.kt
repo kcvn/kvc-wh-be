@@ -371,12 +371,9 @@ class CompletionRateService(
     fun importExcelCompletionRateProcess(file: MultipartFile, effectiveDate: OffsetDateTime) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
-
         val rowIndex = 1
-
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }

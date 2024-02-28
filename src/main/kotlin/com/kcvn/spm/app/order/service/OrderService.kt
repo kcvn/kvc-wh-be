@@ -275,7 +275,8 @@ class OrderService(
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
         }
 
-        if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1)) {
+        val formatDates = arrayOf("MM/dd", "M/d", "M/dd", "MM/dd/yyyy", "M/d/yyyy", "M/dd/yyyy")
+        if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1, formatDates)) {
             workbook.close()
             throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidCalendar"))
         }

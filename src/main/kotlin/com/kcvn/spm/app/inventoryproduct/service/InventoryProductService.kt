@@ -6,8 +6,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToString
-import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertStringToOffSetDateTime
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -29,7 +28,6 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 
 @Service
@@ -416,7 +414,7 @@ class InventoryProductService(
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 if (item?.inventoryDate != null) {
-                    val formattedDate = convertOffSetDateTimeToString(item.inventoryDate!!)
+                    val formattedDate = convertOffSetDateTimeUtc7ToString(item.inventoryDate!!)
                     dataRow.createCell(0).setCellValue(formattedDate)
                     dataRow.getCell(0).cellStyle = style
                 }

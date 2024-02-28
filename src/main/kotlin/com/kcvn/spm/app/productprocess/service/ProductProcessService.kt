@@ -83,6 +83,8 @@ class ProductProcessService(
                     } else {
                         throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
                     }
+                }else{
+                    productProcess.processInventoryCode = item.processInventoryCode
                 }
                 productProcess.processConvertCode = item.processConvertCode;
                 productProcess.processStatisticCode = item.processStatisticCode;

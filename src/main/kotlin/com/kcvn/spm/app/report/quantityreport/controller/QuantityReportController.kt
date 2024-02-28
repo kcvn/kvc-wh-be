@@ -1,8 +1,8 @@
-package com.kcvn.spm.app.quantityreport.controller
+package com.kcvn.spm.app.report.quantityreport.controller
 
-import com.kcvn.spm.app.quantityreport.payload.request.CalculateQuantityRequest
-import com.kcvn.spm.app.quantityreport.payload.response.CalculateQuantityResponse
-import com.kcvn.spm.app.quantityreport.service.QuantityReportService
+import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
+import com.kcvn.spm.app.report.quantityreport.payload.response.CalculateQuantityResponse
+import com.kcvn.spm.app.report.quantityreport.service.QuantityReportService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import org.springframework.data.domain.Pageable

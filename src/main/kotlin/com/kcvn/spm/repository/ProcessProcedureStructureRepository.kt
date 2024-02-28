@@ -47,9 +47,11 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
     }
 
     fun getByFilterProcessStructureByInventoryProduct(request: ImportProcessRequest) : ProcessProcedureStructure?{
-        return context.select()
-            .from(PROCESS_PROCEDURE_STRUCTURE.join(PRODUCT)
-            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PRODUCT.NAME)
+        return context.select(
+            PROCESS_PROCEDURE_STRUCTURE.ID.`as`("id"),
+        )
+            .from(PRODUCT.join(PROCESS_PROCEDURE_STRUCTURE)
+            .on(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(PRODUCT.NAME)
                 .and(PRODUCT.IS_DELETED.eq(false))))
             .where(PRODUCT.NAME.eq(request.productName)
                 .and(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.eq(request.layerCode))

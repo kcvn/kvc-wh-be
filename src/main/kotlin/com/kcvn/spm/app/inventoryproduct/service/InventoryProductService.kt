@@ -298,15 +298,22 @@ class InventoryProductService(
                     {
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
                     }else {
-
+                        var productQuantityRow = 0
+                        var sheetQuantityRow = 0
+                        if(ExcelHelper.getCellValue(row, 7).isNotEmpty()){
+                            productQuantityRow = ExcelHelper.getCellValue(row, 7).toDouble().toInt()
+                        }
+                        if(ExcelHelper.getCellValue(row, 8).isNotEmpty()){
+                            sheetQuantityRow =  ExcelHelper.getCellValue(row, 8).toDouble().toInt()
+                        }
                         val requestImport = InventoryProduct(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
                             code = ExcelHelper.getCellValue(row, 2),
                             tapeLotNo = ExcelHelper.getCellValue(row, 4),
                             orderCode = ExcelHelper.getCellValue(row, 6),
-                            productQuantity = ExcelHelper.getCellValue(row, 7).toDouble().toInt(),
-                            sheetQuantity = ExcelHelper.getCellValue(row, 8).toDouble().toInt()
+                            productQuantity = productQuantityRow,
+                            sheetQuantity = sheetQuantityRow
                         )
 
                         val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date)

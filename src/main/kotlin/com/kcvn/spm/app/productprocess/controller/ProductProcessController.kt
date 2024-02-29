@@ -3,12 +3,12 @@ package com.kcvn.spm.app.productprocess.controller
 import com.kcvn.spm.app.productprocess.payload.request.ProductProcessSearchRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
+import com.kcvn.spm.app.productprocess.service.ProductProcessService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
-import com.kcvn.spm.app.productprocess.service.ProductProcessService
 import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -37,9 +37,8 @@ class ProductProcessController(
         )
         pageable: Pageable?
     ): ResponseEntity<BasePagingResponse<ProductProcessResponse?>> {
-        val result =
-            productProcessService.getPaginatedProductProcess(request.search, request.hasProcessConvertCode, pageable!!);
-            return  ResponseEntity(result, HttpStatus.OK)
+        val result = productProcessService.getPaginatedProductProcess(request.search, request.hasProcessConvertCode, pageable!!);
+        return ResponseEntity(result, HttpStatus.OK)
 
     }
 

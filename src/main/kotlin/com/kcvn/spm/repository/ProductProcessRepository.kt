@@ -34,13 +34,13 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 .or(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.isNull))
         }
 
-        var sortFields = getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE).toMutableList()
+        var sortFields = getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE).distinct().toMutableList()
         val sortLayerCode = pageable.sort.find { x -> x.property == "layerCode" }
         if (sortLayerCode != null){
             if (sortLayerCode.direction == Sort.Direction.ASC)
-                sortFields.add(DSL.cast(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, java.math.BigDecimal::class.java).asc())
+                sortFields.add(1, DSL.cast(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, java.math.BigDecimal::class.java).asc())
             else
-                sortFields.add(DSL.cast(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, java.math.BigDecimal::class.java).desc())
+                sortFields.add(1, DSL.cast(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, java.math.BigDecimal::class.java).desc())
         }
 
         val productProcessQuery = context
@@ -198,7 +198,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             "processStatisticCode" -> PRODUCT_PROCESS.PROCESS_STATISTIC_CODE
             "processInventoryCode" -> PRODUCT_PROCESS.PROCESS_INVENTORY_CODE
             "processSequence" -> PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE
-            else -> PRODUCT_PROCESS.PROCESS_NAME
+            else -> PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE
         }
 
         return sortField

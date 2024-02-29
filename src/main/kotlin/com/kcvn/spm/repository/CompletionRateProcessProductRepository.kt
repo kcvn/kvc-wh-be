@@ -52,17 +52,20 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
-            if (search.productNameShortCut != null) {
+            if (!search.productNameShortCut.isNullOrEmpty()) {
                 val lowerProductNameShortCutSearch = DSL.lower(search.productNameShortCut)
                 condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT).containsIgnoreCase(lowerProductNameShortCutSearch))
             }
 
-            if (search.processCode != null) {
-                val lowerProcessCodeSearch = DSL.lower(search.processCode)
-                condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).containsIgnoreCase(lowerProcessCodeSearch)
-                    .or(PROCESS_MASTER.PROCESS_NAME.containsIgnoreCase(lowerProcessCodeSearch))
-                    .or(PROCESS_MASTER.PROCESS_NAME_JP.containsIgnoreCase(lowerProcessCodeSearch)))
+            if (!search.processCode.isNullOrEmpty()) {
+                val lowerProcessCodeSearch = search.processCode
+                condition = condition.and(
+                    DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).containsIgnoreCase(lowerProcessCodeSearch)
+                        .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME).containsIgnoreCase(lowerProcessCodeSearch))
+                        .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME_JP).containsIgnoreCase(lowerProcessCodeSearch))
+                )
             }
+
         }
         
         val crppSubquery = context.select(
@@ -102,15 +105,15 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .offset(pageable?.offset ?: 0)
             .fetchInto(CompletionRateProcessProductResponse::class.java)
 
-
-
-
         val total = context.selectDistinct(COMPLETION_RATE_PROCESS_PRODUCT.KEY)
-            .from(COMPLETION_RATE_PROCESS_PRODUCT)
-            .where(condition)
+            .from(
+                COMPLETION_RATE_PROCESS_PRODUCT
+                    .join(PROCESS_MASTER)
+                    .on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+                    .where(condition)
+            )
             .fetch()
             .size
-
         return Pair(completionRateProcessesQuery, total)
     }
 

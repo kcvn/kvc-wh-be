@@ -100,7 +100,12 @@ class CompletionRateController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProcessProducts(
             search: CompletionRateProcessProductRequest?,
-            @PageableDefault(size = 10, page = 0) pageable: Pageable
+            @PageableDefault(size = 100000, page = 0)
+            @SortDefault.SortDefaults(
+                SortDefault(sort = ["product_name_shortcut"], direction = Sort.Direction.ASC),
+                SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
+                SortDefault(sort = ["process_code"], direction = Sort.Direction.ASC),
+            )pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result =
             completionRateService.getPaginatedCompletionRateProcessesProduct(search, pageable)

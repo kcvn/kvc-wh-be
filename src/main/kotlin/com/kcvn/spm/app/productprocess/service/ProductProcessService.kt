@@ -11,7 +11,6 @@ import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
@@ -56,7 +55,7 @@ class ProductProcessService(
                     processSequence = productProcess.processSequence
                 );
             }
-            response.data = (response.data as List<ProductProcessResponse?>).sortedWith(compareBy<ProductProcessResponse?> {it?.productName}.thenBy { it?.layerCodeInt }.thenBy { it?.processSequence })
+            //response.data = (response.data as List<ProductProcessResponse?>).sortedWith(compareBy<ProductProcessResponse?> {it?.productName}.thenBy { it?.layerCodeInt }.thenBy { it?.processSequence })
             response.totalRecords = result.second ?: 0
 
         return response;

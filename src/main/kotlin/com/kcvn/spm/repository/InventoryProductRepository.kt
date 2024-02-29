@@ -159,10 +159,10 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             "pcsSh" -> {
                 PRODUCT.PCS_SH
             }
-            "oderCode" -> {
+            "orderCode" -> {
                 INVENTORY_PRODUCT.ORDER_CODE
             }
-            "tapeLotno" -> {
+            "tapeLotNo" -> {
                 INVENTORY_PRODUCT.TAPE_LOT_NO
             }
             "code" -> {

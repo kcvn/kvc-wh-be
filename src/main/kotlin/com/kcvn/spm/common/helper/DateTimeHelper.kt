@@ -27,28 +27,16 @@ class DateTimeHelper {
 
         fun convertOffSetDateTimeUtc7ToString(date: OffsetDateTime?) : String? {
             val dateUtc7 = date?.plusHours(7)
-
             val localDateTime = dateUtc7?.atZoneSameInstant(ZoneOffset.UTC)?.toLocalDateTime()
-
-            // Định dạng chuỗi thành "yyyy-MM-dd"
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
-
-            // Chuyển đổi LocalDateTime thành chuỗi "yyyy-MM-dd"
             val formattedDateTime = localDateTime?.format(formatter)
-
             return formattedDateTime
         }
 
         fun convertOffSetDateTimeToLocalDateTimeToString(date: OffsetDateTime?) : String? {
-
             val localDateTime = date?.toLocalDateTime()
-
-            // Định dạng chuỗi thành "yyyy-MM-dd"
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
-
-            // Chuyển đổi LocalDateTime thành chuỗi "yyyy-MM-dd"
             val formattedDateTime = localDateTime?.format(formatter)
-
             return formattedDateTime
         }
 
@@ -59,8 +47,8 @@ class DateTimeHelper {
             return offsetDateTime
         }
 
-        fun formatDate(offsetDateTime: OffsetDateTime): String {
-            return  offsetDateTime.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+        fun toString(offsetDateTime: OffsetDateTime, format: String): String {
+            return  offsetDateTime.format(DateTimeFormatter.ofPattern(format))
 
         }
         fun convertDateUtc7(date: OffsetDateTime?): OffsetDateTime? {

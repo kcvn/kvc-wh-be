@@ -58,7 +58,7 @@ class InventoryProductService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "ImportInventoryProduct.xlsx",
+            fileName = "Import_ThongTinTonKho_Template.xlsx",
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -122,7 +122,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
                     )
                 )
             }
@@ -131,7 +131,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
                     )
                 )
             }
@@ -140,7 +140,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
                     )
                 )
             }
@@ -149,7 +149,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
                     )
                 )
             }
@@ -158,7 +158,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))
                     )
                 )
             }
@@ -167,28 +167,28 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 7).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 6))
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 8).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 7))
-                    )
-                )
-            }
+//            if (ExcelHelper.getCellValue(row, 7).isEmpty()) {
+//                check = false
+//                messageResults.add(
+//                    CommonUtils.getMessage(
+//                        "validate.excel.empty",
+//                        arrayOf(ExcelHelper.getCellValue(headerRow, 6))
+//                    )
+//                )
+//            }
+//            if (ExcelHelper.getCellValue(row, 8).isEmpty()) {
+//                check = false
+//                messageResults.add(
+//                    CommonUtils.getMessage(
+//                        "validate.excel.empty",
+//                        arrayOf(ExcelHelper.getCellValue(headerRow, 7))
+//                    )
+//                )
+//            }
             if (ExcelHelper.getCellValue(row, 0).isNotEmpty() && row.getCell(0).toString().length > 8) {
                 check = false
                 messageResults.add(
@@ -225,7 +225,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 3).isNotEmpty() && row.getCell(4).toString().length > 100) {
+            if (ExcelHelper.getCellValue(row, 4).isNotEmpty() && row.getCell(4).toString().length > 100) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(

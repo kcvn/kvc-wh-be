@@ -61,9 +61,7 @@ class OrderRepository(
             }
         }
 
-
-
-        val completionRateProcessesQuery = context.select(
+        val orderDetailQuery = context.select(
             ORDER_DETAIL.ID,
             ORDER.QUANTITY,
             PRODUCT.FRAME_1,
@@ -90,7 +88,7 @@ class OrderRepository(
             .limit(pageable?.pageSize ?: 10)
             .offset(pageable?.offset ?: 0)
             .fetchInto(OrderDetailModel::class.java)
-        val uniqueOrderProductPairs = completionRateProcessesQuery
+        val uniqueOrderProductPairs = orderDetailQuery
             .distinctBy { it.orderId to it.productId }
         val total = context.fetchCount(ORDER_DETAIL, ORDER_DETAIL.IS_DELETED.eq(false))
         return Pair(uniqueOrderProductPairs, total)

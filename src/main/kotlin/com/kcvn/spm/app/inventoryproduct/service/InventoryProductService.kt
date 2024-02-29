@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.text.DecimalFormat
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -97,8 +98,8 @@ class InventoryProductService(
             )
         ) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-       if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+//       if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
+//            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
@@ -306,10 +307,19 @@ class InventoryProductService(
                         if(ExcelHelper.getCellValue(row, 8).isNotEmpty()){
                             sheetQuantityRow =  ExcelHelper.getCellValue(row, 8).toDouble().toInt()
                         }
+                        val df = DecimalFormat("#")
+                        val cellCode = row.getCell(2)
+                        var codeValue = ""
+                        codeValue = if (cellCode.cellType == CellType.NUMERIC) {
+                            val numericValue = cellCode.numericCellValue
+                            df.format(numericValue).toString()
+                        }else {
+                            cellCode.stringCellValue
+                        }
                         val requestImport = InventoryProduct(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
-                            code = ExcelHelper.getCellValue(row, 2),
+                            code = codeValue,
                             tapeLotNo = ExcelHelper.getCellValue(row, 4),
                             orderCode = ExcelHelper.getCellValue(row, 6),
                             productQuantity = productQuantityRow,
@@ -342,6 +352,11 @@ class InventoryProductService(
             }
             row.getCell(colIndexResult ).setCellValue(result)
             row.getCell(colIndexResult ).cellStyle = style
+        }
+        
+        if (count == total) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
         }
 
         val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }

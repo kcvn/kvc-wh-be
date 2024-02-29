@@ -6,8 +6,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToString
-import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToLocalDateTimeToString
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -43,6 +42,7 @@ class InventoryProductService(
         val query = inventoryProductRepository.findDateInventoryProduct(date)
         if(query != null) {
             data.hasInventoryDate = true
+            data.inventorydate = query.inventoryDate
             return data
         }
         return data
@@ -97,8 +97,8 @@ class InventoryProductService(
             )
         ) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-//        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
-//            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+       if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
+            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
@@ -415,7 +415,7 @@ class InventoryProductService(
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 if (item?.inventoryDate != null) {
-                    val formattedDate = convertOffSetDateTimeToString(item.inventoryDate!!)
+                    val formattedDate = convertOffSetDateTimeToLocalDateTimeToString(item.inventoryDate!!)
                     dataRow.createCell(0).setCellValue(formattedDate)
                     dataRow.getCell(0).cellStyle = style
                 }

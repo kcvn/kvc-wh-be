@@ -1,8 +1,10 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.order.payload.model.OrderDetailByDateModel
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -87,11 +89,80 @@ class OrderRepository(
             .orderBy(getSortFields(pageable?.sort, ORDER.ORDER_CODE))
             .limit(pageable?.pageSize ?: 10)
             .offset(pageable?.offset ?: 0)
-            .fetchInto(OrderDetailModel::class.java)
+        .fetchInto(OrderDetailModel::class.java)
         val uniqueOrderProductPairs = orderDetailQuery
             .distinctBy { it.orderId to it.productId }
         val total = context.fetchCount(ORDER_DETAIL, ORDER_DETAIL.IS_DELETED.eq(false))
         return Pair(uniqueOrderProductPairs, total)
+    }
+
+    fun getPagingListOrder(request: OrderSearchRequest?, pageable: Pageable?): Pair<List<OrderDetailModel>, Int> {
+        var condition: Condition = DSL.noCondition()
+        if (!request?.productName.isNullOrBlank()) {
+            condition = condition.and(PRODUCT.NAME.containsIgnoreCase(request?.productName))
+        }
+        if (!request?.frame_1.isNullOrBlank()) {
+            condition = condition.and(PRODUCT.FRAME_1.containsIgnoreCase(request?.frame_1))
+        }
+        if (!request?.srNosr.isNullOrBlank()) {
+            condition = condition.and(PRODUCT.SR_NOSR.containsIgnoreCase(request?.srNosr))
+        }
+        if (request?.startDate != null && request.endDate != null) {
+            condition = condition.and(
+                ORDER.START_DATE.between(
+                    DateTimeHelper.convertDateUtc7(request.startDate),
+                    DateTimeHelper.convertDateUtc7(request.endDate)
+                )
+            )
+        }
+        if (!request?.orderCode.isNullOrBlank()) {
+            condition = condition.and(ORDER.ORDER_CODE.eq(request?.orderCode))
+        }
+        if (!request?.version.isNullOrEmpty()) {
+            val versions = request?.version?.split(",")?.map { x -> x.toInt() }
+            if (!versions.isNullOrEmpty())
+                condition = condition.and(ORDER.VERSION.`in`(versions))
+        }
+        condition = condition.and(ORDER_DETAIL.IS_DELETED.eq(false))
+        val query = context.select(
+            ORDER.ID.`as`("orderId"),
+            PRODUCT.ID.`as`("productId"),
+            PRODUCT.NAME.`as`("productName"),
+            DSL.sum(ORDER_DETAIL.QUANTITY).`as`("quantity"),
+            PRODUCT.FRAME_1.`as`("frame_1"),
+            PRODUCT.LAYER_COUNT.`as`("layerCount"),
+            PRODUCT.PCS_SH.`as`("pcsSh"),
+            PRODUCT.SH_BLOCK.`as`("shBlock"),
+            PRODUCT.SR_NOSR.`as`("srNosr"),
+            ORDER.VERSION.`as`("version")
+        ).from(ORDER_DETAIL).join(ORDER).on(ORDER_DETAIL.ORDER_ID.eq(ORDER.ID).and(ORDER.IS_DELETED.eq(false)))
+            .join(PRODUCT).on(ORDER_DETAIL.PRODUCT_ID.eq(PRODUCT.ID).and(PRODUCT.IS_DELETED.eq(false)))
+            .where(condition)
+            .groupBy(ORDER.ID, PRODUCT.ID, PRODUCT.FRAME_1, PRODUCT.LAYER_COUNT, PRODUCT.PCS_SH, PRODUCT.SH_BLOCK, PRODUCT.SR_NOSR, ORDER.VERSION)
+
+        val count = query.count()
+        val data = query
+            .orderBy(getSortFields(pageable?.sort, ORDER.ORDER_CODE))
+            .limit(pageable?.pageSize ?: 10)
+            .offset(pageable?.offset ?: 0)
+            .fetchInto(OrderDetailModel::class.java)
+
+        return Pair(data, count)
+    }
+
+    fun getQuantityByCalendar(orderProductIds: List<Pair<String, String>>) : List<OrderDetailByDateModel> {
+        val orderIds = orderProductIds.map { x -> x.first }
+        val productIds = orderProductIds.map { x -> x.second }
+        val data = context.selectFrom(ORDER_DETAIL)
+            .where(ORDER_DETAIL.ORDER_ID.`in`(orderIds).and(ORDER_DETAIL.PRODUCT_ID.`in`(productIds)).and(ORDER_DETAIL.IS_DELETED.eq(false)))
+            .fetchInto(OrderDetail::class.java)
+            .map { x -> OrderDetailByDateModel(
+                x.orderId,
+                x.productId,
+                DateTimeHelper.toString(x.orderDate!!, DateTimeFormat.MM_dd_yyyy),
+                x.quantity
+            ) }
+        return data
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
@@ -99,12 +170,12 @@ class OrderRepository(
             "id" -> ORDER.ID
             "createdDate" -> ORDER.CREATED_DATE
             "version" -> ORDER.VERSION
-            "productName"-> PRODUCT.NAME
-            "frame1"-> PRODUCT.FRAME_1
-             "layerCount"-> PRODUCT.LAYER_COUNT
-            "pcsSh"-> PRODUCT.PCS_SH
-            "shBlock"-> PRODUCT.SH_BLOCK
-            "srNosR"-> PRODUCT.SR_NOSR
+            "productName" -> PRODUCT.NAME
+            "frame1" -> PRODUCT.FRAME_1
+            "layerCount" -> PRODUCT.LAYER_COUNT
+            "pcsSh" -> PRODUCT.PCS_SH
+            "shBlock" -> PRODUCT.SH_BLOCK
+            "srNosR" -> PRODUCT.SR_NOSR
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }
     }
@@ -128,34 +199,35 @@ class OrderRepository(
         startTransaction()
         try {
             val orderInsert = context.insertInto(ORDER, ORDER.ORDER_CODE, ORDER.START_DATE, ORDER.END_DATE, ORDER.VERSION, ORDER.CREATED_BY)
-                .values(order.orderCode, order.startDate, order.endDate, order.version, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .values(order.orderCode, order.startDate, order.endDate, order.version, CommonUtils.loggedInUser()
+                    ?: Constants.SYSTEM)
                 .returningResult(ORDER).fetchInto(Order::class.java).firstOrNull()
 
             if (orderInsert != null) {
                 for (orderDetail in orderDetails) {
                     context.insertInto(ORDER_DETAIL, ORDER_DETAIL.ORDER_ID, ORDER_DETAIL.PRODUCT_ID, ORDER_DETAIL.ORDER_DATE, ORDER_DETAIL.QUANTITY, ORDER_DETAIL.CREATED_BY)
-                        .values(orderInsert.id, orderDetail.productId, orderDetail.orderDate, orderDetail.quantity, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                        .values(orderInsert.id, orderDetail.productId, orderDetail.orderDate, orderDetail.quantity, CommonUtils.loggedInUser()
+                            ?: Constants.SYSTEM)
                         .returningResult(ORDER_DETAIL).fetchInto(OrderDetail::class.java).firstOrNull()
                 }
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             rollback()
         }
     }
 
 
-    fun getOverlapOrderDate(startDate: OffsetDateTime, endDate: OffsetDateTime, orderCode: String) : Order? {
+    fun getOverlapOrderDate(startDate: OffsetDateTime, endDate: OffsetDateTime, orderCode: String): Order? {
         var condition = DSL.noCondition()
         condition = condition.and(ORDER.ORDER_CODE.notEqual(orderCode)).and(ORDER.IS_DELETED.eq(false))
             .and(
                 (ORDER.END_DATE.ge(startDate).and(ORDER.END_DATE.lt(endDate)))
-                .or(ORDER.START_DATE.le(endDate).and(ORDER.END_DATE.gt(endDate)))
+                    .or(ORDER.START_DATE.le(endDate).and(ORDER.END_DATE.gt(endDate)))
             )
         return context.selectFrom(ORDER).where(condition).fetchInto(Order::class.java).firstOrNull()
     }
 
-    fun getByOrderCode(orderCode: String) : Order? {
+    fun getByOrderCode(orderCode: String): Order? {
         return context.selectFrom(ORDER).where(ORDER.ORDER_CODE.eq(orderCode)).and(ORDER.IS_DELETED.eq(false))
             .orderBy(ORDER.VERSION.sort(SortOrder.DESC))
             .fetchInto(Order::class.java).firstOrNull()

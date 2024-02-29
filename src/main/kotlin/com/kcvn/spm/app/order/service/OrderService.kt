@@ -5,6 +5,7 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
+import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
@@ -239,6 +240,12 @@ class OrderService(
         }
 
         return orderCodeResponses
+    }
+
+    fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
+        val orders = orderRep.getOrderCode(request.startDate,request.endDate)
+
+        return orders
     }
 
     fun importExcelOrder(file: MultipartFile, orderCodeSelected: String?): BaseResponse<FileContentModel> {
@@ -483,5 +490,9 @@ class OrderService(
             if (days[i - 1].plusDays(1).format(formatter) != days[i].format(formatter)) return false
         }
         return true
+    }
+
+    fun getOrderDetailsByOrderId(id: String?): List<OrderDetail> {
+        return orderDetailRep.getOrderDetailsByOrderId(id)
     }
 }

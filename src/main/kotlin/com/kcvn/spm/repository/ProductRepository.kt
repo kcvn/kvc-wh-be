@@ -222,4 +222,20 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
         }
         return sortField
     }
+
+    fun getProductDetailWithCompletionRateById(productId: String?): ProductDetailResponse? {
+        val data = context.selectFrom(
+            PRODUCT
+                .join(COMPLETION_RATE_PRODUCT)
+                .on(PRODUCT.NAME.eq(COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
+        )
+            .where(
+                PRODUCT.ID.eq(productId)
+                    .and(PRODUCT.IS_DELETED.eq(false))
+            )
+            .orderBy(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.desc())
+            .limit(1)
+            .fetchAnyInto(ProductDetailResponse::class.java)
+        return data
+    }
 }

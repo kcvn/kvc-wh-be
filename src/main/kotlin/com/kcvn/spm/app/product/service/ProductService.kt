@@ -56,6 +56,11 @@ class ProductService(
         return productRep.getProductDetail(request)
     }
 
+
+    fun getProductDetailWithCompletionRateById(productId: String?): ProductDetailResponse? {
+        return productRep.getProductDetailWithCompletionRateById(productId)
+    }
+
     fun exportExcel(request: ProductSearchRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
         val products = productRep.getList(request, pageable)
         val productMapping = mappingProductResponse(products)

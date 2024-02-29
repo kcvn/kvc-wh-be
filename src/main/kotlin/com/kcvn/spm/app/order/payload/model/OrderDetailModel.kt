@@ -17,4 +17,8 @@ data class OrderDetailModel (
     var version: String? = null,
     var quantityByCalendars : List<KeyValueResponse>? = listOf()
 
-)
+) {
+    init {
+        if (!version.isNullOrEmpty()) version = "v${version}.0"
+    }
+}

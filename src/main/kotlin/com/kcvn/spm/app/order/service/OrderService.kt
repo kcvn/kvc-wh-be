@@ -251,7 +251,7 @@ class OrderService(
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-            val headerRow = sheet.getRow(0) ?: throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            val headerRow = sheet.getRow(0) ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
             val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportOrderTemplate.xlsx"
 
             val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }

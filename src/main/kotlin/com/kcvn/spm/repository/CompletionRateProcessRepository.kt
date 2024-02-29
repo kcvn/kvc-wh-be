@@ -38,9 +38,9 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
 
         if (search != null) {
             val lowerSearch = DSL.lower(search)
-            val searchCondition = DSL.lower(COMPLETION_RATE_PROCESS.PROCESS_CODE).contains(lowerSearch)
-                .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME).contains(lowerSearch))
-                .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME_JP).contains(lowerSearch))
+            val searchCondition = DSL.lower(COMPLETION_RATE_PROCESS.PROCESS_CODE).containsIgnoreCase(lowerSearch)
+                .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME).containsIgnoreCase(lowerSearch))
+                .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME_JP).containsIgnoreCase(lowerSearch))
             condition = condition.and(searchCondition)
         }
 

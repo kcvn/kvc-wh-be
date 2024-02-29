@@ -30,7 +30,7 @@ class OrderController(
         request: OrderSearchRequest?,
         @PageableDefault(size = 10, page = 0)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["productname"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["version"], direction = Sort.Direction.DESC)
         )
         pageable: Pageable
@@ -59,7 +59,7 @@ class OrderController(
         request: OrderSearchRequest?,
         @PageableDefault(size = 1000000, page = 0)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["productname"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["version"], direction = Sort.Direction.DESC)
         )
         pageable: Pageable

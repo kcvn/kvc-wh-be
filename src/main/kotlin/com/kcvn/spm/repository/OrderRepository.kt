@@ -3,6 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
@@ -41,21 +42,25 @@ class OrderRepository(
         if (request?.startDate != null && request.endDate != null) {
             condition = condition.and(
                 ORDER.START_DATE.between(
-                    request.startDate,
-                    request.endDate
+                    DateTimeHelper.convertDateUtc7(request.startDate),
+                    DateTimeHelper.convertDateUtc7(request.endDate)
                 )
             )
         }
         if (!request?.orderCode.isNullOrBlank()) {
             condition = condition.and(ORDER.ORDER_CODE.eq(request?.orderCode))
         }
+
         val versionArray = request?.version?.split(",")
         if (!versionArray.isNullOrEmpty()) {
-            val versionConditions = versionArray.map { version ->
-                ORDER.VERSION.eq(version.toInt())
+            val orConditions = versionArray.mapNotNull { it.trim().toIntOrNull() }
+                .map { ORDER.VERSION.eq(it) }
+                .reduceOrNull { acc, condition -> acc.or(condition) }
+            if (orConditions != null) {
+                condition = condition.and(orConditions)
             }
-            condition = condition.and(ORDER.VERSION.`in`(versionConditions))
         }
+
 
 
         val completionRateProcessesQuery = context.select(
@@ -97,6 +102,11 @@ class OrderRepository(
             "createdDate" -> ORDER.CREATED_DATE
             "version" -> ORDER.VERSION
             "productName"-> PRODUCT.NAME
+            "frame1"-> PRODUCT.FRAME_1
+             "layerCount"-> PRODUCT.LAYER_COUNT
+            "pcsSh"-> PRODUCT.PCS_SH
+            "shBlock"-> PRODUCT.SH_BLOCK
+            "srNosR"-> PRODUCT.SR_NOSR
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }
     }
@@ -153,8 +163,13 @@ class OrderRepository(
             .fetchInto(Order::class.java).firstOrNull()
     }
 
-    fun getOrderByCodeAndVersion(orderCode: String, version: Int) : Order? {
-        return context.selectFrom(ORDER).where(ORDER.ORDER_CODE.eq(orderCode)).and(ORDER.IS_DELETED.eq(false).and(ORDER.VERSION.eq(version)))
-            .fetchInto(Order::class.java).firstOrNull()
+    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>): List<Order> {
+        return context.selectFrom(ORDER)
+            .where(
+                ORDER.ORDER_CODE.eq(orderCode)
+                    .and(ORDER.IS_DELETED.eq(false))
+                    .and(ORDER.VERSION.`in`(versions))
+            )
+            .fetchInto(Order::class.java)
     }
 }

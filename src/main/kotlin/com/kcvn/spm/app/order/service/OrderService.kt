@@ -53,27 +53,22 @@ class OrderService(
                 var maxEndDate: OffsetDateTime? = null
 
                 if (versionArray != null) {
-                    for (version in versionArray) {
-                        val versionInt = version.trim().toIntOrNull()
-                        versionInt?.let { versionValue ->
-                            val order = orderRep.getOrderByCodeAndVersion(request.orderCode!!, versionValue)
+                    val versions = versionArray.mapNotNull { it.trim().toIntOrNull() }
 
-                            order?.let {
-                                if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
-                                    minStartDate = order.startDate
-                                }
-                                if (maxEndDate == null || order.endDate?.isAfter(maxEndDate) == true) {
-                                    maxEndDate = order.endDate
-                                }
-                            }
+                    val orders = orderRep.getOrdersByCodeAndVersions(request.orderCode!!, versions)
+
+                    for (order in orders) {
+                        if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
+                            minStartDate = order.startDate
+                        }
+                        if (maxEndDate == null || order.endDate?.isAfter(maxEndDate) == true) {
+                            maxEndDate = order.endDate
                         }
                     }
                 }
                 request.startDate = minStartDate
                 request.endDate = maxEndDate
             }
-
-
             if (request.startDate != null && request.endDate != null) {
 
                 request.startDate = DateTimeHelper.convertDateUtc7(request.startDate)
@@ -103,6 +98,7 @@ class OrderService(
             val calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
             item.quantityByCalendars = calender
             if (calender != null) {
+                count =0
                 for (number in calender) {
                     count += number.value?.toInt() ?: 0
                 }

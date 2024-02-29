@@ -3,7 +3,6 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.common.constants.Constants
-import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
@@ -24,7 +23,6 @@ import java.time.OffsetDateTime
 @Repository
 class OrderRepository(
     private val context: DSLContext,
-    private val orderDetailRepository: OrderDetailRepository
 ) : SortingRepository() {
     fun getPaginatedOrder(
         request: OrderSearchRequest?,
@@ -32,26 +30,34 @@ class OrderRepository(
     ): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
         if (!request?.productName.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.NAME.eq(request?.productName))
+            condition = condition.and(PRODUCT.NAME.containsIgnoreCase(request?.productName))
         }
         if (!request?.frame_1.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.FRAME_1.eq(request?.frame_1))
+            condition = condition.and(PRODUCT.FRAME_1.containsIgnoreCase(request?.frame_1))
         }
         if (!request?.srNosr.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.SR_NOSR.eq(request?.srNosr))
+            condition = condition.and(PRODUCT.SR_NOSR.containsIgnoreCase(request?.srNosr))
         }
         if (request?.startDate != null && request.endDate != null) {
             condition = condition.and(
-                ORDER.START_DATE.greaterOrEqual(request.startDate)
-                    .and(ORDER.END_DATE.lessOrEqual(request.endDate))
+                ORDER.START_DATE.between(
+                    request.startDate,
+                    request.endDate
+                )
             )
         }
         if (!request?.orderCode.isNullOrBlank()) {
             condition = condition.and(ORDER.ORDER_CODE.eq(request?.orderCode))
         }
-//        request?.version?.let { version ->
-//            condition = condition.and(ORDER.VERSION.eq(version))
-//        }
+        val versionArray = request?.version?.split(",")
+        if (!versionArray.isNullOrEmpty()) {
+            val versionConditions = versionArray.map { version ->
+                ORDER.VERSION.eq(version.toInt())
+            }
+            condition = condition.and(ORDER.VERSION.`in`(versionConditions))
+        }
+
+
         val completionRateProcessesQuery = context.select(
             ORDER_DETAIL.ID,
             ORDER.QUANTITY,
@@ -88,9 +94,14 @@ class OrderRepository(
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         return when (sortFieldName) {
             "id" -> ORDER.ID
-            "createddate" -> ORDER.CREATED_DATE
+            "createdDate" -> ORDER.CREATED_DATE
             "version" -> ORDER.VERSION
-            "productname"-> PRODUCT.NAME
+            "productName"-> PRODUCT.NAME
+            "frame1"-> PRODUCT.FRAME_1
+             "layerCount"-> PRODUCT.LAYER_COUNT
+            "pcsSh"-> PRODUCT.PCS_SH
+            "shBlock"-> PRODUCT.SH_BLOCK
+            "srNosR"-> PRODUCT.SR_NOSR
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }
     }
@@ -108,19 +119,6 @@ class OrderRepository(
             ORDER.START_DATE,
             ORDER.END_DATE
         ).from(ORDER).where(condition).fetchInto(Order::class.java)
-    }
-
-    fun getVersionByOrderCode(orderCode: String): List<DropdownResponse> {
-        val versions = context.select(ORDER.VERSION)
-            .from(ORDER)
-            .where(
-                ORDER.IS_DELETED.eq(false),
-                ORDER.ORDER_CODE.eq(orderCode)
-            )
-            .fetch()
-            .map { it[ORDER.VERSION] }
-
-        return versions.map { DropdownResponse(it.toString(), it.toString()) }
     }
 
     fun addOrder(order: Order, orderDetails: List<OrderDetail>) {
@@ -160,8 +158,13 @@ class OrderRepository(
             .fetchInto(Order::class.java).firstOrNull()
     }
 
-    fun getByOrderByCodeAndVersion(orderCode: String, version: Int) : Order? {
-        return context.selectFrom(ORDER).where(ORDER.ORDER_CODE.eq(orderCode)).and(ORDER.IS_DELETED.eq(false).and(ORDER.VERSION.eq(version)))
-            .fetchInto(Order::class.java).firstOrNull()
+    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>): List<Order> {
+        return context.selectFrom(ORDER)
+            .where(
+                ORDER.ORDER_CODE.eq(orderCode)
+                    .and(ORDER.IS_DELETED.eq(false))
+                    .and(ORDER.VERSION.`in`(versions))
+            )
+            .fetchInto(Order::class.java)
     }
 }

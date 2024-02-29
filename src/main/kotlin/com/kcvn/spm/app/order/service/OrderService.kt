@@ -53,34 +53,33 @@ class OrderService(
                 var maxEndDate: OffsetDateTime? = null
 
                 if (versionArray != null) {
-                    for (version in versionArray) {
-                        val versionInt = version.trim().toIntOrNull()
-                        versionInt?.let { versionValue ->
-                            val order = orderRep.getByOrderByCodeAndVersion(request.orderCode!!, versionValue)
+                    val versions = versionArray.mapNotNull { it.trim().toIntOrNull() }
 
-                            order?.let {
-                                if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
-                                    minStartDate = order.startDate
-                                }
-                                if (maxEndDate == null || order.endDate?.isAfter(maxEndDate) == true) {
-                                    maxEndDate = order.endDate
-                                }
-                            }
+                    val orders = orderRep.getOrdersByCodeAndVersions(request.orderCode!!, versions)
+
+                    for (order in orders) {
+                        if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
+                            minStartDate = order.startDate
+                        }
+                        if (maxEndDate == null || order.endDate?.isAfter(maxEndDate) == true) {
+                            maxEndDate = order.endDate
                         }
                     }
                 }
                 request.startDate = minStartDate
                 request.endDate = maxEndDate
             }
-
-
             if (request.startDate != null && request.endDate != null) {
 
+                request.startDate = DateTimeHelper.convertDateUtc7(request.startDate)
+                request.endDate = DateTimeHelper.convertDateUtc7(request.endDate)
                 var currentDate = request.startDate
+
                 while (!currentDate!!.isAfter(request.endDate)) {
+                    val key = currentDate.let { DateTimeHelper.formatDate(it) }
                     val response = CalendarValueResponse(
-                        key = currentDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
-                        value = currentDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
+                        key = key,
+                        value = key,
                         isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
                     )
                     calendarResponses.add(response)
@@ -99,6 +98,7 @@ class OrderService(
             val calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
             item.quantityByCalendars = calender
             if (calender != null) {
+                count =0
                 for (number in calender) {
                     count += number.value?.toInt() ?: 0
                 }
@@ -275,7 +275,8 @@ class OrderService(
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
         }
 
-        if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1)) {
+        val formatDates = arrayOf("MM/dd", "M/d", "M/dd", "MM/dd/yyyy", "M/d/yyyy", "M/dd/yyyy")
+        if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1, formatDates)) {
             workbook.close()
             throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidCalendar"))
         }

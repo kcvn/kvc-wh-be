@@ -52,20 +52,33 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
-            if (search.productNameShortCut != null) {
+            if (!search.productNameShortCut.isNullOrEmpty()) {
                 val lowerProductNameShortCutSearch = DSL.lower(search.productNameShortCut)
                 condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT).containsIgnoreCase(lowerProductNameShortCutSearch))
             }
 
-            if (search.processCode != null) {
-                val lowerProcessCodeSearch = DSL.lower(search.processCode)
-                condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).containsIgnoreCase(lowerProcessCodeSearch)
-                    .or(PROCESS_MASTER.PROCESS_NAME.containsIgnoreCase(lowerProcessCodeSearch))
-                    .or(PROCESS_MASTER.PROCESS_NAME_JP.containsIgnoreCase(lowerProcessCodeSearch)))
+            if (!search.processCode.isNullOrEmpty()) {
+                val lowerProcessCodeSearch = search.processCode
+                condition = condition.and(
+                    DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).containsIgnoreCase(lowerProcessCodeSearch)
+                        .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME).containsIgnoreCase(lowerProcessCodeSearch))
+                        .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME_JP).containsIgnoreCase(lowerProcessCodeSearch))
+                )
             }
-        }
 
-        val maxEffectiveDatesMap = mutableMapOf<String, OffsetDateTime?>()
+
+        }
+        
+        val crppSubquery = context.select(
+            COMPLETION_RATE_PROCESS_PRODUCT.KEY,
+            COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE,
+            DSL.max(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE).`as`("max_date")
+        )
+            .from(COMPLETION_RATE_PROCESS_PRODUCT)
+            .groupBy(
+                COMPLETION_RATE_PROCESS_PRODUCT.KEY,
+                COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE
+            )
 
         val completionRateProcessesQuery = context.select(
             COMPLETION_RATE_PROCESS_PRODUCT.ID,
@@ -81,6 +94,10 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .from(
                 COMPLETION_RATE_PROCESS_PRODUCT
                     .join(PROCESS_MASTER).on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+                    .join(crppSubquery)
+                    .on(COMPLETION_RATE_PROCESS_PRODUCT.KEY.eq(crppSubquery.field(COMPLETION_RATE_PROCESS_PRODUCT.KEY))
+                        .and(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(crppSubquery.field(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE)))
+                        .and(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE.eq(crppSubquery.field("max_date", OffsetDateTime::class.java))))
                     .where(PROCESS_MASTER.IS_DELETED.eq(false))
             )
             .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
@@ -89,21 +106,16 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .offset(pageable?.offset ?: 0)
             .fetchInto(CompletionRateProcessProductResponse::class.java)
 
-        completionRateProcessesQuery.forEach { product ->
-            val currentMaxEffectiveDate = maxEffectiveDatesMap[product.key]
-            if (currentMaxEffectiveDate == null || (product.effectiveDate != null && product.effectiveDate > currentMaxEffectiveDate)) {
-                maxEffectiveDatesMap[product.key!!] = product.effectiveDate
-            }
-        }
-
-        val filteredList = completionRateProcessesQuery.filter { product ->
-            val maxEffectiveDate = maxEffectiveDatesMap[product.key]
-            product.effectiveDate != null && product.effectiveDate == maxEffectiveDate
-        }
-
-        val total = filteredList.count()
-
-        return Pair(filteredList, total)
+        val total = context.selectDistinct(COMPLETION_RATE_PROCESS_PRODUCT.KEY)
+            .from(
+                COMPLETION_RATE_PROCESS_PRODUCT
+                    .join(PROCESS_MASTER)
+                    .on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+                    .where(condition)
+            )
+            .fetch()
+            .size
+        return Pair(completionRateProcessesQuery, total)
     }
 
 

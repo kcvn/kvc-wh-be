@@ -12,10 +12,13 @@ import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.model.tables.references.*
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
+import org.jooq.SortField
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -24,14 +27,22 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
     {
         var condition: Condition = DSL.noCondition()
         if(keyword != null){
-            val lowerKeyword = DSL.lower(keyword);
-            condition = condition.and(DSL.lower(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).contains(lowerKeyword))
+            condition = condition.and(DSL.lower(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).contains(keyword.lowercase()))
         }
         if(hasProcessConvertCode){
             condition = condition.and(PRODUCT_PROCESS.PROCESS_CONVERT_CODE.isNull
                 .or(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.isNull))
-
         }
+
+        var sortFields = getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE).distinct().toMutableList()
+        val sortLayerCode = pageable.sort.find { x -> x.property == "layerCode" }
+        if (sortLayerCode != null){
+            if (sortLayerCode.direction == Sort.Direction.ASC)
+                sortFields.add(1, DSL.cast(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, java.math.BigDecimal::class.java).asc())
+            else
+                sortFields.add(1, DSL.cast(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE, java.math.BigDecimal::class.java).desc())
+        }
+
         val productProcessQuery = context
             .select(
                 PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
@@ -55,7 +66,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .leftJoin(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE).and(PROCESS_MASTER.IS_DELETED.eq(false)))
             .where(condition.and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))) // Điều kiện cho bảng PROCESS_PROCEDURE_STRUCTURE
-            .orderBy(getSortFields(pageable.sort, PRODUCT_PROCESS.CREATED_DATE))
+            .orderBy(sortFields)
             .limit(pageable.pageSize)
             .offset(pageable.offset)
             .fetchInto(ProductProcessResponse::class.java)
@@ -179,9 +190,8 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
-        val sortField: TableField<*, *>? = when (sortFieldName) {
+        val sortField: TableField<*, *> = when (sortFieldName) {
             "productName" -> PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE
-            "layerCode" -> PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
             "processConvertCode" -> PRODUCT_PROCESS.PROCESS_CONVERT_CODE
             "processCode" -> PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
             "processName" -> PRODUCT_PROCESS.PROCESS_NAME
@@ -189,10 +199,10 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             "processStatisticCode" -> PRODUCT_PROCESS.PROCESS_STATISTIC_CODE
             "processInventoryCode" -> PRODUCT_PROCESS.PROCESS_INVENTORY_CODE
             "processSequence" -> PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE
-            else -> null
+            else -> PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE
         }
 
-        return sortField ?: throw InvalidDataAccessApiUsageException("Could not find table field: $sortFieldName")
+        return sortField
     }
 
     fun add(productProcess: ProductProcess) {

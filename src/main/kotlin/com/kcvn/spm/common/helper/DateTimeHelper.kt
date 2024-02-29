@@ -58,5 +58,14 @@ class DateTimeHelper {
             val offsetDateTime = OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
             return offsetDateTime
         }
+
+        fun formatDate(offsetDateTime: OffsetDateTime): String {
+            return  offsetDateTime.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+
+        }
+        fun convertDateUtc7(date: OffsetDateTime?): OffsetDateTime? {
+            return date?.plusHours(7)
+        }
+
     }
 }

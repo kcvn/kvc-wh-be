@@ -30,7 +30,7 @@ class RoleRepository(private val context: DSLContext) : SortingRepository() {
     fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<AuthRole>, Int> {
         var condition: Condition = DSL.noCondition()
         if (keyword != null) {
-            condition = condition.and(AUTH_ROLE.NAME.contains(keyword).or(AUTH_ROLE.DESCRIPTION.contains(keyword)))
+            condition = condition.and(AUTH_ROLE.NAME.containsIgnoreCase(keyword).or(AUTH_ROLE.DESCRIPTION.containsIgnoreCase(keyword)))
         }
         val roles = context.selectFrom(AUTH_ROLE).where(condition)
             .and(AUTH_ROLE.IS_DELETED.eq(false))

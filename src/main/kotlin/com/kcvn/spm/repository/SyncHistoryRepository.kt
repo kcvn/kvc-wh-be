@@ -18,12 +18,12 @@ class SyncHistoryRepository (private val context: DSLContext) {
     }
 
     fun add(data: SyncHistory): SyncHistory? {
+        val createBy = try {CommonUtils.loggedInUser() ?: Constants.SYSTEM} catch (e: Exception) { Constants.SYSTEM}
         return context.insertInto(
             SYNC_HISTORY,
             SYNC_HISTORY.SOURCE, SYNC_HISTORY.DESTINATION, SYNC_HISTORY.TYPE, SYNC_HISTORY.CREATED_BY
         ).values(
-            data.source, data.destination, data.type,
-            CommonUtils.loggedInUser() ?: Constants.SYSTEM
+            data.source, data.destination, data.type, createBy
         ).returningResult(SYNC_HISTORY).fetchInto(SyncHistory::class.java).firstOrNull()
     }
 

@@ -39,9 +39,9 @@ class DateTimeHelper {
             return formattedDateTime
         }
 
-        fun convertOffSetDateTimeToString(date: OffsetDateTime?) : String? {
+        fun convertOffSetDateTimeToLocalDateTimeToString(date: OffsetDateTime?) : String? {
 
-            val localDateTime = date?.atZoneSameInstant(ZoneOffset.UTC)?.toLocalDateTime()
+            val localDateTime = date?.toLocalDateTime()
 
             // Định dạng chuỗi thành "yyyy-MM-dd"
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)

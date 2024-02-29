@@ -98,7 +98,7 @@ class OrderService(
             val calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
             item.quantityByCalendars = calender
             if (calender != null) {
-                count =0
+                count = 0
                 for (number in calender) {
                     count += number.value?.toInt() ?: 0
                 }
@@ -244,206 +244,189 @@ class OrderService(
 
     fun importExcelOrder(file: MultipartFile, orderCodeSelected: String?): BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
-        val sheet = workbook.getSheetAt(0)
-        val rowIndex = 1
+        try {
+            val sheet = workbook.getSheetAt(0)
+            val rowIndex = 1
 
-        if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex)) {
-            workbook.close()
-            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        }
+            if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
+                throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-        val headerRow = sheet.getRow(0)
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportOrderTemplate.xlsx"
+            val headerRow = sheet.getRow(0) ?: throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportOrderTemplate.xlsx"
 
-        val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
-        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
-        val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
+            val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
+            val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+            val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
-        if (colResult == null) {
-            headerRow.createCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
-        } else {
-            headerRow.getCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
-        }
-        val headerStyle = headerRow.getCell(0).cellStyle
-        headerRow.getCell(colIndexResult).cellStyle.cloneStyleFrom(headerStyle)
-        headerRow.getCell(colIndexResult).cellStyle.fillForegroundColor = IndexedColors.RED.index
-        headerRow.getCell(colIndexResult).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-        sheet.setColumnWidth(colIndexResult, 15000)
-
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 1)) {
-            workbook.close()
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
-        }
-
-        val formatDates = arrayOf("MM/dd", "M/d", "M/dd", "MM/dd/yyyy", "M/d/yyyy", "M/dd/yyyy")
-        if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1, formatDates)) {
-            workbook.close()
-            throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidCalendar"))
-        }
-
-        if (!checkContinuousDate(headerRow, 1, colIndexResult - 1)) {
-            workbook.close()
-            throw BusinessException(CommonUtils.getMessage("validate.excel.date.notContinuous"))
-        }
-
-        val year = LocalDateTime.now().year
-        val arrStartDate = ExcelHelper.getCellValue(headerRow, 1, DateTimeFormat.MM_dd).split("/")
-        val startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
-        val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1, DateTimeFormat.MM_dd).split("/")
-        val endDate = LocalDateTime.of(year, arrEndDate[0].toInt(), arrEndDate[1].toInt(), 0, 0)
-        val orderCode = "${startDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}-${endDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}"
-        var startDateUtc = OffsetDateTime.of(startDate, ZoneOffset.UTC)
-        val endDateUtc = OffsetDateTime.of(endDate, ZoneOffset.UTC)
-        var version = 1
-
-        if (startDate > endDate) {
-            workbook.close()
-            throw BusinessException(CommonUtils.getMessage("validate.excel.startDate.gt.endDate"))
-        }
-
-        if (orderCodeSelected.isNullOrEmpty()) {
-            if (Duration.between(endDate, startDate).toDays() > 31) {
-                workbook.close()
-                throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidDiffDate", arrayOf(31)))
+            if (colResult == null) {
+                headerRow.createCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            } else {
+                headerRow.getCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
             }
-            if (startDate < DateTimeHelper.getFirstDayOfQuarterInYear(LocalDateTime.now())) {
-                workbook.close()
-                throw BusinessException(CommonUtils.getMessage("validate.excel.column.quarterInYear"))
-            }
-            val overlapOrder = orderRep.getOverlapOrderDate(startDateUtc, endDateUtc, orderCode)
-            if (overlapOrder != null) {
-                workbook.close()
-                throw BusinessException(CommonUtils.getMessage("validate.excel.orderOverlap"))
-            }
-        } else {
-            val orderExist = orderRep.getByOrderCode(orderCodeSelected)
-            if (orderExist == null) {
-                workbook.close()
-                throw BusinessException(CommonUtils.getMessage("validate.orderNotExist"))
-            }
-            if (startDateUtc < orderExist.startDate || endDateUtc > orderExist.endDate) {
-                workbook.close()
-                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidTime"))
-            }
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(colIndexResult).cellStyle.cloneStyleFrom(headerStyle)
+            headerRow.getCell(colIndexResult).cellStyle.fillForegroundColor = IndexedColors.RED.index
+            headerRow.getCell(colIndexResult).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            sheet.setColumnWidth(colIndexResult, 15000)
 
-            val workResult = workResultRep.getMaxByDate(startDateUtc, endDateUtc)
-            if (workResult?.summaryResultDate != null) {
-                if (workResult.summaryResultDate!! >= endDateUtc) {
-                    workbook.close()
-                    throw BusinessException(CommonUtils.getMessage("validate.order.hasWorkResult"))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 1))
+                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+
+            val formatDates = arrayOf("MM/dd", "M/d", "M/dd", "MM/dd/yyyy", "M/d/yyyy", "M/dd/yyyy")
+            if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1, formatDates))
+                throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidCalendar"))
+
+            if (!checkContinuousDate(headerRow, 1, colIndexResult - 1))
+                throw BusinessException(CommonUtils.getMessage("validate.excel.date.notContinuous"))
+
+            val year = LocalDateTime.now().year
+            val arrStartDate = ExcelHelper.getCellValue(headerRow, 1, DateTimeFormat.MM_dd).split("/")
+            val startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
+            val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1, DateTimeFormat.MM_dd).split("/")
+            val endDate = LocalDateTime.of(year, arrEndDate[0].toInt(), arrEndDate[1].toInt(), 0, 0)
+            val orderCode = "${startDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}-${endDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}"
+            var startDateUtc = OffsetDateTime.of(startDate, ZoneOffset.UTC)
+            val endDateUtc = OffsetDateTime.of(endDate, ZoneOffset.UTC)
+            var version = 1
+
+            if (startDate > endDate)
+                throw BusinessException(CommonUtils.getMessage("validate.excel.startDate.gt.endDate"))
+
+            if (orderCodeSelected.isNullOrEmpty()) {
+                if (Duration.between(endDate, startDate).toDays() > 31)
+                    throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidDiffDate", arrayOf(31)))
+
+                if (startDate < DateTimeHelper.getFirstDayOfQuarterInYear(LocalDateTime.now()))
+                    throw BusinessException(CommonUtils.getMessage("validate.excel.column.quarterInYear"))
+
+                val overlapOrder = orderRep.getOverlapOrderDate(startDateUtc, endDateUtc, orderCode)
+                if (overlapOrder != null)
+                    throw BusinessException(CommonUtils.getMessage("validate.excel.orderOverlap"))
+
+            } else {
+                val orderExist = orderRep.getByOrderCode(orderCodeSelected)
+                    ?: throw BusinessException(CommonUtils.getMessage("validate.orderNotExist"))
+
+                if (startDateUtc < orderExist.startDate || endDateUtc > orderExist.endDate)
+                    throw BusinessException(CommonUtils.getMessage("validate.excel.invalidTime"))
+
+                val workResult = workResultRep.getMaxByDate(startDateUtc, endDateUtc)
+                if (workResult?.summaryResultDate != null) {
+                    if (workResult.summaryResultDate!! >= endDateUtc)
+                        throw BusinessException(CommonUtils.getMessage("validate.order.hasWorkResult"))
+
+                    val workResultDate = workResult.summaryResultDate!!.plusDays(1)
+                    startDateUtc = OffsetDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0, 0, 0, ZoneOffset.UTC)
                 }
-                val workResultDate = workResult.summaryResultDate!!.plusDays(1)
-                startDateUtc = OffsetDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0, 0, 0, ZoneOffset.UTC)
-            }
-            version = (orderExist.version ?: 0) + 1
-        }
-
-        val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
-        val productExists = productRep.getByName(productNames)
-
-        val orderDetails = mutableListOf<OrderDetail>()
-        val productImports = mutableListOf<String>()
-        var isBreak = false
-        var count = 0
-        val total = sheet.filter { x -> x.rowNum >= rowIndex }.size
-        for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val messageResults = mutableListOf<String>()
-            val style = row.getCell(0).cellStyle
-            val name = ExcelHelper.getCellValue(row, 0)
-            var check = true
-            if (productImports.any { x -> x == name }) {
-                check = false
-                messageResults.add(CommonUtils.getMessage("validate.excel.duplicate"))
-            }
-            val product = productExists.find { x -> x.name == name }
-            if (product == null) {
-                isBreak = true
-                check = false
-                messageResults.add(CommonUtils.getMessage("product.not.exist"))
+                version = (orderExist.version ?: 0) + 1
             }
 
-            if (check) {
-                for (iCol in 1 until colIndexResult) {
-                    try {
-                        val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol, DateTimeFormat.MM_dd).split("/")
-                        val orderDate = LocalDateTime.of(year, arrOrderDate[0].toInt(), arrOrderDate[1].toInt(), 0, 0)
-                        val strQuantity = ExcelHelper.getCellValue(row, iCol)
-                        if (strQuantity.isEmpty()) {
-                            continue
-                        } else {
-                            if (strQuantity.toBigDecimalOrNull() == null) {
-                                isBreak = true
-                                messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, iCol))))
-                                break
+            val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
+            val productExists = productRep.getByName(productNames)
+
+            val orderDetails = mutableListOf<OrderDetail>()
+            val productImports = mutableListOf<String>()
+            var isBreak = false
+            var count = 0
+            val total = sheet.filter { x -> x.rowNum >= rowIndex }.size
+            for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val messageResults = mutableListOf<String>()
+                val style = row.getCell(0).cellStyle
+                val name = ExcelHelper.getCellValue(row, 0)
+                var check = true
+                if (productImports.any { x -> x == name }) {
+                    check = false
+                    messageResults.add(CommonUtils.getMessage("validate.excel.duplicate"))
+                }
+                val product = productExists.find { x -> x.name == name }
+                if (product == null) {
+                    isBreak = true
+                    check = false
+                    messageResults.add(CommonUtils.getMessage("product.not.exist"))
+                }
+
+                if (check) {
+                    for (iCol in 1 until colIndexResult) {
+                        try {
+                            val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol, DateTimeFormat.MM_dd).split("/")
+                            val orderDate = LocalDateTime.of(year, arrOrderDate[0].toInt(), arrOrderDate[1].toInt(), 0, 0)
+                            val strQuantity = ExcelHelper.getCellValue(row, iCol)
+                            if (strQuantity.isEmpty()) {
+                                continue
+                            } else {
+                                if (strQuantity.toBigDecimalOrNull() == null) {
+                                    isBreak = true
+                                    messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, iCol))))
+                                    break
+                                }
                             }
+                            val orderDetail = OrderDetail(
+                                productId = product!!.id,
+                                orderDate = OffsetDateTime.of(orderDate, ZoneOffset.UTC),
+                                quantity = strQuantity.toBigDecimalOrNull()?.toInt()
+                            )
+                            orderDetails.add(orderDetail)
+                        } catch (e: Exception) {
+                            isBreak = true
+                            messageResults.add(CommonUtils.getMessage("validate.excel.updateDataError"))
                         }
-                        val orderDetail = OrderDetail(
-                            productId = product!!.id,
-                            orderDate = OffsetDateTime.of(orderDate, ZoneOffset.UTC),
-                            quantity = strQuantity.toBigDecimalOrNull()?.toInt()
-                        )
-                        orderDetails.add(orderDetail)
-                    } catch (e: Exception) {
-                        isBreak = true
-                        messageResults.add(CommonUtils.getMessage("validate.excel.updateDataError"))
+                    }
+                    if (!isBreak) {
+                        productImports.add(name)
+                        messageResults.add(CommonUtils.getMessage("validate.excel.checked"))
+                        count++
                     }
                 }
-                if (!isBreak) {
-                    productImports.add(name)
-                    messageResults.add(CommonUtils.getMessage("validate.excel.checked"))
-                    count++
+
+                val result = messageResults.joinToString(separator = "; ")
+
+                if (row.getCell(colIndexResult) == null) {
+                    row.createCell(colIndexResult)
+                }
+                row.getCell(colIndexResult).setCellValue(result)
+                row.getCell(colIndexResult).cellStyle = style
+            }
+
+            if (!isBreak) {
+                try {
+                    val order = Order(
+                        orderCode = orderCodeSelected ?: orderCode,
+                        startDate = startDateUtc,
+                        endDate = endDateUtc,
+                        version = version
+                    )
+
+                    orderRep.addOrder(order, orderDetails)
+
+                    return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
+
+                } catch (e: Exception) {
+                    throw e
                 }
             }
 
-            val result = messageResults.joinToString(separator = "; ")
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            workbook.write(byteArrayOutputStream)
 
-            if (row.getCell(colIndexResult) == null) {
-                row.createCell(colIndexResult)
-            }
-            row.getCell(colIndexResult).setCellValue(result)
-            row.getCell(colIndexResult).cellStyle = style
+            val excelBytes = byteArrayOutputStream.toByteArray()
 
-            //if (isBreak) break
+            val response = FileContentModel(
+                fileName = CommonUtils.getMessage("fileName.resultImportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateTimeFormat.yyyy_MM_dd_HH_mm_ss)))),
+                contentType = Constants.EXCEL_CONTENT_TYPE,
+                content = excelBytes
+            )
+
+            workbook.close()
+
+            return BaseResponse(
+                response,
+                if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
+            )
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            workbook.close()
         }
-
-        if (!isBreak) {
-            try {
-                val order = Order(
-                    orderCode = orderCodeSelected ?: orderCode,
-                    startDate = startDateUtc,
-                    endDate = endDateUtc,
-                    version = version
-                )
-
-                orderRep.addOrder(order, orderDetails)
-
-                workbook.close()
-
-                return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
-
-            } catch (e: Exception) {
-                workbook.close()
-                throw e
-            }
-        }
-
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        workbook.write(byteArrayOutputStream)
-
-        val excelBytes = byteArrayOutputStream.toByteArray()
-
-        val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.resultImportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateTimeFormat.yyyy_MM_dd_HH_mm_ss)))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
-            content = excelBytes
-        )
-
-        workbook.close()
-
-        return BaseResponse(
-            response,
-            if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
-        )
     }
 
     fun downloadTemplate(): BaseResponse<FileContentModel> {
@@ -464,7 +447,7 @@ class OrderService(
         return BaseResponse(response)
     }
 
-    fun checkWorkResult(orderCode: String) : BaseResponse<CheckWorkResultModel> {
+    fun checkWorkResult(orderCode: String): BaseResponse<CheckWorkResultModel> {
         val orderExist = orderRep.getByOrderCode(orderCode)
             ?: throw BusinessException(CommonUtils.getMessage("validate.orderNotExist"))
 

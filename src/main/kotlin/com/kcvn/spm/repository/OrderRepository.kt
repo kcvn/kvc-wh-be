@@ -97,6 +97,11 @@ class OrderRepository(
             "createdDate" -> ORDER.CREATED_DATE
             "version" -> ORDER.VERSION
             "productName"-> PRODUCT.NAME
+            "frame1"-> PRODUCT.FRAME_1
+             "layerCount"-> PRODUCT.LAYER_COUNT
+            "pcsSh"-> PRODUCT.PCS_SH
+            "shBlock"-> PRODUCT.SH_BLOCK
+            "srNosR"-> PRODUCT.SR_NOSR
             else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
         }
     }
@@ -153,8 +158,13 @@ class OrderRepository(
             .fetchInto(Order::class.java).firstOrNull()
     }
 
-    fun getOrderByCodeAndVersion(orderCode: String, version: Int) : Order? {
-        return context.selectFrom(ORDER).where(ORDER.ORDER_CODE.eq(orderCode)).and(ORDER.IS_DELETED.eq(false).and(ORDER.VERSION.eq(version)))
-            .fetchInto(Order::class.java).firstOrNull()
+    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>): List<Order> {
+        return context.selectFrom(ORDER)
+            .where(
+                ORDER.ORDER_CODE.eq(orderCode)
+                    .and(ORDER.IS_DELETED.eq(false))
+                    .and(ORDER.VERSION.`in`(versions))
+            )
+            .fetchInto(Order::class.java)
     }
 }

@@ -7,6 +7,7 @@ import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -17,7 +18,6 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
-import com.kcvn.spm.repository.OrderDetailRepository
 import com.kcvn.spm.repository.OrderRepository
 import com.kcvn.spm.repository.ProductRepository
 import com.kcvn.spm.repository.WorkResultRepository
@@ -37,7 +37,6 @@ import java.time.format.DateTimeFormatter
 @Transactional
 class OrderService(
     private val orderRep: OrderRepository,
-    private val orderDetailRep: OrderDetailRepository,
     private val workResultRep: WorkResultRepository,
     private val productRep: ProductRepository
 ) {
@@ -47,7 +46,7 @@ class OrderService(
     ): PagingOrderResponse {
         val calendarResponses = mutableListOf<CalendarValueResponse>()
         if (request != null) {
-            if (request.filterType != null && request.filterType == 1 && request.orderCode != null) {
+            if (request.filterType != null && request.filterType == OrderFilterType.ORDER && request.orderCode != null) {
 
                 val versionArray = request.version?.split(",")
                 var minStartDate: OffsetDateTime? = null
@@ -67,13 +66,13 @@ class OrderService(
                         }
                     }
                 }
-                request.startDate = minStartDate
-                request.endDate = maxEndDate
+                request.startDate = DateTimeHelper.toTimeZone7(minStartDate)
+                request.endDate = DateTimeHelper.toTimeZone7(maxEndDate)
             }
             if (request.startDate != null && request.endDate != null) {
 
-                request.startDate = DateTimeHelper.convertDateUtc7(request.startDate)
-                request.endDate = DateTimeHelper.convertDateUtc7(request.endDate)
+                request.startDate = DateTimeHelper.toTimeZone7(request.startDate)
+                request.endDate = DateTimeHelper.toTimeZone7(request.endDate)
                 var currentDate = request.startDate
 
                 while (!currentDate!!.isAfter(request.endDate)) {
@@ -100,6 +99,10 @@ class OrderService(
             val quantityByCalendar = quantityByCalendars.filter { m -> m.orderId == model.orderId && m.productId == model.productId }
                 .map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
             model.quantityByCalendars = quantityByCalendar
+            model.version = "v${model.version}.0"
+            if(!model.productName.isNullOrEmpty()){
+                model.productShortcutName = model.productName!!.substring(model.productName!!.length-7,model.productName!!.length)
+            }
             model
         }
 

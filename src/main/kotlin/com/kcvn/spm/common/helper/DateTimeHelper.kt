@@ -56,12 +56,8 @@ class DateTimeHelper {
             return date.format(DateTimeFormatter.ofPattern(format))
         }
 
-        fun convertDateUtc7(date: OffsetDateTime?): OffsetDateTime? {
+        fun toTimeZone7(date: OffsetDateTime?): OffsetDateTime? {
             return date?.plusHours(7)
-        }
-
-        fun toUniversalTime(date: OffsetDateTime): OffsetDateTime {
-            return date.plusHours(-7)
         }
 
         fun toUniversalTime(date: LocalDateTime): OffsetDateTime {

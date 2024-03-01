@@ -27,20 +27,16 @@ class TranAmSyncScheduler(
         val minute = timeRunning.value!!.split(":")[1].toInt()
         val dt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(7)
 
-        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) <= 5) {
-            println("-------------------------------------------------------")
-            println("Scheduled task SyncProcessProcedureStructure started...")
-            println("-------------------------------------------------------")
+        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) < 5) {
+
             try {
                 syncTranAmService.syncProcessProcedureStructure()
-                println("-------------------------------------------------------")
-                println("Scheduled task SyncProcessProcedureStructure completed!")
-                println("-------------------------------------------------------")
+
             }catch (e: Exception){
                 val messageError = e.message.toString()
-                println("-------------------------------------------------------")
+
                 println("Error: $messageError")
-                println("-------------------------------------------------------")
+             
             }
 
         }else {
@@ -58,20 +54,13 @@ class TranAmSyncScheduler(
         val minute = timeRunning.value!!.split(":")[1].toInt()
         val dt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(7)
 
-        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) <= 5) {
-            println("-------------------------------------------------------")
-            println("Scheduled task SyncProcessMaster started...")
-            println("-------------------------------------------------------")
+        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) < 5) {
+
             try {
                 syncTranAmService.syncProcessMaster()
-                println("-------------------------------------------------------")
-                println("Scheduled task SyncProcessMaster completed!")
-                println("-------------------------------------------------------")
             }catch (e: Exception){
                 val messageError = e.message.toString()
-                println("-------------------------------------------------------")
                 println("Error: $messageError")
-                println("-------------------------------------------------------")
             }
 
         }else {
@@ -89,20 +78,14 @@ class TranAmSyncScheduler(
         val minute = timeRunning.value!!.split(":")[1].toInt()
         val dt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(7)
 
-        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) <= 5) {
-            println("-------------------------------------------------------")
-            println("Scheduled task SyncWorkResult started...")
-            println("-------------------------------------------------------")
+        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) < 5) {
+
             try {
                 syncTranAmService.syncWorkResult()
-                println("-------------------------------------------------------")
-                println("Scheduled task SyncWorkResult completed!")
-                println("-------------------------------------------------------")
+
             }catch (e: Exception){
                 val messageError = e.message.toString()
-                println("-------------------------------------------------------")
                 println("Error: $messageError")
-                println("-------------------------------------------------------")
             }
 
         }else {

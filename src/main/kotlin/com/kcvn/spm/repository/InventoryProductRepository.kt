@@ -28,9 +28,10 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .fetchAnyInto(InventoryProduct::class.java)
     }
 
-    fun findInventoryProduct(id: String?, date: OffsetDateTime) : InventoryProduct? {
+    fun findInventoryProduct(id: String?, date: OffsetDateTime, code: String) : InventoryProduct? {
         return  context.selectFrom(INVENTORY_PRODUCT)
             .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(id)
+                .and(INVENTORY_PRODUCT.CODE.eq(code))
                 .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
                 .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)))
             .fetchAnyInto(InventoryProduct::class.java)
@@ -47,7 +48,8 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
                 .eq(record.processProcedureStructureId)
                 .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
-                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))).execute()
+                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
+                .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
     }
 
     fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{

@@ -98,8 +98,8 @@ class InventoryProductService(
             )
         ) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-//       if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
-//            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+       if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
+           throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
@@ -326,7 +326,7 @@ class InventoryProductService(
                             sheetQuantity = sheetQuantityRow
                         )
 
-                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date)
+                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date, codeValue)
 
                         if(checkInventoryProduct == null) {
                             requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)

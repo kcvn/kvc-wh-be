@@ -6,8 +6,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToString
-import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToLocalDateTimeToString
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -25,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.text.DecimalFormat
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -43,6 +43,7 @@ class InventoryProductService(
         val query = inventoryProductRepository.findDateInventoryProduct(date)
         if(query != null) {
             data.hasInventoryDate = true
+            data.inventorydate = query.inventoryDate
             return data
         }
         return data
@@ -58,7 +59,7 @@ class InventoryProductService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "ImportInventoryProduct.xlsx",
+            fileName = "Import_ThongTinTonKho_Template.xlsx",
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -97,8 +98,8 @@ class InventoryProductService(
             )
         ) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-//        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
-//            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+       if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
+           throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
@@ -122,7 +123,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
                     )
                 )
             }
@@ -131,7 +132,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
                     )
                 )
             }
@@ -140,7 +141,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
                     )
                 )
             }
@@ -149,7 +150,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
                     )
                 )
             }
@@ -158,7 +159,7 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))
                     )
                 )
             }
@@ -167,28 +168,28 @@ class InventoryProductService(
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 7).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 6))
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 8).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 7))
-                    )
-                )
-            }
+//            if (ExcelHelper.getCellValue(row, 7).isEmpty()) {
+//                check = false
+//                messageResults.add(
+//                    CommonUtils.getMessage(
+//                        "validate.excel.empty",
+//                        arrayOf(ExcelHelper.getCellValue(headerRow, 6))
+//                    )
+//                )
+//            }
+//            if (ExcelHelper.getCellValue(row, 8).isEmpty()) {
+//                check = false
+//                messageResults.add(
+//                    CommonUtils.getMessage(
+//                        "validate.excel.empty",
+//                        arrayOf(ExcelHelper.getCellValue(headerRow, 7))
+//                    )
+//                )
+//            }
             if (ExcelHelper.getCellValue(row, 0).isNotEmpty() && row.getCell(0).toString().length > 8) {
                 check = false
                 messageResults.add(
@@ -225,7 +226,7 @@ class InventoryProductService(
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 3).isNotEmpty() && row.getCell(4).toString().length > 100) {
+            if (ExcelHelper.getCellValue(row, 4).isNotEmpty() && row.getCell(4).toString().length > 100) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
@@ -298,18 +299,34 @@ class InventoryProductService(
                     {
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
                     }else {
-
+                        var productQuantityRow = 0
+                        var sheetQuantityRow = 0
+                        if(ExcelHelper.getCellValue(row, 7).isNotEmpty()){
+                            productQuantityRow = ExcelHelper.getCellValue(row, 7).toDouble().toInt()
+                        }
+                        if(ExcelHelper.getCellValue(row, 8).isNotEmpty()){
+                            sheetQuantityRow =  ExcelHelper.getCellValue(row, 8).toDouble().toInt()
+                        }
+                        val df = DecimalFormat("#")
+                        val cellCode = row.getCell(2)
+                        var codeValue = ""
+                        codeValue = if (cellCode.cellType == CellType.NUMERIC) {
+                            val numericValue = cellCode.numericCellValue
+                            df.format(numericValue).toString()
+                        }else {
+                            cellCode.stringCellValue
+                        }
                         val requestImport = InventoryProduct(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
-                            code = ExcelHelper.getCellValue(row, 2),
+                            code = codeValue,
                             tapeLotNo = ExcelHelper.getCellValue(row, 4),
                             orderCode = ExcelHelper.getCellValue(row, 6),
-                            productQuantity = ExcelHelper.getCellValue(row, 7).toDouble().toInt(),
-                            sheetQuantity = ExcelHelper.getCellValue(row, 8).toDouble().toInt()
+                            productQuantity = productQuantityRow,
+                            sheetQuantity = sheetQuantityRow
                         )
 
-                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date)
+                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date, codeValue)
 
                         if(checkInventoryProduct == null) {
                             requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
@@ -335,6 +352,11 @@ class InventoryProductService(
             }
             row.getCell(colIndexResult ).setCellValue(result)
             row.getCell(colIndexResult ).cellStyle = style
+        }
+        
+        if (count == total) {
+            workbook.close()
+            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
         }
 
         val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
@@ -415,7 +437,7 @@ class InventoryProductService(
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 if (item?.inventoryDate != null) {
-                    val formattedDate = convertOffSetDateTimeToString(item.inventoryDate!!)
+                    val formattedDate = convertOffSetDateTimeToLocalDateTimeToString(item.inventoryDate!!)
                     dataRow.createCell(0).setCellValue(formattedDate)
                     dataRow.getCell(0).cellStyle = style
                 }

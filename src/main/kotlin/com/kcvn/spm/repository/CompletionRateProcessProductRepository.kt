@@ -66,6 +66,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                 )
             }
 
+
         }
         
         val crppSubquery = context.select(

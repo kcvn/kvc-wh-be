@@ -28,9 +28,10 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .fetchAnyInto(InventoryProduct::class.java)
     }
 
-    fun findInventoryProduct(id: String?, date: OffsetDateTime) : InventoryProduct? {
+    fun findInventoryProduct(id: String?, date: OffsetDateTime, code: String) : InventoryProduct? {
         return  context.selectFrom(INVENTORY_PRODUCT)
             .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(id)
+                .and(INVENTORY_PRODUCT.CODE.eq(code))
                 .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
                 .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)))
             .fetchAnyInto(InventoryProduct::class.java)
@@ -47,7 +48,8 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
                 .eq(record.processProcedureStructureId)
                 .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
-                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))).execute()
+                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
+                .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
     }
 
     fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
@@ -55,11 +57,11 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
 
         if(request != null){
             if(!request.orderCode.isNullOrEmpty()){
-                condition = condition.and(INVENTORY_PRODUCT.ORDER_CODE.contains(request.orderCode))
+                condition = condition.and(DSL.lower(INVENTORY_PRODUCT.ORDER_CODE).contains(DSL.lower(request.orderCode)))
             }
             if(!request.productName.isNullOrEmpty()){
                 val productNameStep12 = substring(request.productName,1,12)
-                condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.contains(productNameStep12))
+                condition = condition.and(DSL.lower(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).contains(DSL.lower(productNameStep12)))
             }
             if(!request.listProcessGroup.isNullOrEmpty()){
                 val processGroupCodes = request.listProcessGroup!!.split(",")
@@ -78,10 +80,10 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 condition = condition.and(condition2)
             }
             if(!request.tapeLot.isNullOrEmpty()){
-                condition = condition.and(INVENTORY_PRODUCT.TAPE_LOT_NO.contains(request.tapeLot))
+                condition = condition.and(DSL.lower(INVENTORY_PRODUCT.TAPE_LOT_NO).contains(DSL.lower(request.tapeLot)))
             }
             if(!request.code.isNullOrEmpty()){
-                condition = condition.and((INVENTORY_PRODUCT.CODE.contains(request.code)))
+                condition = condition.and((DSL.lower(INVENTORY_PRODUCT.CODE).contains(DSL.lower(request.code))))
             }
             if(request.fromDate != null && request.toDate != null){
                 condition = condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.between(request.fromDate, request.toDate))
@@ -159,10 +161,10 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             "pcsSh" -> {
                 PRODUCT.PCS_SH
             }
-            "oderCode" -> {
+            "orderCode" -> {
                 INVENTORY_PRODUCT.ORDER_CODE
             }
-            "tapeLotno" -> {
+            "tapeLotNo" -> {
                 INVENTORY_PRODUCT.TAPE_LOT_NO
             }
             "code" -> {

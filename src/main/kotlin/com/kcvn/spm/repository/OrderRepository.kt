@@ -136,7 +136,10 @@ class OrderRepository(
             ORDER.VERSION,
             ORDER.START_DATE,
             ORDER.END_DATE
-        ).from(ORDER).where(condition).fetchInto(Order::class.java)
+        ).from(ORDER)
+            .where(condition)
+            .orderBy(ORDER.END_DATE.sort(SortOrder.DESC))
+            .fetchInto(Order::class.java)
     }
 
     fun addOrder(order: Order, orderDetails: List<OrderDetail>) {
@@ -194,13 +197,18 @@ class OrderRepository(
             .fetchInto(Order::class.java).firstOrNull()
     }
 
-    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>): List<Order> {
-        return context.selectFrom(ORDER)
+    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>?): List<Order> {
+        val query = context.selectFrom(ORDER)
             .where(
                 ORDER.ORDER_CODE.eq(orderCode)
                     .and(ORDER.IS_DELETED.eq(false))
-                    .and(ORDER.VERSION.`in`(versions))
             )
-            .fetchInto(Order::class.java)
+        if (versions != null) {
+            if (versions.isNotEmpty()) {
+                query.and(ORDER.VERSION.`in`(versions))
+            }
+        }
+        return query.fetchInto(Order::class.java)
     }
+
 }

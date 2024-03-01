@@ -15,18 +15,21 @@ import java.time.OffsetDateTime
 data class CalculateQuantityResult(
     var id: String? = null,
     var monthReport: OffsetDateTime? = null,
-    var orderDateFrom: OffsetDateTime? = null,
+    var startDate: OffsetDateTime? = null,
     var status: Boolean? = null,
     var calculateBy: String? = null,
     var calculateDate: OffsetDateTime? = null,
     var lockedBy: String? = null,
     var lockedDate: OffsetDateTime? = null,
-    var orderDateTo: OffsetDateTime? = null,
+    var endDate: OffsetDateTime? = null,
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var orderDateFromTo: String? = null,
+    var createdDate: OffsetDateTime? = null,
+    var createdBy: String? = null
 ): Serializable {
 
 
@@ -50,11 +53,11 @@ data class CalculateQuantityResult(
         }
         else if (this.monthReport != o.monthReport)
             return false
-        if (this.orderDateFrom == null) {
-            if (o.orderDateFrom != null)
+        if (this.startDate == null) {
+            if (o.startDate != null)
                 return false
         }
-        else if (this.orderDateFrom != o.orderDateFrom)
+        else if (this.startDate != o.startDate)
             return false
         if (this.status == null) {
             if (o.status != null)
@@ -86,11 +89,11 @@ data class CalculateQuantityResult(
         }
         else if (this.lockedDate != o.lockedDate)
             return false
-        if (this.orderDateTo == null) {
-            if (o.orderDateTo != null)
+        if (this.endDate == null) {
+            if (o.endDate != null)
                 return false
         }
-        else if (this.orderDateTo != o.orderDateTo)
+        else if (this.endDate != o.endDate)
             return false
         if (this.updatedDate == null) {
             if (o.updatedDate != null)
@@ -110,6 +113,24 @@ data class CalculateQuantityResult(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.orderDateFromTo == null) {
+            if (o.orderDateFromTo != null)
+                return false
+        }
+        else if (this.orderDateFromTo != o.orderDateFromTo)
+            return false
+        if (this.createdDate == null) {
+            if (o.createdDate != null)
+                return false
+        }
+        else if (this.createdDate != o.createdDate)
+            return false
+        if (this.createdBy == null) {
+            if (o.createdBy != null)
+                return false
+        }
+        else if (this.createdBy != o.createdBy)
+            return false
         return true
     }
 
@@ -118,16 +139,19 @@ data class CalculateQuantityResult(
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.monthReport == null) 0 else this.monthReport.hashCode())
-        result = prime * result + (if (this.orderDateFrom == null) 0 else this.orderDateFrom.hashCode())
+        result = prime * result + (if (this.startDate == null) 0 else this.startDate.hashCode())
         result = prime * result + (if (this.status == null) 0 else this.status.hashCode())
         result = prime * result + (if (this.calculateBy == null) 0 else this.calculateBy.hashCode())
         result = prime * result + (if (this.calculateDate == null) 0 else this.calculateDate.hashCode())
         result = prime * result + (if (this.lockedBy == null) 0 else this.lockedBy.hashCode())
         result = prime * result + (if (this.lockedDate == null) 0 else this.lockedDate.hashCode())
-        result = prime * result + (if (this.orderDateTo == null) 0 else this.orderDateTo.hashCode())
+        result = prime * result + (if (this.endDate == null) 0 else this.endDate.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.orderDateFromTo == null) 0 else this.orderDateFromTo.hashCode())
+        result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
+        result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         return result
     }
 
@@ -136,16 +160,19 @@ data class CalculateQuantityResult(
 
         sb.append(id)
         sb.append(", ").append(monthReport)
-        sb.append(", ").append(orderDateFrom)
+        sb.append(", ").append(startDate)
         sb.append(", ").append(status)
         sb.append(", ").append(calculateBy)
         sb.append(", ").append(calculateDate)
         sb.append(", ").append(lockedBy)
         sb.append(", ").append(lockedDate)
-        sb.append(", ").append(orderDateTo)
+        sb.append(", ").append(endDate)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(orderDateFromTo)
+        sb.append(", ").append(createdDate)
+        sb.append(", ").append(createdBy)
 
         sb.append(")")
         return sb.toString()

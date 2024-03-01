@@ -1,6 +1,9 @@
 package com.kcvn.spm.app.product.payload.response
 
+import java.time.OffsetDateTime
+
 data class ProductDetailResponse(
+    var id: String? = null,
     var name: String? = null,
     var exportType: String? = null,
     var size: String? = null,
@@ -18,5 +21,7 @@ data class ProductDetailResponse(
     var tapeCommon: String? = null,
     var tapeType: String? = null,
     var productLayerDetail: String? = null,
-    var rate: Double? = 0.0
+    var rate: Double? = 0.0,
+    var effectiveDate: OffsetDateTime? = null,
+    var expirationDate: OffsetDateTime? = null,
 )

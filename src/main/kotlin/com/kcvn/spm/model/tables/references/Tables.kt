@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
+import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
@@ -94,6 +95,11 @@ val COMPLETION_RATE_PRODUCT: CompletionRateProduct = CompletionRateProduct.COMPL
  * The table <code>public.information_calculate_quantity</code>.
  */
 val INFORMATION_CALCULATE_QUANTITY: InformationCalculateQuantity = InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY
+
+/**
+ * The table <code>public.information_calculate_quantity_detail</code>.
+ */
+val INFORMATION_CALCULATE_QUANTITY_DETAIL: InformationCalculateQuantityDetail = InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL
 
 /**
  * The table <code>public.inventory_product</code>.

@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
+import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
@@ -114,6 +115,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val INFORMATION_CALCULATE_QUANTITY: InformationCalculateQuantity get() = InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY
 
     /**
+     * The table <code>public.information_calculate_quantity_detail</code>.
+     */
+    val INFORMATION_CALCULATE_QUANTITY_DETAIL: InformationCalculateQuantityDetail get() = InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL
+
+    /**
      * The table <code>public.inventory_product</code>.
      */
     val INVENTORY_PRODUCT: InventoryProduct get() = InventoryProduct.INVENTORY_PRODUCT
@@ -179,6 +185,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,
         CompletionRateProduct.COMPLETION_RATE_PRODUCT,
         InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY,
+        InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL,
         InventoryProduct.INVENTORY_PRODUCT,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,

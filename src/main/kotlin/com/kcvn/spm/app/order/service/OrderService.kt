@@ -281,9 +281,9 @@ class OrderService(
             val startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
             val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1, DateTimeFormat.MM_dd).split("/")
             val endDate = LocalDateTime.of(year, arrEndDate[0].toInt(), arrEndDate[1].toInt(), 0, 0)
-            val orderCode = "${startDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}-${endDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}"
-            var startDateUtc = OffsetDateTime.of(startDate, ZoneOffset.UTC)
-            val endDateUtc = OffsetDateTime.of(endDate, ZoneOffset.UTC)
+            val orderCode = "${DateTimeHelper.toString(startDate, DateTimeFormat.dd_MM_yyyy)}-${DateTimeHelper.toString(endDate, DateTimeFormat.dd_MM_yyyy)}"
+            var startDateUtc = DateTimeHelper.toUniversalTime(startDate)
+            val endDateUtc = DateTimeHelper.toUniversalTime(endDate)
             var version = 1
 
             if (startDate > endDate)
@@ -325,11 +325,13 @@ class OrderService(
             val productImports = mutableListOf<String>()
             var isBreak = false
             var count = 0
-            val total = sheet.filter { x -> x.rowNum >= rowIndex }.size
+            var total = 0
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-                val messageResults = mutableListOf<String>()
-                val style = row.getCell(0).cellStyle
                 val name = ExcelHelper.getCellValue(row, 0)
+                if (name.isEmpty()) break
+                val style = row.getCell(0)?.cellStyle ?: break
+                val messageResults = mutableListOf<String>()
+                total++
                 var check = true
                 if (productImports.any { x -> x == name }) {
                     check = false

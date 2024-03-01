@@ -27,7 +27,7 @@ class TranAmSyncScheduler(
         val minute = timeRunning.value!!.split(":")[1].toInt()
         val dt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(7)
 
-        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) <= 5) {
+        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) < 5) {
 
             try {
                 syncTranAmService.syncProcessProcedureStructure()
@@ -54,7 +54,7 @@ class TranAmSyncScheduler(
         val minute = timeRunning.value!!.split(":")[1].toInt()
         val dt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(7)
 
-        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) <= 5) {
+        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) < 5) {
 
             try {
                 syncTranAmService.syncProcessMaster()
@@ -78,7 +78,7 @@ class TranAmSyncScheduler(
         val minute = timeRunning.value!!.split(":")[1].toInt()
         val dt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(7)
 
-        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) <= 5) {
+        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) < 5) {
 
             try {
                 syncTranAmService.syncWorkResult()

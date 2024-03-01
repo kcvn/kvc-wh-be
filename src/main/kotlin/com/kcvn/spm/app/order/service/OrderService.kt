@@ -89,27 +89,6 @@ class OrderService(
                 }
             }
         }
-
-//        val pagingOrderResponse = PagingOrderResponse()
-//        pagingOrderResponse.columns = calendarResponses
-//        val listOrderResponse = orderRep.getPaginatedOrder(request, pageable)
-//        pagingOrderResponse.data = listOrderResponse.first
-//        var count = 0
-//        for (item in listOrderResponse.first) {
-//            val calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
-//            item.quantityByCalendars = calender
-//            if (calender != null) {
-//                count = 0
-//                for (number in calender) {
-//                    count += number.value?.toInt() ?: 0
-//                }
-//            }
-//            item.quantity = count
-//
-//        }
-//        pagingOrderResponse.totalRecords = listOrderResponse.second
-//        return pagingOrderResponse
-
         val response = PagingOrderResponse()
         response.columns = calendarResponses
         val orderDetails = orderRep.getPagingListOrder(request, pageable)

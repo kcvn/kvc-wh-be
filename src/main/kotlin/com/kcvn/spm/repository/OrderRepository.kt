@@ -27,74 +27,6 @@ import java.time.OffsetDateTime
 class OrderRepository(
     private val context: DSLContext,
 ) : SortingRepository() {
-    fun getPaginatedOrder(
-        request: OrderSearchRequest?,
-        pageable: Pageable?
-    ): Pair<List<OrderDetailModel>, Int> {
-        var condition: Condition = DSL.noCondition()
-        if (!request?.productName.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.NAME.containsIgnoreCase(request?.productName))
-        }
-        if (!request?.frame_1.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.FRAME_1.containsIgnoreCase(request?.frame_1))
-        }
-        if (!request?.srNosr.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.SR_NOSR.containsIgnoreCase(request?.srNosr))
-        }
-        if (request?.startDate != null && request.endDate != null) {
-            condition = condition.and(
-                ORDER.START_DATE.between(
-                    DateTimeHelper.convertDateUtc7(request.startDate),
-                    DateTimeHelper.convertDateUtc7(request.endDate)
-                )
-            )
-        }
-        if (!request?.orderCode.isNullOrBlank()) {
-            condition = condition.and(ORDER.ORDER_CODE.eq(request?.orderCode))
-        }
-
-        val versionArray = request?.version?.split(",")
-        if (!versionArray.isNullOrEmpty()) {
-            val orConditions = versionArray.mapNotNull { it.trim().toIntOrNull() }
-                .map { ORDER.VERSION.eq(it) }
-                .reduceOrNull { acc, condition -> acc.or(condition) }
-            if (orConditions != null) {
-                condition = condition.and(orConditions)
-            }
-        }
-
-        val orderDetailQuery = context.select(
-            ORDER_DETAIL.ID,
-            ORDER.QUANTITY,
-            PRODUCT.FRAME_1,
-            PRODUCT.LAYER_COUNT,
-            PRODUCT.PCS_SH,
-            PRODUCT.SH_BLOCK,
-            PRODUCT.SR_NOSR,
-            ORDER.VERSION,
-            PRODUCT.NAME.`as`("productName"),
-            substring(PRODUCT.NAME, 6, 10).`as`("productShortcutName"),
-            ORDER.ID.`as`("orderId"),
-            ORDER_DETAIL.PRODUCT_ID.`as`("productId")
-        )
-            .from(
-                ORDER.join(ORDER_DETAIL).on(ORDER.ID.eq(ORDER_DETAIL.ORDER_ID))
-                    .join(PRODUCT).on(ORDER_DETAIL.PRODUCT_ID.eq(PRODUCT.ID))
-            )
-            .where(
-                condition.and(ORDER_DETAIL.IS_DELETED.eq(false))
-                    .and(PRODUCT.IS_DELETED.eq(false))
-                    .and(ORDER.IS_DELETED.eq(false))
-            )
-            .orderBy(getSortFields(pageable?.sort, ORDER.ORDER_CODE))
-            .limit(pageable?.pageSize ?: 10)
-            .offset(pageable?.offset ?: 0)
-        .fetchInto(OrderDetailModel::class.java)
-        val uniqueOrderProductPairs = orderDetailQuery
-            .distinctBy { it.orderId to it.productId }
-        val total = context.fetchCount(ORDER_DETAIL, ORDER_DETAIL.IS_DELETED.eq(false))
-        return Pair(uniqueOrderProductPairs, total)
-    }
 
     fun getPagingListOrder(request: OrderSearchRequest?, pageable: Pageable?): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
@@ -134,7 +66,8 @@ class OrderRepository(
             PRODUCT.PCS_SH.`as`("pcsSh"),
             PRODUCT.SH_BLOCK.`as`("shBlock"),
             PRODUCT.SR_NOSR.`as`("srNosr"),
-            ORDER.VERSION.`as`("version")
+            ORDER.VERSION.`as`("version"),
+            substring(PRODUCT.NAME, 6, 10).`as`("productShortcutName")
         ).from(ORDER_DETAIL).join(ORDER).on(ORDER_DETAIL.ORDER_ID.eq(ORDER.ID).and(ORDER.IS_DELETED.eq(false)))
             .join(PRODUCT).on(ORDER_DETAIL.PRODUCT_ID.eq(PRODUCT.ID).and(PRODUCT.IS_DELETED.eq(false)))
             .where(condition)

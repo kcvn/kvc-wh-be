@@ -193,13 +193,18 @@ class OrderRepository(
             .fetchInto(Order::class.java).firstOrNull()
     }
 
-    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>): List<Order> {
-        return context.selectFrom(ORDER)
+    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>?): List<Order> {
+        val query = context.selectFrom(ORDER)
             .where(
                 ORDER.ORDER_CODE.eq(orderCode)
                     .and(ORDER.IS_DELETED.eq(false))
-                    .and(ORDER.VERSION.`in`(versions))
             )
-            .fetchInto(Order::class.java)
+        if (versions != null) {
+            if (versions.isNotEmpty()) {
+                query.and(ORDER.VERSION.`in`(versions))
+            }
+        }
+        return query.fetchInto(Order::class.java)
     }
+
 }

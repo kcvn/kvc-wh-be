@@ -33,14 +33,11 @@ class TranAmSyncScheduler(
                 syncTranAmService.syncProcessProcedureStructure()
 
             }catch (e: Exception){
-                val messageError = e.message.toString()
-
-                println("Error: $messageError")
-             
+                return
             }
 
         }else {
-            println("No data")
+            return
         }
     }
 
@@ -59,12 +56,11 @@ class TranAmSyncScheduler(
             try {
                 syncTranAmService.syncProcessMaster()
             }catch (e: Exception){
-                val messageError = e.message.toString()
-                println("Error: $messageError")
+                return
             }
 
         }else {
-            println("No data")
+            return
         }
     }
 
@@ -84,12 +80,11 @@ class TranAmSyncScheduler(
                 syncTranAmService.syncWorkResult()
 
             }catch (e: Exception){
-                val messageError = e.message.toString()
-                println("Error: $messageError")
+                return
             }
 
         }else {
-            println("No data")
+            return
         }
     }
 }

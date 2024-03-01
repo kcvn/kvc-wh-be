@@ -1,18 +1,25 @@
 package com.kcvn.spm.common.helper
 
 import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.DateUtil
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
+import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 class ExcelHelper {
     companion object {
-        fun getCellValue(row: Row, colIdx: Int): String {
+        fun getCellValue(row: Row, colIdx: Int, format: String? = null): String {
             try {
                 val cell = row.getCell(colIdx)
+                if (!format.isNullOrEmpty() && cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                    val dateFormat = SimpleDateFormat(format)
+                    val date = cell.dateCellValue
+                    return dateFormat.format(date)
+                }
                 return when (cell.cellType) {
                     CellType.STRING -> cell.stringCellValue
                     CellType.NUMERIC -> cell.numericCellValue.toString()
@@ -62,6 +69,10 @@ class ExcelHelper {
 
         fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int, formats: Array<String>) : Boolean {
             for (i in startCol until endCol+1) {
+                val cell = headerRowImport.getCell(i)
+                if (cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                    continue
+                }
                 val cellValue = getCellValue(headerRowImport, i)
                 if (cellValue.isEmpty()) return false
                 var isDate = false
@@ -79,5 +90,6 @@ class ExcelHelper {
             }
             return true
         }
+
     }
 }

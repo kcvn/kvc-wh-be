@@ -5,7 +5,6 @@ import com.kcvn.spm.app.product.payload.response.ProductDetailResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
 import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PRODUCT
 import com.kcvn.spm.model.tables.references.PRODUCT
@@ -17,7 +16,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.math.max
 
 
 @Repository
@@ -26,7 +24,8 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
     fun getPagingList(request: ProductSearchRequest?, pageable: Pageable): Pair<List<Product>, Int> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
-            if (!request.search.isNullOrEmpty()) condition = condition.and(PRODUCT.NAME.containsIgnoreCase(request.search?.lowercase()))
+            if (!request.search.isNullOrEmpty()) condition =
+                condition.and(PRODUCT.NAME.containsIgnoreCase(request.search?.lowercase()))
 
             if (!request.frame_1.isNullOrEmpty()) condition = condition.and(PRODUCT.FRAME_1.eq(request.frame_1))
 
@@ -34,7 +33,8 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
 
             if (!request.mold.isNullOrEmpty()) condition = condition.and(PRODUCT.MOLD.eq(request.mold))
 
-            if (!request.exportType.isNullOrEmpty()) condition = condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
+            if (!request.exportType.isNullOrEmpty()) condition =
+                condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
 
             if (!request.srNosr.isNullOrEmpty()) condition = condition.and(PRODUCT.SR_NOSR.eq(request.srNosr))
 
@@ -63,7 +63,8 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
 
             if (!request.mold.isNullOrEmpty()) condition = condition.and(PRODUCT.MOLD.eq(request.mold))
 
-            if (!request.exportType.isNullOrEmpty()) condition = condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
+            if (!request.exportType.isNullOrEmpty()) condition =
+                condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
 
             if (!request.srNosr.isNullOrEmpty()) condition = condition.and(PRODUCT.SR_NOSR.eq(request.srNosr))
 
@@ -77,7 +78,7 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
 
     }
 
-    fun getProductDetail(request: String?) : ProductDetailResponse? {
+    fun getProductDetail(request: String?): ProductDetailResponse? {
         val data = context.selectFrom(
             PRODUCT
                 .leftJoin(COMPLETION_RATE_PRODUCT)
@@ -112,9 +113,24 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
     fun add(data: Product): Product? {
         return context.insertInto(
             PRODUCT,
-            PRODUCT.NAME, PRODUCT.EXPORT_TYPE, PRODUCT.SIZE, PRODUCT.FRAME_1, PRODUCT.FRAME_2, PRODUCT.MOLD, PRODUCT.PRODUCT_LINE,
-            PRODUCT.SR_NOSR, PRODUCT.PCS_SH, PRODUCT.SH_BLOCK, PRODUCT.LAYER_COUNT, PRODUCT.RING_JIG, PRODUCT.PROCESS,
-            PRODUCT.SNAP_MOLD, PRODUCT.TAPE_COMMON, PRODUCT.TAPE_TYPE, PRODUCT.PRODUCT_LAYER_DETAIL, PRODUCT.CREATED_BY
+            PRODUCT.NAME,
+            PRODUCT.EXPORT_TYPE,
+            PRODUCT.SIZE,
+            PRODUCT.FRAME_1,
+            PRODUCT.FRAME_2,
+            PRODUCT.MOLD,
+            PRODUCT.PRODUCT_LINE,
+            PRODUCT.SR_NOSR,
+            PRODUCT.PCS_SH,
+            PRODUCT.SH_BLOCK,
+            PRODUCT.LAYER_COUNT,
+            PRODUCT.RING_JIG,
+            PRODUCT.PROCESS,
+            PRODUCT.SNAP_MOLD,
+            PRODUCT.TAPE_COMMON,
+            PRODUCT.TAPE_TYPE,
+            PRODUCT.PRODUCT_LAYER_DETAIL,
+            PRODUCT.CREATED_BY
         ).values(
             data.name,
             data.exportType,
@@ -223,19 +239,44 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
         return sortField
     }
 
-    fun getProductDetailWithCompletionRateById(productId: String?): ProductDetailResponse? {
-        val data = context.selectFrom(
-            PRODUCT
-                .join(COMPLETION_RATE_PRODUCT)
-                .on(PRODUCT.NAME.eq(COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
-        )
+    fun getProductDetailWithCompletionRateByIds(productIds: List<String?>): List<ProductDetailResponse?> {
+        val data = context.select(
+            PRODUCT.ID,
+            PRODUCT.NAME,
+            PRODUCT.EXPORT_TYPE,
+            PRODUCT.SIZE,
+            PRODUCT.FRAME_1,
+            PRODUCT.FRAME_2,
+            PRODUCT.MOLD,
+            PRODUCT.PRODUCT_LINE,
+            PRODUCT.SR_NOSR,
+            PRODUCT.PCS_SH,
+            PRODUCT.SH_BLOCK,
+            PRODUCT.LAYER_COUNT,
+            PRODUCT.RING_JIG,
+            PRODUCT.PROCESS,
+            PRODUCT.SNAP_MOLD,
+            PRODUCT.TAPE_COMMON,
+            PRODUCT.TAPE_TYPE,
+            PRODUCT.PRODUCT_LAYER_DETAIL,
+            COMPLETION_RATE_PRODUCT.RATE,
+            COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE,
+            COMPLETION_RATE_PRODUCT.EXPIRATION_DATE
+        ).from(PRODUCT)
+            .leftJoin(COMPLETION_RATE_PRODUCT)
+            .on(PRODUCT.NAME.eq(COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
             .where(
-                PRODUCT.ID.eq(productId)
+                PRODUCT.ID.`in`(productIds)
                     .and(PRODUCT.IS_DELETED.eq(false))
             )
             .orderBy(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.desc())
-            .limit(1)
-            .fetchAnyInto(ProductDetailResponse::class.java)
+            .fetchInto(ProductDetailResponse::class.java)
         return data
+    }
+
+    fun getByIds(productIDs: List<String?>): List<Product> {
+        return context.selectFrom(PRODUCT)
+            .where(PRODUCT.ID.`in`(productIDs).and(PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(Product::class.java)
     }
 }

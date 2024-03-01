@@ -11,7 +11,6 @@ import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
@@ -56,7 +55,7 @@ class ProductProcessService(
                     processSequence = productProcess.processSequence
                 );
             }
-            response.data = (response.data as List<ProductProcessResponse?>).sortedWith(compareBy<ProductProcessResponse?> {it?.productName}.thenBy { it?.layerCodeInt }.thenBy { it?.processSequence })
+            //response.data = (response.data as List<ProductProcessResponse?>).sortedWith(compareBy<ProductProcessResponse?> {it?.productName}.thenBy { it?.layerCodeInt }.thenBy { it?.processSequence })
             response.totalRecords = result.second ?: 0
 
         return response;
@@ -70,10 +69,10 @@ class ProductProcessService(
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
 
         for (item in request.listProcess!!){
-            if(item.processId!!.isNotEmpty()) {
+            if(item.processId != null) {
                 val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                     ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
-                if (item.processInventoryCode != null) {
+                if (!item.processInventoryCode.isNullOrEmpty()) {
                     val productProcessAfter = request.listProcess!!.find { it.idx == item.idx + 1 }
                     val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
                     if ((productProcessAfter?.processCode!!.isNotEmpty() && productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
@@ -83,6 +82,8 @@ class ProductProcessService(
                     } else {
                         throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
                     }
+                }else{
+                    productProcess.processInventoryCode = item.processInventoryCode
                 }
                 productProcess.processConvertCode = item.processConvertCode;
                 productProcess.processStatisticCode = item.processStatisticCode;

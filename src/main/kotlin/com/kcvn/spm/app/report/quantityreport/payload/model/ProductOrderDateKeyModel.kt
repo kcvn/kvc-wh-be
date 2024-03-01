@@ -2,7 +2,7 @@ package com.kcvn.spm.app.report.quantityreport.payload.model
 
 import java.time.OffsetDateTime
 
-data class ProductOrderDateKey(
+data class ProductOrderDateKeyModel(
     val productName:String?,
     val orderDate:OffsetDateTime?
 )

@@ -25,18 +25,47 @@ class DateTimeHelper {
             }
         }
 
-        fun convertOffSetDateTimeToString(date: OffsetDateTime) : String? {
-            val localDate = date.toLocalDate() // Chuyển đổi OffsetDateTime thành LocalDate
-            val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.DATE_FORMAT) // Định dạng của chuỗi
-            val formattedDate = localDate.format(formatter) // Định dạng lại LocalDate thành chuỗi
-            return formattedDate
+        fun convertOffSetDateTimeUtc7ToString(date: OffsetDateTime?) : String? {
+            val dateUtc7 = date?.plusHours(7)
+
+            val localDateTime = dateUtc7?.atZoneSameInstant(ZoneOffset.UTC)?.toLocalDateTime()
+
+            // Định dạng chuỗi thành "yyyy-MM-dd"
+            val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
+
+            // Chuyển đổi LocalDateTime thành chuỗi "yyyy-MM-dd"
+            val formattedDateTime = localDateTime?.format(formatter)
+
+            return formattedDateTime
+        }
+
+        fun convertOffSetDateTimeToString(date: OffsetDateTime?) : String? {
+
+            val localDateTime = date?.atZoneSameInstant(ZoneOffset.UTC)?.toLocalDateTime()
+
+            // Định dạng chuỗi thành "yyyy-MM-dd"
+            val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
+
+            // Chuyển đổi LocalDateTime thành chuỗi "yyyy-MM-dd"
+            val formattedDateTime = localDateTime?.format(formatter)
+
+            return formattedDateTime
         }
 
         fun convertStringToOffSetDateTime(date: String) : OffsetDateTime{
-            val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.DATE_FORMAT) // Định dạng của chuỗi
-            val localDate = LocalDate.parse(date, formatter) // Chuyển đổi chuỗi thành LocalDate
+            val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
+            val localDate = LocalDate.parse(date, formatter)
             val offsetDateTime = OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
             return offsetDateTime
         }
+
+        fun formatDate(offsetDateTime: OffsetDateTime): String {
+            return  offsetDateTime.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+
+        }
+        fun convertDateUtc7(date: OffsetDateTime?): OffsetDateTime? {
+            return date?.plusHours(7)
+        }
+
     }
 }

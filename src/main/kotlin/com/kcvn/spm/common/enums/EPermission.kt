@@ -20,6 +20,7 @@ enum class EPermission(val value: String) {
     V_PRODUCT("product.v"),
     I_PRODUCT("product.i"),
     E_PRODUCT("product.e"),
+    U_PRODUCT("product.u"),
 
     // process
     V_PROCESS("process.v"),
@@ -38,7 +39,7 @@ enum class EPermission(val value: String) {
     E_WORK_RESULT("work_result.e"),
     SY_WORK_RESULT("work_result.sy"),
 
-    // the - order
+    // order
     V_ORDER("order.v"),
     I_ORDER("order.i"),
     E_ORDER("order.e"),
@@ -51,6 +52,8 @@ enum class EPermission(val value: String) {
 
     // inventory
     V_INVENTORY("inventory.v"),
+    E_INVENTORY("inventory.e"),
+    I_INVENTORY("inventory.i"),
 
     // report
     V_REPORT_ASVERAGE_OUTPUT_OF_TWO_MONTHS("rp.aootm.v"),

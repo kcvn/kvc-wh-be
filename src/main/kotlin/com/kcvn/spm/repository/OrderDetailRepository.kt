@@ -4,12 +4,11 @@ import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.model.tables.pojos.OrderDetail
 import com.kcvn.spm.model.tables.references.ORDER_DETAIL
 import org.jooq.DSLContext
-import org.jooq.Record2
 import org.springframework.stereotype.Repository
 import java.time.format.DateTimeFormatter
 
 @Repository
-class OrderDetailRepository (private val context: DSLContext) {
+class OrderDetailRepository(private val context: DSLContext) {
 
 
     fun GetCalenderOrderDetail(orderId: String, productId: String): List<KeyValueResponse> {
@@ -29,7 +28,9 @@ class OrderDetailRepository (private val context: DSLContext) {
         }
     }
 
-    fun getOrderDetailsByOrderId(id: String?): List<OrderDetail> {
-        return context.select().from(ORDER_DETAIL).where(ORDER_DETAIL.ORDER_ID.eq(id)).fetchInto(OrderDetail::class.java)
+    fun getOrderDetailsByOrderIds(ids: List<String?>): List<OrderDetail> {
+        return context.select().from(ORDER_DETAIL)
+            .where(ORDER_DETAIL.ORDER_ID.`in`(ids).and(ORDER_DETAIL.IS_DELETED.eq(false)))
+            .fetchInto(OrderDetail::class.java)
     }
 }

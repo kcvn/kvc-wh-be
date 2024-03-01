@@ -1,9 +1,9 @@
 package com.kcvn.spm.repository
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
+import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -36,30 +36,36 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             condition = condition.and(DSL.lower(COMPLETION_RATE_PRODUCT.PRODUCT_NAME).contains(lowerSearch))
         }
 
-        val completionRateProcessesQuery = context.selectFrom(COMPLETION_RATE_PRODUCT)
+        val crpSubquery = context.select(
+            COMPLETION_RATE_PRODUCT.PRODUCT_NAME,
+            DSL.max(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE).`as`("max_date")
+        )
+            .from(COMPLETION_RATE_PRODUCT)
+            .where(condition.and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
+            .groupBy(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)
+
+        val completionRateProcessesQuery = context.select(
+            COMPLETION_RATE_PRODUCT.ID,
+            COMPLETION_RATE_PRODUCT.PRODUCT_NAME,
+            COMPLETION_RATE_PRODUCT.RATE,
+        )
+            .from(COMPLETION_RATE_PRODUCT)
+            .join(crpSubquery)
+            .on(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.eq(crpSubquery.field(COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
+                .and(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.eq(crpSubquery.field("max_date", OffsetDateTime::class.java))))
             .where(condition.and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
-            .limit(pageable?.pageSize)
-            .offset(pageable?.offset)
+            .limit(pageable?.pageSize ?: 10)
+            .offset(pageable?.offset ?: 0)
             .fetchInto(CompletionRateProduct::class.java)
 
-        val maxEffectiveDatesMap = mutableMapOf<String, OffsetDateTime>()
+        val total = context.selectDistinct(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)
+            .from(COMPLETION_RATE_PRODUCT)
+            .where(condition)
+            .fetch()
+            .size
 
-        completionRateProcessesQuery.forEach { product ->
-            val currentMaxEffectiveDate = maxEffectiveDatesMap[product.productName]
-            if (currentMaxEffectiveDate == null || product.effectiveDate!! > currentMaxEffectiveDate) {
-                maxEffectiveDatesMap[product.productName!!] = product.effectiveDate!!
-            }
-        }
-
-        val filteredList = completionRateProcessesQuery.filter { product ->
-            val maxEffectiveDate = maxEffectiveDatesMap[product.productName]
-            product.effectiveDate == maxEffectiveDate
-        }
-
-        val total = context.fetchCount(COMPLETION_RATE_PRODUCT, condition)
-
-        return Pair(filteredList, total)
+        return Pair(completionRateProcessesQuery, total)
     }
 
 

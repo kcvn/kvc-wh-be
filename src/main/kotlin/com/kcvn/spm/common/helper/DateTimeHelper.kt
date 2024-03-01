@@ -55,5 +55,9 @@ class DateTimeHelper {
             return date?.plusHours(7)
         }
 
+        fun convertDateDbUtc7(date: OffsetDateTime?): OffsetDateTime? {
+            return date?.minusHours(7)
+        }
+
     }
 }

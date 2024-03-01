@@ -52,12 +52,9 @@ class OrderService(
                 val versionArray = request.version?.split(",")
                 var minStartDate: OffsetDateTime? = null
                 var maxEndDate: OffsetDateTime? = null
-
-                if (versionArray != null) {
-                    val versions = versionArray.mapNotNull { it.trim().toIntOrNull() }
-
-                    val orders = orderRep.getOrdersByCodeAndVersions(request.orderCode!!, versions)
-
+                val versions = versionArray?.mapNotNull { it.trim().toIntOrNull() }
+                val orders = orderRep.getOrdersByCodeAndVersions(request.orderCode!!, versions)
+                if(orders.isNotEmpty())
                     for (order in orders) {
                         if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
                             minStartDate = order.startDate
@@ -66,7 +63,7 @@ class OrderService(
                             maxEndDate = order.endDate
                         }
                     }
-                }
+
                 request.startDate = DateTimeHelper.convertDateUtc7(minStartDate)
                 request.endDate = DateTimeHelper.convertDateUtc7(maxEndDate)
             }

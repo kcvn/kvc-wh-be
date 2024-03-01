@@ -54,7 +54,14 @@ class DateTimeFormat {
     }
 }
 
-class ProcessStatisticCodeConstants {
+class OrderFilterType {
+    companion object {
+        const val DATE = 0
+        const val ORDER = 1
+    }
+}
+
+class ProcessStatisticCode {
     companion object {
         const val KO = "KO"
         const val IN_MACH = "INMACH"

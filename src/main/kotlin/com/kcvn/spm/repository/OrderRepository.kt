@@ -5,6 +5,7 @@ import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -38,10 +39,10 @@ class OrderRepository(
         if (!request?.srNosr.isNullOrBlank()) {
             condition = condition.and(PRODUCT.SR_NOSR.containsIgnoreCase(request?.srNosr))
         }
-        if (request?.filterType == 0 && request.startDate != null && request.endDate != null) {
+        if (request?.filterType == OrderFilterType.DATE && request.startDate != null && request.endDate != null) {
             condition = condition.and(ORDER_DETAIL.ORDER_DATE.between(request.startDate, request.endDate))
         }
-        if (request?.filterType == 1) {
+        if (request?.filterType == OrderFilterType.ORDER) {
             if (!request.orderCode.isNullOrBlank()) {
                 condition = condition.and(ORDER.ORDER_CODE.eq(request.orderCode))
             }
@@ -135,7 +136,10 @@ class OrderRepository(
             ORDER.VERSION,
             ORDER.START_DATE,
             ORDER.END_DATE
-        ).from(ORDER).where(condition).fetchInto(Order::class.java)
+        ).from(ORDER)
+            .where(condition)
+            .orderBy(ORDER.END_DATE.sort(SortOrder.DESC))
+            .fetchInto(Order::class.java)
     }
 
     fun addOrder(order: Order, orderDetails: List<OrderDetail>) {
@@ -193,13 +197,18 @@ class OrderRepository(
             .fetchInto(Order::class.java).firstOrNull()
     }
 
-    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>): List<Order> {
-        return context.selectFrom(ORDER)
+    fun getOrdersByCodeAndVersions(orderCode: String, versions: List<Int>?): List<Order> {
+        val query = context.selectFrom(ORDER)
             .where(
                 ORDER.ORDER_CODE.eq(orderCode)
                     .and(ORDER.IS_DELETED.eq(false))
-                    .and(ORDER.VERSION.`in`(versions))
             )
-            .fetchInto(Order::class.java)
+        if (versions != null) {
+            if (versions.isNotEmpty()) {
+                query.and(ORDER.VERSION.`in`(versions))
+            }
+        }
+        return query.fetchInto(Order::class.java)
     }
+
 }

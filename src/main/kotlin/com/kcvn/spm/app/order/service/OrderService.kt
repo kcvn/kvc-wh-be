@@ -7,6 +7,7 @@ import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -17,7 +18,6 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
-import com.kcvn.spm.repository.OrderDetailRepository
 import com.kcvn.spm.repository.OrderRepository
 import com.kcvn.spm.repository.ProductRepository
 import com.kcvn.spm.repository.WorkResultRepository
@@ -37,7 +37,6 @@ import java.time.format.DateTimeFormatter
 @Transactional
 class OrderService(
     private val orderRep: OrderRepository,
-    private val orderDetailRep: OrderDetailRepository,
     private val workResultRep: WorkResultRepository,
     private val productRep: ProductRepository
 ) {
@@ -47,17 +46,16 @@ class OrderService(
     ): PagingOrderResponse {
         val calendarResponses = mutableListOf<CalendarValueResponse>()
         if (request != null) {
-            if (request.filterType != null && request.filterType == 1 && request.orderCode != null) {
+            var colStartDate = OffsetDateTime.now()
+            var colEndDate= OffsetDateTime.now()
+            if (request.filterType == OrderFilterType.ORDER && request.orderCode != null) {
 
                 val versionArray = request.version?.split(",")
                 var minStartDate: OffsetDateTime? = null
                 var maxEndDate: OffsetDateTime? = null
-
-                if (versionArray != null) {
-                    val versions = versionArray.mapNotNull { it.trim().toIntOrNull() }
-
-                    val orders = orderRep.getOrdersByCodeAndVersions(request.orderCode!!, versions)
-
+                val versions = versionArray?.mapNotNull { it.trim().toIntOrNull() }
+                val orders = orderRep.getOrdersByCodeAndVersions(request.orderCode!!, versions)
+                if (orders.isNotEmpty())
                     for (order in orders) {
                         if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
                             minStartDate = order.startDate
@@ -66,29 +64,27 @@ class OrderService(
                             maxEndDate = order.endDate
                         }
                     }
-                }
-                request.startDate = DateTimeHelper.convertDateUtc7(minStartDate)
-                request.endDate = DateTimeHelper.convertDateUtc7(maxEndDate)
+
+                colStartDate = DateTimeHelper.toTimeZone7(minStartDate)
+                colEndDate = DateTimeHelper.toTimeZone7(maxEndDate)
             }
-            if (request.startDate != null && request.endDate != null) {
+            if (request.filterType == OrderFilterType.DATE && request.startDate != null && request.endDate != null) {
+                colStartDate = DateTimeHelper.toTimeZone7(request.startDate)
+                colEndDate = DateTimeHelper.toTimeZone7(request.endDate)
+            }
 
-                request.startDate = DateTimeHelper.convertDateUtc7(request.startDate)
-                request.endDate = DateTimeHelper.convertDateUtc7(request.endDate)
-                var currentDate = request.startDate
-
-                while (!currentDate!!.isAfter(request.endDate)) {
-                    val key = currentDate.let { DateTimeHelper.toString(it, DateTimeFormat.MM_dd_yyyy) }
-                    val response = CalendarValueResponse(
-                        key = key,
-                        value = key,
-                        isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
-                    )
-                    calendarResponses.add(response)
-
-                    currentDate = currentDate.plusDays(1)
-                }
+            var currentDate = colStartDate
+            while (!currentDate!!.isAfter(colEndDate)) {
+                val response = CalendarValueResponse(
+                    key = DateTimeHelper.toString(currentDate, DateTimeFormat.yyyyMMdd),
+                    value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
+                    isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
+                )
+                calendarResponses.add(response)
+                currentDate = currentDate.plusDays(1)
             }
         }
+
         val response = PagingOrderResponse()
         response.columns = calendarResponses
         val orderDetails = orderRep.getPagingListOrder(request, pageable)
@@ -101,8 +97,8 @@ class OrderService(
                 .map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
             model.quantityByCalendars = quantityByCalendar
             model.version = "v${model.version}.0"
-            if(!model.productName.isNullOrEmpty()){
-                model.productShortcutName = model.productName!!.substring(model.productName!!.length-7,model.productName!!.length)
+            if (!model.productName.isNullOrEmpty()) {
+                model.productShortcutName = model.productName!!.substring(model.productName!!.length - 7, model.productName!!.length)
             }
             model
         }
@@ -252,7 +248,8 @@ class OrderService(
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-            val headerRow = sheet.getRow(0) ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
+            val headerRow = sheet.getRow(0)
+                ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
             val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportOrderTemplate.xlsx"
 
             val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
@@ -285,9 +282,9 @@ class OrderService(
             val startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
             val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1, DateTimeFormat.MM_dd).split("/")
             val endDate = LocalDateTime.of(year, arrEndDate[0].toInt(), arrEndDate[1].toInt(), 0, 0)
-            val orderCode = "${startDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}-${endDate.format(DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy))}"
-            var startDateUtc = OffsetDateTime.of(startDate, ZoneOffset.UTC)
-            val endDateUtc = OffsetDateTime.of(endDate, ZoneOffset.UTC)
+            val orderCode = "${DateTimeHelper.toString(startDate, DateTimeFormat.dd_MM_yyyy)}-${DateTimeHelper.toString(endDate, DateTimeFormat.dd_MM_yyyy)}"
+            var startDateUtc = DateTimeHelper.toUniversalTime(startDate)
+            val endDateUtc = DateTimeHelper.toUniversalTime(endDate)
             var version = 1
 
             if (startDate > endDate)
@@ -329,11 +326,13 @@ class OrderService(
             val productImports = mutableListOf<String>()
             var isBreak = false
             var count = 0
-            val total = sheet.filter { x -> x.rowNum >= rowIndex }.size
+            var total = 0
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-                val messageResults = mutableListOf<String>()
-                val style = row.getCell(0).cellStyle
                 val name = ExcelHelper.getCellValue(row, 0)
+                if (name.isEmpty()) break
+                val style = row.getCell(0)?.cellStyle ?: break
+                val messageResults = mutableListOf<String>()
+                total++
                 var check = true
                 if (productImports.any { x -> x == name }) {
                     check = false

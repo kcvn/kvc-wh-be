@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
+import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
@@ -39,6 +40,7 @@ import com.kcvn.spm.model.tables.records.CommonCategoryRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProcessProductRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProcessRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProductRecord
+import com.kcvn.spm.model.tables.records.InformationCalculateQuantityDetailRecord
 import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
 import com.kcvn.spm.model.tables.records.InventoryProductRecord
 import com.kcvn.spm.model.tables.records.OrderDetailRecord
@@ -74,7 +76,8 @@ val COMMON_CATEGORY_PKEY: UniqueKey<CommonCategoryRecord> = Internal.createUniqu
 val COMPLETION_RATE_PROCESS_PKEY: UniqueKey<CompletionRateProcessRecord> = Internal.createUniqueKey(CompletionRateProcess.COMPLETION_RATE_PROCESS, DSL.name("completion_rate_process_pkey"), arrayOf(CompletionRateProcess.COMPLETION_RATE_PROCESS.ID), true)
 val COMPLETION_RATE_PROCESS_PRODUCT_PKEY: UniqueKey<CompletionRateProcessProductRecord> = Internal.createUniqueKey(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT, DSL.name("completion_rate_process_product_pkey"), arrayOf(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.ID), true)
 val COMPLETION_RATE_PRODUCT_PKEY: UniqueKey<CompletionRateProductRecord> = Internal.createUniqueKey(CompletionRateProduct.COMPLETION_RATE_PRODUCT, DSL.name("completion_rate_product_pkey"), arrayOf(CompletionRateProduct.COMPLETION_RATE_PRODUCT.ID), true)
-val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityRecord> = Internal.createUniqueKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantity_pk"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)
+val INFORMATION_CALCULATE_QUANTITY_PKEY: UniqueKey<InformationCalculateQuantityRecord> = Internal.createUniqueKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantity_pkey"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)
+val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityDetailRecord> = Internal.createUniqueKey(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL, DSL.name("information_calculate_quantity_pk"), arrayOf(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL.ID), true)
 val INVENTORY_PRODUCT_PKEY: UniqueKey<InventoryProductRecord> = Internal.createUniqueKey(InventoryProduct.INVENTORY_PRODUCT, DSL.name("inventory_product_pkey"), arrayOf(InventoryProduct.INVENTORY_PRODUCT.ID), true)
 val ORDER_PKEY: UniqueKey<OrderRecord> = Internal.createUniqueKey(Order.ORDER, DSL.name("order_pkey"), arrayOf(Order.ORDER.ID), true)
 val ORDER_DETAIL_PKEY: UniqueKey<OrderDetailRecord> = Internal.createUniqueKey(OrderDetail.ORDER_DETAIL, DSL.name("order_detail_pkey"), arrayOf(OrderDetail.ORDER_DETAIL.ID), true)
@@ -95,3 +98,5 @@ val AUTH_ROLE_CLAIM__AUTH_ROLE_CLAIM_AUTH_ROLE_ID_FK: ForeignKey<AuthRoleClaimRe
 val AUTH_USER_CLAIM__AUTH_USER_CLAIM_AUTH_USER_ID_FK: ForeignKey<AuthUserClaimRecord, AuthUserRecord> = Internal.createForeignKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_auth_user_id_fk"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.USER_ID), com.kcvn.spm.model.keys.AUTH_USER_PKEY, arrayOf(AuthUser.AUTH_USER.ID), true)
 val AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_ROLE_ID_FK: ForeignKey<AuthUserRoleRecord, AuthRoleRecord> = Internal.createForeignKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_auth_role_id_fk"), arrayOf(AuthUserRole.AUTH_USER_ROLE.ROLE_ID), com.kcvn.spm.model.keys.AUTH_ROLE_PKEY, arrayOf(AuthRole.AUTH_ROLE.ID), true)
 val AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_USER_ID_FK: ForeignKey<AuthUserRoleRecord, AuthUserRecord> = Internal.createForeignKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_auth_user_id_fk"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID), com.kcvn.spm.model.keys.AUTH_USER_PKEY, arrayOf(AuthUser.AUTH_USER.ID), true)
+val INFORMATION_CALCULATE_QUANTITY__INFORMATION_CALCULATE_QUANTIT_CALCULATE_QUANTITY_RESULT_ID_FKEY: ForeignKey<InformationCalculateQuantityRecord, CalculateQuantityResultRecord> = Internal.createForeignKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantit_calculate_quantity_result_id_fkey"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID), com.kcvn.spm.model.keys.CALCULATE_QUANTITY_RESULT_PKEY, arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
+val INFORMATION_CALCULATE_QUANTITY_DETAIL__INFORMATION_CALCULATE_QUANTITY_DETAIL_INFORMATION_CALCULATE_QUA: ForeignKey<InformationCalculateQuantityDetailRecord, InformationCalculateQuantityRecord> = Internal.createForeignKey(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL, DSL.name("information_calculate_quantity_detail_information_calculate_qua"), arrayOf(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID), com.kcvn.spm.model.keys.INFORMATION_CALCULATE_QUANTITY_PKEY, arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)

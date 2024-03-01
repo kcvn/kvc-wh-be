@@ -5,6 +5,7 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
+import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.OrderFilterType
@@ -18,6 +19,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
+import com.kcvn.spm.repository.OrderDetailRepository
 import com.kcvn.spm.repository.OrderRepository
 import com.kcvn.spm.repository.ProductRepository
 import com.kcvn.spm.repository.WorkResultRepository
@@ -38,7 +40,8 @@ import java.time.format.DateTimeFormatter
 class OrderService(
     private val orderRep: OrderRepository,
     private val workResultRep: WorkResultRepository,
-    private val productRep: ProductRepository
+    private val productRep: ProductRepository,
+    private val orderDetailRep: OrderDetailRepository
 ) {
     fun getPaginatedOrder(
         request: OrderSearchRequest?,
@@ -237,6 +240,12 @@ class OrderService(
         }
 
         return orderCodeResponses
+    }
+
+    fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
+        val orders = orderRep.getOrderCode(request.startDate,request.endDate)
+
+        return orders
     }
 
     fun importExcelOrder(file: MultipartFile, orderCodeSelected: String?): BaseResponse<FileContentModel> {
@@ -479,5 +488,9 @@ class OrderService(
             if (days[i - 1].plusDays(1).format(formatter) != days[i].format(formatter)) return false
         }
         return true
+    }
+
+    fun getOrderDetailsByOrderIds(ids: List<String?>): List<OrderDetail> {
+        return orderDetailRep.getOrderDetailsByOrderIds(ids)
     }
 }

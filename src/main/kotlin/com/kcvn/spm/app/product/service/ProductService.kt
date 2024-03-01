@@ -58,7 +58,12 @@ class ProductService(
         return productRep.getProductDetail(request)
     }
 
-    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
+
+    fun getProductDetailWithCompletionRateByIds(productId: List<String?>): List<ProductDetailResponse?> {
+        return productRep.getProductDetailWithCompletionRateByIds(productId)
+    }
+
+    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
         val products = productRep.getList(request, pageable)
         val productMapping = mappingProductResponse(products)
 
@@ -493,6 +498,4 @@ class ProductService(
         }
         return messageResults
     }
-
-
 }

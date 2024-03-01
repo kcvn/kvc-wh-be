@@ -1,9 +1,7 @@
 package com.kcvn.spm.app.report.quantityreport.controller
 
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
-import com.kcvn.spm.app.report.quantityreport.payload.response.CalculateQuantityResponse
 import com.kcvn.spm.app.report.quantityreport.service.QuantityReportService
-import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -28,9 +26,9 @@ class QuantityReportController(
         @PageableDefault(size = 10, page = 0)
         @SortDefault.SortDefaults(
         ) pageable: Pageable,
-    ): ResponseEntity<BasePagingResponse<CalculateQuantityResponse>> {
+    ): ResponseEntity<BaseResponse<Boolean>> {
         val data = quantityReportService.calculateQuantity(request)
-        return ResponseEntity<BasePagingResponse<CalculateQuantityResponse>>(data, HttpStatus.OK)
+        return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)
     }
 
     @GetMapping("/locked-quantity")

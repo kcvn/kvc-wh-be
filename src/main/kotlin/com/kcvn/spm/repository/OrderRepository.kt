@@ -125,13 +125,14 @@ class OrderRepository(
     }
 
 
-    fun getOrderCode(startDate: OffsetDateTime, endDate: OffsetDateTime?): List<Order> {
+    fun getOrderCode(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<Order> {
         var condition = DSL.noCondition()
         if (endDate != null) {
             condition = condition.and(ORDER.END_DATE.le(endDate))
         }
         condition = condition.and(ORDER.START_DATE.ge(startDate)).and(ORDER.IS_DELETED.eq(false))
         return context.select(
+            ORDER.ID,
             ORDER.ORDER_CODE,
             ORDER.VERSION,
             ORDER.START_DATE,

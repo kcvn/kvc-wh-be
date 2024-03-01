@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 
 class DateTimeHelper {
     companion object {
-        fun getFirstDayOfQuarterInYear(date: LocalDateTime) : LocalDateTime? {
+        fun getFirstDayOfQuarterInYear(date: LocalDateTime): LocalDateTime? {
             val year = date.year
             return when (date.month.value) {
                 1 -> LocalDateTime.of(year, 1, 1, 0, 0)
@@ -25,7 +25,7 @@ class DateTimeHelper {
             }
         }
 
-        fun convertOffSetDateTimeUtc7ToString(date: OffsetDateTime?) : String? {
+        fun convertOffSetDateTimeUtc7ToString(date: OffsetDateTime?): String? {
             val dateUtc7 = date?.plusHours(7)
             val localDateTime = dateUtc7?.atZoneSameInstant(ZoneOffset.UTC)?.toLocalDateTime()
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
@@ -33,31 +33,35 @@ class DateTimeHelper {
             return formattedDateTime
         }
 
-        fun convertOffSetDateTimeToLocalDateTimeToString(date: OffsetDateTime?) : String? {
+        fun convertOffSetDateTimeToLocalDateTimeToString(date: OffsetDateTime?): String? {
             val localDateTime = date?.toLocalDateTime()
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
             val formattedDateTime = localDateTime?.format(formatter)
             return formattedDateTime
         }
 
-        fun convertStringToOffSetDateTime(date: String) : OffsetDateTime{
+        fun convertStringToOffSetDateTime(date: String): OffsetDateTime {
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
             val localDate = LocalDate.parse(date, formatter)
             val offsetDateTime = OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
             return offsetDateTime
         }
 
-        fun toString(offsetDateTime: OffsetDateTime, format: String): String {
-            return  offsetDateTime.format(DateTimeFormatter.ofPattern(format))
+        fun toString(date: OffsetDateTime, format: String): String {
+            return date.format(DateTimeFormatter.ofPattern(format))
 
         }
-        fun convertDateUtc7(date: OffsetDateTime?): OffsetDateTime? {
+
+        fun toString(date: LocalDateTime, format: String): String {
+            return date.format(DateTimeFormatter.ofPattern(format))
+        }
+
+        fun toTimeZone7(date: OffsetDateTime?): OffsetDateTime? {
             return date?.plusHours(7)
         }
 
-        fun convertDateDbUtc7(date: OffsetDateTime?): OffsetDateTime? {
-            return date?.minusHours(7)
+        fun toUniversalTime(date: LocalDateTime): OffsetDateTime {
+            return OffsetDateTime.of(date, ZoneOffset.UTC).plusHours(-7)
         }
-
     }
 }

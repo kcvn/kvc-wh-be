@@ -6,7 +6,6 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS
-import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
 import com.kcvn.spm.model.tables.references.PROCESS_MASTER
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -71,6 +70,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
                     .where(PROCESS_MASTER.IS_DELETED.eq(false)
                         .and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)))
             )
+            .where(condition.and(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PROCESS.UPDATED_DATE))
             .limit(pageable?.pageSize ?: 10)
             .offset(pageable?.offset ?: 0)

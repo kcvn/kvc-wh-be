@@ -67,8 +67,8 @@ class OrderService(
                         }
                     }
                 }
-                request.startDate = minStartDate
-                request.endDate = maxEndDate
+                request.startDate = DateTimeHelper.convertDateUtc7(minStartDate)
+                request.endDate = DateTimeHelper.convertDateUtc7(maxEndDate)
             }
             if (request.startDate != null && request.endDate != null) {
 
@@ -100,6 +100,10 @@ class OrderService(
             val quantityByCalendar = quantityByCalendars.filter { m -> m.orderId == model.orderId && m.productId == model.productId }
                 .map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
             model.quantityByCalendars = quantityByCalendar
+            model.version = "v${model.version}.0"
+            if(!model.productName.isNullOrEmpty()){
+                model.productShortcutName = model.productName!!.substring(model.productName!!.length-7,model.productName!!.length)
+            }
             model
         }
 

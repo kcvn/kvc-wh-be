@@ -19,6 +19,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
+import com.kcvn.spm.repository.OrderDetailRepository
 import com.kcvn.spm.repository.OrderRepository
 import com.kcvn.spm.repository.ProductRepository
 import com.kcvn.spm.repository.WorkResultRepository
@@ -39,7 +40,8 @@ import java.time.format.DateTimeFormatter
 class OrderService(
     private val orderRep: OrderRepository,
     private val workResultRep: WorkResultRepository,
-    private val productRep: ProductRepository
+    private val productRep: ProductRepository,
+    private val orderDetailRep: OrderDetailRepository
 ) {
     fun getPaginatedOrder(
         request: OrderSearchRequest?,

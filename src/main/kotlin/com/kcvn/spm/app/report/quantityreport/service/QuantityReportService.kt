@@ -7,12 +7,12 @@ import com.kcvn.spm.app.report.quantityreport.payload.model.*
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityOfProcessRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.common.constants.Constants
-import com.kcvn.spm.common.constants.ProcessStatisticCodeConstants
+import com.kcvn.spm.common.constants.ProcessStatisticCode
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
-import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
+import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
 import com.kcvn.spm.repository.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -49,7 +49,7 @@ class QuantityReportService(
             val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
             val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
             val productProcessGroups = productProcesses.filter { x ->
-                !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCodeConstants.KO
+                !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
             }.map { x ->
                 val procedureStructure = productProcedureStructures.find { m -> m.id == x.processProcedureStructureId }
                 if (procedureStructure == null) ProcessGroupModel()
@@ -143,7 +143,7 @@ class QuantityReportService(
             }
 
             val listInformationCalculateQuantityDetails = listCalculateQuantityProcess.map { x ->
-                InformationCalculateQuantity(
+                InformationCalculateQuantityDetail(
                     monthReport = x.orderDate,
                     productName = x.productName,
                     processStatisticCode = x.processStatisticCode,
@@ -152,7 +152,7 @@ class QuantityReportService(
                     processCount = x.processCount,
                     blockQuantity = x.quantityBlock,
                     blockSh = x.blockSh,
-                    totalQuantity = ((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate!!.toDouble()) / 100)).toInt(),
+                    quantityProcessStatistic = ((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate!!.toDouble()) / 100)).toInt(),
                     createdDate = OffsetDateTime.now(),
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                 )
@@ -170,7 +170,7 @@ class QuantityReportService(
                     monthReport = items.first().monthReport,
                     productName = key.productName,
                     processStatisticCode = key.processStatisticCode,
-                    totalQuantityOfProcess = items.sumOf { it.totalQuantity!! },
+                    totalQuantityOfProcess = items.sumOf { it.quantityProcessStatistic!! },
                     createdDate = OffsetDateTime.now(),
                     createdBy = CommonUtils.loggedInUser()?: Constants.SYSTEM
                 )
@@ -179,8 +179,8 @@ class QuantityReportService(
             val listCalculateQuantityResult = listOrder.map { x ->
                 CalculateQuantityResult(
                     monthReport = x.startDate,
-                    orderDateFrom = x.startDate,
-                    orderDateTo = x.endDate,
+                    startDate = x.startDate,
+                    endDate = x.endDate,
                     calculateBy = CommonUtils.loggedInUser()?: Constants.SYSTEM,
                     calculateDate = OffsetDateTime.now(),
                     updatedDate = OffsetDateTime.now(),

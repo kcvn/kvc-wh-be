@@ -12,6 +12,7 @@ import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
+import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
@@ -76,7 +77,7 @@ class OrderService(
                 var currentDate = request.startDate
 
                 while (!currentDate!!.isAfter(request.endDate)) {
-                    val key = currentDate.let { DateTimeHelper.formatDate(it) }
+                    val key = currentDate.let { DateTimeHelper.toString(it, DateTimeFormat.MM_dd_yyyy) }
                     val response = CalendarValueResponse(
                         key = key,
                         value = key,
@@ -88,26 +89,22 @@ class OrderService(
                 }
             }
         }
+        val response = PagingOrderResponse()
+        response.columns = calendarResponses
+        val orderDetails = orderRep.getPagingListOrder(request, pageable)
 
-        val pagingOrderResponse = PagingOrderResponse()
-        pagingOrderResponse.columns = calendarResponses
-        val listOrderResponse = orderRep.getPaginatedOrder(request, pageable)
-        pagingOrderResponse.data = listOrderResponse.first
-        var count = 0
-        for (item in listOrderResponse.first) {
-            val calender = item.productId?.let { orderDetailRep.GetCalenderOrderDetail(item.orderId, it) }
-            item.quantityByCalendars = calender
-            if (calender != null) {
-                count = 0
-                for (number in calender) {
-                    count += number.value?.toInt() ?: 0
-                }
-            }
-            item.quantity = count
+        val orderProductIds = orderDetails.first.map { x -> Pair(x.orderId!!, x.productId!!) }
+        val quantityByCalendars = orderRep.getQuantityByCalendar(orderProductIds)
 
+        response.data = orderDetails.first.map { model ->
+            val quantityByCalendar = quantityByCalendars.filter { m -> m.orderId == model.orderId && m.productId == model.productId }
+                .map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
+            model.quantityByCalendars = quantityByCalendar
+            model
         }
-        pagingOrderResponse.totalRecords = listOrderResponse.second
-        return pagingOrderResponse
+
+        response.totalRecords = orderDetails.second
+        return response
     }
 
     fun exportOrderExcel(request: OrderSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {

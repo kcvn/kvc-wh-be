@@ -76,7 +76,7 @@ class OrderService(
             var currentDate = colStartDate
             while (!currentDate!!.isAfter(colEndDate)) {
                 val response = CalendarValueResponse(
-                    key = DateTimeHelper.toString(currentDate, DateTimeFormat.yyyyMMdd),
+                    key = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd_yyyy),
                     value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
                     isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
                 )
@@ -180,7 +180,7 @@ class OrderService(
                     row.createCell(7).setCellValue(item.srNosr)
                     row.getCell(7).cellStyle = style
 
-                    row.createCell(8).setCellValue("v${item.version}.0")
+                    row.createCell(8).setCellValue(item.version)
                     row.getCell(8).cellStyle = style
 
                     for (orderDetail in item.quantityByCalendars!!) {

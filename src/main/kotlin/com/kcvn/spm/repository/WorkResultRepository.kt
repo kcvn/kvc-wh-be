@@ -222,7 +222,7 @@ class WorkResultRepository(
 
     fun findByObjectId(objectIds: List<Int>): List<WorkResult> {
         return context.selectFrom(WORK_RESULT)
-            .where(WORK_RESULT.ID.`in`(objectIds))
+            .where(WORK_RESULT.OBJECT_ID.`in`(objectIds))
             .fetchInto(WorkResult::class.java)
     }
 

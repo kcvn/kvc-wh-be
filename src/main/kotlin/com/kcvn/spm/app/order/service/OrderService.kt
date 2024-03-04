@@ -40,8 +40,7 @@ import java.time.format.DateTimeFormatter
 class OrderService(
     private val orderRep: OrderRepository,
     private val workResultRep: WorkResultRepository,
-    private val productRep: ProductRepository,
-    private val orderDetailRep: OrderDetailRepository
+    private val productRep: ProductRepository
 ) {
     fun getPaginatedOrder(
         request: OrderSearchRequest?,
@@ -244,7 +243,6 @@ class OrderService(
 
     fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
         val orders = orderRep.getOrderCode(request.startDate,request.endDate)
-
         return orders
     }
 
@@ -490,7 +488,4 @@ class OrderService(
         return true
     }
 
-    fun getOrderDetailsByOrderIds(ids: List<String?>): List<OrderDetail> {
-        return orderDetailRep.getOrderDetailsByOrderIds(ids)
-    }
 }

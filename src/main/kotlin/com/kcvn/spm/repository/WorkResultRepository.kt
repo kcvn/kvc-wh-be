@@ -15,10 +15,12 @@ import org.jooq.SortOrder
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.length
+import org.jooq.impl.DSL.lower
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
+import java.util.*
 
 @Repository
 class WorkResultRepository(
@@ -28,10 +30,10 @@ class WorkResultRepository(
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.order.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
+                condition = condition.and(lower(WORK_RESULT.ORDER_CODE).contains(request.order!!.lowercase(Locale.getDefault())))
 
             if (!request.itemName.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
+                condition = condition.and(lower(WORK_RESULT.ITEM_NAME).contains(request.itemName!!.lowercase(Locale.getDefault())))
 
             if (!request.listProcessGroup.isNullOrEmpty()) {
                 val processGroupCodes = request.listProcessGroup!!.split(",")
@@ -52,10 +54,10 @@ class WorkResultRepository(
             }
 
             if (!request.tapeLot.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.TAPE_LOT_NO.contains(request.tapeLot))
+                condition = condition.and(lower(WORK_RESULT.TAPE_LOT_NO).contains(request.tapeLot!!.lowercase(Locale.getDefault())))
 
             if (!request.code.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.CODE.contains(request.code))
+                condition = condition.and(lower( WORK_RESULT.CODE).contains(request.code!!.lowercase(Locale.getDefault())))
 
             if (request.fromDate != null && request.toDate != null)
                 condition = condition.and(WORK_RESULT.SUMMARY_RESULT_DATE.between(request.fromDate, request.toDate))
@@ -181,10 +183,10 @@ class WorkResultRepository(
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.order.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
+                condition = condition.and(lower(WORK_RESULT.ORDER_CODE).contains(request.order!!.lowercase(Locale.getDefault())))
 
             if (!request.itemName.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
+                condition = condition.and(lower(WORK_RESULT.ITEM_NAME).contains(request.itemName!!.lowercase(Locale.getDefault())))
 
             if (!request.listProcessGroup.isNullOrEmpty()) {
                 val processGroupCodes = request.listProcessGroup!!.split(",")
@@ -205,10 +207,10 @@ class WorkResultRepository(
             }
 
             if (!request.tapeLot.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.TAPE_LOT_NO.contains(request.tapeLot))
+                condition = condition.and(lower(WORK_RESULT.TAPE_LOT_NO).contains(request.tapeLot!!.lowercase(Locale.getDefault())))
 
             if (!request.code.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.CODE.contains(request.code))
+                condition = condition.and(lower( WORK_RESULT.CODE).contains(request.code!!.lowercase(Locale.getDefault())))
 
             if (request.fromDate != null && request.toDate != null)
                 condition = condition.and(WORK_RESULT.SUMMARY_RESULT_DATE.between(request.fromDate, request.toDate))

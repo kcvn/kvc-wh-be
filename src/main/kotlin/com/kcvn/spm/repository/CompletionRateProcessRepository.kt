@@ -96,7 +96,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
             "key" -> COMPLETION_RATE_PROCESS.KEY
             "processCode" -> COMPLETION_RATE_PROCESS.PROCESS_CODE
             "layerCode" -> COMPLETION_RATE_PROCESS.LAYER_CODE
-            else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
+            else -> throw IllegalArgumentException(CommonUtils.getMessage("sort.error.columnNotFound"))
         }
     }
 

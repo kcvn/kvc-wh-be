@@ -29,7 +29,7 @@ class ProductController(
     fun getList(
         request: ProductSearchRequest?,
         @PageableDefault(size = 10, page = 0)
-        @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
+        @SortDefault.SortDefaults(SortDefault(sort = ["name"], direction = Sort.Direction.ASC))
         pageable: Pageable
     ): ResponseEntity<PagingProductResponse> {
         val data = productService.getListProduct(request, pageable)

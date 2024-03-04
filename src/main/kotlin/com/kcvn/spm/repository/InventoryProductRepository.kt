@@ -2,12 +2,13 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
-import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
-import com.kcvn.spm.model.tables.pojos.ProductProcess
-import com.kcvn.spm.model.tables.pojos.WorkResult
-import com.kcvn.spm.model.tables.references.*
+import com.kcvn.spm.model.tables.references.INVENTORY_PRODUCT
+import com.kcvn.spm.model.tables.references.PROCESS_MASTER
+import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
+import com.kcvn.spm.model.tables.references.PRODUCT
 import org.apache.commons.lang3.StringUtils.substring
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -171,7 +172,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 INVENTORY_PRODUCT.CODE
             }
             else -> {
-                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
+                val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
                 throw InvalidDataAccessApiUsageException(errorMessage)
             }
         }

@@ -19,10 +19,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
-import com.kcvn.spm.repository.OrderDetailRepository
-import com.kcvn.spm.repository.OrderRepository
-import com.kcvn.spm.repository.ProductRepository
-import com.kcvn.spm.repository.WorkResultRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
@@ -40,12 +37,16 @@ import java.time.format.DateTimeFormatter
 class OrderService(
     private val orderRep: OrderRepository,
     private val workResultRep: WorkResultRepository,
-    private val productRep: ProductRepository
+    private val productRep: ProductRepository,
+    private val orderDetailRep: OrderDetailRepository,
+    private val holidaysCalenderRepository: HolidaysCalenderRepository,
 ) {
+
     fun getPaginatedOrder(
         request: OrderSearchRequest?,
         pageable: Pageable?
     ): PagingOrderResponse {
+        val holidayCalender = holidaysCalenderRepository.getHolidaysCalender();
         val calendarResponses = mutableListOf<CalendarValueResponse>()
         if (request != null) {
             var colStartDate = OffsetDateTime.now()
@@ -80,7 +81,7 @@ class OrderService(
                 val response = CalendarValueResponse(
                     key = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd_yyyy),
                     value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
-                    isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
+                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
                 )
                 calendarResponses.add(response)
                 currentDate = currentDate.plusDays(1)
@@ -243,6 +244,7 @@ class OrderService(
 
     fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
         val orders = orderRep.getOrderCode(request.startDate,request.endDate)
+
         return orders
     }
 
@@ -259,20 +261,7 @@ class OrderService(
                 ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
             val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportOrderTemplate.xlsx"
 
-            val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
-            val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
-            val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
-
-            if (colResult == null) {
-                headerRow.createCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
-            } else {
-                headerRow.getCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
-            }
-            val headerStyle = headerRow.getCell(0).cellStyle
-            headerRow.getCell(colIndexResult).cellStyle.cloneStyleFrom(headerStyle)
-            headerRow.getCell(colIndexResult).cellStyle.fillForegroundColor = IndexedColors.RED.index
-            headerRow.getCell(colIndexResult).cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-            sheet.setColumnWidth(colIndexResult, 15000)
+            val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
 
             if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 1))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
@@ -304,7 +293,7 @@ class OrderService(
                 if (startDate < DateTimeHelper.getFirstDayOfQuarterInYear(LocalDateTime.now()))
                     throw BusinessException(CommonUtils.getMessage("validate.excel.column.quarterInYear"))
 
-                val overlapOrder = orderRep.getOverlapOrderDate(startDateUtc, endDateUtc, orderCode)
+                val overlapOrder = orderRep.getOverlapOrderDate(startDateUtc, endDateUtc)
                 if (overlapOrder != null)
                     throw BusinessException(CommonUtils.getMessage("validate.excel.orderOverlap"))
 
@@ -353,6 +342,7 @@ class OrderService(
                 }
 
                 if (check) {
+                    var isValidCol = true
                     for (iCol in 1 until colIndexResult) {
                         try {
                             val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol, DateTimeFormat.MM_dd).split("/")
@@ -363,6 +353,7 @@ class OrderService(
                             } else {
                                 if (strQuantity.toBigDecimalOrNull() == null) {
                                     isBreak = true
+                                    isValidCol = false
                                     messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, iCol))))
                                     break
                                 }
@@ -375,10 +366,11 @@ class OrderService(
                             orderDetails.add(orderDetail)
                         } catch (e: Exception) {
                             isBreak = true
+                            isValidCol = false
                             messageResults.add(CommonUtils.getMessage("validate.excel.updateDataError"))
                         }
                     }
-                    if (!isBreak) {
+                    if (isValidCol) {
                         productImports.add(name)
                         messageResults.add(CommonUtils.getMessage("validate.excel.checked"))
                         count++
@@ -391,7 +383,8 @@ class OrderService(
                     row.createCell(colIndexResult)
                 }
                 row.getCell(colIndexResult).setCellValue(result)
-                row.getCell(colIndexResult).cellStyle = style
+                val hasFontColor = result == CommonUtils.getMessage("validate.excel.checked")
+                row.getCell(colIndexResult).cellStyle = ExcelHelper.getCellStyleResultCol(workbook, style, hasFontColor)
             }
 
             if (!isBreak) {
@@ -425,10 +418,7 @@ class OrderService(
 
             workbook.close()
 
-            return BaseResponse(
-                response,
-                if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
-            )
+            return BaseResponse(response, CommonUtils.getMessage("import.insertNoData"))
         } catch (e: Exception) {
             throw e
         } finally {
@@ -488,4 +478,7 @@ class OrderService(
         return true
     }
 
+    fun getOrderDetailsByOrderIds(ids: List<String?>): List<OrderDetail> {
+        return orderDetailRep.getOrderDetailsByOrderIds(ids)
+    }
 }

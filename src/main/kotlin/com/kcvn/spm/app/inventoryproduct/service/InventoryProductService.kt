@@ -7,6 +7,7 @@ import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToLocalDateTimeToString
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -76,7 +77,6 @@ class InventoryProductService(
         var count = 0
         val total = sheet.lastRowNum
 
-
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
 
@@ -105,6 +105,9 @@ class InventoryProductService(
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
         val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
+        val requestDelete = InventoryProduct()
+        requestDelete.inventoryDate = date
+        inventoryProductRepository.deleteInventoryProduct(requestDelete)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()
@@ -374,7 +377,7 @@ class InventoryProductService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.result.import",arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            fileName = CommonUtils.getMessage("export.excel.result.import.inventoryProduct",arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = Constants.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -437,7 +440,7 @@ class InventoryProductService(
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 if (item?.inventoryDate != null) {
-                    val formattedDate = convertOffSetDateTimeToLocalDateTimeToString(item.inventoryDate!!)
+                    val formattedDate = convertOffSetDateTimeUtc7ToString(item.inventoryDate!!)
                     dataRow.createCell(0).setCellValue(formattedDate)
                     dataRow.getCell(0).cellStyle = style
                 }

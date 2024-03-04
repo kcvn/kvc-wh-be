@@ -127,7 +127,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             "layerCode" -> COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE
             "process_code" -> COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE
             // Add more cases for other fields as needed
-            else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
+            else -> throw IllegalArgumentException(CommonUtils.getMessage("sort.error.columnNotFound"))
         }
     }
 

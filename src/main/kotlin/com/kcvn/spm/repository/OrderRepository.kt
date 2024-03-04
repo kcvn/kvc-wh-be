@@ -32,13 +32,13 @@ class OrderRepository(
     fun getPagingListOrder(request: OrderSearchRequest?, pageable: Pageable?): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
         if (!request?.productName.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.NAME.containsIgnoreCase(request?.productName))
+            condition = condition.and(PRODUCT.NAME.contains(request?.productName))
         }
         if (!request?.frame_1.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.FRAME_1.containsIgnoreCase(request?.frame_1))
+            condition = condition.and(PRODUCT.FRAME_1.contains(request?.frame_1))
         }
         if (!request?.srNosr.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.SR_NOSR.containsIgnoreCase(request?.srNosr))
+            condition = condition.and(PRODUCT.SR_NOSR.contains(request?.srNosr))
         }
         if (request?.filterType == OrderFilterType.DATE && request.startDate != null && request.endDate != null) {
             condition = condition.and(ORDER_DETAIL.ORDER_DATE.between(request.startDate, request.endDate))
@@ -121,7 +121,7 @@ class OrderRepository(
             "pcsSh" -> PRODUCT.PCS_SH
             "shBlock" -> PRODUCT.SH_BLOCK
             "srNosR" -> PRODUCT.SR_NOSR
-            else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
+            else -> throw IllegalArgumentException(CommonUtils.getMessage("sort.error.columnNotFound"))
         }
     }
 
@@ -179,16 +179,17 @@ class OrderRepository(
             }
         } catch (e: Exception) {
             DSL.rollback()
+            throw e
         }
     }
 
 
-    fun getOverlapOrderDate(startDate: OffsetDateTime, endDate: OffsetDateTime, orderCode: String): Order? {
+    fun getOverlapOrderDate(startDate: OffsetDateTime, endDate: OffsetDateTime): Order? {
         var condition = DSL.noCondition()
-        condition = condition.and(ORDER.ORDER_CODE.notEqual(orderCode)).and(ORDER.IS_DELETED.eq(false))
+        condition = condition.and(ORDER.IS_DELETED.eq(false))
             .and(
-                (ORDER.END_DATE.ge(startDate).and(ORDER.END_DATE.lt(endDate)))
-                    .or(ORDER.START_DATE.le(endDate).and(ORDER.END_DATE.gt(endDate)))
+                (ORDER.END_DATE.ge(startDate).and(ORDER.END_DATE.le(endDate)))
+                    .or(ORDER.START_DATE.le(endDate).and(ORDER.END_DATE.ge(endDate)))
             )
         return context.selectFrom(ORDER).where(condition).fetchInto(Order::class.java).firstOrNull()
     }

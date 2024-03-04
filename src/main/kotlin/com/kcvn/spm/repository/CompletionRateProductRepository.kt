@@ -75,7 +75,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             "productname" -> COMPLETION_RATE_PRODUCT.PRODUCT_NAME
             "rate" -> COMPLETION_RATE_PRODUCT.RATE
             // Add more cases for other fields as needed
-            else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
+            else -> throw IllegalArgumentException(CommonUtils.getMessage("sort.error.columnNotFound"))
         }
     }
 

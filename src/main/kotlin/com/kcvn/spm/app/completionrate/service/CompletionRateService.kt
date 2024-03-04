@@ -130,6 +130,7 @@ class CompletionRateService(
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
 
+
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
@@ -148,6 +149,7 @@ class CompletionRateService(
         val productMaster = productRepository.getListNameProduct()
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProductRepository.getByProduct(productNames)
+
         var count = 0
         val total = sheet.lastRowNum - rowIndex
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
@@ -170,6 +172,9 @@ class CompletionRateService(
 
             val productExist = productExists.find { x -> x.productName == name }
             val productMasterExist = productMaster.find {x -> x == name}
+            val productExistMinEffectiveDate = productExists
+                .filter { it.productName == name }
+                .minByOrNull { it.effectiveDate!! }
 
             if(productMasterExist == null){
                 errorMessages.add(CommonUtils.getMessage("product.not.exist"))

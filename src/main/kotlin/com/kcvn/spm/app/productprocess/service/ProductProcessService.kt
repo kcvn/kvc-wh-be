@@ -72,19 +72,20 @@ class ProductProcessService(
             if(item.processId != null) {
                 val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
                     ?: throw BusinessException(CommonUtils.getMessage("productProcess.notFound"))
-                if (!item.processInventoryCode.isNullOrEmpty()) {
-                    val productProcessAfter = request.listProcess!!.find { it.idx == item.idx + 1 }
-                    val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
-                    if ((productProcessAfter?.processCode!!.isNotEmpty() && productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
-                        || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode)
-                    ) {
-                        productProcess.processInventoryCode = item.processInventoryCode;
-                    } else {
-                        throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
-                    }
-                }else{
-                    productProcess.processInventoryCode = item.processInventoryCode
-                }
+//                if (!item.processInventoryCode.isNullOrEmpty()) {
+//                    val productProcessAfter = request.listProcess!!.find { it.idx == item.idx + 1 }
+//                    val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
+//                    if ((productProcessAfter?.processCode!!.isNotEmpty() && productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
+//                        || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode)
+//                    ) {
+//                        productProcess.processInventoryCode = item.processInventoryCode;
+//                    } else {
+//                        throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+//                    }
+//                }else{
+//                    productProcess.processInventoryCode = item.processInventoryCode
+//                }
+                productProcess.processInventoryCode = item.processInventoryCode
                 productProcess.processConvertCode = item.processConvertCode;
                 productProcess.processStatisticCode = item.processStatisticCode;
                 val data = productProcessRep.updateProcessDetail(productProcess);
@@ -102,17 +103,18 @@ class ProductProcessService(
                 requestAddProcess.processConvertCode = item.processConvertCode
                 requestAddProcess.processStatisticCode = item.processStatisticCode
                 /// check điều kiện mã tồn kho khi khác null
-                if (item.processInventoryCode != null) {
-                    val productProcessAfter = request.listProcess!!.find { it.idx == item.idx + 1 }
-                    val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
-                    if ((productProcessAfter?.processCode!!.isNotEmpty() && productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
-                        || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode)
-                    ) {
-                        requestAddProcess.processInventoryCode = item.processInventoryCode;
-                    } else {
-                        throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
-                    }
-                }
+//                if (item.processInventoryCode != null) {
+//                    val productProcessAfter = request.listProcess!!.find { it.idx == item.idx + 1 }
+//                    val productProcessPrev = request.listProcess!!.find { it.idx == item.idx - 1 }
+//                    if ((productProcessAfter?.processCode!!.isNotEmpty() && productProcessAfter.processCode == item.processInventoryCode && productProcessAfter.layerCode == item.layerCode)
+//                        || (productProcessPrev?.processCode!!.isNotEmpty() && productProcessPrev.processCode == item.processInventoryCode && productProcessPrev.layerCode == item.layerCode)
+//                    ) {
+//                        requestAddProcess.processInventoryCode = item.processInventoryCode;
+//                    } else {
+//                        throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
+//                    }
+//                }
+                requestAddProcess.processInventoryCode = item.processInventoryCode;
                 val data = productProcessRep.addProductProcess(requestAddProcess)
                 dataResult.add(data)
             }

@@ -231,8 +231,6 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
             }
 
             else -> {
-                //val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
-                //throw InvalidDataAccessApiUsageException(errorMessage)
                 PRODUCT.CREATED_DATE
             }
         }

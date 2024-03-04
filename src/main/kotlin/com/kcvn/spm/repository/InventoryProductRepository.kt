@@ -2,12 +2,13 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
-import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
-import com.kcvn.spm.model.tables.pojos.ProductProcess
-import com.kcvn.spm.model.tables.pojos.WorkResult
-import com.kcvn.spm.model.tables.references.*
+import com.kcvn.spm.model.tables.references.INVENTORY_PRODUCT
+import com.kcvn.spm.model.tables.references.PROCESS_MASTER
+import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
+import com.kcvn.spm.model.tables.references.PRODUCT
 import org.apache.commons.lang3.StringUtils.substring
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -50,6 +51,13 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
                 .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
                 .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
+    }
+
+    fun deleteInventoryProduct(request: InventoryProduct){
+        val record = context.newRecord(INVENTORY_PRODUCT, request)
+        context.delete(INVENTORY_PRODUCT)
+            .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
+            .execute()
     }
 
     fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
@@ -117,31 +125,6 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .orderBy(getSortFields(pageable.sort, INVENTORY_PRODUCT.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(InventoryProductResponse::class.java)
-        val test = context.select(
-            INVENTORY_PRODUCT.INVENTORY_DATE.`as`("inventoryDate"),
-            PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
-            PROCESS_MASTER.PROCESS_NAME.`as`("processName"),
-            PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.`as`("processCode"),
-            PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.`as`("layerCode"),
-            PRODUCT.PCS_SH.`as`("pcsSh"),
-            INVENTORY_PRODUCT.PRODUCT_QUANTITY.`as`("productQuantity"),
-            INVENTORY_PRODUCT.SHEET_QUANTITY.`as`("sheetQuantity"),
-            INVENTORY_PRODUCT.ORDER_CODE.`as`("orderCode"),
-            INVENTORY_PRODUCT.TAPE_LOT_NO.`as`("tapeLotNo"),
-            INVENTORY_PRODUCT.CODE.`as`("code"),
-        )
-            .from(INVENTORY_PRODUCT
-                .join(PROCESS_PROCEDURE_STRUCTURE)
-                .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
-                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
-                .join(PROCESS_MASTER)
-                .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
-                    .and(PROCESS_MASTER.IS_DELETED.eq(false)))
-                .leftJoin(PRODUCT)
-                .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
-                    .and(PRODUCT.IS_DELETED.eq(false))))
-
-        val testQuery = test.getSQL()
 
         val totalData =  context
             .selectCount()
@@ -149,7 +132,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .join(PROCESS_PROCEDURE_STRUCTURE)
             .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
                 .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
-            .join(PROCESS_MASTER)
+            .leftJoin(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                 .and(PROCESS_MASTER.IS_DELETED.eq(false)))
             .leftJoin(PRODUCT)
@@ -196,7 +179,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 INVENTORY_PRODUCT.CODE
             }
             else -> {
-                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
+                val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
                 throw InvalidDataAccessApiUsageException(errorMessage)
             }
         }

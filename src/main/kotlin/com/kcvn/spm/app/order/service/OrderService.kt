@@ -38,7 +38,6 @@ class OrderService(
     private val orderRep: OrderRepository,
     private val workResultRep: WorkResultRepository,
     private val productRep: ProductRepository,
-    private val orderDetailRep: OrderDetailRepository,
     private val holidaysCalenderRepository: HolidaysCalenderRepository,
 ) {
 
@@ -476,9 +475,5 @@ class OrderService(
             if (days[i - 1].plusDays(1).format(formatter) != days[i].format(formatter)) return false
         }
         return true
-    }
-
-    fun getOrderDetailsByOrderIds(ids: List<String?>): List<OrderDetail> {
-        return orderDetailRep.getOrderDetailsByOrderIds(ids)
     }
 }

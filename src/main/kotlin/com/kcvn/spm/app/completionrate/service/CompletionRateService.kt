@@ -170,6 +170,9 @@ class CompletionRateService(
 
             val productExist = productExists.find { x -> x.productName == name }
             val productMasterExist = productMaster.find {x -> x == name}
+            val productExistMinEffectiveDate = productExists
+                .filter { it.productName == name }
+                .minByOrNull { it.effectiveDate!! }
 
             if(productMasterExist == null){
                 errorMessages.add(CommonUtils.getMessage("product.not.exist"))

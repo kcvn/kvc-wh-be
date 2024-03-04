@@ -181,7 +181,7 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
                 AUTH_USER.CREATED_DATE
             }
             else -> {
-                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
+                val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
                 throw InvalidDataAccessApiUsageException(errorMessage)
             }
         }

@@ -75,8 +75,7 @@ class InventoryProductService(
 
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
         var count = 0
-        val total = sheet.lastRowNum
-
+        val total = sheet.lastRowNum - 1
 
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)

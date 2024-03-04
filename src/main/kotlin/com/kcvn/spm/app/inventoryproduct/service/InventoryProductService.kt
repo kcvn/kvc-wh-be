@@ -105,6 +105,9 @@ class InventoryProductService(
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
         val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
+        val requestDelete = InventoryProduct()
+        requestDelete.inventoryDate = date
+        inventoryProductRepository.deleteInventoryProduct(requestDelete)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val messageResults = mutableListOf<String>()

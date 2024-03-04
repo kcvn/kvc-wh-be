@@ -120,7 +120,7 @@ class OrderRepository(
             "pcsSh" -> PRODUCT.PCS_SH
             "shBlock" -> PRODUCT.SH_BLOCK
             "srNosR" -> PRODUCT.SR_NOSR
-            else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
+            else -> throw IllegalArgumentException(CommonUtils.getMessage("sort.error.columnNotFound"))
         }
     }
 
@@ -178,16 +178,17 @@ class OrderRepository(
             }
         } catch (e: Exception) {
             DSL.rollback()
+            throw e
         }
     }
 
 
-    fun getOverlapOrderDate(startDate: OffsetDateTime, endDate: OffsetDateTime, orderCode: String): Order? {
+    fun getOverlapOrderDate(startDate: OffsetDateTime, endDate: OffsetDateTime): Order? {
         var condition = DSL.noCondition()
-        condition = condition.and(ORDER.ORDER_CODE.notEqual(orderCode)).and(ORDER.IS_DELETED.eq(false))
+        condition = condition.and(ORDER.IS_DELETED.eq(false))
             .and(
-                (ORDER.END_DATE.ge(startDate).and(ORDER.END_DATE.lt(endDate)))
-                    .or(ORDER.START_DATE.le(endDate).and(ORDER.END_DATE.gt(endDate)))
+                (ORDER.END_DATE.ge(startDate).and(ORDER.END_DATE.le(endDate)))
+                    .or(ORDER.START_DATE.le(endDate).and(ORDER.END_DATE.ge(endDate)))
             )
         return context.selectFrom(ORDER).where(condition).fetchInto(Order::class.java).firstOrNull()
     }

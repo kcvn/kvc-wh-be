@@ -1,9 +1,7 @@
 package com.kcvn.spm.common.helper
 
-import org.apache.poi.ss.usermodel.CellType
-import org.apache.poi.ss.usermodel.DateUtil
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.Sheet
+import com.kcvn.spm.common.util.CommonUtils
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
@@ -32,7 +30,7 @@ class ExcelHelper {
             }
         }
 
-        fun columnIsMatchingTemplate(templateUrl: String, headerRowImport: Row, indexHeaderRow: Int, rangeCheckCol: Int?) : Boolean {
+        fun columnIsMatchingTemplate(templateUrl: String, headerRowImport: Row, indexHeaderRow: Int, rangeCheckCol: Int?): Boolean {
             val workbookTemplate = FileInputStream(templateUrl).use { x -> XSSFWorkbook(x) }
             val headerRowTemplate = workbookTemplate.getSheetAt(0).getRow(indexHeaderRow)
 
@@ -50,7 +48,7 @@ class ExcelHelper {
             return true
         }
 
-        fun fileIsEmpty(sheet: Sheet, rowIndex: Int) : Boolean {
+        fun fileIsEmpty(sheet: Sheet, rowIndex: Int): Boolean {
             val countRowCheck = if (sheet.lastRowNum < 5) sheet.lastRowNum else 5
             var isEmpty = true
             for (iRow in rowIndex until countRowCheck + 1) {
@@ -67,8 +65,8 @@ class ExcelHelper {
             return isEmpty
         }
 
-        fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int, formats: Array<String>) : Boolean {
-            for (i in startCol until endCol+1) {
+        fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int, formats: Array<String>): Boolean {
+            for (i in startCol until endCol + 1) {
                 val cell = headerRowImport.getCell(i)
                 if (cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
                     continue
@@ -91,5 +89,36 @@ class ExcelHelper {
             return true
         }
 
+        fun getCellStyleResultCol(workbook: Workbook, styleTemplate: CellStyle, hasFontColor: Boolean = true): CellStyle {
+            val cellStyle = workbook.createCellStyle()
+            if (!hasFontColor) {
+                val font = workbook.createFont()
+                font.color = IndexedColors.RED.index
+                cellStyle.setFont(font)
+            }
+            cellStyle.alignment = HorizontalAlignment.LEFT
+            cellStyle.borderTop = styleTemplate.borderTop
+            cellStyle.borderLeft = styleTemplate.borderLeft
+            cellStyle.borderRight = styleTemplate.borderRight
+            cellStyle.borderBottom = styleTemplate.borderBottom
+            return cellStyle
+        }
+
+        fun createColResult(headerRow: Row, sheet: Sheet): Int {
+            val colEmpty = headerRow.firstOrNull { x -> getCellValue(headerRow, x.columnIndex) == "" }
+            val colResult = headerRow.firstOrNull { x -> getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+            val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (headerRow.lastCellNum + 0))
+
+            if (colResult == null) {
+                headerRow.createCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            } else {
+                headerRow.getCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            }
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(colIndexResult).cellStyle.cloneStyleFrom(headerStyle)
+            sheet.setColumnWidth(colIndexResult, 15000)
+
+            return colIndexResult
+        }
     }
 }

@@ -1,16 +1,15 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.app.report.quantityreport.payload.model.InformationQuantity
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
-import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
-import com.kcvn.spm.model.tables.pojos.WorkResult
-import com.kcvn.spm.model.tables.references.*
-import org.jooq.Condition
+import com.kcvn.spm.model.tables.references.CALCULATE_QUANTITY_RESULT
+import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY
+import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY_DETAIL
+import com.kcvn.spm.model.tables.references.PRODUCT
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL

@@ -4,16 +4,13 @@ import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequ
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
-import com.kcvn.spm.model.tables.references.CALCULATE_QUANTITY_RESULT
 import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY
-import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -37,7 +34,7 @@ class QuantityReportRepository(
             }
         }
 
-        var sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()
+        val sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()
         val sortProductName = pageable.sort.find { x -> x.property == "productname" }
         if (sortProductName != null){
                 sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.desc())

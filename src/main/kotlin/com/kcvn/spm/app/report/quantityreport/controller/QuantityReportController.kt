@@ -7,7 +7,6 @@ import com.kcvn.spm.app.report.quantityreport.service.QuantityReportService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
-import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault

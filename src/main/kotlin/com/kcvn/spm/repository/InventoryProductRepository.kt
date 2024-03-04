@@ -53,6 +53,13 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
     }
 
+    fun deleteInventoryProduct(request: InventoryProduct){
+        val record = context.newRecord(INVENTORY_PRODUCT, request)
+        context.delete(INVENTORY_PRODUCT)
+            .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
+            .execute()
+    }
+
     fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
         var condition: Condition = DSL.noCondition()
 
@@ -108,10 +115,10 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .join(PROCESS_PROCEDURE_STRUCTURE)
             .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
                 .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
-            .join(PROCESS_MASTER)
+            .leftJoin(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                 .and(PROCESS_MASTER.IS_DELETED.eq(false)))
-            .join(PRODUCT)
+            .leftJoin(PRODUCT)
             .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
                 .and(PRODUCT.IS_DELETED.eq(false))))
             .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
@@ -125,10 +132,10 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .join(PROCESS_PROCEDURE_STRUCTURE)
             .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
                 .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
-            .join(PROCESS_MASTER)
+            .leftJoin(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                 .and(PROCESS_MASTER.IS_DELETED.eq(false)))
-            .join(PRODUCT)
+            .leftJoin(PRODUCT)
             .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
                 .and(PRODUCT.IS_DELETED.eq(false))))
             .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))

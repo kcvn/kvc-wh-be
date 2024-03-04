@@ -20,7 +20,7 @@ import java.time.ZoneOffset
 class CompletionRateProcessRepository(private val context: DSLContext) : SortingRepository() {
 
 
-    fun getListCompletionRateProcessByKey(productNames: List<String>): List<CompletionRateProcess> {
+    fun getListCompletionRateProcessByKey(productNames: List<String>): List<CompletionRateProcess>? {
         return context.selectFrom(COMPLETION_RATE_PROCESS)
             .where(
                 COMPLETION_RATE_PROCESS.KEY.`in`(productNames)

@@ -3,6 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.order.payload.model.OrderDetailByDateModel
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
+import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.OrderFilterType
@@ -211,6 +212,24 @@ class OrderRepository(
             }
         }
         return query.fetchInto(Order::class.java)
+    }
+
+    fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
+        var condition = DSL.noCondition()
+        if (request.endDate != null) {
+            condition = condition.and(ORDER.END_DATE.le(request.endDate))
+        }
+        condition = condition.and(ORDER.START_DATE.ge(request.startDate)).and(ORDER.IS_DELETED.eq(false)).or(ORDER.START_DATE.le(request.endDate))
+        return context.select(
+            ORDER.ID,
+            ORDER.ORDER_CODE,
+            ORDER.VERSION,
+            ORDER.START_DATE,
+            ORDER.END_DATE
+        ).from(ORDER)
+            .where(condition)
+            .orderBy(ORDER.START_DATE.sort(SortOrder.DESC))
+            .fetchInto(Order::class.java)
     }
 
 }

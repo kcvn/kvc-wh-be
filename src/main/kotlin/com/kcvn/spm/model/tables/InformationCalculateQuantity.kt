@@ -5,19 +5,21 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
-import com.kcvn.spm.model.keys.INFORMATION_CALCULATE_QUANTITY_PK
+import com.kcvn.spm.model.keys.INFORMATION_CALCULATE_QUANTITY_PKEY
+import com.kcvn.spm.model.keys.INFORMATION_CALCULATE_QUANTITY__INFORMATION_CALCULATE_QUANTIT_CALCULATE_QUANTITY_RESULT_ID_FKEY
 import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
 
-import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.util.function.Function
+
+import kotlin.collections.List
 
 import org.jooq.Field
 import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row15
+import org.jooq.Row11
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -79,53 +81,25 @@ open class InformationCalculateQuantity(
      * The column
      * <code>public.information_calculate_quantity.product_name</code>.
      */
-    val PRODUCT_NAME: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("product_name"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+    val PRODUCT_NAME: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("product_name"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     /**
      * The column
-     * <code>public.information_calculate_quantity.process_statistic_code</code>.
+     * <code>public.information_calculate_quantity.process_statistic</code>.
      */
-    val PROCESS_STATISTIC_CODE: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("process_statistic_code"), SQLDataType.VARCHAR(10).nullable(false), this, "")
+    val PROCESS_STATISTIC: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("process_statistic"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     /**
      * The column
-     * <code>public.information_calculate_quantity.total_quantity</code>.
+     * <code>public.information_calculate_quantity.total_quantity_of_process</code>.
      */
-    val TOTAL_QUANTITY: TableField<InformationCalculateQuantityRecord, Int?> = createField(DSL.name("total_quantity"), SQLDataType.INTEGER, this, "")
-
-    /**
-     * The column
-     * <code>public.information_calculate_quantity.completion_rate</code>.
-     */
-    val COMPLETION_RATE: TableField<InformationCalculateQuantityRecord, BigDecimal?> = createField(DSL.name("completion_rate"), SQLDataType.NUMERIC(5, 2), this, "")
-
-    /**
-     * The column <code>public.information_calculate_quantity.order_date</code>.
-     */
-    val ORDER_DATE: TableField<InformationCalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("order_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
-
-    /**
-     * The column
-     * <code>public.information_calculate_quantity.process_count</code>.
-     */
-    val PROCESS_COUNT: TableField<InformationCalculateQuantityRecord, Int?> = createField(DSL.name("process_count"), SQLDataType.INTEGER, this, "")
-
-    /**
-     * The column <code>public.information_calculate_quantity.block_sh</code>.
-     */
-    val BLOCK_SH: TableField<InformationCalculateQuantityRecord, Int?> = createField(DSL.name("block_sh"), SQLDataType.INTEGER, this, "")
-
-    /**
-     * The column
-     * <code>public.information_calculate_quantity.block_quantity</code>.
-     */
-    val BLOCK_QUANTITY: TableField<InformationCalculateQuantityRecord, Int?> = createField(DSL.name("block_quantity"), SQLDataType.INTEGER, this, "")
+    val TOTAL_QUANTITY_OF_PROCESS: TableField<InformationCalculateQuantityRecord, Int?> = createField(DSL.name("total_quantity_of_process"), SQLDataType.INTEGER.nullable(false), this, "")
 
     /**
      * The column
      * <code>public.information_calculate_quantity.created_date</code>.
      */
-    val CREATED_DATE: TableField<InformationCalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
+    val CREATED_DATE: TableField<InformationCalculateQuantityRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.information_calculate_quantity.created_by</code>.
@@ -141,12 +115,18 @@ open class InformationCalculateQuantity(
     /**
      * The column <code>public.information_calculate_quantity.updated_by</code>.
      */
-    val UPDATED_BY: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
+    val UPDATED_BY: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(50), this, "")
 
     /**
      * The column <code>public.information_calculate_quantity.is_deleted</code>.
      */
     val IS_DELETED: TableField<InformationCalculateQuantityRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
+    /**
+     * The column
+     * <code>public.information_calculate_quantity.calculate_quantity_result_id</code>.
+     */
+    val CALCULATE_QUANTITY_RESULT_ID: TableField<InformationCalculateQuantityRecord, String?> = createField(DSL.name("calculate_quantity_result_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     private constructor(alias: Name, aliased: Table<InformationCalculateQuantityRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<InformationCalculateQuantityRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
@@ -171,7 +151,24 @@ open class InformationCalculateQuantity(
 
     constructor(child: Table<out Record>, key: ForeignKey<out Record, InformationCalculateQuantityRecord>): this(Internal.createPathAlias(child, key), child, key, INFORMATION_CALCULATE_QUANTITY, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getPrimaryKey(): UniqueKey<InformationCalculateQuantityRecord> = INFORMATION_CALCULATE_QUANTITY_PK
+    override fun getPrimaryKey(): UniqueKey<InformationCalculateQuantityRecord> = INFORMATION_CALCULATE_QUANTITY_PKEY
+    override fun getReferences(): List<ForeignKey<InformationCalculateQuantityRecord, *>> = listOf(INFORMATION_CALCULATE_QUANTITY__INFORMATION_CALCULATE_QUANTIT_CALCULATE_QUANTITY_RESULT_ID_FKEY)
+
+    private lateinit var _calculateQuantityResult: CalculateQuantityResult
+
+    /**
+     * Get the implicit join path to the
+     * <code>public.calculate_quantity_result</code> table.
+     */
+    fun calculateQuantityResult(): CalculateQuantityResult {
+        if (!this::_calculateQuantityResult.isInitialized)
+            _calculateQuantityResult = CalculateQuantityResult(this, INFORMATION_CALCULATE_QUANTITY__INFORMATION_CALCULATE_QUANTIT_CALCULATE_QUANTITY_RESULT_ID_FKEY)
+
+        return _calculateQuantityResult;
+    }
+
+    val calculateQuantityResult: CalculateQuantityResult
+        get(): CalculateQuantityResult = calculateQuantityResult()
     override fun `as`(alias: String): InformationCalculateQuantity = InformationCalculateQuantity(DSL.name(alias), this)
     override fun `as`(alias: Name): InformationCalculateQuantity = InformationCalculateQuantity(alias, this)
     override fun `as`(alias: Table<*>): InformationCalculateQuantity = InformationCalculateQuantity(alias.getQualifiedName(), this)
@@ -192,18 +189,18 @@ open class InformationCalculateQuantity(
     override fun rename(name: Table<*>): InformationCalculateQuantity = InformationCalculateQuantity(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row15 type methods
+    // Row11 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row15<String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row15<String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row11<String?, OffsetDateTime?, String?, String?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?> = super.fieldsRow() as Row11<String?, OffsetDateTime?, String?, String?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, OffsetDateTime?, String?, String?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, OffsetDateTime?, String?, String?, Int?, BigDecimal?, OffsetDateTime?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, OffsetDateTime?, String?, String?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

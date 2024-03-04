@@ -9,7 +9,7 @@ import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductDetailResponse
 import com.kcvn.spm.common.constants.Constants
-import com.kcvn.spm.common.constants.ProcessStatisticCodeConstants
+import com.kcvn.spm.common.constants.ProcessStatisticCode
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.helper.JsonConvert
@@ -58,7 +58,12 @@ class ProductService(
         return productRep.getProductDetail(request)
     }
 
-    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
+
+    fun getProductDetailWithCompletionRateByIds(productId: List<String?>): List<ProductDetailResponse?> {
+        return productRep.getProductDetailWithCompletionRateByIds(productId)
+    }
+
+    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
         val products = productRep.getList(request, pageable)
         val productMapping = mappingProductResponse(products)
 
@@ -335,7 +340,7 @@ class ProductService(
         val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
         val processGroups = processGroupRep.getAll()
         val productProcessGroups = productProcesses.filter { x ->
-            !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCodeConstants.KO
+            !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
         }.map { x ->
             val procedureStructure = productProcedureStructures.find { m -> m.id == x.processProcedureStructureId }
             if (procedureStructure == null) ProcessGroupModel()
@@ -365,43 +370,43 @@ class ProductService(
                 completionRate = completionRates.find { m -> m.productName == x.name }?.rate?.toDouble()
             )
             val lstProcess = productProcessGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> KeyValueResponse(m.key.second, m.value.size.toString()) }.toMutableList()
-            if (lstProcess.any { m -> m.key == ProcessStatisticCodeConstants.HP_TAN || m.key == ProcessStatisticCodeConstants.HP_ALL }) {
-                val sum = (lstProcess.find { m -> m.key == ProcessStatisticCodeConstants.HP_TAN }?.value?.toInt() ?: 0) +
-                    (lstProcess.find { m -> m.key == ProcessStatisticCodeConstants.HP_ALL }?.value?.toInt() ?: 0)
-                lstProcess.add(KeyValueResponse(ProcessStatisticCodeConstants.IN_LO, sum.toString()))
+            if (lstProcess.any { m -> m.key == ProcessStatisticCode.HP_TAN || m.key == ProcessStatisticCode.HP_ALL }) {
+                val sum = (lstProcess.find { m -> m.key == ProcessStatisticCode.HP_TAN }?.value?.toInt() ?: 0) +
+                    (lstProcess.find { m -> m.key == ProcessStatisticCode.HP_ALL }?.value?.toInt() ?: 0)
+                lstProcess.add(KeyValueResponse(ProcessStatisticCode.IN_LO, sum.toString()))
             }
-            if (lstProcess.any { m -> m.key == ProcessStatisticCodeConstants.TAN || m.key == ProcessStatisticCodeConstants.ZEN }) {
-                val sum = (lstProcess.find { m -> m.key == ProcessStatisticCodeConstants.TAN }?.value?.toInt() ?: 0) +
-                    (lstProcess.find { m -> m.key == ProcessStatisticCodeConstants.ZEN }?.value?.toInt() ?: 0)
-                lstProcess.add(KeyValueResponse(ProcessStatisticCodeConstants.IN_MACH, sum.toString()))
+            if (lstProcess.any { m -> m.key == ProcessStatisticCode.TAN || m.key == ProcessStatisticCode.ZEN }) {
+                val sum = (lstProcess.find { m -> m.key == ProcessStatisticCode.TAN }?.value?.toInt() ?: 0) +
+                    (lstProcess.find { m -> m.key == ProcessStatisticCode.ZEN }?.value?.toInt() ?: 0)
+                lstProcess.add(KeyValueResponse(ProcessStatisticCode.IN_MACH, sum.toString()))
             }
-            if (lstProcess.any { m -> m.key == ProcessStatisticCodeConstants.M_TAN || m.key == ProcessStatisticCodeConstants.M_ALL }) {
-                val sum = (lstProcess.find { m -> m.key == ProcessStatisticCodeConstants.M_TAN }?.value?.toInt() ?: 0) +
-                    (lstProcess.find { m -> m.key == ProcessStatisticCodeConstants.M_ALL }?.value?.toInt() ?: 0)
-                lstProcess.add(KeyValueResponse(ProcessStatisticCodeConstants.GHEP_LOP, sum.toString()))
+            if (lstProcess.any { m -> m.key == ProcessStatisticCode.M_TAN || m.key == ProcessStatisticCode.M_ALL }) {
+                val sum = (lstProcess.find { m -> m.key == ProcessStatisticCode.M_TAN }?.value?.toInt() ?: 0) +
+                    (lstProcess.find { m -> m.key == ProcessStatisticCode.M_ALL }?.value?.toInt() ?: 0)
+                lstProcess.add(KeyValueResponse(ProcessStatisticCode.GHEP_LOP, sum.toString()))
             }
             prod.lstProcess = lstProcess.toList()
             prod
         }
 
         val columns = productProcesses.filter { x ->
-            !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCodeConstants.KO
+            !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
         }.map { x ->
             val processGroup = processGroups.find { m -> !m.processStatisticCode.isNullOrEmpty() && m.processStatisticCode == x.processStatisticCode }
             if (processGroup == null) KeyValueResponse()
             else KeyValueResponse(x.processStatisticCode, processGroup.description, processGroup.sortOrder)
         }.filter { x -> !x.key.isNullOrEmpty() && !x.value.isNullOrEmpty() }.distinct().toMutableList()
 
-        if (columns.any { m -> m.key == ProcessStatisticCodeConstants.HP_TAN || m.key == ProcessStatisticCodeConstants.HP_ALL }) {
-            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCodeConstants.IN_LO }
+        if (columns.any { m -> m.key == ProcessStatisticCode.HP_TAN || m.key == ProcessStatisticCode.HP_ALL }) {
+            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.IN_LO }
             if (processGroup != null) columns.add(KeyValueResponse(processGroup.processStatisticCode, processGroup.description, processGroup.sortOrder))
         }
-        if (columns.any { m -> m.key == ProcessStatisticCodeConstants.TAN || m.key == ProcessStatisticCodeConstants.ZEN }) {
-            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCodeConstants.IN_MACH }
+        if (columns.any { m -> m.key == ProcessStatisticCode.TAN || m.key == ProcessStatisticCode.ZEN }) {
+            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.IN_MACH }
             if (processGroup != null) columns.add(KeyValueResponse(processGroup.processStatisticCode, processGroup.description, processGroup.sortOrder))
         }
-        if (columns.any { m -> m.key == ProcessStatisticCodeConstants.M_TAN || m.key == ProcessStatisticCodeConstants.M_ALL }) {
-            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCodeConstants.GHEP_LOP }
+        if (columns.any { m -> m.key == ProcessStatisticCode.M_TAN || m.key == ProcessStatisticCode.M_ALL }) {
+            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.GHEP_LOP }
             if (processGroup != null) columns.add(KeyValueResponse(processGroup.processStatisticCode, processGroup.description, processGroup.sortOrder))
         }
         response.columns = columns.sortedBy { x -> x.sort }.distinct().toList()
@@ -493,6 +498,4 @@ class ProductService(
         }
         return messageResults
     }
-
-
 }

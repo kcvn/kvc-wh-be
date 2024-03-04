@@ -16,7 +16,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row12
+import org.jooq.Row15
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -74,9 +74,9 @@ open class CalculateQuantityResult(
     val MONTH_REPORT: TableField<CalculateQuantityResultRecord, OffsetDateTime?> = createField(DSL.name("month_report"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
 
     /**
-     * The column <code>public.calculate_quantity_result.order_date_from</code>.
+     * The column <code>public.calculate_quantity_result.start_date</code>.
      */
-    val ORDER_DATE_FROM: TableField<CalculateQuantityResultRecord, OffsetDateTime?> = createField(DSL.name("order_date_from"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
+    val START_DATE: TableField<CalculateQuantityResultRecord, OffsetDateTime?> = createField(DSL.name("start_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
 
     /**
      * The column <code>public.calculate_quantity_result.status</code>.
@@ -104,9 +104,9 @@ open class CalculateQuantityResult(
     val LOCKED_DATE: TableField<CalculateQuantityResultRecord, OffsetDateTime?> = createField(DSL.name("locked_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     /**
-     * The column <code>public.calculate_quantity_result.order_date_to</code>.
+     * The column <code>public.calculate_quantity_result.end_date</code>.
      */
-    val ORDER_DATE_TO: TableField<CalculateQuantityResultRecord, OffsetDateTime?> = createField(DSL.name("order_date_to"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
+    val END_DATE: TableField<CalculateQuantityResultRecord, OffsetDateTime?> = createField(DSL.name("end_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
 
     /**
      * The column <code>public.calculate_quantity_result.updated_date</code>.
@@ -122,6 +122,22 @@ open class CalculateQuantityResult(
      * The column <code>public.calculate_quantity_result.is_deleted</code>.
      */
     val IS_DELETED: TableField<CalculateQuantityResultRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
+    /**
+     * The column
+     * <code>public.calculate_quantity_result.order_date_from_to</code>.
+     */
+    val ORDER_DATE_FROM_TO: TableField<CalculateQuantityResultRecord, String?> = createField(DSL.name("order_date_from_to"), SQLDataType.VARCHAR(50), this, "")
+
+    /**
+     * The column <code>public.calculate_quantity_result.created_date</code>.
+     */
+    val CREATED_DATE: TableField<CalculateQuantityResultRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
+
+    /**
+     * The column <code>public.calculate_quantity_result.created_by</code>.
+     */
+    val CREATED_BY: TableField<CalculateQuantityResultRecord, String?> = createField(DSL.name("created_by"), SQLDataType.VARCHAR(100), this, "")
 
     private constructor(alias: Name, aliased: Table<CalculateQuantityResultRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<CalculateQuantityResultRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
@@ -166,18 +182,18 @@ open class CalculateQuantityResult(
     override fun rename(name: Table<*>): CalculateQuantityResult = CalculateQuantityResult(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row12 type methods
+    // Row15 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row12<String?, OffsetDateTime?, OffsetDateTime?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row12<String?, OffsetDateTime?, OffsetDateTime?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row15<String?, OffsetDateTime?, OffsetDateTime?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, Boolean?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row15<String?, OffsetDateTime?, OffsetDateTime?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, Boolean?, String?, OffsetDateTime?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, OffsetDateTime?, OffsetDateTime?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, OffsetDateTime?, OffsetDateTime?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, Boolean?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, OffsetDateTime?, OffsetDateTime?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, OffsetDateTime?, OffsetDateTime?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, Boolean?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

@@ -61,4 +61,10 @@ enum class EPermission(val value: String) {
 
     // sync data
     V_SYNC_PROCESS_PROCEDURE_STRUCTURE("sync.ppst.v"),
+
+    //quantity report
+    V_REPORT_QUANTITY("rp.quantity.v"),
+    E_REPORT_QUANTITY ("rp.quantity.e"),
+    CA_REPORT_QUANTITY("rp.quantity.ca"),
+    LOCK_REPORT_QUANTITY("rp.quantity.lock"),
 }

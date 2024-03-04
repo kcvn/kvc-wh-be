@@ -2,18 +2,20 @@ package com.kcvn.spm.app.report.quantityreport.service
 
 import com.kcvn.spm.app.order.service.OrderService
 import com.kcvn.spm.app.product.payload.model.ProcessGroupModel
-import com.kcvn.spm.app.product.service.ProductService
 import com.kcvn.spm.app.report.quantityreport.payload.model.*
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityOfProcessRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
+import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.ProcessStatisticCode
+import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
 import com.kcvn.spm.repository.*
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
@@ -23,10 +25,8 @@ import java.time.OffsetDateTime
 @Transactional
 class QuantityReportService(
     private val orderService: OrderService,
-    private val productService: ProductService,
     private val productRep: ProductRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
-    private val completionRateProductRep: CompletionRateProductRepository,
     private val productProcessRep: ProductProcessRepository,
     private val processGroupRep: ProcessGroupRepository,
     private val calculateQuantityReportRep: CalculateQuantityReportRepository,
@@ -203,6 +203,34 @@ class QuantityReportService(
         val calculateQuantityReport = calculateQuantityReportRep.findById(request)
         calculateQuantityReportRep.update(calculateQuantityReport)
         return BaseResponse(true, message = CommonUtils.getMessage("quantity.locked.success"))
+    }
+
+    fun getListCalculateQuantityResult(pageable: Pageable): BasePagingResponse<CalculateQuantityResult> {
+        val calculateQuantityResults = calculateQuantityReportRep.getPagingListCalculateQuantityResult(pageable)
+        var response = BasePagingResponse<CalculateQuantityResult>()
+
+        if (calculateQuantityResults.first.isNotEmpty()) {
+            response = mappingWorkResultResponse(calculateQuantityResults.first)
+            response.totalRecords = calculateQuantityResults.second
+        }
+        return response
+    }
+
+    private fun mappingWorkResultResponse(calculateQuantityResults: List<CalculateQuantityResult>): BasePagingResponse<CalculateQuantityResult> {
+        val response = BasePagingResponse<CalculateQuantityResult>()
+        response.data = calculateQuantityResults.map { x ->
+            CalculateQuantityResult(
+                monthReport = x.monthReport,
+                startDate = x.startDate,
+                endDate = x.endDate,
+                status = x.status,
+                calculateBy = x.calculateBy,
+                calculateDate = x.calculateDate,
+                lockedBy = x.lockedBy,
+                lockedDate = x.lockedDate
+            )
+        }
+        return response
     }
 
 }

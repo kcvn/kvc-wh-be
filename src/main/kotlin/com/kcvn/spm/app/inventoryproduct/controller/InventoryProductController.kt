@@ -4,7 +4,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.CheckInventoryDateResponse
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.inventoryproduct.service.InventoryProductService
-import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToLocalDateTimeToString
+import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -30,7 +30,7 @@ class InventoryProductController(
     ) : ResponseEntity<BaseResponse<CheckInventoryDateResponse>>{
         val data = inventoryProductService.checkInventoryDate(date)
 
-        val formattedDate = convertOffSetDateTimeToLocalDateTimeToString(data?.inventorydate) // Định dạng lại LocalDate thành chuỗi
+        val formattedDate = convertOffSetDateTimeUtc7ToString(date) // Định dạng lại LocalDate thành chuỗi
 
         return if( data!= null && data.hasInventoryDate){
             ResponseEntity(

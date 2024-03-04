@@ -81,7 +81,7 @@ class OrderService(
                 val response = CalendarValueResponse(
                     key = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd_yyyy),
                     value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
-                    isHoliday = holidayCalender.contains(currentDate)
+                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
                 )
                 calendarResponses.add(response)
                 currentDate = currentDate.plusDays(1)

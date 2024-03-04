@@ -31,13 +31,13 @@ class OrderRepository(
     fun getPagingListOrder(request: OrderSearchRequest?, pageable: Pageable?): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
         if (!request?.productName.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.NAME.containsIgnoreCase(request?.productName))
+            condition = condition.and(PRODUCT.NAME.contains(request?.productName))
         }
         if (!request?.frame_1.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.FRAME_1.containsIgnoreCase(request?.frame_1))
+            condition = condition.and(PRODUCT.FRAME_1.contains(request?.frame_1))
         }
         if (!request?.srNosr.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.SR_NOSR.containsIgnoreCase(request?.srNosr))
+            condition = condition.and(PRODUCT.SR_NOSR.contains(request?.srNosr))
         }
         if (request?.filterType == OrderFilterType.DATE && request.startDate != null && request.endDate != null) {
             condition = condition.and(ORDER_DETAIL.ORDER_DATE.between(request.startDate, request.endDate))

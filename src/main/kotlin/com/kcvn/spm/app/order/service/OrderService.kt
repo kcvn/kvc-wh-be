@@ -6,8 +6,8 @@ import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
-import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
@@ -125,7 +125,7 @@ class OrderService(
             style.borderLeft = BorderStyle.THIN
             style.wrapText = true
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
             val rowNumber = 0
@@ -205,7 +205,7 @@ class OrderService(
         val excelBytes = byteArrayOutputStream.toByteArray()
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.exportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -412,7 +412,7 @@ class OrderService(
 
             val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.resultImportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateTimeFormat.yyyy_MM_dd_HH_mm_ss)))),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
             )
 
@@ -437,7 +437,7 @@ class OrderService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.importOrderTemplate"),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 

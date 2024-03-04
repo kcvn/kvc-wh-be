@@ -3,7 +3,7 @@ package com.kcvn.spm.app.workresult.service
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
-import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
@@ -128,7 +128,7 @@ class WorkResultService(
             style.wrapText = true
 
             val font: Font = workBook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -209,7 +209,7 @@ class WorkResultService(
                 "fileName.exportListWorkResult",
                 arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))
             ),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 

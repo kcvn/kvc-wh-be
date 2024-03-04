@@ -9,6 +9,7 @@ import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductDetailResponse
 import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.ProcessStatisticCode
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -80,7 +81,7 @@ class ProductService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -98,41 +99,21 @@ class ProductService(
             var rowNumber = 2
             for (item in productMapping.data!!) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                dataRow.createCell(0).setCellValue(item.name)
-                dataRow.getCell(0).cellStyle = style
 
-                dataRow.createCell(1).setCellValue(item.exportType)
-                dataRow.getCell(1).cellStyle = style
+                ExcelHelper.setCellValue(dataRow, 0, style, item.name)
+                ExcelHelper.setCellValue(dataRow, 1, style, item.exportType)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.size)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.frame_1)
+                ExcelHelper.setCellValue(dataRow, 4, style, item.frame_2)
+                ExcelHelper.setCellValue(dataRow, 5, style, item.mold)
+                ExcelHelper.setCellValue(dataRow, 6, style, item.productLine)
+                ExcelHelper.setCellValue(dataRow, 7, style, item.srNosr)
+                ExcelHelper.setCellValue(dataRow, 8, style, item.pcsSh?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 9, style, item.shBlock?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 10, style, item.layerCount?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 11, style, item.completionRate?.toString() ?: "")
 
-                dataRow.createCell(2).setCellValue(item.size)
-                dataRow.getCell(2).cellStyle = style
 
-                dataRow.createCell(3).setCellValue(item.frame_1)
-                dataRow.getCell(3).cellStyle = style
-
-                dataRow.createCell(4).setCellValue(item.frame_2)
-                dataRow.getCell(4).cellStyle = style
-
-                dataRow.createCell(5).setCellValue(item.mold)
-                dataRow.getCell(5).cellStyle = style
-
-                dataRow.createCell(6).setCellValue(item.productLine)
-                dataRow.getCell(6).cellStyle = style
-
-                dataRow.createCell(7).setCellValue(item.srNosr)
-                dataRow.getCell(7).cellStyle = style
-
-                dataRow.createCell(8).setCellValue(item.pcsSh?.toString() ?: "")
-                dataRow.getCell(8).cellStyle = style
-
-                dataRow.createCell(9).setCellValue(item.shBlock?.toString() ?: "")
-                dataRow.getCell(9).cellStyle = style
-
-                dataRow.createCell(10).setCellValue(item.layerCount?.toString() ?: "")
-                dataRow.getCell(10).cellStyle = style
-
-                dataRow.createCell(11).setCellValue(item.completionRate?.toString() ?: "")
-                dataRow.getCell(11).cellStyle = style
 
                 if (!productMapping.columns.isNullOrEmpty()) {
                     var cellIndex = 12
@@ -152,7 +133,7 @@ class ProductService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.exportListProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -172,7 +153,7 @@ class ProductService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.importProductTemplate"),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -320,7 +301,7 @@ class ProductService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.resultImportProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 

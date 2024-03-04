@@ -24,8 +24,8 @@ class Constants {
         const val MATHONGKE = "MA_THONG_KE"
 
         //Excel
-        const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
+//        const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//        const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
 
         //KHUON_DUC
         const val KHUONDUC_KVC = "KVC"
@@ -75,5 +75,12 @@ class ProcessStatisticCode {
         const val M_ALL = "M ALL"
         const val M_TAN = "M TAN"
         const val GHEPLOP_GIAAPNHIET = "M 熱圧着"
+    }
+}
+
+class ExcelConstant {
+    companion object {
+        const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
     }
 }

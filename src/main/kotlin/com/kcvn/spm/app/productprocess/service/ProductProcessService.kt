@@ -5,6 +5,7 @@ import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -138,7 +139,7 @@ class ProductProcessService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -178,7 +179,7 @@ class ProductProcessService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("export.excel.process",arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -198,7 +199,7 @@ class ProductProcessService(
 
         val response = FileContentModel(
             fileName = "Import_Danhsachcongdoan_Template.xlsx",
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -403,7 +404,7 @@ class ProductProcessService(
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("export.excel.result.import",arrayOf(LocalDateTime.now().format(
                 DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
         workbook.close()

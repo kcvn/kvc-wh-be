@@ -30,6 +30,11 @@ class ExcelHelper {
             }
         }
 
+        fun setCellValue(row: Row, colIndex: Int, style: CellStyle, value: String?) {
+            row.createCell(colIndex).setCellValue(value)
+            row.getCell(colIndex).cellStyle = style
+        }
+
         fun columnIsMatchingTemplate(templateUrl: String, headerRowImport: Row, indexHeaderRow: Int, rangeCheckCol: Int?): Boolean {
             val workbookTemplate = FileInputStream(templateUrl).use { x -> XSSFWorkbook(x) }
             val headerRowTemplate = workbookTemplate.getSheetAt(0).getRow(indexHeaderRow)

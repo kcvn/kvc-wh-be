@@ -52,6 +52,13 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
     }
 
+    fun deleteInventoryProduct(request: InventoryProduct){
+        val record = context.newRecord(INVENTORY_PRODUCT, request)
+        context.delete(INVENTORY_PRODUCT)
+            .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
+            .execute()
+    }
+
     fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
         var condition: Condition = DSL.noCondition()
 

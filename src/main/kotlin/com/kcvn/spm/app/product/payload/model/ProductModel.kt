@@ -22,5 +22,6 @@ data class ProductModel (
     var completionRate: Double? = 0.0,
     var productLayerDetail: String? = null,
     var process : Int? = 0,
-    var lstProcess: List<KeyValueResponse> = listOf()
+    var lstProcess: List<KeyValueResponse> = listOf(),
+    var lstLayer: List<LayerImportProductModel> = listOf()
 )

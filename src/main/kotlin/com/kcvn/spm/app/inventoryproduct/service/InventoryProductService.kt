@@ -5,6 +5,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.CheckInventoryDateResp
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeToLocalDateTimeToString
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
@@ -61,7 +62,7 @@ class InventoryProductService(
 
         val response = FileContentModel(
             fileName = "Import_ThongTinTonKho_Template.xlsx",
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -378,7 +379,7 @@ class InventoryProductService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("export.excel.result.import.inventoryProduct",arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
         workbook.close()
@@ -427,7 +428,7 @@ class InventoryProductService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -492,7 +493,7 @@ class InventoryProductService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("export.excel.inventoryProduct",arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 

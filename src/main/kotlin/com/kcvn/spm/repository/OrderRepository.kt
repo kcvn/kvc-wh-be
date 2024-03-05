@@ -111,17 +111,14 @@ class OrderRepository(
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
-        return when (sortFieldName) {
-            "id" -> ORDER.ID
-            "createdDate" -> ORDER.CREATED_DATE
+        val fieldName = sortFieldName.lowercase()
+        return when (fieldName) {
+            "createddate" -> ORDER.CREATED_DATE
             "version" -> ORDER.VERSION
-            "productName" -> PRODUCT.NAME
-            "frame1" -> PRODUCT.FRAME_1
-            "layerCount" -> PRODUCT.LAYER_COUNT
-            "pcsSh" -> PRODUCT.PCS_SH
-            "shBlock" -> PRODUCT.SH_BLOCK
-            "srNosR" -> PRODUCT.SR_NOSR
-            else -> throw IllegalArgumentException(CommonUtils.getMessage("sort.error.columnNotFound"))
+            "productname" -> PRODUCT.NAME
+            "frame_1" -> PRODUCT.FRAME_1
+            "layercount" -> PRODUCT.LAYER_COUNT
+            else -> PRODUCT.NAME
         }
     }
 

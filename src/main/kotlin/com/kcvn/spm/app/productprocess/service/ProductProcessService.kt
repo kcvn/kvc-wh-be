@@ -38,8 +38,8 @@ class ProductProcessService(
 ) {
     fun  getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse?>
     {
-        val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable);
-        val response = BasePagingResponse<ProductProcessResponse?>();
+        val result = productProcessRep.findByKeywordPaginated(search,hasProcessConvertCode,pageable)
+        val response = BasePagingResponse<ProductProcessResponse?>()
             response.data = result.first.map { productProcess ->
                 ProductProcessResponse(
                     processId = productProcess?.processId,
@@ -55,12 +55,12 @@ class ProductProcessService(
                     processProcedureStructureId = productProcess?.processProcedureStructureId,
                     layerCodeInt = productProcess?.layerCode!!.toInt(),
                     processSequence = productProcess.processSequence
-                );
+                )
             }
             //response.data = (response.data as List<ProductProcessResponse?>).sortedWith(compareBy<ProductProcessResponse?> {it?.productName}.thenBy { it?.layerCodeInt }.thenBy { it?.processSequence })
             response.totalRecords = result.second ?: 0
 
-        return response;
+        return response
     }
 
     fun getProductProcessDetail(nameProduct: String?) : List<ProductProcessResponse?>?{
@@ -88,9 +88,9 @@ class ProductProcessService(
 //                    productProcess.processInventoryCode = item.processInventoryCode
 //                }
                 productProcess.processInventoryCode = item.processInventoryCode
-                productProcess.processConvertCode = item.processConvertCode;
-                productProcess.processStatisticCode = item.processStatisticCode;
-                val data = productProcessRep.updateProcessDetail(productProcess);
+                productProcess.processConvertCode = item.processConvertCode
+                productProcess.processStatisticCode = item.processStatisticCode
+                val data = productProcessRep.updateProcessDetail(productProcess)
                 dataResult.add(data)
             }else {
                 /// tìm id bảng structure để thêm vào bảng process
@@ -116,7 +116,7 @@ class ProductProcessService(
 //                        throw BusinessException(CommonUtils.getMessage("processCode.notMap.processInventoryCode"))
 //                    }
 //                }
-                requestAddProcess.processInventoryCode = item.processInventoryCode;
+                requestAddProcess.processInventoryCode = item.processInventoryCode
                 val data = productProcessRep.addProductProcess(requestAddProcess)
                 dataResult.add(data)
             }
@@ -384,8 +384,16 @@ class ProductProcessService(
             }
 
             messageErr.productName = ExcelHelper.getCellValue(row, 0)
-            messageErr.processCode = ExcelHelper.getCellValue(row, 1)
-            messageErr.layerCode = ExcelHelper.getCellValue(row, 2)
+            messageErr.processCode = if(row.getCell(1).cellType == CellType.NUMERIC && row.getCell(1).numericCellValue % 1 == 0.0)
+                row.getCell(1).numericCellValue.toInt().toString()
+            else {
+                ExcelHelper.getCellValue(row, 1)
+            }
+            messageErr.layerCode = if(row.getCell(2).cellType == CellType.NUMERIC && row.getCell(2).numericCellValue % 1 == 0.0)
+                row.getCell(2).numericCellValue.toInt().toString()
+            else {
+                ExcelHelper.getCellValue(row, 1)
+            }
             messageErr.processConvertCode = ExcelHelper.getCellValue(row, 3)
             messageErr.processInventoryCode = ExcelHelper.getCellValue(row, 4)
             messageErr.processStatisticCode = ExcelHelper.getCellValue(row, 5)
@@ -393,11 +401,10 @@ class ProductProcessService(
            try {
                if (check) {
                    val cellProcessCode = row.getCell(1)
-                   var processCode = ""
-                   if(cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
-                       processCode = cellProcessCode.numericCellValue.toInt().toString()
+                   var processCode = if(cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
+                       cellProcessCode.numericCellValue.toInt().toString()
                    else {
-                       processCode = ExcelHelper.getCellValue(row, 1)
+                       ExcelHelper.getCellValue(row, 1)
                    }
 
                    val cellLayerCode = row.getCell(2)

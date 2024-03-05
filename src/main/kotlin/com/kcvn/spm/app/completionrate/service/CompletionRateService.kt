@@ -112,7 +112,7 @@ class CompletionRateService(
                 return BaseResponse(CheckImportResponse(true),CommonUtils.getMessage("message.completion.error",arrayOf(formattedDate.toString())))
             }
         }
-        return BaseResponse(CheckImportResponse(false),CommonUtils.getMessage("message.completion.success"))
+        return BaseResponse(CheckImportResponse(false),CommonUtils.getMessage(""))
     }
 
     //Service Product
@@ -499,14 +499,8 @@ class CompletionRateService(
             if(processExist == null){
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
-            if (productExist == null) {
-                if (convertEffectiveDate != null) {
-                    if (convertEffectiveDate < currentDate) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
-
-                    }
-                }
-
+            if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
             }
             if (key.length != 7) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
@@ -696,13 +690,10 @@ class CompletionRateService(
             if(processExist == null){
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
-            if (productExist == null) {
-                if (convertEffectiveDate != null) {
-                    if (convertEffectiveDate < currentDate) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
-                    }
-                }
+            if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
             }
+
             if (key.length != 14) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
             }

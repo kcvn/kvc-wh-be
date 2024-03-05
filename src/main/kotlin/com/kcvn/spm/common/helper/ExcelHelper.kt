@@ -36,6 +36,26 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle = style
         }
 
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false) {
+            row.createCell(colIndex).setCellValue(value)
+
+            val cellStyle = workbook.createCellStyle()
+
+            cellStyle.alignment = HorizontalAlignment.CENTER
+            cellStyle.borderTop = style.borderTop
+            cellStyle.borderLeft = BorderStyle.THIN
+            cellStyle.borderRight = BorderStyle.THIN
+            cellStyle.borderBottom = style.borderBottom
+
+            if (isHoliday) {
+                cellStyle.fillForegroundColor = IndexedColors.PINK.index
+            } else {
+                cellStyle.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+            }
+            cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            row.getCell(colIndex).cellStyle = cellStyle
+        }
+
         fun columnIsMatchingTemplate(templateUrl: String, headerRowImport: Row, indexHeaderRow: Int, rangeCheckCol: Int?): Boolean {
             val workbookTemplate = FileInputStream(templateUrl).use { x -> XSSFWorkbook(x) }
             val headerRowTemplate = workbookTemplate.getSheetAt(0).getRow(indexHeaderRow)

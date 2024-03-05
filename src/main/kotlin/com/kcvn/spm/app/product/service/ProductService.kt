@@ -61,7 +61,7 @@ class ProductService(
         return productRep.getProductDetail(request)
     }
 
-    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
+    fun exportExcel(request: ProductSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
         val products = productRep.getList(request, pageable)
         val productMapping = mappingProductResponse(products)
 
@@ -196,7 +196,7 @@ class ProductService(
             val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
             val productNameInserts = mutableListOf<String>()
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-                val style = row.getCell(1).cellStyle
+                val style = row.getCell(0).cellStyle
                 val name = ExcelHelper.getCellValue(row, 0)
                 val messageResults = validateImportProduct(row, headerRow, masterData)
                 if (productNameInserts.any { x -> x == name }) messageResults.add(CommonUtils.getMessage("validate.excel.duplicate"))
@@ -283,14 +283,14 @@ class ProductService(
                 return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
             }
 
-        val resultRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
-        for (row in resultRows) {
-            val rowNum = row.rowNum
-            sheet.removeRow(row)
-            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
-                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+            val resultRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+            for (row in resultRows) {
+                val rowNum = row.rowNum
+                sheet.removeRow(row)
+                if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+                    sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+                }
             }
-        }
 
             val byteArrayOutputStream = ByteArrayOutputStream()
             workbook.write(byteArrayOutputStream)

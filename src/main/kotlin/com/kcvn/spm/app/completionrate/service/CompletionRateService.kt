@@ -49,7 +49,6 @@ class CompletionRateService(
     val importInsertNoData = "import.insertNoData"
     val importFileEmptyMessage = CommonUtils.getMessage("import.file.empty")
     val validateExcelInvalidFormat = CommonUtils.getMessage("validate.excel.invalidFormat")
-    val excelColResultName = CommonUtils.getMessage("excel.colResultName")
     val validateExcelCompletionRateExdate = CommonUtils.getMessage("validate.excel.completion.rate.exdate")
     val validateExcelCompletionRateFormatError = CommonUtils.getMessage("validate.excel.completion.rate.format.error")
     val userDir = "user.dir"
@@ -112,10 +111,10 @@ class CompletionRateService(
             if (minDate < currentDate && effectiveDate < currentDate && minDate > effectiveDate) {
                 val formattedDate = DateTimeHelper.convertOffSetDateTimeUtc7ToString(minDate)
 
-                return BaseResponse(CheckImportResponse(true), CommonUtils.getMessage("message.completion.error", arrayOf(formattedDate.toString())))
+                return BaseResponse(CheckImportResponse(true,CommonUtils.getMessage("message.completion.error", arrayOf(formattedDate.toString()))), "")
             }
         }
-        return BaseResponse(CheckImportResponse(false), CommonUtils.getMessage(""))
+        return BaseResponse(CheckImportResponse(false,""), "")
     }
 
     //Service Product

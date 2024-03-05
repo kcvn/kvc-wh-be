@@ -42,6 +42,12 @@ class CompletionRateService(
         private val processMasterRepository : ProcessMasterRepository,
         private val productRepository : ProductRepository
 ) {
+    val checkImportCompletionRateDate = CommonUtils.getMessage("check.importCompletionRateDate")
+    val checkValidateExcelImportSuccess = CommonUtils.getMessage("validate.excel.importSuccess")
+    val importSuccessMessageKey = "import.success"
+    val importInsertNoData = "import.insertNoData"
+    val importFileEmptyMessage = CommonUtils.getMessage("import.file.empty")
+    val validateExcelInvalidFormat = CommonUtils.getMessage("validate.excel.invalidFormat")
     fun downloadTemplate() : BaseResponse<FileContentModel> {
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
@@ -65,8 +71,8 @@ class CompletionRateService(
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
-        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(importFileEmptyMessage)
+        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(importFileEmptyMessage)
         val utcOffset = ZoneOffset.ofHours(7)
         val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
             .withMinute(0)
@@ -80,21 +86,21 @@ class CompletionRateService(
         var minDate: OffsetDateTime? = null
         if(typeOfCompletionRate == 0){
             val productExists = completionRateProductRepository.getByProduct(productKeys)
-            if(productExists!=null){
+            if(!productExists.isNullOrEmpty()){
                 minDate = productExists.filter { it.effectiveDate != null }
                     .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
             }
         }
         else if(typeOfCompletionRate ==1 ){
             val processExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productKeys)
-            if (processExists != null) {
+            if (!processExists.isNullOrEmpty()) {
                 minDate = processExists.filter { it.effectiveDate != null }
                     .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
             }
         }
         else{
             val processProductExist = completionRateProcessProductRepository.getListProcessProductByKey(productKeys)
-            if (processProductExist != null) {
+            if (!processProductExist.isNullOrEmpty()) {
                 minDate = processProductExist.filter { it.effectiveDate != null }
                     .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
             }
@@ -175,21 +181,21 @@ class CompletionRateService(
         )
     }
 
-    fun importExcelCompletionRateProduct(file: MultipartFile,effectiveDate: OffsetDateTime) : BaseResponse<FileContentModel> {
+    fun importExcelCompletionRateProduct(file: MultipartFile, effectiveDate: OffsetDateTime) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
 
 
-        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(importFileEmptyMessage)
+        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(importFileEmptyMessage)
 
         val utcOffset = ZoneOffset.ofHours(7)
         val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
                 .withMinute(0)
                 .withSecond(0)
                 .withNano(0)
-
+        val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
@@ -225,9 +231,7 @@ class CompletionRateService(
             val productExistMinEffectiveDate = productExists
                 ?.filter { it.productName == name }
                 ?.minByOrNull { it.effectiveDate!! }
-            if(productExistMinEffectiveDate !=null){
-                val minEffectivedate = productExistMinEffectiveDate.effectiveDate
-            }
+
 
             if(productMasterExist == null){
                 errorMessages.add(CommonUtils.getMessage("product.not.exist"))
@@ -235,9 +239,11 @@ class CompletionRateService(
             }
 
             if (productExist == null) {
-                if (effectiveDate <= currentDate) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                if (convertEffectiveDate != null) {
+                    if (convertEffectiveDate < currentDate) {
+                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
+                    }
                 }
                 if (name.length != 12) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.key"))
@@ -269,40 +275,55 @@ class CompletionRateService(
                     // ton tai
                     else {
                         val productExistSameDate =
-                            productExists.find { x -> (x.productName == name && x.effectiveDate?.toLocalDate() == effectiveDate.toLocalDate()) }
+                            productExists.find { x -> (x.productName == name && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                             completionRateProductRepository.update(productExistSameDate)
                             count++
-                        } else if (currentDate.toLocalDate() > effectiveDate.toLocalDate()) {
-                            //them logic vao day nhe a
-                            errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
-                        } else {
-                            val completionRateUpdate =
-                                completionRateProductRepository.getCompletionRateProductWithMaxEffectivedateByName(name)
-                            if (completionRateUpdate != null) {
-                                if(effectiveDate.toLocalDate()< completionRateUpdate.effectiveDate?.toLocalDate()){
-                                    errorMessages.add(CommonUtils.getMessage("check.importCompletionRateDate"))
-                                }else {
-                                    completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
-                                    completionRateProductRepository.update(completionRateUpdate)
-                                    val compleRateProduct = CompletionRateProduct(
-                                        productName = name,
-                                        rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
-                                        effectiveDate = effectiveDate,
-                                        expirationDate = null
+                        } else if (convertEffectiveDate != null) {
+                            if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                                //them logic vao day nhe a
+                                val minEffectivedate = productExistMinEffectiveDate?.effectiveDate
+                                if (minEffectivedate != null) {
+                                    if (minEffectivedate.toLocalDate() > effectiveDate.toLocalDate()) {
+                                        val compleRateProduct = CompletionRateProduct(
+                                            productName = name,
+                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            effectiveDate = effectiveDate,
+                                            expirationDate = minEffectivedate.minusDays(1)
 
-                                    )
-                                    completionRateProductRepository.add(compleRateProduct)
-
-                                    count++
+                                        )
+                                        completionRateProductRepository.add(compleRateProduct)
+                                        count++
+                                    }
                                 }
-                            }
+                            } else {
+                                val completionRateUpdate =
+                                    completionRateProductRepository.getCompletionRateProductWithMaxEffectivedateByName(name)
+                                if (completionRateUpdate != null) {
+                                    if(convertEffectiveDate.toLocalDate()< completionRateUpdate.effectiveDate?.toLocalDate()){
+                                        errorMessages.add(checkImportCompletionRateDate)
+                                    }else {
+                                        completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
+                                        completionRateProductRepository.update(completionRateUpdate)
+                                        val compleRateProduct = CompletionRateProduct(
+                                            productName = name,
+                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            effectiveDate = effectiveDate,
+                                            expirationDate = null
 
+                                        )
+                                        completionRateProductRepository.add(compleRateProduct)
+
+                                        count++
+                                    }
+                                }
+
+                            }
                         }
                     }
                     if(errorMessages.isEmpty()){
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.importSuccess"))
+                        errorMessages.add(checkValidateExcelImportSuccess)
                     }
                 } catch (e: Exception) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.updateDataError"))
@@ -319,9 +340,9 @@ class CompletionRateService(
         }
         if (count == total+1) {
             workbook.close()
-            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total+1)))
+            return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total+1)))
         }
-        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == checkValidateExcelImportSuccess }
         for (row in resultRows) {
             val rowNum = row.rowNum
             sheet.removeRow(row)
@@ -344,7 +365,7 @@ class CompletionRateService(
 
         return BaseResponse(
                 response,
-                if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total+1))
+                if(count == 0) CommonUtils.getMessage(importInsertNoData) else CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total+1))
         )
     }
 
@@ -431,14 +452,14 @@ class CompletionRateService(
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
-        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(importFileEmptyMessage)
+        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(importFileEmptyMessage)
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
         val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
-
+        val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
@@ -466,7 +487,9 @@ class CompletionRateService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
-
+            val processExistMinEffectiveDate = productExists
+                ?.filter { it.key == key }
+                ?.minByOrNull { it.effectiveDate!! }
             val errorMessages = mutableListOf<String>()
 
             val productExist = productExists?.find { x -> x.key == key }
@@ -477,9 +500,11 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
             if (productExist == null) {
-                if (effectiveDate <= currentDate) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                if (convertEffectiveDate != null) {
+                    if (convertEffectiveDate < currentDate) {
+                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
 
+                    }
                 }
 
             }
@@ -511,51 +536,61 @@ class CompletionRateService(
                     }
                         else{
                         val productExistSameDate =
-                            productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == effectiveDate.toLocalDate()) }
+                            productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                             completionRateProcessRepository.update(productExist)
                             count++
 
-                        } else if (currentDate > effectiveDate) {
-                            errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
-                        }
-                        else{
-                            val completionRateUpdate =
-                                completionRateProcessRepository.getCompletionRateProcessWithMaxEffectivedateByName(key)
-
-                            if (completionRateUpdate != null) {
-                                if(effectiveDate.toLocalDate()< completionRateUpdate.effectiveDate?.toLocalDate()){
-                                    errorMessages.add(CommonUtils.getMessage("check.importCompletionRateDate"))
-                                }else {
-                                    completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
-                                    completionRateProcessRepository.update(completionRateUpdate)
-
-                                    val compleRateProduct = CompletionRateProcess(
-                                        key = key,
-                                        rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
-                                        processCode = key.take(6),
-                                        layerCode = key.substring(6, 7),
-                                        expirationDate = null,
-                                        effectiveDate = effectiveDate
-                                    )
-                                    completionRateProcessRepository.add(compleRateProduct)
-
-                                    count++
+                        } else if (convertEffectiveDate != null) {
+                            if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                                val minEffectivedate = processExistMinEffectiveDate?.effectiveDate
+                                if (minEffectivedate != null) {
+                                    if (minEffectivedate.toLocalDate() > effectiveDate.toLocalDate()) {
+                                        val compleRateProduct = CompletionRateProcess(
+                                            key = key,
+                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            processCode = key.take(6),
+                                            layerCode = key.substring(6, 7),
+                                            expirationDate = minEffectivedate.minusDays(1),
+                                            effectiveDate = effectiveDate
+                                        )
+                                        completionRateProcessRepository.add(compleRateProduct)
+                                        count++
+                                    }
                                 }
+                            } else{
+                                val completionRateUpdate =
+                                    completionRateProcessRepository.getCompletionRateProcessWithMaxEffectivedateByName(key)
 
+                                if (completionRateUpdate != null) {
+                                    if(convertEffectiveDate.toLocalDate()< completionRateUpdate.effectiveDate?.toLocalDate()){
+                                        errorMessages.add(checkImportCompletionRateDate)
+                                    }else {
+                                        completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
+                                        completionRateProcessRepository.update(completionRateUpdate)
+                                        val compleRateProduct = CompletionRateProcess(
+                                            key = key,
+                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            processCode = key.take(6),
+                                            layerCode = key.substring(6, 7),
+                                            expirationDate = null,
+                                            effectiveDate = effectiveDate
+                                        )
+                                        completionRateProcessRepository.add(compleRateProduct)
+                                        count++
+                                    }
+                                }
                             }
-
                         }
                     }
                     if(errorMessages.isEmpty()){
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.importSuccess"))
+                        errorMessages.add(checkValidateExcelImportSuccess)
                     }
                 } catch (e: Exception) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.process.error"))
                 }
             }
-
             val result = errorMessages.joinToString(separator = "; ")
             if (!checkColResult) {
                 row.createCell(row.lastCellNum + 0).setCellValue(result)
@@ -564,12 +599,11 @@ class CompletionRateService(
                 row.getCell(row.lastCellNum - 1).setCellValue(result)
             }
         }
-
         if (count == total+1) {
             workbook.close()
-            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total+1)))
+            return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total+1)))
         }
-        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == checkValidateExcelImportSuccess }
         for (row in resultRows) {
             val rowNum = row.rowNum
             sheet.removeRow(row)
@@ -592,7 +626,7 @@ class CompletionRateService(
 
         return BaseResponse(
                 response,
-                if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total+1))
+                if(count == 0) CommonUtils.getMessage(importInsertNoData) else CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total+1))
         )
     }
 
@@ -622,17 +656,13 @@ class CompletionRateService(
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
-
-        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-
+        if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(importFileEmptyMessage)
+        if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(importFileEmptyMessage)
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
-
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
-
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProcessProductByKey(productKeys)
         val processCodeExist = processMasterRepository.getListProcessCode()
@@ -641,13 +671,12 @@ class CompletionRateService(
                 .withMinute(0)
                 .withSecond(0)
                 .withNano(0)
-
+        val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
         var count = 0
         val total = sheet.lastRowNum - rowIndex
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
         val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
         val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
-
         val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
         if (!checkColResult) {
             headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
@@ -655,29 +684,28 @@ class CompletionRateService(
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
         }
-
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val style = row.getCell(1).cellStyle
             val key = ExcelHelper.getCellValue(row, 0)
             val errorMessages = mutableListOf<String>()
-
             val productExist = productExists?.find { x -> x.key == key }
-
             val processExist = processCodeExist.find {x -> x ==  key.take(6)}
+            val processProductExistMinEffectiveDate = productExists
+                ?.filter { it.key == key }
+                ?.minByOrNull { it.effectiveDate!! }
             if(processExist == null){
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
-
             if (productExist == null) {
-                if (effectiveDate <= currentDate) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
-
+                if (convertEffectiveDate != null) {
+                    if (convertEffectiveDate < currentDate) {
+                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                    }
                 }
             }
             if (key.length != 14) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
             }
-
             try {
                 val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                 if (rate.scale() > 2) {
@@ -686,7 +714,6 @@ class CompletionRateService(
             } catch (e: NumberFormatException) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
             }
-
             if (errorMessages.isEmpty()) {
                 try {
                     if (productExist == null) {
@@ -698,54 +725,62 @@ class CompletionRateService(
                             layerCode = key.substring(13, 14),
                             expirationDate = null,
                             effectiveDate = effectiveDate
-
-
                         )
                         completionRateProcessProductRepository.add(compleRateProcessProduct)
                         count++
                     }
                         else{
                         val productExistSameDate =
-                            productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == effectiveDate.toLocalDate()) }
+                            productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                             completionRateProcessProductRepository.update(productExistSameDate)
                             count++
-                        } else if (currentDate > effectiveDate) {
-                            errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
-                        }
-                        else{
-                            val completionRateUpdate =
-                                completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectivedateByName(key)
-                            if (completionRateUpdate != null ) {
-                                if(effectiveDate.toLocalDate()< completionRateUpdate.effectiveDate?.toLocalDate()){
-                                    errorMessages.add(CommonUtils.getMessage("check.importCompletionRateDate"))
-                                }else{
-                                    completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
-                                    completionRateProcessProductRepository.update(completionRateUpdate)
-                                    val compleRateProcessProduct = CompletionRateProcessProduct(
-                                        key = key,
-                                        rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
-                                        productNameShortcut = key.substring(6, 13),
-                                        processCode = key.take(6),
-                                        layerCode = key.substring(13, 14),
-                                        expirationDate = null,
-                                        effectiveDate = effectiveDate
-                                    )
-                                    completionRateProcessProductRepository.add(compleRateProcessProduct)
-
-                                    count++
+                        } else if (convertEffectiveDate != null) {
+                            if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                                val minEffectivedate = processProductExistMinEffectiveDate?.effectiveDate
+                                if (minEffectivedate != null) {
+                                    if (minEffectivedate.toLocalDate() > effectiveDate.toLocalDate()) {
+                                        val compleRateProcessProduct = CompletionRateProcessProduct(
+                                            key = key,
+                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            productNameShortcut = key.substring(6, 13),
+                                            processCode = key.take(6),
+                                            layerCode = key.substring(13, 14),
+                                            expirationDate = minEffectivedate.minusDays(1),
+                                            effectiveDate = effectiveDate
+                                        )
+                                        completionRateProcessProductRepository.add(compleRateProcessProduct)
+                                        count++
+                                    }
                                 }
-
+                            } else{
+                                val completionRateUpdate =
+                                    completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectivedateByName(key)
+                                if (completionRateUpdate != null ) {
+                                    if(effectiveDate.toLocalDate()< completionRateUpdate.effectiveDate?.toLocalDate()){
+                                        errorMessages.add(checkImportCompletionRateDate)
+                                    }else{
+                                        completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
+                                        completionRateProcessProductRepository.update(completionRateUpdate)
+                                        val compleRateProcessProduct = CompletionRateProcessProduct(
+                                            key = key,
+                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            productNameShortcut = key.substring(6, 13),
+                                            processCode = key.take(6),
+                                            layerCode = key.substring(13, 14),
+                                            expirationDate = null,
+                                            effectiveDate = effectiveDate
+                                        )
+                                        completionRateProcessProductRepository.add(compleRateProcessProduct)
+                                        count++
+                                    }
+                                }
                             }
-
-
                         }
-
-
                     }
                     if(errorMessages.isEmpty()){
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.importSuccess"))
+                        errorMessages.add(checkValidateExcelImportSuccess)
                     }
                 } catch (e: Exception) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.process.error"))
@@ -762,9 +797,9 @@ class CompletionRateService(
         }
         if (count == total+1) {
             workbook.close()
-            return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total+1)))
+            return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total+1)))
         }
-        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == checkValidateExcelImportSuccess }
         for (row in resultRows) {
             val rowNum = row.rowNum
             sheet.removeRow(row)
@@ -774,20 +809,16 @@ class CompletionRateService(
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
-
         val excelBytes = byteArrayOutputStream.toByteArray()
-
         val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.resultImportCompletionRateProductProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
                 contentType = Constants.EXCEL_CONTENT_TYPE,
                 content = excelBytes
         )
-
         workbook.close()
-
         return BaseResponse(
                 response,
-                if(count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total+1))
+                if(count == 0) CommonUtils.getMessage(importInsertNoData) else CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total+1))
         )
     }
 

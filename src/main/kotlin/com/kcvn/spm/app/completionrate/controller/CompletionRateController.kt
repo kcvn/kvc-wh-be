@@ -35,8 +35,8 @@ class CompletionRateController(
     @PostMapping(value = ["/check-import"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun checkImportExcel(@RequestPart("file") file: MultipartFile,
-                    @RequestParam("effectivedate") effectiveDate: OffsetDateTime,
-                         @RequestParam("typecompletionrate") typeOfCompletionRate: Int,): ResponseEntity<BaseResponse<CheckImportResponse>> {
+                    @RequestParam("effectiveDate") effectiveDate: OffsetDateTime,
+                         @RequestParam("typeCompletionRate") typeOfCompletionRate: Int,): ResponseEntity<BaseResponse<CheckImportResponse>> {
         val result = completionRateService.checkImportExcel(file,effectiveDate,typeOfCompletionRate)
         return ResponseEntity(result, HttpStatus.OK)
     }

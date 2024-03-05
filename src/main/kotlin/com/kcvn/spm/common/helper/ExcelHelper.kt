@@ -38,9 +38,7 @@ class ExcelHelper {
 
         fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false) {
             row.createCell(colIndex).setCellValue(value)
-
             val cellStyle = workbook.createCellStyle()
-
             cellStyle.alignment = HorizontalAlignment.CENTER
             cellStyle.borderTop = style.borderTop
             cellStyle.borderLeft = BorderStyle.THIN
@@ -49,10 +47,8 @@ class ExcelHelper {
 
             if (isHoliday) {
                 cellStyle.fillForegroundColor = IndexedColors.PINK.index
-            } else {
-                cellStyle.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+                cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             }
-            cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             row.getCell(colIndex).cellStyle = cellStyle
         }
 
@@ -117,16 +113,20 @@ class ExcelHelper {
 
         fun getCellStyleResultCol(workbook: Workbook, styleTemplate: CellStyle, hasFontColor: Boolean = true): CellStyle {
             val cellStyle = workbook.createCellStyle()
-            if (!hasFontColor) {
-                val font = workbook.createFont()
+            val font = workbook.createFont()
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+            font.fontHeightInPoints = 12.toShort()
+            if (hasFontColor) {
                 font.color = IndexedColors.RED.index
                 cellStyle.setFont(font)
             }
+            cellStyle.verticalAlignment = VerticalAlignment.CENTER
             cellStyle.alignment = HorizontalAlignment.LEFT
             cellStyle.borderTop = styleTemplate.borderTop
             cellStyle.borderLeft = BorderStyle.THIN
             cellStyle.borderRight = BorderStyle.THIN
             cellStyle.borderBottom = styleTemplate.borderBottom
+            cellStyle.wrapText = true
             return cellStyle
         }
 

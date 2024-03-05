@@ -1,5 +1,6 @@
 package com.kcvn.spm.common.helper
 
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.util.CommonUtils
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -103,10 +104,25 @@ class ExcelHelper {
             }
             cellStyle.alignment = HorizontalAlignment.LEFT
             cellStyle.borderTop = styleTemplate.borderTop
-            cellStyle.borderLeft = styleTemplate.borderLeft
-            cellStyle.borderRight = styleTemplate.borderRight
+            cellStyle.borderLeft = BorderStyle.THIN
+            cellStyle.borderRight = BorderStyle.THIN
             cellStyle.borderBottom = styleTemplate.borderBottom
             return cellStyle
+        }
+
+        fun getCellStyleCommon(workbook: Workbook): CellStyle {
+            val style: CellStyle = workbook.createCellStyle()
+            style.borderBottom = BorderStyle.THIN
+            style.borderTop = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.wrapText = true
+
+            val font: Font = workbook.createFont()
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
+            return style
         }
 
         fun createColResult(headerRow: Row, sheet: Sheet): Int {

@@ -110,73 +110,78 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
     }
 
 
-    fun add(data: Product): Product? {
-        return context.insertInto(
-            PRODUCT,
-            PRODUCT.NAME,
-            PRODUCT.EXPORT_TYPE,
-            PRODUCT.SIZE,
-            PRODUCT.FRAME_1,
-            PRODUCT.FRAME_2,
-            PRODUCT.MOLD,
-            PRODUCT.PRODUCT_LINE,
-            PRODUCT.SR_NOSR,
-            PRODUCT.PCS_SH,
-            PRODUCT.SH_BLOCK,
-            PRODUCT.LAYER_COUNT,
-            PRODUCT.RING_JIG,
-            PRODUCT.PROCESS,
-            PRODUCT.SNAP_MOLD,
-            PRODUCT.TAPE_COMMON,
-            PRODUCT.TAPE_TYPE,
-            PRODUCT.PRODUCT_LAYER_DETAIL,
-            PRODUCT.CREATED_BY
-        ).values(
-            data.name,
-            data.exportType,
-            data.size,
-            data.frame_1,
-            data.frame_2,
-            data.mold,
-            data.productLine,
-            data.srNosr,
-            data.pcsSh,
-            data.shBlock,
-            data.layerCount,
-            data.ringJig,
-            data.process,
-            data.snapMold,
-            data.tapeCommon,
-            data.tapeType,
-            data.productLayerDetail,
-            CommonUtils.loggedInUser() ?: Constants.SYSTEM
-        ).returningResult(PRODUCT).fetchInto(Product::class.java).firstOrNull()
+    fun add(data: Product) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            transactionalContext.insertInto(
+                PRODUCT,
+                PRODUCT.NAME,
+                PRODUCT.EXPORT_TYPE,
+                PRODUCT.SIZE,
+                PRODUCT.FRAME_1,
+                PRODUCT.FRAME_2,
+                PRODUCT.MOLD,
+                PRODUCT.PRODUCT_LINE,
+                PRODUCT.SR_NOSR,
+                PRODUCT.PCS_SH,
+                PRODUCT.SH_BLOCK,
+                PRODUCT.LAYER_COUNT,
+                PRODUCT.RING_JIG,
+                PRODUCT.PROCESS,
+                PRODUCT.SNAP_MOLD,
+                PRODUCT.TAPE_COMMON,
+                PRODUCT.TAPE_TYPE,
+                PRODUCT.PRODUCT_LAYER_DETAIL,
+                PRODUCT.CREATED_BY
+            ).values(
+                data.name,
+                data.exportType,
+                data.size,
+                data.frame_1,
+                data.frame_2,
+                data.mold,
+                data.productLine,
+                data.srNosr,
+                data.pcsSh,
+                data.shBlock,
+                data.layerCount,
+                data.ringJig,
+                data.process,
+                data.snapMold,
+                data.tapeCommon,
+                data.tapeType,
+                data.productLayerDetail,
+                CommonUtils.loggedInUser() ?: Constants.SYSTEM
+            ).execute()
+        }
     }
 
-    fun update(data: Product): Product? {
-        return context.update(PRODUCT)
-            .set(PRODUCT.NAME, data.name)
-            .set(PRODUCT.EXPORT_TYPE, data.exportType)
-            .set(PRODUCT.SIZE, data.size)
-            .set(PRODUCT.FRAME_1, data.frame_1)
-            .set(PRODUCT.FRAME_2, data.frame_2)
-            .set(PRODUCT.MOLD, data.mold)
-            .set(PRODUCT.PRODUCT_LINE, data.productLine)
-            .set(PRODUCT.SR_NOSR, data.srNosr)
-            .set(PRODUCT.PCS_SH, data.pcsSh)
-            .set(PRODUCT.SH_BLOCK, data.shBlock)
-            .set(PRODUCT.LAYER_COUNT, data.layerCount)
-            .set(PRODUCT.RING_JIG, data.ringJig)
-            .set(PRODUCT.PROCESS, data.process)
-            .set(PRODUCT.SNAP_MOLD, data.snapMold)
-            .set(PRODUCT.TAPE_COMMON, data.tapeCommon)
-            .set(PRODUCT.TAPE_TYPE, data.tapeType)
-            .set(PRODUCT.PRODUCT_LAYER_DETAIL, data.productLayerDetail)
-            .set(PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-            .set(PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .where(PRODUCT.ID.eq(data.id))
-            .returningResult(PRODUCT)
-            .fetchInto(Product::class.java).firstOrNull()
+    fun update(data: Product) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            transactionalContext.update(PRODUCT)
+                .set(PRODUCT.NAME, data.name)
+                .set(PRODUCT.EXPORT_TYPE, data.exportType)
+                .set(PRODUCT.SIZE, data.size)
+                .set(PRODUCT.FRAME_1, data.frame_1)
+                .set(PRODUCT.FRAME_2, data.frame_2)
+                .set(PRODUCT.MOLD, data.mold)
+                .set(PRODUCT.PRODUCT_LINE, data.productLine)
+                .set(PRODUCT.SR_NOSR, data.srNosr)
+                .set(PRODUCT.PCS_SH, data.pcsSh)
+                .set(PRODUCT.SH_BLOCK, data.shBlock)
+                .set(PRODUCT.LAYER_COUNT, data.layerCount)
+                .set(PRODUCT.RING_JIG, data.ringJig)
+                .set(PRODUCT.PROCESS, data.process)
+                .set(PRODUCT.SNAP_MOLD, data.snapMold)
+                .set(PRODUCT.TAPE_COMMON, data.tapeCommon)
+                .set(PRODUCT.TAPE_TYPE, data.tapeType)
+                .set(PRODUCT.PRODUCT_LAYER_DETAIL, data.productLayerDetail)
+                .set(PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .where(PRODUCT.ID.eq(data.id))
+                .execute()
+        }
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

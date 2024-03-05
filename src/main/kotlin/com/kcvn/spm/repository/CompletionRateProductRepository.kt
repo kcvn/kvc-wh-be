@@ -16,10 +16,20 @@ import java.time.ZoneOffset
 
 @Repository
 class CompletionRateProductRepository(private val context: DSLContext) : SortingRepository() {
-    fun getByProduct(productNames: List<String>): List<CompletionRateProduct> {
+    fun getByProduct(productNames: List<String>): List<CompletionRateProduct>? {
         return context.selectFrom(COMPLETION_RATE_PRODUCT)
             .where(
                 COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames)
+                    .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false))
+            )
+            .fetchInto(CompletionRateProduct::class.java)
+    }
+
+    fun getEffectiveByProduct(productNames: List<String>): List<CompletionRateProduct>? {
+        return context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(
+                COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames)
+                    .and(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.isNull)
                     .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false))
             )
             .fetchInto(CompletionRateProduct::class.java)

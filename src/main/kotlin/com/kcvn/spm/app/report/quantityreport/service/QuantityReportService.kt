@@ -1,19 +1,23 @@
 package com.kcvn.spm.app.report.quantityreport.service
 
-import com.kcvn.spm.app.order.service.OrderService
 import com.kcvn.spm.app.product.payload.model.ProcessGroupModel
 import com.kcvn.spm.app.report.quantityreport.payload.model.*
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityOfProcessRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
-import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
+import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
+import com.kcvn.spm.app.report.quantityreport.payload.response.PagingQuantityReportResponse
 import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ProcessStatisticCode
+import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
+import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
+import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.repository.*
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -24,26 +28,43 @@ import java.time.OffsetDateTime
 @Service
 @Transactional
 class QuantityReportService(
-    private val orderService: OrderService,
+    private val orderRep: OrderRepository,
+    private val orderDetailRep: OrderDetailRepository,
     private val productRep: ProductRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val productProcessRep: ProductProcessRepository,
-    private val processGroupRep: ProcessGroupRepository,
     private val calculateQuantityReportRep: CalculateQuantityReportRepository,
+    private val quantityReportRep: QuantityReportRepository,
+    private val processGroupRep: ProcessGroupRepository,
 ) {
     fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<Boolean> {
         val calculateQuantityReport = calculateQuantityReportRep.findByMonthReport(request)
         return if (calculateQuantityReport != null && calculateQuantityReport.status == true) {
             BaseResponse(data = false, message = CommonUtils.getMessage("calculated.locked.error"))
         } else {
-            val listOrder = orderService.getOrderCodeByMonth(request)
             val listCalculateQuantityProcess = mutableListOf<CalculateQuantityOfProcessRequest>()
             val listOrderDetailError = mutableListOf<ErrorOrderDetail>()
-            val orderIds = listOrder.map { x -> x.id }
-            val orderDetails = orderService.getOrderDetailsByOrderIds(orderIds)
+
+
+            val listOrder = orderRep.getOrderCodeByMonth(request)
+            val listOrderGroupedByOrderCode = listOrder.groupBy { x -> x.orderCode }
+            val listOrderWithHighestVersion =
+                listOrderGroupedByOrderCode.mapValues { (_, value) -> value.maxByOrNull { it.version ?: 0 } }.map { x ->
+                    Order(
+                        id = x.value?.id,
+                        orderCode = x.value?.orderCode,
+                        startDate = x.value?.startDate,
+                        endDate = x.value?.endDate,
+                        version = x.value?.version,
+                    )
+                }
+
+            val orderIds = listOrderWithHighestVersion.map { x -> x.id }
+            val orderDetails = orderDetailRep.getOrderDetailsByOrderIdsAndMonth(orderIds, request)
+
+
             val productIDs = orderDetails.map { x -> x.productId }
             val productsWithRate = productRep.getProductDetailWithCompletionRateByIds(productIDs)
-
             val productNames = productsWithRate.mapNotNull { x -> x?.name }.distinct()
             val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
             val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
@@ -66,8 +87,8 @@ class QuantityReportService(
                 )
             }
 
-            val listCalculateWithoutCheckVersion = orderDetails.map { x ->
-                val ord = listOrder.find { m -> m.id == x.orderId }
+            val listOrderDetailCalculate = orderDetails.map { x ->
+                val ord = listOrderWithHighestVersion.find { m -> m.id == x.orderId }
                 val prods = productsWithRate.filter { m -> m?.id == x.productId }
 
                 val prod = prods.firstOrNull()
@@ -99,25 +120,7 @@ class QuantityReportService(
                     )
                 }
             }.filter { x -> !x.productName.isNullOrEmpty() }
-            val groupedData = listCalculateWithoutCheckVersion.groupBy {
-                ProductOrderDateKeyModel(
-                    it.productName,
-                    it.orderDate
-                )
-            }
-            val listCalculateAfterCheckVersion = groupedData.mapValues { (_, value) -> value.maxByOrNull { it.version ?: 0 } }
-            val listOrderDetailCalculate = listCalculateAfterCheckVersion.map { x ->
-                CalculateQuantityOfProcessRequest(
-                    version = x.value?.version,
-                    productName = x.value?.productName,
-                    blockSh = x.value?.blockSh,
-                    quantityBlock = x.value?.quantityBlock,
-                    completionRate = x.value?.completionRate,
-                    orderDate = x.value?.orderDate,
-                    effectiveDate = x.value?.effectiveDate,
-                    expirationDate = x.value?.expirationDate,
-                )
-            }
+
             listOrderDetailCalculate.forEach { x ->
                 run {
                     val listProductProcess = lstProductProcess.find { y -> y.productName == x.productName }?.lstProcess
@@ -153,8 +156,7 @@ class QuantityReportService(
                     blockQuantity = x.quantityBlock,
                     blockSh = x.blockSh,
                     quantityProcessStatistic = ((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate!!.toDouble()) / 100)).toInt(),
-                    createdDate = OffsetDateTime.now(),
-                    createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                    createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
                 )
             }
 
@@ -165,35 +167,48 @@ class QuantityReportService(
                 )
             }
 
-            val listInformationQuantity = data.map { (key,items)->
-                InformationQuantity(
+            val listInformationQuantity = data.map { (key, items) ->
+                InformationCalculateQuantity(
                     monthReport = items.first().monthReport,
                     productName = key.productName,
-                    processStatisticCode = key.processStatisticCode,
+                    processStatistic = key.processStatisticCode,
                     totalQuantityOfProcess = items.sumOf { it.quantityProcessStatistic!! },
-                    createdDate = OffsetDateTime.now(),
-                    createdBy = CommonUtils.loggedInUser()?: Constants.SYSTEM
+                    createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
                 )
             }
-
-            val listCalculateQuantityResult = listOrder.map { x ->
-                CalculateQuantityResult(
-                    monthReport = x.startDate,
-                    startDate = x.startDate,
-                    endDate = x.endDate,
-                    calculateBy = CommonUtils.loggedInUser()?: Constants.SYSTEM,
-                    calculateDate = OffsetDateTime.now(),
-                    updatedDate = OffsetDateTime.now(),
-                    updatedBy = CommonUtils.loggedInUser()?: Constants.SYSTEM,
-                )
-            }
-
 
 
             println(listOrderDetailError)
-            println(listCalculateQuantityResult)
             println(listInformationQuantity)
             println(listInformationCalculateQuantityDetails)
+
+            val quantityResult = CalculateQuantityResult(
+                monthReport = request.startDate,
+                orderDateFromTo = "${
+                    request.startDate?.let {
+                        DateTimeHelper.toString(
+                            it,
+                            DateTimeFormat.dd_MM_yyyy
+                        )
+                    }
+                }-${
+                    request.endDate?.let {
+                        DateTimeHelper.toString(
+                            it, DateTimeFormat.dd_MM_yyyy
+                        )
+                    }
+                }",
+                startDate = request.startDate,
+                endDate = request.endDate,
+                calculateBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                calculateDate = OffsetDateTime.now(),
+            )
+
+            calculateQuantityReportRep.addCalculateQuantityResult(
+                quantityResult,
+                listInformationQuantity,
+                listInformationCalculateQuantityDetails
+            )
 
             BaseResponse(data = true, message = CommonUtils.getMessage("calculated.success"))
         }
@@ -220,6 +235,7 @@ class QuantityReportService(
         val response = BasePagingResponse<CalculateQuantityResult>()
         response.data = calculateQuantityResults.map { x ->
             CalculateQuantityResult(
+                id = x.id,
                 monthReport = x.monthReport,
                 startDate = x.startDate,
                 endDate = x.endDate,
@@ -230,6 +246,91 @@ class QuantityReportService(
                 lockedDate = x.lockedDate
             )
         }
+        return response
+    }
+
+    fun getListQuantityReport(request: QuantityReportRequest?, pageable: Pageable): PagingQuantityReportResponse {
+        val informationCalculateQuantity = quantityReportRep.getPagingListQuantityReport(request, pageable)
+        var response = PagingQuantityReportResponse()
+
+        if (informationCalculateQuantity.first.isNotEmpty()) {
+            response = mappingInformationCalculateQuantityResponse(informationCalculateQuantity.first)
+            response.totalRecords = informationCalculateQuantity.second
+        }
+        return response
+    }
+
+    private fun mappingInformationCalculateQuantityResponse(data: List<InformationCalculateQuantity>): PagingQuantityReportResponse {
+        val group = data.groupBy {
+            ProductOrderDateKeyModel(
+                it.productName,
+                it.monthReport
+            )
+        }
+
+        val listQuantityReportModel = group.map { x ->
+            QuantityReportModel(
+                x.key.productName,
+                x.key.orderDate.let {
+                    it?.let { it1 ->
+                        DateTimeHelper.toString(
+                            it1,
+                            DateTimeFormat.MM_yyyy
+                        )
+                    }
+                },
+                x.value.map { m -> KeyValueResponse(m.processStatistic, m.totalQuantityOfProcess.toString()) })
+        }
+
+        val productNames = listQuantityReportModel.mapNotNull { x -> x.productName }.distinct()
+        val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
+        val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
+        val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
+        val processGroups = processGroupRep.getAll()
+
+        val columns = productProcesses.filter { x ->
+            !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
+        }.map { x ->
+            val processGroup =
+                processGroups.find { m -> !m.processStatisticCode.isNullOrEmpty() && m.processStatisticCode == x.processStatisticCode }
+            if (processGroup == null) KeyValueResponse()
+            else KeyValueResponse(x.processStatisticCode, processGroup.description, processGroup.sortOrder)
+        }.filter { x -> !x.key.isNullOrEmpty() && !x.value.isNullOrEmpty() }.distinct().toMutableList()
+
+        if (columns.any { m -> m.key == ProcessStatisticCode.HP_TAN || m.key == ProcessStatisticCode.HP_ALL }) {
+            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.IN_LO }
+            if (processGroup != null) columns.add(
+                KeyValueResponse(
+                    processGroup.processStatisticCode,
+                    processGroup.description,
+                    processGroup.sortOrder
+                )
+            )
+        }
+        if (columns.any { m -> m.key == ProcessStatisticCode.TAN || m.key == ProcessStatisticCode.ZEN }) {
+            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.IN_MACH }
+            if (processGroup != null) columns.add(
+                KeyValueResponse(
+                    processGroup.processStatisticCode,
+                    processGroup.description,
+                    processGroup.sortOrder
+                )
+            )
+        }
+        if (columns.any { m -> m.key == ProcessStatisticCode.M_TAN || m.key == ProcessStatisticCode.M_ALL }) {
+            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.GHEP_LOP }
+            if (processGroup != null) columns.add(
+                KeyValueResponse(
+                    processGroup.processStatisticCode,
+                    processGroup.description,
+                    processGroup.sortOrder
+                )
+            )
+        }
+
+        val response = PagingQuantityReportResponse()
+        response.data = listQuantityReportModel
+        response.columns = columns.sortedBy { x -> x.sort }.distinct().toList()
         return response
     }
 

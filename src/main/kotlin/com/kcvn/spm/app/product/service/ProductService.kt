@@ -317,7 +317,7 @@ class ProductService(
 
     private fun mappingProductResponse(products: List<Product>): PagingProductResponse {
         val productNames = products.mapNotNull { x -> x.name }
-        val completionRates = completionRateProductRep.getByProduct(productNames)
+        val completionRates = completionRateProductRep.getEffectiveByProduct(productNames)
         val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
         val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
         val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
@@ -350,7 +350,7 @@ class ProductService(
                 snapMold = x.snapMold,
                 tapeCommon = x.tapeCommon,
                 tapeType = x.tapeType,
-                completionRate = completionRates.find { m -> m.productName == x.name }?.rate?.toDouble(),
+                completionRate = completionRates?.find { m -> m.productName == x.name }?.rate?.toDouble(),
                 productLayerDetail = x.productLayerDetail
             )
             val lstProcess = productProcessGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> KeyValueResponse(m.key.second, m.value.size.toString()) }.toMutableList()

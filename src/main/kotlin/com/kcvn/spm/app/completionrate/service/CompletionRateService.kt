@@ -113,10 +113,10 @@ class CompletionRateService(
             if(minDate < currentDate && effectiveDate < currentDate && minDate> effectiveDate){
                 val formattedDate = DateTimeHelper.convertOffSetDateTimeUtc7ToString(minDate)
 
-                return BaseResponse(CheckImportResponse(true),CommonUtils.getMessage("message.completion.error",arrayOf(formattedDate.toString())))
+                return BaseResponse(CheckImportResponse(true,CommonUtils.getMessage("message.completion.error",arrayOf(formattedDate.toString()))),"")
             }
         }
-        return BaseResponse(CheckImportResponse(false),CommonUtils.getMessage(""))
+        return BaseResponse(CheckImportResponse(false,""),"")
     }
 
     //Service Product

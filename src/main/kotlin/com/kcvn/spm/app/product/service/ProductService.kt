@@ -367,7 +367,7 @@ class ProductService(
                 snapMold = x.snapMold,
                 tapeCommon = x.tapeCommon,
                 tapeType = x.tapeType,
-                completionRate = completionRates.find { m -> m.productName == x.name }?.rate?.toDouble()
+                completionRate = completionRates?.find { m -> m.productName == x.name }?.rate?.toDouble()
             )
             val lstProcess = productProcessGroups.filter { m -> m.key.first == x.name }.mapNotNull { m -> KeyValueResponse(m.key.second, m.value.size.toString()) }.toMutableList()
             if (lstProcess.any { m -> m.key == ProcessStatisticCode.HP_TAN || m.key == ProcessStatisticCode.HP_ALL }) {

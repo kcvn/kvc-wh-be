@@ -2,6 +2,7 @@ package com.kcvn.spm.app.completionrate.controller
 
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateSearchRequest
+import com.kcvn.spm.app.completionrate.payload.response.CheckImportResponse
 import com.kcvn.spm.app.completionrate.service.CompletionRateService
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
@@ -29,6 +30,15 @@ class CompletionRateController(
     fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.downloadTemplate()
         return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @PostMapping(value = ["/check-import"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
+    fun checkImportExcel(@RequestPart("file") file: MultipartFile,
+                    @RequestParam("effectiveDate") effectiveDate: OffsetDateTime,
+                         @RequestParam("typeCompletionRate") typeOfCompletionRate: Int,): ResponseEntity<BaseResponse<CheckImportResponse>> {
+        val result = completionRateService.checkImportExcel(file,effectiveDate,typeOfCompletionRate)
+        return ResponseEntity(result, HttpStatus.OK)
     }
 
     //Product Function

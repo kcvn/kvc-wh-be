@@ -4,12 +4,15 @@ import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityR
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
-import com.kcvn.spm.model.tables.pojos.WorkResult
+import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
+import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.references.CALCULATE_QUANTITY_RESULT
+import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY
+import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY_DETAIL
 import com.kcvn.spm.model.tables.references.PRODUCT
-import com.kcvn.spm.model.tables.references.WORK_RESULT
 import org.jooq.DSLContext
 import org.jooq.TableField
+import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
@@ -19,7 +22,7 @@ import java.time.ZoneOffset
 @Repository
 class CalculateQuantityReportRepository(
     private val context: DSLContext,
-) : SortingRepository(){
+) : SortingRepository() {
     fun findById(request: String): CalculateQuantityResult? {
         return context.selectFrom(CALCULATE_QUANTITY_RESULT)
             .where(CALCULATE_QUANTITY_RESULT.ID.eq(request).and(CALCULATE_QUANTITY_RESULT.IS_DELETED.eq(false)))
@@ -71,6 +74,7 @@ class CalculateQuantityReportRepository(
             "monthreport" -> {
                 CALCULATE_QUANTITY_RESULT.MONTH_REPORT
             }
+
             else -> {
                 val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
                 throw InvalidDataAccessApiUsageException(errorMessage)
@@ -79,5 +83,103 @@ class CalculateQuantityReportRepository(
 
         return sortField
     }
+
+    fun addCalculateQuantityResult(
+        quantityResult: CalculateQuantityResult,
+        listInformationQuantity: List<InformationCalculateQuantity>,
+        listInformationCalculateQuantityDetails: List<InformationCalculateQuantityDetail>,
+    ) {
+        DSL.startTransaction()
+        try {
+            val quantityResultInsert = context.insertInto(
+                CALCULATE_QUANTITY_RESULT,
+                CALCULATE_QUANTITY_RESULT.MONTH_REPORT,
+                CALCULATE_QUANTITY_RESULT.START_DATE,
+                CALCULATE_QUANTITY_RESULT.END_DATE,
+                CALCULATE_QUANTITY_RESULT.ORDER_DATE_FROM_TO,
+                CALCULATE_QUANTITY_RESULT.CALCULATE_BY,
+                CALCULATE_QUANTITY_RESULT.CALCULATE_DATE,
+                CALCULATE_QUANTITY_RESULT.UPDATED_DATE,
+                CALCULATE_QUANTITY_RESULT.UPDATED_BY,
+            ).values(
+                quantityResult.monthReport,
+                quantityResult.startDate,
+                quantityResult.endDate,
+                quantityResult.orderDateFromTo,
+                quantityResult.calculateBy,
+                quantityResult.calculateDate,
+                quantityResult.updatedDate,
+                quantityResult.updatedBy,
+            ).returningResult(CALCULATE_QUANTITY_RESULT).fetchAnyInto(CalculateQuantityResult::class.java)
+
+            if (quantityResultInsert != null) {
+                for (informationQuantity in listInformationQuantity) {
+                    val informationCalculateQuantityInsert = context.insertInto(
+                        INFORMATION_CALCULATE_QUANTITY,
+                        INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT,
+                        INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME,
+                        INFORMATION_CALCULATE_QUANTITY.PROCESS_STATISTIC,
+                        INFORMATION_CALCULATE_QUANTITY.TOTAL_QUANTITY_OF_PROCESS,
+                        INFORMATION_CALCULATE_QUANTITY.CREATED_BY,
+                        INFORMATION_CALCULATE_QUANTITY.UPDATED_BY,
+                        INFORMATION_CALCULATE_QUANTITY.UPDATED_DATE,
+                        INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID
+                    ).values(
+                        informationQuantity.monthReport,
+                        informationQuantity.productName,
+                        informationQuantity.processStatistic,
+                        informationQuantity.totalQuantityOfProcess,
+                        informationQuantity.createdBy,
+                        informationQuantity.updatedBy,
+                        informationQuantity.updatedDate,
+                        quantityResultInsert.id
+                    ).returningResult(INFORMATION_CALCULATE_QUANTITY)
+                        .fetchAnyInto(InformationCalculateQuantity::class.java)
+
+                    if (informationCalculateQuantityInsert != null) {
+                        for (informationCalculateQuantityDetail in listInformationCalculateQuantityDetails) {
+                            if (informationCalculateQuantityDetail.monthReport == informationCalculateQuantityInsert.monthReport
+                                && informationCalculateQuantityDetail.productName == informationCalculateQuantityInsert.productName
+                                && informationCalculateQuantityDetail.processStatisticCode == informationCalculateQuantityInsert.processStatistic
+                            ) {
+                                context.insertInto(
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.MONTH_REPORT,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.PRODUCT_NAME,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.PROCESS_STATISTIC_CODE,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.ORDER_DATE,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.COMPLETION_RATE,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.PROCESS_COUNT,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.BLOCK_QUANTITY,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.BLOCK_SH,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.CREATED_BY,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.QUANTITY_PROCESS_STATISTIC,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID
+                                ).values(
+                                    informationCalculateQuantityDetail.monthReport,
+                                    informationCalculateQuantityDetail.productName,
+                                    informationCalculateQuantityDetail.processStatisticCode,
+                                    informationCalculateQuantityDetail.orderDate,
+                                    informationCalculateQuantityDetail.completionRate,
+                                    informationCalculateQuantityDetail.processCount,
+                                    informationCalculateQuantityDetail.blockQuantity,
+                                    informationCalculateQuantityDetail.blockSh,
+                                    informationCalculateQuantityDetail.createdBy,
+                                    informationCalculateQuantityDetail.quantityProcessStatistic,
+                                    informationCalculateQuantityInsert.id
+                                ).returningResult(INFORMATION_CALCULATE_QUANTITY_DETAIL)
+                                    .fetchAnyInto(InformationCalculateQuantityDetail::class.java)
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            DSL.rollback()
+        }
+    }
+
+
+
 
 }

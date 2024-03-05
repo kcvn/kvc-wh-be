@@ -35,7 +35,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .fetchInto(CompletionRateProcessProduct::class.java).firstOrNull()
     }
 
-    fun getListProductByKey(productKeys: List<String>): List<CompletionRateProcessProduct> {
+    fun getListProcessProductByKey(productKeys: List<String>): List<CompletionRateProcessProduct>? {
         return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
             .where(
                 COMPLETION_RATE_PROCESS_PRODUCT.KEY.`in`(productKeys)

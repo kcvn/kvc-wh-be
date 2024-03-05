@@ -208,7 +208,7 @@ class CompletionRateService(
             if (productExist == null) {
                 if (convertEffectiveDate != null) {
                     if (convertEffectiveDate < currentDate) {
-                        errorMessages.add(validateExcelCompletionRateExdate)
+                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                     }
                 }
                 if (name.length != 12) {
@@ -426,7 +426,7 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
             if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
-                errorMessages.add(validateExcelCompletionRateExdate)
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
             }
             if (key.length != 7) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
@@ -607,7 +607,7 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
             if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
-                errorMessages.add(validateExcelCompletionRateExdate)
+                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
             }
 
             if (key.length != 14) {

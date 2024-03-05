@@ -48,8 +48,12 @@ class CompletionRateService(
     val importInsertNoData = "import.insertNoData"
     val importFileEmptyMessage = CommonUtils.getMessage("import.file.empty")
     val validateExcelInvalidFormat = CommonUtils.getMessage("validate.excel.invalidFormat")
+    val excelColResultName = CommonUtils.getMessage("excel.colResultName")
+    val validateExcelCompletionRateExdate= CommonUtils.getMessage("validate.excel.completion.rate.exdate")
+    val validateExcelCompletionRateFormatError = CommonUtils.getMessage("validate.excel.completion.rate.format.error")
+    val userDir = "user.dir"
     fun downloadTemplate() : BaseResponse<FileContentModel> {
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
+        val filePath = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -79,9 +83,9 @@ class CompletionRateService(
             .withSecond(0)
             .withNano(0)
         val headerRow = sheet.getRow(0)
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
+        val templateUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRate.xlsx"
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            throw BusinessException(validateExcelInvalidFormat)
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         var minDate: OffsetDateTime? = null
         if(typeOfCompletionRate == 0){
@@ -120,7 +124,7 @@ class CompletionRateService(
     fun exportCompletionRateProductExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
         val products = completionRateProductRepository.getPaginatedCompletionRateProduct(search, pageable)
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx")
+        val fileTemplate = File("${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
@@ -185,11 +189,8 @@ class CompletionRateService(
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
-
-
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(importFileEmptyMessage)
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(importFileEmptyMessage)
-
         val utcOffset = ZoneOffset.ofHours(7)
         val currentDate =OffsetDateTime.now(utcOffset).withHour(0)
                 .withMinute(0)
@@ -198,9 +199,9 @@ class CompletionRateService(
         val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
+        val templateUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRate.xlsx"
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            throw BusinessException(validateExcelInvalidFormat)
 
         val productMaster = productRepository.getListNameProduct()
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
@@ -209,12 +210,12 @@ class CompletionRateService(
         var count = 0
         val total = sheet.lastRowNum - rowIndex
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
-        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == excelColResultName }
         val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == excelColResultName
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            headerRow.createCell(headerCell).setCellValue(excelColResultName)
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
@@ -241,7 +242,7 @@ class CompletionRateService(
             if (productExist == null) {
                 if (convertEffectiveDate != null) {
                     if (convertEffectiveDate < currentDate) {
-                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                        errorMessages.add(validateExcelCompletionRateExdate)
 
                     }
                 }
@@ -255,7 +256,7 @@ class CompletionRateService(
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.rate"))
                 }
             } catch (e: NumberFormatException) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                errorMessages.add(validateExcelCompletionRateFormatError)
             }
 
             if (errorMessages.isEmpty()) {
@@ -375,7 +376,7 @@ class CompletionRateService(
     fun exportCompletionRateProcessExcel(search: String?, pageable: Pageable) : BaseResponse<FileContentModel> {
         val products = completionRateProcessRepository.getPaginatedCompletionRateProcesses(search, pageable)
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompletionRateProcessTemplate.xlsx")
+        val fileTemplate = File("${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionRateProcessTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
@@ -457,12 +458,12 @@ class CompletionRateService(
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
-        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == excelColResultName }
         val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
         val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
+        val templateUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRate.xlsx"
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            throw BusinessException(validateExcelInvalidFormat)
 
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
@@ -474,9 +475,9 @@ class CompletionRateService(
                 .withSecond(0)
                 .withNano(0)
 
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == excelColResultName
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            headerRow.createCell(headerCell).setCellValue(excelColResultName)
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
@@ -500,7 +501,7 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
             if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                errorMessages.add(validateExcelCompletionRateExdate)
             }
             if (key.length != 7) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
@@ -508,10 +509,10 @@ class CompletionRateService(
             try {
                 val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                 if (rate.scale() > 2) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                    errorMessages.add(validateExcelCompletionRateFormatError)
                 }
             } catch (e: NumberFormatException) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                errorMessages.add(validateExcelCompletionRateFormatError)
             }
 
             if (errorMessages.isEmpty()) {
@@ -654,9 +655,9 @@ class CompletionRateService(
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(importFileEmptyMessage)
         val headerCell = sheet.first().lastCellNum + 0
         val headerRow = sheet.getRow(0)
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompleteRate.xlsx"
+        val templateUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRate.xlsx"
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            throw BusinessException(validateExcelInvalidFormat)
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProcessProductByKey(productKeys)
         val processCodeExist = processMasterRepository.getListProcessCode()
@@ -669,11 +670,11 @@ class CompletionRateService(
         var count = 0
         val total = sheet.lastRowNum - rowIndex
         val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
-        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+        val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == excelColResultName }
         val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
-        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == CommonUtils.getMessage("excel.colResultName")
+        val checkColResult = ExcelHelper.getCellValue(headerRow, headerCell - 1) == excelColResultName
         if (!checkColResult) {
-            headerRow.createCell(headerCell).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            headerRow.createCell(headerCell).setCellValue(excelColResultName)
             val headerStyle = headerRow.getCell(0).cellStyle
             headerRow.getCell(headerCell).cellStyle.cloneStyleFrom(headerStyle)
             sheet.setColumnWidth(headerCell, 15000)
@@ -691,7 +692,7 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processcode"))
             }
             if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
+                errorMessages.add(validateExcelCompletionRateExdate)
             }
 
             if (key.length != 14) {
@@ -700,10 +701,10 @@ class CompletionRateService(
             try {
                 val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                 if (rate.scale() > 2) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                    errorMessages.add(validateExcelCompletionRateFormatError)
                 }
             } catch (e: NumberFormatException) {
-                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.format.error"))
+                errorMessages.add(validateExcelCompletionRateFormatError)
             }
             if (errorMessages.isEmpty()) {
                 try {
@@ -816,7 +817,7 @@ class CompletionRateService(
     fun exportCompletionRateProcessProductExcel(search: CompletionRateProcessProductRequest?, pageable: Pageable) : BaseResponse<FileContentModel> {
         val processproducts = completionRateProcessProductRepository.getPaginatedCompletionRateProcessesProduct(search, pageable)
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportCompletionProcessProductRateTemplate.xlsx")
+        val fileTemplate = File("${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionProcessProductRateTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 

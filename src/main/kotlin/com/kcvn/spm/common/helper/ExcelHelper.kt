@@ -38,9 +38,7 @@ class ExcelHelper {
 
         fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false) {
             row.createCell(colIndex).setCellValue(value)
-
             val cellStyle = workbook.createCellStyle()
-
             cellStyle.alignment = HorizontalAlignment.CENTER
             cellStyle.borderTop = style.borderTop
             cellStyle.borderLeft = BorderStyle.THIN
@@ -49,10 +47,8 @@ class ExcelHelper {
 
             if (isHoliday) {
                 cellStyle.fillForegroundColor = IndexedColors.PINK.index
-            } else {
-                cellStyle.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+                cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             }
-            cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             row.getCell(colIndex).cellStyle = cellStyle
         }
 

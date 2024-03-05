@@ -5,7 +5,7 @@ import com.kcvn.spm.app.completionrate.payload.response.CheckImportResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
-import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -63,7 +63,7 @@ class CompletionRateService(
 
         val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.importCompletionRateTemplate"),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
         )
 
@@ -137,7 +137,7 @@ class CompletionRateService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -161,7 +161,7 @@ class CompletionRateService(
 
         val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.exportCompletionRateProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
         )
 
@@ -358,7 +358,7 @@ class CompletionRateService(
 
         val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.resultImportCompletionRateProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
         )
 
@@ -389,7 +389,7 @@ class CompletionRateService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -423,7 +423,7 @@ class CompletionRateService(
 
         val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.exportCompletionRateProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
         )
 
@@ -613,7 +613,7 @@ class CompletionRateService(
 
         val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.resultImportCompletionRateProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
         )
 
@@ -804,7 +804,7 @@ class CompletionRateService(
         val excelBytes = byteArrayOutputStream.toByteArray()
         val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.resultImportCompletionRateProductProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
         )
         workbook.close()
@@ -830,7 +830,7 @@ class CompletionRateService(
             style.wrapText = true
 
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
 
@@ -866,7 +866,7 @@ class CompletionRateService(
 
         val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.exportCompletionRateProductProcess", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
         )
 

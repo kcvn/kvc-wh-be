@@ -6,8 +6,8 @@ import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
-import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
@@ -124,7 +124,7 @@ class OrderService(
             style.borderLeft = BorderStyle.THIN
             style.wrapText = true
             val font: Font = workbook.createFont()
-            font.fontName = Constants.FONT_TIMES_NEW_ROMAN
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
             val rowNumber = 0
@@ -158,32 +158,15 @@ class OrderService(
             if (listOrder != null) {
                 for (item in listOrder) {
                     val row: Row = sheet.createRow(rowNumberFill++)
-                    row.createCell(0).setCellValue(item.productShortcutName)
-                    row.getCell(0).cellStyle = style
-
-                    row.createCell(1).setCellValue(item.productName)
-                    row.getCell(1).cellStyle = style
-
-                    row.createCell(2).setCellValue(item.quantity.toString())
-                    row.getCell(2).cellStyle = style
-
-                    row.createCell(3).setCellValue(item.frame_1)
-                    row.getCell(3).cellStyle = style
-
-                    row.createCell(4).setCellValue(item.pcsSh.toString())
-                    row.getCell(4).cellStyle = style
-
-                    row.createCell(5).setCellValue(item.shBlock.toString())
-                    row.getCell(5).cellStyle = style
-
-                    row.createCell(6).setCellValue(item.shBlock.toString())
-                    row.getCell(6).cellStyle = style
-
-                    row.createCell(7).setCellValue(item.srNosr)
-                    row.getCell(7).cellStyle = style
-
-                    row.createCell(8).setCellValue(item.version)
-                    row.getCell(8).cellStyle = style
+                    ExcelHelper.setCellValue(dataRow, 0, style, item.productShortcutName)
+                    ExcelHelper.setCellValue(dataRow, 1, style, item.productName)
+                    ExcelHelper.setCellValue(dataRow, 2, style, item.quantity.toString())
+                    ExcelHelper.setCellValue(dataRow, 3, style, item.frame_1)
+                    ExcelHelper.setCellValue(dataRow, 4, style, item.layerCount.toString())
+                    ExcelHelper.setCellValue(dataRow, 5, style, item.pcsSh.toString())
+                    ExcelHelper.setCellValue(dataRow, 6, style, item.shBlock.toString())
+                    ExcelHelper.setCellValue(dataRow, 7, style, item.srNosr)
+                    ExcelHelper.setCellValue(dataRow, 8, style, item.version)
 
                     for (orderDetail in item.quantityByCalendars!!) {
                         val check = keyValueList.find { x -> x.key == orderDetail.key }
@@ -204,7 +187,7 @@ class OrderService(
         val excelBytes = byteArrayOutputStream.toByteArray()
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.exportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 
@@ -286,7 +269,7 @@ class OrderService(
                 throw BusinessException(CommonUtils.getMessage("validate.excel.startDate.gt.endDate"))
 
             if (orderCodeSelected.isNullOrEmpty()) {
-                if (Duration.between(endDate, startDate).toDays() > 31)
+                if (Duration.between(startDate, endDate).toDays() > 31)
                     throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidDiffDate", arrayOf(31)))
 
                 if (startDate < DateTimeHelper.getFirstDayOfQuarterInYear(LocalDateTime.now()))
@@ -301,7 +284,7 @@ class OrderService(
                     ?: throw BusinessException(CommonUtils.getMessage("validate.orderNotExist"))
 
                 if (startDateUtc < orderExist.startDate || endDateUtc > orderExist.endDate)
-                    throw BusinessException(CommonUtils.getMessage("validate.excel.invalidTime"))
+                    throw BusinessException(CommonUtils.getMessage("validate.excel.orderOverlap"))
 
                 val workResult = workResultRep.getMaxByDate(startDateUtc, endDateUtc)
                 if (workResult?.summaryResultDate != null) {
@@ -342,12 +325,14 @@ class OrderService(
 
                 if (check) {
                     var isValidCol = true
+                    var countCellEmpty = 0
                     for (iCol in 1 until colIndexResult) {
                         try {
                             val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol, DateTimeFormat.MM_dd).split("/")
                             val orderDate = LocalDateTime.of(year, arrOrderDate[0].toInt(), arrOrderDate[1].toInt(), 0, 0)
                             val strQuantity = ExcelHelper.getCellValue(row, iCol)
                             if (strQuantity.isEmpty()) {
+                                countCellEmpty++
                                 continue
                             } else {
                                 if (strQuantity.toBigDecimalOrNull() == null) {
@@ -369,10 +354,16 @@ class OrderService(
                             messageResults.add(CommonUtils.getMessage("validate.excel.updateDataError"))
                         }
                     }
-                    if (isValidCol) {
-                        productImports.add(name)
-                        messageResults.add(CommonUtils.getMessage("validate.excel.checked"))
-                        count++
+                    if (countCellEmpty >= colIndexResult - 1) {
+                        isBreak = true
+                        messageResults.add(CommonUtils.getMessage("validate.excel.rowEmpty"))
+                    }
+                    else {
+                        if (isValidCol) {
+                            productImports.add(name)
+                            messageResults.add(CommonUtils.getMessage("validate.excel.checked"))
+                            count++
+                        }
                     }
                 }
 
@@ -411,7 +402,7 @@ class OrderService(
 
             val response = FileContentModel(
                 fileName = CommonUtils.getMessage("fileName.resultImportOrder", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateTimeFormat.yyyy_MM_dd_HH_mm_ss)))),
-                contentType = Constants.EXCEL_CONTENT_TYPE,
+                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
                 content = excelBytes
             )
 
@@ -436,7 +427,7 @@ class OrderService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.importOrderTemplate"),
-            contentType = Constants.EXCEL_CONTENT_TYPE,
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
 

@@ -51,7 +51,7 @@ class OrderService(
         request: OrderSearchRequest?,
         pageable: Pageable?
     ): PagingOrderResponse {
-        val holidayCalender = holidaysCalenderRepository.getHolidaysCalender();
+        val holidayCalender = holidaysCalenderRepository.getHolidaysCalender()
         val calendarResponses = mutableListOf<CalendarValueResponse>()
         if (request != null) {
             var colStartDate = OffsetDateTime.now()
@@ -86,7 +86,7 @@ class OrderService(
                 val response = CalendarValueResponse(
                     key = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd_yyyy),
                     value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
-                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
+                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() } || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
                 )
                 calendarResponses.add(response)
                 currentDate = currentDate.plusDays(1)
@@ -123,39 +123,17 @@ class OrderService(
         val sheet = workbook.getSheetAt(0)
 
         if (listOrderResponse.columns != null) {
-            val style: CellStyle = workbook.createCellStyle()
-            style.borderBottom = BorderStyle.THIN
-            style.borderTop = BorderStyle.THIN
-            style.borderRight = BorderStyle.THIN
-            style.borderLeft = BorderStyle.THIN
-            style.wrapText = true
-            val font: Font = workbook.createFont()
-            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
-            font.fontHeightInPoints = 12.toShort()
-            style.setFont(font)
+            val style = ExcelHelper.getCellStyleCommon(workbook)
             val rowNumber = 0
             val columnNumber = 9
             val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
 
-            val keyValueList: MutableList<CalendarValueResponse> = mutableListOf()
-
-            for ((index, column) in listOrderResponse.columns!!.withIndex()) {
-
-                val cell = dataRow.createCell(columnNumber + index)
-                cell.setCellValue(column.key)
-                val cellStyle: CellStyle = workbook.createCellStyle()
-                cellStyle.cloneStyleFrom(style)
-                if (column.isHoliday) {
-                    cellStyle.fillForegroundColor = IndexedColors.PINK.index
-                } else {
-                    cellStyle.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+            if (listOrderResponse.columns!!.isNotEmpty()) {
+                var headerCol = 9
+                for (col in listOrderResponse.columns!!) {
+                    ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, col.isHoliday)
+                    headerCol++
                 }
-
-                cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-
-                cell.cellStyle = cellStyle
-                val indexColumn = (columnNumber + index).toString()
-                keyValueList.add(CalendarValueResponse(column.key, indexColumn, column.isHoliday))
             }
 
             val listOrder = listOrderResponse.data
@@ -164,27 +142,25 @@ class OrderService(
             if (listOrder != null) {
                 for (item in listOrder) {
                     val row: Row = sheet.createRow(rowNumberFill++)
-                    ExcelHelper.setCellValue(dataRow, 0, style, item.productShortcutName)
-                    ExcelHelper.setCellValue(dataRow, 1, style, item.productName)
-                    ExcelHelper.setCellValue(dataRow, 2, style, item.quantity.toString())
-                    ExcelHelper.setCellValue(dataRow, 3, style, item.frame_1)
-                    ExcelHelper.setCellValue(dataRow, 4, style, item.layerCount.toString())
-                    ExcelHelper.setCellValue(dataRow, 5, style, item.pcsSh.toString())
-                    ExcelHelper.setCellValue(dataRow, 6, style, item.shBlock.toString())
-                    ExcelHelper.setCellValue(dataRow, 7, style, item.srNosr)
-                    ExcelHelper.setCellValue(dataRow, 8, style, item.version)
+                    ExcelHelper.setCellValue(row, 0, style, item.productShortcutName)
+                    ExcelHelper.setCellValue(row, 1, style, item.productName)
+                    ExcelHelper.setCellValue(row, 2, style, item.quantity.toString())
+                    ExcelHelper.setCellValue(row, 3, style, item.frame_1)
+                    ExcelHelper.setCellValue(row, 4, style, item.layerCount.toString())
+                    ExcelHelper.setCellValue(row, 5, style, item.pcsSh.toString())
+                    ExcelHelper.setCellValue(row, 6, style, item.shBlock.toString())
+                    ExcelHelper.setCellValue(row, 7, style, item.srNosr)
+                    ExcelHelper.setCellValue(row, 8, style, item.version)
 
-                    for (orderDetail in item.quantityByCalendars!!) {
-                        val check = keyValueList.find { x -> x.key == orderDetail.key }
-                        if (check != null) {
-                            check.value?.let { row.createCell(it.toInt()).setCellValue(orderDetail.value) }
-                            check.value?.let {
-                                val cell = row.getCell(it.toInt())
-                                cell?.cellStyle = style
-                            }
+                    if (listOrderResponse.columns!!.isNotEmpty()) {
+                        var colIndex = 9
+                        for (col in listOrderResponse.columns!!) {
+                            val orderDetail = item.quantityByCalendars?.find { it.key == col.key }
+                            ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, style, orderDetail?.value, col.isHoliday)
+                            colIndex++
                         }
-
                     }
+
                 }
             }
         }

@@ -1,6 +1,8 @@
 package com.kcvn.spm.app.report.quantityreport.controller
 
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
+import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
+import com.kcvn.spm.app.report.quantityreport.payload.response.PagingQuantityReportResponse
 import com.kcvn.spm.app.report.quantityreport.service.QuantityReportService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -41,11 +43,24 @@ class QuantityReportController(
     fun getListCalculateQuantityResult(
         @PageableDefault(size = 10, page = 0)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["monthReport"], direction = Sort.Direction.DESC)
+            SortDefault(sort = ["monthreport"], direction = Sort.Direction.DESC)
         ) pageable: Pageable,
     ): ResponseEntity<BasePagingResponse<CalculateQuantityResult>> {
         val result = quantityReportService.getListCalculateQuantityResult(pageable)
         return ResponseEntity<BasePagingResponse<CalculateQuantityResult>>(result, HttpStatus.OK)
     }
 
+    @GetMapping("/get-list-quantity-report")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_REPORT_QUANTITY.value) || hasRole('ADMIN')")
+    fun getListQuantityReport(
+        request: QuantityReportRequest?,
+        @PageableDefault(size = 10, page = 0)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["productname"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["monthreport"], direction = Sort.Direction.DESC)
+        ) pageable: Pageable,
+    ) : ResponseEntity<PagingQuantityReportResponse>{
+        val data = quantityReportService.getListQuantityReport(request,pageable)
+        return ResponseEntity<PagingQuantityReportResponse>(data,HttpStatus.OK)
+    }
 }

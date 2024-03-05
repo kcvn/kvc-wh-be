@@ -3,6 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.order.payload.model.OrderDetailByDateModel
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
+import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.OrderFilterType
@@ -31,13 +32,13 @@ class OrderRepository(
     fun getPagingListOrder(request: OrderSearchRequest?, pageable: Pageable?): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
         if (!request?.productName.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.NAME.containsIgnoreCase(request?.productName))
+            condition = condition.and(PRODUCT.NAME.contains(request?.productName))
         }
         if (!request?.frame_1.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.FRAME_1.containsIgnoreCase(request?.frame_1))
+            condition = condition.and(PRODUCT.FRAME_1.contains(request?.frame_1))
         }
         if (!request?.srNosr.isNullOrBlank()) {
-            condition = condition.and(PRODUCT.SR_NOSR.containsIgnoreCase(request?.srNosr))
+            condition = condition.and(PRODUCT.SR_NOSR.contains(request?.srNosr))
         }
         if (request?.filterType == OrderFilterType.DATE && request.startDate != null && request.endDate != null) {
             condition = condition.and(ORDER_DETAIL.ORDER_DATE.between(request.startDate, request.endDate))
@@ -211,6 +212,24 @@ class OrderRepository(
             }
         }
         return query.fetchInto(Order::class.java)
+    }
+
+    fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
+        var condition = DSL.noCondition()
+        if (request.endDate != null) {
+            condition = condition.and(ORDER.END_DATE.le(request.endDate))
+        }
+        condition = condition.and(ORDER.START_DATE.ge(request.startDate)).and(ORDER.IS_DELETED.eq(false)).or(ORDER.START_DATE.le(request.endDate))
+        return context.select(
+            ORDER.ID,
+            ORDER.ORDER_CODE,
+            ORDER.VERSION,
+            ORDER.START_DATE,
+            ORDER.END_DATE
+        ).from(ORDER)
+            .where(condition)
+            .orderBy(ORDER.START_DATE.sort(SortOrder.DESC))
+            .fetchInto(Order::class.java)
     }
 
 }

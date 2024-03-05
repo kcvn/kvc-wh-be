@@ -16,7 +16,7 @@ import java.time.ZoneOffset
 
 @Repository
 class CompletionRateProductRepository(private val context: DSLContext) : SortingRepository() {
-    fun getByProduct(productNames: List<String>): List<CompletionRateProduct> {
+    fun getByProduct(productNames: List<String>): List<CompletionRateProduct>? {
         return context.selectFrom(COMPLETION_RATE_PRODUCT)
             .where(
                 COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames)

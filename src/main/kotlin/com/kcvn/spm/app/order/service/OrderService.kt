@@ -19,10 +19,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
-import com.kcvn.spm.repository.OrderDetailRepository
-import com.kcvn.spm.repository.OrderRepository
-import com.kcvn.spm.repository.ProductRepository
-import com.kcvn.spm.repository.WorkResultRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
@@ -41,12 +38,14 @@ class OrderService(
     private val orderRep: OrderRepository,
     private val workResultRep: WorkResultRepository,
     private val productRep: ProductRepository,
-    private val orderDetailRep: OrderDetailRepository
+    private val holidaysCalenderRepository: HolidaysCalenderRepository,
 ) {
+
     fun getPaginatedOrder(
         request: OrderSearchRequest?,
         pageable: Pageable?
     ): PagingOrderResponse {
+        val holidayCalender = holidaysCalenderRepository.getHolidaysCalender();
         val calendarResponses = mutableListOf<CalendarValueResponse>()
         if (request != null) {
             var colStartDate = OffsetDateTime.now()
@@ -81,7 +80,7 @@ class OrderService(
                 val response = CalendarValueResponse(
                     key = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd_yyyy),
                     value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
-                    isHoliday = currentDate.dayOfWeek == DayOfWeek.SATURDAY || currentDate.dayOfWeek == DayOfWeek.SUNDAY
+                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
                 )
                 calendarResponses.add(response)
                 currentDate = currentDate.plusDays(1)
@@ -476,9 +475,5 @@ class OrderService(
             if (days[i - 1].plusDays(1).format(formatter) != days[i].format(formatter)) return false
         }
         return true
-    }
-
-    fun getOrderDetailsByOrderIds(ids: List<String?>): List<OrderDetail> {
-        return orderDetailRep.getOrderDetailsByOrderIds(ids)
     }
 }

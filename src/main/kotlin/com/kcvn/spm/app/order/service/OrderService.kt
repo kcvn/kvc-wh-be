@@ -19,7 +19,10 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
-import com.kcvn.spm.repository.*
+import com.kcvn.spm.repository.HolidaysCalenderRepository
+import com.kcvn.spm.repository.OrderRepository
+import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.WorkResultRepository
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
@@ -29,7 +32,10 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.time.*
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @Service
@@ -269,7 +275,7 @@ class OrderService(
                 throw BusinessException(CommonUtils.getMessage("validate.excel.startDate.gt.endDate"))
 
             if (orderCodeSelected.isNullOrEmpty()) {
-                if (Duration.between(startDate, endDate).toDays() > 31)
+                if ((Duration.between(startDate, endDate).toDays() + 1)  > 31)
                     throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidDiffDate", arrayOf(31)))
 
                 if (startDate < DateTimeHelper.getFirstDayOfQuarterInYear(LocalDateTime.now()))
@@ -373,7 +379,7 @@ class OrderService(
                     row.createCell(colIndexResult)
                 }
                 row.getCell(colIndexResult).setCellValue(result)
-                val hasFontColor = result == CommonUtils.getMessage("validate.excel.checked")
+                val hasFontColor = result != CommonUtils.getMessage("validate.excel.checked")
                 row.getCell(colIndexResult).cellStyle = ExcelHelper.getCellStyleResultCol(workbook, style, hasFontColor)
             }
 

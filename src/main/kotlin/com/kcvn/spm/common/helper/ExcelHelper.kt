@@ -46,7 +46,7 @@ class ExcelHelper {
             cellStyle.borderBottom = style.borderBottom
 
             if (isHoliday) {
-                cellStyle.fillForegroundColor = IndexedColors.PINK.index
+                cellStyle.fillForegroundColor = IndexedColors.LIGHT_TURQUOISE.index
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             }
             row.getCell(colIndex).cellStyle = cellStyle

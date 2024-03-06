@@ -432,10 +432,11 @@ class CompletionRateService(
             if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
             }
-            if (key.length != 7) {
+            if (key.length != 7 && key.length != 8 ) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
             }
             try {
+                val check = ExcelHelper.getCellValue(row,1)
                 val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                 if (rate.scale() > 2) {
                     errorMessages.add(validateExcelCompletionRateFormatError)
@@ -451,7 +452,7 @@ class CompletionRateService(
                             key = key,
                             rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
                             processCode = key.take(6),
-                            layerCode = key.substring(6, 7),
+                            layerCode = key.substring(6, if (key.length == 7) 7 else 8),
                             expirationDate = null,
                             effectiveDate = effectiveDate
                         )
@@ -615,7 +616,7 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
             }
 
-            if (key.length != 14) {
+            if (key.length != 14 && key.length != 15) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
             }
             try {
@@ -634,7 +635,7 @@ class CompletionRateService(
                             rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
                             productNameShortcut = key.substring(6, 13),
                             processCode = key.take(6),
-                            layerCode = key.substring(13, 14),
+                            layerCode = key.substring(13, if (key.length == 15) 15 else 14),
                             expirationDate = null,
                             effectiveDate = effectiveDate
                         )

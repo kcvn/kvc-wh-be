@@ -41,7 +41,8 @@ class CompletionRateService(
     private val completionRateProcessProductRepository: CompletionRateProcessProductRepository,
     private val completionRateProcessRepository: CompletionRateProcessRepository,
     private val processMasterRepository: ProcessMasterRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val processProcedureStructureRepository: ProcessProcedureStructureRepository
 ) {
     val checkImportCompletionRateDate = CommonUtils.getMessage("check.importCompletionRateDate")
     val checkValidateExcelImportSuccess = CommonUtils.getMessage("validate.excel.importSuccess")
@@ -586,7 +587,7 @@ class CompletionRateService(
             throw BusinessException(validateExcelInvalidFormat)
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProcessProductByKey(productKeys)
-        val processCodeExist = processMasterRepository.getListProcessCode()
+        val processCodeExist = processProcedureStructureRepository.getListProcessCode()
         val utcOffset = ZoneOffset.ofHours(7)
         val currentDate = OffsetDateTime.now(utcOffset).withHour(0)
             .withMinute(0)

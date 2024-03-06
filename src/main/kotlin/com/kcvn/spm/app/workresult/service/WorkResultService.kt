@@ -4,6 +4,7 @@ import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
@@ -11,9 +12,6 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.WorkResultRepository
-import org.apache.poi.ss.usermodel.BorderStyle
-import org.apache.poi.ss.usermodel.CellStyle
-import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
@@ -120,84 +118,35 @@ class WorkResultService(
         val sheet = workBook.getSheetAt(0)
 
         if (!workResultMapping.data.isNullOrEmpty()) {
-            val style: CellStyle = workBook.createCellStyle()
-            style.borderBottom = BorderStyle.THIN
-            style.borderTop = BorderStyle.THIN
-            style.borderRight = BorderStyle.THIN
-            style.borderLeft = BorderStyle.THIN
-            style.wrapText = true
-
-            val font: Font = workBook.createFont()
-            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
-            font.fontHeightInPoints = 12.toShort()
-            style.setFont(font)
+            val style = ExcelHelper.getCellStyleCommon(workBook)
 
             var rowNumber = 2
             for (item in workResultMapping.data!!) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                dataRow.createCell(0).setCellValue(item.summaryResultDate?.format(formatter).toString())
-                dataRow.getCell(0).cellStyle = style
-
-                dataRow.createCell(1).setCellValue(item.itemName)
-                dataRow.getCell(1).cellStyle = style
-
-                dataRow.createCell(2).setCellValue(item.processName)
-                dataRow.getCell(2).cellStyle = style
-
-                dataRow.createCell(3).setCellValue(item.processCode)
-                dataRow.getCell(3).cellStyle = style
-
-                dataRow.createCell(4).setCellValue(item.layerCode)
-                dataRow.getCell(4).cellStyle = style
-
-                val totalTapeQuantity = item.totalTapeQuantity?.toString() ?: ""
-
-                dataRow.createCell(5).setCellValue(totalTapeQuantity)
-                dataRow.getCell(5).cellStyle = style
-
-                val totalSheetQuantity = item.totalSheetQuantity?.toString() ?: ""
-
-                dataRow.createCell(6).setCellValue(totalSheetQuantity)
-                dataRow.getCell(6).cellStyle = style
-
-                val goodTapeQuantity = item.goodTapeQuantity?.toString() ?: ""
-
-                dataRow.createCell(7).setCellValue(goodTapeQuantity)
-                dataRow.getCell(7).cellStyle = style
-
-                val goodSheetQuantity = item.goodSheetQuantity?.toString() ?: ""
-
-                dataRow.createCell(8).setCellValue(goodSheetQuantity)
-                dataRow.getCell(8).cellStyle = style
 
                 val result = (item.goodSheetQuantity?.toDouble())?.div(item.totalSheetQuantity!!)
-
                 val percentage = result?.times(100)
-
                 var performance = "%.2f%%".format(percentage)
-
                 if (result == null || item.goodSheetQuantity == 0 || item.totalSheetQuantity == 0) {
                     performance = ""
                 }
 
-                dataRow.createCell(9).setCellValue(performance)
-                dataRow.getCell(9).cellStyle = style
-
-                dataRow.createCell(10).setCellValue(item.orderCode)
-                dataRow.getCell(10).cellStyle = style
-
-                dataRow.createCell(11).setCellValue(item.tapeLotNo)
-                dataRow.getCell(11).cellStyle = style
-
-                dataRow.createCell(12).setCellValue(item.code)
-                dataRow.getCell(12).cellStyle = style
-
-                dataRow.createCell(13).setCellValue(item.workImplementBy)
-                dataRow.getCell(13).cellStyle = style
-
-                dataRow.createCell(14).setCellValue(item.equipmentName)
-                dataRow.getCell(14).cellStyle = style
+                ExcelHelper.setCellValue(dataRow, 0, style, item.summaryResultDate?.format(formatter).toString())
+                ExcelHelper.setCellValue(dataRow, 1, style, item.itemName)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.processName)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.processCode)
+                ExcelHelper.setCellValue(dataRow, 4, style, item.layerCode)
+                ExcelHelper.setCellValue(dataRow, 5, style, item.totalTapeQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 6, style, item.totalSheetQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 7, style, item.goodTapeQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 8, style, item.goodSheetQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 9, style, performance)
+                ExcelHelper.setCellValue(dataRow, 10, style, item.orderCode)
+                ExcelHelper.setCellValue(dataRow, 11, style, item.tapeLotNo)
+                ExcelHelper.setCellValue(dataRow, 12, style, item.code)
+                ExcelHelper.setCellValue(dataRow, 13, style, item.workImplementBy)
+                ExcelHelper.setCellValue(dataRow, 14, style, item.equipmentName)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

@@ -245,17 +245,20 @@ class CompletionRateService(
                             count++
                         } else if (convertEffectiveDate != null) {
                             if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
-                                val minEffectivedate = productExistMinEffectiveDate?.effectiveDate
-                                if (minEffectivedate != null) {
-                                    if (minEffectivedate.toLocalDate() > effectiveDate.toLocalDate()) {
+                                val minEffectiveDate = productExistMinEffectiveDate?.effectiveDate
+                                if (minEffectiveDate != null) {
+                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
                                         val compleRateProduct = CompletionRateProduct(
                                             productName = name,
                                             rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
                                             effectiveDate = effectiveDate,
-                                            expirationDate = minEffectivedate.minusDays(1)
+                                            expirationDate = minEffectiveDate.minusDays(1)
                                         )
                                         completionRateProductRepository.add(compleRateProduct)
                                         count++
+                                    }
+                                    else{
+                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                                     }
                                 }
                             } else {
@@ -454,8 +457,7 @@ class CompletionRateService(
                         completionRateProcessRepository.add(compleRateProduct)
                         count++
                     } else {
-                        val productExistSameDate =
-                            productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
+                        val productExistSameDate = productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
                             completionRateProcessRepository.update(productExist)
@@ -463,19 +465,21 @@ class CompletionRateService(
 
                         } else if (convertEffectiveDate != null) {
                             if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
-                                val minEffectivedate = processExistMinEffectiveDate?.effectiveDate
-                                if (minEffectivedate != null) {
-                                    if (minEffectivedate.toLocalDate() > effectiveDate.toLocalDate()) {
+                                val minEffectiveDate = processExistMinEffectiveDate?.effectiveDate
+                                if (minEffectiveDate != null) {
+                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
                                         val compleRateProduct = CompletionRateProcess(
                                             key = key,
                                             rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
                                             processCode = key.take(6),
                                             layerCode = key.substring(6, 7),
-                                            expirationDate = minEffectivedate.minusDays(1),
+                                            expirationDate = minEffectiveDate.minusDays(1),
                                             effectiveDate = effectiveDate
                                         )
                                         completionRateProcessRepository.add(compleRateProduct)
                                         count++
+                                    }else{
+                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                                     }
                                 }
                             } else {
@@ -644,20 +648,22 @@ class CompletionRateService(
                             count++
                         } else if (convertEffectiveDate != null) {
                             if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
-                                val minEffectivedate = processProductExistMinEffectiveDate?.effectiveDate
-                                if (minEffectivedate != null) {
-                                    if (minEffectivedate.toLocalDate() > effectiveDate.toLocalDate()) {
+                                val minEffectiveDate = processProductExistMinEffectiveDate?.effectiveDate
+                                if (minEffectiveDate != null) {
+                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
                                         val compleRateProcessProduct = CompletionRateProcessProduct(
                                             key = key,
                                             rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
                                             productNameShortcut = key.substring(6, 13),
                                             processCode = key.take(6),
                                             layerCode = key.substring(13, 14),
-                                            expirationDate = minEffectivedate.minusDays(1),
+                                            expirationDate = minEffectiveDate.minusDays(1),
                                             effectiveDate = effectiveDate
                                         )
                                         completionRateProcessProductRepository.add(compleRateProcessProduct)
                                         count++
+                                    }else{
+                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exdate"))
                                     }
                                 }
                             } else {

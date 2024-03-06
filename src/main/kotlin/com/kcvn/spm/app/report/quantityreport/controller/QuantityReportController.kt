@@ -4,6 +4,7 @@ import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityR
 import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
 import com.kcvn.spm.app.report.quantityreport.payload.response.PagingQuantityReportResponse
 import com.kcvn.spm.app.report.quantityreport.service.QuantityReportService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
@@ -41,7 +42,7 @@ class QuantityReportController(
     @GetMapping("/get-list-calculate-quantity-result")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_REPORT_QUANTITY.value) || hasRole('ADMIN')")
     fun getListCalculateQuantityResult(
-        @PageableDefault(size = 10, page = 0)
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["monthreport"], direction = Sort.Direction.DESC)
         ) pageable: Pageable,
@@ -54,7 +55,7 @@ class QuantityReportController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_REPORT_QUANTITY.value) || hasRole('ADMIN')")
     fun getListQuantityReport(
         request: QuantityReportRequest?,
-        @PageableDefault(size = 10, page = 0)
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productname"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["monthreport"], direction = Sort.Direction.DESC)

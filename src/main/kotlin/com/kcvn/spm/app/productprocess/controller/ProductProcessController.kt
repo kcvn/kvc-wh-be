@@ -4,6 +4,7 @@ import com.kcvn.spm.app.productprocess.payload.request.ProductProcessSearchReque
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.app.productprocess.service.ProductProcessService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -29,7 +30,7 @@ class ProductProcessController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PROCESS.value) || hasRole('ADMIN')")
     fun getAllProductProcess(
         request: ProductProcessSearchRequest,
-        @PageableDefault(size = 10, page = 0)
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
@@ -58,7 +59,7 @@ class ProductProcessController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_PROCESS.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: ProductProcessSearchRequest,
-        @PageableDefault(size = 1000000, page = 0)
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["processName"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),

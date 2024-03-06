@@ -5,6 +5,7 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
@@ -28,7 +29,7 @@ class OrderController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getList(
         request: OrderSearchRequest?,
-        @PageableDefault(size = 10, page = 0)
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["version"], direction = Sort.Direction.DESC)
@@ -57,7 +58,7 @@ class OrderController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: OrderSearchRequest?,
-        @PageableDefault(size = 1000000, page = 0)
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["version"], direction = Sort.Direction.DESC)
@@ -76,7 +77,6 @@ class OrderController(
     }
 
     @GetMapping("/check-work-result")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
     fun checkWorkResult(orderCode: String): ResponseEntity<BaseResponse<CheckWorkResultModel>> {
         val data = orderService.checkWorkResult(orderCode)
         return ResponseEntity(data, HttpStatus.OK)

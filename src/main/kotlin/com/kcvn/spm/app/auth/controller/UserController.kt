@@ -7,6 +7,7 @@ import com.kcvn.spm.app.auth.payload.response.UserResponse
 import com.kcvn.spm.app.auth.security.jwt.JwtUtils
 import com.kcvn.spm.app.auth.security.service.UserDetailsImpl
 import com.kcvn.spm.app.auth.service.UserService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.util.CommonUtils
@@ -44,7 +45,7 @@ class UserController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).VIEW_USER.value) || hasRole('ADMIN')")
     fun getAllUsers(
         @RequestParam(required = false) search: String?,
-        @PageableDefault(size = 10, page = 0)
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC))
         pageable: Pageable?
     ): ResponseEntity<*> {

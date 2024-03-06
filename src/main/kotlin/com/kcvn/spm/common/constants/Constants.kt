@@ -23,10 +23,6 @@ class Constants {
         const val MACHUYENDOI = "MA_CHUYEN_DOI"
         const val MATHONGKE = "MA_THONG_KE"
 
-        //Excel
-//        const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//        const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
-
         //KHUON_DUC
         const val KHUONDUC_KVC = "KVC"
         const val KHUONDUC_ML = "ML"
@@ -41,6 +37,14 @@ class Constants {
 
 	// SYSTEM
         const val SYSTEM = "SYSTEM"
+    }
+}
+
+class PagingDefault {
+    companion object {
+        const val PAGE = 0
+        const val SIZE = 10
+        const val EXPORT_SIZE = 1000000
     }
 }
 
@@ -83,5 +87,6 @@ class ExcelConstant {
     companion object {
         const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
+        const val PAGING = 1000000
     }
 }

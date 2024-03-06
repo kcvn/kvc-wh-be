@@ -8,6 +8,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.app.productprocess.service.ProductProcessService
+import com.kcvn.spm.common.constants.PagingDefault
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -28,7 +29,7 @@ class ProductController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(
         request: ProductSearchRequest?,
-        @PageableDefault(size = 10, page = 0)
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(SortDefault(sort = ["name"], direction = Sort.Direction.ASC))
         pageable: Pageable
     ): ResponseEntity<PagingProductResponse> {
@@ -54,7 +55,7 @@ class ProductController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_PRODUCT.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: ProductSearchRequest?,
-        @PageableDefault(size = 1000000, page = 0)
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(SortDefault(sort = ["createddate"], direction = Sort.Direction.DESC))
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {

@@ -4,6 +4,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.CheckInventoryDateResponse
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.inventoryproduct.service.InventoryProductService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -30,7 +31,7 @@ class InventoryProductController(
     ) : ResponseEntity<BaseResponse<CheckInventoryDateResponse>>{
         val data = inventoryProductService.checkInventoryDate(date)
 
-        val formattedDate = convertOffSetDateTimeUtc7ToString(date) // Định dạng lại LocalDate thành chuỗi
+        val formattedDate = convertOffSetDateTimeUtc7ToString(date)
 
         return if( data!= null && data.hasInventoryDate){
             ResponseEntity(
@@ -63,7 +64,7 @@ class InventoryProductController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun  getAllInventoryProduct (
         request: InventoryProductRequest,
-        @PageableDefault(size = 10, page = 0)
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["inventoryDate"], direction = Sort.Direction.DESC),
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
@@ -81,7 +82,7 @@ class InventoryProductController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_INVENTORY.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: InventoryProductRequest,
-        @PageableDefault(size = 1000000, page = 0)
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["inventoryDate"], direction = Sort.Direction.DESC),
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),

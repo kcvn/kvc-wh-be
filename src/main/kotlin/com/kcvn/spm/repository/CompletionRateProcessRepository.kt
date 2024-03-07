@@ -140,7 +140,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
                      data.layerCode,
                      data.rate,
                      data.createdDate ?: OffsetDateTime.now(ZoneOffset.UTC),
-                     data.createdBy ?: "admin",
+                     data.createdBy ?: CommonUtils.loggedInUser(),
                      data.isDeleted ?: false,
                      data.updatedDate ?: OffsetDateTime.now(ZoneOffset.UTC),
                      data.expirationDate,

@@ -33,6 +33,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -128,7 +129,7 @@ class CompletionRateService(
         layerCompletionRateErrorList.forEach { error ->
             val newRow = sheetTemplateWorkBook.createRow(rowIndex)
             newRow.createCell(0).setCellValue(error.key ?: "")
-            newRow.createCell(1).setCellValue(error.rate ?: "")
+            error.rate?.let { newRow.createCell(1).setCellValue(it) }
             val errorMessageCell = newRow.createCell(2)
             errorMessageCell.setCellValue(error.errorMessage ?: "")
             val cellStyle = templateWorkbook.createCellStyle()
@@ -216,9 +217,9 @@ class CompletionRateService(
         val total = sheet.lastRowNum - rowIndex
 
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
-
+        var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1)
+            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
             val name = ExcelHelper.getCellValue(row, 0)
             val errorMessages = mutableListOf<String>()
 
@@ -243,9 +244,10 @@ class CompletionRateService(
                 }
             }
             try {
-                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                if (rate.scale() > 2) {
-                    errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.rate"))
+                rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate >= BigDecimal.ZERO && rate <= BigDecimal.ONE) {
+                    rate *= BigDecimal(100)
+                    rate = rate.setScale(2, RoundingMode.HALF_UP)
                 }
             } catch (e: NumberFormatException) {
                 errorMessages.add(validateExcelCompletionRateFormatError)
@@ -256,7 +258,7 @@ class CompletionRateService(
                     if (productExist == null) {
                         val completionRateProduct = CompletionRateProduct(
                             productName = name,
-                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                            rate = rate,
                             effectiveDate = effectiveDate,
                             expirationDate = null
                         )
@@ -267,7 +269,7 @@ class CompletionRateService(
                         val productExistSameDate =
                             productExists.find { x -> (x.productName == name && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
-                            productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                            productExistSameDate.rate = rate
                             completionRateProductRepository.update(productExistSameDate)
                             count++
                         } else if (convertEffectiveDate != null) {
@@ -277,7 +279,7 @@ class CompletionRateService(
                                     if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
                                         val completionRateProduct = CompletionRateProduct(
                                             productName = name,
-                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            rate = rate,
                                             effectiveDate = effectiveDate,
                                             expirationDate = minEffectiveDate.minusDays(1)
                                         )
@@ -299,7 +301,7 @@ class CompletionRateService(
                                         completionRateProductRepository.update(completionRateUpdate)
                                         val completionRateProduct = CompletionRateProduct(
                                             productName = name,
-                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            rate = rate,
                                             effectiveDate = effectiveDate,
                                             expirationDate = null
                                         )
@@ -430,9 +432,9 @@ class CompletionRateService(
             .withNano(0)
 
         val processCodeExist = processMasterRepository.getListProcessCode()
-
+        var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1)
+            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
             val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
             val processExistMinEffectiveDate = productExists
                 ?.filter { it.key == key }
@@ -453,9 +455,10 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
             }
             try {
-                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                if (rate.scale() > 2) {
-                    errorMessages.add(validateExcelCompletionRateFormatError)
+                rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate >= BigDecimal.ZERO && rate <= BigDecimal.ONE) {
+                    rate *= BigDecimal(100)
+                    rate = rate.setScale(2, RoundingMode.HALF_UP)
                 }
             } catch (e: NumberFormatException) {
                 errorMessages.add(validateExcelCompletionRateFormatError)
@@ -466,7 +469,7 @@ class CompletionRateService(
                     if (productExist == null) {
                         val completionRateProduct = CompletionRateProcess(
                             key = key,
-                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                            rate = rate,
                             processCode = key.take(6),
                             layerCode = key.substring(6, if (key.length == 7) 7 else 8),
                             expirationDate = null,
@@ -477,7 +480,7 @@ class CompletionRateService(
                     } else {
                         val productExistSameDate = productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
-                            productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                            productExistSameDate.rate = rate
                             completionRateProcessRepository.update(productExist)
                             count++
 
@@ -488,7 +491,7 @@ class CompletionRateService(
                                     if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
                                         val completionRateProduct = CompletionRateProcess(
                                             key = key,
-                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            rate = rate,
                                             processCode = key.take(6),
                                             layerCode = key.substring(6, 7),
                                             expirationDate = minEffectiveDate.minusDays(1),
@@ -512,7 +515,7 @@ class CompletionRateService(
                                         completionRateProcessRepository.update(completionRateUpdate)
                                         val completionRateProduct = CompletionRateProcess(
                                             key = key,
-                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            rate = rate,
                                             processCode = key.take(6),
                                             layerCode = key.substring(6, 7),
                                             expirationDate = null,
@@ -605,9 +608,9 @@ class CompletionRateService(
         var count = 0
         val total = sheet.lastRowNum - rowIndex
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
-
+        var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1)
+            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
             val key = ExcelHelper.getCellValue(row, 0)
             val errorMessages = mutableListOf<String>()
             val productExist = productExists?.find { x -> x.key == key }
@@ -626,9 +629,10 @@ class CompletionRateService(
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
             }
             try {
-                val rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
-                if (rate.scale() > 2) {
-                    errorMessages.add(validateExcelCompletionRateFormatError)
+                rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                if (rate >= BigDecimal.ZERO && rate <= BigDecimal.ONE) {
+                    rate *= BigDecimal(100)
+                    rate = rate.setScale(2, RoundingMode.HALF_UP)
                 }
             } catch (e: NumberFormatException) {
                 errorMessages.add(validateExcelCompletionRateFormatError)
@@ -638,7 +642,7 @@ class CompletionRateService(
                     if (productExist == null) {
                         val completionRateProcessProduct = CompletionRateProcessProduct(
                             key = key,
-                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                            rate = rate,
                             productNameShortcut = key.substring(6, 13),
                             processCode = key.take(6),
                             layerCode = key.substring(13, if (key.length == 15) 15 else 14),
@@ -651,7 +655,7 @@ class CompletionRateService(
                         val productExistSameDate =
                             productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
-                            productExistSameDate.rate = BigDecimal(ExcelHelper.getCellValue(row, 1))
+                            productExistSameDate.rate = rate
                             completionRateProcessProductRepository.update(productExistSameDate)
                             count++
                         } else if (convertEffectiveDate != null) {
@@ -661,7 +665,7 @@ class CompletionRateService(
                                     if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
                                         val completionRateProcessProduct = CompletionRateProcessProduct(
                                             key = key,
-                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            rate = rate,
                                             productNameShortcut = key.substring(6, 13),
                                             processCode = key.take(6),
                                             layerCode = key.substring(13, 14),
@@ -685,7 +689,7 @@ class CompletionRateService(
                                         completionRateProcessProductRepository.update(completionRateUpdate)
                                         val completionRateProcessProduct = CompletionRateProcessProduct(
                                             key = key,
-                                            rate = BigDecimal(ExcelHelper.getCellValue(row, 1)),
+                                            rate = rate,
                                             productNameShortcut = key.substring(6, 13),
                                             processCode = key.take(6),
                                             layerCode = key.substring(13, 14),

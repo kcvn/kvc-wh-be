@@ -199,12 +199,6 @@ class ProductProcessService(
             var check = true
             if (ExcelHelper.getCellValue(row, 0).isEmpty()) {
                 check = false
-//                messageResults.add(
-//                    CommonUtils.getMessage(
-//                        "validate.excel.empty",
-//                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
-//                    )
-//                )
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.empty",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 0))
@@ -212,12 +206,6 @@ class ProductProcessService(
             }
             if (ExcelHelper.getCellValue(row, 1).isEmpty()) {
                 check = false
-//                messageResults.add(
-//                    CommonUtils.getMessage(
-//                        "validate.excel.empty",
-//                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
-//                    )
-//                )
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.empty",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 1))
@@ -225,13 +213,6 @@ class ProductProcessService(
             }
             if (ExcelHelper.getCellValue(row, 2).isEmpty()) {
                 check = false
-//                messageResults.add(
-//                    CommonUtils.getMessage(
-//                        "validate.excel.empty",
-//                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
-//                    )
-//                )
-
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.empty",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 2))
@@ -239,13 +220,6 @@ class ProductProcessService(
             }
             if (ExcelHelper.getCellValue(row, 3).isEmpty()) {
                 check = false
-//                messageResults.add(
-//                    CommonUtils.getMessage(
-//                        "validate.excel.empty",
-//                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
-//                    )
-//                )
-
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.empty",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 3))
@@ -254,13 +228,6 @@ class ProductProcessService(
 
             if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
                 check = false
-//                messageResults.add(
-//                    CommonUtils.getMessage(
-//                        "validate.excel.empty",
-//                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
-//                    )
-//                )
-
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.empty",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 5))
@@ -269,45 +236,36 @@ class ProductProcessService(
 
             if (ExcelHelper.getCellValue(row, 0).isNotEmpty() && ExcelHelper.getCellValue(row, 0).length > 12) {
                 check = false
-//                messageResults.add(CommonUtils.getMessage(
-//                    "validate.excel.maxLength",
-//                    arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
-
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
             }
             if (ExcelHelper.getCellValue(row, 1).isNotEmpty() && ExcelHelper.getCellValue(row, 1).length > 8) {
                 check = false
-//                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
             }
             if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && ExcelHelper.getCellValue(row, 2).length > 4) {
                 check = false
-//                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
             }
             if (ExcelHelper.getCellValue(row, 3).isNotEmpty() && ExcelHelper.getCellValue(row, 3).length > 10) {
                 check = false
-//                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
             }
             if (ExcelHelper.getCellValue(row, 4).isNotEmpty() && ExcelHelper.getCellValue(row, 4).length > 10) {
                 check = false
-//                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
             }
             if (ExcelHelper.getCellValue(row, 5).isNotEmpty() && ExcelHelper.getCellValue(row, 5).length > 10) {
                 check = false
-//                messageResults.add(CommonUtils.getMessage("validate.excel.maxLength",arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
@@ -315,14 +273,12 @@ class ProductProcessService(
 
             if (!masterData.processConvertCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
                 check = false
-//                messageResults.add(CommonUtils.getMessage("validate.excel.notExist",arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.notExist",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
             }
             if (!masterData.processStatisticCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
                 check = false
-//                messageResults.add(CommonUtils.getMessage("validate.excel.notExist",arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.notExist",
                     arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
@@ -366,7 +322,6 @@ class ProductProcessService(
                     )
                     val filterCheckProcessProcedure = processProcedureRep.getByFilterProcessStructure(filter)
                     if (filterCheckProcessProcedure == null) {
-//                       messageResults.add(CommonUtils.getMessage("validate.excel.process.dataNull"))
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                             "validate.excel.process.dataNull",
                         ))
@@ -393,7 +348,6 @@ class ProductProcessService(
                     }
                 }
             } catch (e: Exception) {
-                //messageResults.add(CommonUtils.getMessage("validate.excel.process.data.update.err"))
                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                     "validate.excel.process.data.update.err",
                 ))
@@ -460,6 +414,8 @@ class ProductProcessService(
                     ExcelHelper.setCellValue(dataRow, 3, style, item.processConvertCode)
                     ExcelHelper.setCellValue(dataRow, 4, style, item.processInventoryCode)
                     ExcelHelper.setCellValue(dataRow, 5, style, item.processStatisticCode)
+
+                    val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
                     ExcelHelper.setCellValue(dataRow, 6, style, item.messageErrs?.joinToString(separator = "; "))
                 }
             }

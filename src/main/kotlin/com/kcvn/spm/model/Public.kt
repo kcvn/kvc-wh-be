@@ -16,12 +16,17 @@ import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.EquipmentProductivity
 import com.kcvn.spm.model.tables.HolidaysCalendar
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
+import com.kcvn.spm.model.tables.Plan
+import com.kcvn.spm.model.tables.PlanDetail
+import com.kcvn.spm.model.tables.PlanProcess
+import com.kcvn.spm.model.tables.PlanProduct
 import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
@@ -111,6 +116,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val COMPLETION_RATE_PRODUCT: CompletionRateProduct get() = CompletionRateProduct.COMPLETION_RATE_PRODUCT
 
     /**
+     * The table <code>public.equipment_productivity</code>.
+     */
+    val EQUIPMENT_PRODUCTIVITY: EquipmentProductivity get() = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY
+
+    /**
      * The table <code>public.holidays_calendar</code>.
      */
     val HOLIDAYS_CALENDAR: HolidaysCalendar get() = HolidaysCalendar.HOLIDAYS_CALENDAR
@@ -139,6 +149,26 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.order_detail</code>.
      */
     val ORDER_DETAIL: OrderDetail get() = OrderDetail.ORDER_DETAIL
+
+    /**
+     * The table <code>public.plan</code>.
+     */
+    val PLAN: Plan get() = Plan.PLAN
+
+    /**
+     * The table <code>public.plan_detail</code>.
+     */
+    val PLAN_DETAIL: PlanDetail get() = PlanDetail.PLAN_DETAIL
+
+    /**
+     * The table <code>public.plan_process</code>.
+     */
+    val PLAN_PROCESS: PlanProcess get() = PlanProcess.PLAN_PROCESS
+
+    /**
+     * The table <code>public.plan_product</code>.
+     */
+    val PLAN_PRODUCT: PlanProduct get() = PlanProduct.PLAN_PRODUCT
 
     /**
      * The table <code>public.process_group</code>.
@@ -190,12 +220,17 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         CompletionRateProcess.COMPLETION_RATE_PROCESS,
         CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,
         CompletionRateProduct.COMPLETION_RATE_PRODUCT,
+        EquipmentProductivity.EQUIPMENT_PRODUCTIVITY,
         HolidaysCalendar.HOLIDAYS_CALENDAR,
         InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY,
         InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL,
         InventoryProduct.INVENTORY_PRODUCT,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,
+        Plan.PLAN,
+        PlanDetail.PLAN_DETAIL,
+        PlanProcess.PLAN_PROCESS,
+        PlanProduct.PLAN_PRODUCT,
         ProcessGroup.PROCESS_GROUP,
         ProcessMaster.PROCESS_MASTER,
         ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE,

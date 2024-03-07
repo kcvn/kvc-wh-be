@@ -237,7 +237,7 @@ class OrderService(
 
             val year = LocalDateTime.now().year
             val arrStartDate = ExcelHelper.getCellValue(headerRow, 1, DateTimeFormat.MM_dd).split("/")
-            val startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
+            var startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
             val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1, DateTimeFormat.MM_dd).split("/")
             val endDate = LocalDateTime.of(year, arrEndDate[0].toInt(), arrEndDate[1].toInt(), 0, 0)
             val orderCode = "${DateTimeHelper.toString(startDate, DateTimeFormat.dd_MM_yyyy)}-${DateTimeHelper.toString(endDate, DateTimeFormat.dd_MM_yyyy)}"
@@ -272,7 +272,8 @@ class OrderService(
                         throw BusinessException(CommonUtils.getMessage("validate.order.hasWorkResult"))
 
                     val workResultDate = workResult.summaryResultDate!!.plusDays(1)
-                    startDateUtc = OffsetDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0, 0, 0, ZoneOffset.UTC)
+                    startDateUtc = DateTimeHelper.toUniversalTime(OffsetDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0, 0, 0, ZoneOffset.UTC))
+                    startDate = LocalDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0)
                 }
                 version = (orderExist.version ?: 0) + 1
             }
@@ -310,6 +311,8 @@ class OrderService(
                         try {
                             val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol, DateTimeFormat.MM_dd).split("/")
                             val orderDate = LocalDateTime.of(year, arrOrderDate[0].toInt(), arrOrderDate[1].toInt(), 0, 0)
+                            if (orderDate < startDate) continue
+
                             val strQuantity = ExcelHelper.getCellValue(row, iCol)
                             if (strQuantity.isEmpty()) {
                                 countCellEmpty++
@@ -324,7 +327,7 @@ class OrderService(
                             }
                             val orderDetail = OrderDetail(
                                 productId = product!!.id,
-                                orderDate = OffsetDateTime.of(orderDate, ZoneOffset.UTC),
+                                orderDate = DateTimeHelper.toUniversalTime(orderDate),
                                 quantity = strQuantity.toBigDecimalOrNull()?.toInt()
                             )
                             orderDetails.add(orderDetail)

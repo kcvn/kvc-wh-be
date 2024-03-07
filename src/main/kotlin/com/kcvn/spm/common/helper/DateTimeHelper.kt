@@ -63,5 +63,6 @@ class DateTimeHelper {
         fun toUniversalTime(date: LocalDateTime): OffsetDateTime {
             return OffsetDateTime.of(date, ZoneOffset.UTC).plusHours(-7)
         }
+
     }
 }

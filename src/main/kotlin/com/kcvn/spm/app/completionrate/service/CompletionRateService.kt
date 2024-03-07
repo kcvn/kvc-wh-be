@@ -248,6 +248,8 @@ class CompletionRateService(
                 if (rate >= BigDecimal.ZERO && rate <= BigDecimal.ONE) {
                     rate *= BigDecimal(100)
                     rate = rate.setScale(2, RoundingMode.HALF_UP)
+                }else if(rate > BigDecimal(100)){
+                    errorMessages.add(validateExcelCompletionRateFormatError)
                 }
             } catch (e: NumberFormatException) {
                 errorMessages.add(validateExcelCompletionRateFormatError)
@@ -459,6 +461,8 @@ class CompletionRateService(
                 if (rate >= BigDecimal.ZERO && rate <= BigDecimal.ONE) {
                     rate *= BigDecimal(100)
                     rate = rate.setScale(2, RoundingMode.HALF_UP)
+                }else if(rate > BigDecimal(100)){
+                    errorMessages.add(validateExcelCompletionRateFormatError)
                 }
             } catch (e: NumberFormatException) {
                 errorMessages.add(validateExcelCompletionRateFormatError)
@@ -633,6 +637,8 @@ class CompletionRateService(
                 if (rate >= BigDecimal.ZERO && rate <= BigDecimal.ONE) {
                     rate *= BigDecimal(100)
                     rate = rate.setScale(2, RoundingMode.HALF_UP)
+                }else if(rate > BigDecimal(100)){
+                    errorMessages.add(validateExcelCompletionRateFormatError)
                 }
             } catch (e: NumberFormatException) {
                 errorMessages.add(validateExcelCompletionRateFormatError)

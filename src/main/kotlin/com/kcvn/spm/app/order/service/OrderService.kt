@@ -19,8 +19,12 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
-import com.kcvn.spm.repository.*
-import org.apache.poi.ss.usermodel.*
+import com.kcvn.spm.repository.HolidaysCalenderRepository
+import com.kcvn.spm.repository.OrderRepository
+import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.WorkResultRepository
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -45,7 +49,7 @@ class OrderService(
         request: OrderSearchRequest?,
         pageable: Pageable?
     ): PagingOrderResponse {
-        val holidayCalender = holidaysCalenderRepository.getHolidaysCalender();
+        val holidayCalender = holidaysCalenderRepository.getHolidaysCalender()
         val calendarResponses = mutableListOf<CalendarValueResponse>()
         if (request != null) {
             var colStartDate = OffsetDateTime.now()
@@ -80,7 +84,7 @@ class OrderService(
                 val response = CalendarValueResponse(
                     key = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd_yyyy),
                     value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
-                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
+                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() } || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
                 )
                 calendarResponses.add(response)
                 currentDate = currentDate.plusDays(1)
@@ -117,39 +121,17 @@ class OrderService(
         val sheet = workbook.getSheetAt(0)
 
         if (listOrderResponse.columns != null) {
-            val style: CellStyle = workbook.createCellStyle()
-            style.borderBottom = BorderStyle.THIN
-            style.borderTop = BorderStyle.THIN
-            style.borderRight = BorderStyle.THIN
-            style.borderLeft = BorderStyle.THIN
-            style.wrapText = true
-            val font: Font = workbook.createFont()
-            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
-            font.fontHeightInPoints = 12.toShort()
-            style.setFont(font)
+            val style = ExcelHelper.getCellStyleCommon(workbook)
             val rowNumber = 0
             val columnNumber = 9
             val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
 
-            val keyValueList: MutableList<CalendarValueResponse> = mutableListOf()
-
-            for ((index, column) in listOrderResponse.columns!!.withIndex()) {
-
-                val cell = dataRow.createCell(columnNumber + index)
-                cell.setCellValue(column.key)
-                val cellStyle: CellStyle = workbook.createCellStyle()
-                cellStyle.cloneStyleFrom(style)
-                if (column.isHoliday) {
-                    cellStyle.fillForegroundColor = IndexedColors.PINK.index
-                } else {
-                    cellStyle.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+            if (listOrderResponse.columns!!.isNotEmpty()) {
+                var headerCol = 9
+                for (col in listOrderResponse.columns!!) {
+                    ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, col.isHoliday)
+                    headerCol++
                 }
-
-                cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-
-                cell.cellStyle = cellStyle
-                val indexColumn = (columnNumber + index).toString()
-                keyValueList.add(CalendarValueResponse(column.key, indexColumn, column.isHoliday))
             }
 
             val listOrder = listOrderResponse.data
@@ -158,27 +140,25 @@ class OrderService(
             if (listOrder != null) {
                 for (item in listOrder) {
                     val row: Row = sheet.createRow(rowNumberFill++)
-                    ExcelHelper.setCellValue(dataRow, 0, style, item.productShortcutName)
-                    ExcelHelper.setCellValue(dataRow, 1, style, item.productName)
-                    ExcelHelper.setCellValue(dataRow, 2, style, item.quantity.toString())
-                    ExcelHelper.setCellValue(dataRow, 3, style, item.frame_1)
-                    ExcelHelper.setCellValue(dataRow, 4, style, item.layerCount.toString())
-                    ExcelHelper.setCellValue(dataRow, 5, style, item.pcsSh.toString())
-                    ExcelHelper.setCellValue(dataRow, 6, style, item.shBlock.toString())
-                    ExcelHelper.setCellValue(dataRow, 7, style, item.srNosr)
-                    ExcelHelper.setCellValue(dataRow, 8, style, item.version)
+                    ExcelHelper.setCellValue(row, 0, style, item.productShortcutName)
+                    ExcelHelper.setCellValue(row, 1, style, item.productName)
+                    ExcelHelper.setCellValue(row, 2, style, item.quantity.toString())
+                    ExcelHelper.setCellValue(row, 3, style, item.frame_1)
+                    ExcelHelper.setCellValue(row, 4, style, item.layerCount.toString())
+                    ExcelHelper.setCellValue(row, 5, style, item.pcsSh.toString())
+                    ExcelHelper.setCellValue(row, 6, style, item.shBlock.toString())
+                    ExcelHelper.setCellValue(row, 7, style, item.srNosr)
+                    ExcelHelper.setCellValue(row, 8, style, item.version)
 
-                    for (orderDetail in item.quantityByCalendars!!) {
-                        val check = keyValueList.find { x -> x.key == orderDetail.key }
-                        if (check != null) {
-                            check.value?.let { row.createCell(it.toInt()).setCellValue(orderDetail.value) }
-                            check.value?.let {
-                                val cell = row.getCell(it.toInt())
-                                cell?.cellStyle = style
-                            }
+                    if (listOrderResponse.columns!!.isNotEmpty()) {
+                        var colIndex = 9
+                        for (col in listOrderResponse.columns!!) {
+                            val orderDetail = item.quantityByCalendars?.find { it.key == col.key }
+                            ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, style, orderDetail?.value, col.isHoliday)
+                            colIndex++
                         }
-
                     }
+
                 }
             }
         }
@@ -257,7 +237,7 @@ class OrderService(
 
             val year = LocalDateTime.now().year
             val arrStartDate = ExcelHelper.getCellValue(headerRow, 1, DateTimeFormat.MM_dd).split("/")
-            val startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
+            var startDate = LocalDateTime.of(year, arrStartDate[0].toInt(), arrStartDate[1].toInt(), 0, 0)
             val arrEndDate = ExcelHelper.getCellValue(headerRow, colIndexResult - 1, DateTimeFormat.MM_dd).split("/")
             val endDate = LocalDateTime.of(year, arrEndDate[0].toInt(), arrEndDate[1].toInt(), 0, 0)
             val orderCode = "${DateTimeHelper.toString(startDate, DateTimeFormat.dd_MM_yyyy)}-${DateTimeHelper.toString(endDate, DateTimeFormat.dd_MM_yyyy)}"
@@ -269,7 +249,7 @@ class OrderService(
                 throw BusinessException(CommonUtils.getMessage("validate.excel.startDate.gt.endDate"))
 
             if (orderCodeSelected.isNullOrEmpty()) {
-                if (Duration.between(startDate, endDate).toDays() > 31)
+                if ((Duration.between(startDate, endDate).toDays() + 1)  > 31)
                     throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidDiffDate", arrayOf(31)))
 
                 if (startDate < DateTimeHelper.getFirstDayOfQuarterInYear(LocalDateTime.now()))
@@ -292,7 +272,8 @@ class OrderService(
                         throw BusinessException(CommonUtils.getMessage("validate.order.hasWorkResult"))
 
                     val workResultDate = workResult.summaryResultDate!!.plusDays(1)
-                    startDateUtc = OffsetDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0, 0, 0, ZoneOffset.UTC)
+                    startDateUtc = DateTimeHelper.toUniversalTime(OffsetDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0, 0, 0, ZoneOffset.UTC))
+                    startDate = LocalDateTime.of(year, workResultDate.monthValue, workResultDate.dayOfMonth, 0, 0)
                 }
                 version = (orderExist.version ?: 0) + 1
             }
@@ -330,6 +311,8 @@ class OrderService(
                         try {
                             val arrOrderDate = ExcelHelper.getCellValue(headerRow, iCol, DateTimeFormat.MM_dd).split("/")
                             val orderDate = LocalDateTime.of(year, arrOrderDate[0].toInt(), arrOrderDate[1].toInt(), 0, 0)
+                            if (orderDate < startDate) continue
+
                             val strQuantity = ExcelHelper.getCellValue(row, iCol)
                             if (strQuantity.isEmpty()) {
                                 countCellEmpty++
@@ -344,7 +327,7 @@ class OrderService(
                             }
                             val orderDetail = OrderDetail(
                                 productId = product!!.id,
-                                orderDate = OffsetDateTime.of(orderDate, ZoneOffset.UTC),
+                                orderDate = DateTimeHelper.toUniversalTime(orderDate),
                                 quantity = strQuantity.toBigDecimalOrNull()?.toInt()
                             )
                             orderDetails.add(orderDetail)
@@ -373,7 +356,7 @@ class OrderService(
                     row.createCell(colIndexResult)
                 }
                 row.getCell(colIndexResult).setCellValue(result)
-                val hasFontColor = result == CommonUtils.getMessage("validate.excel.checked")
+                val hasFontColor = result != CommonUtils.getMessage("validate.excel.checked")
                 row.getCell(colIndexResult).cellStyle = ExcelHelper.getCellStyleResultCol(workbook, style, hasFontColor)
             }
 

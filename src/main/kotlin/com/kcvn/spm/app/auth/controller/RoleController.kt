@@ -3,6 +3,7 @@ package com.kcvn.spm.app.auth.controller
 import com.kcvn.spm.app.auth.payload.request.RoleRequest
 import com.kcvn.spm.app.auth.payload.response.RoleResponse
 import com.kcvn.spm.app.auth.service.RoleService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.util.CommonUtils
@@ -21,7 +22,7 @@ class RoleController(private val roleService: RoleService) {
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).VIEW_ROLE.value) || hasRole('ADMIN')")
     fun getAllRoles(
         @RequestParam(required = false) search: String?,
-        @PageableDefault(size = 10, page = 0) pageable: Pageable?
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE) pageable: Pageable?
     ): ResponseEntity<*> {
         val result = roleService.findAllPaginated(search, pageable!!)
         return if (result.data.isEmpty())

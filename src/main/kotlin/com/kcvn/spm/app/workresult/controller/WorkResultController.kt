@@ -3,6 +3,7 @@ package com.kcvn.spm.app.workresult.controller
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.app.workresult.service.WorkResultService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
@@ -28,7 +29,7 @@ class WorkResultController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_RESULT.value) || hasRole('ADMIN')")
     fun getListWorkResult(
         request: WorkResultSearchRequest?,
-        @PageableDefault(size = 10, page = 0)
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["summaryResultDate"], direction = Sort.Direction.DESC),
             SortDefault(sort = ["itemName"], direction = Sort.Direction.ASC),
@@ -56,7 +57,7 @@ class WorkResultController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_WORK_RESULT.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: WorkResultSearchRequest?,
-        @PageableDefault(size = 1000000, page = 0)
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["summaryResultDate"], direction = Sort.Direction.DESC),
             SortDefault(sort = ["itemName"], direction = Sort.Direction.ASC),
@@ -72,7 +73,7 @@ class WorkResultController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_WORK_RESULT.value) || hasRole('ADMIN')")
     fun generateXlsReport(
         request: WorkResultSearchRequest?,
-        @PageableDefault(size = 1000000, page = 0) pageable: Pageable,
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE) pageable: Pageable,
     ): ResponseEntity<ByteArray> {
         val report = workResultService.exportExcel(request, pageable)
 

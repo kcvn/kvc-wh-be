@@ -36,6 +36,22 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle = style
         }
 
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false) {
+            row.createCell(colIndex).setCellValue(value)
+            val cellStyle = workbook.createCellStyle()
+            cellStyle.alignment = HorizontalAlignment.CENTER
+            cellStyle.borderTop = style.borderTop
+            cellStyle.borderLeft = BorderStyle.THIN
+            cellStyle.borderRight = BorderStyle.THIN
+            cellStyle.borderBottom = style.borderBottom
+
+            if (isHoliday) {
+                cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+                cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            row.getCell(colIndex).cellStyle = cellStyle
+        }
+
         fun columnIsMatchingTemplate(templateUrl: String, headerRowImport: Row, indexHeaderRow: Int, rangeCheckCol: Int?): Boolean {
             val workbookTemplate = FileInputStream(templateUrl).use { x -> XSSFWorkbook(x) }
             val headerRowTemplate = workbookTemplate.getSheetAt(0).getRow(indexHeaderRow)
@@ -97,16 +113,18 @@ class ExcelHelper {
 
         fun getCellStyleResultCol(workbook: Workbook, styleTemplate: CellStyle, hasFontColor: Boolean = true): CellStyle {
             val cellStyle = workbook.createCellStyle()
-            if (!hasFontColor) {
-                val font = workbook.createFont()
+            cellStyle.cloneStyleFrom(styleTemplate)
+            val fontTemplate = workbook.getFontAt(styleTemplate.fontIndex)
+            val font = workbook.createFont()
+            font.fontName = fontTemplate.fontName
+            font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+            if (hasFontColor) {
                 font.color = IndexedColors.RED.index
                 cellStyle.setFont(font)
             }
+            cellStyle.verticalAlignment = VerticalAlignment.CENTER
             cellStyle.alignment = HorizontalAlignment.LEFT
-            cellStyle.borderTop = styleTemplate.borderTop
-            cellStyle.borderLeft = BorderStyle.THIN
-            cellStyle.borderRight = BorderStyle.THIN
-            cellStyle.borderBottom = styleTemplate.borderBottom
+            cellStyle.wrapText = true
             return cellStyle
         }
 

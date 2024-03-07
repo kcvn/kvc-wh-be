@@ -416,7 +416,7 @@ class ProductProcessService(
                     ExcelHelper.setCellValue(dataRow, 5, style, item.processStatisticCode)
 
                     val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
-                    ExcelHelper.setCellValue(dataRow, 6, style, item.messageErrs?.joinToString(separator = "; "))
+                    ExcelHelper.setCellValue(dataRow, 6, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))
                 }
             }
         }

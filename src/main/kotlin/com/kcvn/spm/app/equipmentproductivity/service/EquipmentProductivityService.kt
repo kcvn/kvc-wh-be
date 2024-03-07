@@ -1,10 +1,9 @@
-package com.kcvn.spm.app.machineproductivity.service
+package com.kcvn.spm.app.equipmentproductivity.service
 
-import com.kcvn.spm.app.completionrate.payload.model.LayerCompletionRateError
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.repository.MachineProductivityRepository
+import com.kcvn.spm.repository.EquipmentProductivityRepository
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -13,7 +12,7 @@ import java.time.OffsetDateTime
 
 @Service
 @Transactional
-class MachineProductivityService(machineProductivityRepository: MachineProductivityRepository)
+class EquipmentProductivityService(equipmentProductivityRepository: EquipmentProductivityRepository)
 {
     fun importExcel(file: MultipartFile, startDate: OffsetDateTime, endDate:OffsetDateTime) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)

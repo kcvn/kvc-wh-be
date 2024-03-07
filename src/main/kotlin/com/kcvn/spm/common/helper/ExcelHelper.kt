@@ -113,19 +113,17 @@ class ExcelHelper {
 
         fun getCellStyleResultCol(workbook: Workbook, styleTemplate: CellStyle, hasFontColor: Boolean = true): CellStyle {
             val cellStyle = workbook.createCellStyle()
+            cellStyle.cloneStyleFrom(styleTemplate)
+            val fontTemplate = workbook.getFontAt(styleTemplate.fontIndex)
             val font = workbook.createFont()
-            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
-            font.fontHeightInPoints = 12.toShort()
+            font.fontName = fontTemplate.fontName
+            font.fontHeightInPoints = fontTemplate.fontHeightInPoints
             if (hasFontColor) {
                 font.color = IndexedColors.RED.index
                 cellStyle.setFont(font)
             }
             cellStyle.verticalAlignment = VerticalAlignment.CENTER
             cellStyle.alignment = HorizontalAlignment.LEFT
-            cellStyle.borderTop = styleTemplate.borderTop
-            cellStyle.borderLeft = BorderStyle.THIN
-            cellStyle.borderRight = BorderStyle.THIN
-            cellStyle.borderBottom = styleTemplate.borderBottom
             cellStyle.wrapText = true
             return cellStyle
         }

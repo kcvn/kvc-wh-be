@@ -91,7 +91,7 @@ class InventoryProductService(
         requestDelete.inventoryDate = date
         inventoryProductRepository.deleteInventoryProduct(requestDelete)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val style = row.getCell(1).cellStyle
+            val style = row.getCell(0).cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
             if (ExcelHelper.getCellValue(row, 0).isEmpty()) {

@@ -56,6 +56,16 @@ class CalculateQuantityReportRepository(
             .fetchOneInto(CalculateQuantityResult::class.java)
     }
 
+    fun deleteByIdReport(id: String?) {
+        context.deleteFrom(CALCULATE_QUANTITY_RESULT)
+            .where(
+               CALCULATE_QUANTITY_RESULT.ID.eq(id)
+            )
+            .execute()
+    }
+
+
+
     fun getPagingListCalculateQuantityResult(pageable: Pageable): Pair<List<CalculateQuantityResult>, Int> {
         val data = context.selectFrom(CALCULATE_QUANTITY_RESULT)
             .where(CALCULATE_QUANTITY_RESULT.IS_DELETED.eq(false))
@@ -180,6 +190,37 @@ class CalculateQuantityReportRepository(
     }
 
 
+    fun getIdInformationCalculateQuantity(id: String?) : List<String>{
+        return context.select(
+            INFORMATION_CALCULATE_QUANTITY.ID
+        )
+            .from(INFORMATION_CALCULATE_QUANTITY)
+            .where(INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID.eq(id)
+                .and(INFORMATION_CALCULATE_QUANTITY.IS_DELETED.eq(false)))
+            .fetchInto(String::class.java)
+    }
 
+    fun getIdInformationCalculateQuantityDetail(ids: List<String>) : List<String>{
+        return context.select(
+            INFORMATION_CALCULATE_QUANTITY_DETAIL.ID
+        )
+            .from(INFORMATION_CALCULATE_QUANTITY_DETAIL)
+            .where(INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID.`in`(
+                ids
+            )
+                .and(INFORMATION_CALCULATE_QUANTITY_DETAIL.IS_DELETED.eq(false)))
+            .fetchInto(String::class.java)
+    }
 
+    fun deleteInformationCalculateQuantityDetail(ids: List<String>) {
+         context.deleteFrom(INFORMATION_CALCULATE_QUANTITY_DETAIL)
+            .where(INFORMATION_CALCULATE_QUANTITY_DETAIL.ID.`in`(ids))
+            .execute()
+    }
+
+    fun deleteInformationCalculateQuantity(id: String?){
+        context.deleteFrom(INFORMATION_CALCULATE_QUANTITY)
+            .where(INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID.eq(id))
+            .execute()
+    }
 }

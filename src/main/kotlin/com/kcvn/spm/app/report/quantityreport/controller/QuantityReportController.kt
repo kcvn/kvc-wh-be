@@ -2,11 +2,13 @@ package com.kcvn.spm.app.report.quantityreport.controller
 
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
+import com.kcvn.spm.app.report.quantityreport.payload.response.CheckCalculateQuantityResponse
 import com.kcvn.spm.app.report.quantityreport.payload.response.PagingQuantityReportResponse
 import com.kcvn.spm.app.report.quantityreport.service.QuantityReportService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+
 
 @RestController
 @RequestMapping("/api/quantity-report")
@@ -63,5 +66,25 @@ class QuantityReportController(
     ) : ResponseEntity<PagingQuantityReportResponse>{
         val data = quantityReportService.getListQuantityReport(request,pageable)
         return ResponseEntity<PagingQuantityReportResponse>(data,HttpStatus.OK)
+    }
+
+    @GetMapping("/check-quantity-report")
+    fun checkInventoryDate(request: CalculateQuantityRequest
+    ) : ResponseEntity<BaseResponse<CheckCalculateQuantityResponse>>{
+        val data = quantityReportService.checkCalculateQuantity(request)
+
+        val month = request.endDate?.monthValue
+        val year = request.endDate?.year
+        return if(data.hasCalculateQuantity ){
+            ResponseEntity(
+                BaseResponse(data = data, message = CommonUtils.getMessage("quantity.validation",arrayOf(month.toString(), year.toString()))),
+                HttpStatus.OK
+            )
+        }else{
+            ResponseEntity(
+                BaseResponse(data = data, message = "Ok"),
+                HttpStatus.OK
+            )
+        }
     }
 }

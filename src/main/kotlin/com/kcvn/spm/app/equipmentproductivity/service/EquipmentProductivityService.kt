@@ -19,7 +19,13 @@ import java.time.OffsetDateTime
 @Transactional
 class EquipmentProductivityService(private val equipmentProductivityRepository: EquipmentProductivityRepository)
 {
-    fun importExcel(file: MultipartFile, startDate: OffsetDateTime, endDate:OffsetDateTime) : BaseResponse<FileContentModel> {
+
+
+
+
+
+
+    fun importExcel(file: MultipartFile) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -28,7 +34,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val equipmentProductivity = EquipmentProductivity(
-                processCode = ExcelHelper.getCellValue(row, 1),
+                processCode = ExcelHelper.getCellValue(row, 1).let { if (it.length > 6) it.substring(0, 6) else it },
                 equipmentCode = "eCode",
                 mold = ExcelHelper.getCellValue(row, 2),
                 task = BigDecimal(ExcelHelper.getCellValue(row, 6)),
@@ -62,7 +68,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) * BigDecimal(100)
                 ),
                 sheetHour_100 = truncateDecimal(BigDecimal(ExcelHelper.getCellValue(row, 7))),
-                description = "Insert"
+                description = "insert"
             )
 
             equipmentProductivityRepository.add(equipmentProductivity)
@@ -70,4 +76,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         }
         return BaseResponse(null, CommonUtils.getMessage("Insert Ok", arrayOf(count, total + 1)))
     }
+
+
+
 }

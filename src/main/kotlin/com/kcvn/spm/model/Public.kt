@@ -29,6 +29,7 @@ import com.kcvn.spm.model.tables.PlanProcess
 import com.kcvn.spm.model.tables.PlanProduct
 import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
+import com.kcvn.spm.model.tables.ProcessMasterData
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
@@ -181,6 +182,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val PROCESS_MASTER: ProcessMaster get() = ProcessMaster.PROCESS_MASTER
 
     /**
+     * The table <code>public.process_master_data</code>.
+     */
+    val PROCESS_MASTER_DATA: ProcessMasterData get() = ProcessMasterData.PROCESS_MASTER_DATA
+
+    /**
      * The table <code>public.process_procedure_structure</code>.
      */
     val PROCESS_PROCEDURE_STRUCTURE: ProcessProcedureStructure get() = ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE
@@ -233,6 +239,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         PlanProduct.PLAN_PRODUCT,
         ProcessGroup.PROCESS_GROUP,
         ProcessMaster.PROCESS_MASTER,
+        ProcessMasterData.PROCESS_MASTER_DATA,
         ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE,
         Product.PRODUCT,
         ProductProcess.PRODUCT_PROCESS,

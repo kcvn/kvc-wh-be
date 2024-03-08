@@ -79,9 +79,8 @@ class CalculateQuantityReportRepository(
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
-        val fieldName = sortFieldName.lowercase()
-        val sortField: TableField<*, *> = when (fieldName) {
-            "monthreport" -> {
+        val sortField: TableField<*, *> = when (sortFieldName) {
+            "monthReport" -> {
                 CALCULATE_QUANTITY_RESULT.MONTH_REPORT
             }
 

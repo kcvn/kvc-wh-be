@@ -275,7 +275,6 @@ class QuantityReportService(
 
         if (informationCalculateQuantity.first.isNotEmpty()) {
             response = mappingInformationCalculateQuantityResponse(informationCalculateQuantity.first)
-            response.totalRecords = informationCalculateQuantity.second
         }
         return response
     }
@@ -351,6 +350,7 @@ class QuantityReportService(
         val response = PagingQuantityReportResponse()
         response.data = listQuantityReportModel
         response.columns = columns.sortedBy { x -> x.sort }.distinct().toList()
+        response.totalRecords = listQuantityReportModel.count()
         return response
     }
 

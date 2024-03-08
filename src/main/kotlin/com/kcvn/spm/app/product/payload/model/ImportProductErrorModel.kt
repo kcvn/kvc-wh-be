@@ -1,9 +1,6 @@
 package com.kcvn.spm.app.product.payload.model
 
-import com.kcvn.spm.common.payload.KeyValueResponse
-
-data class ProductModel (
-    var id: String? = null,
+data class ImportProductErrorModel(
     var name: String? = null,
     var exportType: String? = null,
     var size: String? = null,
@@ -22,5 +19,6 @@ data class ProductModel (
     var completionRate: Double? = 0.0,
     var productLayerDetail: String? = null,
     var process : Int? = 0,
-    var lstProcess: List<KeyValueResponse> = listOf()
+    var messageError: String? = null,
+    var cellStyles: List<CellStyleModel> = mutableListOf(),
 )

@@ -20,5 +20,5 @@ data class ImportProductErrorModel(
     var productLayerDetail: String? = null,
     var process : Int? = 0,
     var messageError: String? = null,
-    var cellStyles: List<CellStyleModel> = mutableListOf(),
+    var cellStyles: List<CellStyleModel> = mutableListOf()
 )

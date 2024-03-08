@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.model.tables.pojos.CommonCategory
 import com.kcvn.spm.model.tables.pojos.ProcessMasterData
 import com.kcvn.spm.model.tables.references.COMMON_CATEGORY
@@ -24,5 +25,15 @@ class CommonCategoryRepository(private val context: DSLContext) {
     fun add(request: ProcessMasterData) {
         val record = context.newRecord(PROCESS_MASTER_DATA, request)
         context.insertInto(PROCESS_MASTER_DATA).set(record).execute()
+    }
+
+    fun getListProcessCodeDropDown(processCode: String?, type: String) : List<DropdownResponse>? {
+        return context.select(
+            PROCESS_MASTER_DATA.VALUE.`as`("value"),
+            PROCESS_MASTER_DATA.VALUE.`as`("label")
+        )
+            .from(PROCESS_MASTER_DATA)
+            .where(PROCESS_MASTER_DATA.PROCESS_CODE.eq(processCode).and(PROCESS_MASTER_DATA.TYPE.eq(type)))
+            .fetchInto(DropdownResponse::class.java)
     }
 }

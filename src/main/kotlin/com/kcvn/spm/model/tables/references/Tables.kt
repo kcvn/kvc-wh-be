@@ -29,6 +29,7 @@ import com.kcvn.spm.model.tables.PlanProcess
 import com.kcvn.spm.model.tables.PlanProduct
 import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
+import com.kcvn.spm.model.tables.ProcessMasterData
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
@@ -161,6 +162,11 @@ val PROCESS_GROUP: ProcessGroup = ProcessGroup.PROCESS_GROUP
  * The table <code>public.process_master</code>.
  */
 val PROCESS_MASTER: ProcessMaster = ProcessMaster.PROCESS_MASTER
+
+/**
+ * The table <code>public.process_master_data</code>.
+ */
+val PROCESS_MASTER_DATA: ProcessMasterData = ProcessMasterData.PROCESS_MASTER_DATA
 
 /**
  * The table <code>public.process_procedure_structure</code>.

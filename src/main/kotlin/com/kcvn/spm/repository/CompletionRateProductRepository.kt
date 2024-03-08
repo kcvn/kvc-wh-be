@@ -114,7 +114,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                     data.productName,
                     data.rate,
                     data.createdDate ?: OffsetDateTime.now(),
-                    data.createdBy ?: "SYSTEM",
+                    data.createdBy ?: CommonUtils.loggedInUser(),
                     data.isDeleted ?: false,
                     data.updatedDate ?: OffsetDateTime.now(),
                     data.effectiveDate,

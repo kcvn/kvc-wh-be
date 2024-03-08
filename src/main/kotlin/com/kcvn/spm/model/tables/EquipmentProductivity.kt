@@ -96,7 +96,7 @@ open class EquipmentProductivity(
     /**
      * The column <code>public.equipment_productivity.operating_rate</code>.
      */
-    val OPERATING_RATE: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("operating_rate"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val OPERATING_RATE: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("operating_rate"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.time</code>.
@@ -106,42 +106,42 @@ open class EquipmentProductivity(
     /**
      * The column <code>public.equipment_productivity.count</code>.
      */
-    val COUNT: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("count"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val COUNT: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("count"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.task</code>.
      */
-    val TASK: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("task"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val TASK: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("task"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.sheet_hour_100</code>.
      */
-    val SHEET_HOUR_100: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sheet_hour_100"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val SHEET_HOUR_100: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sheet_hour_100"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.block_sh</code>.
      */
-    val BLOCK_SH: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("block_sh"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val BLOCK_SH: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("block_sh"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.sheet_hour</code>.
      */
-    val SHEET_HOUR: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sheet_hour"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val SHEET_HOUR: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sheet_hour"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.sheet_day</code>.
      */
-    val SHEET_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sheet_day"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val SHEET_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sheet_day"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.set_day</code>.
      */
-    val SET_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("set_day"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val SET_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("set_day"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.block_day</code>.
      */
-    val BLOCK_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("block_day"), SQLDataType.NUMERIC(5, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val BLOCK_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("block_day"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.created_date</code>.

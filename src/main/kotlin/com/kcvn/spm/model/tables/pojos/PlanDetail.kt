@@ -19,14 +19,15 @@ data class PlanDetail(
     var planProcessId: String? = null,
     var title: String? = null,
     var planDate: OffsetDateTime? = null,
-    var quantity: Int? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var sheetQuantity: Int? = null,
+    var blockQuantity: Int? = null
 ): Serializable {
 
 
@@ -74,12 +75,6 @@ data class PlanDetail(
         }
         else if (this.planDate != o.planDate)
             return false
-        if (this.quantity == null) {
-            if (o.quantity != null)
-                return false
-        }
-        else if (this.quantity != o.quantity)
-            return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
                 return false
@@ -110,6 +105,18 @@ data class PlanDetail(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.sheetQuantity == null) {
+            if (o.sheetQuantity != null)
+                return false
+        }
+        else if (this.sheetQuantity != o.sheetQuantity)
+            return false
+        if (this.blockQuantity == null) {
+            if (o.blockQuantity != null)
+                return false
+        }
+        else if (this.blockQuantity != o.blockQuantity)
+            return false
         return true
     }
 
@@ -122,12 +129,13 @@ data class PlanDetail(
         result = prime * result + (if (this.planProcessId == null) 0 else this.planProcessId.hashCode())
         result = prime * result + (if (this.title == null) 0 else this.title.hashCode())
         result = prime * result + (if (this.planDate == null) 0 else this.planDate.hashCode())
-        result = prime * result + (if (this.quantity == null) 0 else this.quantity.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.sheetQuantity == null) 0 else this.sheetQuantity.hashCode())
+        result = prime * result + (if (this.blockQuantity == null) 0 else this.blockQuantity.hashCode())
         return result
     }
 
@@ -140,12 +148,13 @@ data class PlanDetail(
         sb.append(", ").append(planProcessId)
         sb.append(", ").append(title)
         sb.append(", ").append(planDate)
-        sb.append(", ").append(quantity)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(sheetQuantity)
+        sb.append(", ").append(blockQuantity)
 
         sb.append(")")
         return sb.toString()

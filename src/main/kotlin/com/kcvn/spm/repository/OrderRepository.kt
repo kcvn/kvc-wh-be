@@ -27,7 +27,7 @@ import java.time.OffsetDateTime
 
 @Repository
 class OrderRepository(
-    private val context: DSLContext,
+    private val context: DSLContext
 ) : SortingRepository() {
 
     fun getPagingListOrder(request: OrderSearchRequest?, pageable: Pageable?): Pair<List<OrderDetailModel>, Int> {

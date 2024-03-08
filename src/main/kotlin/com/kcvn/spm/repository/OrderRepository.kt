@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 
+
 @Repository
 class OrderRepository(
     private val context: DSLContext,
@@ -229,4 +230,45 @@ class OrderRepository(
             .fetchInto(Order::class.java)
     }
 
+    fun getNameOrderByMonth(request: CalculateQuantityRequest) : List<String> {
+
+        var condition = DSL.noCondition()
+        condition = condition.or(ORDER.START_DATE.lt(request.startDate).and(ORDER.END_DATE.gt(request.endDate)))
+        .or(ORDER.START_DATE.gt(request.startDate).and(ORDER.START_DATE.lt(request.endDate)))
+        .or(ORDER.START_DATE.eq(request.startDate))
+        .or(ORDER.START_DATE.eq(request.endDate))
+        .or(ORDER.END_DATE.gt(request.startDate).and(ORDER.START_DATE.lt(request.endDate)))
+        .or(ORDER.END_DATE.eq(request.startDate))
+        .or(ORDER.END_DATE.eq(request.endDate))
+        return context.select(
+            ORDER.ORDER_CODE,
+        )
+            .from(ORDER)
+            .where(condition)
+            .fetchInto(String::class.java)
+    }
+
+    fun getIdOderVersionMax(request: List<String>): List<String> {
+        val subQuery = DSL.select(
+            ORDER.ORDER_CODE,
+            DSL.max(ORDER.VERSION)
+        )
+            .from(ORDER)
+            .where(ORDER.ORDER_CODE.`in`(request))
+            .groupBy(ORDER.ORDER_CODE)
+
+        val condition = DSL.row(ORDER.ORDER_CODE, ORDER.VERSION)
+            .`in`(subQuery)
+
+        return context.select(ORDER.ID)
+            .from(ORDER)
+            .where(condition)
+            .fetchInto(String::class.java)
+    }
+
+    fun getOrderById(request: List<String>) : List<Order>{
+        return context.selectFrom(ORDER)
+            .where(ORDER.ID.`in`(request))
+            .fetchInto(Order::class.java)
+    }
 }

@@ -158,7 +158,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                     data.layerCode,
                     data.rate,
                     data.createdDate ?: OffsetDateTime.now(),
-                    data.createdBy ?: "SYSTEM",
+                    data.createdBy ?: CommonUtils.loggedInUser(),
                     data.isDeleted ?: false,
                     data.updatedDate ?: OffsetDateTime.now(),
                     data.expirationDate ?: null,

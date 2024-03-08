@@ -5,6 +5,7 @@ import com.kcvn.spm.app.report.quantityreport.payload.model.*
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityOfProcessRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
+import com.kcvn.spm.app.report.quantityreport.payload.response.CheckCalculateQuantityResponse
 import com.kcvn.spm.app.report.quantityreport.payload.response.PagingQuantityReportResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
@@ -45,23 +46,29 @@ class QuantityReportService(
             val listCalculateQuantityProcess = mutableListOf<CalculateQuantityOfProcessRequest>()
             val listOrderDetailError = mutableListOf<ErrorOrderDetail>()
 
+            //val orderIds = listOrderWithHighestVersion.map { x -> x.id }
+         //   val orderDetails = orderDetailRep.getOrderDetailsByOrderIdsAndMonth(orderIds, request)
+////////////////////////////////////////////////
+            // Nếu mà có bản ghi tồn tại thì xóa bản ghi cũ đi và thêm lại tính sản lượng mới
+            if(calculateQuantityReport != null) {
+                val listIdInformationCalculateQuantity = calculateQuantityReportRep.getIdInformationCalculateQuantity(calculateQuantityReport.id)
+                val listIdInformationCalculateQuantityDetail = calculateQuantityReportRep.getIdInformationCalculateQuantityDetail(listIdInformationCalculateQuantity)
+                calculateQuantityReportRep.deleteInformationCalculateQuantityDetail(listIdInformationCalculateQuantityDetail)
+                calculateQuantityReportRep.deleteInformationCalculateQuantity(calculateQuantityReport.id)
+                calculateQuantityReportRep.deleteByIdReport(calculateQuantityReport.id)
+            }
 
-            val listOrder = orderRep.getOrderCodeByMonth(request)
-            val listOrderGroupedByOrderCode = listOrder.groupBy { x -> x.orderCode }
-            val listOrderWithHighestVersion =
-                listOrderGroupedByOrderCode.mapValues { (_, value) -> value.maxByOrNull { it.version ?: 0 } }.map { x ->
-                    Order(
-                        id = x.value?.id,
-                        orderCode = x.value?.orderCode,
-                        startDate = x.value?.startDate,
-                        endDate = x.value?.endDate,
-                        version = x.value?.version,
-                    )
-                }
-
-            val orderIds = listOrderWithHighestVersion.map { x -> x.id }
-            val orderDetails = orderDetailRep.getOrderDetailsByOrderIdsAndMonth(orderIds, request)
-
+            // Lấy ra những order theo tháng tính sản lượng
+            val listNameOrder = orderRep.getNameOrderByMonth(request)
+            val listNameOrderDistinct = listNameOrder.distinct()
+            // lấy ra những order thỏa mãn mà có version hiện tại là cao nhất
+            val listIdOrderVersionMax = orderRep.getIdOderVersionMax(listNameOrderDistinct)
+            val listIdOrderVersionMaxDistinct = listIdOrderVersionMax.distinct()
+            // lấy ra những sản phẩm dưạ trên version cao nhất của order
+            val listIdProductOnOderDetailByOderVersionMax = orderDetailRep.getIdProductOnOderDetailByOderVersionMax(listIdOrderVersionMaxDistinct)
+            val listIdProductOnOderDetailByOderVersionMaxDistinct = listIdProductOnOderDetailByOderVersionMax.distinct()
+            // lấy ra chi tiết order dựa vào sản phẩm có version cao nhất và tháng tính sản lượng
+            val orderDetails = orderDetailRep.getOrderDetailByProductId(listIdProductOnOderDetailByOderVersionMaxDistinct, request)
 
             val productIDs = orderDetails.map { x -> x.productId }
             val productsWithRate = productRep.getProductDetailWithCompletionRateByIds(productIDs)
@@ -86,6 +93,19 @@ class QuantityReportService(
                     lstProcess = lstProcess
                 )
             }
+
+            val listOrder = orderRep.getOrderById(listIdOrderVersionMaxDistinct)
+            val listOrderGroupedByOrderCode = listOrder.groupBy { x -> x.orderCode }
+            val listOrderWithHighestVersion =
+                listOrderGroupedByOrderCode.mapValues { (_, value) -> value.maxByOrNull { it.version ?: 0 } }.map { x ->
+                    Order(
+                        id = x.value?.id,
+                        orderCode = x.value?.orderCode,
+                        startDate = x.value?.startDate,
+                        endDate = x.value?.endDate,
+                        version = x.value?.version,
+                    )
+                }
 
             val listOrderDetailCalculate = orderDetails.map { x ->
                 val ord = listOrderWithHighestVersion.find { m -> m.id == x.orderId }
@@ -334,4 +354,13 @@ class QuantityReportService(
         return response
     }
 
+    fun checkCalculateQuantity (request: CalculateQuantityRequest) : CheckCalculateQuantityResponse  {
+        val data = CheckCalculateQuantityResponse()
+        val query = calculateQuantityReportRep.findByMonthReport(request)
+        if(query != null){
+            data.hasCalculateQuantity = true
+            return data
+        }
+        return data
+    }
 }

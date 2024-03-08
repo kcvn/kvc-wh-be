@@ -29,22 +29,19 @@ class DateTimeHelper {
             val dateUtc7 = date?.plusHours(7)
             val localDateTime = dateUtc7?.atZoneSameInstant(ZoneOffset.UTC)?.toLocalDateTime()
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
-            val formattedDateTime = localDateTime?.format(formatter)
-            return formattedDateTime
+             return  localDateTime?.format(formatter)
         }
 
         fun convertOffSetDateTimeToLocalDateTimeToString(date: OffsetDateTime?): String? {
             val localDateTime = date?.toLocalDateTime()
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
-            val formattedDateTime = localDateTime?.format(formatter)
-            return formattedDateTime
+            return  localDateTime?.format(formatter)
         }
 
         fun convertStringToOffSetDateTime(date: String): OffsetDateTime {
             val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
             val localDate = LocalDate.parse(date, formatter)
-            val offsetDateTime = OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
-            return offsetDateTime
+            return OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
         }
 
         fun toString(date: OffsetDateTime, format: String): String {
@@ -67,5 +64,6 @@ class DateTimeHelper {
         fun toUniversalTime(date: OffsetDateTime): OffsetDateTime {
             return date.plusHours(-7)
         }
+
     }
 }

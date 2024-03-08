@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.equipmentproductivity.payload.Model
+package com.kcvn.spm.app.plan.payload.model
 
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 

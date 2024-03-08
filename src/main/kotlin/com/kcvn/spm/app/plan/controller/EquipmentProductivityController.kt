@@ -1,12 +1,11 @@
-package com.kcvn.spm.app.equipmentproductivity.controller
+package com.kcvn.spm.app.plan.controller
 
-import com.kcvn.spm.app.equipmentproductivity.payload.Model.EquipmentProductivityModel
-import com.kcvn.spm.app.equipmentproductivity.payload.Model.ProcessDetailListModel
-import com.kcvn.spm.app.equipmentproductivity.payload.Model.ProcessDetailModel
-import com.kcvn.spm.app.equipmentproductivity.payload.Response.PagingEquipmentProdResponse
-import com.kcvn.spm.app.equipmentproductivity.service.EquipmentProductivityService
+import com.kcvn.spm.app.plan.payload.model.EquipmentProductivityModel
+import com.kcvn.spm.app.plan.payload.model.ProcessDetailListModel
+import com.kcvn.spm.app.plan.payload.model.ProcessDetailModel
+import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
+import com.kcvn.spm.app.plan.service.EquipmentProductivityService
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
-import com.kcvn.spm.app.plan.payload.model.ProductPlanModel
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -26,7 +25,7 @@ class EquipmentProductivityController(
     private val equipmentProductivityService: EquipmentProductivityService)
 {
 
-    @GetMapping("/equipment-productivity/get-list")
+    @GetMapping("/get-equipment-productivity")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getList(
         request: PlanSearchRequest?,
@@ -83,7 +82,7 @@ class EquipmentProductivityController(
 
 
 
-    @PostMapping(value = ["/equipment-productivity/import-excel"], consumes = ["multipart/form-data"])
+    @PostMapping(value = ["/import-excel-equipment"], consumes = ["multipart/form-data"])
 //    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun importExcel(
         @RequestPart("file") file: MultipartFile,

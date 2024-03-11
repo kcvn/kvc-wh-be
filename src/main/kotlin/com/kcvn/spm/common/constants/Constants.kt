@@ -108,5 +108,18 @@ class PlanTitle {
         const val ACTUAL = "実績"
         const val ACTUAL_ACCUMULATION = "累計"
         const val DIFFERENCE = "差"
+
+        const val PLAN_KEY = "PLAN"
+        const val PLAN_ACCUMULATION_KEY = "PLAN_ACCUMULATION"
+        const val ACTUAL_KEY = "ACTUAL"
+        const val ACTUAL_ACCUMULATION_KEY = "ACTUAL_ACCUMULATION"
+        const val DIFFERENCE_KEY = "DIFFERENCE"
+    }
+}
+
+class ProcessUnit {
+    companion object {
+        const val SHEET = "Sheet"
+        const val BLOCK = "Block"
     }
 }

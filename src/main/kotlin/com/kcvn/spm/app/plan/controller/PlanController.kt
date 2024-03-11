@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.plan.controller
 
 import com.kcvn.spm.app.plan.payload.model.ProductPlanModel
+import com.kcvn.spm.app.plan.payload.request.PlanDetailRequest
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
 import com.kcvn.spm.app.plan.service.PlanService
@@ -34,9 +35,9 @@ class PlanController(private val planService: PlanService) {
     @GetMapping("/detail")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getPlanDetail(
-        @RequestParam id: String
+        @RequestParam request: PlanDetailRequest
     ): ResponseEntity<ProductPlanDetailResponse> {
-        val data = ProductPlanDetailResponse()
+        val data = planService.getPlanDetail(request)
         return ResponseEntity<ProductPlanDetailResponse>(data, HttpStatus.OK)
     }
 

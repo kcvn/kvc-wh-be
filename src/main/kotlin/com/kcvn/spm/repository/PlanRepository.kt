@@ -42,7 +42,15 @@ class PlanRepository (private val context: DSLContext) {
         }
         condition = condition.and(PLAN.IS_ACTIVE.eq(true)).and(PLAN_PRODUCT.IS_DELETED.eq(false))
 
-        val query = context.select().from(PLAN_PRODUCT)
+        val query = context.select(
+            PLAN_PRODUCT.ID,
+            PLAN_PRODUCT.PLAN_ID,
+            PLAN_PRODUCT.PRODUCT_NAME,
+            PLAN_PRODUCT.FRAME_1,
+            PLAN_PRODUCT.MOLD,
+            PLAN_PRODUCT.PCS_SH,
+            PLAN_PRODUCT.BLOCK_SH
+        ).from(PLAN_PRODUCT)
             .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
             .where(condition)
 

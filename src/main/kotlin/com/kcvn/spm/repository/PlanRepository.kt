@@ -3,12 +3,8 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.model.tables.pojos.Plan
-import com.kcvn.spm.model.tables.pojos.PlanDetail
-import com.kcvn.spm.model.tables.pojos.PlanProcess
 import com.kcvn.spm.model.tables.pojos.PlanProduct
 import com.kcvn.spm.model.tables.references.PLAN
-import com.kcvn.spm.model.tables.references.PLAN_DETAIL
-import com.kcvn.spm.model.tables.references.PLAN_PROCESS
 import com.kcvn.spm.model.tables.references.PLAN_PRODUCT
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -65,17 +61,5 @@ class PlanRepository (private val context: DSLContext) {
             .where(PLAN.ORDER_CODE.eq(orderCode).and(PLAN.IS_ACTIVE.eq(true)).and(PLAN.IS_DELETED.eq(false)))
             .fetchInto(Plan::class.java)
             .firstOrNull()
-    }
-
-    fun getListPlanProcess(planProductId: String): List<PlanProcess> {
-        return context.selectFrom(PLAN_PROCESS)
-            .where(PLAN_PROCESS.PLAN_PRODUCT_ID.eq(planProductId).and(PLAN_PROCESS.IS_DELETED.eq(false)))
-            .fetchInto(PlanProcess::class.java)
-    }
-
-    fun getPlanDetail(planProcessIds: List<String>): List<PlanDetail> {
-        return context.selectFrom(PLAN_DETAIL)
-            .where(PLAN_DETAIL.PLAN_PROCESS_ID.`in`(planProcessIds).and(PLAN_DETAIL.IS_DELETED.eq(false)))
-            .fetchInto(PlanDetail::class.java)
     }
 }

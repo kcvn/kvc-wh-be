@@ -1,5 +1,7 @@
 package com.kcvn.spm.common.constants
 
+import com.kcvn.spm.common.payload.KeyValueResponse
+
 class Constants {
     companion object {
         //Sync type
@@ -88,5 +90,23 @@ class ExcelConstant {
         const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
         const val PAGING = 1000000
+    }
+}
+
+class PlanTitle {
+    companion object {
+        val DATA = listOf<KeyValueResponse>(
+            KeyValueResponse("PLAN", "予定"),
+            KeyValueResponse("PLAN_ACCUMULATION", "累計"),
+            KeyValueResponse("ACTUAL", "実績"),
+            KeyValueResponse("ACTUAL_ACCUMULATION", "累計"),
+            KeyValueResponse("DIFFERENCE", "差")
+        )
+
+        const val PLAN = "予定"
+        const val PLAN_ACCUMULATION = "累計"
+        const val ACTUAL = "実績"
+        const val ACTUAL_ACCUMULATION = "累計"
+        const val DIFFERENCE = "差"
     }
 }

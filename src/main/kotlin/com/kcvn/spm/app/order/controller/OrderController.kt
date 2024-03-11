@@ -23,8 +23,6 @@ import org.springframework.web.multipart.MultipartFile
 class OrderController(
     private val orderService: OrderService
 ) {
-
-
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getList(

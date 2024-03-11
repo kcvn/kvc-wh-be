@@ -1,7 +1,6 @@
-package com.kcvn.spm.app.order.payload.response
+package com.kcvn.spm.common.payload
 
-
-data class CalendarValueResponse(
+data class CalendarResponse (
     var key: String? = null,
     var value: String? = null,
     var isHoliday: Boolean = false

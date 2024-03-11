@@ -1,6 +1,7 @@
 package com.kcvn.spm.common.helper
 
 import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.payload.CalendarResponse
 import java.time.*
 import java.time.format.DateTimeFormatter
 
@@ -65,5 +66,21 @@ class DateTimeHelper {
             return date.plusHours(-7)
         }
 
+        fun toCalendarColumn(startDate: OffsetDateTime, endDate: OffsetDateTime, holidayCalender: List<OffsetDateTime> = listOf()): List<CalendarResponse> {
+            val calendarResponses = mutableListOf<CalendarResponse>()
+            var currentDate = startDate
+            while (!currentDate.isAfter(endDate)) {
+                val response = CalendarResponse(
+                    key = toString(currentDate, DateTimeFormat.yyyyMMdd),
+                    value = toString(currentDate, DateTimeFormat.MM_dd),
+                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
+                        || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY
+                        || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
+                )
+                calendarResponses.add(response)
+                currentDate = currentDate.plusDays(1)
+            }
+            return calendarResponses
+        }
     }
 }

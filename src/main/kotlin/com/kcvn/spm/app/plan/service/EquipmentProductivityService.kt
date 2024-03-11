@@ -1,14 +1,23 @@
 package com.kcvn.spm.app.plan.service
 
+import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
+import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
+import com.kcvn.spm.common.constants.OrderFilterType
+import com.kcvn.spm.common.constants.PagingDefault
+import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
-import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.helper.NumberHelper.Companion.truncateDecimal
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.EquipmentProductivity
 import com.kcvn.spm.repository.EquipmentProductivityRepository
+import com.kcvn.spm.repository.HolidaysCalenderRepository
+import com.kcvn.spm.repository.PlanRepository
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -17,10 +26,47 @@ import java.time.OffsetDateTime
 
 @Service
 @Transactional
-class EquipmentProductivityService(private val equipmentProductivityRepository: EquipmentProductivityRepository)
+class EquipmentProductivityService(private val equipmentProductivityRepository: EquipmentProductivityRepository,
+                                   private val planRepository: PlanRepository)
 {
 
+    fun getPaginatedEquipmentProductivityPlan(
+        request: PlanSearchRequest?,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        pageable: Pageable
+    ): PagingEquipmentProdResponse? {
+        val result = PagingEquipmentProdResponse()
+        val equipmentProductivity = equipmentProductivityRepository.getEquipmentProductivity()
+        var colStartDate: OffsetDateTime = OffsetDateTime.now()
+        var colEndDate: OffsetDateTime = OffsetDateTime.now()
 
+        if (request != null) {
+            when(request.filterType) {
+                OrderFilterType.DATE -> {
+                    if (request.startDate == null || request.endDate == null) throw BusinessException("")
+                    colStartDate = DateTimeHelper.toTimeZone7(request.startDate) ?: OffsetDateTime.now()
+                    colEndDate = DateTimeHelper.toTimeZone7(request.endDate) ?: OffsetDateTime.now()
+                }
+                OrderFilterType.ORDER -> {
+                    val plan = request.orderCode?.let { planRepository.getPlanByOrderCode(it) } ?: throw BusinessException("")
+                    colStartDate = DateTimeHelper.toTimeZone7(plan.startDate) ?: OffsetDateTime.now()
+                    colEndDate = DateTimeHelper.toTimeZone7(plan.endDate) ?: OffsetDateTime.now()
+                }
+                else -> throw BusinessException("")
+            }
+        }
+
+        result.columns = DateTimeHelper.toCalendarColumn(colStartDate, colEndDate)
+
+//        if (request?.orderCode != null) {
+//            val plan = planRepository.getPlanByOrderCode(request.orderCode)
+//            if (plan != null) {
+//                startDate = plan.START_DATE
+//                endDate = plan.END_DATE
+//            }
+//        }
+        return result
+    }
 
 
 

@@ -162,7 +162,7 @@ class CompletionRateService(
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 ExcelHelper.setCellValue(dataRow, 0, style, item.productName)
-                ExcelHelper.setCellValue(dataRow, 1, style, item.rate.toString())
+                ExcelHelper.setCellValue(dataRow, 1, style, "${item.rate.toString()}%")
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

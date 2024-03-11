@@ -1,14 +1,13 @@
 package com.kcvn.spm.app.plan.service
 
-import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
-import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.common.constants.PagingDefault
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.helper.NumberHelper.Companion.truncateDecimal
-import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
@@ -23,14 +22,12 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.math.BigDecimal
-import java.time.DayOfWeek
 import java.time.OffsetDateTime
 
 @Service
 @Transactional
 class EquipmentProductivityService(private val equipmentProductivityRepository: EquipmentProductivityRepository,
-                                   private val planRepository: PlanRepository,
-                                   private val holidaysCalenderRepository: HolidaysCalenderRepository)
+                                   private val planRepository: PlanRepository)
 {
 
     fun getPaginatedEquipmentProductivityPlan(
@@ -39,31 +36,27 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         pageable: Pageable
     ): PagingEquipmentProdResponse? {
         val result = PagingEquipmentProdResponse()
-
         val equipmentProductivity = equipmentProductivityRepository.getEquipmentProductivity()
-        var startDate: OffsetDateTime? = null
-        var endDate: OffsetDateTime? = null
+        var colStartDate: OffsetDateTime = OffsetDateTime.now()
+        var colEndDate: OffsetDateTime = OffsetDateTime.now()
 
         if (request != null) {
-            if(request.startDate !=null && request.endDate!=null){
-                startDate= request.startDate
-                endDate = request.endDate
+            when(request.filterType) {
+                OrderFilterType.DATE -> {
+                    if (request.startDate == null || request.endDate == null) throw BusinessException("")
+                    colStartDate = DateTimeHelper.toTimeZone7(request.startDate) ?: OffsetDateTime.now()
+                    colEndDate = DateTimeHelper.toTimeZone7(request.endDate) ?: OffsetDateTime.now()
+                }
+                OrderFilterType.ORDER -> {
+                    val plan = request.orderCode?.let { planRepository.getPlanByOrderCode(it) } ?: throw BusinessException("")
+                    colStartDate = DateTimeHelper.toTimeZone7(plan.startDate) ?: OffsetDateTime.now()
+                    colEndDate = DateTimeHelper.toTimeZone7(plan.endDate) ?: OffsetDateTime.now()
+                }
+                else -> throw BusinessException("")
             }
         }
-        val calendarResponses = mutableListOf<CalendarValueResponse>()
-        val holidayCalender = holidaysCalenderRepository.getHolidaysCalender()
 
-        var currentDate = startDate
-        while (!currentDate!!.isAfter(endDate)) {
-            val response = CalendarValueResponse(
-                key = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
-                value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
-                isHoliday = holidayCalender.any { it.toLocalDate() == currentDate!!.toLocalDate() } || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
-            )
-            calendarResponses.add(response)
-            currentDate = currentDate.plusDays(1)
-        }
-        result.columns = calendarResponses
+        result.columns = DateTimeHelper.toCalendarColumn(colStartDate, colEndDate)
 
 //        if (request?.orderCode != null) {
 //            val plan = planRepository.getPlanByOrderCode(request.orderCode)

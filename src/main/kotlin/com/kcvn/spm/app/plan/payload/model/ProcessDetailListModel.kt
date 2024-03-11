@@ -1,8 +1,8 @@
 package com.kcvn.spm.app.plan.payload.model
 
-import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
+import com.kcvn.spm.common.payload.CalendarResponse
 
 data class ProcessDetailListModel(
     var type: String,
-    var quantityByCalendars: List<CalendarValueResponse>
+    var quantityByCalendars: List<CalendarResponse>
 )

@@ -30,7 +30,8 @@ data class PlanProcess(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var unit: String? = null
 ): Serializable {
 
 
@@ -132,6 +133,12 @@ data class PlanProcess(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.unit == null) {
+            if (o.unit != null)
+                return false
+        }
+        else if (this.unit != o.unit)
+            return false
         return true
     }
 
@@ -153,6 +160,7 @@ data class PlanProcess(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.unit == null) 0 else this.unit.hashCode())
         return result
     }
 
@@ -174,6 +182,7 @@ data class PlanProcess(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(unit)
 
         sb.append(")")
         return sb.toString()

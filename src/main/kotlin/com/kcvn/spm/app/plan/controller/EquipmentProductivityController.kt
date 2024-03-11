@@ -31,53 +31,10 @@ class EquipmentProductivityController(
         request: PlanSearchRequest?,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<EquipmentProductivityModel>> {
-        val fakeCalendars: MutableList<CalendarValueResponse> = mutableListOf()
-        for (i in 1..5) {
-            val calendarValue = CalendarValueResponse(
-                key = "Key$i",
-                value = "Value$i",
-                isHoliday = false
-            )
-            fakeCalendars.add(calendarValue)
-        }
-        val fakeProcessDetailList: MutableList<ProcessDetailListModel> = mutableListOf()
-        for (i in 1..3) {
-            val processDetail = ProcessDetailListModel(
-                type = "Type$i",
-                quantityByCalendars = fakeCalendars
-            )
-            fakeProcessDetailList.add(processDetail)
-        }
+    ): ResponseEntity<PagingEquipmentProdResponse> {
 
-        val fakeProcessDetail: MutableList<ProcessDetailModel> = mutableListOf()
-        for (i in 1..2) {
-            val processDetailModel = ProcessDetailModel(
-                name = "Process $i",
-                totalProcess = 100 + i,
-                processDetailList = fakeProcessDetailList
-            )
-            fakeProcessDetail.add(processDetailModel)
-        }
-
-
-        // Tạo danh sách giả cho EquipmentProductivityModel
-        val fakeEquipmentProductivityModelList: MutableList<EquipmentProductivityModel> = mutableListOf()
-        for (i in 1..5) {
-            val fakeEquipmentProductivityModel = EquipmentProductivityModel(
-                frame1 = "Frame1 $i",
-                processName = "ProcessName $i",
-                processNameJp = "ProcessNameJP $i",
-                processConvertCode = "ConvertCode $i",
-                processDetail = fakeProcessDetail
-            )
-            fakeEquipmentProductivityModelList.add(fakeEquipmentProductivityModel)
-        }
-
-        // Tạo dữ liệu giả cho PagingEquipmentProdResponse
-        val pagingEquipmentProdResponse = PagingEquipmentProdResponse(columns = fakeCalendars)
-        pagingEquipmentProdResponse.data = fakeEquipmentProductivityModelList
-        return ResponseEntity<BasePagingResponse<EquipmentProductivityModel>>(pagingEquipmentProdResponse, HttpStatus.OK)
+        val data = equipmentProductivityService.getPaginatedEquipmentProductivityPlan(request, pageable)
+        return ResponseEntity<PagingEquipmentProdResponse>(data, HttpStatus.OK)
     }
 
 

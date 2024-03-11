@@ -14,6 +14,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
+import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import org.apache.poi.ss.usermodel.CellType
@@ -36,7 +37,8 @@ import java.time.format.DateTimeFormatter
 class ProductProcessService(
     private val productProcessRep: ProductProcessRepository,
     private val processProcedureRep: ProcessProcedureStructureRepository,
-    private val masterDataService: MasterDataService
+    private val masterDataService: MasterDataService,
+    private val commonCategoryRep: CommonCategoryRepository
 ) {
     fun getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse?> {
         val result = productProcessRep.findByKeywordPaginated(search, hasProcessConvertCode, pageable)
@@ -64,7 +66,41 @@ class ProductProcessService(
     }
 
     fun getProductProcessDetail(nameProduct: String?): List<ProductProcessResponse?>? {
-        return productProcessRep.getByProductProcessDetail(nameProduct)
+        val masterData = masterDataService.getMasterDataSelection()
+        val query =  productProcessRep.getByProductProcessDetail(nameProduct)
+        val data = query?.map {
+            val listProcessCode = commonCategoryRep.getListProcessCodeDropDown(it?.processCode, Constants.MACHUYENDOI)
+            val listStatisticCode = commonCategoryRep.getListProcessCodeDropDown(it?.processCode,Constants.MATHONGKE)
+            val productProcessResponse = ProductProcessResponse()
+            if(listProcessCode.isNullOrEmpty()){
+                productProcessResponse.listDropDownConvertCode = masterData.processConvertCodes
+            }else
+                productProcessResponse.listDropDownConvertCode= listProcessCode
+
+            if (listStatisticCode.isNullOrEmpty()){
+                productProcessResponse.listDropDownStatisticCode = masterData.processStatisticCodes
+            }else
+                productProcessResponse.listDropDownStatisticCode= listStatisticCode
+
+
+            productProcessResponse.processId = it?.processId
+            productProcessResponse.productName = it?.productName
+            productProcessResponse.layerCode = it?.layerCode
+            productProcessResponse.processCode = it?.processCode
+            productProcessResponse.processName = it?.processName
+            productProcessResponse.processNameJp = it?.processNameJp
+            productProcessResponse.processConvertCode = it?.processConvertCode
+            productProcessResponse.processStatisticCode = it?.processStatisticCode
+            productProcessResponse.processInventoryCode = it?.processInventoryCode
+            productProcessResponse.idx = it?.idx
+            productProcessResponse.productId = it?.productId
+            productProcessResponse.processProcedureStructureId = it?.processProcedureStructureId
+            productProcessResponse.layerCodeInt = it?.layerCodeInt
+            productProcessResponse.processSequence = it?.processSequence
+            productProcessResponse
+        }
+
+        return data
     }
 
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest): List<ProductProcess?> {

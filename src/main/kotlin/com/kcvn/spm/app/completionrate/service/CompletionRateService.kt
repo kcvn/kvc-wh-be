@@ -19,6 +19,7 @@ import com.kcvn.spm.model.tables.pojos.CompletionRateProcess
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
 import com.kcvn.spm.repository.*
+import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
@@ -122,12 +123,14 @@ class CompletionRateService(
     }
 
 
-    fun createErrorSheet(layerCompletionRateErrorList: List<LayerCompletionRateError>,  templateErrorExportUrl: String): Pair<Sheet,Workbook> {
+    fun createErrorSheet(layerCompletionRateErrorList: List<LayerCompletionRateError>,  templateErrorExportUrl: String, style: CellStyle?): Pair<Sheet,Workbook> {
         val templateWorkbook = WorkbookFactory.create(FileInputStream(templateErrorExportUrl))
         val sheetTemplateWorkBook = templateWorkbook.getSheetAt(0)
+//        sheetTemplateWorkBook.getRow(0).rowStyle = style
        var rowIndex =1
         layerCompletionRateErrorList.forEach { error ->
             val newRow = sheetTemplateWorkBook.createRow(rowIndex)
+//            newRow.rowStyle = style
             newRow.createCell(0).setCellValue(error.key ?: "")
             error.rate?.let { newRow.createCell(1).setCellValue(it) }
             val errorMessageCell = newRow.createCell(2)
@@ -333,7 +336,8 @@ class CompletionRateService(
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
         val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/TemplateExportCompleteRateError.xlsx"
-        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl)
+        val styleCell = sheet.getRow(1).getCell(1).cellStyle
+        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleCell)
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         errorWorkbook.second.write(byteArrayOutputStream)
@@ -549,7 +553,9 @@ class CompletionRateService(
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
         val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/TemplateExportCompleteRateError.xlsx"
-        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl)
+        val styleRow = sheet.getRow(1).rowStyle
+
+        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleRow)
         val byteArrayOutputStream = ByteArrayOutputStream()
         errorWorkbook.second.write(byteArrayOutputStream)
 
@@ -727,7 +733,8 @@ class CompletionRateService(
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
         val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/TemplateExportCompleteRateError.xlsx"
-        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl)
+        val styleRow = sheet.getRow(1).rowStyle
+        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleRow)
         val byteArrayOutputStream = ByteArrayOutputStream()
         errorWorkbook.second.write(byteArrayOutputStream)
         val excelBytes = byteArrayOutputStream.toByteArray()

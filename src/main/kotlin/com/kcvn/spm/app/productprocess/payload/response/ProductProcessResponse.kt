@@ -1,5 +1,7 @@
 package com.kcvn.spm.app.productprocess.payload.response
 
+import com.kcvn.spm.common.payload.DropdownResponse
+
 data class ProductProcessResponse (
     var processId: String? = null,
     var productName: String? = null,
@@ -14,6 +16,8 @@ data class ProductProcessResponse (
     var productId: String? = null,
     var processProcedureStructureId: String? = null,
     var layerCodeInt: Int? = null,
-    var processSequence: String? = null
+    var processSequence: String? = null,
+    var listDropDownConvertCode : List<DropdownResponse>? = null,
+    var listDropDownStatisticCode: List<DropdownResponse>? = null
 )
 

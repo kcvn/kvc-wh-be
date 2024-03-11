@@ -1,6 +1,6 @@
-package com.kcvn.spm.app.equipmentproductivity.payload.Response
+package com.kcvn.spm.app.plan.payload.response
 
-import com.kcvn.spm.app.equipmentproductivity.payload.Model.EquipmentProductivityModel
+import com.kcvn.spm.app.plan.payload.model.EquipmentProductivityModel
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
 

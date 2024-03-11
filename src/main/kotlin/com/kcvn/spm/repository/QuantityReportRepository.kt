@@ -35,11 +35,11 @@ class QuantityReportRepository(
         }
 
         val sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()
-        val sortProductName = pageable.sort.find { x -> x.property == "productname" }
+        val sortProductName = pageable.sort.find { x -> x.property == "productName" }
         if (sortProductName != null){
                 sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.desc())
         }
-        val sortMonthReport = pageable.sort.find { x -> x.property == "monthreport" }
+        val sortMonthReport = pageable.sort.find { x -> x.property == "monthReport" }
         if (sortMonthReport!=null){
             sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.asc())
         }
@@ -56,12 +56,11 @@ class QuantityReportRepository(
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
-        val fieldName = sortFieldName.lowercase()
-        val sortField: TableField<*, *> = when (fieldName) {
-            "productname" -> {
+        val sortField: TableField<*, *> = when (sortFieldName) {
+            "productName" -> {
                 INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME
             }
-            "monthreport" -> {
+            "monthReport" -> {
                 INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT
             }
 

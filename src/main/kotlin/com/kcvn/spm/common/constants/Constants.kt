@@ -116,3 +116,10 @@ class PlanTitle {
         const val DIFFERENCE_KEY = "DIFFERENCE"
     }
 }
+
+class ProcessUnit {
+    companion object {
+        const val SHEET = "Sheet"
+        const val BLOCK = "Block"
+    }
+}

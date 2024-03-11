@@ -7,8 +7,9 @@ import com.kcvn.spm.app.product.payload.model.*
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductDetailResponse
-import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.Frame1
+import com.kcvn.spm.common.constants.Mold
 import com.kcvn.spm.common.constants.ProcessStatisticCode
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -349,7 +350,6 @@ class ProductService(
             }
         }
         ExcelHelper.createColResult(headerRow, sheet)
-        val style = ExcelHelper.getCellStyleCommon(workbook)
 
         var rowNumber = 1
         for (item in products) {
@@ -548,18 +548,16 @@ class ProductService(
         val mold = ExcelHelper.getCellValue(row, 5)
         if (frame1.isNotEmpty() && mold.isNotEmpty()) {
             when (frame1) {
-                Constants.KHUNG1_ML -> {
-                    if (mold != Constants.KHUONDUC_ML)
+                Frame1.ML -> {
+                    if (mold != Mold.ML)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
                 }
-
-                Constants.KHUNG1_MU -> {
-                    if (mold != Constants.KHUONDUC_KVC && mold != Constants.KHUONDUC_SKE)
+                Frame1.MU -> {
+                    if (mold != Mold.KVC && mold != Mold.SKE)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
                 }
-
-                Constants.KHUNG1_SWR -> {
-                    if (mold != Constants.KHUONDUC_SWR && mold != Constants.KHUONDUC_SUR)
+                Frame1.SWR -> {
+                    if (mold != Mold.SWR && mold != Mold.SUR)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
                 }
             }

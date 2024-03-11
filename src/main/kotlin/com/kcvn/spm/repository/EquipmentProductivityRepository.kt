@@ -1,5 +1,4 @@
 package com.kcvn.spm.repository
-
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.EquipmentProductivity
 import com.kcvn.spm.model.tables.references.EQUIPMENT_PRODUCTIVITY
@@ -10,6 +9,11 @@ import java.time.OffsetDateTime
 @Repository
 class EquipmentProductivityRepository (private val context: DSLContext) {
 
+    fun getEquipmentProductivity(): List<EquipmentProductivity>{
+        return context.selectFrom(EQUIPMENT_PRODUCTIVITY)
+            .where(EQUIPMENT_PRODUCTIVITY.IS_DELETED.eq(false))
+            .fetchInto(EquipmentProductivity::class.java)
+    }
     fun add(data: EquipmentProductivity): EquipmentProductivity? {
         return context
             .insertInto(

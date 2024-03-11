@@ -1,14 +1,10 @@
 package com.kcvn.spm.app.auth.security.jwt
 
 import com.kcvn.spm.app.auth.security.service.UserDetailsImpl
-import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.ClaimType
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
-import io.jsonwebtoken.ExpiredJwtException
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.MalformedJwtException
-import io.jsonwebtoken.SignatureAlgorithm
-import io.jsonwebtoken.UnsupportedJwtException
+import io.jsonwebtoken.*
 import io.jsonwebtoken.security.Keys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -16,7 +12,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import java.security.Key
-import java.util.Date
+import java.util.*
 
 @Component
 class JwtUtils {
@@ -31,7 +27,7 @@ class JwtUtils {
     fun generateJwtToken(authentication: Authentication): String {
         val userPrincipal = authentication.principal as UserDetailsImpl
         return Jwts.builder()
-            .claim(Constants.CLAIM_TYPE_USER_ID, userPrincipal.getId())
+            .claim(ClaimType.USER_ID, userPrincipal.getId())
             .setSubject(userPrincipal.username)
             .setIssuedAt(Date())
             .setExpiration(Date(Date().time + jwtExpirationMs.toLong()))
@@ -50,7 +46,7 @@ class JwtUtils {
 
     fun getUserIdFromJwtToken(token: String): String {
         return Jwts.parserBuilder().setSigningKey(key()).build()
-            .parseClaimsJws(token).body[Constants.CLAIM_TYPE_USER_ID].toString()
+            .parseClaimsJws(token).body[ClaimType.USER_ID].toString()
     }
 
     fun validateJwtToken(authToken: String): Boolean {

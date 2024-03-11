@@ -15,6 +15,7 @@ import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.repository.*
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -48,27 +49,27 @@ class PlanService(
     fun getPlanDetail(request: PlanDetailRequest): ProductPlanDetailResponse {
         val response = ProductPlanDetailResponse()
 
-        if (request.planProductId.isEmpty()) throw BusinessException("")
+        if (request.planProductId.isEmpty()) throw BusinessException(CommonUtils.getMessage("plan.invalidParam"))
         var colStartDate: OffsetDateTime
         var colEndDate: OffsetDateTime
 
         when (request.filterType) {
             OrderFilterType.DATE -> {
-                if (request.startDate == null || request.endDate == null) throw BusinessException("")
+                if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
                 colStartDate = request.startDate ?: OffsetDateTime.now()
                 colEndDate = request.endDate ?: OffsetDateTime.now()
             }
             OrderFilterType.ORDER -> {
-                val plan = planRep.getPlanByOrderCode(request.orderCode) ?: throw BusinessException("")
+                val plan = planRep.getPlanByOrderCode(request.orderCode) ?: throw BusinessException(CommonUtils.getMessage("plan.notExistInOrder"))
                 colStartDate = plan.startDate ?: OffsetDateTime.now()
                 colEndDate = plan.endDate ?: OffsetDateTime.now()
             }
-            else -> throw BusinessException("")
+            else -> throw BusinessException(CommonUtils.getMessage("plan.invalidParam"))
         }
 
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!)
 
-        val planProduct = planProductRep.getById(request.planProductId) ?: throw BusinessException("")
+        val planProduct = planProductRep.getById(request.planProductId) ?: throw BusinessException(CommonUtils.getMessage("data.notExist"))
 
         val planProcesses = planProcessRep.getListPlanProcess(request.planProductId)
         val parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }
@@ -81,7 +82,13 @@ class PlanService(
 
         response.data = parentPlanProcess.map { x ->
             val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
-            val workResultData = workResults.filter { m -> m.processCode == x.processCode && m.layerCode == x.layerCode }
+            val workResultData = workResults.filter { m -> m.processCode == x.processCode && m.layerCode == x.layerCode }.map { m ->
+                KeyValueResponse(
+                    DateTimeHelper.toString(m.summaryResultDate!!, DateTimeFormat.yyyyMMdd),
+                    if (x.unit == ProcessUnit.BLOCK) m.goodTapeQuantity?.toString() else m.goodSheetQuantity?.toString()
+                )
+            }.sortedBy { m -> m.key }
+
             val productPlan = ProductPlanDetailModel(
                 layerCode = x.layerCode,
                 processCode = x.processCode,
@@ -101,78 +108,53 @@ class PlanService(
             productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
 
             val planData = mutableListOf<PlanDataByProcessModel>()
-            for (title in PlanTitle.DATA) {
-                when (title.key) {
-                    PlanTitle.PLAN_KEY -> {
-                        planData.add(
-                            PlanDataByProcessModel(
-                                title = title.value,
-                                quantityByCalendars = planDetailByProcess.filter { t -> t.title == title.key }.map { t ->
-                                    KeyValueResponse(
-                                        DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                                        if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
-                                    )
-                                }
-                            )
-                        )
-                    }
-                    PlanTitle.PLAN_ACCUMULATION_KEY -> {
-                        planData.add(
-                            PlanDataByProcessModel(
-                                title = title.value,
-                                quantityByCalendars = planDetailByProcess.filter { t -> t.title == title.key }.map { t ->
-                                    KeyValueResponse(
-                                        DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                                        if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
-                                    )
-                                }
-                            )
-                        )
-                    }
-                    PlanTitle.ACTUAL_KEY -> {
-                        planData.add(
-                            PlanDataByProcessModel(
-                                title = title.value,
-                                quantityByCalendars = workResultData.map { t -> KeyValueResponse(
-                                    DateTimeHelper.toString(t.summaryResultDate!!, DateTimeFormat.yyyyMMdd),
-                                    t.furimukouQuantity?.toString()
-                                ) }
-                            )
-                        )
-                    }
-                    PlanTitle.ACTUAL_ACCUMULATION_KEY -> {
-                        planData.add(
-                            PlanDataByProcessModel(
-                                title = title.value,
-                                quantityByCalendars = workResultData.map { t -> KeyValueResponse(
-                                    DateTimeHelper.toString(t.summaryResultDate!!, DateTimeFormat.yyyyMMdd),
-                                    t.furimukouQuantity?.toString()
-                                ) }
-                            )
-                        )
-                    }
-                    PlanTitle.DIFFERENCE_KEY -> {
-                        planData.add(
-                            PlanDataByProcessModel(
-                                title = title.value
-                            )
-                        )
-                    }
-                }
-            }
 
-            productPlan.planData = PlanTitle.DATA.map { m ->
+            val planAccumulations = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_ACCUMULATION_KEY }.map { t ->
+                KeyValueResponse(
+                    DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
+                    if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
+                )
+            }
+            val workResultAccumulations = calculateAccumulation(workResultData)
+
+            planData.add(
                 PlanDataByProcessModel(
-                    title = m.value,
-                    quantityByCalendars = planDetailByProcess.filter { t -> t.title == m.key }.map { t ->
+                    title = PlanTitle.PLAN,
+                    quantityByCalendars = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
                         KeyValueResponse(
                             DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                            t.blockQuantity?.toString()
+                            if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
                         )
                     }
                 )
-            }
+            )
+            planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION,quantityByCalendars = planAccumulations))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, quantityByCalendars = workResultData))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, quantityByCalendars = workResultAccumulations))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
+
+            productPlan.planData = planData
             productPlan
+        }
+        return response
+    }
+
+    private fun calculateAccumulation(data: List<KeyValueResponse>, firstValue: Int? = null): List<KeyValueResponse> {
+        var value = firstValue ?: 0
+        val response = mutableListOf<KeyValueResponse>()
+        for (item in data) {
+            value += (item.value?.toInt() ?: 0)
+            response.add(KeyValueResponse(item.key, value.toString()))
+        }
+        return response
+    }
+
+    private fun calculateDifference(sourceData: List<KeyValueResponse>, compareData: List<KeyValueResponse>): List<KeyValueResponse> {
+        val response = mutableListOf<KeyValueResponse>()
+        for (item in sourceData) {
+            val compareValue = compareData.find { x -> x.key == item.key }
+            val diffValue = (compareValue?.value?.toInt() ?: 0) - (item.value?.toInt() ?: 0)
+            response.add(KeyValueResponse(item.key, diffValue.toString()))
         }
         return response
     }

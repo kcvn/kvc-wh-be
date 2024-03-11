@@ -3,7 +3,7 @@ package com.kcvn.spm.app.sync.service
 import com.kcvn.spm.app.sync.payload.response.SyncProcessMasterResponse
 import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureResponse
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
-import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.SyncType
 import com.kcvn.spm.common.constants.TransAmTable
 import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
@@ -42,7 +42,7 @@ class SyncTransAmDataService(
     )
 
     fun syncProcessProcedureStructure() {
-        val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_PROCEDURE_STRUCTURE)
+        val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_PROCEDURE_STRUCTURE)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
@@ -73,13 +73,13 @@ class SyncTransAmDataService(
 
         insertSyncHistory(
             TransAmTable.PROCESS_PROCEDURE_STRUCTURE,
-            Constants.PROCESS_PROCEDURE_STRUCTURE,
-            Constants.PROCESS_PROCEDURE_STRUCTURE
+            SyncType.PROCESS_PROCEDURE_STRUCTURE,
+            SyncType.PROCESS_PROCEDURE_STRUCTURE
         )
     }
 
     fun syncProcessMaster() {
-        val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_MASTER)
+        val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_MASTER)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
@@ -110,14 +110,14 @@ class SyncTransAmDataService(
 
         insertSyncHistory(
             TransAmTable.PROCESS_MASTER,
-            Constants.PROCESS_MASTER,
-            Constants.PROCESS_MASTER
+            SyncType.PROCESS_MASTER,
+            SyncType.PROCESS_MASTER
         )
     }
 
 
     fun syncWorkResult() {
-        val syncHistory = syncHistoryRep.findByType(Constants.WORK_RESULT)
+        val syncHistory = syncHistoryRep.findByType(SyncType.WORK_RESULT)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.WORK_RESULT))
         var condition: Condition = DSL.noCondition()
         if (syncHistory!= null) {
@@ -156,8 +156,8 @@ class SyncTransAmDataService(
 
         insertSyncHistory(
             TransAmTable.WORK_RESULT,
-            Constants.WORK_RESULT,
-            Constants.WORK_RESULT
+            SyncType.WORK_RESULT,
+            SyncType.WORK_RESULT
         )
 
     }

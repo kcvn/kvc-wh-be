@@ -37,8 +37,8 @@ class QuantityReportController(
 
     @GetMapping("/locked-quantity")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).LOCK_REPORT_QUANTITY.value) || hasRole('ADMIN')")
-    fun LockedQuantity(request: String): ResponseEntity<BaseResponse<Boolean>> {
-        val result = quantityReportService.lockedQuantity(request)
+    fun LockedQuantity(id: String): ResponseEntity<BaseResponse<Boolean>> {
+        val result = quantityReportService.lockedQuantity(id)
         return ResponseEntity<BaseResponse<Boolean>>(result, HttpStatus.OK)
     }
 

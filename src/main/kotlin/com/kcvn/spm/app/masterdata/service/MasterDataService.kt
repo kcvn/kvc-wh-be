@@ -53,6 +53,7 @@ class MasterDataService(
         )
     }
 
+
     fun downloadTemplate(): BaseResponse<FileContentModel> {
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessMasterData.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
@@ -93,7 +94,7 @@ class MasterDataService(
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val style = row.getCell(1).cellStyle
+
 
 
             val requestData = ProcessMasterData()
@@ -114,7 +115,7 @@ class MasterDataService(
 
             requestData.processCode = processCode
             requestData.groupProcessCode = groupProcessCode
-            requestData.type = sheet.getRow(2).getCell(1).toString()
+            requestData.type = sheet.getRow(1).getCell(2).toString()
             requestData.value = ExcelHelper.getCellValue(row, 3)
             requestData.unit = ExcelHelper.getCellValue(row, 4)
 
@@ -127,7 +128,7 @@ class MasterDataService(
 //                row.createCell(colIndexResult)
 //            }
             // row.getCell(colIndexResult ).setCellValue(result)
-            row.getCell(colIndexResult).cellStyle = style
+
         }
 
 

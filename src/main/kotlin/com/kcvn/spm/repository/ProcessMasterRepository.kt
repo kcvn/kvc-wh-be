@@ -1,7 +1,9 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.model.tables.pojos.ProcessMaster
+import com.kcvn.spm.model.tables.pojos.ProcessMasterData
 import com.kcvn.spm.model.tables.references.PROCESS_MASTER
+import com.kcvn.spm.model.tables.references.PROCESS_MASTER_DATA
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -9,12 +11,6 @@ import org.springframework.stereotype.Repository
 class ProcessMasterRepository(
     private val context: DSLContext
 ) {
-    fun getListProcessMaster(): List<ProcessMaster> {
-        return context.selectFrom(PROCESS_MASTER)
-            .where(PROCESS_MASTER.IS_DELETED.eq(false))
-            .fetchInto(ProcessMaster::class.java)
-    }
-
     fun getListProcessCode(): List<String> {
         return context.select(PROCESS_MASTER.PROCESS_CODE)
             .from(PROCESS_MASTER)
@@ -37,15 +33,9 @@ class ProcessMasterRepository(
         context.deleteFrom(PROCESS_MASTER).where(PROCESS_MASTER.ID.eq(id)).execute()
     }
 
-    fun findByProcessCode(processCode: String?): ProcessMaster? {
-        return context.selectFrom(PROCESS_MASTER)
-            .where(PROCESS_MASTER.PROCESS_CODE.eq(processCode).and(PROCESS_MASTER.IS_DELETED.eq(false)))
-            .fetchAnyInto(ProcessMaster::class.java)
-    }
-
-    fun getByProcessCode(processCodes: List<String>): List<ProcessMaster> {
-        return context.selectFrom(PROCESS_MASTER)
-            .where(PROCESS_MASTER.PROCESS_CODE.`in`(processCodes).and(PROCESS_MASTER.IS_DELETED.eq(false)))
-            .fetchInto(ProcessMaster::class.java)
+    fun getProcessMasterDataByCode(processCodes: List<String>): List<ProcessMasterData> {
+        return context.selectFrom(PROCESS_MASTER_DATA)
+            .where(PROCESS_MASTER_DATA.PROCESS_CODE.`in`(processCodes).and(PROCESS_MASTER_DATA.IS_DELETED.eq(false)))
+            .fetchInto(ProcessMasterData::class.java)
     }
 }

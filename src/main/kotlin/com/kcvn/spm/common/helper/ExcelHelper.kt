@@ -46,6 +46,7 @@ class ExcelHelper {
         fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false) {
             row.createCell(colIndex).setCellValue(value)
             val cellStyle = workbook.createCellStyle()
+            cellStyle.cloneStyleFrom(style)
             cellStyle.alignment = HorizontalAlignment.CENTER
             cellStyle.borderTop = style.borderTop
             cellStyle.borderLeft = BorderStyle.THIN
@@ -57,6 +58,44 @@ class ExcelHelper {
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             }
             row.getCell(colIndex).cellStyle = cellStyle
+        }
+
+        fun setCellValueCustom(
+            workbook: Workbook,
+            row: Row,
+            colIndex: Int,
+            styleTemplate: CellStyle,
+            value: String?,
+            isBorderLeft: Boolean = true,
+            isBorderRight: Boolean = true,
+            isBorderTop: Boolean = true,
+            isBorderBottom: Boolean = true,
+            isBold: Boolean = false,
+            isAlignCenter: Boolean = false,
+            indexColor: Short? = null
+        ) {
+            val style = workbook.createCellStyle()
+            style.cloneStyleFrom(styleTemplate)
+            row.createCell(colIndex).setCellValue(value)
+
+            if (isBorderLeft) style.borderLeft = BorderStyle.THIN else style.borderLeft = BorderStyle.NONE
+            if (isBorderRight) style.borderRight = BorderStyle.THIN else style.borderRight = BorderStyle.NONE
+            if (isBorderTop) style.borderTop = BorderStyle.THIN else style.borderTop = BorderStyle.NONE
+            if (isBorderBottom) style.borderBottom = BorderStyle.THIN else style.borderBottom = BorderStyle.NONE
+            if (isAlignCenter) style.alignment = HorizontalAlignment.CENTER
+            if (indexColor != null) {
+                style.fillForegroundColor = indexColor
+                style.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            if (isBold) {
+                val fontTemplate = workbook.getFontAt(styleTemplate.fontIndex)
+                val font = workbook.createFont()
+                font.fontName = fontTemplate.fontName
+                font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+                font.bold = true
+                style.setFont(font)
+            }
+            row.getCell(colIndex).cellStyle = style
         }
 
         fun columnIsMatchingTemplate(templateUrl: String, headerRowImport: Row, indexHeaderRow: Int, rangeCheckCol: Int?): Boolean {
@@ -142,6 +181,7 @@ class ExcelHelper {
             style.borderRight = BorderStyle.THIN
             style.borderLeft = BorderStyle.THIN
             style.wrapText = true
+            style.verticalAlignment = VerticalAlignment.CENTER
 
             val font: Font = workbook.createFont()
             font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN

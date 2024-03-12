@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -34,9 +33,7 @@ class PlanController(private val planService: PlanService) {
 
     @GetMapping("/detail")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
-    fun getPlanDetail(
-        @RequestParam request: PlanDetailRequest
-    ): ResponseEntity<ProductPlanDetailResponse> {
+    fun getPlanDetail(request: PlanDetailRequest): ResponseEntity<ProductPlanDetailResponse> {
         val data = planService.getPlanDetail(request)
         return ResponseEntity<ProductPlanDetailResponse>(data, HttpStatus.OK)
     }

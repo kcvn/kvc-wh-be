@@ -41,14 +41,9 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
     ): PagingEquipmentProdResponse? {
 
         val listPlan  = planRepository.getListPlan(request, pageable)
-
         val listPlanIds: List<String> = listPlan.first.map { plan -> plan.id.toString() }
-
         val requestListPlan = PlanProcessDetailRequest(listPlanIds,request.filterType,request.startDate,request.endDate,request.orderCode)
-
         val result = getPlanDetail(requestListPlan)
-
-
         return result
 
     }
@@ -130,11 +125,11 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                     val processValues = processDetailListModel
                         .firstOrNull { it.type == ProcessPlan.PROCESS }
                         ?.quantityByCalendars
-                    if (uniqueSheetDayValue != null) {
-                        processDetailListModel.add(
-                            ProcessDetailListModel(
-                                type = ProcessPlan.MACHINENUMBER,
-                                quantityByCalendars = processValues!!.map { column ->
+                    processDetailListModel.add(
+                        ProcessDetailListModel(
+                            type = ProcessPlan.MACHINENUMBER,
+                            quantityByCalendars = if (uniqueSheetDayValue != null) {
+                                processValues!!.map { column ->
                                     val result = (column.value?.toDoubleOrNull() ?: 0.0) / uniqueSheetDayValue.toDouble()
                                     val formattedResult = String.format("%.1f", result)
                                     KeyValueResponse(
@@ -142,9 +137,14 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                                         formattedResult
                                     )
                                 }
-                            )
+                            } else {
+                                processValues!!.map { column ->
+                                    KeyValueResponse(column.key, null)
+                                }
+                            }
                         )
-                    }
+                    )
+
                     //end
                     val totalProcessValue: Int = processDetailListModel.sumOf { processDetail ->
                         processDetail.quantityByCalendars.sumOf { keyValueResponse ->
@@ -165,7 +165,6 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
             }
         }
 
-
         val groupedData = plan.groupBy { it ->
             listOf(
                 it.frame1,
@@ -179,7 +178,6 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
             val mergedProcessDetail = group.flatMap { it.processDetail!! }
             group.first().copy(processDetail = mergedProcessDetail)
         }
-
 
         response.data = mergedData
         return response

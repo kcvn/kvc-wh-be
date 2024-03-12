@@ -12,4 +12,10 @@ class PlanProcessRepository(private val context: DSLContext) {
             .where(PLAN_PROCESS.PLAN_PRODUCT_ID.eq(planProductId).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .fetchInto(PlanProcess::class.java)
     }
+
+    fun getListPlanProcess(planProductIds: List<String>): List<PlanProcess> {
+        return context.selectFrom(PLAN_PROCESS)
+            .where(PLAN_PROCESS.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS.IS_DELETED.eq(false)))
+            .fetchInto(PlanProcess::class.java)
+    }
 }

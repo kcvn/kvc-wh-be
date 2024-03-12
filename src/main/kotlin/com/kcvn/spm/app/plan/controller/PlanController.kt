@@ -40,12 +40,8 @@ class PlanController(private val planService: PlanService) {
 
     @GetMapping("/export-excel")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
-    fun exportExcel(
-        request: PlanSearchRequest?,
-        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
-        pageable: Pageable
-    ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = BaseResponse<FileContentModel>()
-        return ResponseEntity(data, HttpStatus.OK)
+    fun exportExcel(request: PlanSearchRequest): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = planService.exportExcel(request)
+        return ResponseEntity(BaseResponse(data), HttpStatus.OK)
     }
 }

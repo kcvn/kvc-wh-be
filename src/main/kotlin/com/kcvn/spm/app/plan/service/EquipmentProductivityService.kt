@@ -40,7 +40,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         pageable: Pageable
     ): PagingEquipmentProdResponse? {
 
-        val listPlan  = planRepository.getListPlan(request, pageable)
+        val listPlan  = planProductRep.getListPlanProduct(request, pageable)
         val listPlanIds: List<String> = listPlan.first.map { plan -> plan.id.toString() }
         val requestListPlan = PlanProcessDetailRequest(listPlanIds,request.filterType,request.startDate,request.endDate,request.orderCode)
         val result = getPlanDetail(requestListPlan)

@@ -1,14 +1,11 @@
 package com.kcvn.spm.app.plan.controller
 
-import com.kcvn.spm.app.plan.payload.model.EquipmentProductivityModel
-import com.kcvn.spm.app.plan.payload.model.ProcessDetailListModel
-import com.kcvn.spm.app.plan.payload.model.ProcessDetailModel
+
+import com.kcvn.spm.app.plan.payload.request.PlanDetailRequest
 import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
 import com.kcvn.spm.app.plan.service.EquipmentProductivityService
-import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.common.constants.PagingDefault
-import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
@@ -38,6 +35,12 @@ class EquipmentProductivityController(
     }
 
 
+    @GetMapping("/detail-equipment")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
+    fun getPlanDetailEquip(request: PlanDetailRequest): ResponseEntity<PagingEquipmentProdResponse> {
+        val data = equipmentProductivityService.getPlanDetail(request)
+        return ResponseEntity<PagingEquipmentProdResponse>(data, HttpStatus.OK)
+    }
 
     @PostMapping(value = ["/import-excel-equipment"], consumes = ["multipart/form-data"])
 //    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")

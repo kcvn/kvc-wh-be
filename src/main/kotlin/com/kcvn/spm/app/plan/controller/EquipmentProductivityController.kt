@@ -37,9 +37,7 @@ class EquipmentProductivityController(
 
     @GetMapping("/detail-equipment")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
-    fun getPlanDetailEquip(
-        @RequestParam request: PlanDetailRequest
-    ): ResponseEntity<PagingEquipmentProdResponse> {
+    fun getPlanDetailEquip(request: PlanDetailRequest): ResponseEntity<PagingEquipmentProdResponse> {
         val data = equipmentProductivityService.getPlanDetail(request)
         return ResponseEntity<PagingEquipmentProdResponse>(data, HttpStatus.OK)
     }

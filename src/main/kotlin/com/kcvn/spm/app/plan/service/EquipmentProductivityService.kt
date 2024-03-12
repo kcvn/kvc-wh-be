@@ -10,7 +10,6 @@ import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.helper.NumberHelper.Companion.truncateDecimal
 import com.kcvn.spm.common.payload.BaseResponse
-import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
@@ -32,7 +31,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                                    private val planProductRep: PlanProductRepository,
                                    private val planProcessRep: PlanProcessRepository,
                                    private val planDetailRep: PlanDetailRepository,
-                                   private val workResultRep: WorkResultRepository)
+                                   private val holidaysCalenderRep: HolidaysCalenderRepository)
 {
 
     fun getPaginatedEquipmentProductivityPlan(
@@ -41,7 +40,6 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         pageable: Pageable
     ): PagingEquipmentProdResponse? {
         val result = PagingEquipmentProdResponse()
-        val equipmentProductivity = equipmentProductivityRepository.getEquipmentProductivity()
         //get calendar key and value
         val colStartDate: OffsetDateTime
         val colEndDate: OffsetDateTime
@@ -67,6 +65,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
 
     fun getPlanDetail(request: PlanDetailRequest): PagingEquipmentProdResponse {
         val response = PagingEquipmentProdResponse()
+        val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         if (request.planProductId.isEmpty()) throw BusinessException("")
         val colStartDate: OffsetDateTime
         val colEndDate: OffsetDateTime
@@ -84,16 +83,15 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
             }
             else -> throw BusinessException("")
         }
-
-        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!)
+        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
         // start here
         val planProduct = planProductRep.getById(request.planProductId)
         val planProcesses = planProcessRep.getListPlanProcess(request.planProductId)
         val parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }
         val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
         val planDetails = planDetailRep.getPlanDetail(planProcessIds)
-
-        val plan: List<EquipmentProductivityModel> = listOf()
+        val equipmentProductList = equipmentProductivityRepository.getEquipmentProductivity()
+        val plan: MutableList<EquipmentProductivityModel> = mutableListOf()
         if(planProduct!=null){
             for(planProcess in parentPlanProcess){
                 val equipmentProductivity = EquipmentProductivityModel(
@@ -102,13 +100,12 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                     processNameJp= planProcess.processName,
                     processConvertCode = planProcess.processConvertCode
                 )
-
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == planProcess.id }
-                val wrs = workResultRep.getListProcessGroup()
                 val processDetailListModel =  mutableListOf<ProcessDetailListModel>()
+                //process
                 processDetailListModel.add(
                     ProcessDetailListModel(
-                        type = PlanTitle.PLAN,
+                        type = ProcessPlan.PROCESS,
                         quantityByCalendars = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
                             KeyValueResponse(
                                 DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
@@ -117,22 +114,62 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                         }
                     )
                 )
-
+                //machine
+                val uniqueSheetDayValue = equipmentProductList
+                    .firstOrNull { equipment ->
+                        equipment.processCode == planProcess.processCode &&
+                                equipment.mold == planProduct.mold &&
+                                equipment.frame_1 == planProduct.frame_1
+                    }
+                    ?.sheetDay
+                processDetailListModel.add(
+                    ProcessDetailListModel(
+                        type = ProcessPlan.MACHINE,
+                        quantityByCalendars = response.columns!!.map { column ->
+                            KeyValueResponse(
+                                column.key,
+                                uniqueSheetDayValue.toString()
+                            )
+                        }
+                    )
+                )
+                // machine number
+                val processValues = processDetailListModel
+                    .firstOrNull { it.type == ProcessPlan.PROCESS }
+                    ?.quantityByCalendars
+                if (uniqueSheetDayValue != null) {
+                    processDetailListModel.add(
+                        ProcessDetailListModel(
+                            type = ProcessPlan.MACHINE,
+                            quantityByCalendars = processValues!!.map { column ->
+                                val result = (column.value?.toDoubleOrNull() ?: 0.0) / uniqueSheetDayValue.toDouble()
+                                val formattedResult = String.format("%.1f", result)
+                                KeyValueResponse(
+                                    column.key,
+                                    formattedResult
+                                )
+                            }
+                        )
+                    )
+                }
+                //end
+                val totalProcessValue: Int = processDetailListModel.sumOf { processDetail ->
+                    processDetail.quantityByCalendars.sumOf { keyValueResponse ->
+                        keyValueResponse.value?.toIntOrNull() ?: 0
+                    }
+                }
                 val processDetailList = mutableListOf<ProcessDetailModel>()
                 processDetailList.add(
                     ProcessDetailModel(
-                        name="Kvc",
-                        totalProcess = 1,
+                        name=planProduct.mold,
+                        totalProcess = totalProcessValue,
                         processDetailList = processDetailListModel
                     )
-
                 )
                 equipmentProductivity.processDetail = processDetailList
-
+                plan.add(equipmentProductivity)
             }
-
         }
-
         response.data = plan
         return response
     }

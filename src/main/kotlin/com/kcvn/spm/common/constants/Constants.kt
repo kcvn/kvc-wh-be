@@ -131,6 +131,16 @@ class PlanTitle {
     }
 }
 
+
+class ProcessPlan {
+    companion object {
+        const val PROCESS = "Process"
+        const val MACHINE = "Cap(1machine)"
+        const val MACHINENUMBER = "Số máy sử dụng"
+
+    }
+}
+
 class ProcessUnit {
     companion object {
         const val SHEET = "Sheet"

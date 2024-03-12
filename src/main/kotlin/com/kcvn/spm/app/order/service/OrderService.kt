@@ -5,7 +5,6 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
-import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.OrderFilterType
@@ -115,15 +114,13 @@ class OrderService(
 
     fun exportOrderExcel(request: OrderSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
         val listOrderResponse = getPaginatedOrder(request, pageable)
-        val fileTemplate =
-            File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportOrderTemplate.xlsx")
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportOrderTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
         if (listOrderResponse.columns != null) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
             val rowNumber = 0
-            val columnNumber = 9
             val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
 
             if (listOrderResponse.columns!!.isNotEmpty()) {
@@ -202,12 +199,6 @@ class OrderService(
         }
 
         return orderCodeResponses
-    }
-
-    fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
-        val orders = orderRep.getOrderCode(request.startDate,request.endDate)
-
-        return orders
     }
 
     fun importExcelOrder(file: MultipartFile, orderCodeSelected: String?): BaseResponse<FileContentModel> {

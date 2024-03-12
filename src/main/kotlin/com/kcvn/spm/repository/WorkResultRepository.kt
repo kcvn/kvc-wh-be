@@ -248,4 +248,16 @@ class WorkResultRepository(
             .fetchInto(WorkResult::class.java)
             .firstOrNull()
     }
+
+    fun getForPlan(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String>): List<WorkResult> {
+        return context.selectFrom(WORK_RESULT)
+            .where(
+                WORK_RESULT.SUMMARY_RESULT_DATE.ge(startDate)
+                    .and(WORK_RESULT.SUMMARY_RESULT_DATE.le(endDate))
+                    .and(WORK_RESULT.ITEM_NAME.`in`(productNames))
+                    .and(WORK_RESULT.IS_DELETED.eq(false))
+            )
+            .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))
+            .fetchInto(WorkResult::class.java)
+    }
 }

@@ -42,14 +42,14 @@ class OrderService(
     private val orderRep: OrderRepository,
     private val workResultRep: WorkResultRepository,
     private val productRep: ProductRepository,
-    private val holidaysCalenderRepository: HolidaysCalenderRepository,
+    private val holidaysCalenderRep: HolidaysCalenderRepository
 ) {
 
     fun getPaginatedOrder(
         request: OrderSearchRequest?,
         pageable: Pageable?
     ): PagingOrderResponse {
-        val holidayCalender = holidaysCalenderRepository.getHolidaysCalender()
+        val holidayCalender = holidaysCalenderRep.getHolidaysCalender()
         val calendarResponses = mutableListOf<CalendarValueResponse>()
         if (request != null) {
             var colStartDate = OffsetDateTime.now()

@@ -1,8 +1,10 @@
 package com.kcvn.spm.app.plan.controller
 
 import com.kcvn.spm.app.plan.payload.model.ProductPlanModel
+import com.kcvn.spm.app.plan.payload.request.PlanDetailRequest
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
+import com.kcvn.spm.app.plan.service.PlanService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -13,29 +15,26 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/plan")
-class PlanController {
+class PlanController(private val planService: PlanService) {
     @GetMapping("/get-list")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getList(
-        request: PlanSearchRequest?,
+        request: PlanSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<ProductPlanModel>> {
-        val data = BasePagingResponse<ProductPlanModel>()
+        val data = planService.getListPlan(request, pageable)
         return ResponseEntity<BasePagingResponse<ProductPlanModel>>(data, HttpStatus.OK)
     }
 
     @GetMapping("/detail")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
-    fun getPlanDetail(
-        @RequestParam id: String
-    ): ResponseEntity<ProductPlanDetailResponse> {
-        val data = ProductPlanDetailResponse()
+    fun getPlanDetail(request: PlanDetailRequest): ResponseEntity<ProductPlanDetailResponse> {
+        val data = planService.getPlanDetail(request)
         return ResponseEntity<ProductPlanDetailResponse>(data, HttpStatus.OK)
     }
 

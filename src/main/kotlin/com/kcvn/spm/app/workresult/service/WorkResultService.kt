@@ -4,6 +4,7 @@ import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.PagingWorkResultResponse
 import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.ProcessUnit
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -11,6 +12,7 @@ import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.WorkResult
+import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.WorkResultRepository
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -30,6 +32,7 @@ import java.time.format.DateTimeFormatter
 @Transactional
 class WorkResultService(
     private val workResultRep: WorkResultRepository,
+    private val processMasterRep: ProcessMasterRepository
 ) {
     fun getListWorkResult(
         request: WorkResultSearchRequest?,
@@ -49,13 +52,21 @@ class WorkResultService(
 
     private fun mappingWorkResultResponse(workResults: List<WorkResult>): BasePagingResponse<WorkResultResponse> {
         val response = PagingWorkResultResponse()
+        val processCodes = workResults.mapNotNull { x -> x.processCode }.distinct()
+        val processMasterData = processMasterRep.getProcessMasterDataByCode(processCodes)
         response.data = workResults.map { x ->
-            val result = (x.goodSheetQuantity?.toDouble())?.div(x.totalSheetQuantity!!)
-            val percentage = result?.times(100)
-            var performance = "%.2f%%".format(percentage)
-            if (result == null || x.goodSheetQuantity == 0 || x.totalSheetQuantity == 0) {
-                performance = ""
+            val processMaster = processMasterData.find { m -> m.processCode == x.processCode }
+            var result = 0.0
+            if (processMaster != null) {
+                when (processMaster.unit) {
+                    ProcessUnit.BLOCK -> result = (x.goodTapeQuantity?.toDouble())?.div(x.totalTapeQuantity!!) ?: 0.0
+                    ProcessUnit.SHEET -> result = (x.goodSheetQuantity?.toDouble())?.div(x.totalSheetQuantity!!) ?: 0.0
+                }
             }
+
+            val percentage = result.times(100)
+            val performance = if (percentage == 0.0) "" else "%.2f%%".format(percentage)
+
             WorkResultResponse(
                 id = x.id,
                 summaryResultDate = x.summaryResultDate,

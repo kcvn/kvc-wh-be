@@ -335,7 +335,7 @@ class CompletionRateService(
             workbook.close()
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
-        val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRateErrorTemplate.xlsx"
+        val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionRateErrorTemplate.xlsx"
         val styleCell = sheet.getRow(1).getCell(1).cellStyle
         val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleCell)
 
@@ -552,7 +552,7 @@ class CompletionRateService(
             workbook.close()
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
-        val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRateErrorTemplate.xlsx"
+        val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionRateErrorTemplate.xlsx"
         val styleRow = sheet.getRow(1).rowStyle
 
         val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleRow)
@@ -732,7 +732,7 @@ class CompletionRateService(
             workbook.close()
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
-        val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompleteRateErrorTemplate.xlsx"
+        val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionRateErrorTemplate.xlsx"
         val styleRow = sheet.getRow(1).rowStyle
         val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleRow)
         val byteArrayOutputStream = ByteArrayOutputStream()

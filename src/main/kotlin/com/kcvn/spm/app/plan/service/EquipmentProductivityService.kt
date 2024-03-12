@@ -1,18 +1,16 @@
 package com.kcvn.spm.app.plan.service
 
-import com.kcvn.spm.app.plan.payload.model.PlanDataByProcessModel
-import com.kcvn.spm.app.plan.payload.model.ProcessChildrenModel
-import com.kcvn.spm.app.plan.payload.model.ProductPlanDetailModel
+import com.kcvn.spm.app.plan.payload.model.*
 import com.kcvn.spm.app.plan.payload.request.PlanDetailRequest
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
-import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
 import com.kcvn.spm.common.constants.*
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.helper.NumberHelper.Companion.truncateDecimal
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
@@ -45,36 +43,33 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         val result = PagingEquipmentProdResponse()
         val equipmentProductivity = equipmentProductivityRepository.getEquipmentProductivity()
         //get calendar key and value
-        var colStartDate: OffsetDateTime = OffsetDateTime.now()
-        var colEndDate: OffsetDateTime = OffsetDateTime.now()
-        if (request != null) {
-            when(request.filterType) {
-                OrderFilterType.DATE -> {
-                    if (request.startDate == null || request.endDate == null) throw BusinessException("")
-                    colStartDate = DateTimeHelper.toTimeZone7(request.startDate) ?: OffsetDateTime.now()
-                    colEndDate = DateTimeHelper.toTimeZone7(request.endDate) ?: OffsetDateTime.now()
-                }
-                OrderFilterType.ORDER -> {
-                    val plan = request.orderCode?.let { planRepository.getPlanByOrderCode(it) } ?: throw BusinessException("")
-                    colStartDate = DateTimeHelper.toTimeZone7(plan.startDate) ?: OffsetDateTime.now()
-                    colEndDate = DateTimeHelper.toTimeZone7(plan.endDate) ?: OffsetDateTime.now()
-                }
-                else -> throw BusinessException("")
+        val colStartDate: OffsetDateTime
+        val colEndDate: OffsetDateTime
+        when(request?.filterType) {
+            OrderFilterType.DATE -> {
+                if (request.startDate == null || request.endDate == null) throw BusinessException("")
+                colStartDate = DateTimeHelper.toTimeZone7(request.startDate) ?: OffsetDateTime.now()
+                colEndDate = DateTimeHelper.toTimeZone7(request.endDate) ?: OffsetDateTime.now()
             }
+            OrderFilterType.ORDER -> {
+                val plan = request.orderCode?.let { planRepository.getPlanByOrderCode(it) } ?: throw BusinessException("")
+                colStartDate = DateTimeHelper.toTimeZone7(plan.startDate) ?: OffsetDateTime.now()
+                colEndDate = DateTimeHelper.toTimeZone7(plan.endDate) ?: OffsetDateTime.now()
+            }
+            else -> throw BusinessException("")
         }
-        result.columns = DateTimeHelper.toCalendarColumn(colStartDate, colEndDate)
+        result.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!)
 
 
         return result
     }
 
 
-    fun getPlanDetail(request: PlanDetailRequest): ProductPlanDetailResponse {
-        val response = ProductPlanDetailResponse()
-
+    fun getPlanDetail(request: PlanDetailRequest): PagingEquipmentProdResponse {
+        val response = PagingEquipmentProdResponse()
         if (request.planProductId.isEmpty()) throw BusinessException("")
-        var colStartDate: OffsetDateTime
-        var colEndDate: OffsetDateTime
+        val colStartDate: OffsetDateTime
+        val colEndDate: OffsetDateTime
 
         when (request.filterType) {
             OrderFilterType.DATE -> {
@@ -91,71 +86,54 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         }
 
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!)
-
-        val planProduct = planProductRep.getById(request.planProductId) ?: throw BusinessException("")
-
+        // start here
+        val planProduct = planProductRep.getById(request.planProductId)
         val planProcesses = planProcessRep.getListPlanProcess(request.planProductId)
         val parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }
-        val childrenPlanProcess = planProcesses.filter { x -> x.parentId != null }
-
         val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
         val planDetails = planDetailRep.getPlanDetail(planProcessIds)
 
-        val workResults = workResultRep.getForPlan(colStartDate, colEndDate, listOf(planProduct.productName ?: ""))
-
-        response.data = parentPlanProcess.map { x ->
-            val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
-            val workResultData = workResults.filter { m -> m.processCode == x.processCode && m.layerCode == x.layerCode }
-            val productPlan = ProductPlanDetailModel(
-                layerCode = x.layerCode,
-                processCode = x.processCode,
-                processName = x.processName,
-                completionRate = x.completionRate,
-                processConvertCode = x.processConvertCode,
-                inventory = x.inventory
-            )
-            productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
-                ProcessChildrenModel(
-                    layerCode = m.layerCode,
-                    processCode = m.processCode,
-                    processName = m.processName,
-                    inventory = m.inventory
+        val plan: List<EquipmentProductivityModel> = listOf()
+        if(planProduct!=null){
+            for(planProcess in parentPlanProcess){
+                val equipmentProductivity = EquipmentProductivityModel(
+                    frame1 = planProduct.frame_1,
+                    processName = planProcess.processName,
+                    processNameJp= planProcess.processName,
+                    processConvertCode = planProcess.processConvertCode
                 )
-            }
-            productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
 
-            val planData = mutableListOf<PlanDataByProcessModel>()
-            for (title in PlanTitle.DATA) {
-                when (title.key) {
-                    PlanTitle.PLAN_KEY -> {
-                        planData.add(
-                            PlanDataByProcessModel(
-                                title = title.value,
-                                quantityByCalendars = planDetailByProcess.filter { t -> t.title == title.key }.map { t ->
-                                    KeyValueResponse(
-                                        DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                                        if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
-                                    )
-                                }
+                val planDetailByProcess = planDetails.filter { m -> m.planProcessId == planProcess.id }
+                val wrs = workResultRep.getListProcessGroup()
+                val processDetailListModel =  mutableListOf<ProcessDetailListModel>()
+                processDetailListModel.add(
+                    ProcessDetailListModel(
+                        type = PlanTitle.PLAN,
+                        quantityByCalendars = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
+                            KeyValueResponse(
+                                DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
+                                if (planProcess.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
                             )
-                        )
-                    }
-                }
+                        }
+                    )
+                )
+
+                val processDetailList = mutableListOf<ProcessDetailModel>()
+                processDetailList.add(
+                    ProcessDetailModel(
+                        name="Kvc",
+                        totalProcess = 1,
+                        processDetailList = processDetailListModel
+                    )
+
+                )
+                equipmentProductivity.processDetail = processDetailList
+
             }
 
-            productPlan.planData = PlanTitle.DATA.map { m ->
-                PlanDataByProcessModel(
-                    title = m.value,
-                    quantityByCalendars = planDetailByProcess.filter { t -> t.title == m.key }.map { t ->
-                        KeyValueResponse(
-                            DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                            t.blockQuantity?.toString()
-                        )
-                    }
-                )
-            }
-            productPlan
         }
+
+        response.data = plan
         return response
     }
 

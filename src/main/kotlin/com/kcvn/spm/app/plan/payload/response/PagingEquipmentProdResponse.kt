@@ -7,4 +7,4 @@ import com.kcvn.spm.common.payload.CalendarResponse
 
 data class PagingEquipmentProdResponse(
     var columns: List<CalendarResponse>? = null
-) : BasePagingResponse<List<EquipmentProductivityModel>>()
+) : BasePagingResponse<EquipmentProductivityModel>()

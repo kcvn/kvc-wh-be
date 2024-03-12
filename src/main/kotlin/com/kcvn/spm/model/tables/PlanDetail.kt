@@ -88,7 +88,7 @@ open class PlanDetail(
     /**
      * The column <code>public.plan_detail.title</code>.
      */
-    val TITLE: TableField<PlanDetailRecord, String?> = createField(DSL.name("title"), SQLDataType.VARCHAR(10), this, "")
+    val TITLE: TableField<PlanDetailRecord, String?> = createField(DSL.name("title"), SQLDataType.VARCHAR(30), this, "")
 
     /**
      * The column <code>public.plan_detail.plan_date</code>.

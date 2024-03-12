@@ -2,6 +2,7 @@ package com.kcvn.spm.app.plan.controller
 
 
 import com.kcvn.spm.app.plan.payload.request.PlanDetailRequest
+import com.kcvn.spm.app.plan.payload.request.PlanProcessDetailRequest
 import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
 import com.kcvn.spm.app.plan.service.EquipmentProductivityService
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
@@ -25,7 +26,7 @@ class EquipmentProductivityController(
     @GetMapping("/get-equipment-productivity")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getList(
-        request: PlanSearchRequest?,
+        request: PlanSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         pageable: Pageable
     ): ResponseEntity<PagingEquipmentProdResponse> {
@@ -37,7 +38,7 @@ class EquipmentProductivityController(
 
     @GetMapping("/detail-equipment")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
-    fun getPlanDetailEquip(request: PlanDetailRequest): ResponseEntity<PagingEquipmentProdResponse> {
+    fun getPlanDetailEquip(request: PlanProcessDetailRequest): ResponseEntity<PagingEquipmentProdResponse> {
         val data = equipmentProductivityService.getPlanDetail(request)
         return ResponseEntity<PagingEquipmentProdResponse>(data, HttpStatus.OK)
     }

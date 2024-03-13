@@ -26,13 +26,14 @@ import java.time.OffsetDateTime
 
 @Service
 @Transactional
-class EquipmentProductivityService(private val equipmentProductivityRepository: EquipmentProductivityRepository,
-                                   private val planRepository: PlanRepository,
-                                   private val planProductRep: PlanProductRepository,
-                                   private val planProcessRep: PlanProcessRepository,
-                                   private val planDetailRep: PlanDetailRepository,
-                                   private val holidaysCalenderRep: HolidaysCalenderRepository)
-{
+class EquipmentProductivityService(
+    private val equipmentProductivityRepository: EquipmentProductivityRepository,
+    private val planRepository: PlanRepository,
+    private val planProductRep: PlanProductRepository,
+    private val planProcessRep: PlanProcessRepository,
+    private val planDetailRep: PlanDetailRepository,
+    private val holidaysCalenderRep: HolidaysCalenderRepository
+) {
 
     fun getPaginatedEquipmentProductivityPlan(
         request: PlanSearchRequest,
@@ -40,9 +41,9 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         pageable: Pageable
     ): PagingEquipmentProdResponse? {
 
-        val listPlan  = planProductRep.getListPlanProduct(request, pageable)
+        val listPlan = planProductRep.getListPlanProduct(request, pageable)
         val listPlanIds: List<String> = listPlan.first.map { plan -> plan.id.toString() }
-        val requestListPlan = PlanProcessDetailRequest(listPlanIds,request.filterType,request.startDate,request.endDate,request.orderCode)
+        val requestListPlan = PlanProcessDetailRequest(listPlanIds, request.filterType, request.startDate, request.endDate, request.orderCode)
         val result = getPlanDetail(requestListPlan)
         return result
 
@@ -141,6 +142,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                             }
                         )
                     )
+
                     //end
                     val totalProcessValue: Int = processDetailListModel.sumOf { processDetail ->
                         processDetail.quantityByCalendars.sumOf { keyValueResponse ->
@@ -238,27 +240,27 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                 count = BigDecimal(ExcelHelper.getCellValue(row, 5)),
                 setDay = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 5)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 4)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                        BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 blockDay = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 8)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 5)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 4)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                        BigDecimal(ExcelHelper.getCellValue(row, 5)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 blockSh = BigDecimal(ExcelHelper.getCellValue(row, 8)),
                 frame_1 = ExcelHelper.getCellValue(row, 0),
                 sheetHour = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                        BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 sheetDay = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 4)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                        BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 operatingRate = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) * BigDecimal(100)

@@ -42,7 +42,10 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
 
     fun getByProductName(productNames: List<String>) : List<ProcessProcedureStructure> {
         return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE)
-                .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(productNames).and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+                .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(productNames)
+                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+                    .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.notEqual("0"))
+                    .and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.notLike("0%")))
                 .fetchInto(ProcessProcedureStructure::class.java)
     }
 

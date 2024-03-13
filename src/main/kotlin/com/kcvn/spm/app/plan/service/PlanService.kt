@@ -230,34 +230,105 @@ class PlanService(
     ): Int {
         var rowIndex = rowNumber
         var dataRow = sheet.createRow(rowIndex)
-        val indexColor = IndexedColors.CORNFLOWER_BLUE.index
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 0, style, CommonUtils.getMessage("excel.colProductName"), true, false, true, false, true, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, CommonUtils.getMessage("excel.colFrame"), false, false, true, false, true, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 2, style, CommonUtils.getMessage("excel.colMold"), false, false, true, false, true, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 3, style, CommonUtils.getMessage("excel.colPcsSh"), false, false, true, false, true, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, CommonUtils.getMessage("excel.colBlockSh"), false, false, true, false, true, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 5, style, "", false, false, true, false, true, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 6, style, "", false, false, true, false, true, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 7, style, "", false, true, true, false, true, true, indexColor)
+        val indexColor = IndexedColors.PALE_BLUE.index
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = CommonUtils.getMessage("excel.colProductName"),
+            isBorderLeft = true, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = true, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = CommonUtils.getMessage("excel.colFrame"),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = true, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 2, styleTemplate = style, value = CommonUtils.getMessage("excel.colMold"),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = true, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 3, styleTemplate = style, value = CommonUtils.getMessage("excel.colPcsSh"),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = true, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 4, styleTemplate = style, value = CommonUtils.getMessage("excel.colBlockSh"),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = true, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 5, styleTemplate = style, value = "",
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = true, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 6, styleTemplate = style, value = "",
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = true, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 7, styleTemplate = style, value = "",
+            isBorderLeft = false, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
+            isBold = true, isAlignCenter = true, indexColor = indexColor
+        )
         var colIndex = 8
         for (col in columns) {
-            ExcelHelper.setCellValueCustom(workbook, dataRow, colIndex, style, "", true, true, true, true, true, true, indexColor)
+            ExcelHelper.setCellValueCustom(
+                workbook = workbook, row = dataRow, colIndex = colIndex, styleTemplate = style, value = "",
+                isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = true,
+                isBold = true, isAlignCenter = true, indexColor = indexColor)
             colIndex++
         }
 
         rowIndex++
         dataRow = sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 0, style, data.productName, true, false, false, true, false, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, data.frame_1, false, false, false, true, false, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 2, style, data.mold, false, false, false, true, false, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 3, style, data.pcsSh?.toString(), false, false, false, true, false, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, data.blockSh?.toString(), false, false, false, true, false, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 5, style, "", false, false, false, true, false, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 6, style, "", false, false, false, true, false, true, indexColor)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 7, style, "", false, true, false, true, false, true, indexColor)
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = data.productName,
+            isBorderLeft = true, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+            isBold = false, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = data.frame_1,
+            isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+            isBold = false, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 2, styleTemplate = style, value = data.mold,
+            isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+            isBold = false, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 3, styleTemplate = style, value = data.pcsSh?.toString(),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+            isBold = false, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 4, styleTemplate = style, value = data.blockSh?.toString(),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+            isBold = false, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 5, styleTemplate = style, value = "",
+            isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+            isBold = false, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 6, styleTemplate = style, value = "",
+            isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+            isBold = false, isAlignCenter = true, indexColor = indexColor
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 7, styleTemplate = style, value = "",
+            isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = true,
+            isBold = false, isAlignCenter = true, indexColor = indexColor
+        )
         colIndex = 8
         for (col in columns) {
-            ExcelHelper.setCellValueCustom(workbook, dataRow, colIndex, style, "", true, true, true, true, false, true, indexColor)
+            ExcelHelper.setCellValueCustom(
+                workbook = workbook, row = dataRow, colIndex = colIndex, styleTemplate = style, value = "",
+                isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = true,
+                isBold = false, isAlignCenter = true, indexColor = indexColor
+            )
             colIndex++
         }
         rowIndex++
@@ -273,13 +344,41 @@ class PlanService(
     ): Int {
         var rowIndex = rowNumber
         var dataRow = sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 0, style, data.layerCode, true, false, true, false, false, true)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, data.processCode, false, false, true, false, false, true)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 2, style, data.processName, false, false, true, false, false, false)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 3, style, data.completionRate?.toString(), false, false, true, false, false, true)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, data.inventory?.toString(), false, false, true, false, false, true)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 5, style, data.sumInventory?.toString(), false, false, true, false, false, true)
-        ExcelHelper.setCellValueCustom(workbook, dataRow, 6, style, data.processConvertCode, false, true, true, false, false, true)
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = data.layerCode,
+            isBorderLeft = true, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = false, isAlignCenter = true
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = data.processCode,
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = false, isAlignCenter = true
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 2, styleTemplate = style, value = data.processName,
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = false, isAlignCenter = false
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 3, styleTemplate = style, value = data.completionRate?.toString(),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = false, isAlignCenter = true
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 4, styleTemplate = style, value = data.inventory?.toString(),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = false, isAlignCenter = true
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 5, styleTemplate = style, value = data.sumInventory?.toString(),
+            isBorderLeft = false, isBorderRight = false, isBorderTop = true, isBorderBottom = false,
+            isBold = false, isAlignCenter = true
+        )
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 6, styleTemplate = style, value = data.processConvertCode,
+            isBorderLeft = false, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
+            isBold = false, isAlignCenter = true
+        )
 
         rowIndex++
         var count = 0
@@ -287,21 +386,77 @@ class PlanService(
             for (process in data.processChildren!!) {
                 dataRow = sheet.createRow(rowIndex)
                 if (count < data.processChildren!!.size - 1) {
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 0, style, process.layerCode, true, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, process.processCode, false, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 2, style, process.processName, false, false, false, false, false, false)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 3, style, "", false, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, process.inventory?.toString(), false, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 5, style, "", false, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 6, style, "", false, true, false, false, false, true)
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = process.layerCode,
+                        isBorderLeft = true, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = process.processCode,
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 2, styleTemplate = style, value = process.processName,
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = false
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 3, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 4, styleTemplate = style, value = process.inventory?.toString(),
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 5, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 6, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
                 } else {
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 0, style, process.layerCode, true, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, process.processCode, false, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 2, style, process.processName, false, false, false, true, false, false)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 3, style, "", false, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, process.inventory?.toString(), false, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 5, style, "", false, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 6, style, "", false, true, false, true, false, true)
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = process.layerCode,
+                        isBorderLeft = true, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = process.processCode,
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 2, styleTemplate = style, value = process.processName,
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = false
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 3, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 4, styleTemplate = style, value = process.inventory?.toString(),
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 5, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 6, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
                 }
                 rowIndex++
                 count++
@@ -309,24 +464,80 @@ class PlanService(
         } else {
             for (i in rowIndex until (rowIndex + 4)) {
                 val process = if (data.processChildren.isNullOrEmpty()) null
-                    else if (count < data.processChildren!!.size) data.processChildren!![count] else null
+                else if (count < data.processChildren!!.size) data.processChildren!![count] else null
                 dataRow = sheet.createRow(rowIndex)
                 if (count < 3) {
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 0, style, process?.layerCode, true, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, process?.processCode, false, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 2, style, process?.processName, false, false, false, false, false, false)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 3, style, "", false, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, process?.inventory?.toString(), false, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 5, style, "", false, false, false, false, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 6, style, "", false, true, false, false, false, true)
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = process?.layerCode,
+                        isBorderLeft = true, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = process?.processCode,
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 2, styleTemplate = style, value = process?.processName,
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = false
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 3, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 4, styleTemplate = style, value = process?.inventory?.toString(),
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 5, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 6, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
+                        isBold = false, isAlignCenter = true
+                    )
                 } else {
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 0, style, process?.layerCode, true, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, process?.processCode, false, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 2, style, process?.processName, false, false, false, true, false, false)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 3, style, "", false, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, process?.inventory?.toString(), false, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 5, style, "", false, false, false, true, false, true)
-                    ExcelHelper.setCellValueCustom(workbook, dataRow, 6, style, "", false, true, false, true, false, true)
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = process?.layerCode,
+                        isBorderLeft = true, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = process?.processCode,
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 2, styleTemplate = style, value = process?.processName,
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = false
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 3, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 4, styleTemplate = style, value = process?.inventory?.toString(),
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 5, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = false, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 6, styleTemplate = style, value = "",
+                        isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = true,
+                        isBold = false, isAlignCenter = true
+                    )
                 }
                 rowIndex++
                 count++

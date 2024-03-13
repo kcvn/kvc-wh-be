@@ -82,7 +82,7 @@ class MasterDataService(
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
-        var count = 0
+        val count = 0
         val total = sheet.lastRowNum
 
 
@@ -94,7 +94,7 @@ class MasterDataService(
 
             val requestData = ProcessMasterData()
             val cellProcessCode = row.getCell(0)
-            var processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
+            val processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
                 cellProcessCode.numericCellValue.toInt().toString()
             else {
                 ExcelHelper.getCellValue(row, 0)
@@ -102,7 +102,7 @@ class MasterDataService(
 
             val groupCellProcessCode = row.getCell(1)
 
-            var groupProcessCode = if (groupCellProcessCode.cellType == CellType.NUMERIC && groupCellProcessCode.numericCellValue % 1 == 0.0)
+            val groupProcessCode = if (groupCellProcessCode.cellType == CellType.NUMERIC && groupCellProcessCode.numericCellValue % 1 == 0.0)
                 groupCellProcessCode.numericCellValue.toInt().toString()
             else {
                  ExcelHelper.getCellValue(row, 1)

@@ -26,7 +26,9 @@ data class ProductProcess(
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
     var isDeleted: Boolean? = null,
-    var processProcedureStructureId: String? = null
+    var processProcedureStructureId: String? = null,
+    var inventoryLayerGroup: String? = null,
+    var dayOfImplementation: Int? = null
 ): Serializable {
 
 
@@ -110,6 +112,18 @@ data class ProductProcess(
         }
         else if (this.processProcedureStructureId != o.processProcedureStructureId)
             return false
+        if (this.inventoryLayerGroup == null) {
+            if (o.inventoryLayerGroup != null)
+                return false
+        }
+        else if (this.inventoryLayerGroup != o.inventoryLayerGroup)
+            return false
+        if (this.dayOfImplementation == null) {
+            if (o.dayOfImplementation != null)
+                return false
+        }
+        else if (this.dayOfImplementation != o.dayOfImplementation)
+            return false
         return true
     }
 
@@ -128,6 +142,8 @@ data class ProductProcess(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         result = prime * result + (if (this.processProcedureStructureId == null) 0 else this.processProcedureStructureId.hashCode())
+        result = prime * result + (if (this.inventoryLayerGroup == null) 0 else this.inventoryLayerGroup.hashCode())
+        result = prime * result + (if (this.dayOfImplementation == null) 0 else this.dayOfImplementation.hashCode())
         return result
     }
 
@@ -146,6 +162,8 @@ data class ProductProcess(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
         sb.append(", ").append(processProcedureStructureId)
+        sb.append(", ").append(inventoryLayerGroup)
+        sb.append(", ").append(dayOfImplementation)
 
         sb.append(")")
         return sb.toString()

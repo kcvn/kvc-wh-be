@@ -4,16 +4,27 @@ import com.kcvn.spm.common.payload.KeyValueResponse
 
 class Constants {
     companion object {
-        //Sync type
+        const val SYSTEM = "SYSTEM"
+    }
+}
+
+class SyncType {
+    companion object{
         const val PROCESS_PROCEDURE_STRUCTURE = "PROCESS_PROCEDURE_STRUCTURE"
         const val PROCESS_MASTER = "PROCESS_MASTER"
         const val WORK_RESULT = "WORK_RESULT"
+    }
+}
 
-        //jwt
-        const val CLAIM_TYPE_USER_ID = "UserId"
-        const val CLAIM_TYPE_POSITION = "Position"
+class ClaimType {
+    companion object{
+        const val USER_ID = "UserId"
+        const val POSITION = "Position"
+    }
+}
 
-        //Master Data Type
+class MasterDataType {
+    companion object{
         const val KHUNG_1 = "KHUNG_1"
         const val KHUNG_2 = "KHUNG_2"
         const val KHUON_DUC = "KHUON_DUC"
@@ -24,21 +35,24 @@ class Constants {
         const val TAPE_DUNG_CHUNG = "TAPE_DUNG_CHUNG"
         const val MACHUYENDOI = "MA_CHUYEN_DOI"
         const val MATHONGKE = "MA_THONG_KE"
+    }
+}
 
-        //KHUON_DUC
-        const val KHUONDUC_KVC = "KVC"
-        const val KHUONDUC_ML = "ML"
-        const val KHUONDUC_SKE = "SKE"
-        const val KHUONDUC_SWR = "SWR"
-        const val KHUONDUC_SUR = "SUR"
+class Frame1 {
+    companion object{
+        const val MU = "MU"
+        const val ML = "ML"
+        const val SWR = "SWR"
+    }
+}
 
-        //KHUNG 1
-        const val KHUNG1_MU = "MU"
-        const val KHUNG1_ML = "ML"
-        const val KHUNG1_SWR = "SWR"
-
-	// SYSTEM
-        const val SYSTEM = "SYSTEM"
+class Mold {
+    companion object{
+        const val KVC = "KVC"
+        const val ML = "ML"
+        const val SKE = "SKE"
+        const val SWR = "SWR"
+        const val SUR = "SUR"
     }
 }
 
@@ -114,6 +128,16 @@ class PlanTitle {
         const val ACTUAL_KEY = "ACTUAL"
         const val ACTUAL_ACCUMULATION_KEY = "ACTUAL_ACCUMULATION"
         const val DIFFERENCE_KEY = "DIFFERENCE"
+    }
+}
+
+
+class ProcessPlan {
+    companion object {
+        const val PROCESS = "Process"
+        const val MACHINE = "Cap(1machine)"
+        const val MACHINENUMBER = "Số máy sử dụng"
+
     }
 }
 

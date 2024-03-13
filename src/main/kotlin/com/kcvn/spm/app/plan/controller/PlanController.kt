@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.plan.controller
 
 import com.kcvn.spm.app.plan.payload.model.ProductPlanModel
+import com.kcvn.spm.app.plan.payload.request.PlanDetailRequest
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
 import com.kcvn.spm.app.plan.service.PlanService
@@ -14,7 +15,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -33,21 +33,15 @@ class PlanController(private val planService: PlanService) {
 
     @GetMapping("/detail")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
-    fun getPlanDetail(
-        @RequestParam id: String
-    ): ResponseEntity<ProductPlanDetailResponse> {
-        val data = ProductPlanDetailResponse()
+    fun getPlanDetail(request: PlanDetailRequest): ResponseEntity<ProductPlanDetailResponse> {
+        val data = planService.getPlanDetail(request)
         return ResponseEntity<ProductPlanDetailResponse>(data, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
-    fun exportExcel(
-        request: PlanSearchRequest?,
-        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
-        pageable: Pageable
-    ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = BaseResponse<FileContentModel>()
-        return ResponseEntity(data, HttpStatus.OK)
+    fun exportExcel(request: PlanSearchRequest): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = planService.exportExcel(request)
+        return ResponseEntity(BaseResponse(data), HttpStatus.OK)
     }
 }

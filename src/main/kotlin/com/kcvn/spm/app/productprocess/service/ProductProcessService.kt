@@ -7,6 +7,7 @@ import com.kcvn.spm.app.productprocess.payload.response.ExportExcelErrResponse
 import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.MasterDataType
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -70,8 +71,8 @@ class ProductProcessService(
         val masterData = masterDataService.getMasterDataSelection()
         val query =  productProcessRep.getByProductProcessDetail(nameProduct)
         val data = query?.map {
-            val listProcessCode = commonCategoryRep.getListProcessCodeDropDown(it?.processCode, Constants.MACHUYENDOI)
-            val listStatisticCode = commonCategoryRep.getListProcessCodeDropDown(it?.processCode,Constants.MATHONGKE)
+            val listProcessCode = commonCategoryRep.getListProcessCodeDropDown(it?.processCode, MasterDataType.MACHUYENDOI)
+            val listStatisticCode = commonCategoryRep.getListProcessCodeDropDown(it?.processCode,MasterDataType.MATHONGKE)
             val productProcessResponse = ProductProcessResponse()
             if(listProcessCode.isNullOrEmpty()){
                 productProcessResponse.listDropDownConvertCode = masterData.processConvertCodes

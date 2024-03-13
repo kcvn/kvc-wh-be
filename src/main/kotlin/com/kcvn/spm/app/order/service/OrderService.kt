@@ -5,7 +5,6 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
-import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.OrderFilterType
@@ -115,21 +114,20 @@ class OrderService(
 
     fun exportOrderExcel(request: OrderSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
         val listOrderResponse = getPaginatedOrder(request, pageable)
-        val fileTemplate =
-            File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportOrderTemplate.xlsx")
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportOrderTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
         if (listOrderResponse.columns != null) {
-            val style = ExcelHelper.getCellStyleCommon(workbook)
             val rowNumber = 0
-            val columnNumber = 9
             val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+            val style = ExcelHelper.getCellStyleCommon(workbook)
+            val headerStyle = dataRow.getCell(0).cellStyle
 
             if (listOrderResponse.columns!!.isNotEmpty()) {
                 var headerCol = 9
                 for (col in listOrderResponse.columns!!) {
-                    ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, col.isHoliday)
+                    ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, headerStyle, col.value, col.isHoliday)
                     headerCol++
                 }
             }
@@ -140,15 +138,15 @@ class OrderService(
             if (listOrder != null) {
                 for (item in listOrder) {
                     val row: Row = sheet.createRow(rowNumberFill++)
-                    ExcelHelper.setCellValue(row, 0, style, item.productShortcutName)
-                    ExcelHelper.setCellValue(row, 1, style, item.productName)
-                    ExcelHelper.setCellValue(row, 2, style, item.quantity.toString())
-                    ExcelHelper.setCellValue(row, 3, style, item.frame_1)
-                    ExcelHelper.setCellValue(row, 4, style, item.layerCount.toString())
-                    ExcelHelper.setCellValue(row, 5, style, item.pcsSh.toString())
-                    ExcelHelper.setCellValue(row, 6, style, item.shBlock.toString())
-                    ExcelHelper.setCellValue(row, 7, style, item.srNosr)
-                    ExcelHelper.setCellValue(row, 8, style, item.version)
+                    ExcelHelper.setCellValue(workbook, row, 0, style, item.productShortcutName)
+                    ExcelHelper.setCellValue(workbook, row, 1, style, item.productName)
+                    ExcelHelper.setCellValue(workbook, row, 2, style, item.quantity.toString())
+                    ExcelHelper.setCellValue(workbook, row, 3, style, item.frame_1)
+                    ExcelHelper.setCellValue(workbook, row, 4, style, item.layerCount.toString())
+                    ExcelHelper.setCellValue(workbook, row, 5, style, item.pcsSh.toString())
+                    ExcelHelper.setCellValue(workbook, row, 6, style, item.shBlock.toString())
+                    ExcelHelper.setCellValue(workbook, row, 7, style, item.srNosr)
+                    ExcelHelper.setCellValue(workbook, row, 8, style, item.version)
 
                     if (listOrderResponse.columns!!.isNotEmpty()) {
                         var colIndex = 9
@@ -202,12 +200,6 @@ class OrderService(
         }
 
         return orderCodeResponses
-    }
-
-    fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
-        val orders = orderRep.getOrderCode(request.startDate,request.endDate)
-
-        return orders
     }
 
     fun importExcelOrder(file: MultipartFile, orderCodeSelected: String?): BaseResponse<FileContentModel> {

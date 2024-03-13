@@ -1,6 +1,8 @@
 package com.kcvn.spm.app.plan.service
 
-import com.kcvn.spm.app.plan.payload.model.*
+import com.kcvn.spm.app.plan.payload.model.EquipmentProductivityModel
+import com.kcvn.spm.app.plan.payload.model.ProcessDetailListModel
+import com.kcvn.spm.app.plan.payload.model.ProcessDetailModel
 import com.kcvn.spm.app.plan.payload.request.PlanProcessDetailRequest
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
@@ -26,13 +28,14 @@ import java.time.OffsetDateTime
 
 @Service
 @Transactional
-class EquipmentProductivityService(private val equipmentProductivityRepository: EquipmentProductivityRepository,
-                                   private val planRepository: PlanRepository,
-                                   private val planProductRep: PlanProductRepository,
-                                   private val planProcessRep: PlanProcessRepository,
-                                   private val planDetailRep: PlanDetailRepository,
-                                   private val holidaysCalenderRep: HolidaysCalenderRepository)
-{
+class EquipmentProductivityService(
+    private val equipmentProductivityRepository: EquipmentProductivityRepository,
+    private val planRepository: PlanRepository,
+    private val planProductRep: PlanProductRepository,
+    private val planProcessRep: PlanProcessRepository,
+    private val planDetailRep: PlanDetailRepository,
+    private val holidaysCalenderRep: HolidaysCalenderRepository
+) {
 
     fun getPaginatedEquipmentProductivityPlan(
         request: PlanSearchRequest,
@@ -40,14 +43,13 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         pageable: Pageable
     ): PagingEquipmentProdResponse? {
 
-        val listPlan  = planProductRep.getListPlanProduct(request, pageable)
+        val listPlan = planProductRep.getListPlanProduct(request, pageable)
         val listPlanIds: List<String> = listPlan.first.map { plan -> plan.id.toString() }
-        val requestListPlan = PlanProcessDetailRequest(listPlanIds,request.filterType,request.startDate,request.endDate,request.orderCode)
+        val requestListPlan = PlanProcessDetailRequest(listPlanIds, request.filterType, request.startDate, request.endDate, request.orderCode)
         val result = getPlanDetail(requestListPlan)
         return result
 
     }
-
 
     fun getPlanDetail(request: PlanProcessDetailRequest): PagingEquipmentProdResponse {
         val response = PagingEquipmentProdResponse()
@@ -62,34 +64,37 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                 colStartDate = request.startDate ?: OffsetDateTime.now()
                 colEndDate = request.endDate ?: OffsetDateTime.now()
             }
+
             OrderFilterType.ORDER -> {
-                val plan = request.orderCode?.let { planRepository.getPlanByOrderCode(it) } ?: throw BusinessException("")
+                val plan = request.orderCode?.let { planRepository.getPlanByOrderCode(it) }
+                    ?: throw BusinessException("")
                 colStartDate = plan.startDate ?: OffsetDateTime.now()
                 colEndDate = plan.endDate ?: OffsetDateTime.now()
             }
+
             else -> throw BusinessException("")
         }
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
         // start here
         val plan: MutableList<EquipmentProductivityModel> = mutableListOf()
 
-        for(planProductId in request.planProductId!!){
+        for (planProductId in request.planProductId!!) {
             val planProduct = planProductRep.getById(planProductId)
             val planProcesses = planProcessRep.getListPlanProcess(planProductId)
             val parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }
             val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
             val planDetails = planDetailRep.getPlanDetail(planProcessIds)
             val equipmentProductList = equipmentProductivityRepository.getEquipmentProductivity()
-            if(planProduct!=null){
-                for(planProcess in parentPlanProcess){
+            if (planProduct != null) {
+                for (planProcess in parentPlanProcess) {
                     val equipmentProductivity = EquipmentProductivityModel(
                         frame1 = planProduct.frame_1,
                         processName = planProcess.processName,
-                        processNameJp= planProcess.processName,
+                        processNameJp = planProcess.processName,
                         processConvertCode = planProcess.processConvertCode
                     )
                     val planDetailByProcess = planDetails.filter { m -> m.planProcessId == planProcess.id }
-                    val processDetailListModel =  mutableListOf<ProcessDetailListModel>()
+                    val processDetailListModel = mutableListOf<ProcessDetailListModel>()
                     //process
                     processDetailListModel.add(
                         ProcessDetailListModel(
@@ -106,8 +111,8 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                     val uniqueSheetDayValue = equipmentProductList
                         .firstOrNull { equipment ->
                             equipment.processCode == planProcess.processCode &&
-                                    equipment.mold == planProduct.mold &&
-                                    equipment.frame_1 == planProduct.frame_1
+                                equipment.mold == planProduct.mold &&
+                                equipment.frame_1 == planProduct.frame_1
                         }
                         ?.sheetDay
                     processDetailListModel.add(
@@ -130,7 +135,8 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                             type = ProcessPlan.MACHINENUMBER,
                             quantityByCalendars = if (uniqueSheetDayValue != null) {
                                 processValues!!.map { column ->
-                                    val result = (column.value?.toDoubleOrNull() ?: 0.0) / uniqueSheetDayValue.toDouble()
+                                    val result = (column.value?.toDoubleOrNull()
+                                        ?: 0.0) / uniqueSheetDayValue.toDouble()
                                     val formattedResult = String.format("%.1f", result)
                                     KeyValueResponse(
                                         column.key,
@@ -154,7 +160,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                     val processDetailList = mutableListOf<ProcessDetailModel>()
                     processDetailList.add(
                         ProcessDetailModel(
-                            name=planProduct.mold,
+                            name = planProduct.mold,
                             totalProcess = totalProcessValue,
                             processDetailList = processDetailListModel
                         )
@@ -183,7 +189,7 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         return response
     }
 
-    fun importExcel(file: MultipartFile) : BaseResponse<FileContentModel> {
+    fun importExcel(file: MultipartFile): BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -200,27 +206,27 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
                 count = BigDecimal(ExcelHelper.getCellValue(row, 5)),
                 setDay = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 5)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 4)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                        BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 blockDay = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 8)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 5)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 4)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                        BigDecimal(ExcelHelper.getCellValue(row, 5)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 blockSh = BigDecimal(ExcelHelper.getCellValue(row, 8)),
                 frame_1 = ExcelHelper.getCellValue(row, 0),
                 sheetHour = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                        BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 sheetDay = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 4)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
-                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                        BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                        BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 operatingRate = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) * BigDecimal(100)
@@ -234,7 +240,6 @@ class EquipmentProductivityService(private val equipmentProductivityRepository: 
         }
         return BaseResponse(null, CommonUtils.getMessage("Insert Ok", arrayOf(count, total + 1)))
     }
-
 
 
 }

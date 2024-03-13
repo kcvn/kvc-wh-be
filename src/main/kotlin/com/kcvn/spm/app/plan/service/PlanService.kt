@@ -230,7 +230,7 @@ class PlanService(
     ): Int {
         var rowIndex = rowNumber
         var dataRow = sheet.createRow(rowIndex)
-        val indexColor = IndexedColors.CORNFLOWER_BLUE.index
+        val indexColor = IndexedColors.PALE_BLUE.index
         ExcelHelper.setCellValueCustom(workbook, dataRow, 0, style, CommonUtils.getMessage("excel.colProductName"), true, false, true, false, true, true, indexColor)
         ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, CommonUtils.getMessage("excel.colFrame"), false, false, true, false, true, true, indexColor)
         ExcelHelper.setCellValueCustom(workbook, dataRow, 2, style, CommonUtils.getMessage("excel.colMold"), false, false, true, false, true, true, indexColor)

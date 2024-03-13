@@ -54,7 +54,7 @@ class ExcelHelper {
             cellStyle.borderBottom = style.borderBottom
 
             if (isHoliday) {
-                cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+                cellStyle.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             }
             row.getCell(colIndex).cellStyle = cellStyle
@@ -187,6 +187,7 @@ class ExcelHelper {
             font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
             font.fontHeightInPoints = 12.toShort()
             style.setFont(font)
+
             return style
         }
 

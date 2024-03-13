@@ -119,14 +119,15 @@ class OrderService(
         val sheet = workbook.getSheetAt(0)
 
         if (listOrderResponse.columns != null) {
-            val style = ExcelHelper.getCellStyleCommon(workbook)
             val rowNumber = 0
             val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+            val style = ExcelHelper.getCellStyleCommon(workbook)
+            val headerStyle = dataRow.getCell(0).cellStyle
 
             if (listOrderResponse.columns!!.isNotEmpty()) {
                 var headerCol = 9
                 for (col in listOrderResponse.columns!!) {
-                    ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, col.isHoliday)
+                    ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, headerStyle, col.value, col.isHoliday)
                     headerCol++
                 }
             }
@@ -137,15 +138,15 @@ class OrderService(
             if (listOrder != null) {
                 for (item in listOrder) {
                     val row: Row = sheet.createRow(rowNumberFill++)
-                    ExcelHelper.setCellValue(row, 0, style, item.productShortcutName)
-                    ExcelHelper.setCellValue(row, 1, style, item.productName)
-                    ExcelHelper.setCellValue(row, 2, style, item.quantity.toString())
-                    ExcelHelper.setCellValue(row, 3, style, item.frame_1)
-                    ExcelHelper.setCellValue(row, 4, style, item.layerCount.toString())
-                    ExcelHelper.setCellValue(row, 5, style, item.pcsSh.toString())
-                    ExcelHelper.setCellValue(row, 6, style, item.shBlock.toString())
-                    ExcelHelper.setCellValue(row, 7, style, item.srNosr)
-                    ExcelHelper.setCellValue(row, 8, style, item.version)
+                    ExcelHelper.setCellValue(workbook, row, 0, style, item.productShortcutName)
+                    ExcelHelper.setCellValue(workbook, row, 1, style, item.productName)
+                    ExcelHelper.setCellValue(workbook, row, 2, style, item.quantity.toString())
+                    ExcelHelper.setCellValue(workbook, row, 3, style, item.frame_1)
+                    ExcelHelper.setCellValue(workbook, row, 4, style, item.layerCount.toString())
+                    ExcelHelper.setCellValue(workbook, row, 5, style, item.pcsSh.toString())
+                    ExcelHelper.setCellValue(workbook, row, 6, style, item.shBlock.toString())
+                    ExcelHelper.setCellValue(workbook, row, 7, style, item.srNosr)
+                    ExcelHelper.setCellValue(workbook, row, 8, style, item.version)
 
                     if (listOrderResponse.columns!!.isNotEmpty()) {
                         var colIndex = 9

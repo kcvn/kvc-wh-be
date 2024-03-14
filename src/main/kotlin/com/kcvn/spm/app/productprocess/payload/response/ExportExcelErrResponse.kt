@@ -8,7 +8,7 @@ data class ExportExcelErrResponse (
     var processStatisticCode: String? = null,
     var processInventoryCode: String? = null,
     var inventoryLayerGroup: String? = null,
-    var dayOfImplementation: Int? = null,
+    var dayOfImplementation: String? = null,
     var idProcessStructure: String? = null,
     var messageErrs: MutableList<String?>? = null
 )

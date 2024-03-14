@@ -3,6 +3,7 @@ package com.kcvn.spm.app.plan.service
 import com.kcvn.spm.app.plan.payload.model.*
 import com.kcvn.spm.app.plan.payload.request.PlanDetailRequest
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
+import com.kcvn.spm.app.plan.payload.response.PlanSummaryResponse
 import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
 import com.kcvn.spm.common.constants.*
 import com.kcvn.spm.common.exception.BusinessException
@@ -40,6 +41,7 @@ class PlanService(
     private val workResultRep: WorkResultRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository
 ) {
+    //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
         val data = planProductRep.getListPlanProduct(request, pageable)
         val plans = data.first.map { x ->
@@ -112,14 +114,16 @@ class PlanService(
             val workResultAccumulations = calculateAccumulation(workResultData)
 
             val planData = mutableListOf<PlanDataByProcessModel>()
-
-
             val productPlan = ProductPlanDetailModel(
+                frame_1 = planProduct.frame_1,
+                mold = planProduct.mold,
                 layerCode = x.layerCode,
                 processCode = x.processCode,
                 processName = x.processName,
+                processNameJp = x.processNameJp,
                 completionRate = x.completionRate,
                 processConvertCode = x.processConvertCode,
+                processSequence = x.processSequence,
                 inventory = x.inventory
             )
             productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
@@ -130,18 +134,17 @@ class PlanService(
                     inventory = m.inventory
                 )
             }
-            productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 }
-                ?: 0) + (productPlan.inventory ?: 0)
+            productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
 
-            planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, quantityByCalendars = planDetail))
-            planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, quantityByCalendars = planAccumulations))
-            planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, quantityByCalendars = workResultData))
-            planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, quantityByCalendars = workResultAccumulations))
-            planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, titleKey = PlanTitle.PLAN_ACCUMULATION_KEY, quantityByCalendars = planAccumulations))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY, quantityByCalendars = workResultAccumulations))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
 
             productPlan.planData = planData
             productPlan
-        }
+        }.sortedBy { x -> x.processSequence }
         return response
     }
 
@@ -624,11 +627,15 @@ class PlanService(
                 val planData = mutableListOf<PlanDataByProcessModel>()
 
                 val productPlan = ProductPlanDetailModel(
+                    frame_1 = planProduct.frame_1,
+                    mold = planProduct.mold,
                     layerCode = x.layerCode,
                     processCode = x.processCode,
                     processName = x.processName,
+                    processNameJp = x.processNameJp,
                     completionRate = x.completionRate,
                     processConvertCode = x.processConvertCode,
+                    processSequence = x.processSequence,
                     inventory = x.inventory
                 )
                 productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
@@ -642,15 +649,15 @@ class PlanService(
                 productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 }
                     ?: 0) + (productPlan.inventory ?: 0)
 
-                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, quantityByCalendars = planDetail))
-                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, quantityByCalendars = planAccumulations))
-                planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, quantityByCalendars = workResultData))
-                planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, quantityByCalendars = workResultAccumulations))
-                planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, titleKey = PlanTitle.PLAN_ACCUMULATION_KEY, quantityByCalendars = planAccumulations))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY, quantityByCalendars = workResultAccumulations))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
 
                 productPlan.planData = planData
                 productPlan
-            }
+            }.sortedBy { x -> x.processSequence }
             data.add(productExport)
         }
 
@@ -677,5 +684,218 @@ class PlanService(
         }
         return response
     }
+
+    //endregion
+
+    //region PLAN SUMMARY
+
+    fun getPlanSummary(request: PlanSearchRequest): PlanSummaryResponse {
+        val response = PlanSummaryResponse()
+        var colStartDate = OffsetDateTime.now()
+        var colEndDate = OffsetDateTime.now()
+        if (request.filterType == OrderFilterType.DATE) {
+            if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
+            colStartDate = request.startDate
+            colEndDate = request.endDate
+        }
+        if (request.filterType == OrderFilterType.ORDER) {
+            val plan = planRep.getPlanByOrderCode(request.orderCode ?: "")
+                ?: throw BusinessException(CommonUtils.getMessage("plan.notExistInOrder"))
+            colStartDate = plan.startDate
+            colEndDate = plan.endDate
+        }
+
+        val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
+        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
+
+        val planProducts = planProductRep.getListPlanProduct(request)
+        val dataExports = getDataExportExcel(planProducts, colStartDate, colEndDate)
+        val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten()
+
+        val dataSummary = dataExportFlattens.groupBy { x -> x.processCode }.map { x ->
+            val process = x.value.first()
+            val summary = PlanSummaryModel(
+                frame_1 = process.frame_1,
+                mold = process.mold,
+                processName = process.processName,
+                processNameJp = process.processNameJp,
+                processConvertCode = process.processConvertCode,
+                processSequence = process.processSequence,
+                details = mutableListOf(
+                    PlanSummaryDetailModel(
+                        type = "",
+                        planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                            .groupBy { m -> Pair(m.titleKey, m.title) }
+                            .map { m ->
+                                val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                data
+                            }
+                    )
+                )
+            )
+            summary
+        }.toMutableList()
+
+        val dataDucLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH }
+        if (dataDucLo.isNotEmpty()) {
+            val ducLo = PlanSummaryModel(
+                frame_1 = dataDucLo.first().frame_1,
+                mold = dataDucLo.first().mold,
+                processName = CommonUtils.getMessage("excel.rowDucLo"),
+                processNameJp = dataDucLo.first().processNameJp,
+                processConvertCode = "${ProcessConvertCode.T}/${ProcessConvertCode.TH}",
+                processSequence = dataDucLo.first().processSequence,
+                details = mutableListOf(
+                    PlanSummaryDetailModel(
+                        type = CommonUtils.getMessage("excel.rowTotal"),
+                        planSummaryData = dataDucLo.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
+                            .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
+                                val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
+                                data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                data
+                            }.toList()
+                    )
+                )
+            )
+
+            for (mold in listOf(Mold.KVC, Mold.SKE)) {
+                val dataMold = dataExportFlattens
+                    .filter { x -> x.mold == mold && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH) }
+                    .groupBy { x -> x.mold }.mapNotNull { x ->
+                        PlanSummaryDetailModel(
+                            type = x.key,
+                            planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                                .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                                    val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                    data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                        .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                    data
+                                }
+                        )
+                    }
+                ducLo.details!!.addAll(dataMold)
+            }
+
+            dataSummary.removeAll(dataDucLo)
+            dataSummary.add(ducLo)
+        }
+
+        val dataInMach = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.TAN || x.processConvertCode == ProcessConvertCode.ZEN }
+        if (dataInMach.isNotEmpty()) {
+            val inMach = PlanSummaryModel(
+                frame_1 = dataInMach.first().frame_1,
+                mold = dataInMach.first().mold,
+                processName = CommonUtils.getMessage("excel.rowInMach"),
+                processNameJp = dataInMach.first().processNameJp,
+                processConvertCode = "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}",
+                processSequence = dataInMach.first().processSequence,
+                details = mutableListOf(
+                    PlanSummaryDetailModel(
+                        type = CommonUtils.getMessage("excel.rowTotal"),
+                        planSummaryData = dataInMach.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
+                            .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
+                                val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
+                                data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                data
+                            }.toList()
+                    )
+                )
+            )
+
+            for (code in listOf(ProcessConvertCode.TAN, ProcessConvertCode.ZEN)) {
+                val dataTanZen = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                    PlanSummaryDetailModel(
+                        type = x.key,
+                        planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                            .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                                val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                data
+                            }
+                    )
+                }
+                inMach.details!!.addAll(dataTanZen)
+            }
+
+            dataSummary.removeAll(dataInMach)
+            dataSummary.add(inMach)
+        }
+
+        val dataGhepLop = dataSummary.filter { x -> !x.processConvertCode.isNullOrEmpty() && x.processConvertCode!!.startsWith("M") }
+        if (dataGhepLop.isNotEmpty()) {
+            val ghepLop = PlanSummaryModel(
+                frame_1 = dataGhepLop.first().frame_1,
+                mold = dataGhepLop.first().mold,
+                processName = CommonUtils.getMessage("excel.rowGhepLop"),
+                processNameJp = dataGhepLop.first().processNameJp,
+                processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_TAN}",
+                processSequence = dataGhepLop.first().processSequence,
+                details = mutableListOf(
+                    PlanSummaryDetailModel(
+                        type = CommonUtils.getMessage("excel.rowTotal"),
+                        planSummaryData = dataGhepLop.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
+                            .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
+                                val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
+                                data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                data
+                            }.toList()
+                    )
+                )
+            )
+
+            val mAll = dataExportFlattens.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                PlanSummaryDetailModel(
+                    type = x.key,
+                    planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                        .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                            val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                            data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                            data
+                        }
+                )
+            }
+            ghepLop.details!!.addAll(mAll)
+
+            val mTan = dataExportFlattens
+                .filter { x -> !x.processConvertCode.isNullOrEmpty() && x.processConvertCode != ProcessConvertCode.M_ALL && x.processConvertCode!!.startsWith("M") }
+                .map { x ->
+                    x.processConvertCode = ProcessConvertCode.M_TAN
+                    x
+                }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                    PlanSummaryDetailModel(
+                        type = x.key,
+                        planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                            .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                                val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                data
+                            }
+                    )
+                }
+            ghepLop.details!!.addAll(mTan)
+
+            dataSummary.removeAll(dataGhepLop)
+            dataSummary.add(ghepLop)
+        }
+
+        response.data = dataSummary
+
+        return response
+
+    }
+
+    fun exportExcelSummary(request: PlanSearchRequest): FileContentModel {
+        return FileContentModel()
+    }
+
+    //endregion
 
 }

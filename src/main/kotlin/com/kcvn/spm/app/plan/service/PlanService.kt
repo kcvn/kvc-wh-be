@@ -168,7 +168,7 @@ class PlanService(
 
         val planProducts = planProductRep.getListPlanProduct(request)
         val dataExports = getDataExportExcel(planProducts, colStartDate, colEndDate)
-        if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("plan.export.noData"))
+        if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
@@ -886,14 +886,129 @@ class PlanService(
             dataSummary.add(ghepLop)
         }
 
-        response.data = dataSummary
+        response.data = dataSummary.sortedBy { x -> x.processSequence }
 
         return response
 
     }
 
     fun exportExcelSummary(request: PlanSearchRequest): FileContentModel {
+        val dataSummary = getPlanSummary(request)
+        if (dataSummary.data.isNullOrEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanSummaryTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        val headerRow = sheet.getRow(0)
+        var headerCol = 3
+        val headerStyle = headerRow.getCell(0).cellStyle
+        for (col in dataSummary.columns!!) {
+            ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
+            headerCol++
+        }
+
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        var rowNumber = 1
+        for (data in dataSummary.data!!) {
+            generateExcelColProcessInPlanSummary(workbook, sheet, rowNumber, style, data)
+
+            var rowIndex = rowNumber
+            for (detail in data.details!!) {
+                var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                ExcelHelper.setCellValueCustom(
+                    workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = detail.type,
+                    isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
+                    isBold = false, isAlignCenter = false
+                )
+                rowIndex++
+
+                for (i in 1 until 5) {
+                    dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                    ExcelHelper.setCellValueCustom(
+                        workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = "",
+                        isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = (i == 4),
+                        isBold = false, isAlignCenter = false
+                    )
+                    rowIndex++
+                }
+
+                rowIndex = rowNumber
+                for (item in detail.planSummaryData!!) {
+                    dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                    ExcelHelper.setCellValue(workbook, dataRow, 2, style, item.title)
+
+                    var colIndex = 3
+                    for (col in dataSummary.columns!!) {
+                        val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
+                        ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday)
+                        colIndex++
+                    }
+                    rowIndex++
+                }
+                rowNumber = rowIndex
+            }
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportPlanSummary", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+        return response
+
         return FileContentModel()
+    }
+
+    private fun generateExcelColProcessInPlanSummary(
+        workbook: Workbook,
+        sheet: Sheet,
+        rowNumber: Int,
+        style: CellStyle,
+        data: PlanSummaryModel
+    ): Int {
+        var rowIndex = rowNumber
+        var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = data.processName,
+            isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
+            isBold = false, isAlignCenter = false
+        )
+
+        rowIndex++
+        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = data.processNameJp,
+            isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
+            isBold = false, isAlignCenter = false
+        )
+
+        rowIndex++
+        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValueCustom(
+            workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = data.processConvertCode,
+            isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
+            isBold = false, isAlignCenter = false
+        )
+
+        rowIndex++
+        for (i in 3 until (data.details!!.size * 5)) {
+            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+            ExcelHelper.setCellValueCustom(
+                workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = "",
+                isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = (i == ((data.details!!.size * 5) - 1)),
+                isBold = false, isAlignCenter = false
+            )
+            rowIndex++
+        }
+        return rowIndex
     }
 
     //endregion

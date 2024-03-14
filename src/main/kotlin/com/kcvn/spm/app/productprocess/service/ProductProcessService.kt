@@ -112,9 +112,6 @@ class ProductProcessService(
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest): List<ProductProcess?> {
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
         //// Lấy ra danh sách công đoạn cuối mỗi lớp và check phải tồn tại mã tồn kho là mã công đoạn ở lớp trước
-        val requestMap = request.listProcess?.map {
-
-        }
         val listInventoryProcessGrByLayer = request.listProcess
             ?.filter { it.layerCode != "1" }
             ?.groupBy { it.layerCode }
@@ -134,12 +131,19 @@ class ProductProcessService(
             }
         }
 
-        ///// Check khi ngày thứ thực hiện để trống
+
+        ///// Check khi ngày thứ thực hiện để trống và check ngày thứ thực hiện phải có ngày bắt đầu từ 1
         val countDayOfImplementNull = request.listProcess?.count { it.dayOfImplementation == null } ?: 0
         val countRequest = request.listProcess?.count()
         if(countDayOfImplementNull > 0 && countDayOfImplementNull != countRequest){
             throw BusinessException(CommonUtils.getMessage("validate.excel.dayOfImplementation"))
+        }else {
+            request.listProcess?.firstOrNull{
+                it.dayOfImplementation == 1
+            } ?: throw  BusinessException(CommonUtils.getMessage("validate.excel.processDayOne"))
         }
+        // check ngày thứ thực hiện nếu k trống thì trong lớp phải có ngày thực hiện bắt đầu bằng 1
+
         /// check mã tồn kho hoặc mã thống kê để null
         val listConvertCodeOrStatisticCodeNull = request.listProcess?.firstOrNull{
             it.processConvertCode.isEmpty() || it.processStatisticCode.isEmpty()

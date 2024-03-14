@@ -31,7 +31,9 @@ data class PlanProcess(
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
     var isDeleted: Boolean? = null,
-    var unit: String? = null
+    var unit: String? = null,
+    var processSequence: Int? = null,
+    var processNameJp: String? = null
 ): Serializable {
 
 
@@ -139,6 +141,18 @@ data class PlanProcess(
         }
         else if (this.unit != o.unit)
             return false
+        if (this.processSequence == null) {
+            if (o.processSequence != null)
+                return false
+        }
+        else if (this.processSequence != o.processSequence)
+            return false
+        if (this.processNameJp == null) {
+            if (o.processNameJp != null)
+                return false
+        }
+        else if (this.processNameJp != o.processNameJp)
+            return false
         return true
     }
 
@@ -161,6 +175,8 @@ data class PlanProcess(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         result = prime * result + (if (this.unit == null) 0 else this.unit.hashCode())
+        result = prime * result + (if (this.processSequence == null) 0 else this.processSequence.hashCode())
+        result = prime * result + (if (this.processNameJp == null) 0 else this.processNameJp.hashCode())
         return result
     }
 
@@ -183,6 +199,8 @@ data class PlanProcess(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
         sb.append(", ").append(unit)
+        sb.append(", ").append(processSequence)
+        sb.append(", ").append(processNameJp)
 
         sb.append(")")
         return sb.toString()

@@ -99,6 +99,17 @@ class ProcessStatisticCode {
     }
 }
 
+class ProcessConvertCode {
+    companion object {
+        const val T = "T"
+        const val TH = "TH"
+        const val M_ALL = "M ALL"
+        const val M_TAN = "M TAN"
+        const val TAN = "TAN"
+        const val ZEN = "ZEN"
+    }
+}
+
 class ExcelConstant {
     companion object {
         const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

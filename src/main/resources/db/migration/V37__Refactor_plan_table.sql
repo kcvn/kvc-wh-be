@@ -1,0 +1,1 @@
+ALTER TABLE public.plan_process ADD process_name_jp varchar(100) NULL;

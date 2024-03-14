@@ -339,18 +339,17 @@ class ProductProcessService(
             try {
                 if (check) {
                     val cellProcessCode = row.getCell(1)
-                    var processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
+                    val processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
                         cellProcessCode.numericCellValue.toInt().toString()
                     else {
                         ExcelHelper.getCellValue(row, 1)
                     }
 
                     val cellLayerCode = row.getCell(2)
-                    var layerCode = ""
-                    if (cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0)
-                        layerCode = cellLayerCode.numericCellValue.toInt().toString()
-                    else {
-                        processCode = ExcelHelper.getCellValue(row, 2)
+                    val layerCode = if (cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+                         cellLayerCode.numericCellValue.toInt().toString()
+                    } else {
+                         ExcelHelper.getCellValue(row, 2)
                     }
                     val filter = ImportProcessRequest(
                         productName = ExcelHelper.getCellValue(row, 0),
@@ -429,6 +428,441 @@ class ProductProcessService(
         )
     }
 
+    fun importExcelProduct1(file: MultipartFile): BaseResponse<FileContentModel> {
+        val workbook = WorkbookFactory.create(file.inputStream)
+        val sheet = workbook.getSheetAt(0)
+        val rowIndex = 1
+
+        if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
+            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+        val headerRow = sheet.getRow(0)
+
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx"
+
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
+            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+
+        val total = sheet.lastRowNum
+
+        val masterData = masterDataService.getMasterDataSelection()
+        //val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
+        // Tạo lít dataErr để sau trả lại excel lỗi
+        val dataErr: MutableList<ExportExcelErrResponse> = mutableListOf()
+        val dataDefault: MutableList<ProductProcessResponse> = mutableListOf()
+        // đọc file lấy dữ liệu ở file excel lưu vào 1 list default
+        for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+            val process = ProductProcessResponse()
+            val cellProcessCode = row.getCell(1)
+            val processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
+                cellProcessCode.numericCellValue.toInt().toString()
+            else {
+                ExcelHelper.getCellValue(row, 1)
+            }
+
+            val cellLayerCode = row.getCell(2)
+            val layerCode = if (cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+                cellLayerCode.numericCellValue.toInt().toString()
+            } else {
+                ExcelHelper.getCellValue(row, 2)
+            }
+            process.productName = ExcelHelper.getCellValue(row, 0)
+            process.processCode = processCode
+            process.layerCode = layerCode
+            process.processConvertCode = ExcelHelper.getCellValue(row, 3)
+            val processInventoryCode =  if(ExcelHelper.getCellValue(row, 4).isEmpty()){
+                ""
+            }else {
+                if (row.getCell(4).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+                    row.getCell(4).numericCellValue.toInt().toString()
+                } else {
+                    ExcelHelper.getCellValue(row, 4)
+                }
+            }
+            process.processInventoryCode = processInventoryCode
+            process.processStatisticCode = ExcelHelper.getCellValue(row, 5)
+            val inventoryLayerGroup = if(ExcelHelper.getCellValue(row, 6).isEmpty()){
+                ""
+            }else {
+                if (row.getCell(6).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+                    row.getCell(6).numericCellValue.toInt().toString()
+                } else {
+                    ExcelHelper.getCellValue(row, 6)
+                }
+            }
+
+            val dayOfImplementation = if(ExcelHelper.getCellValue(row, 7).isEmpty()){
+                ""
+            }else {
+                if (row.getCell(7).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+                    row.getCell(7).numericCellValue.toInt().toString()
+                } else {
+                    ExcelHelper.getCellValue(row, 7)
+                }
+            }
+            process.inventoryLayerGroup = inventoryLayerGroup
+            process.dayOfImplementation = dayOfImplementation
+
+            dataDefault.add(process)
+        }
+
+        // list product name lỗi
+        val listKeyErr : MutableList<String?> = mutableListOf()
+        // gr theo key product name
+        val dataDefaultGr = dataDefault.groupBy { it.productName }
+        // Lấy ra list product name default
+        var listProductNameDefault: List<String?> = listOf()
+        for(itemProduct in dataDefaultGr){
+            listProductNameDefault = listProductNameDefault + itemProduct.key
+        }
+        val listProductNameDefaultNotNull = listProductNameDefault.filterNotNull()
+        // lấy ra dữ liệu theo tên sản phẩm dựa vào list product name trong excel
+        val listDataDb = processProcedureRep.getByProductName(listProductNameDefaultNotNull)
+        // validate dữ liệu và thêm vào bản ghi
+
+        for (listItem in dataDefaultGr){
+
+            var checkList = true
+            var checkCountProcess = true
+            var checkDayNull = true
+            var checkDayOne = true
+            // Đếm xem có đủ công đoạn trong db không
+            val countProcess = listDataDb.count { it.productCode == listItem.key }
+            val countProcessByExcel = listItem.value.count { it.processCode?.any { char -> char != '0' } ?: false }
+            if(countProcess != countProcessByExcel){
+
+                checkList = false
+                checkCountProcess = false
+            }
+            val listInventoryLayerFilter = listItem.value.filter { !it.inventoryLayerGroup.isNullOrEmpty() }
+
+            for (itemInventoryLayerGr in listInventoryLayerFilter.sortedWith(compareBy({ it.layerCode }, { it.processSequence }))){
+
+                val checkInventory = listItem.value.firstOrNull {
+                    it.processCode == itemInventoryLayerGr.processInventoryCode
+                              && it.productName == itemInventoryLayerGr.productName
+                }
+
+                if (checkInventory != null){
+                    val messageErr1 = ExportExcelErrResponse()
+                    messageErr1.messageErrs = mutableListOf()
+                    messageErr1.productName = itemInventoryLayerGr.productName
+                    messageErr1.layerCode = itemInventoryLayerGr.layerCode
+                    messageErr1.processCode = itemInventoryLayerGr.processCode
+                    messageErr1.processConvertCode = itemInventoryLayerGr.processConvertCode
+                    messageErr1.processInventoryCode = itemInventoryLayerGr.processInventoryCode
+                    messageErr1.processStatisticCode = itemInventoryLayerGr.processStatisticCode
+                    messageErr1.inventoryLayerGroup = itemInventoryLayerGr.inventoryLayerGroup
+                    messageErr1.dayOfImplementation = itemInventoryLayerGr.dayOfImplementation
+                    if(!checkInventory.processInventoryCode.isNullOrEmpty()){
+                        messageErr1.messageErrs?.add(CommonUtils.getMessage(
+                            "validate.excel.processInventoryCode"))
+                        dataErr.add(messageErr1)
+                    }
+                    if(checkInventory.layerCode != itemInventoryLayerGr.inventoryLayerGroup){
+                        messageErr1.messageErrs?.add(CommonUtils.getMessage(
+                            "validate.excel.inventoryCodeAndInventoryLayerGr2"))
+                        dataErr.add(messageErr1)
+                    }
+
+                    checkList = false
+                }
+            }
+
+            val countDayImplement = listItem.value.count{ !it.dayOfImplementation.isNullOrEmpty()}
+            val countListItem = listItem.value.count()
+            if(countDayImplement != countListItem && countDayImplement > 0){
+                checkDayNull = false
+            }
+            if(countDayImplement == countListItem && countDayImplement > 0){
+                val findDayOne = listItem.value.firstOrNull{
+                    it.dayOfImplementation!!.toDoubleOrNull() == 1.0}
+                if(findDayOne == null){
+                    checkDayOne = false
+                }
+            }
+
+            if(!checkCountProcess || !checkDayNull || !checkDayOne ){
+                for(item in listItem.value){
+                    val messageErr = ExportExcelErrResponse()
+                    messageErr.messageErrs = mutableListOf()
+                    messageErr.productName = item.productName
+                    messageErr.processCode = item.processCode
+                    messageErr.layerCode = item.layerCode
+                    messageErr.processConvertCode = item.processConvertCode
+                    messageErr.processInventoryCode = item.processInventoryCode
+                    messageErr.processStatisticCode = item.processStatisticCode
+                    messageErr.inventoryLayerGroup = item.inventoryLayerGroup
+                    messageErr.dayOfImplementation = item.dayOfImplementation
+                    if(!checkCountProcess){
+                        messageErr.messageErrs?.add(CommonUtils.getMessage(
+                            "validate.excel.sumProcessByProduct"))
+                    }
+                    if(!checkDayNull){
+                        messageErr.messageErrs?.add(CommonUtils.getMessage(
+                            "validate.excel.dayOfImplementation"))
+                    }
+                    if(!checkDayOne){
+                        messageErr.messageErrs?.add(CommonUtils.getMessage(
+                            "validate.excel.processDayOne"))
+                    }
+
+                    dataErr.add(messageErr)
+                }
+            }
+
+
+            val listItemValueMap = listItem.value.sortedWith(compareBy({ it.layerCode }, { it.processSequence })).map { x ->
+                var i = 0
+                i++
+                val sq = listDataDb.firstOrNull {
+                    it.productCode == x.productName
+                            && it.processCode == x.processCode
+                            && it.layerCode == x.layerCode}
+                val model = ProductProcessResponse(
+                    processSequence = sq?.processSequence.toString(),
+                    processName = x.processName,
+                    productName = x.productName,
+                    processCode = x.processCode,
+                    layerCode = x.layerCode,
+                    processConvertCode = x.processConvertCode,
+                    processStatisticCode = x.processStatisticCode,
+                    processInventoryCode = x.processInventoryCode,
+                    inventoryLayerGroup = x.inventoryLayerGroup,
+                    dayOfImplementation = x.dayOfImplementation,
+                    idx = i
+                )
+                model
+            }
+            // Check mã tồn kho từ lớp 2 trở đi ở cuối phải là mã công đoạn ở lớp trước đó
+            val listProcessLast: MutableList<ProductProcessResponse> = mutableListOf()
+            val listItemGrByLayer = listItemValueMap.filter { it.layerCode != "1" }
+                .groupBy { it.layerCode }
+            for(item in listItemGrByLayer){
+                val listItemGrByLayerSort = item.value.sortedBy { it.processSequence }
+                val itemLast = listItemGrByLayerSort.last()
+                listProcessLast.add(itemLast)
+            }
+
+            val listItemValueMapSort = listItemValueMap.sortedWith(compareBy({ it.layerCode }, { it.processSequence }))
+            var itemInventoryLayerGrPre: ProductProcessResponse? =  null
+            for (item in listItemValueMapSort ){
+                val messageErr = ExportExcelErrResponse()
+                messageErr.messageErrs = mutableListOf()
+                val checkDataErr = dataErr.firstOrNull { it.processCode == item.processCode
+                        && it.productName == item.productName
+                        && it.layerCode == item.layerCode}
+                if (checkDataErr != null) {
+                    continue
+                }
+                if (item.productName.isNullOrEmpty()) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
+                    ))
+                }
+                if (item.processCode.isNullOrEmpty()) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
+                    ))
+                }
+                if (item.layerCode.isNullOrEmpty()) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
+                    ))
+                }
+                if (item.processConvertCode.isNullOrEmpty()) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
+                    ))
+                }
+
+                if (item.processStatisticCode.isNullOrEmpty()) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))
+                    ))
+                }
+
+                if (!item.productName.isNullOrEmpty() && item.productName!!.length > 12) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
+                }
+                if (!item.processCode.isNullOrEmpty() && item.processCode!!.length > 6) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
+                }
+                if (!item.layerCode.isNullOrEmpty() && item.layerCode!!.length > 2) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
+                }
+                if (!item.processConvertCode.isNullOrEmpty() && item.processConvertCode!!.length > 10) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
+                }
+                if (!item.processInventoryCode.isNullOrEmpty() && item.processInventoryCode!!.length > 10) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
+                }
+                if (!item.processStatisticCode.isNullOrEmpty() && item.processStatisticCode!!.length > 10) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
+                }
+
+                if (!masterData.processConvertCodes.any { x -> x.label == item.processConvertCode }) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.notExist",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
+                }
+                if (!masterData.processStatisticCodes.any { x -> x.label == item.processStatisticCode }) {
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.notExist",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
+                }
+
+
+
+                if((!item.processInventoryCode.isNullOrEmpty() && item.inventoryLayerGroup.isNullOrEmpty())
+                    || (item.processInventoryCode.isNullOrEmpty() && !item.inventoryLayerGroup.isNullOrEmpty()))
+                {
+                        messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.inventoryCodeAndInventoryLayerGr1"))
+                }
+
+                if(!item.inventoryLayerGroup.isNullOrEmpty()){
+                    val checkInventoryLayerGr = listItem.value.firstOrNull { it.layerCode == item.inventoryLayerGroup
+                            && it.processCode == item.processInventoryCode}
+                    if(checkInventoryLayerGr == null){
+                        messageErr.messageErrs?.add(CommonUtils.getMessage(
+                            "validate.excel.inventoryLayerGr"))
+                    }
+                }
+
+                val checkProcessStructure = listDataDb.firstOrNull {
+                    it.productCode == item.productName
+                            && it.layerCode == item.layerCode
+                            && it.processCode == item.processCode
+                }
+                if(checkProcessStructure == null){
+                    checkList = false
+                    messageErr.messageErrs?.add(CommonUtils.getMessage(
+                        "validate.excel.process.dataNull"))
+                }else {
+                    messageErr.idProcessStructure = checkProcessStructure.id
+                }
+
+                if(itemInventoryLayerGrPre != null && !item.dayOfImplementation.isNullOrEmpty()) {
+                    val dayItemInventoryLayerGrPre = itemInventoryLayerGrPre.dayOfImplementation?.toIntOrNull() ?: 0
+                    val dayItemInventoryLayerGr = item.dayOfImplementation?.toIntOrNull() ?: 0
+                    if(dayItemInventoryLayerGr - dayItemInventoryLayerGrPre > 1 || dayItemInventoryLayerGr - dayItemInventoryLayerGrPre < 0){
+                        messageErr.messageErrs?.add(CommonUtils.getMessage(
+                            "validate.excel.checkSubtractionDayOfImplementation"))
+                    }
+                }
+
+                val checkLastProcess = listProcessLast.firstOrNull{
+                    it.productName == item.productName
+                            && it.layerCode == item.layerCode
+                            && it.processCode == item.processCode
+                }
+                if(checkLastProcess != null){
+                    val layerItemInt = item.layerCode?.toIntOrNull() ?: 0
+                    val listProcessLayerPre = listItem.value.filter {
+                        it.layerCode?.toIntOrNull() == (  layerItemInt - 1)
+                                && it.productName == item.productName
+                    }
+                    val checkProcessInventoryLast = listProcessLayerPre.firstOrNull{
+                        it.processCode == checkLastProcess.processInventoryCode
+                    }
+                    if(checkProcessInventoryLast == null){
+                        messageErr.messageErrs?.add(CommonUtils.getMessage(
+                            "validate.excel.checkInventoryLast"))
+                    }
+                }
+
+                itemInventoryLayerGrPre = item
+
+                messageErr.productName = item.productName
+                messageErr.layerCode = item.layerCode
+                messageErr.processCode = item.processCode
+                messageErr.processConvertCode = item.processConvertCode
+                messageErr.processInventoryCode = item.processInventoryCode
+                messageErr.processStatisticCode = item.processStatisticCode
+                messageErr.inventoryLayerGroup = item.inventoryLayerGroup
+                messageErr.dayOfImplementation = item.dayOfImplementation
+                dataErr.add(messageErr)
+            }
+            if(!checkList) {
+                listKeyErr.add(listItem.key)
+            }
+        }
+        val resultDataErr: MutableList<ExportExcelErrResponse> = mutableListOf()
+        for (itemKey in listKeyErr){
+            val filteredData = dataErr.filter { it.productName == itemKey }
+            resultDataErr.addAll(filteredData)
+        }
+        var count = 0
+        val resultData = dataErr.filter { it !in resultDataErr }.toMutableList()
+        for(item in resultData){
+            val requestImport = ProductProcess(
+                processProcedureStructureId = item.idProcessStructure,
+                processConvertCode = item.processConvertCode,
+                processInventoryCode = item.processInventoryCode,
+                processStatisticCode = item.processStatisticCode,
+                inventoryLayerGroup =  item.inventoryLayerGroup,
+                dayOfImplementation = item.dayOfImplementation?.toIntOrNull()
+            )
+            val checkProductProcess = productProcessRep.findByIdProductProcedureStructure(requestImport.processProcedureStructureId)
+            if (checkProductProcess == null) {
+                requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+                requestImport.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                productProcessRep.insertProductProcess(requestImport)
+            } else {
+                requestImport.updatedBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+                productProcessRep.updateProcessDetail(requestImport)
+            }
+            // messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
+
+            count++
+        }
+        val excelBytes = exportExcelErr(resultDataErr)
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("export.excel.result.import", arrayOf(LocalDateTime.now().format(
+                DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+        workbook.close()
+
+        return BaseResponse(
+            response,
+            if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
+        )
+    }
     fun exportExcelErr(requestErr: MutableList<ExportExcelErrResponse>): ByteArray? {
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx")
 
@@ -442,19 +876,20 @@ class ProductProcessService(
             val style = ExcelHelper.getCellStyleCommon(workbook)
             var rowNumber = 1
             for (item in requestErr) {
-                if (item.messageErrs.isNullOrEmpty()) continue
-                else {
-                    val dataRow: Row = sheet.createRow(rowNumber++)
-                    ExcelHelper.setCellValue(dataRow, 0, style, item.productName)
-                    ExcelHelper.setCellValue(dataRow, 1, style, item.processCode)
-                    ExcelHelper.setCellValue(dataRow, 2, style, item.layerCode)
-                    ExcelHelper.setCellValue(dataRow, 3, style, item.processConvertCode)
-                    ExcelHelper.setCellValue(dataRow, 4, style, item.processInventoryCode)
-                    ExcelHelper.setCellValue(dataRow, 5, style, item.processStatisticCode)
 
-                    val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
-                    ExcelHelper.setCellValue(dataRow, 6, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))
-                }
+                val dataRow: Row = sheet.createRow(rowNumber++)
+                ExcelHelper.setCellValue(dataRow, 0, style, item.productName)
+                ExcelHelper.setCellValue(dataRow, 1, style, item.processCode)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.layerCode)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.processConvertCode)
+                ExcelHelper.setCellValue(dataRow, 4, style, item.processInventoryCode)
+                ExcelHelper.setCellValue(dataRow, 5, style, item.processStatisticCode)
+                ExcelHelper.setCellValue(dataRow, 6, style, item.inventoryLayerGroup)
+                ExcelHelper.setCellValue(dataRow, 7, style, item.dayOfImplementation)
+
+                val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
+                ExcelHelper.setCellValue(dataRow, 8, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))
+
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -462,4 +897,6 @@ class ProductProcessService(
 
         return byteArrayOutputStream.toByteArray()
     }
+
+
 }

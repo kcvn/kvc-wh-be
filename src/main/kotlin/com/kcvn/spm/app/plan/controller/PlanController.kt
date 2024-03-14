@@ -3,6 +3,7 @@ package com.kcvn.spm.app.plan.controller
 import com.kcvn.spm.app.plan.payload.model.ProductPlanModel
 import com.kcvn.spm.app.plan.payload.request.PlanDetailRequest
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
+import com.kcvn.spm.app.plan.payload.response.PlanSummaryResponse
 import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
 import com.kcvn.spm.app.plan.service.PlanService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -41,6 +42,20 @@ class PlanController(private val planService: PlanService) {
     @GetMapping("/export-excel")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportExcel(request: PlanSearchRequest): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = planService.exportExcel(request)
+        return ResponseEntity(BaseResponse(data), HttpStatus.OK)
+    }
+
+    @GetMapping("/summary")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
+    fun getListSummary(request: PlanSearchRequest): ResponseEntity<PlanSummaryResponse> {
+        val data = planService.getPlanSummary(request)
+        return ResponseEntity<PlanSummaryResponse>(data, HttpStatus.OK)
+    }
+
+    @GetMapping("/summary/export-excel")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    fun exportExcelSummary(request: PlanSearchRequest): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = planService.exportExcel(request)
         return ResponseEntity(BaseResponse(data), HttpStatus.OK)
     }

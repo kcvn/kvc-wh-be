@@ -99,6 +99,8 @@ class ProductProcessService(
             productProcessResponse.processProcedureStructureId = it?.processProcedureStructureId
             productProcessResponse.layerCodeInt = it?.layerCodeInt
             productProcessResponse.processSequence = it?.processSequence
+            productProcessResponse.dayOfImplementation = it?.dayOfImplementation
+            productProcessResponse.inventoryLayerGroup = it?.inventoryLayerGroup
             productProcessResponse
         }
         data?.forEachIndexed { idx, dt ->
@@ -110,11 +112,14 @@ class ProductProcessService(
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest): List<ProductProcess?> {
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
         //// Lấy ra danh sách công đoạn cuối mỗi lớp và check phải tồn tại mã tồn kho là mã công đoạn ở lớp trước
+        val requestMap = request.listProcess?.map {
+
+        }
         val listInventoryProcessGrByLayer = request.listProcess
             ?.filter { it.layerCode != "1" }
             ?.groupBy { it.layerCode }
         for(itemInventoryProcessGrByLayer in listInventoryProcessGrByLayer!!.values){
-            val itemInventoryProcessGrByLayerSort = itemInventoryProcessGrByLayer.sortedBy { it.processSequence }
+            val itemInventoryProcessGrByLayerSort = itemInventoryProcessGrByLayer.sortedBy { it.idx }
             val itemInventoryProcessGrByLayerLast = itemInventoryProcessGrByLayerSort.last()
             if(itemInventoryProcessGrByLayerLast.processInventoryCode.isNullOrEmpty()
                 || itemInventoryProcessGrByLayerLast.inventoryLayerGroup.isNullOrEmpty()){
@@ -144,8 +149,8 @@ class ProductProcessService(
         }
         // check nếu tồn tại Lớp số gộp tồn kho thì phải tồn tại mã gộp tồn kho
         val checkInventoryCodeAndLayerCodeGr = request.listProcess?.firstOrNull{
-            (!it.inventoryLayerGroup!!.isEmpty() && it.processInventoryCode!!.isEmpty())
-                    || (it.inventoryLayerGroup!!.isEmpty() && !it.processInventoryCode!!.isEmpty())
+            (!it.inventoryLayerGroup.isNullOrEmpty() && it.processInventoryCode.isNullOrEmpty())
+                    || (it.inventoryLayerGroup.isNullOrEmpty() && !it.processInventoryCode.isNullOrEmpty())
         }
         if(checkInventoryCodeAndLayerCodeGr != null){
             throw  BusinessException(CommonUtils.getMessage("validate.convertCode.inventoryCodeAndInventoryLayerGr1"))

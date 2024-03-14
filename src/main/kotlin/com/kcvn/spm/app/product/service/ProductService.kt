@@ -83,13 +83,13 @@ class ProductService(
             val headerStyle = headerRow.getCell(11).cellStyle
             if (layers.isNotEmpty()) {
                 for (col in layers) {
-                    ExcelHelper.setCellValue(headerRow, headerCol, headerStyle, CommonUtils.getMessage("excel.colLayerName", arrayOf(col)))
+                    ExcelHelper.setCellValue(workbook, headerRow, headerCol, headerStyle, CommonUtils.getMessage("excel.colLayerName", arrayOf(col)))
                     headerCol++
                 }
             }
             if (!productMapping.columns.isNullOrEmpty()) {
                 for (col in productMapping.columns!!) {
-                    ExcelHelper.setCellValue(headerRow, headerCol, headerStyle, col.value)
+                    ExcelHelper.setCellValue(workbook, headerRow, headerCol, headerStyle, col.value)
                     headerCol++
                 }
             }
@@ -97,24 +97,24 @@ class ProductService(
             var rowNumber = 2
             for (item in productMapping.data!!) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(dataRow, 0, style, item.name)
-                ExcelHelper.setCellValue(dataRow, 1, style, item.name?.substring((if (item.name!!.length < 7) 0 else item.name!!.length - 7), item.name!!.length))
-                ExcelHelper.setCellValue(dataRow, 2, style, item.exportType)
-                ExcelHelper.setCellValue(dataRow, 3, style, item.size)
-                ExcelHelper.setCellValue(dataRow, 4, style, item.frame_1)
-                ExcelHelper.setCellValue(dataRow, 5, style, item.frame_2)
-                ExcelHelper.setCellValue(dataRow, 6, style, item.mold)
-                ExcelHelper.setCellValue(dataRow, 7, style, item.productLine)
-                ExcelHelper.setCellValue(dataRow, 8, style, item.srNosr)
-                ExcelHelper.setCellValue(dataRow, 9, style, item.pcsSh?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 10, style, item.shBlock?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 11, style, item.layerCount?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 12, style, item.ringJig)
-                ExcelHelper.setCellValue(dataRow, 13, style, item.process?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 14, style, item.completionRate?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 15, style, item.snapMold)
-                ExcelHelper.setCellValue(dataRow, 16, style, item.tapeCommon)
-                ExcelHelper.setCellValue(dataRow, 17, style, item.tapeType)
+                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item.name)
+                ExcelHelper.setCellValue(workbook, dataRow, 1, style, item.name?.substring((if (item.name!!.length < 7) 0 else item.name!!.length - 7), item.name!!.length))
+                ExcelHelper.setCellValue(workbook, dataRow, 2, style, item.exportType)
+                ExcelHelper.setCellValue(workbook, dataRow, 3, style, item.size)
+                ExcelHelper.setCellValue(workbook, dataRow, 4, style, item.frame_1)
+                ExcelHelper.setCellValue(workbook, dataRow, 5, style, item.frame_2)
+                ExcelHelper.setCellValue(workbook, dataRow, 6, style, item.mold)
+                ExcelHelper.setCellValue(workbook, dataRow, 7, style, item.productLine)
+                ExcelHelper.setCellValue(workbook, dataRow, 8, style, item.srNosr)
+                ExcelHelper.setCellValue(workbook, dataRow, 9, style, item.pcsSh?.toString() ?: "")
+                ExcelHelper.setCellValue(workbook, dataRow, 10, style, item.shBlock?.toString() ?: "")
+                ExcelHelper.setCellValue(workbook, dataRow, 11, style, item.layerCount?.toString() ?: "")
+                ExcelHelper.setCellValue(workbook, dataRow, 12, style, item.ringJig)
+                ExcelHelper.setCellValue(workbook, dataRow, 13, style, item.process?.toString() ?: "")
+                ExcelHelper.setCellValue(workbook, dataRow, 14, style, item.completionRate?.toString() ?: "")
+                ExcelHelper.setCellValue(workbook, dataRow, 15, style, item.snapMold)
+                ExcelHelper.setCellValue(workbook, dataRow, 16, style, item.tapeCommon)
+                ExcelHelper.setCellValue(workbook, dataRow, 17, style, item.tapeType)
 
                 var colIndex = 18
                 if (!item.productLayerDetail.isNullOrEmpty()) {
@@ -122,7 +122,7 @@ class ProductService(
                     val layerValues = JsonConvert.deserialize<List<LayerImportProductModel>>(item.productLayerDetail!!, type).sortedBy { x -> x.layerCode }
                     for (layer in layers) {
                         val cellValue = layerValues.find { x -> x.layerCode?.toIntOrNull() == layer }
-                        ExcelHelper.setCellValue(dataRow, colIndex, style, cellValue?.value?.toString())
+                        ExcelHelper.setCellValue(workbook, dataRow, colIndex, style, cellValue?.value?.toString())
                         colIndex++
                     }
                 }
@@ -130,7 +130,7 @@ class ProductService(
                 if (!productMapping.columns.isNullOrEmpty()) {
                     for (col in productMapping.columns!!) {
                         val cellValue = item.lstProcess.find { x -> x.key == col.key }
-                        ExcelHelper.setCellValue(dataRow, colIndex, style, cellValue?.value)
+                        ExcelHelper.setCellValue(workbook, dataRow, colIndex, style, cellValue?.value ?: "0")
                         colIndex++
                     }
                 }
@@ -465,17 +465,26 @@ class ProductService(
             else KeyValueResponse(x.processStatisticCode, processGroup.description, processGroup.sortOrder)
         }.filter { x -> !x.key.isNullOrEmpty() && !x.value.isNullOrEmpty() }.distinct().toMutableList()
 
-        if (columns.any { m -> m.key == ProcessStatisticCode.HP_TAN || m.key == ProcessStatisticCode.HP_ALL }) {
-            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.IN_LO }
-            if (processGroup != null) columns.add(KeyValueResponse(processGroup.processStatisticCode, processGroup.description, processGroup.sortOrder))
+        if (columns.any { x -> x.key == ProcessStatisticCode.HP_TAN || x.key == ProcessStatisticCode.HP_ALL }) {
+            val processGroup = processGroups.filter {
+                x -> x.processStatisticCode == ProcessStatisticCode.IN_LO
+                || x.processStatisticCode == ProcessStatisticCode.HP_TAN || x.processStatisticCode == ProcessStatisticCode.HP_ALL
+            }.map { x -> KeyValueResponse(x.processStatisticCode, x.description, x.sortOrder) }
+            if (processGroup.isNotEmpty()) columns.addAll(processGroup)
         }
-        if (columns.any { m -> m.key == ProcessStatisticCode.TAN || m.key == ProcessStatisticCode.ZEN }) {
-            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.IN_MACH }
-            if (processGroup != null) columns.add(KeyValueResponse(processGroup.processStatisticCode, processGroup.description, processGroup.sortOrder))
+        if (columns.any { x -> x.key == ProcessStatisticCode.TAN || x.key == ProcessStatisticCode.ZEN }) {
+            val processGroup = processGroups.filter {
+                x -> x.processStatisticCode == ProcessStatisticCode.IN_MACH
+                || x.processStatisticCode == ProcessStatisticCode.TAN || x.processStatisticCode == ProcessStatisticCode.ZEN
+            }.map { x -> KeyValueResponse(x.processStatisticCode, x.description, x.sortOrder) }
+            if (processGroup.isNotEmpty()) columns.addAll(processGroup)
         }
-        if (columns.any { m -> m.key == ProcessStatisticCode.M_TAN || m.key == ProcessStatisticCode.M_ALL }) {
-            val processGroup = processGroups.find { m -> m.processStatisticCode == ProcessStatisticCode.GHEP_LOP }
-            if (processGroup != null) columns.add(KeyValueResponse(processGroup.processStatisticCode, processGroup.description, processGroup.sortOrder))
+        if (columns.any { x -> x.key == ProcessStatisticCode.M_TAN || x.key == ProcessStatisticCode.M_ALL }) {
+            val processGroup = processGroups.filter {
+                x -> x.processStatisticCode == ProcessStatisticCode.GHEP_LOP
+                || x.processStatisticCode == ProcessStatisticCode.M_TAN || x.processStatisticCode == ProcessStatisticCode.M_ALL
+            }.map { x -> KeyValueResponse(x.processStatisticCode, x.description, x.sortOrder) }
+            if (processGroup.isNotEmpty()) columns.addAll(processGroup)
         }
         response.columns = columns.sortedBy { x -> x.sort }.distinct().toList()
         return response

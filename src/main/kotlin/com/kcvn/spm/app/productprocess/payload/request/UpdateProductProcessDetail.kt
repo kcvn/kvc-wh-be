@@ -14,5 +14,9 @@ data class ItemUpdateProductProcessDetailRequest(
     var processConvertCode: String,
     var processStatisticCode: String,
     var processInventoryCode: String? = null,
-    var idx: Int
+    var idx: Int,
+    var inventoryLayerGroup: String? = null,
+    var dayOfImplementation: Int? = null,
+    var isEdit: Boolean? = false,
+    var processSequence: String? = null
 )

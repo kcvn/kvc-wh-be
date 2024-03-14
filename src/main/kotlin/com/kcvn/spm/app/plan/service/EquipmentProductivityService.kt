@@ -10,19 +10,29 @@ import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.helper.NumberHelper.Companion.truncateDecimal
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.EquipmentProductivity
 import com.kcvn.spm.repository.*
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -106,8 +116,8 @@ class EquipmentProductivityService(
                             equipment.processCode == planProcess.processCode &&
                                     equipment.mold == planProduct.mold &&
                                     equipment.frame_1 == planProduct.frame_1
-                        }
-                        ?.sheetDay
+                        }?.sheetDay
+
                     processDetailListModel.add(
                         ProcessDetailListModel(
                             type = ProcessPlan.MACHINE,
@@ -137,7 +147,7 @@ class EquipmentProductivityService(
                                 }.toMutableList()
                             } else {
                                 processValues!!.map { column ->
-                                    KeyValueResponse(column.key, null)
+                                    KeyValueResponse(column.key, "")
                                 }.toMutableList()
                             }
                         )
@@ -275,6 +285,115 @@ class EquipmentProductivityService(
         return BaseResponse(null, CommonUtils.getMessage("Insert Ok", arrayOf(count, total + 1)))
     }
 
+    fun exportExcel(
+    request: PlanSearchRequest,
+    @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+    pageable: Pageable) : FileContentModel{
+        var colStartDate = OffsetDateTime.now()
+        var colEndDate = OffsetDateTime.now()
+        if (request.filterType == OrderFilterType.DATE) {
+            if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
+            colStartDate = request.startDate
+            colEndDate = request.endDate
+        }
+        if (request.filterType == OrderFilterType.ORDER) {
+            val plan = planRepository.getPlanByOrderCode(request.orderCode ?: "")
+                ?: throw BusinessException(CommonUtils.getMessage("plan.notExistInOrder"))
+            colStartDate = plan.startDate
+            colEndDate = plan.endDate
+        }
+
+        val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
+        val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
+
+        val dataExports = getPaginatedEquipmentProductivityPlan(request,pageable)
+        if (dataExports?.data?.isEmpty() == true) throw BusinessException(CommonUtils.getMessage("plan.export.noData"))
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/EquipmentProdPlanTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        val headerRow = sheet.getRow(0)
+        var headerCol = 4
+        val headerStyle = headerRow.getCell(0).cellStyle
+        for (col in columns) {
+            ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
+            headerCol++
+        }
+        val planDetails = dataExports?.data
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        var rowNumber = 1
+
+        if (planDetails != null) {
+           for(planProcess in planDetails){
+               generateExcelRowProcess(workbook, sheet, rowNumber, style, planProcess)
+               for(processDetail in planProcess.processDetail!!){
+                   rowNumber = generateExcelRowPlanData(workbook, sheet, rowNumber, style,columns, processDetail)
+               }
+           }
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportPlanEquipment ", arrayOf(
+                LocalDateTime.now().format(
+                    DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+        return response
+    }
 
 
+    private fun generateExcelRowProcess(
+        workbook: Workbook,
+        sheet: Sheet,
+        rowNumber: Int,
+        style: CellStyle,
+        data: EquipmentProductivityModel
+    ) {
+        var rowIndex = rowNumber
+
+        val processNameDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(workbook, processNameDataRow, 0, style, data.processName)
+
+        val processNameJpDataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(workbook, processNameJpDataRow, 0, style, data.processNameJp)
+        rowIndex++
+
+        val processConvertCodeDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(workbook, processConvertCodeDataRow, 0, style, data.processConvertCode)
+    }
+    private fun generateExcelRowPlanData(
+        workbook: Workbook,
+        sheet: Sheet,
+        rowNumber: Int,
+        style: CellStyle,
+        columns: List<CalendarResponse>,
+        data: ProcessDetailModel
+    ): Int {
+
+        var rowIndex = rowNumber
+        val fixRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(workbook, fixRow, 1, style, data.name)
+        ExcelHelper.setCellValue(workbook, fixRow, 2, style, data.totalProcess.toString())
+        for (planData in data.processDetailList!!) {
+            val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+            ExcelHelper.setCellValue(workbook, dataRow, 3, style, planData.type)
+            var colIndex = 4
+            for (col in columns) {
+                val value = planData.quantityByCalendars.find { x -> x.key == col.key }?.value
+                ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday)
+                colIndex++
+            }
+            rowIndex++
+        }
+        return rowIndex
+    }
 }

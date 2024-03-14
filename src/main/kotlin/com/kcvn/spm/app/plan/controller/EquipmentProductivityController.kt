@@ -23,6 +23,19 @@ class EquipmentProductivityController(
     private val equipmentProductivityService: EquipmentProductivityService)
 {
 
+
+    @GetMapping("/export-excel-equipment-productivity")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    fun exportExcel(
+    request: PlanSearchRequest,
+    @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+    pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = equipmentProductivityService.exportExcel(request,pageable)
+        return ResponseEntity(BaseResponse(data), HttpStatus.OK)
+    }
+
+
     @GetMapping("/get-equipment-productivity")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getList(
@@ -35,13 +48,6 @@ class EquipmentProductivityController(
         return ResponseEntity<PagingEquipmentProdResponse>(data, HttpStatus.OK)
     }
 
-
-    @GetMapping("/detail-equipment")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
-    fun getPlanDetailEquip(request: PlanProcessDetailRequest): ResponseEntity<PagingEquipmentProdResponse> {
-        val data = equipmentProductivityService.getPlanDetail(request)
-        return ResponseEntity<PagingEquipmentProdResponse>(data, HttpStatus.OK)
-    }
 
     @PostMapping(value = ["/import-excel-equipment"], consumes = ["multipart/form-data"])
 //    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")

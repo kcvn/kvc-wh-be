@@ -122,13 +122,10 @@ class ProductProcessService(
             }else {
                 val layerCodeItem =  itemInventoryProcessGrByLayerLast.layerCode?.toIntOrNull() ?: 0
                 val layerCodePre = layerCodeItem - 1
-                val checkInventoryCode = request.listProcess?.firstOrNull{
+                request.listProcess?.firstOrNull{
                     it.processCode == itemInventoryProcessGrByLayerLast.processInventoryCode
                             && it.layerCode == layerCodePre.toString()
-                }
-                if(checkInventoryCode != null){
-                    throw BusinessException(CommonUtils.getMessage("validate.excel.checkInventoryLast"))
-                }
+                } ?: throw BusinessException(CommonUtils.getMessage("validate.excel.checkInventoryLast"))
             }
         }
 

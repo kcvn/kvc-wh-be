@@ -56,7 +56,7 @@ class PlanController(private val planService: PlanService) {
     @GetMapping("/summary/export-excel")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportExcelSummary(request: PlanSearchRequest): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = planService.exportExcel(request)
+        val data = planService.exportExcelSummary(request)
         return ResponseEntity(BaseResponse(data), HttpStatus.OK)
     }
 }

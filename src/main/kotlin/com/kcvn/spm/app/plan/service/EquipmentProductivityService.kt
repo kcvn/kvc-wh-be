@@ -124,7 +124,7 @@ class EquipmentProductivityService(
                             quantityByCalendars = response.columns!!.map { column ->
                                 KeyValueResponse(
                                     column.key,
-                                    uniqueSheetDayValue.toString()
+                                    uniqueSheetDayValue?.toString() ?: ""
                                 )
                             }.toMutableList()
                         )
@@ -201,7 +201,7 @@ class EquipmentProductivityService(
                             }
                         detailItem.quantityByCalendars.forEach { keyValueResponse ->
                             val existingKeyValue = existingItem.quantityByCalendars.find { it.key == keyValueResponse.key }
-                                ?: KeyValueResponse(key = keyValueResponse.key, value = "0.0").also {
+                                ?: KeyValueResponse(key = keyValueResponse.key, value = "").also {
                                     existingItem.quantityByCalendars.add(it)
                                 }
                             if (detailItem.type == ProcessPlan.MACHINE) {

@@ -281,9 +281,9 @@ class ProductService(
                 return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
             }
 
-            val resultRows = sheet.filter { x ->
-                ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess")
-                    && x.rowNum >= rowIndex
+            val resultRows = sheet.filter {
+                x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess")
+                && x.rowNum >= rowIndex
             }.map { x ->
                 val prod = ImportProductErrorModel(
                     name = ExcelHelper.getCellValue(x, 0),
@@ -315,7 +315,7 @@ class ProductService(
                 prod
             }
 
-            val response = exportErrorFile(resultRows, templateUrl)
+            val response = exportErrorFile(resultRows, templateUrl, headerRow)
 
             workbook.close()
             return BaseResponse(
@@ -329,10 +329,9 @@ class ProductService(
         }
     }
 
-    private fun exportErrorFile(products: List<ImportProductErrorModel>, templateUrl: String): FileContentModel {
+    private fun exportErrorFile(products: List<ImportProductErrorModel>, templateUrl: String, titleRow: Row): FileContentModel {
         val workbook = FileInputStream(templateUrl).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
-        var headerCol = 16
         val layers = products.asSequence().mapNotNull { x ->
             if (x.productLayerDetail.isNullOrEmpty()) null
             else {
@@ -342,14 +341,12 @@ class ProductService(
         }.flatten().mapNotNull { x -> x.layerCode?.toIntOrNull() }.distinct().sortedBy { x -> x }.toList()
 
         val headerRow: Row = sheet.getRow(0)
-        val headerStyle = headerRow.getCell(0).cellStyle
-        if (layers.isNotEmpty()) {
-            for (col in layers) {
-                ExcelHelper.setCellValue(workbook, headerRow, headerCol, headerStyle, CommonUtils.getMessage("excel.colLayerName", arrayOf(col)))
-                headerCol++
-            }
+        for (i in 0 until titleRow.lastCellNum) {
+            val headerStyle = titleRow.getCell(i).cellStyle
+            val headerCellValue = ExcelHelper.getCellValue(titleRow, i)
+            ExcelHelper.setCellValue(workbook, headerRow, i, headerStyle, headerCellValue)
         }
-        ExcelHelper.createColResult(headerRow, sheet)
+        val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
 
         var rowNumber = 1
         for (item in products) {
@@ -380,7 +377,7 @@ class ProductService(
                 colIndex++
             }
 
-            ExcelHelper.setCellValue(workbook, dataRow, colIndex, item.cellStyles.find { x -> x.index == colIndex }!!.cellStyle, item.messageError)
+            ExcelHelper.setCellValue(workbook, dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }!!.cellStyle, item.messageError)
             rowNumber++
         }
 
@@ -466,23 +463,23 @@ class ProductService(
         }.filter { x -> !x.key.isNullOrEmpty() && !x.value.isNullOrEmpty() }.distinct().toMutableList()
 
         if (columns.any { x -> x.key == ProcessStatisticCode.HP_TAN || x.key == ProcessStatisticCode.HP_ALL }) {
-            val processGroup = processGroups.filter {
-                x -> x.processStatisticCode == ProcessStatisticCode.IN_LO
-                || x.processStatisticCode == ProcessStatisticCode.HP_TAN || x.processStatisticCode == ProcessStatisticCode.HP_ALL
+            val processGroup = processGroups.filter { x ->
+                x.processStatisticCode == ProcessStatisticCode.IN_LO
+                    || x.processStatisticCode == ProcessStatisticCode.HP_TAN || x.processStatisticCode == ProcessStatisticCode.HP_ALL
             }.map { x -> KeyValueResponse(x.processStatisticCode, x.description, x.sortOrder) }
             if (processGroup.isNotEmpty()) columns.addAll(processGroup)
         }
         if (columns.any { x -> x.key == ProcessStatisticCode.TAN || x.key == ProcessStatisticCode.ZEN }) {
-            val processGroup = processGroups.filter {
-                x -> x.processStatisticCode == ProcessStatisticCode.IN_MACH
-                || x.processStatisticCode == ProcessStatisticCode.TAN || x.processStatisticCode == ProcessStatisticCode.ZEN
+            val processGroup = processGroups.filter { x ->
+                x.processStatisticCode == ProcessStatisticCode.IN_MACH
+                    || x.processStatisticCode == ProcessStatisticCode.TAN || x.processStatisticCode == ProcessStatisticCode.ZEN
             }.map { x -> KeyValueResponse(x.processStatisticCode, x.description, x.sortOrder) }
             if (processGroup.isNotEmpty()) columns.addAll(processGroup)
         }
         if (columns.any { x -> x.key == ProcessStatisticCode.M_TAN || x.key == ProcessStatisticCode.M_ALL }) {
-            val processGroup = processGroups.filter {
-                x -> x.processStatisticCode == ProcessStatisticCode.GHEP_LOP
-                || x.processStatisticCode == ProcessStatisticCode.M_TAN || x.processStatisticCode == ProcessStatisticCode.M_ALL
+            val processGroup = processGroups.filter { x ->
+                x.processStatisticCode == ProcessStatisticCode.GHEP_LOP
+                    || x.processStatisticCode == ProcessStatisticCode.M_TAN || x.processStatisticCode == ProcessStatisticCode.M_ALL
             }.map { x -> KeyValueResponse(x.processStatisticCode, x.description, x.sortOrder) }
             if (processGroup.isNotEmpty()) columns.addAll(processGroup)
         }
@@ -561,10 +558,12 @@ class ProductService(
                     if (mold != Mold.ML)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
                 }
+
                 Frame1.MU -> {
                     if (mold != Mold.KVC && mold != Mold.SKE)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))
                 }
+
                 Frame1.SWR -> {
                     if (mold != Mold.SWR && mold != Mold.SUR)
                         messageResults.add(CommonUtils.getMessage("validate.excel.fieldMatching", arrayOf(ExcelHelper.getCellValue(headerRow, 5), ExcelHelper.getCellValue(headerRow, 3))))

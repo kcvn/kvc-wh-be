@@ -656,9 +656,8 @@ class ProductProcessService(
                 }
             }
 
-
+            var i = 0
             val listItemValueMap = listItem.value.sortedWith(compareBy({ it.layerCode }, { it.processSequence })).map { x ->
-                var i = 0
                 i++
                 val sq = listDataDb.firstOrNull {
                     it.productCode == x.productName
@@ -691,6 +690,7 @@ class ProductProcessService(
 
             val listItemValueMapSort = listItemValueMap.sortedWith(compareBy({ it.layerCode }, { it.processSequence }))
             var itemInventoryLayerGrPre: ProductProcessResponse? =  null
+            var k = 0;
             for (item in listItemValueMapSort ){
                 val messageErr = ExportExcelErrResponse()
                 messageErr.messageErrs = mutableListOf()
@@ -848,8 +848,23 @@ class ProductProcessService(
                             messageErr.messageErrs?.add(CommonUtils.getMessage(
                                 "validate.excel.inventoryCodeAndInventoryLayerGr4"))
                         }
+                        val idx = item.idx ?: 0
+                        val check1 = listItem.value.firstOrNull {
+                                it.processInventoryCode == item.processCode
+                                && it.inventoryLayerGroup == item.layerCode
+                                && k <= idx
+                        }
+                        if(check1 != null && !check1.processInventoryCode.isNullOrEmpty()){
+                            messageErr.messageErrs?.add(CommonUtils.getMessage(
+                                "validate.excel.inventoryCodeAndInventoryLayerGr5",
+                                arrayOf(item.processCode.toString(), item.layerCode.toString()
+                                , check1.processCode.toString(), check1.layerCode.toString()))
+                            )
+                        }
                     }
+
                 }
+                k++
 
                 val checkLastProcess = listProcessLast.firstOrNull{
                     it.productName == item.productName
@@ -947,14 +962,14 @@ class ProductProcessService(
             for (item in requestErr) {
 
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(dataRow, 0, style, item.productName)
-                ExcelHelper.setCellValue(dataRow, 1, style, item.processCode)
-                ExcelHelper.setCellValue(dataRow, 2, style, item.layerCode)
-                ExcelHelper.setCellValue(dataRow, 3, style, item.processConvertCode)
-                ExcelHelper.setCellValue(dataRow, 4, style, item.processInventoryCode)
-                ExcelHelper.setCellValue(dataRow, 5, style, item.processStatisticCode)
-                ExcelHelper.setCellValue(dataRow, 6, style, item.inventoryLayerGroup)
-                ExcelHelper.setCellValue(dataRow, 7, style, item.dayOfImplementation)
+                ExcelHelper.setCellValue(workbook,dataRow, 0, style, item.productName)
+                ExcelHelper.setCellValue(workbook,dataRow, 1, style, item.processCode)
+                ExcelHelper.setCellValue(workbook,dataRow, 2, style, item.layerCode)
+                ExcelHelper.setCellValue(workbook,dataRow, 3, style, item.processConvertCode)
+                ExcelHelper.setCellValue(workbook,dataRow, 4, style, item.processInventoryCode)
+                ExcelHelper.setCellValue(workbook,dataRow, 5, style, item.processStatisticCode)
+                ExcelHelper.setCellValue(workbook,dataRow, 6, style, item.inventoryLayerGroup)
+                ExcelHelper.setCellValue(workbook,dataRow, 7, style, item.dayOfImplementation)
 
                 val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
                 ExcelHelper.setCellValue(dataRow, 8, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))

@@ -5,6 +5,7 @@ import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureRespo
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
 import com.kcvn.spm.common.constants.SyncType
 import com.kcvn.spm.common.constants.TransAmTable
+import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
 import com.kcvn.spm.model.tables.pojos.*
@@ -175,7 +176,7 @@ class SyncTransAmDataService(
             customerCode = request.KYAKUSAKI_CD,
             itemCode = request.HINMOKU_CD,
             itemName = request.KC_HINMEI,
-            layerCode = request.SO_NO,
+            layerCode = StringHelper.intToStringD2(request.SO_NO),
             processCode = request.KOTEI_CD,
             processGrp = request.KOTEI_GRP,
             processName = request.KOTEI_MEI,
@@ -274,7 +275,7 @@ class SyncTransAmDataService(
             grpDepartments = request.BUMON_GRP,
             remediationDirectiveNumber = request.SHOCHISHIJI_NO,
             productCode = request.KOTEI_TEJUN_CD,
-            layerCode = request.SO_NO,
+            layerCode = StringHelper.intToStringD2(request.SO_NO),
             processCode = request.KOTEI_CD,
             processSequence = request.KOTEI_NO,
             processSequenceRev = request.KOTEI_TEJUN_REV,

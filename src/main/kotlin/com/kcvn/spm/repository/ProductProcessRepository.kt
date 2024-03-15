@@ -104,6 +104,8 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
             PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE.`as`("processSequence"),
+            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION,
+            PRODUCT_PROCESS.INVENTORY_LAYER_GROUP
         )
             .from(PROCESS_PROCEDURE_STRUCTURE
                 .leftJoin(PRODUCT_PROCESS)

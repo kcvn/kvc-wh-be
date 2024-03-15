@@ -99,6 +99,8 @@ class ProductProcessService(
             productProcessResponse.processProcedureStructureId = it?.processProcedureStructureId
             productProcessResponse.layerCodeInt = it?.layerCodeInt
             productProcessResponse.processSequence = it?.processSequence
+            productProcessResponse.dayOfImplementation = it?.dayOfImplementation
+            productProcessResponse.inventoryLayerGroup = it?.inventoryLayerGroup
             productProcessResponse
         }
         data?.forEachIndexed { idx, dt ->
@@ -114,7 +116,7 @@ class ProductProcessService(
             ?.filter { it.layerCode != "1" }
             ?.groupBy { it.layerCode }
         for(itemInventoryProcessGrByLayer in listInventoryProcessGrByLayer!!.values){
-            val itemInventoryProcessGrByLayerSort = itemInventoryProcessGrByLayer.sortedBy { it.processSequence }
+            val itemInventoryProcessGrByLayerSort = itemInventoryProcessGrByLayer.sortedBy { it.idx }
             val itemInventoryProcessGrByLayerLast = itemInventoryProcessGrByLayerSort.last()
             if(itemInventoryProcessGrByLayerLast.processInventoryCode.isNullOrEmpty()
                 || itemInventoryProcessGrByLayerLast.inventoryLayerGroup.isNullOrEmpty()){
@@ -129,12 +131,19 @@ class ProductProcessService(
             }
         }
 
-        ///// Check khi ngày thứ thực hiện để trống
+
+        ///// Check khi ngày thứ thực hiện để trống và check ngày thứ thực hiện phải có ngày bắt đầu từ 1
         val countDayOfImplementNull = request.listProcess?.count { it.dayOfImplementation == null } ?: 0
         val countRequest = request.listProcess?.count()
         if(countDayOfImplementNull > 0 && countDayOfImplementNull != countRequest){
             throw BusinessException(CommonUtils.getMessage("validate.excel.dayOfImplementation"))
+        }else {
+            request.listProcess?.firstOrNull{
+                it.dayOfImplementation == 1
+            } ?: throw  BusinessException(CommonUtils.getMessage("validate.excel.processDayOne"))
         }
+        // check ngày thứ thực hiện nếu k trống thì trong lớp phải có ngày thực hiện bắt đầu bằng 1
+
         /// check mã tồn kho hoặc mã thống kê để null
         val listConvertCodeOrStatisticCodeNull = request.listProcess?.firstOrNull{
             it.processConvertCode.isEmpty() || it.processStatisticCode.isEmpty()
@@ -144,8 +153,8 @@ class ProductProcessService(
         }
         // check nếu tồn tại Lớp số gộp tồn kho thì phải tồn tại mã gộp tồn kho
         val checkInventoryCodeAndLayerCodeGr = request.listProcess?.firstOrNull{
-            (!it.inventoryLayerGroup!!.isEmpty() && it.processInventoryCode!!.isEmpty())
-                    || (it.inventoryLayerGroup!!.isEmpty() && !it.processInventoryCode!!.isEmpty())
+            (!it.inventoryLayerGroup.isNullOrEmpty() && it.processInventoryCode.isNullOrEmpty())
+                    || (it.inventoryLayerGroup.isNullOrEmpty() && !it.processInventoryCode.isNullOrEmpty())
         }
         if(checkInventoryCodeAndLayerCodeGr != null){
             throw  BusinessException(CommonUtils.getMessage("validate.convertCode.inventoryCodeAndInventoryLayerGr1"))

@@ -882,18 +882,17 @@ class ProductProcessService(
                     it.productName == item.productName
                             && it.layerCode == item.layerCode
                             && it.processCode == item.processCode
+                            && it.layerCode!!.toInt() > 1
                 }
                 if(checkLastProcess != null){
-                    val layerItemInt = item.layerCode?.toIntOrNull() ?: 0
-                    val listProcessLayerPre = listItem.value.filter {
-                        it.layerCode?.toIntOrNull() == (layerItemInt - 1)
+                    val layerItemInt = item.inventoryLayerGroup?.toIntOrNull() ?: 0
+                    val processPre = listItem.value.firstOrNull {
+                        it.layerCode!!.toInt() - 1 == (layerItemInt)
                                 && it.productName == item.productName
+                                && it.processCode == item.processInventoryCode
                     }
-                    val checkProcessInventoryLast = listProcessLayerPre.firstOrNull{
-                        it.processCode == checkLastProcess.processInventoryCode
-                                && it.layerCode!!.toInt() > 1
-                    }
-                    if(checkProcessInventoryLast == null){
+
+                    if(processPre == null){
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                             "validate.excel.checkInventoryLast"))
                         checkList = false

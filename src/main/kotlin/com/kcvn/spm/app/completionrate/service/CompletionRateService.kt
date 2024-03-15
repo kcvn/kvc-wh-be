@@ -474,7 +474,7 @@ class CompletionRateService(
                             key = key,
                             rate = rate,
                             processCode = key.take(6),
-                            layerCode = key.substring(6, if (key.length == 7) 7 else 8),
+                            layerCode = StringHelper.intToStringD2(key.substring(6, if (key.length == 7) 7 else 8)),
                             expirationDate = null,
                             effectiveDate = effectiveDate
                         )
@@ -496,7 +496,7 @@ class CompletionRateService(
                                             key = key,
                                             rate = rate,
                                             processCode = key.take(6),
-                                            layerCode = key.substring(6, 7),
+                                            layerCode = StringHelper.intToStringD2(key.substring(6, 7)),
                                             expirationDate = minEffectiveDate.minusDays(1),
                                             effectiveDate = effectiveDate
                                         )
@@ -520,7 +520,7 @@ class CompletionRateService(
                                             key = key,
                                             rate = rate,
                                             processCode = key.take(6),
-                                            layerCode = key.substring(6, 7),
+                                            layerCode = StringHelper.intToStringD2(key.substring(6, 7)),
                                             expirationDate = null,
                                             effectiveDate = effectiveDate
                                         )
@@ -652,7 +652,7 @@ class CompletionRateService(
                             rate = rate,
                             productNameShortcut = key.substring(6, 13),
                             processCode = key.take(6),
-                            layerCode = key.substring(13, if (key.length == 15) 15 else 14),
+                            layerCode = StringHelper.intToStringD2(key.substring(13, if (key.length == 15) 15 else 14)),
                             expirationDate = null,
                             effectiveDate = effectiveDate
                         )
@@ -675,7 +675,7 @@ class CompletionRateService(
                                             rate = rate,
                                             productNameShortcut = key.substring(6, 13),
                                             processCode = key.take(6),
-                                            layerCode = key.substring(13, 14),
+                                            layerCode = StringHelper.intToStringD2(key.substring(13, 14)),
                                             expirationDate = minEffectiveDate.minusDays(1),
                                             effectiveDate = effectiveDate
                                         )
@@ -699,7 +699,7 @@ class CompletionRateService(
                                             rate = rate,
                                             productNameShortcut = key.substring(6, 13),
                                             processCode = key.take(6),
-                                            layerCode = key.substring(13, 14),
+                                            layerCode = StringHelper.intToStringD2(key.substring(13, 14)),
                                             expirationDate = null,
                                             effectiveDate = effectiveDate
                                         )

@@ -9,7 +9,7 @@ import org.jooq.SortOrder
 import org.springframework.stereotype.Repository
 
 @Repository
-class SyncHistoryRepository (private val context: DSLContext) {
+class SyncHistoryRepository(private val context: DSLContext) {
     fun findByType(type: String): SyncHistory? {
         return context.selectFrom(SYNC_HISTORY).where(SYNC_HISTORY.TYPE.eq(type).and(SYNC_HISTORY.IS_DELETED.eq(false)))
             .orderBy(SYNC_HISTORY.CREATED_DATE.sort(SortOrder.DESC))
@@ -18,7 +18,11 @@ class SyncHistoryRepository (private val context: DSLContext) {
     }
 
     fun add(data: SyncHistory): SyncHistory? {
-        val createBy = try {CommonUtils.loggedInUser() ?: Constants.SYSTEM} catch (e: Exception) { Constants.SYSTEM}
+        val createBy = try {
+            CommonUtils.loggedInUser() ?: Constants.SYSTEM
+        } catch (e: Exception) {
+            Constants.SYSTEM
+        }
         return context.insertInto(
             SYNC_HISTORY,
             SYNC_HISTORY.SOURCE, SYNC_HISTORY.DESTINATION, SYNC_HISTORY.TYPE, SYNC_HISTORY.CREATED_BY

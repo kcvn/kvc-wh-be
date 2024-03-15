@@ -9,7 +9,7 @@ class Constants {
 }
 
 class SyncType {
-    companion object{
+    companion object {
         const val PROCESS_PROCEDURE_STRUCTURE = "PROCESS_PROCEDURE_STRUCTURE"
         const val PROCESS_MASTER = "PROCESS_MASTER"
         const val WORK_RESULT = "WORK_RESULT"
@@ -17,14 +17,14 @@ class SyncType {
 }
 
 class ClaimType {
-    companion object{
+    companion object {
         const val USER_ID = "UserId"
         const val POSITION = "Position"
     }
 }
 
 class MasterDataType {
-    companion object{
+    companion object {
         const val KHUNG_1 = "KHUNG_1"
         const val KHUNG_2 = "KHUNG_2"
         const val KHUON_DUC = "KHUON_DUC"
@@ -39,7 +39,7 @@ class MasterDataType {
 }
 
 class Frame1 {
-    companion object{
+    companion object {
         const val MU = "MU"
         const val ML = "ML"
         const val SWR = "SWR"
@@ -47,12 +47,22 @@ class Frame1 {
 }
 
 class Mold {
-    companion object{
+    companion object {
         const val KVC = "KVC"
         const val ML = "ML"
         const val SKE = "SKE"
         const val SWR = "SWR"
         const val SUR = "SUR"
+
+        fun DATA_BY_FRAME1(frame1: String?) : List<String> {
+            return when (frame1) {
+                Frame1.ML -> listOf(this.ML)
+                Frame1.MU -> listOf(this.KVC, this.SKE)
+                Frame1.SWR -> listOf(this.SUR, this.SWR)
+                else -> listOf(this.ML, this.KVC, this.SKE, this.SUR, this.SWR)
+            }
+        }
+
     }
 }
 
@@ -61,6 +71,14 @@ class PagingDefault {
         const val PAGE = 0
         const val SIZE = 10
         const val EXPORT_SIZE = 1000000
+    }
+}
+
+class ExcelConstant {
+    companion object {
+        const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
+        const val PAGING = 1000000
     }
 }
 
@@ -101,20 +119,22 @@ class ProcessStatisticCode {
 
 class ProcessConvertCode {
     companion object {
+        const val W = "W"
+        const val U = "U"
+        const val HP_ALL = "HP ALL"
+        const val HP = "HP"
         const val T = "T"
         const val TH = "TH"
         const val M_ALL = "M ALL"
-        const val M_TAN = "M TAN"
+        const val M_ANY = "M*"
+        const val M = "M"
         const val TAN = "TAN"
         const val ZEN = "ZEN"
-    }
-}
-
-class ExcelConstant {
-    companion object {
-        const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
-        const val PAGING = 1000000
+        const val K = "K"
+        const val SHN = "SHN"
+        const val SNAP = "SNAP"
+        const val TK = "TK"
+        const val INS = "INS"
     }
 }
 
@@ -142,7 +162,6 @@ class PlanTitle {
     }
 }
 
-
 class ProcessPlan {
     companion object {
         const val PROCESS = "Process"
@@ -156,5 +175,27 @@ class ProcessUnit {
     companion object {
         const val SHEET = "Sheet"
         const val BLOCK = "Block"
+    }
+}
+
+class PlanProcessSummary {
+    companion object {
+        val DATA = listOf<String>(
+            ProcessConvertCode.W,
+            ProcessConvertCode.U,
+            ProcessConvertCode.T,
+            ProcessConvertCode.TH,
+            ProcessConvertCode.TAN,
+            ProcessConvertCode.ZEN,
+            ProcessConvertCode.HP,
+            ProcessConvertCode.HP_ALL,
+            ProcessConvertCode.M_ALL,
+            ProcessConvertCode.M,
+            ProcessConvertCode.K,
+            ProcessConvertCode.SHN,
+            ProcessConvertCode.SNAP,
+            ProcessConvertCode.TK,
+            ProcessConvertCode.INS
+        )
     }
 }

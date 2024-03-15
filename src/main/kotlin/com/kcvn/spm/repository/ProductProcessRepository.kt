@@ -56,6 +56,8 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
                 PRODUCT.ID.`as`("productId"),
                 PROCESS_PROCEDURE_STRUCTURE.ID.`as`("processProcedureStructureId"),
+                PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION,
+                PRODUCT_PROCESS.INVENTORY_LAYER_GROUP
             )
             .from(PROCESS_PROCEDURE_STRUCTURE)
             .leftJoin(PRODUCT_PROCESS)

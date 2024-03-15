@@ -10,12 +10,12 @@ class StringHelper {
             }
         }
 
-        fun intToStringD2(number: String): String {
-            return number.toBigDecimalOrNull()?.toInt().toString().padStart(2, '0') ?: ""
+        fun intToStringD2(number: String?): String {
+            return number?.toBigDecimalOrNull()?.toInt().toString().padStart(2, '0') ?: ""
         }
 
-        fun intToStringD2(number: Int): String {
-            return number.toString().padStart(2, '0') ?: ""
+        fun intToStringD2(number: Int?): String {
+            return number?.toString()?.padStart(2, '0') ?: ""
         }
 
     }

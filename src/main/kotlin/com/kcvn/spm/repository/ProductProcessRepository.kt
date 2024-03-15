@@ -104,6 +104,8 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
             PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE.`as`("processSequence"),
+            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION,
+            PRODUCT_PROCESS.INVENTORY_LAYER_GROUP
         )
             .from(PROCESS_PROCEDURE_STRUCTURE
                 .leftJoin(PRODUCT_PROCESS)
@@ -137,6 +139,8 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
             .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
             .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP, request.inventoryLayerGroup)
+            .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, request.dayOfImplementation)
             .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(request.processProcedureStructureId).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
             .returningResult(PRODUCT_PROCESS)
             .fetchAnyInto(ProductProcess::class.java);
@@ -153,12 +157,16 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
             PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
             PRODUCT_PROCESS.CREATED_BY,
-            PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID)
+            PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
+            PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
+            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION)
             .values(request?.processConvertCode,
                 request?.processInventoryCode,
                 request?.processStatisticCode,
                 CommonUtils.loggedInUser() ?: Constants.SYSTEM,
-                request?.processProcedureStructureId)
+                request?.processProcedureStructureId,
+                request?.inventoryLayerGroup,
+                request?.dayOfImplementation)
             .returningResult(PRODUCT_PROCESS).fetchInto(ProductProcess::class.java).firstOrNull()
     }
     fun getProcessByFilter (request: ImportProcessRequest): ImportProcessResponse? {

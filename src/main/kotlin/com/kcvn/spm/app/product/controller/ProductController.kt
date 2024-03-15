@@ -68,9 +68,7 @@ class ProductController(
     fun getProductDetail(@PathVariable("name") nameProduct: String?): ResponseEntity<BaseResponse<ProductAndProcessResponse>> {
         val dataProduct = productService.getProductDetail(nameProduct)
         val dataProcess = productProcessService.getProductProcessDetail(nameProduct)
-        dataProcess?.forEachIndexed { idx, data ->
-            data?.idx = idx
-        }
+
         val resultData = ProductAndProcessResponse(
             detail = dataProduct,
             listProcess = dataProcess

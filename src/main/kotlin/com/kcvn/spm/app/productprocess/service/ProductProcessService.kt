@@ -59,7 +59,9 @@ class ProductProcessService(
                 productId = productProcess?.productId,
                 processProcedureStructureId = productProcess?.processProcedureStructureId,
                 layerCodeInt = productProcess?.layerCode!!.toInt(),
-                processSequence = productProcess.processSequence
+                processSequence = productProcess.processSequence,
+                inventoryLayerGroup = productProcess.inventoryLayerGroup,
+                dayOfImplementation = productProcess.dayOfImplementation
             )
         }
         response.totalRecords = result.second ?: 0

@@ -200,7 +200,7 @@ class PlanService(
                         ExcelHelper.setCellValue(workbook, dataRow, 7, style, "")
                         var colIndex = 8
                         for (col in columns) {
-                            ExcelHelper.setCellValue(workbook, dataRow, colIndex, style, "")
+                            ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, "", col.isHoliday)
                             colIndex++
                         }
                     }

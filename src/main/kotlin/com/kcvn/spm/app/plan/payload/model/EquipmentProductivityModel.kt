@@ -6,6 +6,7 @@ data class EquipmentProductivityModel(
     var processName: String? =null,
     var processNameJp: String? =null,
     var processConvertCode: String? =null,
+    var processCode: String? =null,
     var processDetail: List<ProcessDetailModel>? = listOf()
 )
 

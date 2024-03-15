@@ -15,6 +15,8 @@ import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.EquipmentProductivity
+import com.kcvn.spm.model.tables.pojos.PlanProcess
+import com.kcvn.spm.model.tables.pojos.PlanProduct
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Sheet
@@ -87,14 +89,15 @@ class EquipmentProductivityService(
             val parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }
             val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
             val planDetails = planDetailRep.getPlanDetail(planProcessIds)
-            val equipmentProductList = equipmentProductivityRepository.getEquipmentProductivity()
             if(planProduct!=null){
                 for(planProcess in parentPlanProcess){
                     val equipmentProductivity = EquipmentProductivityModel(
                         frame1 = planProduct.frame_1,
                         processName = planProcess.processName,
-                        processNameJp= planProcess.processName,
-                        processConvertCode = planProcess.processConvertCode
+                        processNameJp= planProcess.processNameJp,
+                        processConvertCode = planProcess.processConvertCode,
+                        processCode = planProcess.processCode
+
                     )
                     val planDetailByProcess = planDetails.filter { m -> m.planProcessId == planProcess.id }
                     val processDetailListModel =  mutableListOf<ProcessDetailListModel>()
@@ -108,48 +111,6 @@ class EquipmentProductivityService(
                                     if (planProcess.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
                                 )
                             }.toMutableList()
-                        )
-                    )
-                    //machine
-                    val uniqueSheetDayValue = equipmentProductList
-                        .firstOrNull { equipment ->
-                            equipment.processCode == planProcess.processCode &&
-                                    equipment.mold == planProduct.mold &&
-                                    equipment.frame_1 == planProduct.frame_1
-                        }?.sheetDay
-
-                    processDetailListModel.add(
-                        ProcessDetailListModel(
-                            type = ProcessPlan.MACHINE,
-                            quantityByCalendars = response.columns!!.map { column ->
-                                KeyValueResponse(
-                                    column.key,
-                                    uniqueSheetDayValue?.toString() ?: ""
-                                )
-                            }.toMutableList()
-                        )
-                    )
-                    // machine number
-                    val processValues = processDetailListModel
-                        .firstOrNull { it.type == ProcessPlan.PROCESS }
-                        ?.quantityByCalendars
-                    processDetailListModel.add(
-                        ProcessDetailListModel(
-                            type = ProcessPlan.MACHINENUMBER,
-                            quantityByCalendars = if (uniqueSheetDayValue != null) {
-                                processValues!!.map { column ->
-                                    val result = (column.value?.toDoubleOrNull() ?: 0.0) / uniqueSheetDayValue.toDouble()
-                                    val formattedResult = String.format("%.1f", result)
-                                    KeyValueResponse(
-                                        column.key,
-                                        formattedResult
-                                    )
-                                }.toMutableList()
-                            } else {
-                                processValues!!.map { column ->
-                                    KeyValueResponse(column.key, "")
-                                }.toMutableList()
-                            }
                         )
                     )
 
@@ -187,6 +148,7 @@ class EquipmentProductivityService(
                 processName = group.firstOrNull()?.processName,
                 processNameJp = group.firstOrNull()?.processNameJp,
                 processConvertCode = group.firstOrNull()?.processConvertCode,
+                processCode = group.firstOrNull()?.processCode,
                 processDetail = mutableListOf()
             )
             val mergedProcessDetails = mutableMapOf<String, MutableList<ProcessDetailListModel>>()
@@ -194,7 +156,7 @@ class EquipmentProductivityService(
                 equipmentModel.processDetail?.forEach { processDetail ->
                     val name = processDetail.name ?: ""
                     val existingDetail = mergedProcessDetails.getOrPut(name) { mutableListOf() }
-                    processDetail.processDetailList?.forEach { detailItem ->
+                    processDetail.processDetailList.forEach { detailItem ->
                         val existingItem = existingDetail.find { it.type == detailItem.type }
                             ?: ProcessDetailListModel(type = detailItem.type, quantityByCalendars = mutableListOf()).also {
                                 existingDetail.add(it)
@@ -230,9 +192,79 @@ class EquipmentProductivityService(
             mergedEquipmentModel.processDetail = mergedProcessDetailList.toMutableList()
             mergedEquipmentModel
         }
+        // Add process and process number
+
+        addProcessAndProcessNumber(mergedData, response.columns!!)
+
         response.data = mergedData
         return response
     }
+
+
+    private fun addProcessAndProcessNumber(data: List<EquipmentProductivityModel>,columns: List<CalendarResponse>) {
+        val equipmentProductList = equipmentProductivityRepository.getEquipmentProductivity()
+
+        for(equipmentProductivity in data){
+            for(processDetailModel in equipmentProductivity.processDetail!!){
+                val uniqueSheetDayValue: BigDecimal? = if(equipmentProductivity.processName.equals(ProcessPlan.PROCESS_DUC_LO)){
+                    equipmentProductList
+                        .firstOrNull { equipment ->
+                            equipment.processCode.equals(equipmentProductivity.processCode) &&
+                                    equipment.mold.equals(processDetailModel.name) &&
+                                    equipment.frame_1.equals(equipmentProductivity.frame1)
+                        }?.sheetDay
+                } else{
+                    equipmentProductList
+                        .firstOrNull { equipment ->
+                            equipment.processCode.equals(equipmentProductivity.processCode) &&
+                                    equipment.frame_1.equals(equipmentProductivity.frame1)
+                        }?.sheetDay
+                }
+
+
+                processDetailModel.processDetailList.add(
+                        ProcessDetailListModel(
+                            type = ProcessPlan.MACHINE,
+                            quantityByCalendars = columns.map { column ->
+                                KeyValueResponse(
+                                    column.key,
+                                    uniqueSheetDayValue?.toInt()?.toString() ?: ""
+
+                                )
+                            }.toMutableList()
+                        )
+                    )
+                    // machine number
+                    val processValues = processDetailModel.processDetailList
+                        .firstOrNull { it.type == ProcessPlan.PROCESS }
+                        ?.quantityByCalendars
+                processDetailModel.processDetailList.add(
+                        ProcessDetailListModel(
+                            type = ProcessPlan.MACHINENUMBER,
+                            quantityByCalendars = if (uniqueSheetDayValue != null) {
+                                processValues!!.map { column ->
+                                    val result = (column.value?.toDoubleOrNull() ?: 0.0) / uniqueSheetDayValue.toDouble()
+                                    val formattedResult = String.format("%.1f", result)
+                                    KeyValueResponse(
+                                        column.key,
+                                        formattedResult
+                                    )
+                                }.toMutableList()
+                            } else {
+                                processValues!!.map { column ->
+                                    KeyValueResponse(column.key, "")
+                                }.toMutableList()
+                            }
+                        )
+                    )
+                }
+
+        }
+    }
+
+
+
+
     fun importExcel(file: MultipartFile) : BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
@@ -309,28 +341,34 @@ class EquipmentProductivityService(
         val dataExports = getPaginatedEquipmentProductivityPlan(request,pageable)
         if (dataExports?.data?.isEmpty() == true) throw BusinessException(CommonUtils.getMessage("plan.export.noData"))
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/EquipmentProdPlanTemplate.xlsx")
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportEqProdPlanTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
         val headerRow = sheet.getRow(0)
-        var headerCol = 4
-        val headerStyle = headerRow.getCell(0).cellStyle
+        var headerCol = 5
+        val headerStyle = headerRow.getCell(1).cellStyle
         for (col in columns) {
             ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
             headerCol++
         }
         val planDetails = dataExports?.data
+
         val style = ExcelHelper.getCellStyleCommon(workbook)
         var rowNumber = 1
 
         if (planDetails != null) {
-           for(planProcess in planDetails){
-               generateExcelRowProcess(workbook, sheet, rowNumber, style, planProcess)
-               for(processDetail in planProcess.processDetail!!){
-                   rowNumber = generateExcelRowPlanData(workbook, sheet, rowNumber, style,columns, processDetail)
-               }
-           }
+            val groupedByFrame1: Map<String?, List<EquipmentProductivityModel>> = planDetails.groupBy { it.frame1 } ?: emptyMap()
+
+            groupedByFrame1.forEach { (frame1Value, frame1List) ->
+                rowNumber = frame1Value?.let { generateExcelRowFrame(workbook, sheet, rowNumber, style, it) }!!
+                for (planProcess in frame1List) {
+                    generateExcelRowProcess(workbook, sheet, rowNumber, style, planProcess)
+                    for (processDetail in planProcess.processDetail!!) {
+                        rowNumber = generateExcelRowPlanData(workbook, sheet, rowNumber, style, columns, processDetail)
+                    }
+                }
+            }
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -351,6 +389,20 @@ class EquipmentProductivityService(
     }
 
 
+    private fun generateExcelRowFrame(
+        workbook: Workbook,
+        sheet: Sheet,
+        rowNumber: Int,
+        style: CellStyle,
+        data: String
+    ):Int{
+        var rowIndex = rowNumber
+        val processNameDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(workbook, processNameDataRow, 0, style, data)
+        return rowIndex
+
+    }
+
     private fun generateExcelRowProcess(
         workbook: Workbook,
         sheet: Sheet,
@@ -361,14 +413,14 @@ class EquipmentProductivityService(
         var rowIndex = rowNumber
 
         val processNameDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValue(workbook, processNameDataRow, 0, style, data.processName)
+        ExcelHelper.setCellValue(workbook, processNameDataRow, 1, style, data.processName)
 
         val processNameJpDataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValue(workbook, processNameJpDataRow, 0, style, data.processNameJp)
+        ExcelHelper.setCellValue(workbook, processNameJpDataRow, 1, style, data.processNameJp)
         rowIndex++
 
         val processConvertCodeDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValue(workbook, processConvertCodeDataRow, 0, style, data.processConvertCode)
+        ExcelHelper.setCellValue(workbook, processConvertCodeDataRow, 1, style, data.processConvertCode)
     }
     private fun generateExcelRowPlanData(
         workbook: Workbook,
@@ -381,12 +433,12 @@ class EquipmentProductivityService(
 
         var rowIndex = rowNumber
         val fixRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValue(workbook, fixRow, 1, style, data.name)
-        ExcelHelper.setCellValue(workbook, fixRow, 2, style, data.totalProcess.toString())
-        for (planData in data.processDetailList!!) {
+        ExcelHelper.setCellValue(workbook, fixRow, 2, style, data.name)
+        ExcelHelper.setCellValue(workbook, fixRow, 3, style, data.totalProcess.toString())
+        for (planData in data.processDetailList) {
             val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-            ExcelHelper.setCellValue(workbook, dataRow, 3, style, planData.type)
-            var colIndex = 4
+            ExcelHelper.setCellValue(workbook, dataRow, 4, style, planData.type)
+            var colIndex = 5
             for (col in columns) {
                 val value = planData.quantityByCalendars.find { x -> x.key == col.key }?.value
                 ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday)

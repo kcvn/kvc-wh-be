@@ -148,7 +148,7 @@ class ProcessPlan {
         const val PROCESS = "Process"
         const val MACHINE = "Cap(1machine)"
         const val MACHINENUMBER = "Số máy sử dụng"
-
+        const val PROCESS_DUC_LO ="Đục lỗ"
     }
 }
 

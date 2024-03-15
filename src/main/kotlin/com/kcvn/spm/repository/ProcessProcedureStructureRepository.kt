@@ -66,7 +66,7 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
     }
 
     fun getByFilterProcessStructure(request: ImportProcessRequest) : ProcessProcedureStructure?{
-        val layerCodeInt = request.layerCode?.toIntOrNull()
+        val layerCodeInt = request.layerCode?.toInt()
         return context
             .selectFrom(PROCESS_PROCEDURE_STRUCTURE)
             .where(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.eq(request.productName)

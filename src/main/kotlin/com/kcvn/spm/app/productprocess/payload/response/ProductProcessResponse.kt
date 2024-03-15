@@ -20,6 +20,6 @@ data class ProductProcessResponse (
     var listDropDownConvertCode : List<DropdownResponse>? = null,
     var listDropDownStatisticCode: List<DropdownResponse>? = null,
     var inventoryLayerGroup: String? = null,
-    var dayOfImplementation: String? = null
+    var dayOfImplementation: String? = null,
 )
 

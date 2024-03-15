@@ -15,8 +15,6 @@ import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.EquipmentProductivity
-import com.kcvn.spm.model.tables.pojos.PlanProcess
-import com.kcvn.spm.model.tables.pojos.PlanProduct
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Sheet
@@ -143,54 +141,111 @@ class EquipmentProductivityService(
             )
         }
         val mergedData = groupedData.values.map { group ->
-            val mergedEquipmentModel = EquipmentProductivityModel(
-                frame1 = group.firstOrNull()?.frame1,
-                processName = group.firstOrNull()?.processName,
-                processNameJp = group.firstOrNull()?.processNameJp,
-                processConvertCode = group.firstOrNull()?.processConvertCode,
-                processCode = group.firstOrNull()?.processCode,
-                processDetail = mutableListOf()
-            )
-            val mergedProcessDetails = mutableMapOf<String, MutableList<ProcessDetailListModel>>()
-            group.forEach { equipmentModel ->
-                equipmentModel.processDetail?.forEach { processDetail ->
-                    val name = processDetail.name ?: ""
-                    val existingDetail = mergedProcessDetails.getOrPut(name) { mutableListOf() }
-                    processDetail.processDetailList.forEach { detailItem ->
-                        val existingItem = existingDetail.find { it.type == detailItem.type }
-                            ?: ProcessDetailListModel(type = detailItem.type, quantityByCalendars = mutableListOf()).also {
-                                existingDetail.add(it)
-                            }
-                        detailItem.quantityByCalendars.forEach { keyValueResponse ->
-                            val existingKeyValue = existingItem.quantityByCalendars.find { it.key == keyValueResponse.key }
-                                ?: KeyValueResponse(key = keyValueResponse.key, value = "").also {
-                                    existingItem.quantityByCalendars.add(it)
+            if(group.firstOrNull()?.processName == "T/H" || group.firstOrNull()?.processName == "Đục lỗ"){
+                val mergedEquipmentModel = EquipmentProductivityModel(
+                    frame1 = group.firstOrNull()?.frame1,
+                    processName = group.firstOrNull()?.processName,
+                    processNameJp = group.firstOrNull()?.processNameJp,
+                    processConvertCode = group.firstOrNull()?.processConvertCode,
+                    processCode = group.firstOrNull()?.processCode,
+                    processDetail = mutableListOf()
+                )
+                val mergedProcessDetails = mutableMapOf<String, MutableList<ProcessDetailListModel>>()
+                group.forEach { equipmentModel ->
+                    equipmentModel.processDetail?.forEach { processDetail ->
+                        val name = processDetail.name ?: ""
+                        val existingDetail = mergedProcessDetails.getOrPut(name) { mutableListOf() }
+                        processDetail.processDetailList.forEach { detailItem ->
+                            val existingItem = existingDetail.find { it.type == detailItem.type }
+                                ?: ProcessDetailListModel(type = detailItem.type, quantityByCalendars = mutableListOf()).also {
+                                    existingDetail.add(it)
                                 }
-                            if (detailItem.type == ProcessPlan.MACHINE) {
-                                existingKeyValue.value = keyValueResponse.value
-                            } else {
-                                existingKeyValue.value = ((existingKeyValue.value?.toDoubleOrNull() ?: 0.0) + (keyValueResponse.value?.toDoubleOrNull() ?: 0.0)).toString()
+                            detailItem.quantityByCalendars.forEach { keyValueResponse ->
+                                val existingKeyValue = existingItem.quantityByCalendars.find { it.key == keyValueResponse.key }
+                                    ?: KeyValueResponse(key = keyValueResponse.key, value = "").also {
+                                        existingItem.quantityByCalendars.add(it)
+                                    }
+                                if (detailItem.type == ProcessPlan.MACHINE) {
+                                    existingKeyValue.value = keyValueResponse.value
+                                } else {
+                                    existingKeyValue.value = ((existingKeyValue.value?.toDoubleOrNull() ?: 0.0) + (keyValueResponse.value?.toDoubleOrNull() ?: 0.0)).toString()
+                                }
                             }
                         }
                     }
                 }
+                val mergedProcessDetailList = mergedProcessDetails.map { (name, detailList) ->
+                    val totalProcess = detailList.sumOf { processDetail ->
+                        if (processDetail.type == ProcessPlan.PROCESS) {
+                            processDetail.quantityByCalendars.sumOf { keyValueResponse ->
+                                keyValueResponse.value?.toDoubleOrNull() ?: 0.0
+                            }
+                        } else { 0.0 }
+                    }
+                    ProcessDetailModel(
+                        name = name,
+                        totalProcess = totalProcess.toInt(),
+                        processDetailList = detailList
+                    )
+                }
+                mergedEquipmentModel.processDetail = mergedProcessDetailList.toMutableList()
+                mergedEquipmentModel
             }
-            val mergedProcessDetailList = mergedProcessDetails.map { (name, detailList) ->
-                val totalProcess = detailList.sumOf { processDetail ->
-                    if (processDetail.type == ProcessPlan.PROCESS) {
+            else{
+                val mergedEquipmentModel = EquipmentProductivityModel(
+                    frame1 = group.firstOrNull()?.frame1,
+                    processName = group.firstOrNull()?.processName,
+                    processNameJp = group.firstOrNull()?.processNameJp,
+                    processConvertCode = group.firstOrNull()?.processConvertCode,
+                    processCode = group.firstOrNull()?.processCode,
+                    processDetail = mutableListOf()
+                )
+
+                val mergedProcessDetails = mutableMapOf<String, MutableList<ProcessDetailListModel>>()
+
+                group.forEach { equipmentModel ->
+                    equipmentModel.processDetail?.forEach { processDetail ->
+                        processDetail.processDetailList.forEach { detailItem ->
+                            val name = detailItem.type
+                            val existingDetail = mergedProcessDetails.getOrPut(name) { mutableListOf() }
+                            detailItem.quantityByCalendars.forEach { keyValueResponse ->
+                                val existingKeyValue = existingDetail.find { it.type == detailItem.type }
+                                    ?: ProcessDetailListModel(type = detailItem.type, quantityByCalendars = mutableListOf()).also {
+                                        existingDetail.add(it)
+                                    }
+                                val existingItem = existingKeyValue.quantityByCalendars.find { it.key == keyValueResponse.key }
+                                    ?: KeyValueResponse(key = keyValueResponse.key, value = "").also {
+                                        existingKeyValue.quantityByCalendars.add(it)
+                                    }
+                                if (existingItem.value.isNullOrEmpty()) {
+                                    existingItem.value = keyValueResponse.value
+                                } else {
+                                    existingItem.value = ((existingItem.value!!.toDoubleOrNull() ?: 0.0) + (keyValueResponse.value?.toDoubleOrNull() ?: 0.0)).toString()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                val mergedProcessDetailList = mergedProcessDetails.map { (name, detailList) ->
+                    val totalProcess = detailList.sumOf { processDetail ->
                         processDetail.quantityByCalendars.sumOf { keyValueResponse ->
                             keyValueResponse.value?.toDoubleOrNull() ?: 0.0
                         }
-                    } else { 0.0 }
+                    }
+                    ProcessDetailModel(
+                        name = name,
+                        totalProcess = totalProcess.toInt(),
+                        processDetailList = detailList
+                    )
                 }
-                ProcessDetailModel(
-                    name = name,
-                    totalProcess = totalProcess.toInt(),
-                    processDetailList = detailList
-                )
+
+                mergedEquipmentModel.processDetail = mergedProcessDetailList.toMutableList()
+                mergedEquipmentModel
+
             }
-            mergedEquipmentModel.processDetail = mergedProcessDetailList.toMutableList()
-            mergedEquipmentModel
+
+
         }
         // Add process and process number
 
@@ -241,8 +296,8 @@ class EquipmentProductivityService(
                 processDetailModel.processDetailList.add(
                         ProcessDetailListModel(
                             type = ProcessPlan.MACHINENUMBER,
-                            quantityByCalendars = if (uniqueSheetDayValue != null) {
-                                processValues!!.map { column ->
+                            quantityByCalendars = if (uniqueSheetDayValue != null && processValues !=null) {
+                                processValues.map { column ->
                                     val result = (column.value?.toDoubleOrNull() ?: 0.0) / uniqueSheetDayValue.toDouble()
                                     val formattedResult = String.format("%.1f", result)
                                     KeyValueResponse(
@@ -251,9 +306,7 @@ class EquipmentProductivityService(
                                     )
                                 }.toMutableList()
                             } else {
-                                processValues!!.map { column ->
-                                    KeyValueResponse(column.key, "")
-                                }.toMutableList()
+                                mutableListOf()
                             }
                         )
                     )

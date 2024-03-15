@@ -113,7 +113,7 @@ class ProductProcessService(
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
         //// Lấy ra danh sách công đoạn cuối mỗi lớp và check phải tồn tại mã tồn kho là mã công đoạn ở lớp trước
         val listInventoryProcessGrByLayer = request.listProcess
-            ?.filter { it.layerCode != "1" }
+            ?.filter { it.layerCode?.toInt() != 1 }
             ?.groupBy { it.layerCode }
         for(itemInventoryProcessGrByLayer in listInventoryProcessGrByLayer!!.values){
             val itemInventoryProcessGrByLayerSort = itemInventoryProcessGrByLayer.sortedBy { it.idx }
@@ -126,18 +126,18 @@ class ProductProcessService(
                 val layerCodePre = layerCodeItem - 1
                 request.listProcess?.firstOrNull{
                     it.processCode == itemInventoryProcessGrByLayerLast.processInventoryCode
-                            && it.layerCode == layerCodePre.toString()
+                            && it.layerCode?.toInt() == layerCodePre
                 } ?: throw BusinessException(CommonUtils.getMessage("validate.excel.checkInventoryLast"))
             }
         }
 
 
         ///// Check khi ngày thứ thực hiện để trống và check ngày thứ thực hiện phải có ngày bắt đầu từ 1
-        val countDayOfImplementNull = request.listProcess?.count { it.dayOfImplementation == null } ?: 0
+        val countDayOfImplementNotNull = request.listProcess?.count { it.dayOfImplementation != null } ?: 0
         val countRequest = request.listProcess?.count()
-        if(countDayOfImplementNull > 0 && countDayOfImplementNull != countRequest){
+        if(countDayOfImplementNotNull > 0 && countDayOfImplementNotNull != countRequest){
             throw BusinessException(CommonUtils.getMessage("validate.excel.dayOfImplementation"))
-        }else {
+        }else if(countDayOfImplementNotNull > 0)  {
             request.listProcess?.firstOrNull{
                 it.dayOfImplementation == 1
             } ?: throw  BusinessException(CommonUtils.getMessage("validate.excel.processDayOne"))

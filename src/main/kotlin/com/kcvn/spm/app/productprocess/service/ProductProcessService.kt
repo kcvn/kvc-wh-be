@@ -59,7 +59,9 @@ class ProductProcessService(
                 productId = productProcess?.productId,
                 processProcedureStructureId = productProcess?.processProcedureStructureId,
                 layerCodeInt = productProcess?.layerCode!!.toInt(),
-                processSequence = productProcess.processSequence
+                processSequence = productProcess.processSequence,
+                inventoryLayerGroup = productProcess.inventoryLayerGroup,
+                dayOfImplementation = productProcess.dayOfImplementation
             )
         }
         response.totalRecords = result.second ?: 0
@@ -240,14 +242,14 @@ class ProductProcessService(
             var rowNumber = 2
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(dataRow, 0, style, item?.productName)
-                ExcelHelper.setCellValue(dataRow, 1, style, item?.layerCode)
-                ExcelHelper.setCellValue(dataRow, 2, style, item?.processCode)
-                ExcelHelper.setCellValue(dataRow, 3, style, item?.processName)
-                ExcelHelper.setCellValue(dataRow, 4, style, item?.processNameJp)
-                ExcelHelper.setCellValue(dataRow, 5, style, item?.processConvertCode)
-                ExcelHelper.setCellValue(dataRow, 6, style, item?.processInventoryCode)
-                ExcelHelper.setCellValue(dataRow, 7, style, item?.processStatisticCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item?.productName)
+                ExcelHelper.setCellValue(workbook, dataRow, 1, style, item?.layerCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 2, style, item?.processCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 3, style, item?.processName)
+                ExcelHelper.setCellValue(workbook, dataRow, 4, style, item?.processNameJp)
+                ExcelHelper.setCellValue(workbook, dataRow, 5, style, item?.processConvertCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 6, style, item?.processInventoryCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 7, style, item?.processStatisticCode)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -794,6 +796,7 @@ class ProductProcessService(
                 {
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.inventoryCodeAndInventoryLayerGr1"))
+                    checkList = false
                 }
 
                 if(!item.inventoryLayerGroup.isNullOrEmpty()){
@@ -802,6 +805,7 @@ class ProductProcessService(
                     if(checkInventoryLayerGr == null){
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                             "validate.excel.inventoryLayerGr"))
+                        checkList = false
                     }
                 }
 
@@ -814,6 +818,7 @@ class ProductProcessService(
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.process.dataNull"))
+                    checkList = false
                 }else {
                     messageErr.idProcessStructure = checkProcessStructure.id
                 }
@@ -824,29 +829,34 @@ class ProductProcessService(
                     if(dayItemInventoryLayerGr - dayItemInventoryLayerGrPre > 1 || dayItemInventoryLayerGr - dayItemInventoryLayerGrPre < 0){
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                             "validate.excel.checkSubtractionDayOfImplementation"))
+                        checkList = false
                     }
                 }
 
                 if(!item.processInventoryCode.isNullOrEmpty() && item.inventoryLayerGroup.isNullOrEmpty()){
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.inventoryCodeAndInventoryLayerGr1"))
+                    checkList = false
                 }
 
                 if(item.processInventoryCode.isNullOrEmpty() && !item.inventoryLayerGroup.isNullOrEmpty()){
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.inventoryCodeAndInventoryLayerGr2"))
+                    checkList = false
                 }
 
                 if(!item.processInventoryCode.isNullOrEmpty() && !item.inventoryLayerGroup.isNullOrEmpty()){
                     if(item.processInventoryCode == item.processCode && item.inventoryLayerGroup == item.layerCode){
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                             "validate.excel.inventoryCodeAndInventoryLayerGr3"))
+                        checkList = false
                     }else {
                         val check = listItem.value.firstOrNull { it.processCode == item.processInventoryCode
                                 && it.layerCode == item.inventoryLayerGroup}
                         if(check == null){
                             messageErr.messageErrs?.add(CommonUtils.getMessage(
                                 "validate.excel.inventoryCodeAndInventoryLayerGr4"))
+                            checkList = false
                         }
                         val idx = item.idx ?: 0
                         val check1 = listItem.value.firstOrNull {
@@ -860,6 +870,7 @@ class ProductProcessService(
                                 arrayOf(item.processCode.toString(), item.layerCode.toString()
                                 , check1.processCode.toString(), check1.layerCode.toString()))
                             )
+                            checkList = false
                         }
                     }
 
@@ -883,6 +894,7 @@ class ProductProcessService(
                     if(checkProcessInventoryLast == null){
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                             "validate.excel.checkInventoryLast"))
+                        checkList = false
                     }
                 }
 
@@ -972,7 +984,7 @@ class ProductProcessService(
                 ExcelHelper.setCellValue(workbook,dataRow, 7, style, item.dayOfImplementation)
 
                 val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
-                ExcelHelper.setCellValue(dataRow, 8, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))
+                ExcelHelper.setCellValue(workbook, dataRow, 8, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))
 
             }
         }

@@ -200,7 +200,7 @@ class PlanService(
                         ExcelHelper.setCellValue(workbook, dataRow, 7, style, "")
                         var colIndex = 8
                         for (col in columns) {
-                            ExcelHelper.setCellValue(workbook, dataRow, colIndex, style, "")
+                            ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, "", col.isHoliday)
                             colIndex++
                         }
                     }
@@ -710,16 +710,17 @@ class PlanService(
 
         val planProducts = planProductRep.getListPlanProduct(request)
         val dataExports = getDataExportExcel(planProducts, colStartDate, colEndDate)
-        val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten()
+        val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter {
+            x -> !x.processConvertCode.isNullOrEmpty()
+            && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
+        }
 
-        val dataSummary = dataExportFlattens.groupBy { x -> x.processCode }.map { x ->
+        val dataSummary = dataExportFlattens.groupBy { x -> x.processConvertCode }.map { x ->
             val process = x.value.first()
             val summary = PlanSummaryModel(
-                frame_1 = process.frame_1,
-                mold = process.mold,
                 processName = process.processName,
                 processNameJp = process.processNameJp,
-                processConvertCode = process.processConvertCode,
+                processConvertCode = x.key,
                 processSequence = process.processSequence,
                 details = mutableListOf(
                     PlanSummaryDetailModel(
@@ -740,16 +741,15 @@ class PlanService(
 
         val dataDucLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH }
         if (dataDucLo.isNotEmpty()) {
+            val moldByFrame1s = Mold.DATA_BY_FRAME1(request.frame_1)
             val ducLo = PlanSummaryModel(
-                frame_1 = dataDucLo.first().frame_1,
-                mold = dataDucLo.first().mold,
                 processName = CommonUtils.getMessage("excel.rowDucLo"),
                 processNameJp = dataDucLo.first().processNameJp,
                 processConvertCode = "${ProcessConvertCode.T}/${ProcessConvertCode.TH}",
                 processSequence = dataDucLo.first().processSequence,
                 details = mutableListOf(
                     PlanSummaryDetailModel(
-                        type = CommonUtils.getMessage("excel.rowTotal"),
+                        type = if (moldByFrame1s.size > 1) CommonUtils.getMessage("excel.rowTotal") else "",
                         planSummaryData = dataDucLo.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
                             .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
                                 val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
@@ -760,11 +760,12 @@ class PlanService(
                     )
                 )
             )
-
-            for (mold in listOf(Mold.KVC, Mold.SKE)) {
-                val dataMold = dataExportFlattens
-                    .filter { x -> x.mold == mold && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH) }
-                    .groupBy { x -> x.mold }.mapNotNull { x ->
+            if (moldByFrame1s.size > 1) {
+                for (mold in moldByFrame1s) {
+                    var dataMold = dataExportFlattens.filter {
+                        x -> x.mold == mold
+                        && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH)
+                    }.groupBy { x -> x.mold }.mapNotNull { x ->
                         PlanSummaryDetailModel(
                             type = x.key,
                             planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
@@ -775,8 +776,15 @@ class PlanService(
                                     data
                                 }
                         )
+                    }.firstOrNull()
+                    if (dataMold == null) {
+                        dataMold = PlanSummaryDetailModel(
+                            type = mold,
+                            planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
+                        )
                     }
-                ducLo.details!!.addAll(dataMold)
+                    ducLo.details!!.add(dataMold)
+                }
             }
 
             dataSummary.removeAll(dataDucLo)
@@ -786,8 +794,6 @@ class PlanService(
         val dataInMach = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.TAN || x.processConvertCode == ProcessConvertCode.ZEN }
         if (dataInMach.isNotEmpty()) {
             val inMach = PlanSummaryModel(
-                frame_1 = dataInMach.first().frame_1,
-                mold = dataInMach.first().mold,
                 processName = CommonUtils.getMessage("excel.rowInMach"),
                 processNameJp = dataInMach.first().processNameJp,
                 processConvertCode = "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}",
@@ -807,7 +813,7 @@ class PlanService(
             )
 
             for (code in listOf(ProcessConvertCode.TAN, ProcessConvertCode.ZEN)) {
-                val dataTanZen = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                var dataTanZen = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
                     PlanSummaryDetailModel(
                         type = x.key,
                         planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
@@ -818,22 +824,73 @@ class PlanService(
                                 data
                             }
                     )
+                }.firstOrNull()
+                if (dataTanZen == null) {
+                    dataTanZen = PlanSummaryDetailModel(
+                        type = code,
+                        planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
+                    )
                 }
-                inMach.details!!.addAll(dataTanZen)
+                inMach.details!!.add(dataTanZen)
             }
 
             dataSummary.removeAll(dataInMach)
             dataSummary.add(inMach)
         }
 
-        val dataGhepLop = dataSummary.filter { x -> !x.processConvertCode.isNullOrEmpty() && x.processConvertCode!!.startsWith("M") }
+        val dataInLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.HP_ALL || x.processConvertCode == ProcessConvertCode.HP }
+        if (dataInLo.isNotEmpty()) {
+            val inLo = PlanSummaryModel(
+                processName = CommonUtils.getMessage("excel.rowInLo"),
+                processNameJp = dataInLo.first().processNameJp,
+                processConvertCode = "${ProcessConvertCode.HP_ALL}/${ProcessConvertCode.HP}",
+                processSequence = dataInLo.first().processSequence,
+                details = mutableListOf(
+                    PlanSummaryDetailModel(
+                        type = CommonUtils.getMessage("excel.rowTotal"),
+                        planSummaryData = dataInLo.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
+                            .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
+                                val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
+                                data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                data
+                            }.toList()
+                    )
+                )
+            )
+
+            for (code in listOf(ProcessConvertCode.HP_ALL, ProcessConvertCode.HP)) {
+                var dataHP = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                    PlanSummaryDetailModel(
+                        type = x.key,
+                        planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                            .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                                val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                data
+                            }
+                    )
+                }.firstOrNull()
+                if (dataHP == null) {
+                    dataHP = PlanSummaryDetailModel(
+                        type = code,
+                        planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
+                    )
+                }
+                inLo.details!!.add(dataHP)
+            }
+
+            dataSummary.removeAll(dataInLo)
+            dataSummary.add(inLo)
+        }
+
+        val dataGhepLop = dataSummary.filter { x -> !x.processConvertCode.isNullOrEmpty() && x.processConvertCode!!.startsWith(ProcessConvertCode.M) }
         if (dataGhepLop.isNotEmpty()) {
             val ghepLop = PlanSummaryModel(
-                frame_1 = dataGhepLop.first().frame_1,
-                mold = dataGhepLop.first().mold,
                 processName = CommonUtils.getMessage("excel.rowGhepLop"),
                 processNameJp = dataGhepLop.first().processNameJp,
-                processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_TAN}",
+                processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
                 processSequence = dataGhepLop.first().processSequence,
                 details = mutableListOf(
                     PlanSummaryDetailModel(
@@ -849,7 +906,7 @@ class PlanService(
                 )
             )
 
-            val mAll = dataExportFlattens.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+            var mAll = dataExportFlattens.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
                 PlanSummaryDetailModel(
                     type = x.key,
                     planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
@@ -860,27 +917,41 @@ class PlanService(
                             data
                         }
                 )
+            }.firstOrNull()
+            if (mAll == null) {
+                mAll = PlanSummaryDetailModel(
+                    type = ProcessConvertCode.M_ALL,
+                    planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
+                )
             }
-            ghepLop.details!!.addAll(mAll)
+            ghepLop.details!!.add(mAll)
 
-            val mTan = dataExportFlattens
-                .filter { x -> !x.processConvertCode.isNullOrEmpty() && x.processConvertCode != ProcessConvertCode.M_ALL && x.processConvertCode!!.startsWith("M") }
-                .map { x ->
-                    x.processConvertCode = ProcessConvertCode.M_TAN
-                    x
-                }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
-                    PlanSummaryDetailModel(
-                        type = x.key,
-                        planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
-                            .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
-                                val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
-                                data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
-                                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
-                                data
-                            }
-                    )
-                }
-            ghepLop.details!!.addAll(mTan)
+            var mTan = dataExportFlattens.filter {
+                x -> !x.processConvertCode.isNullOrEmpty()
+                && x.processConvertCode != ProcessConvertCode.M_ALL
+                && x.processConvertCode!!.startsWith(ProcessConvertCode.M)
+            }.map { x ->
+                x.processConvertCode = ProcessConvertCode.M_ANY
+                x
+            }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                PlanSummaryDetailModel(
+                    type = x.key,
+                    planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                        .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                            val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                            data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                            data
+                        }
+                )
+            }.firstOrNull()
+            if (mTan == null) {
+                mTan = PlanSummaryDetailModel(
+                    type = ProcessConvertCode.M_ANY,
+                    planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
+                )
+            }
+            ghepLop.details!!.add(mTan)
 
             dataSummary.removeAll(dataGhepLop)
             dataSummary.add(ghepLop)
@@ -963,8 +1034,6 @@ class PlanService(
 
         workbook.close()
         return response
-
-        return FileContentModel()
     }
 
     private fun generateExcelColProcessInPlanSummary(

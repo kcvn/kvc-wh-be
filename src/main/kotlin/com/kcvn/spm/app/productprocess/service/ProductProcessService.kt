@@ -240,14 +240,14 @@ class ProductProcessService(
             var rowNumber = 2
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(dataRow, 0, style, item?.productName)
-                ExcelHelper.setCellValue(dataRow, 1, style, item?.layerCode)
-                ExcelHelper.setCellValue(dataRow, 2, style, item?.processCode)
-                ExcelHelper.setCellValue(dataRow, 3, style, item?.processName)
-                ExcelHelper.setCellValue(dataRow, 4, style, item?.processNameJp)
-                ExcelHelper.setCellValue(dataRow, 5, style, item?.processConvertCode)
-                ExcelHelper.setCellValue(dataRow, 6, style, item?.processInventoryCode)
-                ExcelHelper.setCellValue(dataRow, 7, style, item?.processStatisticCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item?.productName)
+                ExcelHelper.setCellValue(workbook, dataRow, 1, style, item?.layerCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 2, style, item?.processCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 3, style, item?.processName)
+                ExcelHelper.setCellValue(workbook, dataRow, 4, style, item?.processNameJp)
+                ExcelHelper.setCellValue(workbook, dataRow, 5, style, item?.processConvertCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 6, style, item?.processInventoryCode)
+                ExcelHelper.setCellValue(workbook, dataRow, 7, style, item?.processStatisticCode)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -972,7 +972,7 @@ class ProductProcessService(
                 ExcelHelper.setCellValue(workbook,dataRow, 7, style, item.dayOfImplementation)
 
                 val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
-                ExcelHelper.setCellValue(dataRow, 8, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))
+                ExcelHelper.setCellValue(workbook, dataRow, 8, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))
 
             }
         }

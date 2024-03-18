@@ -73,16 +73,21 @@ class EquipmentProductivityService(
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
                         var equipmentMachineValue: BigDecimal?
-                        val matchingEquipment = equipmentMachine.firstOrNull {
-                            it.processCode == planSummaryModel.processCode &&
-                                    it.frame_1 == planSummaryModel.frame1 &&
-                                    (it.mold == processSummaryDetailModel.type ||
-                                            equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo"))
-                        }
-                        equipmentMachineValue = when (equipmentProductivityModel.unit) {
-                            ProcessUnit.SHEET -> matchingEquipment?.sheetDay
-                            ProcessUnit.SET -> matchingEquipment?.setDay
-                            else -> matchingEquipment?.blockDay
+                        if(equipmentProductivityModel.unit ==ProcessUnit.SHEET){
+                            equipmentMachineValue = equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1}?.sheetDay
+                            if(equipmentProductivityModel.processName==CommonUtils.getMessage("excel.rowDucLo")){
+                                equipmentMachineValue =equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type}?.sheetDay
+                            }
+                        }else if(equipmentProductivityModel.unit ==ProcessUnit.SET){
+                            equipmentMachineValue = equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1}?.setDay
+                            if(equipmentProductivityModel.processName==CommonUtils.getMessage("excel.rowDucLo")){
+                                equipmentMachineValue =equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type}?.setDay
+                            }
+                        }else{
+                            equipmentMachineValue = equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1}?.blockDay
+                            if(equipmentProductivityModel.processName==CommonUtils.getMessage("excel.rowDucLo")){
+                                equipmentMachineValue =equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type}?.blockDay
+                            }
                         }
                         val processDetailModel = ProcessDetailModel(
                             name = processSummaryDetailModel.type,

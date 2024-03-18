@@ -16,7 +16,7 @@ data class ProductProcessResponse (
     var productId: String? = null,
     var processProcedureStructureId: String? = null,
     var layerCodeInt: Int? = null,
-    var processSequence: String? = null,
+    var processSequence: Int? = null,
     var listDropDownConvertCode : List<DropdownResponse>? = null,
     var listDropDownStatisticCode: List<DropdownResponse>? = null,
     var inventoryLayerGroup: String? = null,

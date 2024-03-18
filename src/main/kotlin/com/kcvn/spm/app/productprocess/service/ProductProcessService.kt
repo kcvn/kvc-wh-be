@@ -667,7 +667,7 @@ class ProductProcessService(
                             && it.processCode == x.processCode
                             && it.layerCode == x.layerCode}
                 val model = ProductProcessResponse(
-                    processSequence = sq?.processSequence.toString(),
+                    processSequence = sq?.processSequence,
                     processName = x.processName,
                     productName = x.productName,
                     processCode = x.processCode,

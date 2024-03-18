@@ -94,20 +94,17 @@ class OrderRepository(
     fun getQuantityByCalendar(orderProductIds: List<Pair<String, String>>): List<OrderDetailByDateModel> {
         val orderIds = orderProductIds.map { x -> x.first }
         val productIds = orderProductIds.map { x -> x.second }
-        val data = context.selectFrom(ORDER_DETAIL)
-            .where(
-                ORDER_DETAIL.ORDER_ID.`in`(orderIds).and(ORDER_DETAIL.PRODUCT_ID.`in`(productIds))
-                    .and(ORDER_DETAIL.IS_DELETED.eq(false))
+        val data = context.selectFrom(ORDER_DETAIL).where(
+            ORDER_DETAIL.ORDER_ID.`in`(orderIds).and(ORDER_DETAIL.PRODUCT_ID.`in`(productIds))
+                .and(ORDER_DETAIL.IS_DELETED.eq(false))
+        ).fetchInto(OrderDetail::class.java).map { x ->
+            OrderDetailByDateModel(
+                x.orderId,
+                x.productId,
+                DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.MM_dd_yyyy),
+                x.quantity
             )
-            .fetchInto(OrderDetail::class.java)
-            .map { x ->
-                OrderDetailByDateModel(
-                    x.orderId,
-                    x.productId,
-                    DateTimeHelper.toString(x.orderDate!!, DateTimeFormat.MM_dd_yyyy),
-                    x.quantity
-                )
-            }
+        }
         return data
     }
 
@@ -153,7 +150,7 @@ class OrderRepository(
                 ORDER.VERSION,
                 ORDER.CREATED_BY
             ).values(order.orderCode, order.startDate, order.endDate, order.version, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-            .returningResult(ORDER).fetchInto(Order::class.java).firstOrNull()
+                .returningResult(ORDER).fetchInto(Order::class.java).firstOrNull()
 
             if (orderInsert != null) {
                 for (orderDetail in orderDetails) {
@@ -212,34 +209,16 @@ class OrderRepository(
         return query.fetchInto(Order::class.java)
     }
 
-    fun getOrderCodeByMonth(request: CalculateQuantityRequest): List<Order> {
-        var condition = DSL.noCondition()
-        if (request.endDate != null) {
-            condition = condition.and(ORDER.END_DATE.le(request.endDate))
-        }
-        condition = condition.and(ORDER.START_DATE.ge(request.startDate)).and(ORDER.IS_DELETED.eq(false)).or(ORDER.START_DATE.le(request.endDate))
-        return context.select(
-            ORDER.ID,
-            ORDER.ORDER_CODE,
-            ORDER.VERSION,
-            ORDER.START_DATE,
-            ORDER.END_DATE
-        ).from(ORDER)
-            .where(condition)
-            .orderBy(ORDER.START_DATE.sort(SortOrder.DESC))
-            .fetchInto(Order::class.java)
-    }
-
-    fun getNameOrderByMonth(request: CalculateQuantityRequest) : List<String> {
+    fun getNameOrderByMonth(request: CalculateQuantityRequest): List<String> {
 
         var condition = DSL.noCondition()
         condition = condition.or(ORDER.START_DATE.lt(request.startDate).and(ORDER.END_DATE.gt(request.endDate)))
-        .or(ORDER.START_DATE.gt(request.startDate).and(ORDER.START_DATE.lt(request.endDate)))
-        .or(ORDER.START_DATE.eq(request.startDate))
-        .or(ORDER.START_DATE.eq(request.endDate))
-        .or(ORDER.END_DATE.gt(request.startDate).and(ORDER.START_DATE.lt(request.endDate)))
-        .or(ORDER.END_DATE.eq(request.startDate))
-        .or(ORDER.END_DATE.eq(request.endDate))
+            .or(ORDER.START_DATE.gt(request.startDate).and(ORDER.START_DATE.lt(request.endDate)))
+            .or(ORDER.START_DATE.eq(request.startDate))
+            .or(ORDER.START_DATE.eq(request.endDate))
+            .or(ORDER.END_DATE.gt(request.startDate).and(ORDER.START_DATE.lt(request.endDate)))
+            .or(ORDER.END_DATE.eq(request.startDate))
+            .or(ORDER.END_DATE.eq(request.endDate))
         return context.select(
             ORDER.ORDER_CODE,
         )
@@ -266,7 +245,7 @@ class OrderRepository(
             .fetchInto(String::class.java)
     }
 
-    fun getOrderById(request: List<String>) : List<Order>{
+    fun getOrderById(request: List<String>): List<Order> {
         return context.selectFrom(ORDER)
             .where(ORDER.ID.`in`(request))
             .fetchInto(Order::class.java)

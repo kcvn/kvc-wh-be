@@ -58,6 +58,10 @@ class DateTimeHelper {
             return date?.plusHours(7)
         }
 
+        fun toTimeZone7toString(date: OffsetDateTime, format: String): String {
+            return date.plusHours(7).format(DateTimeFormatter.ofPattern(format))
+        }
+
         fun toUniversalTime(date: LocalDateTime): OffsetDateTime {
             return OffsetDateTime.of(date, ZoneOffset.UTC).plusHours(-7)
         }

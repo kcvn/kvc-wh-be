@@ -184,6 +184,7 @@ class CompletionRateService(
                     id = item.id,
                     productName = item.productName,
                     rate = item.rate,
+                    effectiveDate = item.effectiveDate
                 )
             }, result.second
         )
@@ -402,7 +403,9 @@ class CompletionRateService(
                     layerCode = item.layerCode,
                     rate = item.rate,
                     processName = item.processName,
-                    processNameJp = item.processNameJp
+                    processNameJp = item.processNameJp,
+                    effectiveDate = item.effectiveDate
+
                 )
             }, result.second
         )

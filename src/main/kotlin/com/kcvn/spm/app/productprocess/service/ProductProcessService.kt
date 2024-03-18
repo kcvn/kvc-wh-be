@@ -11,6 +11,7 @@ import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.MasterDataType
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -543,7 +544,7 @@ class ProductProcessService(
 
             val cellLayerCode = row.getCell(2)
             val layerCode = if (cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
-                cellLayerCode.numericCellValue.toInt().toString()
+                StringHelper.intToStringD2(row.getCell(2).numericCellValue.toInt())
             } else {
                 ExcelHelper.getCellValue(row, 2)
             }
@@ -555,7 +556,7 @@ class ProductProcessService(
                 ""
             }else {
                 if (row.getCell(4).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
-                    row.getCell(4).numericCellValue.toInt().toString()
+                    StringHelper.intToStringD2(row.getCell(4).numericCellValue.toInt())
                 } else {
                     ExcelHelper.getCellValue(row, 4)
                 }
@@ -566,7 +567,7 @@ class ProductProcessService(
                 ""
             }else {
                 if (row.getCell(6).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
-                    row.getCell(6).numericCellValue.toInt().toString()
+                    StringHelper.intToStringD2(row.getCell(6).numericCellValue.toInt())
                 } else {
                     ExcelHelper.getCellValue(row, 6)
                 }
@@ -881,17 +882,17 @@ class ProductProcessService(
                     it.productName == item.productName
                             && it.layerCode == item.layerCode
                             && it.processCode == item.processCode
+                            && it.layerCode!!.toInt() > 1
                 }
                 if(checkLastProcess != null){
-                    val layerItemInt = item.layerCode?.toIntOrNull() ?: 0
-                    val listProcessLayerPre = listItem.value.filter {
-                        it.layerCode?.toIntOrNull() == (layerItemInt - 1)
+                    val layerItemInt = item.inventoryLayerGroup?.toIntOrNull() ?: 0
+                    val processPre = listItem.value.firstOrNull {
+                        it.layerCode!!.toInt() - 1 == (layerItemInt)
                                 && it.productName == item.productName
+                                && it.processCode == item.processInventoryCode
                     }
-                    val checkProcessInventoryLast = listProcessLayerPre.firstOrNull{
-                        it.processCode == checkLastProcess.processInventoryCode
-                    }
-                    if(checkProcessInventoryLast == null){
+
+                    if(processPre == null){
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                             "validate.excel.checkInventoryLast"))
                         checkList = false

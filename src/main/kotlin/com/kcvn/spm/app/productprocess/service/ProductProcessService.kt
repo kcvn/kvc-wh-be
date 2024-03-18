@@ -817,7 +817,7 @@ class ProductProcessService(
                 }
 
 
-                if(!item.inventoryLayerGroup.isNullOrEmpty()){
+                if(!item.inventoryLayerGroup.isNullOrEmpty() && !item.processInventoryCode.isNullOrEmpty()){
                     val checkInventoryLayerGr = listItem.value.firstOrNull { it.layerCode == item.inventoryLayerGroup
                             && it.processCode == item.processInventoryCode}
                     if(checkInventoryLayerGr == null){
@@ -926,7 +926,7 @@ class ProductProcessService(
             }
         }
         val resultDataErr: MutableList<ExportExcelErrResponse> = mutableListOf()
-        for (itemKey in listKeyErr){
+        for (itemKey in listKeyErr.distinct()){
             val filteredData = dataErr.filter { it.productName == itemKey }
             resultDataErr.addAll(filteredData)
         }
@@ -955,6 +955,7 @@ class ProductProcessService(
 
             count++
         }
+
         val excelBytes = exportExcelErr(resultDataErr)
 
         val response = FileContentModel(
@@ -964,14 +965,15 @@ class ProductProcessService(
             content = excelBytes
         )
         workbook.close()
-
-        return BaseResponse(
-            response,
-            if (count == 0)
+        return if(count == total) {
+            BaseResponse(null, message = CommonUtils.getMessage("import.success", arrayOf(count, total)))
+        } else {
+            BaseResponse(
+                response,
                 CommonUtils.getMessage("import.insertNoData")
+            )
+        }
 
-            else CommonUtils.getMessage("import.success", arrayOf(count, total))
-        )
     }
     fun exportExcelErr(requestErr: MutableList<ExportExcelErrResponse>): ByteArray? {
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx")

@@ -13,4 +13,5 @@ class CompletionRateProcessProductResponse(
     val processName: String?,
     val processNameJp:String?,
     val effectiveDate: OffsetDateTime?,
+
 )

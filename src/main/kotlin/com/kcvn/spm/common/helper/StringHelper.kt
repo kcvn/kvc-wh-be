@@ -1,7 +1,5 @@
 package com.kcvn.spm.common.helper
 
-import java.nio.charset.StandardCharsets
-
 class StringHelper {
     companion object {
         fun removeDecimalSuffix(value: String): String {
@@ -12,10 +10,13 @@ class StringHelper {
             }
         }
 
-        fun convertToUtf8(input: String?) : String? {
-            if (input.isNullOrEmpty()) return null
-            val utf8Bytes = input.toByteArray(StandardCharsets.UTF_8)
-            return String(utf8Bytes, StandardCharsets.UTF_8)
+        fun intToStringD2(number: String?): String {
+            return number?.toBigDecimalOrNull()?.toInt().toString().padStart(2, '0') ?: ""
         }
+
+        fun intToStringD2(number: Int?): String {
+            return number?.toString()?.padStart(2, '0') ?: ""
+        }
+
     }
 }

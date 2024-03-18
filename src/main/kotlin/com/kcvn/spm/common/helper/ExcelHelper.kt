@@ -31,11 +31,6 @@ class ExcelHelper {
             }
         }
 
-        fun setCellValue(row: Row, colIndex: Int, style: CellStyle, value: String?) {
-            row.createCell(colIndex).setCellValue(value)
-            row.getCell(colIndex).cellStyle.cloneStyleFrom(style)
-        }
-
         fun setCellValue(workbook: Workbook, row: Row, colIndex: Int, styleTemplate: CellStyle, value: String?) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)

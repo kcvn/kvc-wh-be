@@ -36,4 +36,10 @@ class CommonCategoryRepository(private val context: DSLContext) {
             .where(PROCESS_MASTER_DATA.PROCESS_CODE.eq(processCode).and(PROCESS_MASTER_DATA.TYPE.eq(type)))
             .fetchInto(DropdownResponse::class.java)
     }
+
+    fun getProcessMasterData() : List<ProcessMasterData> {
+        return context.selectFrom(PROCESS_MASTER_DATA)
+            .where(PROCESS_MASTER_DATA.IS_DELETED.eq(false))
+            .fetchInto(ProcessMasterData::class.java)
+    }
 }

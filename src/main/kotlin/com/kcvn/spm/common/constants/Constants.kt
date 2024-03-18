@@ -78,7 +78,6 @@ class ExcelConstant {
     companion object {
         const val EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
-        const val PAGING = 1000000
     }
 }
 

@@ -44,8 +44,9 @@ enum class EPermission(val value: String) {
     I_ORDER("order.i"),
     E_ORDER("order.e"),
 
-    //production plan
-    V_PRODUCTTION_PLAN("product_plan.v"),
+    //work plan
+    V_WORK_PLAN("work_plan.v"),
+    E_WORK_PLAN("work_plan.e"),
 
     //production result
     V_PRODUCTION_RESULT("product_result.v"),
@@ -55,16 +56,15 @@ enum class EPermission(val value: String) {
     E_INVENTORY("inventory.e"),
     I_INVENTORY("inventory.i"),
 
-    // report
-    V_REPORT_ASVERAGE_OUTPUT_OF_TWO_MONTHS("rp.aootm.v"),
-    V_REPORT_KTTN_PRODUCT_DELIVERY("rp.kpd.v"),
-
     // sync data
     V_SYNC_PROCESS_PROCEDURE_STRUCTURE("sync.ppst.v"),
 
-    //quantity report
-    V_REPORT_QUANTITY("rp.quantity.v"),
-    E_REPORT_QUANTITY ("rp.quantity.e"),
-    CA_REPORT_QUANTITY("rp.quantity.ca"),
-    LOCK_REPORT_QUANTITY("rp.quantity.lock"),
+    //report
+    V_REPORT_QUANTITY("rp_quantity.v"),
+    E_REPORT_QUANTITY ("rp_quantity.e"),
+    CA_REPORT_QUANTITY("rp_quantity.ca"),
+    LOCK_REPORT_QUANTITY("rp_quantity.lock"),
+
+    V_REPORT_EXPORT_ITEM("rp_export_item.v"),
+    E_REPORT_EXPORT_ITEM("rp_export_item.e"),
 }

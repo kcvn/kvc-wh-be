@@ -38,4 +38,5 @@ class ProcessMasterRepository(
             .where(PROCESS_MASTER_DATA.PROCESS_CODE.`in`(processCodes).and(PROCESS_MASTER_DATA.IS_DELETED.eq(false)))
             .fetchInto(ProcessMasterData::class.java)
     }
+
 }

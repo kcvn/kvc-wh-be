@@ -168,6 +168,7 @@ class ProcessPlan {
         const val MACHINE = "Cap(1machine)"
         const val MACHINENUMBER = "Số máy sử dụng"
         const val PROCESS_DUC_LO ="Đục lỗ"
+        const val PROCESS_DUC_LO_M = "T/H"
     }
 }
 
@@ -175,6 +176,7 @@ class ProcessUnit {
     companion object {
         const val SHEET = "Sheet"
         const val BLOCK = "Block"
+        const val SET = "Set"
     }
 }
 

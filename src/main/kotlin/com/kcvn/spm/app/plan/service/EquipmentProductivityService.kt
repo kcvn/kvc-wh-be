@@ -72,22 +72,21 @@ class EquipmentProductivityService(
 
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
-                        var equipmentMachineValue: BigDecimal?
-                        if(equipmentProductivityModel.unit ==ProcessUnit.SHEET){
-                            equipmentMachineValue = equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1}?.sheetDay
-                            if(equipmentProductivityModel.processName==CommonUtils.getMessage("excel.rowDucLo")){
-                                equipmentMachineValue =equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type}?.sheetDay
+                        var equipmentMachineValue: BigDecimal? = null
+                        val equipmentMachineModel = if (equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo")) {
+                            equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
+                        } else {
+                            equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 }
+                        }
+                        equipmentMachineValue = when {
+                            equipmentMachineModel != null -> {
+                                when (equipmentProductivityModel.unit) {
+                                    ProcessUnit.SHEET -> equipmentMachineModel.sheetDay
+                                    ProcessUnit.SET -> equipmentMachineModel.setDay
+                                    else -> equipmentMachineModel.blockDay
+                                }
                             }
-                        }else if(equipmentProductivityModel.unit ==ProcessUnit.SET){
-                            equipmentMachineValue = equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1}?.setDay
-                            if(equipmentProductivityModel.processName==CommonUtils.getMessage("excel.rowDucLo")){
-                                equipmentMachineValue =equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type}?.setDay
-                            }
-                        }else{
-                            equipmentMachineValue = equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1}?.blockDay
-                            if(equipmentProductivityModel.processName==CommonUtils.getMessage("excel.rowDucLo")){
-                                equipmentMachineValue =equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type}?.blockDay
-                            }
+                            else -> null
                         }
                         val processDetailModel = ProcessDetailModel(
                             name = processSummaryDetailModel.type,

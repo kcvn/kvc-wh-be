@@ -410,18 +410,18 @@ class InventoryProductService(
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 if (item?.inventoryDate != null) {
                     val formattedDate = convertOffSetDateTimeUtc7ToString(item.inventoryDate!!)
-                    ExcelHelper.setCellValue(workbook, dataRow, 0, style, formattedDate)
+                    ExcelHelper.setCellValue(dataRow, 0, style, formattedDate)
                 }
-                ExcelHelper.setCellValue(workbook, dataRow, 1, style, item?.productName)
-                ExcelHelper.setCellValue(workbook, dataRow, 2, style, item?.processName)
-                ExcelHelper.setCellValue(workbook, dataRow, 3, style, item?.processCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 4, style, item?.layerCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 5, style, item?.pcsSh)
-                ExcelHelper.setCellValue(workbook, dataRow, 6, style, item?.productQuantity.toString())
-                ExcelHelper.setCellValue(workbook, dataRow, 7, style, item?.sheetQuantity.toString())
-                ExcelHelper.setCellValue(workbook, dataRow, 8, style, item?.orderCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 9, style, item?.tapeLotNo)
-                ExcelHelper.setCellValue(workbook, dataRow, 10, style, item?.code)
+                ExcelHelper.setCellValue(dataRow, 1, style, item?.productName)
+                ExcelHelper.setCellValue(dataRow, 2, style, item?.processName)
+                ExcelHelper.setCellValue(dataRow, 3, style, item?.processCode)
+                ExcelHelper.setCellValue(dataRow, 4, style, item?.layerCode)
+                ExcelHelper.setCellValue(dataRow, 5, style, item?.pcsSh)
+                ExcelHelper.setCellValue(dataRow, 6, style, item?.productQuantity.toString())
+                ExcelHelper.setCellValue(dataRow, 7, style, item?.sheetQuantity.toString())
+                ExcelHelper.setCellValue(dataRow, 8, style, item?.orderCode)
+                ExcelHelper.setCellValue(dataRow, 9, style, item?.tapeLotNo)
+                ExcelHelper.setCellValue(dataRow, 10, style, item?.code)
             }
             val resultRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
             for (row in resultRows) {

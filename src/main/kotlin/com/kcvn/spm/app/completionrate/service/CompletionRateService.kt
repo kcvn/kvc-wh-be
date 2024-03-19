@@ -156,8 +156,8 @@ class CompletionRateService(
             var rowNumber = 1
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item.productName)
-                ExcelHelper.setCellValue(workbook, dataRow, 1, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValue(dataRow, 0, style, item.productName)
+                ExcelHelper.setCellValue(dataRow, 1, style, "${item.rate.toString()}%")
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -373,11 +373,11 @@ class CompletionRateService(
             var rowNumber = 1
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item.processCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 1, style, item.processName)
-                ExcelHelper.setCellValue(workbook, dataRow, 2, style, item.processNameJp)
-                ExcelHelper.setCellValue(workbook, dataRow, 3, style, item.layerCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 4, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValue(dataRow, 0, style, item.processCode)
+                ExcelHelper.setCellValue(dataRow, 1, style, item.processName)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.processNameJp)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.layerCode)
+                ExcelHelper.setCellValue(dataRow, 4, style, "${item.rate.toString()}%")
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -774,12 +774,12 @@ class CompletionRateService(
             var rowNumber = 1
             for (item in processProducts.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item.key)
-                ExcelHelper.setCellValue(workbook, dataRow, 1, style, item.processCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 2, style, item.processName)
-                ExcelHelper.setCellValue(workbook, dataRow, 3, style, item.processNameJp)
-                ExcelHelper.setCellValue(workbook, dataRow, 4, style, item.layerCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 5, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValue(dataRow, 0, style, item.key)
+                ExcelHelper.setCellValue(dataRow, 1, style, item.processCode)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.processName)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.processNameJp)
+                ExcelHelper.setCellValue(dataRow, 4, style, item.layerCode)
+                ExcelHelper.setCellValue(dataRow, 5, style, "${item.rate.toString()}%")
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

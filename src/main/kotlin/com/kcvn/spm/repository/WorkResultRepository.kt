@@ -230,12 +230,18 @@ class WorkResultRepository(
 
 
     fun add(model: WorkResult) {
-        val record = context.newRecord(WORK_RESULT, model)
-        context.insertInto(WORK_RESULT).set(record).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(WORK_RESULT, model)
+            transactionalContext.insertInto(WORK_RESULT).set(record).execute()
+        }
     }
 
     fun delete(id: String) {
-        context.deleteFrom(WORK_RESULT).where(WORK_RESULT.ID.eq(id)).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            transactionalContext.deleteFrom(WORK_RESULT).where(WORK_RESULT.ID.eq(id)).execute()
+        }
     }
 
     fun getMaxByDate(startDate: OffsetDateTime, endDate: OffsetDateTime): WorkResult? {

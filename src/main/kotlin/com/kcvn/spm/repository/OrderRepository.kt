@@ -140,9 +140,9 @@ class OrderRepository(
     }
 
     fun addOrder(order: Order, orderDetails: List<OrderDetail>) {
-        DSL.startTransaction()
-        try {
-            val orderInsert = context.insertInto(
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val orderInsert = transactionalContext.insertInto(
                 ORDER,
                 ORDER.ORDER_CODE,
                 ORDER.START_DATE,
@@ -154,7 +154,7 @@ class OrderRepository(
 
             if (orderInsert != null) {
                 for (orderDetail in orderDetails) {
-                    context.insertInto(
+                    transactionalContext.insertInto(
                         ORDER_DETAIL,
                         ORDER_DETAIL.ORDER_ID,
                         ORDER_DETAIL.PRODUCT_ID,
@@ -172,9 +172,6 @@ class OrderRepository(
                         .returningResult(ORDER_DETAIL).fetchInto(OrderDetail::class.java).firstOrNull()
                 }
             }
-        } catch (e: Exception) {
-            DSL.rollback()
-            throw e
         }
     }
 

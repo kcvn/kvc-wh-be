@@ -20,9 +20,7 @@ import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
-import org.apache.poi.ss.usermodel.CellType
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -287,229 +285,6 @@ class ProductProcessService(
         return BaseResponse(response)
     }
 
-    fun importExcelProduct(file: MultipartFile): BaseResponse<FileContentModel> {
-        val workbook = WorkbookFactory.create(file.inputStream)
-        val sheet = workbook.getSheetAt(0)
-        val rowIndex = 1
-
-        if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
-            throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-
-        val headerRow = sheet.getRow(0)
-
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx"
-
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
-
-        var count = 0
-        val total = sheet.lastRowNum
-
-        val masterData = masterDataService.getMasterDataSelection()
-
-        val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
-
-        val dataErr: MutableList<ExportExcelErrResponse> = mutableListOf()
-        for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val messageErr = ExportExcelErrResponse()
-            val style = row.getCell(1).cellStyle
-
-            messageErr.messageErrs = mutableListOf()
-            var check = true
-            if (ExcelHelper.getCellValue(row, 0).isEmpty()) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.empty",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 0))
-                ))
-            }
-            if (ExcelHelper.getCellValue(row, 1).isEmpty()) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.empty",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 1))
-                ))
-            }
-            if (ExcelHelper.getCellValue(row, 2).isEmpty()) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.empty",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 2))
-                ))
-            }
-            if (ExcelHelper.getCellValue(row, 3).isEmpty()) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.empty",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 3))
-                ))
-            }
-
-            if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.empty",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 5))
-                ))
-            }
-
-            if (ExcelHelper.getCellValue(row, 0).isNotEmpty() && ExcelHelper.getCellValue(row, 0).length > 12) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 0), 12)))
-            }
-            if (ExcelHelper.getCellValue(row, 1).isNotEmpty() && ExcelHelper.getCellValue(row, 1).length > 8) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 1), 6)))
-            }
-            if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && ExcelHelper.getCellValue(row, 2).length > 4) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 2), 4)))
-            }
-            if (ExcelHelper.getCellValue(row, 3).isNotEmpty() && ExcelHelper.getCellValue(row, 3).length > 10) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 3), 6)))
-            }
-            if (ExcelHelper.getCellValue(row, 4).isNotEmpty() && ExcelHelper.getCellValue(row, 4).length > 10) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
-            }
-            if (ExcelHelper.getCellValue(row, 5).isNotEmpty() && ExcelHelper.getCellValue(row, 5).length > 10) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
-            }
-
-            if (!masterData.processConvertCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 3) }) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.notExist",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
-            }
-            if (!masterData.processStatisticCodes.any { x -> x.label == ExcelHelper.getCellValue(row, 5) }) {
-                check = false
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.notExist",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 0))))
-            }
-
-            messageErr.productName = ExcelHelper.getCellValue(row, 0)
-            messageErr.processCode = if (row.getCell(1).cellType == CellType.NUMERIC && row.getCell(1).numericCellValue % 1 == 0.0)
-                row.getCell(1).numericCellValue.toInt().toString()
-            else {
-                ExcelHelper.getCellValue(row, 1)
-            }
-            messageErr.layerCode = if (row.getCell(2).cellType == CellType.NUMERIC && row.getCell(2).numericCellValue % 1 == 0.0)
-                row.getCell(2).numericCellValue.toInt().toString()
-            else {
-                ExcelHelper.getCellValue(row, 1)
-            }
-            messageErr.processConvertCode = ExcelHelper.getCellValue(row, 3)
-            messageErr.processInventoryCode = ExcelHelper.getCellValue(row, 4)
-            messageErr.processStatisticCode = ExcelHelper.getCellValue(row, 5)
-
-            try {
-                if (check) {
-                    val cellProcessCode = row.getCell(1)
-                    val processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
-                        cellProcessCode.numericCellValue.toInt().toString()
-                    else {
-                        ExcelHelper.getCellValue(row, 1)
-                    }
-
-                    val cellLayerCode = row.getCell(2)
-                    val layerCode = if (cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
-                         cellLayerCode.numericCellValue.toInt().toString()
-                    } else {
-                         ExcelHelper.getCellValue(row, 2)
-                    }
-                    val filter = ImportProcessRequest(
-                        productName = ExcelHelper.getCellValue(row, 0),
-                        processCode = processCode,
-                        layerCode = layerCode
-                    )
-                    val filterCheckProcessProcedure = processProcedureRep.getByFilterProcessStructure(filter)
-                    if (filterCheckProcessProcedure == null) {
-                        messageErr.messageErrs?.add(CommonUtils.getMessage(
-                            "validate.excel.process.dataNull",
-                        ))
-                    } else {
-                        val requestImport = ProductProcess(
-                            processProcedureStructureId = filterCheckProcessProcedure.id,
-                            processConvertCode = ExcelHelper.getCellValue(row, 3),
-                            processInventoryCode = ExcelHelper.getCellValue(row, 4),
-                            processStatisticCode = ExcelHelper.getCellValue(row, 5),
-                        )
-                        val checkProductProcess = productProcessRep.findByIdProductProcedureStructure(filterCheckProcessProcedure.id)
-                        if (checkProductProcess == null) {
-                            requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
-                            requestImport.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
-                            productProcessRep.insertProductProcess(requestImport)
-                        } else {
-                            requestImport.updatedBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
-                            requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
-                            productProcessRep.updateProcessDetail(requestImport)
-                        }
-                        // messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
-
-                        count++
-                    }
-                }
-            } catch (e: Exception) {
-                messageErr.messageErrs?.add(CommonUtils.getMessage(
-                    "validate.excel.process.data.update.err",
-                ))
-            }
-
-            dataErr.add(messageErr)
-            // val result = messageResults.joinToString(separator = "; ")
-
-//            if (row.getCell(colIndexResult) == null) {
-//                row.createCell(colIndexResult)
-//            }
-            // row.getCell(colIndexResult ).setCellValue(result)
-            row.getCell(colIndexResult).cellStyle = style
-        }
-
-//        val resultRows = sheet.filter { x ->  ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
-//        for (row in resultRows) {
-//            val rowNum = row.rowNum
-//            sheet.removeRow(row)
-//            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
-//                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
-//            }
-//        }
-//        val byteArrayOutputStream = ByteArrayOutputStream()
-//        workbook.write(byteArrayOutputStream)
-//
-//        val excelBytes = byteArrayOutputStream.toByteArray()
-
-        val excelBytes = exportExcelErr(dataErr)
-
-        val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.result.import", arrayOf(LocalDateTime.now().format(
-                DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
-            content = excelBytes
-        )
-        workbook.close()
-
-        return BaseResponse(
-            response,
-            if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
-        )
-    }
-
     fun importExcelProduct1(file: MultipartFile): BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
@@ -701,7 +476,7 @@ class ProductProcessService(
 
             val listItemValueMapSort = listItemValueMap.sortedWith(compareBy({ it.layerCode }, { it.processSequence }))
             var itemInventoryLayerGrPre: ProductProcessResponse? =  null
-            var k = 0;
+            var k = 0
             for (item in listItemValueMapSort ){
                 val messageErr = ExportExcelErrResponse()
                 messageErr.messageErrs = mutableListOf()
@@ -972,7 +747,7 @@ class ProductProcessService(
             count++
         }
 
-        val excelBytes = exportExcelErr(resultDataErr)
+        val excelBytes = exportExcelErr(resultDataErr, headerRow, workbook, sheet)
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("export.excel.result.import", arrayOf(LocalDateTime.now().format(
@@ -991,21 +766,30 @@ class ProductProcessService(
         }
 
     }
-    fun exportExcelErr(requestErr: MutableList<ExportExcelErrResponse>): ByteArray? {
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx")
+    fun exportExcelErr(requestErr: MutableList<ExportExcelErrResponse>, titleRow: Row, workbook: Workbook, importSheet: Sheet): ByteArray? {
 
-        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
-        val sheet = workbook.getSheetAt(0)
-        val headerRow = sheet.getRow(0)
+        val sheet = workbook.createSheet(CommonUtils.getMessage("excel.colResultName"))
+        val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
+        headerRow.height = titleRow.height
+
+        for (i in 0 until titleRow.lastCellNum) {
+            val headerStyle = titleRow.getCell(i).cellStyle
+            val headerCellValue = ExcelHelper.getCellValue(titleRow, i)
+            ExcelHelper.setCellValue(workbook, headerRow, i, headerStyle, headerCellValue)
+            sheet.setColumnWidth(i, importSheet.getColumnWidth(i))
+        }
 
         ExcelHelper.createColResult(headerRow, sheet)
 
         if (requestErr.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
+            val rowHeight = importSheet.getRow(1).height
             var rowNumber = 1
             for (item in requestErr) {
 
                 val dataRow: Row = sheet.createRow(rowNumber++)
+                dataRow.height = rowHeight
                 ExcelHelper.setCellValue(workbook,dataRow, 0, style, item.productName)
                 ExcelHelper.setCellValue(workbook,dataRow, 1, style, item.processCode)
                 ExcelHelper.setCellValue(workbook,dataRow, 2, style, item.layerCode)
@@ -1014,12 +798,11 @@ class ProductProcessService(
                 ExcelHelper.setCellValue(workbook,dataRow, 5, style, item.processStatisticCode)
                 ExcelHelper.setCellValue(workbook,dataRow, 6, style, item.inventoryLayerGroup)
                 ExcelHelper.setCellValue(workbook,dataRow, 7, style, item.dayOfImplementation)
-
-                val resultCellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
                 ExcelHelper.setCellValue(workbook, dataRow, 8, resultCellStyle, item.messageErrs?.joinToString(separator = "; "))
 
             }
         }
+        workbook.removeSheetAt(0)
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 

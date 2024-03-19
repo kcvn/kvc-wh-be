@@ -1,22 +1,27 @@
 package com.kcvn.spm.repository
+
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.EquipmentProductivity
 import com.kcvn.spm.model.tables.references.EQUIPMENT_PRODUCTIVITY
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 
 @Repository
-class EquipmentProductivityRepository (private val context: DSLContext) {
+class EquipmentProductivityRepository(private val context: DSLContext) {
 
-    fun getEquipmentProductivity(): List<EquipmentProductivity>{
+    fun getEquipmentProductivity(): List<EquipmentProductivity> {
         return context.selectFrom(EQUIPMENT_PRODUCTIVITY)
             .where(EQUIPMENT_PRODUCTIVITY.IS_DELETED.eq(false))
             .fetchInto(EquipmentProductivity::class.java)
     }
+
     fun add(data: EquipmentProductivity): EquipmentProductivity? {
-        return context
-            .insertInto(
+        var result: EquipmentProductivity? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext.insertInto(
                 EQUIPMENT_PRODUCTIVITY,
                 EQUIPMENT_PRODUCTIVITY.EQUIPMENT_CODE,
                 EQUIPMENT_PRODUCTIVITY.PROCESS_CODE,
@@ -37,8 +42,7 @@ class EquipmentProductivityRepository (private val context: DSLContext) {
                 EQUIPMENT_PRODUCTIVITY.CREATED_BY,
                 EQUIPMENT_PRODUCTIVITY.IS_DELETED,
                 EQUIPMENT_PRODUCTIVITY.UPDATED_DATE
-            )
-            .values(
+            ).values(
                 data.equipmentCode,
                 data.processCode,
                 data.description,
@@ -58,10 +62,8 @@ class EquipmentProductivityRepository (private val context: DSLContext) {
                 data.createdBy ?: CommonUtils.loggedInUser(),
                 data.isDeleted ?: false,
                 data.updatedDate ?: OffsetDateTime.now(),
-
-            )
-            .returningResult(EQUIPMENT_PRODUCTIVITY)
-            .fetchOne()
-            ?.into(EquipmentProductivity::class.java)
+            ).returningResult(EQUIPMENT_PRODUCTIVITY).fetchOne()?.into(EquipmentProductivity::class.java)
+        }
+        return result
     }
 }

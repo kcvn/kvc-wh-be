@@ -8,6 +8,7 @@ import com.kcvn.spm.app.report.quantityreport.service.QuantityReportService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
 import org.springframework.data.domain.Pageable
@@ -86,5 +87,22 @@ class QuantityReportController(
                 HttpStatus.OK
             )
         }
+    }
+
+    @GetMapping("/export-excel")
+//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_REPORT_QUANTITY.value) || hasRole('ADMIN')")
+    fun exportQuantityReportExcel(
+        request: QuantityReportRequest?,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["monthReport"], direction = Sort.Direction.DESC)
+        ) pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = quantityReportService.exportQuantityReportExcel(
+            request,
+            pageable
+        )
+        return ResponseEntity(data, HttpStatus.OK)
     }
 }

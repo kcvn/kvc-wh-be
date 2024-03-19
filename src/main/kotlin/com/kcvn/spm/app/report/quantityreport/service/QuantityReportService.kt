@@ -1,5 +1,4 @@
 package com.kcvn.spm.app.report.quantityreport.service
-
 import com.kcvn.spm.app.product.payload.model.ProcessGroupModel
 import com.kcvn.spm.app.report.quantityreport.payload.model.*
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityOfProcessRequest
@@ -9,21 +8,32 @@ import com.kcvn.spm.app.report.quantityreport.payload.response.CheckCalculateQua
 import com.kcvn.spm.app.report.quantityreport.payload.response.PagingQuantityReportResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.ProcessStatisticCode
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
+import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.repository.*
+import org.apache.poi.ss.usermodel.*
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 
 @Service
@@ -362,5 +372,83 @@ class QuantityReportService(
             return data
         }
         return data
+    }
+
+
+    fun setCellHeader(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?) {
+        row.createCell(colIndex).setCellValue(value)
+        val cellStyle = workbook.createCellStyle()
+        cellStyle.cloneStyleFrom(style)
+        cellStyle.alignment = HorizontalAlignment.CENTER
+        cellStyle.borderTop = style.borderTop
+        cellStyle.borderLeft = BorderStyle.THIN
+        cellStyle.borderRight = BorderStyle.THIN
+        cellStyle.borderBottom = style.borderBottom
+
+        cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+        cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+
+    }
+
+    private fun generateExcelRowPlan(
+        workbook: Workbook,
+        sheet: Sheet,
+        rowNumber: Int,
+        style: CellStyle,
+        data: QuantityReportModel,
+        columns: List<KeyValueResponse>
+    ): Int {
+        var rowIndex = rowNumber
+
+        val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, data.productName,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.monthReport,isBold = true,isAlignCenter = true)
+        var colIndex = 3
+        for (col in columns) {
+            val value = data.lstProcess.find { x -> x.key == col.key }?.value
+            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value)
+            colIndex++
+        }
+        rowIndex++
+       return rowIndex
+    }
+
+
+    fun exportQuantityReportExcel(request: QuantityReportRequest?, pageable: Pageable) : BaseResponse<FileContentModel>{
+        val dataExport = getListQuantityReport(request,pageable)
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportQuantityReportTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+        val headerRow = sheet.getRow(0)
+        var headerCol = 3
+        val headerStyle = headerRow.getCell(1).cellStyle
+        val columns = dataExport.columns
+        if (dataExport.data?.isEmpty() == true) throw BusinessException(CommonUtils.getMessage("report.export.noData"))
+
+        if (columns != null) {
+            for (col in columns) {
+                setCellHeader(workbook, headerRow, headerCol, headerStyle, col.value)
+                headerCol++
+            }
+        }
+        var rowNumber = 1
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+
+        for(report in dataExport.data!!){
+            if (columns != null) {
+                rowNumber = generateExcelRowPlan(workbook, sheet, rowNumber, style, report,columns)
+            }
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+        val excelBytes = byteArrayOutputStream.toByteArray()
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportQuantityReport", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+        workbook.close()
+        return BaseResponse(response)
     }
 }

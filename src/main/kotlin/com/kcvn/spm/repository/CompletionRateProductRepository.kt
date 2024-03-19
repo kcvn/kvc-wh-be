@@ -58,6 +58,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             COMPLETION_RATE_PRODUCT.ID,
             COMPLETION_RATE_PRODUCT.PRODUCT_NAME,
             COMPLETION_RATE_PRODUCT.RATE,
+            COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE
         )
             .from(COMPLETION_RATE_PRODUCT)
             .join(crpSubquery)

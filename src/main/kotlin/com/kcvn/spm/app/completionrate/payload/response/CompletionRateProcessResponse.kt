@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.completionrate.payload.response
 
 import java.math.BigDecimal
+import java.time.OffsetDateTime
 
 class CompletionRateProcessResponse(
     val id: String?,
@@ -9,5 +10,7 @@ class CompletionRateProcessResponse(
     val layerCode: String?,
     val rate: BigDecimal?,
     val processName: String?,
-    val processNameJp:String?
+    val processNameJp:String?,
+    val effectiveDate: OffsetDateTime?
+
 )

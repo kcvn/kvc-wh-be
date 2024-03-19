@@ -507,12 +507,31 @@ class ProductProcessService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 2))
                     ))
                 }
+                val checkProcessMasterData = listProcessMasterData.filter{
+                    it.processCode == item.processCode
+                }
+
                 if (item.processConvertCode.isNullOrEmpty()) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 3))
                     ))
+                }
+                if(!item.processConvertCode.isNullOrEmpty()) {
+                    if(checkProcessMasterData.isNotEmpty()) {
+                        if (checkProcessMasterData.firstOrNull {
+                                it.type == MasterDataType.MACHUYENDOI
+                                        && it.value == item.processConvertCode
+                            } == null) {
+                            messageErr.messageErrs?.add(
+                                CommonUtils.getMessage(
+                                    "validate.excel.processMasterDataConvertCode"
+                                )
+                            )
+                            checkList = false
+                        }
+                    }
                 }
 
                 if (item.processStatisticCode.isNullOrEmpty()) {
@@ -521,6 +540,19 @@ class ProductProcessService(
                         "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 5))
                     ))
+                }
+                if(!item.processStatisticCode.isNullOrEmpty())
+                {
+                    if(checkProcessMasterData.isNotEmpty()){
+                            if(checkProcessMasterData.firstOrNull{it.type == MasterDataType.MATHONGKE
+                                        && it.value == item.processStatisticCode} == null)
+                            {
+                                messageErr.messageErrs?.add(CommonUtils.getMessage(
+                                    "validate.excel.processMasterDataStatisticCode"))
+                                checkList = false
+                            }
+                    }
+
                 }
 
                 if (!item.productName.isNullOrEmpty() && item.productName!!.length > 12) {
@@ -560,39 +592,23 @@ class ProductProcessService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
                 }
 
-                if (!masterData.processConvertCodes.any { x -> x.label == item.processConvertCode }) {
+                if (!item.processConvertCode.isNullOrEmpty() && !masterData.processConvertCodes.any { x -> x.label == item.processConvertCode }) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.notExist",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
                 }
-                if (!masterData.processStatisticCodes.any { x -> x.label == item.processStatisticCode }) {
+                if (!item.processStatisticCode.isNullOrEmpty() && !masterData.processStatisticCodes.any { x -> x.label == item.processStatisticCode }) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.notExist",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
                 }
 
-                val checkProcessMasterData = listProcessMasterData.filter{
-                    it.processCode == item.processCode
-                }
-                if(checkProcessMasterData.isNotEmpty()){
-                    if(checkProcessMasterData.firstOrNull{it.type == MasterDataType.MACHUYENDOI
-                                && it.value == item.processConvertCode} == null){
-                        messageErr.messageErrs?.add(CommonUtils.getMessage(
-                            "validate.excel.processMasterDataConvertCode"))
-                        checkList = false
-                    }
-                    if(checkProcessMasterData.firstOrNull{it.type == MasterDataType.MATHONGKE
-                                && it.value == item.processStatisticCode} == null){
-                        messageErr.messageErrs?.add(CommonUtils.getMessage(
-                            "validate.excel.processMasterDataStatisticCode"))
-                        checkList = false
-                    }
-                }
 
 
-                if(!item.inventoryLayerGroup.isNullOrEmpty()){
+
+                if(!item.inventoryLayerGroup.isNullOrEmpty() && !item.processInventoryCode.isNullOrEmpty()){
                     val checkInventoryLayerGr = listItem.value.firstOrNull { it.layerCode == item.inventoryLayerGroup
                             && it.processCode == item.processInventoryCode}
                     if(checkInventoryLayerGr == null){
@@ -701,7 +717,7 @@ class ProductProcessService(
             }
         }
         val resultDataErr: MutableList<ExportExcelErrResponse> = mutableListOf()
-        for (itemKey in listKeyErr){
+        for (itemKey in listKeyErr.distinct()){
             val filteredData = dataErr.filter { it.productName == itemKey }
             resultDataErr.addAll(filteredData)
         }
@@ -730,6 +746,7 @@ class ProductProcessService(
 
             count++
         }
+
         val excelBytes = exportExcelErr(resultDataErr, headerRow, workbook, sheet)
 
         val response = FileContentModel(
@@ -739,19 +756,18 @@ class ProductProcessService(
             content = excelBytes
         )
         workbook.close()
-
-        return BaseResponse(
-            response,
-            if (count == 0)
+        return if(count == total) {
+            BaseResponse(null, message = CommonUtils.getMessage("import.success", arrayOf(count, total)))
+        } else {
+            BaseResponse(
+                response,
                 CommonUtils.getMessage("import.insertNoData")
+            )
+        }
 
-            else CommonUtils.getMessage("import.success", arrayOf(count, total))
-        )
     }
     fun exportExcelErr(requestErr: MutableList<ExportExcelErrResponse>, titleRow: Row, workbook: Workbook, importSheet: Sheet): ByteArray? {
-//        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx")
-//
-//        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+
         val sheet = workbook.createSheet(CommonUtils.getMessage("excel.colResultName"))
         val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
         headerRow.height = titleRow.height

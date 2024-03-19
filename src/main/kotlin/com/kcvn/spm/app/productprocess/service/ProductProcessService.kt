@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.productprocess.service
 
 import com.kcvn.spm.app.masterdata.service.MasterDataService
+import com.kcvn.spm.app.product.payload.model.CellStyleModel
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.app.productprocess.payload.request.ItemUpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
@@ -359,6 +360,8 @@ class ProductProcessService(
             }
             process.inventoryLayerGroup = inventoryLayerGroup
             process.dayOfImplementation = dayOfImplementation
+            process.cellStyles =  row.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
+
 
             dataDefault.add(process)
         }
@@ -421,6 +424,7 @@ class ProductProcessService(
                     messageErr.processStatisticCode = item.processStatisticCode
                     messageErr.inventoryLayerGroup = item.inventoryLayerGroup
                     messageErr.dayOfImplementation = item.dayOfImplementation
+                    messageErr.cellStyles = item.cellStyles
                     if(!checkCountProcess){
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
                             "validate.excel.sumProcessByProduct"))
@@ -460,7 +464,8 @@ class ProductProcessService(
                     processInventoryCode = x.processInventoryCode,
                     inventoryLayerGroup = x.inventoryLayerGroup,
                     dayOfImplementation = x.dayOfImplementation,
-                    idx = i
+                    idx = i,
+                    cellStyles = x.cellStyles
                 )
                 model
             }
@@ -710,6 +715,7 @@ class ProductProcessService(
                 messageErr.processStatisticCode = item.processStatisticCode
                 messageErr.inventoryLayerGroup = item.inventoryLayerGroup
                 messageErr.dayOfImplementation = item.dayOfImplementation
+                messageErr.cellStyles = item.cellStyles
                 dataErr.add(messageErr)
             }
             if(!checkList) {

@@ -732,12 +732,30 @@ class ProductProcessService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 2))
                     ))
                 }
+                val checkProcessMasterData = listProcessMasterData.filter{
+                    it.processCode == item.processCode
+                }
+
                 if (item.processConvertCode.isNullOrEmpty()) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 3))
                     ))
+                }else {
+                    if(checkProcessMasterData.isNotEmpty()) {
+                        if (checkProcessMasterData.firstOrNull {
+                                it.type == MasterDataType.MACHUYENDOI
+                                        && it.value == item.processConvertCode
+                            } == null) {
+                            messageErr.messageErrs?.add(
+                                CommonUtils.getMessage(
+                                    "validate.excel.processMasterDataConvertCode"
+                                )
+                            )
+                            checkList = false
+                        }
+                    }
                 }
 
                 if (item.processStatisticCode.isNullOrEmpty()) {
@@ -746,6 +764,16 @@ class ProductProcessService(
                         "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 5))
                     ))
+                }else {
+                    if(checkProcessMasterData.isNotEmpty()){
+                            if(checkProcessMasterData.firstOrNull{it.type == MasterDataType.MATHONGKE
+                                        && it.value == item.processStatisticCode} == null){
+                                messageErr.messageErrs?.add(CommonUtils.getMessage(
+                                    "validate.excel.processMasterDataStatisticCode"))
+                                checkList = false
+                            }
+                    }
+
                 }
 
                 if (!item.productName.isNullOrEmpty() && item.productName!!.length > 12) {
@@ -798,23 +826,7 @@ class ProductProcessService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
                 }
 
-                val checkProcessMasterData = listProcessMasterData.filter{
-                    it.processCode == item.processCode
-                }
-                if(checkProcessMasterData.isNotEmpty()){
-                    if(checkProcessMasterData.firstOrNull{it.type == MasterDataType.MACHUYENDOI
-                                && it.value == item.processConvertCode} == null){
-                        messageErr.messageErrs?.add(CommonUtils.getMessage(
-                            "validate.excel.processMasterDataConvertCode"))
-                        checkList = false
-                    }
-                    if(checkProcessMasterData.firstOrNull{it.type == MasterDataType.MATHONGKE
-                                && it.value == item.processStatisticCode} == null){
-                        messageErr.messageErrs?.add(CommonUtils.getMessage(
-                            "validate.excel.processMasterDataStatisticCode"))
-                        checkList = false
-                    }
-                }
+
 
 
                 if(!item.inventoryLayerGroup.isNullOrEmpty() && !item.processInventoryCode.isNullOrEmpty()){

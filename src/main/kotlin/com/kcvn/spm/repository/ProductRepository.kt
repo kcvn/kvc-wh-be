@@ -187,57 +187,19 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "name" -> {
-                PRODUCT.NAME
-            }
-
-            "exporttype" -> {
-                PRODUCT.EXPORT_TYPE
-            }
-
-            "size" -> {
-                PRODUCT.SIZE
-            }
-
-            "createdDate" -> {
-                PRODUCT.CREATED_DATE
-            }
-
-            "frame_1" -> {
-                PRODUCT.FRAME_1
-            }
-
-            "frame_2" -> {
-                PRODUCT.FRAME_2
-            }
-
-            "mold" -> {
-                PRODUCT.MOLD
-            }
-
-            "productline" -> {
-                PRODUCT.PRODUCT_LINE
-            }
-
-            "srnosr" -> {
-                PRODUCT.SR_NOSR
-            }
-
-            "pcssh" -> {
-                PRODUCT.PCS_SH
-            }
-
-            "blocksh" -> {
-                PRODUCT.SH_BLOCK
-            }
-
-            "layercount" -> {
-                PRODUCT.LAYER_COUNT
-            }
-
-            else -> {
-                PRODUCT.CREATED_DATE
-            }
+            "name" -> PRODUCT.NAME
+            "exporttype" -> PRODUCT.EXPORT_TYPE
+            "size" -> PRODUCT.SIZE
+            "createdDate" -> PRODUCT.CREATED_DATE
+            "frame_1" -> PRODUCT.FRAME_1
+            "frame_2" -> PRODUCT.FRAME_2
+            "mold" -> PRODUCT.MOLD
+            "productline" -> PRODUCT.PRODUCT_LINE
+            "srnosr" -> PRODUCT.SR_NOSR
+            "pcssh" -> PRODUCT.PCS_SH
+            "blocksh" -> PRODUCT.SH_BLOCK
+            "layercount" -> PRODUCT.LAYER_COUNT
+            else -> PRODUCT.CREATED_DATE
         }
         return sortField
     }
@@ -268,10 +230,7 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
         ).from(PRODUCT)
             .leftJoin(COMPLETION_RATE_PRODUCT)
             .on(PRODUCT.NAME.eq(COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
-            .where(
-                PRODUCT.ID.`in`(productIds)
-                    .and(PRODUCT.IS_DELETED.eq(false))
-            )
+            .where(PRODUCT.ID.`in`(productIds).and(PRODUCT.IS_DELETED.eq(false)))
             .orderBy(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.desc())
             .fetchInto(ProductDetailResponse::class.java)
         return data

@@ -39,25 +39,34 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
     }
 
     fun insertInventoryProduct(request: InventoryProduct)  {
-        val record = context.newRecord(INVENTORY_PRODUCT, request)
-        context.insertInto(INVENTORY_PRODUCT).set(record).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
+            transactionalContext.insertInto(INVENTORY_PRODUCT).set(record).execute()
+        }
     }
 
     fun updateInventoryProduct(request: InventoryProduct)  {
-        val record = context.newRecord(INVENTORY_PRODUCT, request)
-        context.update(INVENTORY_PRODUCT).set(record)
-            .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
-                .eq(record.processProcedureStructureId)
-                .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
-                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
-                .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
+            transactionalContext.update(INVENTORY_PRODUCT).set(record)
+                .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
+                    .eq(record.processProcedureStructureId)
+                    .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
+                    .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
+                    .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
+        }
     }
 
     fun deleteInventoryProduct(request: InventoryProduct){
-        val record = context.newRecord(INVENTORY_PRODUCT, request)
-        context.delete(INVENTORY_PRODUCT)
-            .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
-            .execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
+            transactionalContext.delete(INVENTORY_PRODUCT)
+                .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
+                .execute()
+        }
     }
 
     fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{

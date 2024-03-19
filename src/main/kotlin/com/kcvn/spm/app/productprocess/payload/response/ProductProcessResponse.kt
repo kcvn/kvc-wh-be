@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.productprocess.payload.response
 
+import com.kcvn.spm.app.product.payload.model.CellStyleModel
 import com.kcvn.spm.common.payload.DropdownResponse
 
 data class ProductProcessResponse (
@@ -21,5 +22,6 @@ data class ProductProcessResponse (
     var listDropDownStatisticCode: List<DropdownResponse>? = null,
     var inventoryLayerGroup: String? = null,
     var dayOfImplementation: String? = null,
+    var cellStyles: List<CellStyleModel> = mutableListOf()
 )
 

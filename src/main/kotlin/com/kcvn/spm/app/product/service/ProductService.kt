@@ -21,6 +21,8 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
@@ -315,7 +317,7 @@ class ProductService(
                 prod
             }
 
-            val response = exportErrorFile(resultRows, templateUrl, headerRow)
+            val response = exportErrorFile(resultRows, headerRow, workbook, sheet)
 
             workbook.close()
             return BaseResponse(
@@ -329,28 +331,24 @@ class ProductService(
         }
     }
 
-    private fun exportErrorFile(products: List<ImportProductErrorModel>, templateUrl: String, titleRow: Row): FileContentModel {
-        val workbook = FileInputStream(templateUrl).use { x -> XSSFWorkbook(x) }
-        val sheet = workbook.getSheetAt(0)
-        val layers = products.asSequence().mapNotNull { x ->
-            if (x.productLayerDetail.isNullOrEmpty()) null
-            else {
-                val type = object : TypeReference<List<LayerImportProductModel>>() {}
-                JsonConvert.deserialize<List<LayerImportProductModel>>(x.productLayerDetail!!, type)
-            }
-        }.flatten().mapNotNull { x -> x.layerCode?.toIntOrNull() }.distinct().sortedBy { x -> x }.toList()
+    private fun exportErrorFile(products: List<ImportProductErrorModel>, titleRow: Row, workbook: Workbook, importSheet: Sheet): FileContentModel {
+        val sheet = workbook.createSheet(CommonUtils.getMessage("excel.colResultName"))
+        val headerRow: Row = sheet.getRow(0) ?: sheet.createRow(0)
+        headerRow.height = titleRow.height
 
-        val headerRow: Row = sheet.getRow(0)
         for (i in 0 until titleRow.lastCellNum) {
             val headerStyle = titleRow.getCell(i).cellStyle
             val headerCellValue = ExcelHelper.getCellValue(titleRow, i)
             ExcelHelper.setCellValue(workbook, headerRow, i, headerStyle, headerCellValue)
+            sheet.setColumnWidth(i, importSheet.getColumnWidth(i))
         }
-        val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
 
+        val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
+        val rowHeight = importSheet.getRow(1).height
         var rowNumber = 1
         for (item in products) {
             val dataRow: Row = sheet.createRow(rowNumber)
+            dataRow.height = rowHeight
             ExcelHelper.setCellValue(workbook, dataRow, 0, item.cellStyles.find { x -> x.index == 0 }!!.cellStyle, item.name)
             ExcelHelper.setCellValue(workbook, dataRow, 1, item.cellStyles.find { x -> x.index == 1 }!!.cellStyle, item.exportType)
             ExcelHelper.setCellValue(workbook, dataRow, 2, item.cellStyles.find { x -> x.index == 2 }!!.cellStyle, item.size)
@@ -368,21 +366,21 @@ class ProductService(
             ExcelHelper.setCellValue(workbook, dataRow, 14, item.cellStyles.find { x -> x.index == 14 }!!.cellStyle, item.tapeCommon)
             ExcelHelper.setCellValue(workbook, dataRow, 15, item.cellStyles.find { x -> x.index == 15 }!!.cellStyle, item.tapeType)
 
-            var colIndex = 16
             val type = object : TypeReference<List<LayerImportProductModel>>() {}
             val layerValues = JsonConvert.deserialize<List<LayerImportProductModel>>(item.productLayerDetail ?: "[]", type).sortedBy { x -> x.layerCode }
-            for (layer in layers) {
-                val cellValue = layerValues.find { x -> x.layerCode?.toIntOrNull() == layer }
+            for (colIndex in 16 until colIndexResult) {
+                val cellValue = layerValues.find { x -> x.layerCode?.toIntOrNull() == (colIndex - 15) }
                 ExcelHelper.setCellValue(workbook, dataRow, colIndex, item.cellStyles.find { x -> x.index == colIndex }!!.cellStyle, cellValue?.value?.toString())
-                colIndex++
             }
 
             ExcelHelper.setCellValue(workbook, dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }!!.cellStyle, item.messageError)
             rowNumber++
         }
 
+        workbook.removeSheetAt(0)
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
+
 
         val excelBytes = byteArrayOutputStream.toByteArray()
 
@@ -392,7 +390,6 @@ class ProductService(
             content = excelBytes
         )
 
-        workbook.close()
         return response
     }
 

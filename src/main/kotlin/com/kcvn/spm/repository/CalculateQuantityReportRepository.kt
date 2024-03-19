@@ -49,8 +49,8 @@ class CalculateQuantityReportRepository(
     fun findByMonthReport(request: CalculateQuantityRequest): CalculateQuantityResult? {
         return context.selectFrom(CALCULATE_QUANTITY_RESULT)
             .where(
-                CALCULATE_QUANTITY_RESULT.START_DATE.ge(request.startDate)
-                    .and(CALCULATE_QUANTITY_RESULT.END_DATE.le(request.endDate))
+                CALCULATE_QUANTITY_RESULT.LOCKED_DATE.ge(request.startDate)
+                    .and(CALCULATE_QUANTITY_RESULT.LOCKED_DATE.le(request.endDate))
                     .and(CALCULATE_QUANTITY_RESULT.IS_DELETED.eq(false))
             )
             .fetchOneInto(CalculateQuantityResult::class.java)

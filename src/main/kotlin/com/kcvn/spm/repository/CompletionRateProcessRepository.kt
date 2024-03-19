@@ -19,7 +19,6 @@ import java.time.ZoneOffset
 @Repository
 class CompletionRateProcessRepository(private val context: DSLContext) : SortingRepository() {
 
-
     fun getListCompletionRateProcessByKey(productNames: List<String>): List<CompletionRateProcess>? {
         return context.selectFrom(COMPLETION_RATE_PROCESS)
             .where(
@@ -118,68 +117,81 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
     }
 
     fun add(data: CompletionRateProcess): CompletionRateProcess? {
-       return try {
-            context
-                .insertInto(
-                    COMPLETION_RATE_PROCESS,
-                    COMPLETION_RATE_PROCESS.KEY,
-                    COMPLETION_RATE_PROCESS.PROCESS_CODE,
-                    COMPLETION_RATE_PROCESS.LAYER_CODE,
-                    COMPLETION_RATE_PROCESS.RATE,
-                    COMPLETION_RATE_PROCESS.CREATED_DATE,
-                    COMPLETION_RATE_PROCESS.CREATED_BY,
-                    COMPLETION_RATE_PROCESS.IS_DELETED,
-                    COMPLETION_RATE_PROCESS.UPDATED_DATE,
-                    COMPLETION_RATE_PROCESS.EXPIRATION_DATE,
-                    COMPLETION_RATE_PROCESS.EFFECTIVE_DATE
-                )
-                .values(
+        var result: CompletionRateProcess? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = try {
+                transactionalContext
+                    .insertInto(
+                        COMPLETION_RATE_PROCESS,
+                        COMPLETION_RATE_PROCESS.KEY,
+                        COMPLETION_RATE_PROCESS.PROCESS_CODE,
+                        COMPLETION_RATE_PROCESS.LAYER_CODE,
+                        COMPLETION_RATE_PROCESS.RATE,
+                        COMPLETION_RATE_PROCESS.CREATED_DATE,
+                        COMPLETION_RATE_PROCESS.CREATED_BY,
+                        COMPLETION_RATE_PROCESS.IS_DELETED,
+                        COMPLETION_RATE_PROCESS.UPDATED_DATE,
+                        COMPLETION_RATE_PROCESS.EXPIRATION_DATE,
+                        COMPLETION_RATE_PROCESS.EFFECTIVE_DATE
+                    )
+                    .values(
 
-                     data.key,
-                     data.processCode,
-                     data.layerCode,
-                     data.rate,
-                     data.createdDate ?: OffsetDateTime.now(ZoneOffset.UTC),
-                     data.createdBy ?: CommonUtils.loggedInUser(),
-                     data.isDeleted ?: false,
-                     data.updatedDate ?: OffsetDateTime.now(ZoneOffset.UTC),
-                     data.expirationDate,
-                     data.effectiveDate
-                )
-                .returningResult(COMPLETION_RATE_PROCESS)
-                .fetchOne()
-                ?.into(CompletionRateProcess::class.java)
-        } catch (e: Exception) {
-           null
+                        data.key,
+                        data.processCode,
+                        data.layerCode,
+                        data.rate,
+                        data.createdDate ?: OffsetDateTime.now(ZoneOffset.UTC),
+                        data.createdBy ?: CommonUtils.loggedInUser(),
+                        data.isDeleted ?: false,
+                        data.updatedDate ?: OffsetDateTime.now(ZoneOffset.UTC),
+                        data.expirationDate,
+                        data.effectiveDate
+                    )
+                    .returningResult(COMPLETION_RATE_PROCESS)
+                    .fetchOne()
+                    ?.into(CompletionRateProcess::class.java)
+            } catch (e: Exception) {
+                null
+            }
         }
+        return result
     }
 
 
     fun delete(id: String) {
-        context.update(COMPLETION_RATE_PROCESS)
-            .set(COMPLETION_RATE_PROCESS.IS_DELETED, true)
-            .where(COMPLETION_RATE_PROCESS.ID.eq(id))
-            .execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            transactionalContext.update(COMPLETION_RATE_PROCESS)
+                .set(COMPLETION_RATE_PROCESS.IS_DELETED, true)
+                .where(COMPLETION_RATE_PROCESS.ID.eq(id))
+                .execute()
+        }
     }
 
 
     fun update(data: CompletionRateProcess): CompletionRateProcess? {
-        return context
-            .update(COMPLETION_RATE_PROCESS)
-            .set(COMPLETION_RATE_PROCESS.RATE, data.rate)
-            .set(COMPLETION_RATE_PROCESS.CREATED_DATE, data.createdDate)
-            .set(COMPLETION_RATE_PROCESS.LAYER_CODE, data.layerCode)
-            .set(COMPLETION_RATE_PROCESS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .set(COMPLETION_RATE_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-            .set(COMPLETION_RATE_PROCESS.IS_DELETED, data.isDeleted)
-            .set(COMPLETION_RATE_PROCESS.EXPIRATION_DATE, data.expirationDate)
-            .set(COMPLETION_RATE_PROCESS.EFFECTIVE_DATE, data.effectiveDate)
-            .set(COMPLETION_RATE_PROCESS.PROCESS_CODE, data.processCode)
-            .set(COMPLETION_RATE_PROCESS.KEY, data.key)
-            .where(COMPLETION_RATE_PROCESS.ID.eq(data.id)) // Assuming ID is the primary key
-            .returningResult(COMPLETION_RATE_PROCESS)
-            .fetchOne()
-            ?.into(CompletionRateProcess::class.java)
+        var result: CompletionRateProcess? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext
+                .update(COMPLETION_RATE_PROCESS)
+                .set(COMPLETION_RATE_PROCESS.RATE, data.rate)
+                .set(COMPLETION_RATE_PROCESS.CREATED_DATE, data.createdDate)
+                .set(COMPLETION_RATE_PROCESS.LAYER_CODE, data.layerCode)
+                .set(COMPLETION_RATE_PROCESS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(COMPLETION_RATE_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(COMPLETION_RATE_PROCESS.IS_DELETED, data.isDeleted)
+                .set(COMPLETION_RATE_PROCESS.EXPIRATION_DATE, data.expirationDate)
+                .set(COMPLETION_RATE_PROCESS.EFFECTIVE_DATE, data.effectiveDate)
+                .set(COMPLETION_RATE_PROCESS.PROCESS_CODE, data.processCode)
+                .set(COMPLETION_RATE_PROCESS.KEY, data.key)
+                .where(COMPLETION_RATE_PROCESS.ID.eq(data.id)) // Assuming ID is the primary key
+                .returningResult(COMPLETION_RATE_PROCESS)
+                .fetchOne()
+                ?.into(CompletionRateProcess::class.java)
+        }
+        return result
     }
 
 

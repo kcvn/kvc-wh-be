@@ -218,8 +218,12 @@ class CompletionRateService(
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
+            val rateInputString = ExcelHelper.getCellValue(row, 1)
+            val rateInput = rateInputString.toDoubleOrNull()
             val name = ExcelHelper.getCellValue(row, 0)
+            if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                continue
+            }
             val errorMessages = mutableListOf<String>()
 
             val productExist = productExists?.find { x -> x.productName == name }
@@ -438,7 +442,12 @@ class CompletionRateService(
         val processCodeExist = processMasterRepository.getListProcessCode()
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
+            val rateInputString = ExcelHelper.getCellValue(row, 1)
+            val rateInput = rateInputString.toDoubleOrNull()
+            val name = ExcelHelper.getCellValue(row, 0)
+            if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                continue
+            }
             val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
             val processExistMinEffectiveDate = productExists
                 ?.filter { it.key == key }
@@ -618,7 +627,12 @@ class CompletionRateService(
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
+            val rateInputString = ExcelHelper.getCellValue(row, 1)
+            val rateInput = rateInputString.toDoubleOrNull()
+            val name = ExcelHelper.getCellValue(row, 0)
+            if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                continue
+            }
             val key = ExcelHelper.getCellValue(row, 0)
             val errorMessages = mutableListOf<String>()
             val productExist = productExists?.find { x -> x.key == key }

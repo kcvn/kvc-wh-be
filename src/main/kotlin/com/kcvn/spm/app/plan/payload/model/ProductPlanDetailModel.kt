@@ -15,5 +15,8 @@ data class ProductPlanDetailModel(
     var inventory: Int? = null,
     var sumInventory: Int? = null,
     var processChildren: List<ProcessChildrenModel>? = listOf(),
-    var planData: List<PlanDataByProcessModel>? = listOf()
-)
+    var planData: List<PlanDataByProcessModel>? = listOf(),
+
+    var unit: String?=null
+
+    )

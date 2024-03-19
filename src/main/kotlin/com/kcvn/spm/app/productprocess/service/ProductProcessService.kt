@@ -766,12 +766,12 @@ class ProductProcessService(
             content = excelBytes
         )
         workbook.close()
-        return if (count == total) {
-            BaseResponse(null, message = CommonUtils.getMessage("import.success", arrayOf(count, total)))
+        return if ( count == 0) {
+            BaseResponse(null, message = CommonUtils.getMessage("import.insertNoData"))
         } else {
             BaseResponse(
                 response,
-                CommonUtils.getMessage("import.insertNoData")
+                CommonUtils.getMessage("import.success", arrayOf(count, total))
             )
         }
 

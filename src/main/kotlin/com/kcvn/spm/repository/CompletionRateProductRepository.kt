@@ -91,15 +91,21 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
     }
 
     fun delete(id: String) {
-        context.update(COMPLETION_RATE_PRODUCT)
-            .set(COMPLETION_RATE_PRODUCT.IS_DELETED, true)
-            .where(COMPLETION_RATE_PRODUCT.ID.eq(id))
-            .execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            transactionalContext.update(COMPLETION_RATE_PRODUCT)
+                .set(COMPLETION_RATE_PRODUCT.IS_DELETED, true)
+                .where(COMPLETION_RATE_PRODUCT.ID.eq(id))
+                .execute()
+        }
     }
 
 
     fun add(data: CompletionRateProduct): CompletionRateProduct? {
-        return context
+        var result: CompletionRateProduct? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext
                 .insertInto(
                     COMPLETION_RATE_PRODUCT,
                     COMPLETION_RATE_PRODUCT.PRODUCT_NAME,
@@ -124,25 +130,32 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                 .returningResult(COMPLETION_RATE_PRODUCT)
                 .fetchOne()
                 ?.into(CompletionRateProduct::class.java)
+        }
+        return result
     }
 
 
 
     fun update(data: CompletionRateProduct): CompletionRateProduct? {
-        return context
-            .update(COMPLETION_RATE_PRODUCT)
-            .set(COMPLETION_RATE_PRODUCT.PRODUCT_NAME, data.productName)
-            .set(COMPLETION_RATE_PRODUCT.RATE, data.rate)
-            .set(COMPLETION_RATE_PRODUCT.CREATED_DATE, data.createdDate)
-            .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-            .set(COMPLETION_RATE_PRODUCT.IS_DELETED, data.isDeleted)
-            .set(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
-            .set(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE, data.expirationDate)
-            .where(COMPLETION_RATE_PRODUCT.ID.eq(data.id)) // Assuming ID is the primary key
-            .returningResult(COMPLETION_RATE_PRODUCT)
-            .fetchOne()
-            ?.into(CompletionRateProduct::class.java)
+        var result: CompletionRateProduct? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext
+                .update(COMPLETION_RATE_PRODUCT)
+                .set(COMPLETION_RATE_PRODUCT.PRODUCT_NAME, data.productName)
+                .set(COMPLETION_RATE_PRODUCT.RATE, data.rate)
+                .set(COMPLETION_RATE_PRODUCT.CREATED_DATE, data.createdDate)
+                .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(COMPLETION_RATE_PRODUCT.IS_DELETED, data.isDeleted)
+                .set(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
+                .set(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE, data.expirationDate)
+                .where(COMPLETION_RATE_PRODUCT.ID.eq(data.id)) // Assuming ID is the primary key
+                .returningResult(COMPLETION_RATE_PRODUCT)
+                .fetchOne()
+                ?.into(CompletionRateProduct::class.java)
+        }
+        return result
     }
 
     fun getCompletionRateProductWithMaxEffectivedateByName(name: String): CompletionRateProduct? {

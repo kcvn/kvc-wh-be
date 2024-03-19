@@ -31,11 +31,9 @@ class ExcelHelper {
             }
         }
 
-        fun setCellValue(workbook: Workbook, row: Row, colIndex: Int, styleTemplate: CellStyle, value: String?) {
-            val style = workbook.createCellStyle()
-            style.cloneStyleFrom(styleTemplate)
+        fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: String?) {
             row.createCell(colIndex).setCellValue(value)
-            row.getCell(colIndex).cellStyle = style
+            row.getCell(colIndex).cellStyle = styleTemplate
         }
 
         fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false) {

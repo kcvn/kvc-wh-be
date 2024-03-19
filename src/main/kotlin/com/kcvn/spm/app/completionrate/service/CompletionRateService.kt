@@ -156,8 +156,8 @@ class CompletionRateService(
             var rowNumber = 1
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item.productName)
-                ExcelHelper.setCellValue(workbook, dataRow, 1, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValue(dataRow, 0, style, item.productName)
+                ExcelHelper.setCellValue(dataRow, 1, style, "${item.rate.toString()}%")
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -218,8 +218,12 @@ class CompletionRateService(
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
+            val rateInputString = ExcelHelper.getCellValue(row, 1)
+            val rateInput = rateInputString.toDoubleOrNull()
             val name = ExcelHelper.getCellValue(row, 0)
+            if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                continue
+            }
             val errorMessages = mutableListOf<String>()
 
             val productExist = productExists?.find { x -> x.productName == name }
@@ -369,11 +373,11 @@ class CompletionRateService(
             var rowNumber = 1
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item.processCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 1, style, item.processName)
-                ExcelHelper.setCellValue(workbook, dataRow, 2, style, item.processNameJp)
-                ExcelHelper.setCellValue(workbook, dataRow, 3, style, item.layerCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 4, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValue(dataRow, 0, style, item.processCode)
+                ExcelHelper.setCellValue(dataRow, 1, style, item.processName)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.processNameJp)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.layerCode)
+                ExcelHelper.setCellValue(dataRow, 4, style, "${item.rate.toString()}%")
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -438,7 +442,12 @@ class CompletionRateService(
         val processCodeExist = processMasterRepository.getListProcessCode()
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
+            val rateInputString = ExcelHelper.getCellValue(row, 1)
+            val rateInput = rateInputString.toDoubleOrNull()
+            val name = ExcelHelper.getCellValue(row, 0)
+            if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                continue
+            }
             val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
             val processExistMinEffectiveDate = productExists
                 ?.filter { it.key == key }
@@ -618,7 +627,12 @@ class CompletionRateService(
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-            val rateInput = ExcelHelper.getCellValue(row, 1).toDoubleOrNull() ?: 0.0
+            val rateInputString = ExcelHelper.getCellValue(row, 1)
+            val rateInput = rateInputString.toDoubleOrNull()
+            val name = ExcelHelper.getCellValue(row, 0)
+            if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                continue
+            }
             val key = ExcelHelper.getCellValue(row, 0)
             val errorMessages = mutableListOf<String>()
             val productExist = productExists?.find { x -> x.key == key }
@@ -760,12 +774,12 @@ class CompletionRateService(
             var rowNumber = 1
             for (item in processProducts.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
-                ExcelHelper.setCellValue(workbook, dataRow, 0, style, item.key)
-                ExcelHelper.setCellValue(workbook, dataRow, 1, style, item.processCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 2, style, item.processName)
-                ExcelHelper.setCellValue(workbook, dataRow, 3, style, item.processNameJp)
-                ExcelHelper.setCellValue(workbook, dataRow, 4, style, item.layerCode)
-                ExcelHelper.setCellValue(workbook, dataRow, 5, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValue(dataRow, 0, style, item.key)
+                ExcelHelper.setCellValue(dataRow, 1, style, item.processCode)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.processName)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.processNameJp)
+                ExcelHelper.setCellValue(dataRow, 4, style, item.layerCode)
+                ExcelHelper.setCellValue(dataRow, 5, style, "${item.rate.toString()}%")
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

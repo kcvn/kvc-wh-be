@@ -197,7 +197,7 @@ class PlanService(
                 if (rowIndex1 > rowIndex2) {
                     for (rowIndex in rowIndex2 until rowIndex1) {
                         val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                        ExcelHelper.setCellValue(workbook, dataRow, 7, style, "")
+                        ExcelHelper.setCellValue(dataRow, 7, style, "")
                         var colIndex = 8
                         for (col in columns) {
                             ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, "", col.isHoliday)
@@ -560,7 +560,7 @@ class PlanService(
         var rowIndex = rowNumber
         for (planData in data.planData!!) {
             val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-            ExcelHelper.setCellValue(workbook, dataRow, 7, style, planData.title)
+            ExcelHelper.setCellValue(dataRow, 7, style, planData.title)
             var colIndex = 8
             for (col in columns) {
                 val value = planData.quantityByCalendars?.find { x -> x.key == col.key }?.value
@@ -982,6 +982,7 @@ class PlanService(
         val style = ExcelHelper.getCellStyleCommon(workbook)
         var rowNumber = 1
         for (data in dataSummary.data!!) {
+
             generateExcelColProcessInPlanSummary(workbook, sheet, rowNumber, style, data)
 
             var rowIndex = rowNumber
@@ -1007,7 +1008,7 @@ class PlanService(
                 rowIndex = rowNumber
                 for (item in detail.planSummaryData!!) {
                     dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                    ExcelHelper.setCellValue(workbook, dataRow, 2, style, item.title)
+                    ExcelHelper.setCellValue(dataRow, 2, style, item.title)
 
                     var colIndex = 3
                     for (col in dataSummary.columns!!) {
@@ -1045,6 +1046,7 @@ class PlanService(
     ): Int {
         var rowIndex = rowNumber
         var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+
         ExcelHelper.setCellValueCustom(
             workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = data.processName,
             isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,

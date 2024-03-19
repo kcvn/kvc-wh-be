@@ -136,40 +136,53 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         return data
     }
     fun updateProcessDetail(request: ProductProcess): ProductProcess? {
-        return context.update(PRODUCT_PROCESS)
-            .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, request.processConvertCode)
-            .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
-            .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
-            .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-            .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP, request.inventoryLayerGroup)
-            .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, request.dayOfImplementation)
-            .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(request.processProcedureStructureId).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
-            .returningResult(PRODUCT_PROCESS)
-            .fetchAnyInto(ProductProcess::class.java);
+        var result: ProductProcess? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext.update(PRODUCT_PROCESS)
+                .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, request.processConvertCode)
+                .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, request.processStatisticCode)
+                .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, request.processInventoryCode)
+                .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP, request.inventoryLayerGroup)
+                .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, request.dayOfImplementation)
+                .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(request.processProcedureStructureId).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
+                .returningResult(PRODUCT_PROCESS)
+                .fetchAnyInto(ProductProcess::class.java)
+        }
+        return result
     }
 
     fun insertProductProcess(request: ProductProcess)  {
-        val record = context.newRecord(PRODUCT_PROCESS, request)
-        context.insertInto(PRODUCT_PROCESS).set(record).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(PRODUCT_PROCESS, request)
+            transactionalContext.insertInto(PRODUCT_PROCESS).set(record).execute()
+        }
     }
 
     fun addProductProcess(request: ProductProcess?) : ProductProcess?{
-        return context.insertInto(PRODUCT_PROCESS,
-            PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
-            PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
-            PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
-            PRODUCT_PROCESS.CREATED_BY,
-            PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
-            PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
-            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION)
-            .values(request?.processConvertCode,
-                request?.processInventoryCode,
-                request?.processStatisticCode,
-                CommonUtils.loggedInUser() ?: Constants.SYSTEM,
-                request?.processProcedureStructureId,
-                request?.inventoryLayerGroup,
-                request?.dayOfImplementation)
-            .returningResult(PRODUCT_PROCESS).fetchInto(ProductProcess::class.java).firstOrNull()
+        var result: ProductProcess? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext.insertInto(PRODUCT_PROCESS,
+                PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
+                PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
+                PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
+                PRODUCT_PROCESS.CREATED_BY,
+                PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
+                PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
+                PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION)
+                .values(request?.processConvertCode,
+                    request?.processInventoryCode,
+                    request?.processStatisticCode,
+                    CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                    request?.processProcedureStructureId,
+                    request?.inventoryLayerGroup,
+                    request?.dayOfImplementation)
+                .returningResult(PRODUCT_PROCESS).fetchInto(ProductProcess::class.java).firstOrNull()
+        }
+        return result
     }
     fun getProcessByFilter (request: ImportProcessRequest): ImportProcessResponse? {
             return  context.select(
@@ -216,8 +229,11 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
     }
 
     fun add(productProcess: ProductProcess) {
-        val record = context.newRecord(PRODUCT_PROCESS, productProcess)
-        context.insertInto(PRODUCT_PROCESS).set(record).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(PRODUCT_PROCESS, productProcess)
+            transactionalContext.insertInto(PRODUCT_PROCESS).set(record).execute()
+        }
     }
 }
 

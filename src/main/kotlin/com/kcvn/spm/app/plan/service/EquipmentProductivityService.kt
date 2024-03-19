@@ -516,9 +516,7 @@ class EquipmentProductivityService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportPlanEquipment ", arrayOf(
-                LocalDateTime.now().format(
-                    DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            fileName = CommonUtils.getMessage("fileName.exportPlanEquipment", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )

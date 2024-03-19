@@ -742,7 +742,8 @@ class ProductProcessService(
                         "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 3))
                     ))
-                }else {
+                }
+                if(!item.processConvertCode.isNullOrEmpty()) {
                     if(checkProcessMasterData.isNotEmpty()) {
                         if (checkProcessMasterData.firstOrNull {
                                 it.type == MasterDataType.MACHUYENDOI
@@ -764,10 +765,13 @@ class ProductProcessService(
                         "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 5))
                     ))
-                }else {
+                }
+                if(!item.processStatisticCode.isNullOrEmpty())
+                {
                     if(checkProcessMasterData.isNotEmpty()){
                             if(checkProcessMasterData.firstOrNull{it.type == MasterDataType.MATHONGKE
-                                        && it.value == item.processStatisticCode} == null){
+                                        && it.value == item.processStatisticCode} == null)
+                            {
                                 messageErr.messageErrs?.add(CommonUtils.getMessage(
                                     "validate.excel.processMasterDataStatisticCode"))
                                 checkList = false
@@ -813,13 +817,13 @@ class ProductProcessService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
                 }
 
-                if (!masterData.processConvertCodes.any { x -> x.label == item.processConvertCode }) {
+                if (!item.processConvertCode.isNullOrEmpty() && !masterData.processConvertCodes.any { x -> x.label == item.processConvertCode }) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.notExist",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
                 }
-                if (!masterData.processStatisticCodes.any { x -> x.label == item.processStatisticCode }) {
+                if (!item.processStatisticCode.isNullOrEmpty() && !masterData.processStatisticCodes.any { x -> x.label == item.processStatisticCode }) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.notExist",

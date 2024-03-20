@@ -1,5 +1,7 @@
 package com.kcvn.spm.app.product.payload.model
 
+import com.kcvn.spm.common.payload.model.CellStyleModel
+
 data class ImportProductErrorModel(
     var name: String? = null,
     var exportType: String? = null,

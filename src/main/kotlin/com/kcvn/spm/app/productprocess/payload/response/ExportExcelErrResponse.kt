@@ -1,6 +1,6 @@
 package com.kcvn.spm.app.productprocess.payload.response
 
-import com.kcvn.spm.app.product.payload.model.CellStyleModel
+import com.kcvn.spm.common.payload.model.CellStyleModel
 
 data class ExportExcelErrResponse (
     var productName: String? = null,

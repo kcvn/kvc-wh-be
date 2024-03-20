@@ -70,13 +70,13 @@ class DateTimeHelper {
             return date.plusHours(-7)
         }
 
-        fun toCalendarColumn(startDate: OffsetDateTime, endDate: OffsetDateTime, holidayCalender: List<OffsetDateTime> = listOf()): List<CalendarResponse> {
+        fun toCalendarColumn(startDate: OffsetDateTime, endDate: OffsetDateTime, holidayCalender: List<OffsetDateTime> = listOf(),daysToSubtract: Long = 0): List<CalendarResponse> {
             val calendarResponses = mutableListOf<CalendarResponse>()
             var currentDate = startDate
             while (!currentDate.isAfter(endDate)) {
                 val response = CalendarResponse(
                     key = toString(currentDate, DateTimeFormat.yyyyMMdd),
-                    value = toString(currentDate, DateTimeFormat.MM_dd),
+                    value = toString(currentDate.minusDays(daysToSubtract), DateTimeFormat.MM_dd),
                     isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
                         || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY
                         || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY

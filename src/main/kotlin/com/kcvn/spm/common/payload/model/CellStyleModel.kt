@@ -1,8 +1,9 @@
-package com.kcvn.spm.app.product.payload.model
+package com.kcvn.spm.common.payload.model
 
 import org.apache.poi.ss.usermodel.CellStyle
 
 data class CellStyleModel (
     var index: Int = 0,
-    var cellStyle: CellStyle
+    var cellStyle: CellStyle,
+    var key: String = ""
 )

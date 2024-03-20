@@ -121,11 +121,9 @@ class CompletionRateService(
     fun createErrorSheet(layerCompletionRateErrorList: List<LayerCompletionRateError>,  templateErrorExportUrl: String, style: CellStyle?): Pair<Sheet,Workbook> {
         val templateWorkbook = WorkbookFactory.create(FileInputStream(templateErrorExportUrl))
         val sheetTemplateWorkBook = templateWorkbook.getSheetAt(0)
-//        sheetTemplateWorkBook.getRow(0).rowStyle = style
        var rowIndex =1
         layerCompletionRateErrorList.forEach { error ->
             val newRow = sheetTemplateWorkBook.createRow(rowIndex)
-//            newRow.rowStyle = style
             newRow.createCell(0).setCellValue(error.key ?: "")
             error.rate?.let { newRow.createCell(1).setCellValue(it) }
             val errorMessageCell = newRow.createCell(2)
@@ -134,6 +132,8 @@ class CompletionRateService(
             cellStyle.cloneStyleFrom(errorMessageCell.cellStyle)
             val font = templateWorkbook.createFont()
             font.color = IndexedColors.RED.index
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+            font.fontHeightInPoints = 12
             cellStyle.setFont(font)
             errorMessageCell.cellStyle = cellStyle
             rowIndex++
@@ -213,7 +213,7 @@ class CompletionRateService(
         val productExists = completionRateProductRepository.getByProduct(productNames)
 
         var count = 0
-        val total = sheet.lastRowNum - rowIndex
+        var total = sheet.lastRowNum - rowIndex
 
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
@@ -222,6 +222,7 @@ class CompletionRateService(
             val rateInput = rateInputString.toDoubleOrNull()
             val name = ExcelHelper.getCellValue(row, 0)
             if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                total--
                 continue
             }
             val errorMessages = mutableListOf<String>()
@@ -432,7 +433,7 @@ class CompletionRateService(
         val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
         var count = 0
-        val total = sheet.lastRowNum - rowIndex
+        var total = sheet.lastRowNum - rowIndex
         val utcOffset = ZoneOffset.ofHours(7)
         val currentDate = OffsetDateTime.now(utcOffset).withHour(0)
             .withMinute(0)
@@ -446,6 +447,7 @@ class CompletionRateService(
             val rateInput = rateInputString.toDoubleOrNull()
             val name = ExcelHelper.getCellValue(row, 0)
             if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                total--
                 continue
             }
             val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
@@ -623,7 +625,7 @@ class CompletionRateService(
             .withNano(0)
         val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
         var count = 0
-        val total = sheet.lastRowNum - rowIndex
+        var total = sheet.lastRowNum - rowIndex
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
@@ -631,6 +633,7 @@ class CompletionRateService(
             val rateInput = rateInputString.toDoubleOrNull()
             val name = ExcelHelper.getCellValue(row, 0)
             if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
+                total--
                 continue
             }
             val key = ExcelHelper.getCellValue(row, 0)

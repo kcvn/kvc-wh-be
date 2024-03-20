@@ -1,7 +1,10 @@
 package com.kcvn.spm.app.report.externalquality.service
 
+import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
+import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityReportModel
 import com.kcvn.spm.app.report.externalquality.payload.request.ExternalQualityReportSearchRequest
 import com.kcvn.spm.app.report.externalquality.payload.response.ExternalQualityReportResponse
+import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.repository.*
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -15,12 +18,60 @@ class ExternalQualityReportService(
     private val workResultRep: WorkResultRepository,
     private val inventoryProductRep: InventoryProductRepository,
     private val productRep: ProductRepository,
-    private val completionRateProductRep: CompletionRateProductRepository
+    private val completionRateProductRep: CompletionRateProductRepository,
+    private val holidaysCalenderRep: HolidaysCalenderRepository
 ) {
 
     fun getDataReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): ExternalQualityReportResponse {
 
-        return ExternalQualityReportResponse()
+        val response = ExternalQualityReportResponse()
+        val orderSearchRequest = OrderSearchRequest()
+        val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
+        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
+        val daysToSubtract: Long = 10
+        response.subColumns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders, daysToSubtract)
+        orderSearchRequest.endDate = request.endDate
+        orderSearchRequest.startDate = request.startDate
+        orderSearchRequest.productName = request.productName
+        val order = orderRep.getPagingListOrder(orderSearchRequest,pageable)
+        val listProductOrder = order.first
+        val mappingPaging: List<ExternalQualityReportModel> = listProductOrder.map { product ->
+            val externalQuality = ExternalQualityReportModel()
+            externalQuality.productName = product.productName
+            externalQuality.productShortcutName = product.productShortcutName
+            externalQuality
+        }
+        val listProductName = listProductOrder.map { it.productName }
+        val listProduct = productRep.getByName(listProductName.filterNotNull())
+        val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())
+        for(externalQuality in mappingPaging){
+            if (listCompletionRate != null) {
+                externalQuality.completionRate = listCompletionRate.find { x-> x.productName.equals(externalQuality.productName) }?.rate
+            }
+        }
+        for(externalQuality in mappingPaging){
+                val product = listProduct.find { x-> x.name.equals(externalQuality.productName) }
+                if(product !=null){
+                    externalQuality.mold = product.mold
+                    externalQuality.snapMold = product.snapMold
+                    externalQuality.pcsSh = product.pcsSh
+                    externalQuality.tapeCommon = product.tapeCommon
+                    externalQuality.exportType = product.exportType
+                    externalQuality.blockSh = product.shBlock
+                }
+        }
+
+
+
+
+        response.data = mappingPaging
+        return response
+    }
+
+    fun addShippingData(externalQualityReportModel: List<ExternalQualityReportModel>){
+
+
+
     }
 
 }

@@ -423,20 +423,20 @@ class QuantityReportService(
         var headerCol = 3
         val headerStyle = headerRow.getCell(1).cellStyle
         val columns = dataExport.columns
-        if (dataExport.data?.isEmpty() == true) throw BusinessException(CommonUtils.getMessage("report.export.noData"))
-
-        if (columns != null) {
-            for (col in columns) {
-                setCellHeader(workbook, headerRow, headerCol, headerStyle, col.value)
-                headerCol++
-            }
-        }
-        var rowNumber = 1
-        val style = ExcelHelper.getCellStyleCommon(workbook)
-
-        for(report in dataExport.data!!){
+        if (dataExport.data != null){
             if (columns != null) {
-                rowNumber = generateExcelRowPlan(workbook, sheet, rowNumber, style, report,columns)
+                for (col in columns) {
+                    setCellHeader(workbook, headerRow, headerCol, headerStyle, col.value)
+                    headerCol++
+                }
+            }
+            var rowNumber = 1
+            val style = ExcelHelper.getCellStyleCommon(workbook)
+
+            for(report in dataExport.data!!){
+                if (columns != null) {
+                    rowNumber = generateExcelRowPlan(workbook, sheet, rowNumber, style, report,columns)
+                }
             }
         }
 

@@ -99,10 +99,7 @@ class QuantityReportController(
             SortDefault(sort = ["monthReport"], direction = Sort.Direction.DESC)
         ) pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = quantityReportService.exportQuantityReportExcel(
-            request,
-            pageable
-        )
+        val data = quantityReportService.exportQuantityReportExcel(request, pageable)
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

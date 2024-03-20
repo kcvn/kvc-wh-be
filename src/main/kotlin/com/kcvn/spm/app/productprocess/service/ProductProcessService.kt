@@ -1,7 +1,6 @@
 package com.kcvn.spm.app.productprocess.service
 
 import com.kcvn.spm.app.masterdata.service.MasterDataService
-import com.kcvn.spm.app.product.payload.model.CellStyleModel
 import com.kcvn.spm.app.productprocess.payload.request.ImportProcessRequest
 import com.kcvn.spm.app.productprocess.payload.request.ItemUpdateProductProcessDetailRequest
 import com.kcvn.spm.app.productprocess.payload.request.UpdateProductProcessDetailRequest
@@ -15,6 +14,7 @@ import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.model.CellStyleModel
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProductProcess
@@ -767,7 +767,7 @@ class ProductProcessService(
         )
         workbook.close()
         return if ( count == 0) {
-            BaseResponse(null, message = CommonUtils.getMessage("import.insertNoData"))
+            BaseResponse(response, message = CommonUtils.getMessage("import.insertNoData"))
         } else {
             BaseResponse(
                 response,

@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.product.payload.model
+package com.kcvn.spm.common.payload.model
 
 import org.apache.poi.ss.usermodel.CellStyle
 

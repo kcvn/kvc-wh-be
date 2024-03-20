@@ -15,11 +15,5 @@ class JsonConvert {
         inline fun <reified T> deserialize(json: String, type: TypeReference<T>): T {
             return objectMapper.readValue(json, type)
         }
-
-        inline fun <reified T> cloneJson(obj: T): T {
-            val json = objectMapper.writeValueAsString(obj)
-            val type = object : TypeReference<T>() {}
-            return objectMapper.readValue(json, type)
-        }
     }
 }

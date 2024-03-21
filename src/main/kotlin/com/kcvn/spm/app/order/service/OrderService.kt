@@ -81,7 +81,7 @@ class OrderService(
             var currentDate = colStartDate
             while (!currentDate!!.isAfter(colEndDate)) {
                 val response = CalendarValueResponse(
-                    key = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd_yyyy),
+                    key = DateTimeHelper.toString(currentDate, DateTimeFormat.yyyyMMdd),
                     value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
                     isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() } || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
                 )

@@ -10,7 +10,6 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.ProcessStatisticCode
-import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -315,7 +314,7 @@ class QuantityReportService(
         val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
         val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
         val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
-        val processGroups = processGroupRep.getAll()
+        val processGroups = processGroupRep.getForProduct()
 
         val columns = productProcesses.filter { x ->
             !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO

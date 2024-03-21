@@ -102,9 +102,11 @@ class OrderFilterType {
 class ProcessStatisticCode {
     companion object {
         const val KO = "KO"
+        const val T = "T"
         const val IN_MACH = "INMACH"
         const val IN_LO = "INLO"
         const val GHEP_LOP = "GHEPLOP"
+        const val GHEP_LOP_SUM = "GHEPLOPSUM"
         const val TAN = "TAN"
         const val ZEN = "ZEN"
         const val HP_TAN = "HP TAN"

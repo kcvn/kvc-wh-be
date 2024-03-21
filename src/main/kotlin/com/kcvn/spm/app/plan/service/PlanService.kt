@@ -40,7 +40,8 @@ class PlanService(
     private val planProcessRep: PlanProcessRepository,
     private val planDetailRep: PlanDetailRepository,
     private val workResultRep: WorkResultRepository,
-    private val holidaysCalenderRep: HolidaysCalenderRepository
+    private val holidaysCalenderRep: HolidaysCalenderRepository,
+    private val processGroupRep: ProcessGroupRepository
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -885,6 +886,8 @@ class PlanService(
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
 
+        val processGroups = processGroupRep.getForPlanSummary()
+
         val planProducts = planProductRep.getListPlanProduct(request)
         val dataExports = getDataExportExcel(planProducts, colStartDate, colEndDate)
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
@@ -893,12 +896,13 @@ class PlanService(
         }
 
         val dataSummary = dataExportFlattens.groupBy { x -> x.processConvertCode }.map { x ->
-            val process = x.value.first()
+            val process = processGroups.find { m -> m.processStatisticCode == x.key }
+
             val summary = PlanSummaryModel(
-                processName = process.processName,
-                processNameJp = process.processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = x.key,
-                processSequence = process.processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = "",
@@ -914,16 +918,17 @@ class PlanService(
                 )
             )
             summary
-        }.toMutableList()
+        }.sortedBy { x -> x.processSequence }.toMutableList()
 
         val dataDucLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH }
         if (dataDucLo.isNotEmpty()) {
             val moldByFrame1s = Mold.DATA_BY_FRAME1(request.frame_1).filter { x -> request.mold.isNullOrEmpty() || x == request.mold }
+            val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.T }
             val ducLo = PlanSummaryModel(
-                processName = CommonUtils.getMessage("excel.rowDucLo"),
-                processNameJp = dataDucLo.first().processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = "${ProcessConvertCode.T}/${ProcessConvertCode.TH}",
-                processSequence = dataDucLo.first().processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = if (moldByFrame1s.size > 1) CommonUtils.getMessage("excel.rowTotal") else (request.mold ?: moldByFrame1s.first()),
@@ -970,11 +975,12 @@ class PlanService(
 
         val dataInMach = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.TAN || x.processConvertCode == ProcessConvertCode.ZEN }
         if (dataInMach.isNotEmpty()) {
+            val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_MACH }
             val inMach = PlanSummaryModel(
-                processName = CommonUtils.getMessage("excel.rowInMach"),
-                processNameJp = dataInMach.first().processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}",
-                processSequence = dataInMach.first().processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = CommonUtils.getMessage("excel.rowTotal"),
@@ -1015,11 +1021,12 @@ class PlanService(
 
         val dataInLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.HP_ALL || x.processConvertCode == ProcessConvertCode.HP }
         if (dataInLo.isNotEmpty()) {
+            val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_LO }
             val inLo = PlanSummaryModel(
-                processName = CommonUtils.getMessage("excel.rowInLo"),
-                processNameJp = dataInLo.first().processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = "${ProcessConvertCode.HP_ALL}/${ProcessConvertCode.HP}",
-                processSequence = dataInLo.first().processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = CommonUtils.getMessage("excel.rowTotal"),
@@ -1060,11 +1067,12 @@ class PlanService(
 
         val dataGhepLop = dataSummary.filter { x -> !x.processConvertCode.isNullOrEmpty() && x.processConvertCode!!.startsWith(ProcessConvertCode.M) }
         if (dataGhepLop.isNotEmpty()) {
+            val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.GHEP_LOP_SUM }
             val ghepLop = PlanSummaryModel(
-                processName = CommonUtils.getMessage("excel.rowGhepLop"),
-                processNameJp = dataGhepLop.first().processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
-                processSequence = dataGhepLop.first().processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = CommonUtils.getMessage("excel.rowTotal"),

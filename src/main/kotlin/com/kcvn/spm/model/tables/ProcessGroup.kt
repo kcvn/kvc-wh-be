@@ -17,7 +17,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row10
+import org.jooq.Row12
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -113,6 +113,16 @@ open class ProcessGroup(
      */
     val IS_DELETED: TableField<ProcessGroupRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.process_group.allow_show_product</code>.
+     */
+    val ALLOW_SHOW_PRODUCT: TableField<ProcessGroupRecord, Boolean?> = createField(DSL.name("allow_show_product"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "")
+
+    /**
+     * The column <code>public.process_group.allow_show_plan_summary</code>.
+     */
+    val ALLOW_SHOW_PLAN_SUMMARY: TableField<ProcessGroupRecord, Boolean?> = createField(DSL.name("allow_show_plan_summary"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "")
+
     private constructor(alias: Name, aliased: Table<ProcessGroupRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<ProcessGroupRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -154,18 +164,18 @@ open class ProcessGroup(
     override fun rename(name: Table<*>): ProcessGroup = ProcessGroup(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row10 type methods
+    // Row12 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row10<String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row10<String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row12<String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Boolean?, Boolean?> = super.fieldsRow() as Row12<String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Boolean?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Boolean?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Boolean?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

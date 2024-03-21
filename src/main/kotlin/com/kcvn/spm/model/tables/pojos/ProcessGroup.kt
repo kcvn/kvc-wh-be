@@ -25,7 +25,9 @@ data class ProcessGroup(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var allowShowProduct: Boolean? = null,
+    var allowShowPlanSummary: Boolean? = null
 ): Serializable {
 
 
@@ -97,6 +99,18 @@ data class ProcessGroup(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.allowShowProduct == null) {
+            if (o.allowShowProduct != null)
+                return false
+        }
+        else if (this.allowShowProduct != o.allowShowProduct)
+            return false
+        if (this.allowShowPlanSummary == null) {
+            if (o.allowShowPlanSummary != null)
+                return false
+        }
+        else if (this.allowShowPlanSummary != o.allowShowPlanSummary)
+            return false
         return true
     }
 
@@ -113,6 +127,8 @@ data class ProcessGroup(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.allowShowProduct == null) 0 else this.allowShowProduct.hashCode())
+        result = prime * result + (if (this.allowShowPlanSummary == null) 0 else this.allowShowPlanSummary.hashCode())
         return result
     }
 
@@ -129,6 +145,8 @@ data class ProcessGroup(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(allowShowProduct)
+        sb.append(", ").append(allowShowPlanSummary)
 
         sb.append(")")
         return sb.toString()

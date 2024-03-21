@@ -102,9 +102,11 @@ class OrderFilterType {
 class ProcessStatisticCode {
     companion object {
         const val KO = "KO"
+        const val T = "T"
         const val IN_MACH = "INMACH"
         const val IN_LO = "INLO"
         const val GHEP_LOP = "GHEPLOP"
+        const val GHEP_LOP_SUM = "GHEPLOPSUM"
         const val TAN = "TAN"
         const val ZEN = "ZEN"
         const val HP_TAN = "HP TAN"
@@ -198,5 +200,20 @@ class PlanProcessSummary {
             ProcessConvertCode.TK,
             ProcessConvertCode.INS
         )
+    }
+}
+
+class PlanStyleKey {
+    companion object {
+        const val PLAN_PRODUCT_TITLE = "PLAN_PRODUCT_TITLE"
+        const val PLAN_PRODUCT_VALUE = "PLAN_PRODUCT_VALUE"
+        const val PROCESS_PRIMARY = "PROCESS_PRIMARY"
+        const val PROCESS_CHILDREN = "PROCESS_CHILDREN"
+        const val PROCESS_CHILDREN_END_ROW = "PROCESS_CHILDREN_END_ROW"
+        const val PLAN_DETAIL = "PLAN_DETAIL"
+        const val PLAN_SUMMARY_FIRST_ROW = "PLAN_SUMMARY_FIRST_ROW"
+        const val PLAN_SUMMARY_END_ROW = "PLAN_SUMMARY_END_ROW"
+        const val PLAN_SUMMARY_MIDDLE_ROW = "PLAN_SUMMARY_MIDDLE_ROW"
+        const val PLAN_SUMMARY_DETAIL = "PLAN_SUMMARY_DETAIL"
     }
 }

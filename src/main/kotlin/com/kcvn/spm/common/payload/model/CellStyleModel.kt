@@ -4,5 +4,6 @@ import org.apache.poi.ss.usermodel.CellStyle
 
 data class CellStyleModel (
     var index: Int = 0,
-    var cellStyle: CellStyle
+    var cellStyle: CellStyle,
+    var key: String = ""
 )

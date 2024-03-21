@@ -403,7 +403,7 @@ class ProductService(
         val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
         val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
         val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
-        val processGroups = processGroupRep.getAll()
+        val processGroups = processGroupRep.getForProduct()
         val productProcessGroups = productProcesses.filter { x ->
             !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
         }.map { x ->

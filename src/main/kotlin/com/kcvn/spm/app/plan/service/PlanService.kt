@@ -12,6 +12,7 @@ import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
+import com.kcvn.spm.common.payload.model.CellStyleModel
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.PlanProduct
@@ -39,7 +40,8 @@ class PlanService(
     private val planProcessRep: PlanProcessRepository,
     private val planDetailRep: PlanDetailRepository,
     private val workResultRep: WorkResultRepository,
-    private val holidaysCalenderRep: HolidaysCalenderRepository
+    private val holidaysCalenderRep: HolidaysCalenderRepository,
+    private val processGroupRep: ProcessGroupRepository
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -105,12 +107,13 @@ class PlanService(
                 )
             }
 
-            val workResultData = workResults.filter { m -> m.processCode == x.processCode && m.layerCode == x.layerCode }.map { m ->
-                KeyValueResponse(
-                    DateTimeHelper.toString(m.summaryResultDate!!, DateTimeFormat.yyyyMMdd),
-                    if (x.unit == ProcessUnit.BLOCK) m.goodTapeQuantity?.toString() else m.goodSheetQuantity?.toString()
-                )
-            }.sortedBy { m -> m.key }
+            val workResultData = workResults.filter { m -> m.processCode == x.processCode && m.layerCode == x.layerCode }
+                .groupBy { m -> Triple( m.processCode, m.layerCode, DateTimeHelper.toString(m.summaryResultDate!!, DateTimeFormat.yyyyMMdd)) }.map { m ->
+                    KeyValueResponse(
+                        m.key.third,
+                        if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { t -> t.goodTapeQuantity ?: 0 }.toString() else m.value.sumOf { t -> t.goodSheetQuantity ?: 0 }.toString()
+                    )
+                }.sortedBy { m -> m.key }
             val workResultAccumulations = calculateAccumulation(workResultData)
 
             val planData = mutableListOf<PlanDataByProcessModel>()
@@ -126,7 +129,7 @@ class PlanService(
                 processSequence = x.processSequence,
                 inventory = x.inventory
             )
-            productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
+            productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id && m.layerCode == x.layerCode }.map { m ->
                 ProcessChildrenModel(
                     layerCode = m.layerCode,
                     processCode = m.processCode,
@@ -144,7 +147,7 @@ class PlanService(
 
             productPlan.planData = planData
             productPlan
-        }.sortedBy { x -> x.processSequence }
+        }.sortedWith(compareBy<ProductPlanDetailModel> { x -> x.layerCode?.toInt() }.thenBy { x -> x.processSequence })
         return response
     }
 
@@ -182,30 +185,51 @@ class PlanService(
             headerCol++
         }
 
+        val styleRowProducts = mutableListOf<CellStyleModel>()
+        var styleRowProcess = mutableListOf<CellStyleModel>()
+        val styleRowPlanData = mutableListOf<CellStyleModel>()
+
         val style = ExcelHelper.getCellStyleCommon(workbook)
         var rowNumber = 1
+        var index = 0
         for (planProduct in planProducts) {
             val dataExport = dataExports.find { x -> x.id == planProduct.id }
             if (dataExport == null || dataExport.productPlanDetails.isNullOrEmpty()) continue
 
-            rowNumber = generateExcelRowPlanProduct(workbook, sheet, rowNumber, style, columns, planProduct)
+            rowNumber = if (index == 0) {
+                generateExcelRowPlanProduct(workbook, sheet, rowNumber, style, columns, planProduct, styleRowProducts)
+            } else {
+                generateExcelRowPlanProduct(sheet, rowNumber, columns, planProduct, styleRowProducts)
+            }
 
             for (planProcess in dataExport.productPlanDetails!!) {
-                val rowIndex1 = generateExcelRowPlanProcess(workbook, sheet, rowNumber, style, planProcess)
-                val rowIndex2 = generateExcelRowPlanData(workbook, sheet, rowNumber, style, columns, planProcess)
+                var rowIndex1: Int
+                var rowIndex2: Int
+                if (index == 0) {
+                    rowIndex1 = generateExcelRowPlanProcess(workbook, sheet, rowNumber, style, planProcess, styleRowProcess)
+                    styleRowProcess = styleRowProcess.distinct().toMutableList()
+                    rowIndex2 = generateExcelRowPlanData(workbook, sheet, rowNumber, style, columns, planProcess, styleRowPlanData)
+                } else {
+                    rowIndex1 = generateExcelRowPlanProcess(sheet, rowNumber, planProcess, styleRowProcess)
+                    rowIndex2 = generateExcelRowPlanData(sheet, rowNumber, columns, planProcess, styleRowPlanData)
+                }
+
                 rowNumber = rowIndex1
+
                 if (rowIndex1 > rowIndex2) {
                     for (rowIndex in rowIndex2 until rowIndex1) {
                         val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                        ExcelHelper.setCellValue(dataRow, 7, style, "")
+                        ExcelHelper.setCellValue(dataRow, 7, styleRowPlanData.first { x -> x.key == PlanStyleKey.PLAN_DETAIL && x.index == 7 }.cellStyle, "")
                         var colIndex = 8
                         for (col in columns) {
-                            ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, "", col.isHoliday)
+                            ExcelHelper.setCellValue(dataRow, colIndex, styleRowPlanData.first { x -> x.key == PlanStyleKey.PLAN_DETAIL && x.index == colIndex }.cellStyle, "")
                             colIndex++
                         }
                     }
                 }
             }
+
+            index++
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -229,7 +253,8 @@ class PlanService(
         rowNumber: Int,
         style: CellStyle,
         columns: List<CalendarResponse>,
-        data: PlanProduct
+        data: PlanProduct,
+        styleRowProducts: MutableList<CellStyleModel>
     ): Int {
         var rowIndex = rowNumber
         var dataRow = sheet.createRow(rowIndex)
@@ -283,6 +308,8 @@ class PlanService(
             colIndex++
         }
 
+        styleRowProducts.addAll(dataRow.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PLAN_PRODUCT_TITLE) })
+
         rowIndex++
         dataRow = sheet.createRow(rowIndex)
         ExcelHelper.setCellValueCustom(
@@ -334,6 +361,54 @@ class PlanService(
             )
             colIndex++
         }
+
+        styleRowProducts.addAll(dataRow.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PLAN_PRODUCT_VALUE) })
+
+        rowIndex++
+        return rowIndex
+    }
+
+    private fun generateExcelRowPlanProduct(
+        sheet: Sheet,
+        rowNumber: Int,
+        columns: List<CalendarResponse>,
+        data: PlanProduct,
+        styleRowProducts: MutableList<CellStyleModel>
+    ): Int {
+        var rowIndex = rowNumber
+        var dataRow = sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(dataRow, 0, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == 0 }.cellStyle, CommonUtils.getMessage("excel.colProductName"))
+        ExcelHelper.setCellValue(dataRow, 1, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == 1 }.cellStyle, CommonUtils.getMessage("excel.colFrame"))
+        ExcelHelper.setCellValue(dataRow, 2, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == 2 }.cellStyle, CommonUtils.getMessage("excel.colMold"))
+        ExcelHelper.setCellValue(dataRow, 3, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == 3 }.cellStyle, CommonUtils.getMessage("excel.colPcsSh"))
+        ExcelHelper.setCellValue(dataRow, 4, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == 4 }.cellStyle, CommonUtils.getMessage("excel.colBlockSh"))
+        ExcelHelper.setCellValue(dataRow, 5, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == 5 }.cellStyle, "")
+        ExcelHelper.setCellValue(dataRow, 6, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == 6 }.cellStyle, "")
+        ExcelHelper.setCellValue(dataRow, 7, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == 7 }.cellStyle, "")
+
+        var colIndex = 8
+        for (col in columns) {
+            ExcelHelper.setCellValue(dataRow, colIndex, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_TITLE && x.index == colIndex }.cellStyle, "")
+            colIndex++
+        }
+
+        rowIndex++
+        dataRow = sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(dataRow, 0, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == 0 }.cellStyle, data.productName)
+        ExcelHelper.setCellValue(dataRow, 1, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == 1 }.cellStyle, data.frame_1)
+        ExcelHelper.setCellValue(dataRow, 2, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == 2 }.cellStyle, data.mold)
+        ExcelHelper.setCellValue(dataRow, 3, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == 3 }.cellStyle, data.pcsSh?.toString())
+        ExcelHelper.setCellValue(dataRow, 4, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == 4 }.cellStyle, data.blockSh?.toString())
+        ExcelHelper.setCellValue(dataRow, 5, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == 5 }.cellStyle, "")
+        ExcelHelper.setCellValue(dataRow, 6, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == 6 }.cellStyle, "")
+        ExcelHelper.setCellValue(dataRow, 7, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == 7 }.cellStyle, "")
+
+        colIndex = 8
+        for (col in columns) {
+            ExcelHelper.setCellValue(dataRow, colIndex, styleRowProducts.first { x -> x.key == PlanStyleKey.PLAN_PRODUCT_VALUE && x.index == colIndex }.cellStyle, "")
+            colIndex++
+        }
+
         rowIndex++
         return rowIndex
     }
@@ -343,7 +418,8 @@ class PlanService(
         sheet: Sheet,
         rowNumber: Int,
         style: CellStyle,
-        data: ProductPlanDetailModel
+        data: ProductPlanDetailModel,
+        styleRowProcess: MutableList<CellStyleModel>
     ): Int {
         var rowIndex = rowNumber
         var dataRow = sheet.createRow(rowIndex)
@@ -382,6 +458,8 @@ class PlanService(
             isBorderLeft = false, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
             isBold = false, isAlignCenter = true
         )
+
+        styleRowProcess.addAll(dataRow.filter { x -> x.columnIndex <= 6 }.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PROCESS_PRIMARY) })
 
         rowIndex++
         var count = 0
@@ -424,6 +502,8 @@ class PlanService(
                         isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
                         isBold = false, isAlignCenter = true
                     )
+
+                    styleRowProcess.addAll(dataRow.filter { x -> x.columnIndex <= 6 }.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PROCESS_CHILDREN) })
                 } else {
                     ExcelHelper.setCellValueCustom(
                         workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = process.layerCode,
@@ -460,6 +540,8 @@ class PlanService(
                         isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = true,
                         isBold = false, isAlignCenter = true
                     )
+
+                    styleRowProcess.addAll(dataRow.filter { x -> x.columnIndex <= 6 }.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PROCESS_CHILDREN_END_ROW) })
                 }
                 rowIndex++
                 count++
@@ -505,6 +587,7 @@ class PlanService(
                         isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
                         isBold = false, isAlignCenter = true
                     )
+                    styleRowProcess.addAll(dataRow.filter { x -> x.columnIndex <= 6 }.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PROCESS_CHILDREN) })
                 } else {
                     ExcelHelper.setCellValueCustom(
                         workbook = workbook, row = dataRow, colIndex = 0, styleTemplate = style, value = process?.layerCode,
@@ -541,6 +624,77 @@ class PlanService(
                         isBorderLeft = false, isBorderRight = true, isBorderTop = false, isBorderBottom = true,
                         isBold = false, isAlignCenter = true
                     )
+                    styleRowProcess.addAll(dataRow.filter { x -> x.columnIndex <= 6 }.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PROCESS_CHILDREN_END_ROW) })
+                }
+                rowIndex++
+                count++
+            }
+        }
+        return rowIndex
+    }
+
+    private fun generateExcelRowPlanProcess(
+        sheet: Sheet,
+        rowNumber: Int,
+        data: ProductPlanDetailModel,
+        styleRowProcess: MutableList<CellStyleModel>
+    ): Int {
+        var rowIndex = rowNumber
+        var dataRow = sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(dataRow, 0, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_PRIMARY && x.index == 0 }.cellStyle, data.layerCode)
+        ExcelHelper.setCellValue(dataRow, 1, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_PRIMARY && x.index == 1 }.cellStyle, data.processCode)
+        ExcelHelper.setCellValue(dataRow, 2, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_PRIMARY && x.index == 2 }.cellStyle, data.processName)
+        ExcelHelper.setCellValue(dataRow, 3, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_PRIMARY && x.index == 3 }.cellStyle, data.completionRate?.toString())
+        ExcelHelper.setCellValue(dataRow, 4, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_PRIMARY && x.index == 4 }.cellStyle, data.inventory?.toString())
+        ExcelHelper.setCellValue(dataRow, 5, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_PRIMARY && x.index == 5 }.cellStyle, data.sumInventory?.toString())
+        ExcelHelper.setCellValue(dataRow, 6, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_PRIMARY && x.index == 6 }.cellStyle, data.processConvertCode)
+
+        rowIndex++
+        var count = 0
+        if ((data.processChildren?.size ?: 0) > ((data.planData?.size ?: 0) - 1)) {
+            for (process in data.processChildren!!) {
+                dataRow = sheet.createRow(rowIndex)
+                if (count < data.processChildren!!.size - 1) {
+                    ExcelHelper.setCellValue(dataRow, 0, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 0 }.cellStyle, process.layerCode)
+                    ExcelHelper.setCellValue(dataRow, 1, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 1 }.cellStyle, process.processCode)
+                    ExcelHelper.setCellValue(dataRow, 2, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 2 }.cellStyle, process.processName)
+                    ExcelHelper.setCellValue(dataRow, 3, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 3 }.cellStyle, "")
+                    ExcelHelper.setCellValue(dataRow, 4, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 4 }.cellStyle, process.inventory?.toString())
+                    ExcelHelper.setCellValue(dataRow, 5, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 5 }.cellStyle, "")
+                    ExcelHelper.setCellValue(dataRow, 6, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 6 }.cellStyle, "")
+                } else {
+                    ExcelHelper.setCellValue(dataRow, 0, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 0 }.cellStyle, process.layerCode)
+                    ExcelHelper.setCellValue(dataRow, 1, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 1 }.cellStyle, process.processCode)
+                    ExcelHelper.setCellValue(dataRow, 2, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 2 }.cellStyle, process.processName)
+                    ExcelHelper.setCellValue(dataRow, 3, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 3 }.cellStyle, "")
+                    ExcelHelper.setCellValue(dataRow, 4, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 4 }.cellStyle, process.inventory?.toString())
+                    ExcelHelper.setCellValue(dataRow, 5, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 5 }.cellStyle, "")
+                    ExcelHelper.setCellValue(dataRow, 6, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 6 }.cellStyle, "")
+                }
+                rowIndex++
+                count++
+            }
+        } else {
+            for (i in rowIndex until (rowIndex + 4)) {
+                val process = if (data.processChildren.isNullOrEmpty()) null
+                else if (count < data.processChildren!!.size) data.processChildren!![count] else null
+                dataRow = sheet.createRow(rowIndex)
+                if (count < 3) {
+                    ExcelHelper.setCellValue(dataRow, 0, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 0 }.cellStyle, process?.layerCode)
+                    ExcelHelper.setCellValue(dataRow, 1, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 1 }.cellStyle, process?.processCode)
+                    ExcelHelper.setCellValue(dataRow, 2, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 2 }.cellStyle, process?.processName)
+                    ExcelHelper.setCellValue(dataRow, 3, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 3 }.cellStyle, "")
+                    ExcelHelper.setCellValue(dataRow, 4, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 4 }.cellStyle, process?.inventory?.toString())
+                    ExcelHelper.setCellValue(dataRow, 5, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 5 }.cellStyle, "")
+                    ExcelHelper.setCellValue(dataRow, 6, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN && x.index == 6 }.cellStyle, "")
+                } else {
+                    ExcelHelper.setCellValue(dataRow, 0, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 0 }.cellStyle, process?.layerCode)
+                    ExcelHelper.setCellValue(dataRow, 1, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 1 }.cellStyle, process?.processCode)
+                    ExcelHelper.setCellValue(dataRow, 2, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 2 }.cellStyle, process?.processName)
+                    ExcelHelper.setCellValue(dataRow, 3, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 3 }.cellStyle, "")
+                    ExcelHelper.setCellValue(dataRow, 4, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 4 }.cellStyle, process?.inventory?.toString())
+                    ExcelHelper.setCellValue(dataRow, 5, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 5 }.cellStyle, "")
+                    ExcelHelper.setCellValue(dataRow, 6, styleRowProcess.first { x -> x.key == PlanStyleKey.PROCESS_CHILDREN_END_ROW && x.index == 6 }.cellStyle, "")
                 }
                 rowIndex++
                 count++
@@ -555,7 +709,8 @@ class PlanService(
         rowNumber: Int,
         style: CellStyle,
         columns: List<CalendarResponse>,
-        data: ProductPlanDetailModel
+        data: ProductPlanDetailModel,
+        styleRowPlanData: MutableList<CellStyleModel>
     ): Int {
         var rowIndex = rowNumber
         for (planData in data.planData!!) {
@@ -565,6 +720,32 @@ class PlanService(
             for (col in columns) {
                 val value = planData.quantityByCalendars?.find { x -> x.key == col.key }?.value
                 ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday)
+                colIndex++
+            }
+            if (rowIndex == rowNumber) {
+                styleRowPlanData.addAll(dataRow.filter { x -> x.columnIndex >= 7 }.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PLAN_DETAIL) })
+            }
+            rowIndex++
+        }
+
+        return rowIndex
+    }
+
+    private fun generateExcelRowPlanData(
+        sheet: Sheet,
+        rowNumber: Int,
+        columns: List<CalendarResponse>,
+        data: ProductPlanDetailModel,
+        styleRowPlanData: MutableList<CellStyleModel>
+    ): Int {
+        var rowIndex = rowNumber
+        for (planData in data.planData!!) {
+            val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+            ExcelHelper.setCellValue(dataRow, 7, styleRowPlanData.first { x -> x.key == PlanStyleKey.PLAN_DETAIL && x.index == 7 }.cellStyle, planData.title)
+            var colIndex = 8
+            for (col in columns) {
+                val value = planData.quantityByCalendars?.find { x -> x.key == col.key }?.value
+                ExcelHelper.setCellValue(dataRow, colIndex, styleRowPlanData.first { x -> x.key == PlanStyleKey.PLAN_DETAIL && x.index == colIndex }.cellStyle, value)
                 colIndex++
             }
             rowIndex++
@@ -612,16 +793,13 @@ class PlanService(
                     )
                 }
 
-                val workResultData = workResults.filter { m ->
-                    m.itemName == planProduct.productName
-                        && m.processCode == x.processCode
-                        && m.layerCode == x.layerCode
-                }.map { m ->
-                    KeyValueResponse(
-                        DateTimeHelper.toString(m.summaryResultDate!!, DateTimeFormat.yyyyMMdd),
-                        if (x.unit == ProcessUnit.BLOCK) m.goodTapeQuantity?.toString() else m.goodSheetQuantity?.toString()
-                    )
-                }.sortedBy { m -> m.key }
+                val workResultData = workResults.filter { m -> m.itemName == planProduct.productName && m.processCode == x.processCode && m.layerCode == x.layerCode }
+                    .groupBy { m -> Triple( m.processCode, m.layerCode, DateTimeHelper.toString(m.summaryResultDate!!, DateTimeFormat.yyyyMMdd)) }.map { m ->
+                        KeyValueResponse(
+                            m.key.third,
+                            if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { t -> t.goodTapeQuantity ?: 0 }.toString() else m.value.sumOf { t -> t.goodSheetQuantity ?: 0 }.toString()
+                        )
+                    }.sortedBy { m -> m.key }
                 val workResultAccumulations = calculateAccumulation(workResultData)
 
                 val planData = mutableListOf<PlanDataByProcessModel>()
@@ -638,7 +816,7 @@ class PlanService(
                     processSequence = x.processSequence,
                     inventory = x.inventory
                 )
-                productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
+                productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id && m.layerCode == x.layerCode }.map { m ->
                     ProcessChildrenModel(
                         layerCode = m.layerCode,
                         processCode = m.processCode,
@@ -657,7 +835,7 @@ class PlanService(
 
                 productPlan.planData = planData
                 productPlan
-            }.sortedBy { x -> x.processSequence }
+            }.sortedWith(compareBy<ProductPlanDetailModel> { x -> x.layerCode?.toInt() }.thenBy { x -> x.processSequence })
             data.add(productExport)
         }
 
@@ -677,9 +855,9 @@ class PlanService(
 
     private fun calculateDifference(sourceData: List<KeyValueResponse>, compareData: List<KeyValueResponse>): List<KeyValueResponse> {
         val response = mutableListOf<KeyValueResponse>()
-        for (item in sourceData) {
-            val compareValue = compareData.find { x -> x.key == item.key }
-            val diffValue = (compareValue?.value?.toInt() ?: 0) - (item.value?.toInt() ?: 0)
+        for (item in compareData) {
+            val sourceValue = sourceData.find { x -> x.key == item.key }
+            val diffValue = (item.value?.toInt() ?: 0) - (sourceValue?.value?.toInt() ?: 0)
             response.add(KeyValueResponse(item.key, diffValue.toString()))
         }
         return response
@@ -708,20 +886,23 @@ class PlanService(
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
 
+        val processGroups = processGroupRep.getForPlanSummary()
+
         val planProducts = planProductRep.getListPlanProduct(request)
         val dataExports = getDataExportExcel(planProducts, colStartDate, colEndDate)
-        val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter {
-            x -> !x.processConvertCode.isNullOrEmpty()
-            && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
+        val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
+            !x.processConvertCode.isNullOrEmpty()
+                && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
         }
 
         val dataSummary = dataExportFlattens.groupBy { x -> x.processConvertCode }.map { x ->
-            val process = x.value.first()
+            val process = processGroups.find { m -> m.processStatisticCode == x.key }
+
             val summary = PlanSummaryModel(
-                processName = process.processName,
-                processNameJp = process.processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = x.key,
-                processSequence = process.processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = "",
@@ -737,19 +918,20 @@ class PlanService(
                 )
             )
             summary
-        }.toMutableList()
+        }.sortedBy { x -> x.processSequence }.toMutableList()
 
         val dataDucLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH }
         if (dataDucLo.isNotEmpty()) {
-            val moldByFrame1s = Mold.DATA_BY_FRAME1(request.frame_1)
+            val moldByFrame1s = Mold.DATA_BY_FRAME1(request.frame_1).filter { x -> request.mold.isNullOrEmpty() || x == request.mold }
+            val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.T }
             val ducLo = PlanSummaryModel(
-                processName = CommonUtils.getMessage("excel.rowDucLo"),
-                processNameJp = dataDucLo.first().processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = "${ProcessConvertCode.T}/${ProcessConvertCode.TH}",
-                processSequence = dataDucLo.first().processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
-                        type = if (moldByFrame1s.size > 1) CommonUtils.getMessage("excel.rowTotal") else "",
+                        type = if (moldByFrame1s.size > 1) CommonUtils.getMessage("excel.rowTotal") else (request.mold ?: moldByFrame1s.first()),
                         planSummaryData = dataDucLo.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
                             .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
                                 val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
@@ -762,9 +944,9 @@ class PlanService(
             )
             if (moldByFrame1s.size > 1) {
                 for (mold in moldByFrame1s) {
-                    var dataMold = dataExportFlattens.filter {
-                        x -> x.mold == mold
-                        && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH)
+                    var dataMold = dataExportFlattens.filter { x ->
+                        x.mold == mold
+                            && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH)
                     }.groupBy { x -> x.mold }.mapNotNull { x ->
                         PlanSummaryDetailModel(
                             type = x.key,
@@ -793,11 +975,12 @@ class PlanService(
 
         val dataInMach = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.TAN || x.processConvertCode == ProcessConvertCode.ZEN }
         if (dataInMach.isNotEmpty()) {
+            val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_MACH }
             val inMach = PlanSummaryModel(
-                processName = CommonUtils.getMessage("excel.rowInMach"),
-                processNameJp = dataInMach.first().processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}",
-                processSequence = dataInMach.first().processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = CommonUtils.getMessage("excel.rowTotal"),
@@ -813,7 +996,7 @@ class PlanService(
             )
 
             for (code in listOf(ProcessConvertCode.TAN, ProcessConvertCode.ZEN)) {
-                var dataTanZen = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                val dataTanZen = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
                     PlanSummaryDetailModel(
                         type = x.key,
                         planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
@@ -825,14 +1008,12 @@ class PlanService(
                             }
                     )
                 }.firstOrNull()
-                if (dataTanZen == null) {
-                    dataTanZen = PlanSummaryDetailModel(
-                        type = code,
-                        planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
-                    )
+                if (dataTanZen != null) {
+                    inMach.details!!.add(dataTanZen)
                 }
-                inMach.details!!.add(dataTanZen)
             }
+
+            if (inMach.details!!.size < 3) inMach.details!!.removeAll(inMach.details!!.filter { x -> x.type == CommonUtils.getMessage("excel.rowTotal") })
 
             dataSummary.removeAll(dataInMach)
             dataSummary.add(inMach)
@@ -840,11 +1021,12 @@ class PlanService(
 
         val dataInLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.HP_ALL || x.processConvertCode == ProcessConvertCode.HP }
         if (dataInLo.isNotEmpty()) {
+            val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_LO }
             val inLo = PlanSummaryModel(
-                processName = CommonUtils.getMessage("excel.rowInLo"),
-                processNameJp = dataInLo.first().processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = "${ProcessConvertCode.HP_ALL}/${ProcessConvertCode.HP}",
-                processSequence = dataInLo.first().processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = CommonUtils.getMessage("excel.rowTotal"),
@@ -860,7 +1042,7 @@ class PlanService(
             )
 
             for (code in listOf(ProcessConvertCode.HP_ALL, ProcessConvertCode.HP)) {
-                var dataHP = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                val dataHP = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
                     PlanSummaryDetailModel(
                         type = x.key,
                         planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
@@ -872,14 +1054,12 @@ class PlanService(
                             }
                     )
                 }.firstOrNull()
-                if (dataHP == null) {
-                    dataHP = PlanSummaryDetailModel(
-                        type = code,
-                        planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
-                    )
+                if (dataHP != null) {
+                    inLo.details!!.add(dataHP)
                 }
-                inLo.details!!.add(dataHP)
             }
+
+            if (inLo.details!!.size < 3) inLo.details!!.removeAll(inLo.details!!.filter { x -> x.type == CommonUtils.getMessage("excel.rowTotal") })
 
             dataSummary.removeAll(dataInLo)
             dataSummary.add(inLo)
@@ -887,11 +1067,12 @@ class PlanService(
 
         val dataGhepLop = dataSummary.filter { x -> !x.processConvertCode.isNullOrEmpty() && x.processConvertCode!!.startsWith(ProcessConvertCode.M) }
         if (dataGhepLop.isNotEmpty()) {
+            val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.GHEP_LOP_SUM }
             val ghepLop = PlanSummaryModel(
-                processName = CommonUtils.getMessage("excel.rowGhepLop"),
-                processNameJp = dataGhepLop.first().processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
-                processSequence = dataGhepLop.first().processSequence,
+                processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = CommonUtils.getMessage("excel.rowTotal"),
@@ -906,7 +1087,7 @@ class PlanService(
                 )
             )
 
-            var mAll = dataExportFlattens.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+            val mAll = dataExportFlattens.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
                 PlanSummaryDetailModel(
                     type = x.key,
                     planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
@@ -918,18 +1099,14 @@ class PlanService(
                         }
                 )
             }.firstOrNull()
-            if (mAll == null) {
-                mAll = PlanSummaryDetailModel(
-                    type = ProcessConvertCode.M_ALL,
-                    planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
-                )
+            if (mAll != null) {
+                ghepLop.details!!.add(mAll)
             }
-            ghepLop.details!!.add(mAll)
 
-            var mTan = dataExportFlattens.filter {
-                x -> !x.processConvertCode.isNullOrEmpty()
-                && x.processConvertCode != ProcessConvertCode.M_ALL
-                && x.processConvertCode!!.startsWith(ProcessConvertCode.M)
+            val mTan = dataExportFlattens.filter { x ->
+                !x.processConvertCode.isNullOrEmpty()
+                    && x.processConvertCode != ProcessConvertCode.M_ALL
+                    && x.processConvertCode!!.startsWith(ProcessConvertCode.M)
             }.map { x ->
                 x.processConvertCode = ProcessConvertCode.M_ANY
                 x
@@ -945,13 +1122,11 @@ class PlanService(
                         }
                 )
             }.firstOrNull()
-            if (mTan == null) {
-                mTan = PlanSummaryDetailModel(
-                    type = ProcessConvertCode.M_ANY,
-                    planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
-                )
+            if (mTan != null) {
+                ghepLop.details!!.add(mTan)
             }
-            ghepLop.details!!.add(mTan)
+
+            if (ghepLop.details!!.size < 3) ghepLop.details!!.removeAll(ghepLop.details!!.filter { x -> x.type == CommonUtils.getMessage("excel.rowTotal") })
 
             dataSummary.removeAll(dataGhepLop)
             dataSummary.add(ghepLop)
@@ -979,47 +1154,90 @@ class PlanService(
             headerCol++
         }
 
+        val styleCollections = mutableListOf<CellStyleModel>()
+
         val style = ExcelHelper.getCellStyleCommon(workbook)
         var rowNumber = 1
+        var index = 0
         for (data in dataSummary.data!!) {
+            if (index == 0) {
+                generateExcelColProcessInPlanSummary(workbook, sheet, rowNumber, style, data, styleCollections)
 
-            generateExcelColProcessInPlanSummary(workbook, sheet, rowNumber, style, data)
-
-            var rowIndex = rowNumber
-            for (detail in data.details!!) {
-                var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                ExcelHelper.setCellValueCustom(
-                    workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = detail.type,
-                    isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
-                    isBold = false, isAlignCenter = false
-                )
-                rowIndex++
-
-                for (i in 1 until 5) {
-                    dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                    ExcelHelper.setCellValueCustom(
-                        workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = "",
-                        isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = (i == 4),
-                        isBold = false, isAlignCenter = false
-                    )
+                var rowIndex = rowNumber
+                for (detail in data.details!!) {
+                    var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                    ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, detail.type)
                     rowIndex++
-                }
 
-                rowIndex = rowNumber
-                for (item in detail.planSummaryData!!) {
-                    dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                    ExcelHelper.setCellValue(dataRow, 2, style, item.title)
-
-                    var colIndex = 3
-                    for (col in dataSummary.columns!!) {
-                        val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
-                        ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday)
-                        colIndex++
+                    for (i in 1 until 5) {
+                        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                        val st = if (i == 4) {
+                            styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                        }
+                        else {
+                            styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+                        }
+                        ExcelHelper.setCellValue(dataRow, 1, st, "")
+                        rowIndex++
                     }
-                    rowIndex++
+
+                    rowIndex = rowNumber
+                    for (item in detail.planSummaryData!!) {
+                        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                        ExcelHelper.setCellValue(dataRow, 2, style, item.title)
+
+                        var colIndex = 3
+                        for (col in dataSummary.columns!!) {
+                            val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
+                            ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday)
+                            colIndex++
+                        }
+                        if (rowIndex == rowNumber) {
+                            styleCollections.addAll(dataRow.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PLAN_SUMMARY_DETAIL) })
+                        }
+                        rowIndex++
+                    }
+                    rowNumber = rowIndex
                 }
-                rowNumber = rowIndex
             }
+            else {
+                generateExcelColProcessInPlanSummary(sheet, rowNumber, data, styleCollections)
+
+                var rowIndex = rowNumber
+                for (detail in data.details!!) {
+                    var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                    ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, detail.type)
+                    rowIndex++
+
+                    for (i in 1 until 5) {
+                        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                        val st = if (i == 4) {
+                            styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                        }
+                        else {
+                            styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+                        }
+                        ExcelHelper.setCellValue(dataRow, 1, st, "")
+                        rowIndex++
+                    }
+
+                    rowIndex = rowNumber
+                    for (item in detail.planSummaryData!!) {
+                        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                        ExcelHelper.setCellValue(dataRow, 2, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_DETAIL && x.index == 2 }.cellStyle, item.title)
+
+                        var colIndex = 3
+                        for (col in dataSummary.columns!!) {
+                            val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
+                            ExcelHelper.setCellValue(dataRow, colIndex, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_DETAIL && x.index == colIndex }.cellStyle, value)
+                            colIndex++
+                        }
+                        rowIndex++
+                    }
+                    rowNumber = rowIndex
+                }
+            }
+            index++
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -1042,7 +1260,8 @@ class PlanService(
         sheet: Sheet,
         rowNumber: Int,
         style: CellStyle,
-        data: PlanSummaryModel
+        data: PlanSummaryModel,
+        styleCollections: MutableList<CellStyleModel>
     ): Int {
         var rowIndex = rowNumber
         var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
@@ -1052,6 +1271,7 @@ class PlanService(
             isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
             isBold = false, isAlignCenter = false
         )
+        styleCollections.add(CellStyleModel(0, dataRow.getCell(0).cellStyle, PlanStyleKey.PLAN_SUMMARY_FIRST_ROW))
 
         rowIndex++
         dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
@@ -1060,6 +1280,7 @@ class PlanService(
             isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
             isBold = false, isAlignCenter = false
         )
+        styleCollections.add(CellStyleModel(0, dataRow.getCell(0).cellStyle, PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW))
 
         rowIndex++
         dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
@@ -1077,6 +1298,41 @@ class PlanService(
                 isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = (i == ((data.details!!.size * 5) - 1)),
                 isBold = false, isAlignCenter = false
             )
+            if (i == ((data.details!!.size * 5) - 1)) {
+                styleCollections.add(CellStyleModel(0, dataRow.getCell(0).cellStyle, PlanStyleKey.PLAN_SUMMARY_END_ROW))
+            }
+            rowIndex++
+        }
+        return rowIndex
+    }
+
+    private fun generateExcelColProcessInPlanSummary(
+        sheet: Sheet,
+        rowNumber: Int,
+        data: PlanSummaryModel,
+        styleCollections: MutableList<CellStyleModel>
+    ): Int {
+        var rowIndex = rowNumber
+        var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(dataRow, 0, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, data.processName)
+
+        rowIndex++
+        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(dataRow, 0, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processNameJp)
+
+        rowIndex++
+        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValue(dataRow, 0, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processConvertCode)
+
+        rowIndex++
+        for (i in 3 until (data.details!!.size * 5)) {
+            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+            val st = if (i == ((data.details!!.size * 5) - 1)) {
+                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+            } else {
+                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+            }
+            ExcelHelper.setCellValue(dataRow, 0, st, "")
             rowIndex++
         }
         return rowIndex

@@ -200,3 +200,18 @@ class PlanProcessSummary {
         )
     }
 }
+
+class PlanStyleKey {
+    companion object {
+        const val PLAN_PRODUCT_TITLE = "PLAN_PRODUCT_TITLE"
+        const val PLAN_PRODUCT_VALUE = "PLAN_PRODUCT_VALUE"
+        const val PROCESS_PRIMARY = "PROCESS_PRIMARY"
+        const val PROCESS_CHILDREN = "PROCESS_CHILDREN"
+        const val PROCESS_CHILDREN_END_ROW = "PROCESS_CHILDREN_END_ROW"
+        const val PLAN_DETAIL = "PLAN_DETAIL"
+        const val PLAN_SUMMARY_FIRST_ROW = "PLAN_SUMMARY_FIRST_ROW"
+        const val PLAN_SUMMARY_END_ROW = "PLAN_SUMMARY_END_ROW"
+        const val PLAN_SUMMARY_MIDDLE_ROW = "PLAN_SUMMARY_MIDDLE_ROW"
+        const val PLAN_SUMMARY_DETAIL = "PLAN_SUMMARY_DETAIL"
+    }
+}

@@ -46,6 +46,13 @@ class Frame1 {
     }
 }
 
+
+class ProcessCode{
+    companion object {
+        const val KTTN = "217020"
+    }
+}
+
 class Mold {
     companion object {
         const val KVC = "KVC"
@@ -98,6 +105,38 @@ class OrderFilterType {
         const val ORDER = 1
     }
 }
+
+class ExternalReportDetailType {
+    companion object {
+        const val ORDER_QUANTITY = "納予定(BLOCK)"
+        const val ACCUMULATED_ORDER_QUANTITY = "納累計 ①(BLOCK)"
+        const val PRODUCTION_RESULT = "納実績(BLOCK)"
+        const val ACCUMULATED_PRODUCTION_RESULT = "納累計(BLOCK)"
+        const val DIFFERENCE_1 = "納差(BLOCK)"
+        const val DIFFERENCE_2 = "予定と月初在庫の差(BLOCK)"
+        const val PLANNED_TAPE_SET = "TAPE 予定(SET)"
+        const val ACCUMULATED_PLANNED_TAPE_SET = "TAPE 累計 ①(SET)"
+        const val PLANNED_TAPE_BLOCK = "TAPE 予定(BLOCK)"
+        const val ACCUMULATED_PLANNED_TAPE_BLOCK = "TAPE 累計 ①(BLOCK)"
+        const val TAPE_REQUIRED_FOR_PRODUCTION_BLOCK = "投入必要テープ数(BLOCK)"
+        const val TAPE_DIFFERENCE_BLOCK = "TAPE 差(BLOCK)"
+
+    }
+}
+
+class ExternalReportShippingType {
+    companion object {
+        const val PRODUCTION_PLAN_TITLE = "生産計画　Ke hoach san xuat"
+        const val QUANTITY_REMAINING_TITLE = "出荷残数 Sluong xuat hang còn"
+        const val TAPE_INVENTORY_TITLE = "5月27日テープ在庫Tồn kho tape ( set )"
+        const val EXPIRED_TAPE  = "10月の期限切れテープTape hết hạn (set )"
+
+
+
+    }
+}
+
+
 
 class ProcessStatisticCode {
     companion object {

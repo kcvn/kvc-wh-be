@@ -18,7 +18,7 @@ data class EquipmentProductivity(
     var equipmentCode: String? = null,
     var description: String? = null,
     var frame_1: String? = null,
-    var processCode: String? = null,
+    var grpProcess: String? = null,
     var mold: String? = null,
     var operatingRate: BigDecimal? = null,
     var time: Int? = null,
@@ -72,11 +72,11 @@ data class EquipmentProductivity(
         }
         else if (this.frame_1 != o.frame_1)
             return false
-        if (this.processCode == null) {
-            if (o.processCode != null)
+        if (this.grpProcess == null) {
+            if (o.grpProcess != null)
                 return false
         }
-        else if (this.processCode != o.processCode)
+        else if (this.grpProcess != o.grpProcess)
             return false
         if (this.mold == null) {
             if (o.mold != null)
@@ -184,7 +184,7 @@ data class EquipmentProductivity(
         result = prime * result + (if (this.equipmentCode == null) 0 else this.equipmentCode.hashCode())
         result = prime * result + (if (this.description == null) 0 else this.description.hashCode())
         result = prime * result + (if (this.frame_1 == null) 0 else this.frame_1.hashCode())
-        result = prime * result + (if (this.processCode == null) 0 else this.processCode.hashCode())
+        result = prime * result + (if (this.grpProcess == null) 0 else this.grpProcess.hashCode())
         result = prime * result + (if (this.mold == null) 0 else this.mold.hashCode())
         result = prime * result + (if (this.operatingRate == null) 0 else this.operatingRate.hashCode())
         result = prime * result + (if (this.time == null) 0 else this.time.hashCode())
@@ -211,7 +211,7 @@ data class EquipmentProductivity(
         sb.append(", ").append(equipmentCode)
         sb.append(", ").append(description)
         sb.append(", ").append(frame_1)
-        sb.append(", ").append(processCode)
+        sb.append(", ").append(grpProcess)
         sb.append(", ").append(mold)
         sb.append(", ").append(operatingRate)
         sb.append(", ").append(time)

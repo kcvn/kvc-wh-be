@@ -44,7 +44,8 @@ class EquipmentProductivityService(
     private val planProcessRep: PlanProcessRepository,
     private val planDetailRep: PlanDetailRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
-    private val commonCategoryRep: CommonCategoryRepository
+    private val commonCategoryRep: CommonCategoryRepository,
+    private val processMasterRep:ProcessMasterRepository
 ) {
 
     fun getPaginatedEquipmentProductivityPlan(
@@ -54,6 +55,9 @@ class EquipmentProductivityService(
     ): PagingEquipmentProdResponse? {
 
         val planSummary =getPlanSummary(request)
+        val planSummaryData = planSummary.data
+        val listGroupProcessCode = planSummaryData?.mapNotNull { x -> x.processCode }?.let { processMasterRep.getProcessMasterDataByCode(it) }
+
         val equipmentMachine = equipmentProductivityRepository.getEquipmentProductivity()
 
         val result = PagingEquipmentProdResponse()
@@ -70,14 +74,15 @@ class EquipmentProductivityService(
                     unit = planSummaryModel.unit,
                     processDetail = mutableListOf()
                 )
+                val groupProcessCode =listGroupProcessCode?.firstOrNull { x -> x.processCode == planSummaryModel.processCode }?.groupProcessCode
 
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
                         var equipmentMachineValue: BigDecimal?
                         val equipmentMachineModel = if (equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo")) {
-                            equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
+                            equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
                         } else {
-                            equipmentMachine.firstOrNull { it.processCode == planSummaryModel.processCode && it.frame_1 == planSummaryModel.frame1 }
+                            equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 }
                         }
                         equipmentMachineValue = when {
                             equipmentMachineModel != null -> {
@@ -237,7 +242,7 @@ class EquipmentProductivityService(
                     processCode = dataDucLo.first().processCode,
                     unit =dataDucLo.first().unit
                 )
-                if (moldByFrame1s.size >= 1) {
+                if (moldByFrame1s.isNotEmpty()) {
                     for (mold in moldByFrame1s) {
                         var dataMold = dataExportFlattens.filter {
                                 x -> x.mold == mold
@@ -362,7 +367,7 @@ class EquipmentProductivityService(
         val childrenPlanProcess = planProcesses.filter { x -> x.parentId != null }
 
         val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
-        val planDetails = planDetailRep.getPlanDetail(planProcessIds)
+        val planDetails = planDetailRep.getPlanDetail(planProcessIds).filter { x-> x.planDate != null && x.planDate!! in colStartDate..colEndDate }
 
 
         val data = mutableListOf<PlanExportExcelModel>()
@@ -428,7 +433,7 @@ class EquipmentProductivityService(
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val equipmentProductivity = EquipmentProductivity(
-                processCode = ExcelHelper.getCellValue(row, 1).let { if (it.length > 6) it.substring(0, 6) else it },
+                grpProcess = ExcelHelper.getCellValue(row, 1).let { if (it.length > 5) it.substring(0, 5) else it },
                 equipmentCode = "eCode",
                 mold = ExcelHelper.getCellValue(row, 2),
                 task = BigDecimal(ExcelHelper.getCellValue(row, 6)),

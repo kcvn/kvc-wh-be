@@ -84,9 +84,9 @@ open class EquipmentProductivity(
     val FRAME_1: TableField<EquipmentProductivityRecord, String?> = createField(DSL.name("frame_1"), SQLDataType.VARCHAR(10).nullable(false), this, "")
 
     /**
-     * The column <code>public.equipment_productivity.process_code</code>.
+     * The column <code>public.equipment_productivity.grp_process</code>.
      */
-    val PROCESS_CODE: TableField<EquipmentProductivityRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
+    val GRP_PROCESS: TableField<EquipmentProductivityRecord, String?> = createField(DSL.name("grp_process"), SQLDataType.VARCHAR(5).nullable(false), this, "")
 
     /**
      * The column <code>public.equipment_productivity.mold</code>.

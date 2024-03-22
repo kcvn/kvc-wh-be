@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 
 
 @RestController
-@RequestMapping("/api/quantity-report")
+@RequestMapping("/api/report/quantity-report")
 class QuantityReportController(
     private val quantityReportService: QuantityReportService,
 ) {

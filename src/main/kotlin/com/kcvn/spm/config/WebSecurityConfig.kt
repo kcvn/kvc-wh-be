@@ -90,7 +90,7 @@ class WebSecurityConfig(
                     .requestMatchers("/api/order/**").authenticated()
                     .requestMatchers("/api/plan/**").authenticated()
                     .requestMatchers("/api/inventory-product/**").authenticated()
-                    .requestMatchers("/api/quantity-report/**").authenticated()
+                    .requestMatchers("/api/report/**").authenticated()
                     .anyRequest().permitAll()
             }
             .authenticationProvider(authenticationProvider())

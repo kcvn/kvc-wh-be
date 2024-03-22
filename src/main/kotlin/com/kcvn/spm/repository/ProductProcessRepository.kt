@@ -235,5 +235,58 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             transactionalContext.insertInto(PRODUCT_PROCESS).set(record).execute()
         }
     }
+
+    fun getAll() : List<ProductProcess>{
+        return  context.selectFrom(PRODUCT_PROCESS)
+            .where(PRODUCT_PROCESS.IS_DELETED.eq(false))
+            .fetchInto(ProductProcess::class.java)
+    }
+
+    fun bulkInsertData(request: List<ProductProcess>){
+        val record = request.map { x ->
+            DSL.row(
+                x.processName,
+                x.processNameJp,
+                x.processConvertCode,
+                x.processStatisticCode,
+                x.processInventoryCode,
+                x.createdDate,
+                x.createdBy,
+                x.processProcedureStructureId,
+                x.inventoryLayerGroup,
+                x.dayOfImplementation
+            )
+        }
+        context.insertInto(PRODUCT_PROCESS,
+            PRODUCT_PROCESS.PROCESS_NAME,
+            PRODUCT_PROCESS.PROCESS_NAME_JP,
+            PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
+            PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
+            PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
+            PRODUCT_PROCESS.CREATED_DATE,
+            PRODUCT_PROCESS.CREATED_BY,
+            PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
+            PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
+            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION)
+            .values(record)
+            .execute()
+    }
+
+    fun bulkUpdateData(request: List<ProductProcess>) {
+        val updateQueries = request.map { x ->
+            context.update(PRODUCT_PROCESS)
+                .set(PRODUCT_PROCESS.PROCESS_NAME, x.processName)
+                .set(PRODUCT_PROCESS.PROCESS_NAME_JP,x.processNameJp)
+                .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, x.processConvertCode)
+                .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, x.processStatisticCode)
+                .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, x.processInventoryCode)
+                .set(PRODUCT_PROCESS.UPDATED_DATE, x.updatedDate)
+                .set(PRODUCT_PROCESS.UPDATED_BY, x.updatedBy)
+                .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,x.inventoryLayerGroup)
+                .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, x.dayOfImplementation)
+                .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(x.processProcedureStructureId))
+        }
+        context.batch(updateQueries).execute()
+    }
 }
 

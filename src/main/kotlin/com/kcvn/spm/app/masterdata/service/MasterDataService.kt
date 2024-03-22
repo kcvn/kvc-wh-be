@@ -49,7 +49,7 @@ class MasterDataService(
     }
 
     fun downloadTemplate(): BaseResponse<FileContentModel> {
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessMasterData.xlsx"
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessMasterDataTemplate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -76,7 +76,7 @@ class MasterDataService(
 
         val headerRow = sheet.getRow(0)
 
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessMasterData.xlsx"
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessMasterDataTemplate.xlsx"
 
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))

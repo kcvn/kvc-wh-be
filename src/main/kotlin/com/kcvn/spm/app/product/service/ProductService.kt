@@ -336,7 +336,7 @@ class ProductService(
     }
 
     private fun exportErrorFile(products: List<ImportProductErrorModel>, titleRow: Row, workbook: Workbook, importSheet: Sheet): FileContentModel {
-        val sheet = workbook.createSheet(CommonUtils.getMessage("excel.colResultName"))
+        val sheet = workbook.createSheet()
         val headerRow: Row = sheet.getRow(0) ?: sheet.createRow(0)
         headerRow.height = titleRow.height
 

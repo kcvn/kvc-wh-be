@@ -220,7 +220,13 @@ class EquipmentProductivityService(
         for(frame1 in listFrame1){
             val dataDucLo = dataSummary.filter { x -> x.frame1 == frame1 && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH) }
             if (dataDucLo.isNotEmpty()) {
-                val moldByFrame1s = Mold.DATA_BY_FRAME1(request.frame_1)
+
+                var moldByFrame1s = Mold.DATA_BY_FRAME1(frame1)
+                val listMoldRequest: MutableList<String> = mutableListOf()
+                if(request.mold !=null){
+                    listMoldRequest.add(request.mold!!)
+                    moldByFrame1s = listMoldRequest
+                }
                 val ducLo = PlanSummaryModel(
                     processName = CommonUtils.getMessage("excel.rowDucLo"),
                     processNameJp = dataDucLo.first().processNameJp,
@@ -231,7 +237,7 @@ class EquipmentProductivityService(
                     processCode = dataDucLo.first().processCode,
                     unit =dataDucLo.first().unit
                 )
-                if (moldByFrame1s.size > 1) {
+                if (moldByFrame1s.size >= 1) {
                     for (mold in moldByFrame1s) {
                         var dataMold = dataExportFlattens.filter {
                                 x -> x.mold == mold
@@ -516,6 +522,7 @@ class EquipmentProductivityService(
                         rowNumber = generateExcelRowPlanData(workbook, sheet, rowNumber, style, columns, processDetail)
                     }
                 }
+                rowNumber++
             }
         }
 
@@ -541,11 +548,10 @@ class EquipmentProductivityService(
         rowNumber: Int,
         style: CellStyle,
         data: String
-    ):Int{
-        var rowIndex = rowNumber
-        val processNameDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex++)
-        ExcelHelper.setCellValueCustom(workbook, processNameDataRow, 0, style, data,isBold = true)
-        return rowIndex
+    ): Int {
+        val processNameDataRow = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+        ExcelHelper.setCellValueCustom(workbook, processNameDataRow, 0, style, data, isBold = true)
+        return rowNumber
 
     }
 
@@ -559,14 +565,14 @@ class EquipmentProductivityService(
         var rowIndex = rowNumber
 
         val processNameDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, processNameDataRow, 1, style, data.processName,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, processNameDataRow, 1, style, data.processName,isBold = true,isAlignCenter = true,isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false)
 
         val processNameJpDataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, processNameJpDataRow, 1, style, data.processNameJp,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, processNameJpDataRow, 1, style, data.processNameJp,isBold = true,isAlignCenter = true,isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
         rowIndex++
 
         val processConvertCodeDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, processConvertCodeDataRow, 1, style, data.processConvertCode,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, processConvertCodeDataRow, 1, style, data.processConvertCode,isBold = true,isAlignCenter = true,isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
     }
     private fun generateExcelRowPlanData(
         workbook: Workbook,

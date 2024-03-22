@@ -3,6 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
 import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
+import com.kcvn.spm.common.constants.ProcessCode
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.WorkResult
@@ -266,4 +267,19 @@ class WorkResultRepository(
             .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))
             .fetchInto(WorkResult::class.java)
     }
+
+    fun getForReport(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String?>): List<WorkResult> {
+        return context.selectFrom(WORK_RESULT)
+            .where(
+                WORK_RESULT.SUMMARY_RESULT_DATE.ge(startDate)
+                    .and(WORK_RESULT.SUMMARY_RESULT_DATE.le(endDate))
+                    .and(WORK_RESULT.ITEM_NAME.`in`(productNames))
+                    .and(WORK_RESULT.PROCESS_CODE.eq(ProcessCode.KTTN))
+                    .and(WORK_RESULT.IS_DELETED.eq(false))
+            )
+            .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))
+            .fetchInto(WorkResult::class.java)
+    }
+
+
 }

@@ -101,7 +101,7 @@ class OrderRepository(
             OrderDetailByDateModel(
                 x.orderId,
                 x.productId,
-                DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.MM_dd_yyyy),
+                DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.yyyyMMdd),
                 x.quantity
             )
         }

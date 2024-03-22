@@ -94,18 +94,18 @@ class PlanService(
 
         response.data = parentPlanProcess.map { x ->
             val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
-            val planDetail = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
+            val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.map { m ->
                 KeyValueResponse(
-                    DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                    if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
+                    DateTimeHelper.toString(m.planDate!!, DateTimeFormat.yyyyMMdd),
+                    if (x.unit == ProcessUnit.BLOCK) m.blockQuantity?.toString() else m.sheetQuantity?.toString()
                 )
             }
-            val planAccumulations = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_ACCUMULATION_KEY }.map { t ->
+            val planAccumulations = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_ACCUMULATION_KEY }.map { m ->
                 KeyValueResponse(
-                    DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                    if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
+                    DateTimeHelper.toString(m.planDate!!, DateTimeFormat.yyyyMMdd),
+                    if (x.unit == ProcessUnit.BLOCK) m.blockQuantity?.toString() else m.sheetQuantity?.toString()
                 )
-            }
+            }.sortedBy { m -> m.key }
 
             val workResultData = workResults.filter { m -> m.processCode == x.processCode && m.layerCode == x.layerCode }
                 .groupBy { m -> Triple( m.processCode, m.layerCode, DateTimeHelper.toString(m.summaryResultDate!!, DateTimeFormat.yyyyMMdd)) }.map { m ->

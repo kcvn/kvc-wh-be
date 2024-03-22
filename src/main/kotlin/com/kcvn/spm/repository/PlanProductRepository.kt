@@ -84,7 +84,7 @@ class PlanProductRepository(private val context: DSLContext) {
                     condition = condition.and(PLAN.START_DATE.ge(request.startDate))
                 }
                 if (request.endDate != null) {
-                    condition = condition.and(PLAN.END_DATE.le(request.endDate))
+                    condition = condition.and(PLAN.START_DATE.le(request.endDate))
                 }
             }
 

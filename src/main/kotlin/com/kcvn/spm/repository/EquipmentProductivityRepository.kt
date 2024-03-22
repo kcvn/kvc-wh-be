@@ -24,7 +24,7 @@ class EquipmentProductivityRepository(private val context: DSLContext) {
             result = transactionalContext.insertInto(
                 EQUIPMENT_PRODUCTIVITY,
                 EQUIPMENT_PRODUCTIVITY.EQUIPMENT_CODE,
-                EQUIPMENT_PRODUCTIVITY.PROCESS_CODE,
+                EQUIPMENT_PRODUCTIVITY.GRP_PROCESS,
                 EQUIPMENT_PRODUCTIVITY.DESCRIPTION,
                 EQUIPMENT_PRODUCTIVITY.FRAME_1,
                 EQUIPMENT_PRODUCTIVITY.MOLD,
@@ -44,7 +44,7 @@ class EquipmentProductivityRepository(private val context: DSLContext) {
                 EQUIPMENT_PRODUCTIVITY.UPDATED_DATE
             ).values(
                 data.equipmentCode,
-                data.processCode,
+                data.grpProcess,
                 data.description,
                 data.frame_1,
                 data.mold,

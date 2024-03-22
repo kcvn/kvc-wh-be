@@ -124,12 +124,10 @@ class ProductProcessService(
                 || itemInventoryProcessGrByLayerLast.inventoryLayerGroup.isNullOrEmpty()) {
                 throw BusinessException(CommonUtils.getMessage("validate.excel.checkInventoryLastNull"))
             } else {
-                val layerCodeItem = itemInventoryProcessGrByLayerLast.layerCode?.toIntOrNull() ?: 0
-                val layerCodePre = layerCodeItem - 1
                 request.listProcess?.firstOrNull {
                     it.processCode == itemInventoryProcessGrByLayerLast.processInventoryCode
-                        && it.layerCode?.toInt() == layerCodePre
-                } ?: throw BusinessException(CommonUtils.getMessage("validate.excel.checkInventoryLast", arrayOf(layerCodeItem.toString(), layerCodePre.toString())))
+                        && it.layerCode != itemInventoryProcessGrByLayerLast.layerCode
+                } ?: throw BusinessException(CommonUtils.getMessage("validate.excel.checkInventoryLast", arrayOf(itemInventoryProcessGrByLayerLast.layerCode.toString())))
             }
         }
 
@@ -696,14 +694,14 @@ class ProductProcessService(
                 if (checkLastProcess != null) {
                     val layerItemInt = item.inventoryLayerGroup?.toIntOrNull() ?: 0
                     val processPre = listItem.value.firstOrNull {
-                        it.layerCode!!.toInt() - 1 == (layerItemInt)
+                        it.layerCode!!.toInt()  != (layerItemInt)
                             && it.productName == item.productName
                             && it.processCode == item.processInventoryCode
                     }
 
                     if (processPre == null) {
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
-                            "validate.excel.checkInventoryLast", arrayOf(item.layerCode!!.toInt(), item.layerCode!!.toInt() - 1)
+                            "validate.excel.checkInventoryLast", arrayOf(item.layerCode!!.toInt())
                         ))
                         checkList = false
                     }
@@ -733,6 +731,9 @@ class ProductProcessService(
         }
         var count = 0
         val resultData = dataErr.filter { it !in resultDataErr }.toMutableList()
+        val listProductProcess = productProcessRep.getAll()
+        val listAdd: MutableList<ProductProcess> = mutableListOf()
+        val listUpdate: MutableList<ProductProcess> = mutableListOf()
         for (item in resultData) {
             val requestImport = ProductProcess(
                 processProcedureStructureId = item.idProcessStructure,
@@ -742,21 +743,28 @@ class ProductProcessService(
                 inventoryLayerGroup = item.inventoryLayerGroup,
                 dayOfImplementation = item.dayOfImplementation?.toIntOrNull()
             )
-            val checkProductProcess = productProcessRep.findByIdProductProcedureStructure(requestImport.processProcedureStructureId)
+            val checkProductProcess = listProductProcess.firstOrNull { it.processProcedureStructureId == requestImport.processProcedureStructureId }
             if (checkProductProcess == null) {
                 requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
                 requestImport.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
-                productProcessRep.insertProductProcess(requestImport)
+                listAdd.add(requestImport)
+                //productProcessRep.insertProductProcess(requestImport)
             } else {
                 requestImport.updatedBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                 requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
-                productProcessRep.updateProcessDetail(requestImport)
+                //productProcessRep.updateProcessDetail(requestImport)
+                listUpdate.add(requestImport)
             }
             // messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
 
             count++
         }
-
+        if(listAdd.isNotEmpty()){
+            productProcessRep.bulkInsertData(listAdd)
+        }
+        if(listUpdate.isNotEmpty()){
+            productProcessRep.bulkUpdateData(listUpdate)
+        }
         val excelBytes = exportExcelErr(resultDataErr, headerRow, workbook, sheet)
 
         val response = FileContentModel(

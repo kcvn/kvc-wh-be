@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.inventoryproduct.service
 
+import com.kcvn.spm.app.inventoryproduct.payload.model.ImportInventoryErrorModel
 import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.CheckInventoryDateResponse
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
@@ -11,14 +12,13 @@ import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTime
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.model.CellStyleModel
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
 import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import org.apache.poi.ss.usermodel.CellType
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -27,7 +27,6 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.text.DecimalFormat
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -53,7 +52,7 @@ class InventoryProductService(
     }
 
     fun downloadTemplate(): BaseResponse<FileContentModel> {
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProduct.xlsx"
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProductTemplate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -81,7 +80,7 @@ class InventoryProductService(
         val headerRow = sheet.getRow(0)
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
 
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProduct.xlsx"
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProductTemplate.xlsx"
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
@@ -157,24 +156,6 @@ class InventoryProductService(
                     )
                 )
             }
-//            if (ExcelHelper.getCellValue(row, 7).isEmpty()) {
-//                check = false
-//                messageResults.add(
-//                    CommonUtils.getMessage(
-//                        "validate.excel.empty",
-//                        arrayOf(ExcelHelper.getCellValue(headerRow, 6))
-//                    )
-//                )
-//            }
-//            if (ExcelHelper.getCellValue(row, 8).isEmpty()) {
-//                check = false
-//                messageResults.add(
-//                    CommonUtils.getMessage(
-//                        "validate.excel.empty",
-//                        arrayOf(ExcelHelper.getCellValue(headerRow, 7))
-//                    )
-//                )
-//            }
             if (ExcelHelper.getCellValue(row, 0).isNotEmpty() && row.getCell(0).toString().length > 8) {
                 check = false
                 messageResults.add(
@@ -283,33 +264,21 @@ class InventoryProductService(
                     if (filterCheckProcessProcedure == null) {
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
                     } else {
-                        var productQuantityRow = 0
-                        var sheetQuantityRow = 0
-                        if (ExcelHelper.getCellValue(row, 7).isNotEmpty()) {
-                            productQuantityRow = ExcelHelper.getCellValue(row, 7).toDouble().toInt()
-                        }
-                        if (ExcelHelper.getCellValue(row, 8).isNotEmpty()) {
-                            sheetQuantityRow = ExcelHelper.getCellValue(row, 8).toDouble().toInt()
-                        }
-                        val df = DecimalFormat("#")
-                        val cellCode = row.getCell(2)
-                        val codeValue = if (cellCode.cellType == CellType.NUMERIC) {
-                            val numericValue = cellCode.numericCellValue
-                            df.format(numericValue).toString()
-                        } else {
-                            cellCode.stringCellValue
-                        }
                         val requestImport = InventoryProduct(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
-                            code = codeValue,
+                            code = if (ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull() != null) {
+                                ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toInt().toString()
+                            } else {
+                                ExcelHelper.getCellValue(row, 2)
+                            },
                             tapeLotNo = ExcelHelper.getCellValue(row, 4),
                             orderCode = ExcelHelper.getCellValue(row, 6),
-                            productQuantity = productQuantityRow,
-                            sheetQuantity = sheetQuantityRow
+                            productQuantity = ExcelHelper.getCellValue(row, 7).toBigDecimalOrNull()?.toInt(),
+                            sheetQuantity = ExcelHelper.getCellValue(row, 8).toBigDecimalOrNull()?.toInt()
                         )
 
-                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date, codeValue)
+                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date, requestImport.code ?: "")
 
                         if (checkInventoryProduct == null) {
                             requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
@@ -341,31 +310,104 @@ class InventoryProductService(
             return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
         }
 
-        val resultRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
-        for (row in resultRows) {
-            val rowNum = row.rowNum
-            sheet.removeRow(row)
-            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
-                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
-            }
+//        val resultRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
+//        for (row in resultRows) {
+//            val rowNum = row.rowNum
+//            sheet.removeRow(row)
+//            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
+//                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
+//            }
+//        }
+//
+//        val byteArrayOutputStream = ByteArrayOutputStream()
+//        workbook.write(byteArrayOutputStream)
+//
+//        val excelBytes = byteArrayOutputStream.toByteArray()
+//
+//        val response = FileContentModel(
+//            fileName = CommonUtils.getMessage("export.excel.result.import.inventoryProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+//            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+//            content = excelBytes
+//        )
+        val resultRows = sheet.filter {
+            x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess")
+            && x.rowNum >= rowIndex
+        }.map { x ->
+            ImportInventoryErrorModel(
+                processCode = ExcelHelper.getCellValue(x, 0),
+                processName = ExcelHelper.getCellValue(x, 1),
+                code = if (ExcelHelper.getCellValue(x, 2).toBigDecimalOrNull() != null) {
+                    ExcelHelper.getCellValue(x, 2).toBigDecimalOrNull()?.toInt().toString()
+                } else {
+                    ExcelHelper.getCellValue(x, 2)
+                },
+                layerCode = ExcelHelper.getCellValue(x, 3),
+                tapeLotNo = ExcelHelper.getCellValue(x, 4),
+                productName = ExcelHelper.getCellValue(x, 5),
+                orderCode = ExcelHelper.getCellValue(x, 6),
+                productQuantity = ExcelHelper.getCellValue(x, 7).toBigDecimalOrNull()?.toInt(),
+                sheetQuantity = ExcelHelper.getCellValue(x, 8).toBigDecimalOrNull()?.toInt(),
+                messageError = ExcelHelper.getCellValue(x, colIndexResult),
+                cellStyles = x.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
+            )
         }
 
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        workbook.write(byteArrayOutputStream)
+        val response = exportErrorFile(resultRows, headerRow, workbook, sheet)
 
-        val excelBytes = byteArrayOutputStream.toByteArray()
-
-        val response = FileContentModel(
-            fileName = CommonUtils.getMessage("export.excel.result.import.inventoryProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
-            content = excelBytes
-        )
         workbook.close()
 
         return BaseResponse(
             response,
             if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
         )
+    }
+
+    private fun exportErrorFile(inventories: List<ImportInventoryErrorModel>, titleRow: Row, workbook: Workbook, importSheet: Sheet): FileContentModel {
+        val sheet = workbook.createSheet()
+        val headerRow: Row = sheet.getRow(0) ?: sheet.createRow(0)
+        headerRow.height = titleRow.height
+
+        for (i in 0 until titleRow.lastCellNum) {
+            val headerStyle = titleRow.getCell(i).cellStyle
+            val headerCellValue = ExcelHelper.getCellValue(titleRow, i)
+            ExcelHelper.setCellValue(headerRow, i, headerStyle, headerCellValue)
+            sheet.setColumnWidth(i, importSheet.getColumnWidth(i))
+        }
+
+        val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
+        val rowHeight = importSheet.getRow(1).height
+        var rowNumber = 1
+        for (item in inventories) {
+            val dataRow: Row = sheet.createRow(rowNumber)
+            dataRow.height = rowHeight
+            ExcelHelper.setCellValue(dataRow, 0, item.cellStyles.find { x -> x.index == 0 }!!.cellStyle, item.processCode)
+            ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }!!.cellStyle, item.processName)
+            ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }!!.cellStyle, item.code)
+            ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }!!.cellStyle, item.layerCode)
+            ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }!!.cellStyle, item.tapeLotNo)
+            ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }!!.cellStyle, item.productName)
+            ExcelHelper.setCellValue(dataRow, 6, item.cellStyles.find { x -> x.index == 6 }!!.cellStyle, item.orderCode)
+            ExcelHelper.setCellValue(dataRow, 7, item.cellStyles.find { x -> x.index == 7 }!!.cellStyle, item.productQuantity?.toString())
+            ExcelHelper.setCellValue(dataRow, 8, item.cellStyles.find { x -> x.index == 8 }!!.cellStyle, item.sheetQuantity?.toString())
+
+            ExcelHelper.setCellValue(dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }!!.cellStyle, item.messageError)
+            rowNumber++
+        }
+
+        workbook.removeSheetAt(0)
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.resultImportInventory", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        return response
     }
 
     fun getListInventoryProduct(request: InventoryProductRequest?, pageable: Pageable): BasePagingResponse<InventoryProductResponse?> {
@@ -393,18 +435,12 @@ class InventoryProductService(
     fun exportExcel(request: InventoryProductRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
         val inventoryProduct = inventoryProductRepository.findByKeywordPaginated(request, pageable)
 
-        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportInventoryProduct.xlsx")
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportInventoryProductTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
-        val headerRow = sheet.getRow(0)
+
         if (inventoryProduct.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
-
-            val colEmpty = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == "" }
-            val colResult = headerRow.firstOrNull { x -> ExcelHelper.getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
-            val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (sheet.first().lastCellNum + 0))
-
-
             var rowNumber = 1
             for (item in inventoryProduct.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
@@ -422,14 +458,6 @@ class InventoryProductService(
                 ExcelHelper.setCellValue(dataRow, 8, style, item?.orderCode)
                 ExcelHelper.setCellValue(dataRow, 9, style, item?.tapeLotNo)
                 ExcelHelper.setCellValue(dataRow, 10, style, item?.code)
-            }
-            val resultRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
-            for (row in resultRows) {
-                val rowNum = row.rowNum
-                sheet.removeRow(row)
-                if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
-                    sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
-                }
             }
         }
 

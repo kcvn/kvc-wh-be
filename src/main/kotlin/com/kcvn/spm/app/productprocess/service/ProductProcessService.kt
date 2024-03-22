@@ -528,7 +528,7 @@ class ProductProcessService(
                     if (checkProcessMasterData.isNotEmpty()) {
                         if (checkProcessMasterData.firstOrNull {
                                 it.type == MasterDataType.MACHUYENDOI
-                                    && it.value == item.processConvertCode
+                                    && it.value?.trim() == item.processConvertCode?.trim()
                             } == null) {
                             messageErr.messageErrs?.add(
                                 CommonUtils.getMessage(
@@ -551,7 +551,7 @@ class ProductProcessService(
                     if (checkProcessMasterData.isNotEmpty()) {
                         if (checkProcessMasterData.firstOrNull {
                                 it.type == MasterDataType.MATHONGKE
-                                    && it.value == item.processStatisticCode
+                                    && it.value?.trim() == item.processStatisticCode?.trim()
                             } == null) {
                             messageErr.messageErrs?.add(CommonUtils.getMessage(
                                 "validate.excel.processMasterDataStatisticCode"))
@@ -598,13 +598,13 @@ class ProductProcessService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
                 }
 
-                if (!item.processConvertCode.isNullOrEmpty() && !masterData.processConvertCodes.any { x -> x.label == item.processConvertCode }) {
+                if (!item.processConvertCode.isNullOrEmpty() && !masterData.processConvertCodes.any { x -> x.label?.trim() == item.processConvertCode?.trim() }) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.notExist",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
                 }
-                if (!item.processStatisticCode.isNullOrEmpty() && !masterData.processStatisticCodes.any { x -> x.label == item.processStatisticCode }) {
+                if (!item.processStatisticCode.isNullOrEmpty() && !masterData.processStatisticCodes.any { x -> x.label?.trim() == item.processStatisticCode?.trim() }) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.notExist",
@@ -701,7 +701,7 @@ class ProductProcessService(
 
                     if (processPre == null) {
                         messageErr.messageErrs?.add(CommonUtils.getMessage(
-                            "validate.excel.checkInventoryLast", arrayOf(item.layerCode!!.toInt())
+                            "validate.excel.checkInventoryLast", arrayOf(item.layerCode!!.toInt(), item.layerCode!!.toInt())
                         ))
                         checkList = false
                     }

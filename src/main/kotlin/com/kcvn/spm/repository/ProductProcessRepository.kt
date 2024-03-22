@@ -242,24 +242,22 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             .fetchInto(ProductProcess::class.java)
     }
 
-    fun bulkInsertData(request: List<ProductProcess>){
-        val record = request.map { x ->
+    fun bulkInsertData(request: List<ProductProcess?>) {
+        val records = request.map { x ->
             DSL.row(
-                x.processName,
-                x.processNameJp,
-                x.processConvertCode,
-                x.processStatisticCode,
-                x.processInventoryCode,
-                x.createdDate,
-                x.createdBy,
-                x.processProcedureStructureId,
-                x.inventoryLayerGroup,
-                x.dayOfImplementation
+                x?.processConvertCode,
+                x?.processStatisticCode,
+                x?.processInventoryCode,
+                x?.createdDate,
+                x?.createdBy,
+                x?.processProcedureStructureId,
+                x?.inventoryLayerGroup,
+                x?.dayOfImplementation
             )
-        }
-        context.insertInto(PRODUCT_PROCESS,
-            PRODUCT_PROCESS.PROCESS_NAME,
-            PRODUCT_PROCESS.PROCESS_NAME_JP,
+        }.toTypedArray()
+
+        val insertValuesStep = context.insertInto(
+            PRODUCT_PROCESS,
             PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
             PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
             PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
@@ -267,9 +265,14 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             PRODUCT_PROCESS.CREATED_BY,
             PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
             PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
-            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION)
-            .values(record)
-            .execute()
+            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION
+        )
+
+        for (record in records) {
+            insertValuesStep.values(record)
+        }
+
+        insertValuesStep.execute()
     }
 
     fun bulkUpdateData(request: List<ProductProcess>) {

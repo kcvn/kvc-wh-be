@@ -23,6 +23,7 @@ import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
+import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.Plan
 import com.kcvn.spm.model.tables.PlanDetail
 import com.kcvn.spm.model.tables.PlanProcess
@@ -53,6 +54,7 @@ import com.kcvn.spm.model.tables.records.InformationCalculateQuantityDetailRecor
 import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
 import com.kcvn.spm.model.tables.records.InventoryProductRecord
 import com.kcvn.spm.model.tables.records.OrderDetailRecord
+import com.kcvn.spm.model.tables.records.OrderInfoRecord
 import com.kcvn.spm.model.tables.records.OrderRecord
 import com.kcvn.spm.model.tables.records.PlanDetailRecord
 import com.kcvn.spm.model.tables.records.PlanProcessRecord
@@ -97,6 +99,7 @@ val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityDet
 val INVENTORY_PRODUCT_PKEY: UniqueKey<InventoryProductRecord> = Internal.createUniqueKey(InventoryProduct.INVENTORY_PRODUCT, DSL.name("inventory_product_pkey"), arrayOf(InventoryProduct.INVENTORY_PRODUCT.ID), true)
 val ORDER_PKEY: UniqueKey<OrderRecord> = Internal.createUniqueKey(Order.ORDER, DSL.name("order_pkey"), arrayOf(Order.ORDER.ID), true)
 val ORDER_DETAIL_PKEY: UniqueKey<OrderDetailRecord> = Internal.createUniqueKey(OrderDetail.ORDER_DETAIL, DSL.name("order_detail_pkey"), arrayOf(OrderDetail.ORDER_DETAIL.ID), true)
+val ORDER_INFO_PKEY: UniqueKey<OrderInfoRecord> = Internal.createUniqueKey(OrderInfo.ORDER_INFO, DSL.name("order_info_pkey"), arrayOf(OrderInfo.ORDER_INFO.ID), true)
 val PLAN_PKEY: UniqueKey<PlanRecord> = Internal.createUniqueKey(Plan.PLAN, DSL.name("plan_pkey"), arrayOf(Plan.PLAN.ID), true)
 val PLAN_DETAIL_PKEY: UniqueKey<PlanDetailRecord> = Internal.createUniqueKey(PlanDetail.PLAN_DETAIL, DSL.name("plan_detail_pkey"), arrayOf(PlanDetail.PLAN_DETAIL.ID), true)
 val PLAN_PROCESS_PKEY: UniqueKey<PlanProcessRecord> = Internal.createUniqueKey(PlanProcess.PLAN_PROCESS, DSL.name("plan_process_pkey"), arrayOf(PlanProcess.PLAN_PROCESS.ID), true)

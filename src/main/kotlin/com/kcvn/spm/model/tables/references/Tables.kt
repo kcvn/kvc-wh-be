@@ -23,6 +23,7 @@ import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
+import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.Plan
 import com.kcvn.spm.model.tables.PlanDetail
 import com.kcvn.spm.model.tables.PlanProcess
@@ -132,6 +133,11 @@ val ORDER: Order = Order.ORDER
  * The table <code>public.order_detail</code>.
  */
 val ORDER_DETAIL: OrderDetail = OrderDetail.ORDER_DETAIL
+
+/**
+ * The table <code>public.order_info</code>.
+ */
+val ORDER_INFO: OrderInfo = OrderInfo.ORDER_INFO
 
 /**
  * The table <code>public.plan</code>.

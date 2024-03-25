@@ -153,24 +153,23 @@ class OrderRepository(
                 .returningResult(ORDER).fetchInto(Order::class.java).firstOrNull()
 
             if (orderInsert != null) {
-                for (orderDetail in orderDetails) {
-                    transactionalContext.insertInto(
-                        ORDER_DETAIL,
-                        ORDER_DETAIL.ORDER_ID,
-                        ORDER_DETAIL.PRODUCT_ID,
-                        ORDER_DETAIL.ORDER_DATE,
-                        ORDER_DETAIL.QUANTITY,
-                        ORDER_DETAIL.CREATED_BY
+                val records = orderDetails.map { x ->
+                    DSL.row(
+                        orderInsert.id,
+                        x.productId,
+                        x.orderDate,
+                        x.quantity,
+                        CommonUtils.loggedInUser() ?: Constants.SYSTEM
                     )
-                        .values(
-                            orderInsert.id,
-                            orderDetail.productId,
-                            orderDetail.orderDate,
-                            orderDetail.quantity,
-                            CommonUtils.loggedInUser() ?: Constants.SYSTEM
-                        )
-                        .returningResult(ORDER_DETAIL).fetchInto(OrderDetail::class.java).firstOrNull()
                 }
+                transactionalContext.insertInto(
+                    ORDER_DETAIL,
+                    ORDER_DETAIL.ORDER_ID,
+                    ORDER_DETAIL.PRODUCT_ID,
+                    ORDER_DETAIL.ORDER_DATE,
+                    ORDER_DETAIL.QUANTITY,
+                    ORDER_DETAIL.CREATED_BY
+                ).values(records).execute()
             }
         }
     }

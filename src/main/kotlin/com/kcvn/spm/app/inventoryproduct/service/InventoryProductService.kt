@@ -268,7 +268,7 @@ class InventoryProductService(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
                             code = if (ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull() != null) {
-                                ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toBigInteger().toString()
+                                ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toLong().toString()
                             } else {
                                 ExcelHelper.getCellValue(row, 2)
                             },

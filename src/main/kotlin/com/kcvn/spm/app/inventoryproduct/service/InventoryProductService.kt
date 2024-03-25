@@ -83,8 +83,8 @@ class InventoryProductService(
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProductTemplate.xlsx"
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-//        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
-//            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
+            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val requestDelete = InventoryProduct()
         requestDelete.inventoryDate = date

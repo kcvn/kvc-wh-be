@@ -264,12 +264,11 @@ class InventoryProductService(
                     if (filterCheckProcessProcedure == null) {
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
                     } else {
-                        var test = ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull();
                         val requestImport = InventoryProduct(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
                             code = if (ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull() != null) {
-                                ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull().toString()
+                                ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toBigInteger().toString()
                             } else {
                                 ExcelHelper.getCellValue(row, 2)
                             },

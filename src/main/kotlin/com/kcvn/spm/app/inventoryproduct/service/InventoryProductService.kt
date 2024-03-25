@@ -83,8 +83,8 @@ class InventoryProductService(
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProductTemplate.xlsx"
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
-            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+//        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
+//            throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val requestDelete = InventoryProduct()
         requestDelete.inventoryDate = date
@@ -268,7 +268,7 @@ class InventoryProductService(
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
                             code = if (ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull() != null) {
-                                ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toInt().toString()
+                                ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toBigInteger().toString()
                             } else {
                                 ExcelHelper.getCellValue(row, 2)
                             },
@@ -277,7 +277,6 @@ class InventoryProductService(
                             productQuantity = ExcelHelper.getCellValue(row, 7).toBigDecimalOrNull()?.toInt(),
                             sheetQuantity = ExcelHelper.getCellValue(row, 8).toBigDecimalOrNull()?.toInt()
                         )
-
                         val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date, requestImport.code ?: "")
 
                         if (checkInventoryProduct == null) {

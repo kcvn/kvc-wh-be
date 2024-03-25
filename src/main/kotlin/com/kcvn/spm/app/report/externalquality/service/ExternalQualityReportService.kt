@@ -78,9 +78,11 @@ class ExternalQualityReportService(
 
         }
 
+
+        val valueReportDate= findValueDateReport(response.columns,response.subColumns)
         //add Shipping Data here
         for(mappingItem in mappingPaging){
-            addShippingData(mappingItem)
+            addShippingData(mappingItem,valueReportDate)
         }
 
 
@@ -137,53 +139,41 @@ class ExternalQualityReportService(
 
         //DIFFERENCE_1
         val difference1 = ExternalQualityDetailModel("DIFFERENCE_1", ExternalReportDetailType.DIFFERENCE_1)
-        val difference1Calendars = mutableListOf<KeyValueResponse>()
-        orderQuantityCalendars.forEach { orderEntry ->
-            val productionEntry = productionResultCalendars.find { it.key == orderEntry.key }
-            if (productionEntry != null) {
-                val difference = (orderEntry.value?.toIntOrNull() ?: 0) - (productionEntry.value?.toIntOrNull() ?: 0)
-                difference1Calendars.add(KeyValueResponse(orderEntry.key, difference.toString()))
-            } else {
-                difference1Calendars.add(orderEntry)
-            }
-        }
-        difference1.quantityByCalendars = difference1Calendars
-
+        difference1.quantityByCalendars = calculateDifferenceCalendars(orderQuantityCalendars, productionResultCalendars)
         detailData.add(difference1)
 
         //DIFFERENCE_2
         val difference2 = ExternalQualityDetailModel("DIFFERENCE_2", ExternalReportDetailType.DIFFERENCE_2)
-        val difference2Calendars = mutableListOf<KeyValueResponse>()
-        accumulatedOrderQuantityCalendars.forEach { orderEntry ->
-            val productionEntry = accumulatedProductionResultCalendars.find { it.key == orderEntry.key }
-            if (productionEntry != null) {
-                val difference = (orderEntry.value?.toIntOrNull() ?: 0) - (productionEntry.value?.toIntOrNull() ?: 0)
-                difference1Calendars.add(KeyValueResponse(orderEntry.key, difference.toString()))
-            } else {
-                difference1Calendars.add(orderEntry)
-            }
-        }
-        difference2.quantityByCalendars = difference2Calendars
-
+        difference2.quantityByCalendars = calculateDifferenceCalendars(accumulatedOrderQuantityCalendars,accumulatedProductionResultCalendars)
         detailData.add(difference2)
 
 
+
+        val fakeCalender: MutableList<KeyValueResponse> = mutableListOf()
+        columns.map { x ->   fakeCalender.add(KeyValueResponse(x.key,"100"))}
+        //PLANNED_TAPE_SET
         val plannedTapeSet = ExternalQualityDetailModel("PLANNED_TAPE_SET", ExternalReportDetailType.PLANNED_TAPE_SET)
+        plannedTapeSet.quantityByCalendars =fakeCalender
         detailData.add(plannedTapeSet)
-
+        //ACCUMULATED_PLANNED_TAPE_SET
         val accumulatedPlannedTapeSet = ExternalQualityDetailModel("ACCUMULATED_PLANNED_TAPE_SET", ExternalReportDetailType.ACCUMULATED_PLANNED_TAPE_SET)
+        accumulatedPlannedTapeSet.quantityByCalendars = calculateAccumulation(plannedTapeSet.quantityByCalendars)
         detailData.add(accumulatedPlannedTapeSet)
-
+        //PLANNED_TAPE_BLOCK
         val plannedTapeBlock = ExternalQualityDetailModel("PLANNED_TAPE_BLOCK", ExternalReportDetailType.PLANNED_TAPE_BLOCK)
+        plannedTapeBlock.quantityByCalendars = fakeCalender
         detailData.add(plannedTapeBlock)
-
+        //ACCUMULATED_PLANNED_TAPE_BLOCK
         val accumulatedPlannedTapeBlock = ExternalQualityDetailModel("ACCUMULATED_PLANNED_TAPE_BLOCK", ExternalReportDetailType.ACCUMULATED_PLANNED_TAPE_BLOCK)
+        accumulatedPlannedTapeBlock.quantityByCalendars = calculateAccumulation(plannedTapeBlock.quantityByCalendars)
         detailData.add(accumulatedPlannedTapeBlock)
-
+        //TAPE_REQUIRED_FOR_PRODUCTION_BLOCK
         val tapeRequiredForProductionBlock = ExternalQualityDetailModel("TAPE_REQUIRED_FOR_PRODUCTION_BLOCK", ExternalReportDetailType.TAPE_REQUIRED_FOR_PRODUCTION_BLOCK)
+        tapeRequiredForProductionBlock.quantityByCalendars = fakeCalender
         detailData.add(tapeRequiredForProductionBlock)
-
+        //TAPE_DIFFERENCE_BLOCK
         val tapeDifferenceBlock = ExternalQualityDetailModel("TAPE_DIFFERENCE_BLOCK", ExternalReportDetailType.TAPE_DIFFERENCE_BLOCK)
+        tapeDifferenceBlock.quantityByCalendars = fakeCalender
         detailData.add(tapeDifferenceBlock)
 
 
@@ -199,12 +189,33 @@ class ExternalQualityReportService(
 
     }
 
-    fun addShippingData(externalQualityReportModel: ExternalQualityReportModel){
 
+    fun calculateDifferenceCalendars(orderQuantityCalendars: List<KeyValueResponse>, productionResultCalendars: List<KeyValueResponse>): MutableList<KeyValueResponse> {
+        val difference1Calendars = mutableListOf<KeyValueResponse>()
+
+        orderQuantityCalendars.forEach { orderEntry ->
+            val productionEntry = productionResultCalendars.find { it.key == orderEntry.key }
+            if (productionEntry != null) {
+                val difference = (orderEntry.value?.toIntOrNull() ?: 0) - (productionEntry.value?.toIntOrNull() ?: 0)
+                difference1Calendars.add(KeyValueResponse(orderEntry.key, difference.toString()))
+            } else {
+                difference1Calendars.add(orderEntry)
+            }
+        }
+
+        return difference1Calendars
+    }
+
+
+    fun addShippingData(externalQualityReportModel: ExternalQualityReportModel, valueReportDate: String?){
             val shippingData : MutableList<KeyValueResponse> = mutableListOf()
             shippingData.add(KeyValueResponse("production_plan_title", ExternalReportShippingType.PRODUCTION_PLAN_TITLE))
-            shippingData.add(KeyValueResponse("number_order","80"))
-            shippingData.add(KeyValueResponse("number_work_result","50"))
+
+            val valueNumberOrder = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
+            shippingData.add(KeyValueResponse("number_order",valueNumberOrder))
+
+            val valueNumberWorkResult = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.ACCUMULATED_PRODUCTION_RESULT)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
+            shippingData.add(KeyValueResponse("number_work_result",valueNumberWorkResult))
             shippingData.add(KeyValueResponse("",""))
             shippingData.add(KeyValueResponse("quantity_remaining_title",ExternalReportShippingType.QUANTITY_REMAINING_TITLE))
 
@@ -212,7 +223,6 @@ class ExternalQualityReportService(
             val numberWorkResult = shippingData.find { it.key == "number_work_result" }?.value?.toIntOrNull() ?: 0
             val exchangeRateDifferences = (numberOrder - numberWorkResult).toString()
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
-
             shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
             shippingData.add(KeyValueResponse("tape_inventory_title_number","4000"))
             shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))
@@ -221,6 +231,16 @@ class ExternalQualityReportService(
             shippingData.add(KeyValueResponse("",""))
             externalQualityReportModel.shippingData = shippingData
     }
+
+    fun findValueDateReport(reportList:List<CalendarResponse>, accumulatedReportList:List<CalendarResponse>): String? {
+
+        val valueMap = reportList.firstOrNull()?.value
+        val result=  accumulatedReportList.find { x-> x.value == valueMap }?.key
+
+        return result
+    }
+
+
     private fun calculateAccumulation(data: List<KeyValueResponse>, firstValue: Int? = null): List<KeyValueResponse> {
         var value = firstValue ?: 0
         val response = mutableListOf<KeyValueResponse>()

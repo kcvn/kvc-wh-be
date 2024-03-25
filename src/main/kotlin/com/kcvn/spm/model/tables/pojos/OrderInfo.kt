@@ -23,6 +23,9 @@ data class OrderInfo(
     var version: Int? = null,
     var orderDate: OffsetDateTime? = null,
     var quantity: Int? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsLatest")
+    var isLatest: Boolean? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
@@ -101,6 +104,12 @@ data class OrderInfo(
         }
         else if (this.quantity != o.quantity)
             return false
+        if (this.isLatest == null) {
+            if (o.isLatest != null)
+                return false
+        }
+        else if (this.isLatest != o.isLatest)
+            return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
                 return false
@@ -147,6 +156,7 @@ data class OrderInfo(
         result = prime * result + (if (this.version == null) 0 else this.version.hashCode())
         result = prime * result + (if (this.orderDate == null) 0 else this.orderDate.hashCode())
         result = prime * result + (if (this.quantity == null) 0 else this.quantity.hashCode())
+        result = prime * result + (if (this.isLatest == null) 0 else this.isLatest.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -168,6 +178,7 @@ data class OrderInfo(
         sb.append(", ").append(version)
         sb.append(", ").append(orderDate)
         sb.append(", ").append(quantity)
+        sb.append(", ").append(isLatest)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

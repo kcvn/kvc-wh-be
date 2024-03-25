@@ -38,7 +38,7 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
         set(value): Unit = set(3, value)
         get(): String? = get(3) as String?
 
-    open var processCode: String?
+    open var grpProcess: String?
         set(value): Unit = set(4, value)
         get(): String? = get(4) as String?
 
@@ -124,7 +124,7 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
     override fun field2(): Field<String?> = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.EQUIPMENT_CODE
     override fun field3(): Field<String?> = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.DESCRIPTION
     override fun field4(): Field<String?> = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.FRAME_1
-    override fun field5(): Field<String?> = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.PROCESS_CODE
+    override fun field5(): Field<String?> = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.GRP_PROCESS
     override fun field6(): Field<String?> = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.MOLD
     override fun field7(): Field<BigDecimal?> = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.OPERATING_RATE
     override fun field8(): Field<Int?> = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.TIME
@@ -145,7 +145,7 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
     override fun component2(): String? = equipmentCode
     override fun component3(): String? = description
     override fun component4(): String? = frame_1
-    override fun component5(): String? = processCode
+    override fun component5(): String? = grpProcess
     override fun component6(): String? = mold
     override fun component7(): BigDecimal? = operatingRate
     override fun component8(): Int? = time
@@ -166,7 +166,7 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
     override fun value2(): String? = equipmentCode
     override fun value3(): String? = description
     override fun value4(): String? = frame_1
-    override fun value5(): String? = processCode
+    override fun value5(): String? = grpProcess
     override fun value6(): String? = mold
     override fun value7(): BigDecimal? = operatingRate
     override fun value8(): Int? = time
@@ -317,12 +317,12 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
     /**
      * Create a detached, initialised EquipmentProductivityRecord
      */
-    constructor(id: String? = null, equipmentCode: String? = null, description: String? = null, frame_1: String? = null, processCode: String? = null, mold: String? = null, operatingRate: BigDecimal? = null, time: Int? = null, count: BigDecimal? = null, task: BigDecimal? = null, sheetHour_100: BigDecimal? = null, blockSh: BigDecimal? = null, sheetHour: BigDecimal? = null, sheetDay: BigDecimal? = null, setDay: BigDecimal? = null, blockDay: BigDecimal? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
+    constructor(id: String? = null, equipmentCode: String? = null, description: String? = null, frame_1: String? = null, grpProcess: String? = null, mold: String? = null, operatingRate: BigDecimal? = null, time: Int? = null, count: BigDecimal? = null, task: BigDecimal? = null, sheetHour_100: BigDecimal? = null, blockSh: BigDecimal? = null, sheetHour: BigDecimal? = null, sheetDay: BigDecimal? = null, setDay: BigDecimal? = null, blockDay: BigDecimal? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.equipmentCode = equipmentCode
         this.description = description
         this.frame_1 = frame_1
-        this.processCode = processCode
+        this.grpProcess = grpProcess
         this.mold = mold
         this.operatingRate = operatingRate
         this.time = time
@@ -351,7 +351,7 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
             this.equipmentCode = value.equipmentCode
             this.description = value.description
             this.frame_1 = value.frame_1
-            this.processCode = value.processCode
+            this.grpProcess = value.grpProcess
             this.mold = value.mold
             this.operatingRate = value.operatingRate
             this.time = value.time

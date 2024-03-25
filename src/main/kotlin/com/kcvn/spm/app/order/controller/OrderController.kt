@@ -5,8 +5,10 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
+import com.kcvn.spm.common.constants.OrderVersion
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -71,6 +73,12 @@ class OrderController(
     fun getListOrderCode(year: String?): ResponseEntity<BaseResponse<List<OrderCodeResponse>>> {
         val result = orderService.getOrderCode(year)
         val data = BaseResponse(result)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @GetMapping("/version-dropdown")
+    fun getVersionDropDown(year: String?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = BaseResponse(OrderVersion.DATA)
         return ResponseEntity(data, HttpStatus.OK)
     }
 

@@ -10,6 +10,7 @@ CREATE TABLE order_info
     version int not null default 0,
     order_date TIMESTAMP WITH TIME ZONE,
     quantity INT NOT NULL DEFAULT 0,
+    is_latest boolean NOT NULL DEFAULT true,
     created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(100),
     updated_date TIMESTAMP WITH TIME ZONE,

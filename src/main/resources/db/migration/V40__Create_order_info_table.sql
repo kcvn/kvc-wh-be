@@ -18,3 +18,16 @@ CREATE TABLE order_info
     is_deleted boolean NOT NULL DEFAULT false,
     CONSTRAINT order_info_pkey PRIMARY KEY (id)
 );
+
+CREATE TABLE order_version_dropdown
+(
+    id VARCHAR(50) NOT NULL DEFAULT GEN_RANDOM_UUID(),
+    version varchar(10) not null,
+    label varchar(15) not null,
+    created_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_date TIMESTAMP WITH TIME ZONE,
+    updated_by VARCHAR(100),
+    is_deleted boolean NOT NULL DEFAULT false,
+    CONSTRAINT order_version_dropdown_pkey PRIMARY KEY (id)
+);

@@ -2,15 +2,15 @@ package com.kcvn.spm.app.order.service
 
 import com.kcvn.spm.app.order.payload.model.CheckWorkResultModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
-import com.kcvn.spm.app.order.payload.response.CalendarValueResponse
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExcelConstant
-import com.kcvn.spm.common.constants.OrderFilterType
+import com.kcvn.spm.common.constants.OrderVersion
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
@@ -18,10 +18,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.model.tables.pojos.OrderDetail
-import com.kcvn.spm.repository.HolidaysCalenderRepository
-import com.kcvn.spm.repository.OrderRepository
-import com.kcvn.spm.repository.ProductRepository
-import com.kcvn.spm.repository.WorkResultRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -32,7 +29,10 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.time.*
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @Service
@@ -41,67 +41,31 @@ class OrderService(
     private val orderRep: OrderRepository,
     private val workResultRep: WorkResultRepository,
     private val productRep: ProductRepository,
-    private val holidaysCalenderRep: HolidaysCalenderRepository
+    private val holidaysCalenderRep: HolidaysCalenderRepository,
+    private val orderInfoRep: OrderInfoRepository
 ) {
 
-    fun getPaginatedOrder(
-        request: OrderSearchRequest?,
-        pageable: Pageable?
-    ): PagingOrderResponse {
-        val holidayCalender = holidaysCalenderRep.getHolidaysCalender()
-        val calendarResponses = mutableListOf<CalendarValueResponse>()
-        if (request != null) {
-            var colStartDate = OffsetDateTime.now()
-            var colEndDate= OffsetDateTime.now()
-            if (request.filterType == OrderFilterType.ORDER && request.orderCode != null) {
+    fun getPaginatedOrder(request: OrderSearchRequest, pageable: Pageable): PagingOrderResponse {
+        val response = PagingOrderResponse()
 
-                val versionArray = request.version?.split(",")
-                var minStartDate: OffsetDateTime? = null
-                var maxEndDate: OffsetDateTime? = null
-                val versions = versionArray?.mapNotNull { it.trim().toIntOrNull() }
-                val orders = orderRep.getOrdersByCodeAndVersions(request.orderCode!!, versions)
-                if (orders.isNotEmpty())
-                    for (order in orders) {
-                        if (minStartDate == null || order.startDate?.isBefore(minStartDate) == true) {
-                            minStartDate = order.startDate
-                        }
-                        if (maxEndDate == null || order.endDate?.isAfter(maxEndDate) == true) {
-                            maxEndDate = order.endDate
-                        }
-                    }
-
-                colStartDate = DateTimeHelper.toTimeZone7(minStartDate)
-                colEndDate = DateTimeHelper.toTimeZone7(maxEndDate)
-            }
-            if (request.filterType == OrderFilterType.DATE && request.startDate != null && request.endDate != null) {
-                colStartDate = DateTimeHelper.toTimeZone7(request.startDate)
-                colEndDate = DateTimeHelper.toTimeZone7(request.endDate)
-            }
-
-            var currentDate = colStartDate
-            while (!currentDate!!.isAfter(colEndDate)) {
-                val response = CalendarValueResponse(
-                    key = DateTimeHelper.toString(currentDate, DateTimeFormat.yyyyMMdd),
-                    value = DateTimeHelper.toString(currentDate, DateTimeFormat.MM_dd),
-                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() } || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
-                )
-                calendarResponses.add(response)
-                currentDate = currentDate.plusDays(1)
-            }
+        if (request.startDate != null && request.endDate != null) {
+            val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
+            response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.startDate)!!, holidayCalenders)
         }
 
-        val response = PagingOrderResponse()
-        response.columns = calendarResponses
-        val orderDetails = orderRep.getPagingListOrder(request, pageable)
+        val orderDetails = orderInfoRep.getPagingListOrder(request, pageable)
 
-        val orderProductIds = orderDetails.first.map { x -> Pair(x.orderId!!, x.productId!!) }
-        val quantityByCalendars = orderRep.getQuantityByCalendar(orderProductIds)
+        val productVersion = orderDetails.first.map { x -> Pair(x.productName!!, x.version ?: "") }
+        val quantityByCalendars = orderInfoRep.getQuantityByCalendar(productVersion, (request.version == OrderVersion.LATEST))
 
         response.data = orderDetails.first.map { model ->
-            val quantityByCalendar = quantityByCalendars.filter { m -> m.orderId == model.orderId && m.productId == model.productId }
-                .map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
+            val quantityByCalendar = quantityByCalendars.filter {
+                m -> m.productName == model.productName && m.version == model.version
+            }.map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
             model.quantityByCalendars = quantityByCalendar
-            model.version = "v${model.version}.0"
+            if (!model.version.isNullOrEmpty()) {
+                model.version = "V${StringHelper.intToStringD2(model.version)}"
+            }
             if (!model.productName.isNullOrEmpty()) {
                 model.productShortcutName = model.productName!!.substring(model.productName!!.length - 7, model.productName!!.length)
             }
@@ -112,54 +76,61 @@ class OrderService(
         return response
     }
 
-    fun exportOrderExcel(request: OrderSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
+    fun getOrderVersionDropdown(): BaseResponse<List<DropdownResponse>> {
+        val data = orderInfoRep.getOrderVersionDropdown()
+            .map { x -> DropdownResponse(x.version, x.label) }
+            .toMutableList()
+        data.add(0, OrderVersion.DEFAULT)
+        return BaseResponse(data)
+    }
+
+    fun exportOrderExcel(request: OrderSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
         val listOrderResponse = getPaginatedOrder(request, pageable)
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportOrderTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
-        if (listOrderResponse.columns != null) {
-            val rowNumber = 0
-            val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
-            val style = ExcelHelper.getCellStyleCommon(workbook)
-            val headerStyle = dataRow.getCell(0).cellStyle
+        val rowNumber = 0
+        val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        val headerStyle = dataRow.getCell(0).cellStyle
 
-            if (listOrderResponse.columns!!.isNotEmpty()) {
-                var headerCol = 9
-                for (col in listOrderResponse.columns!!) {
-                    ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, headerStyle, col.value, col.isHoliday)
-                    headerCol++
-                }
-            }
-
-            val listOrder = listOrderResponse.data
-
-            var rowNumberFill = 1
-            if (listOrder != null) {
-                for (item in listOrder) {
-                    val row: Row = sheet.createRow(rowNumberFill++)
-                    ExcelHelper.setCellValue(row, 0, style, item.productShortcutName)
-                    ExcelHelper.setCellValue(row, 1, style, item.productName)
-                    ExcelHelper.setCellValue(row, 2, style, item.quantity.toString())
-                    ExcelHelper.setCellValue(row, 3, style, item.frame_1)
-                    ExcelHelper.setCellValue(row, 4, style, item.layerCount.toString())
-                    ExcelHelper.setCellValue(row, 5, style, item.pcsSh.toString())
-                    ExcelHelper.setCellValue(row, 6, style, item.shBlock.toString())
-                    ExcelHelper.setCellValue(row, 7, style, item.srNosr)
-                    ExcelHelper.setCellValue(row, 8, style, item.version)
-
-                    if (listOrderResponse.columns!!.isNotEmpty()) {
-                        var colIndex = 9
-                        for (col in listOrderResponse.columns!!) {
-                            val orderDetail = item.quantityByCalendars?.find { it.key == col.key }
-                            ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, style, orderDetail?.value, col.isHoliday)
-                            colIndex++
-                        }
-                    }
-
-                }
+        if (listOrderResponse.columns.isNotEmpty()) {
+            var headerCol = 9
+            for (col in listOrderResponse.columns) {
+                ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, headerStyle, col.value, col.isHoliday)
+                headerCol++
             }
         }
+
+        val listOrder = listOrderResponse.data
+
+        var rowNumberFill = 1
+        if (listOrder != null) {
+            for (item in listOrder) {
+                val row: Row = sheet.createRow(rowNumberFill++)
+                ExcelHelper.setCellValue(row, 0, style, item.productShortcutName)
+                ExcelHelper.setCellValue(row, 1, style, item.productName)
+                ExcelHelper.setCellValue(row, 2, style, item.quantity.toString())
+                ExcelHelper.setCellValue(row, 3, style, item.frame_1)
+                ExcelHelper.setCellValue(row, 4, style, item.layerCount.toString())
+                ExcelHelper.setCellValue(row, 5, style, item.pcsSh.toString())
+                ExcelHelper.setCellValue(row, 6, style, item.shBlock.toString())
+                ExcelHelper.setCellValue(row, 7, style, item.srNosr)
+                ExcelHelper.setCellValue(row, 8, style, item.version)
+
+                if (listOrderResponse.columns.isNotEmpty()) {
+                    var colIndex = 9
+                    for (col in listOrderResponse.columns) {
+                        val orderDetail = item.quantityByCalendars?.find { it.key == col.key }
+                        ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, style, orderDetail?.value, col.isHoliday)
+                        colIndex++
+                    }
+                }
+
+            }
+        }
+
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
         val excelBytes = byteArrayOutputStream.toByteArray()

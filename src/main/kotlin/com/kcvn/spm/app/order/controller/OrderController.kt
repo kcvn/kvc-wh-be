@@ -5,7 +5,6 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
-import com.kcvn.spm.common.constants.OrderVersion
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
@@ -28,7 +27,7 @@ class OrderController(
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getList(
-        request: OrderSearchRequest?,
+        request: OrderSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
@@ -57,7 +56,7 @@ class OrderController(
     @GetMapping("/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportExcel(
-        request: OrderSearchRequest?,
+        request: OrderSearchRequest,
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
@@ -78,7 +77,7 @@ class OrderController(
 
     @GetMapping("/version-dropdown")
     fun getVersionDropDown(year: String?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
-        val data = BaseResponse(OrderVersion.DATA)
+        val data = orderService.getOrderVersionDropdown()
         return ResponseEntity(data, HttpStatus.OK)
     }
 

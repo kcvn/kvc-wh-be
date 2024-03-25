@@ -3,9 +3,6 @@ package com.kcvn.spm.app.order.payload.model
 import com.kcvn.spm.common.payload.KeyValueResponse
 
 data class OrderDetailModel (
-    var id:String? = null,
-    var orderId: String? = null,
-    var productId:String?= null,
     var productShortcutName: String? = null,
     var productName: String? = null,
     var quantity: Int? = null,
@@ -17,9 +14,4 @@ data class OrderDetailModel (
     var version: String? = null,
     var quantityByCalendars : List<KeyValueResponse>? = listOf()
 
-) {
-    init {
-        if (!version.isNullOrEmpty()) version = "v${version}.0"
-        if (!productName.isNullOrEmpty()) productShortcutName = productName?.substring(6, 10)
-    }
-}
+)

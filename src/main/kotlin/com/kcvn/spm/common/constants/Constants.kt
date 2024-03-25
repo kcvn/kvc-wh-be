@@ -111,12 +111,7 @@ class OrderVersion {
     companion object {
         const val LATEST = "LATEST"
 
-        val DATA = listOf<DropdownResponse>(
-            DropdownResponse(LATEST, "Mới nhất"),
-            DropdownResponse("0", "V00"),
-            DropdownResponse("1", "V01"),
-            DropdownResponse("2", "V02")
-        )
+        val DEFAULT = DropdownResponse(LATEST, "Mới nhất")
     }
 }
 

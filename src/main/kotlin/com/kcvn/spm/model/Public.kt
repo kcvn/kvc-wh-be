@@ -23,6 +23,7 @@ import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
+import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.Plan
 import com.kcvn.spm.model.tables.PlanDetail
 import com.kcvn.spm.model.tables.PlanProcess
@@ -152,6 +153,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val ORDER_DETAIL: OrderDetail get() = OrderDetail.ORDER_DETAIL
 
     /**
+     * The table <code>public.order_info</code>.
+     */
+    val ORDER_INFO: OrderInfo get() = OrderInfo.ORDER_INFO
+
+    /**
      * The table <code>public.plan</code>.
      */
     val PLAN: Plan get() = Plan.PLAN
@@ -233,6 +239,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         InventoryProduct.INVENTORY_PRODUCT,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,
+        OrderInfo.ORDER_INFO,
         Plan.PLAN,
         PlanDetail.PLAN_DETAIL,
         PlanProcess.PLAN_PROCESS,

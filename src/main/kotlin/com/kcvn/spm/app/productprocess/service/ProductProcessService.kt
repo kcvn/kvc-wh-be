@@ -387,7 +387,7 @@ class ProductProcessService(
             var checkDayNull = true
             var checkDayOne = true
             // Đếm xem có đủ công đoạn trong db không
-            val countProcess = listDataDb.count { it.productCode == listItem.key }
+            val countProcess = listDataDb.count { it.productCode == listItem.key  && it.layerCode?.any { char -> char != '0' } ?: false}
             val countProcessByExcel = listItem.value.count { it.processCode?.any { char -> char != '0' } ?: false }
             if (countProcess != countProcessByExcel) {
                 checkList = false

@@ -30,8 +30,7 @@ class OrderController(
         request: OrderSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["version"], direction = Sort.Direction.DESC)
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC)
         )
         pageable: Pageable
     ): ResponseEntity<PagingOrderResponse> {
@@ -41,8 +40,8 @@ class OrderController(
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_ORDER.value) || hasRole('ADMIN')")
-    fun importExcel(orderCode: String?, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = orderService.importExcelOrder(file, orderCode)
+    fun importExcel(isIncreaseVersion: Boolean?, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = orderService.importExcelOrder(file, isIncreaseVersion)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
@@ -59,8 +58,7 @@ class OrderController(
         request: OrderSearchRequest,
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["version"], direction = Sort.Direction.DESC)
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC)
         )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
@@ -76,7 +74,7 @@ class OrderController(
     }
 
     @GetMapping("/version-dropdown")
-    fun getVersionDropDown(year: String?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+    fun getVersionDropDown(): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
         val data = orderService.getOrderVersionDropdown()
         return ResponseEntity(data, HttpStatus.OK)
     }

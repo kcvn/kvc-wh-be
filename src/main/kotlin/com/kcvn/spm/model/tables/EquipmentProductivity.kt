@@ -10,16 +10,12 @@ import com.kcvn.spm.model.tables.records.EquipmentProductivityRecord
 
 import java.math.BigDecimal
 import java.time.OffsetDateTime
-import java.util.function.Function
 
 import org.jooq.Field
 import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row21
 import org.jooq.Schema
-import org.jooq.SelectField
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
@@ -124,24 +120,24 @@ open class EquipmentProductivity(
     val BLOCK_SH: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("block_sh"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
-     * The column <code>public.equipment_productivity.sheet_hour</code>.
+     * The column <code>public.equipment_productivity.sltb_hour</code>.
      */
-    val SHEET_HOUR: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sheet_hour"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val SLTB_HOUR: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sltb_hour"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
-     * The column <code>public.equipment_productivity.sheet_day</code>.
+     * The column <code>public.equipment_productivity.sltb_sheet</code>.
      */
-    val SHEET_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sheet_day"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val SLTB_SHEET: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sltb_sheet"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
-     * The column <code>public.equipment_productivity.set_day</code>.
+     * The column <code>public.equipment_productivity.sltb_set</code>.
      */
-    val SET_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("set_day"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val SLTB_SET: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sltb_set"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
-     * The column <code>public.equipment_productivity.block_day</code>.
+     * The column <code>public.equipment_productivity.sltb_block</code>.
      */
-    val BLOCK_DAY: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("block_day"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+    val SLTB_BLOCK: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("sltb_block"), SQLDataType.NUMERIC(10, 2).nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.created_date</code>.
@@ -167,6 +163,36 @@ open class EquipmentProductivity(
      * The column <code>public.equipment_productivity.is_deleted</code>.
      */
     val IS_DELETED: TableField<EquipmentProductivityRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
+    /**
+     * The column <code>public.equipment_productivity.cap_hour</code>.
+     */
+    val CAP_HOUR: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("cap_hour"), SQLDataType.NUMERIC(10, 2).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+
+    /**
+     * The column <code>public.equipment_productivity.cap_sheet</code>.
+     */
+    val CAP_SHEET: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("cap_sheet"), SQLDataType.NUMERIC(10, 2).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+
+    /**
+     * The column <code>public.equipment_productivity.cap_set</code>.
+     */
+    val CAP_SET: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("cap_set"), SQLDataType.NUMERIC(10, 2).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+
+    /**
+     * The column <code>public.equipment_productivity.cap_block</code>.
+     */
+    val CAP_BLOCK: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("cap_block"), SQLDataType.NUMERIC(10, 2).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
+
+    /**
+     * The column <code>public.equipment_productivity.machine_number</code>.
+     */
+    val MACHINE_NUMBER: TableField<EquipmentProductivityRecord, Int?> = createField(DSL.name("machine_number"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+
+    /**
+     * The column <code>public.equipment_productivity.process_code</code>.
+     */
+    val PROCESS_CODE: TableField<EquipmentProductivityRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(6), this, "")
 
     private constructor(alias: Name, aliased: Table<EquipmentProductivityRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<EquipmentProductivityRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
@@ -209,20 +235,4 @@ open class EquipmentProductivity(
      * Rename this table
      */
     override fun rename(name: Table<*>): EquipmentProductivity = EquipmentProductivity(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row21 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row21<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row21<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
-
-    /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
-     */
-    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
-
-    /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
-     */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

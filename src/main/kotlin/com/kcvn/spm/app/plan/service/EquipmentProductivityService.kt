@@ -79,17 +79,19 @@ class EquipmentProductivityService(
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
                         var equipmentMachineValue: BigDecimal?
+                        var numberMachine: Double?
                         val equipmentMachineModel = if (equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo")) {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
                         } else {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 }
                         }
+                        numberMachine = equipmentMachineModel?.machineNumber?.toDouble()
                         equipmentMachineValue = when {
                             equipmentMachineModel != null -> {
                                 when (equipmentProductivityModel.unit) {
-                                    ProcessUnit.SHEET -> equipmentMachineModel.sheetDay
-                                    ProcessUnit.SET -> equipmentMachineModel.setDay
-                                    else -> equipmentMachineModel.blockDay
+                                    ProcessUnit.SHEET -> equipmentMachineModel.sltbSheet
+                                    ProcessUnit.SET -> equipmentMachineModel.sltbSet
+                                    else -> equipmentMachineModel.sltbBlock
                                 }
                             }
                             else -> null
@@ -136,11 +138,18 @@ class EquipmentProductivityService(
                                             val formattedValue = "%.1f".format(value / equipmentMachineValueDouble)
                                             formattedValue
                                         } else {
-                                            ""
+                                            "0"
+                                        }
+                                        val rate = ((value) / (equipmentMachineValueDouble)) / (numberMachine ?: 1.0) * 100.0
+                                        val color = when {
+                                            rate > 100 -> Color.ORANGE
+                                            rate > 90 -> Color.YELLOW
+                                            else -> Color.WHITE
                                         }
                                         KeyValueResponse(
                                             key = column.key,
-                                            value = newValue
+                                            value = newValue + "/" + (numberMachine?.toInt() ?: 0).toString() + "\n" + (rate.toInt()).toString(),
+                                            sort = color.toBigDecimal()
                                         )
                                     }?.toMutableList() ?: mutableListOf()
                                 )
@@ -434,39 +443,63 @@ class EquipmentProductivityService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val equipmentProductivity = EquipmentProductivity(
                 grpProcess = ExcelHelper.getCellValue(row, 1).let { if (it.length > 5) it.substring(0, 5) else it },
-                equipmentCode = "eCode",
+                equipmentCode = ExcelHelper.getCellValue(row, 11),
                 mold = ExcelHelper.getCellValue(row, 2),
                 task = BigDecimal(ExcelHelper.getCellValue(row, 6)),
                 time = ExcelHelper.getCellValue(row, 4).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
                 count = BigDecimal(ExcelHelper.getCellValue(row, 5)),
-                setDay = truncateDecimal(
+                sltbSet = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 5)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 4)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 3)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
-                blockDay = truncateDecimal(
+                capSet = truncateDecimal(
+                    BigDecimal(ExcelHelper.getCellValue(row, 5)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                ),
+                sltbBlock = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 8)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 5)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 4)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 3)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
+                capBlock = truncateDecimal(
+                    BigDecimal(ExcelHelper.getCellValue(row, 8)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 5)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                ),
                 blockSh = BigDecimal(ExcelHelper.getCellValue(row, 8)),
                 frame_1 = ExcelHelper.getCellValue(row, 0),
-                sheetHour = truncateDecimal(
+                sltbHour = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
-                sheetDay = truncateDecimal(
+                capHour = truncateDecimal(
+                    BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                ),
+                sltbSheet = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 4)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 3)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 7))
+                ),
+                capSheet = truncateDecimal(
+                    BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 operatingRate = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) * BigDecimal(100)
                 ),
                 sheetHour_100 = truncateDecimal(BigDecimal(ExcelHelper.getCellValue(row, 7))),
+                machineNumber = ExcelHelper.getCellValue(row, 9).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
+                processCode = ExcelHelper.getCellValue(row, 10).let { if (it.length > 6) it.substring(0, 6) else it },
                 description = "insert"
             )
 

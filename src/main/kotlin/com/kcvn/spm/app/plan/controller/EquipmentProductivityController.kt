@@ -52,9 +52,7 @@ class EquipmentProductivityController(
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
 //    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun importExcel(
-        @RequestPart("file") file: MultipartFile,
-        @RequestParam("startDate") startDate: OffsetDateTime,
-        @RequestParam("endDate") endDate: OffsetDateTime
+        @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = equipmentProductivityService.importExcel(file)
         return ResponseEntity(data, HttpStatus.OK)

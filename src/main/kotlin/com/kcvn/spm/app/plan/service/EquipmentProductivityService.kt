@@ -499,7 +499,7 @@ class EquipmentProductivityService(
                 ),
                 sheetHour_100 = truncateDecimal(BigDecimal(ExcelHelper.getCellValue(row, 7))),
                 machineNumber = ExcelHelper.getCellValue(row, 9).toInt(),
-                processCode = "",
+                processCode = ExcelHelper.getCellValue(row, 10),
                 description = "insert"
             )
 

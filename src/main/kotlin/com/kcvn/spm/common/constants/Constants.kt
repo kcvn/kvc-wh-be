@@ -1,5 +1,6 @@
 package com.kcvn.spm.common.constants
 
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 
 class Constants {
@@ -111,6 +112,14 @@ class OrderFilterType {
     companion object {
         const val DATE = 0
         const val ORDER = 1
+    }
+}
+
+class OrderVersion {
+    companion object {
+        const val LATEST = "LATEST"
+
+        val DEFAULT = DropdownResponse(LATEST, "Mới nhất")
     }
 }
 

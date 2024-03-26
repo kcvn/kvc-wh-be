@@ -36,6 +36,7 @@ import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.TapeInfo
 import com.kcvn.spm.model.tables.WorkResult
 import com.kcvn.spm.model.tables.records.AppSettingRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
@@ -69,6 +70,7 @@ import com.kcvn.spm.model.tables.records.ProcessProcedureStructureRecord
 import com.kcvn.spm.model.tables.records.ProductProcessRecord
 import com.kcvn.spm.model.tables.records.ProductRecord
 import com.kcvn.spm.model.tables.records.SyncHistoryRecord
+import com.kcvn.spm.model.tables.records.TapeInfoRecord
 import com.kcvn.spm.model.tables.records.WorkResultRecord
 
 import org.jooq.ForeignKey
@@ -114,6 +116,7 @@ val PROCESS_PROCEDURE_STRUCTURE_PKEY: UniqueKey<ProcessProcedureStructureRecord>
 val PRODUCT_PKEY: UniqueKey<ProductRecord> = Internal.createUniqueKey(Product.PRODUCT, DSL.name("product_pkey"), arrayOf(Product.PRODUCT.ID), true)
 val PRODUCT_PROCESS_PKEY: UniqueKey<ProductProcessRecord> = Internal.createUniqueKey(ProductProcess.PRODUCT_PROCESS, DSL.name("product_process_pkey"), arrayOf(ProductProcess.PRODUCT_PROCESS.ID), true)
 val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
+val TAPE_INFO_PKEY: UniqueKey<TapeInfoRecord> = Internal.createUniqueKey(TapeInfo.TAPE_INFO, DSL.name("tape_info_pkey"), arrayOf(TapeInfo.TAPE_INFO.ID), true)
 val WORK_RESULT_PKEY: UniqueKey<WorkResultRecord> = Internal.createUniqueKey(WorkResult.WORK_RESULT, DSL.name("work_result_pkey"), arrayOf(WorkResult.WORK_RESULT.ID), true)
 
 // -------------------------------------------------------------------------

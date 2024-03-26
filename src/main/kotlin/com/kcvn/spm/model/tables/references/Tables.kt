@@ -36,6 +36,7 @@ import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.TapeInfo
 import com.kcvn.spm.model.tables.WorkResult
 
 
@@ -199,6 +200,11 @@ val PRODUCT_PROCESS: ProductProcess = ProductProcess.PRODUCT_PROCESS
  * The table <code>public.sync_history</code>.
  */
 val SYNC_HISTORY: SyncHistory = SyncHistory.SYNC_HISTORY
+
+/**
+ * The table <code>public.tape_info</code>.
+ */
+val TAPE_INFO: TapeInfo = TapeInfo.TAPE_INFO
 
 /**
  * The table <code>public.work_result</code>.

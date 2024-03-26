@@ -99,6 +99,14 @@ class DateTimeFormat {
     }
 }
 
+class Color{
+    companion object {
+        const val WHITE  = 0
+        const val YELLOW = 1
+        const val ORANGE = 2
+    }
+}
+
 class OrderFilterType {
     companion object {
         const val DATE = 0

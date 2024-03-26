@@ -79,11 +79,13 @@ class EquipmentProductivityService(
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
                         var equipmentMachineValue: BigDecimal?
+                        var numberMachine: Double?
                         val equipmentMachineModel = if (equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo")) {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
                         } else {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 }
                         }
+                        numberMachine = equipmentMachineModel?.equipmentCode?.toDouble()
                         equipmentMachineValue = when {
                             equipmentMachineModel != null -> {
                                 when (equipmentProductivityModel.unit) {
@@ -136,11 +138,18 @@ class EquipmentProductivityService(
                                             val formattedValue = "%.1f".format(value / equipmentMachineValueDouble)
                                             formattedValue
                                         } else {
-                                            ""
+                                            "0"
+                                        }
+                                        val rate = ((value) / (equipmentMachineValueDouble)) / (numberMachine ?: 1.0) * 100.0
+                                        val color = when {
+                                            rate > 100 -> Color.ORANGE
+                                            rate > 90 -> Color.YELLOW
+                                            else -> Color.WHITE
                                         }
                                         KeyValueResponse(
                                             key = column.key,
-                                            value = newValue
+                                            value = newValue+"/"+ numberMachine?.toInt().toString()+"/n"+rate.toInt().toString()+"%",
+                                            sort = color.toBigDecimal()
                                         )
                                     }?.toMutableList() ?: mutableListOf()
                                 )

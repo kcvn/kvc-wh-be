@@ -19,4 +19,10 @@ class ProcessGroupRepository (private val context: DSLContext) {
             .where(PROCESS_GROUP.IS_DELETED.eq(false).and(PROCESS_GROUP.ALLOW_SHOW_PLAN_SUMMARY.eq(true)))
             .fetchInto(ProcessGroup::class.java)
     }
+
+    fun getForPlanEquipmentProductivity() : List<ProcessGroup> {
+        return context.selectFrom(PROCESS_GROUP)
+            .where(PROCESS_GROUP.IS_DELETED.eq(false).and(PROCESS_GROUP.ALLOW_SHOW_EQUIPMENT_PRODUCTIVITY.eq(true)))
+            .fetchInto(ProcessGroup::class.java)
+    }
 }

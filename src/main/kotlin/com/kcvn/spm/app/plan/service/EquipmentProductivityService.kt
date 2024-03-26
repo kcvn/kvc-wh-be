@@ -86,16 +86,16 @@ class EquipmentProductivityService(
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 }
                         }
                         numberMachine = equipmentMachineModel?.equipmentCode?.toDouble()
-//                        equipmentMachineValue = when {
-//                            equipmentMachineModel != null -> {
-//                                when (equipmentProductivityModel.unit) {
-//                                    ProcessUnit.SHEET -> equipmentMachineModel.sheetDay
-//                                    ProcessUnit.SET -> equipmentMachineModel.setDay
-//                                    else -> equipmentMachineModel.blockDay
-//                                }
-//                            }
-//                            else -> null
-//                        }
+                        equipmentMachineValue = when {
+                            equipmentMachineModel != null -> {
+                                when (equipmentProductivityModel.unit) {
+                                    ProcessUnit.SHEET -> equipmentMachineModel.sltbSheet
+                                    ProcessUnit.SET -> equipmentMachineModel.sltbSet
+                                    else -> equipmentMachineModel.sltbBlock
+                                }
+                            }
+                            else -> null
+                        }
                         val processDetailModel = ProcessDetailModel(
                             name = processSummaryDetailModel.type,
                             totalProcess = null,
@@ -148,7 +148,7 @@ class EquipmentProductivityService(
                                         }
                                         KeyValueResponse(
                                             key = column.key,
-                                            value = newValue+"/"+ numberMachine?.toInt().toString()+"/n"+rate.toInt().toString()+"%",
+                                            value = newValue + "/" + (numberMachine?.toInt() ?: 0).toString() + "\n" + (rate.toInt() ?: 0).toString(),
                                             sort = color.toBigDecimal()
                                         )
                                     }?.toMutableList() ?: mutableListOf()

@@ -78,7 +78,7 @@ class EquipmentProductivityService(
 
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
-                        var equipmentMachineValue: BigDecimal?
+                        var equipmentMachineValue: BigDecimal? = BigDecimal.ZERO
                         var numberMachine: Double?
                         val equipmentMachineModel = if (equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo")) {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
@@ -86,16 +86,16 @@ class EquipmentProductivityService(
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 }
                         }
                         numberMachine = equipmentMachineModel?.equipmentCode?.toDouble()
-                        equipmentMachineValue = when {
-                            equipmentMachineModel != null -> {
-                                when (equipmentProductivityModel.unit) {
-                                    ProcessUnit.SHEET -> equipmentMachineModel.sheetDay
-                                    ProcessUnit.SET -> equipmentMachineModel.setDay
-                                    else -> equipmentMachineModel.blockDay
-                                }
-                            }
-                            else -> null
-                        }
+//                        equipmentMachineValue = when {
+//                            equipmentMachineModel != null -> {
+//                                when (equipmentProductivityModel.unit) {
+//                                    ProcessUnit.SHEET -> equipmentMachineModel.sheetDay
+//                                    ProcessUnit.SET -> equipmentMachineModel.setDay
+//                                    else -> equipmentMachineModel.blockDay
+//                                }
+//                            }
+//                            else -> null
+//                        }
                         val processDetailModel = ProcessDetailModel(
                             name = processSummaryDetailModel.type,
                             totalProcess = null,
@@ -448,34 +448,58 @@ class EquipmentProductivityService(
                 task = BigDecimal(ExcelHelper.getCellValue(row, 6)),
                 time = ExcelHelper.getCellValue(row, 4).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
                 count = BigDecimal(ExcelHelper.getCellValue(row, 5)),
-                setDay = truncateDecimal(
+                sltbSet = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 5)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 4)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 3)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
-                blockDay = truncateDecimal(
+                capSet = truncateDecimal(
+                    BigDecimal(ExcelHelper.getCellValue(row, 5)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                ),
+                sltbBlock = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 8)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 5)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 4)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 3)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
+                capBlock = truncateDecimal(
+                    BigDecimal(ExcelHelper.getCellValue(row, 8)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 5)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                ),
                 blockSh = BigDecimal(ExcelHelper.getCellValue(row, 8)),
                 frame_1 = ExcelHelper.getCellValue(row, 0),
-                sheetHour = truncateDecimal(
+                sltbHour = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
-                sheetDay = truncateDecimal(
+                capHour = truncateDecimal(
+                    BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 7))
+                ),
+                sltbSheet = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 4)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 3)) *
                         BigDecimal(ExcelHelper.getCellValue(row, 7))
+                ),
+                capSheet = truncateDecimal(
+                    BigDecimal(ExcelHelper.getCellValue(row, 4)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 3)) *
+                            BigDecimal(ExcelHelper.getCellValue(row, 7))
                 ),
                 operatingRate = truncateDecimal(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) * BigDecimal(100)
                 ),
                 sheetHour_100 = truncateDecimal(BigDecimal(ExcelHelper.getCellValue(row, 7))),
+                machineNumber = ExcelHelper.getCellValue(row, 9).toInt(),
+                processCode = "",
                 description = "insert"
             )
 

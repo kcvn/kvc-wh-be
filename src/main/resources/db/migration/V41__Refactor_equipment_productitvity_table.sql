@@ -7,3 +7,4 @@ ALTER TABLE public.equipment_productivity ADD cap_sheet numeric(10, 2) NULL DEFA
 ALTER TABLE public.equipment_productivity ADD cap_set numeric(10, 2) NULL DEFAULT 0;
 ALTER TABLE public.equipment_productivity ADD cap_block numeric(10, 2) NULL DEFAULT 0;
 ALTER TABLE public.equipment_productivity ADD machine_number int NULL DEFAULT 0;
+

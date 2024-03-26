@@ -1,0 +1,1 @@
+ALTER TABLE public.equipment_productivity ADD process_code varchar(6) NULL;

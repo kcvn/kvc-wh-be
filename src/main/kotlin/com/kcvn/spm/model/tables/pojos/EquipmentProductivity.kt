@@ -26,17 +26,23 @@ data class EquipmentProductivity(
     var task: BigDecimal? = null,
     var sheetHour_100: BigDecimal? = null,
     var blockSh: BigDecimal? = null,
-    var sheetHour: BigDecimal? = null,
-    var sheetDay: BigDecimal? = null,
-    var setDay: BigDecimal? = null,
-    var blockDay: BigDecimal? = null,
+    var sltbHour: BigDecimal? = null,
+    var sltbSheet: BigDecimal? = null,
+    var sltbSet: BigDecimal? = null,
+    var sltbBlock: BigDecimal? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var capHour: BigDecimal? = null,
+    var capSheet: BigDecimal? = null,
+    var capSet: BigDecimal? = null,
+    var capBlock: BigDecimal? = null,
+    var machineNumber: Int? = null,
+    var processCode: String? = null
 ): Serializable {
 
 
@@ -120,29 +126,29 @@ data class EquipmentProductivity(
         }
         else if (this.blockSh != o.blockSh)
             return false
-        if (this.sheetHour == null) {
-            if (o.sheetHour != null)
+        if (this.sltbHour == null) {
+            if (o.sltbHour != null)
                 return false
         }
-        else if (this.sheetHour != o.sheetHour)
+        else if (this.sltbHour != o.sltbHour)
             return false
-        if (this.sheetDay == null) {
-            if (o.sheetDay != null)
+        if (this.sltbSheet == null) {
+            if (o.sltbSheet != null)
                 return false
         }
-        else if (this.sheetDay != o.sheetDay)
+        else if (this.sltbSheet != o.sltbSheet)
             return false
-        if (this.setDay == null) {
-            if (o.setDay != null)
+        if (this.sltbSet == null) {
+            if (o.sltbSet != null)
                 return false
         }
-        else if (this.setDay != o.setDay)
+        else if (this.sltbSet != o.sltbSet)
             return false
-        if (this.blockDay == null) {
-            if (o.blockDay != null)
+        if (this.sltbBlock == null) {
+            if (o.sltbBlock != null)
                 return false
         }
-        else if (this.blockDay != o.blockDay)
+        else if (this.sltbBlock != o.sltbBlock)
             return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
@@ -174,6 +180,42 @@ data class EquipmentProductivity(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.capHour == null) {
+            if (o.capHour != null)
+                return false
+        }
+        else if (this.capHour != o.capHour)
+            return false
+        if (this.capSheet == null) {
+            if (o.capSheet != null)
+                return false
+        }
+        else if (this.capSheet != o.capSheet)
+            return false
+        if (this.capSet == null) {
+            if (o.capSet != null)
+                return false
+        }
+        else if (this.capSet != o.capSet)
+            return false
+        if (this.capBlock == null) {
+            if (o.capBlock != null)
+                return false
+        }
+        else if (this.capBlock != o.capBlock)
+            return false
+        if (this.machineNumber == null) {
+            if (o.machineNumber != null)
+                return false
+        }
+        else if (this.machineNumber != o.machineNumber)
+            return false
+        if (this.processCode == null) {
+            if (o.processCode != null)
+                return false
+        }
+        else if (this.processCode != o.processCode)
+            return false
         return true
     }
 
@@ -192,15 +234,21 @@ data class EquipmentProductivity(
         result = prime * result + (if (this.task == null) 0 else this.task.hashCode())
         result = prime * result + (if (this.sheetHour_100 == null) 0 else this.sheetHour_100.hashCode())
         result = prime * result + (if (this.blockSh == null) 0 else this.blockSh.hashCode())
-        result = prime * result + (if (this.sheetHour == null) 0 else this.sheetHour.hashCode())
-        result = prime * result + (if (this.sheetDay == null) 0 else this.sheetDay.hashCode())
-        result = prime * result + (if (this.setDay == null) 0 else this.setDay.hashCode())
-        result = prime * result + (if (this.blockDay == null) 0 else this.blockDay.hashCode())
+        result = prime * result + (if (this.sltbHour == null) 0 else this.sltbHour.hashCode())
+        result = prime * result + (if (this.sltbSheet == null) 0 else this.sltbSheet.hashCode())
+        result = prime * result + (if (this.sltbSet == null) 0 else this.sltbSet.hashCode())
+        result = prime * result + (if (this.sltbBlock == null) 0 else this.sltbBlock.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.capHour == null) 0 else this.capHour.hashCode())
+        result = prime * result + (if (this.capSheet == null) 0 else this.capSheet.hashCode())
+        result = prime * result + (if (this.capSet == null) 0 else this.capSet.hashCode())
+        result = prime * result + (if (this.capBlock == null) 0 else this.capBlock.hashCode())
+        result = prime * result + (if (this.machineNumber == null) 0 else this.machineNumber.hashCode())
+        result = prime * result + (if (this.processCode == null) 0 else this.processCode.hashCode())
         return result
     }
 
@@ -219,15 +267,21 @@ data class EquipmentProductivity(
         sb.append(", ").append(task)
         sb.append(", ").append(sheetHour_100)
         sb.append(", ").append(blockSh)
-        sb.append(", ").append(sheetHour)
-        sb.append(", ").append(sheetDay)
-        sb.append(", ").append(setDay)
-        sb.append(", ").append(blockDay)
+        sb.append(", ").append(sltbHour)
+        sb.append(", ").append(sltbSheet)
+        sb.append(", ").append(sltbSet)
+        sb.append(", ").append(sltbBlock)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(capHour)
+        sb.append(", ").append(capSheet)
+        sb.append(", ").append(capSet)
+        sb.append(", ").append(capBlock)
+        sb.append(", ").append(machineNumber)
+        sb.append(", ").append(processCode)
 
         sb.append(")")
         return sb.toString()

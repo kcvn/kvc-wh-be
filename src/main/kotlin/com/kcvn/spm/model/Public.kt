@@ -36,6 +36,7 @@ import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.TapeInfo
 import com.kcvn.spm.model.tables.WorkResult
 
 import kotlin.collections.List
@@ -219,6 +220,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
 
     /**
+     * The table <code>public.tape_info</code>.
+     */
+    val TAPE_INFO: TapeInfo get() = TapeInfo.TAPE_INFO
+
+    /**
      * The table <code>public.work_result</code>.
      */
     val WORK_RESULT: WorkResult get() = WorkResult.WORK_RESULT
@@ -258,6 +264,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         Product.PRODUCT,
         ProductProcess.PRODUCT_PROCESS,
         SyncHistory.SYNC_HISTORY,
+        TapeInfo.TAPE_INFO,
         WorkResult.WORK_RESULT
     )
 }

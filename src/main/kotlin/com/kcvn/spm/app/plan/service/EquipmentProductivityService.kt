@@ -78,14 +78,14 @@ class EquipmentProductivityService(
 
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
-                        var equipmentMachineValue: BigDecimal? = BigDecimal.ZERO
+                        var equipmentMachineValue: BigDecimal?
                         var numberMachine: Double?
                         val equipmentMachineModel = if (equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo")) {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
                         } else {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 }
                         }
-                        numberMachine = equipmentMachineModel?.equipmentCode?.toDouble()
+                        numberMachine = equipmentMachineModel?.machineNumber?.toDouble()
                         equipmentMachineValue = when {
                             equipmentMachineModel != null -> {
                                 when (equipmentProductivityModel.unit) {
@@ -148,7 +148,7 @@ class EquipmentProductivityService(
                                         }
                                         KeyValueResponse(
                                             key = column.key,
-                                            value = newValue + "/" + (numberMachine?.toInt() ?: 0).toString() + "\n" + (rate.toInt() ?: 0).toString(),
+                                            value = newValue + "/" + (numberMachine?.toInt() ?: 0).toString() + "\n" + (rate.toInt()).toString(),
                                             sort = color.toBigDecimal()
                                         )
                                     }?.toMutableList() ?: mutableListOf()
@@ -443,7 +443,7 @@ class EquipmentProductivityService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val equipmentProductivity = EquipmentProductivity(
                 grpProcess = ExcelHelper.getCellValue(row, 1).let { if (it.length > 5) it.substring(0, 5) else it },
-                equipmentCode = "eCode",
+                equipmentCode = ExcelHelper.getCellValue(row, 11),
                 mold = ExcelHelper.getCellValue(row, 2),
                 task = BigDecimal(ExcelHelper.getCellValue(row, 6)),
                 time = ExcelHelper.getCellValue(row, 4).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
@@ -498,8 +498,8 @@ class EquipmentProductivityService(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) * BigDecimal(100)
                 ),
                 sheetHour_100 = truncateDecimal(BigDecimal(ExcelHelper.getCellValue(row, 7))),
-                machineNumber = ExcelHelper.getCellValue(row, 9).toInt(),
-                processCode = ExcelHelper.getCellValue(row, 10),
+                machineNumber = ExcelHelper.getCellValue(row, 9).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
+                processCode = ExcelHelper.getCellValue(row, 10).let { if (it.length > 6) it.substring(0, 6) else it },
                 description = "insert"
             )
 

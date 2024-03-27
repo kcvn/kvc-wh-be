@@ -26,6 +26,7 @@ class PlanProductRepository(private val context: DSLContext) {
             PLAN_PRODUCT.BLOCK_SH
         ).from(PLAN_PRODUCT)
             .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
+            .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .where(condition)
 
         val count = query.count()

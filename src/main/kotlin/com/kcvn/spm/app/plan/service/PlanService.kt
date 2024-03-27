@@ -35,7 +35,6 @@ import java.time.format.DateTimeFormatter
 @Service
 @Transactional
 class PlanService(
-    private val planRep: PlanRepository,
     private val planProductRep: PlanProductRepository,
     private val planProcessRep: PlanProcessRepository,
     private val planDetailRep: PlanDetailRepository,
@@ -61,24 +60,16 @@ class PlanService(
 
     fun getPlanDetail(request: PlanDetailRequest): ProductPlanDetailResponse {
         val response = ProductPlanDetailResponse()
-        if (request.planProductId.isEmpty()) throw BusinessException(CommonUtils.getMessage("plan.invalidParam"))
 
-        var colStartDate = OffsetDateTime.now()
-        var colEndDate = OffsetDateTime.now()
-        if (request.filterType == OrderFilterType.DATE) {
-            if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
-            colStartDate = request.startDate
-            colEndDate = request.endDate
-        }
-        if (request.filterType == OrderFilterType.ORDER) {
-            val plan = planRep.getPlanByOrderCode(request.orderCode)
-                ?: throw BusinessException(CommonUtils.getMessage("plan.notExistInOrder"))
-            colStartDate = plan.startDate
-            colEndDate = plan.endDate
-        }
+        if (request.planProductId.isEmpty()) throw BusinessException(CommonUtils.getMessage("plan.invalidParam"))
+        if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
-        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
+        response.columns = DateTimeHelper.toCalendarColumn(
+            DateTimeHelper.toTimeZone7(request.startDate)!!,
+            DateTimeHelper.toTimeZone7(request.endDate)!!,
+            holidayCalenders
+        )
 
         val planProduct = planProductRep.getById(request.planProductId)
             ?: throw BusinessException(CommonUtils.getMessage("data.notExist"))
@@ -90,33 +81,9 @@ class PlanService(
         val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
         val planDetails = planDetailRep.getPlanDetail(planProcessIds)
 
-        val workResults = workResultRep.getForPlan(colStartDate, colEndDate, listOf(planProduct.productName ?: ""))
+        val workResults = workResultRep.getForPlan(request.startDate!!, request.endDate!!, listOf(planProduct.productName ?: ""))
 
         response.data = parentPlanProcess.map { x ->
-            val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
-            val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.map { m ->
-                KeyValueResponse(
-                    DateTimeHelper.toString(m.planDate!!, DateTimeFormat.yyyyMMdd),
-                    if (x.unit == ProcessUnit.BLOCK) m.blockQuantity?.toString() else m.sheetQuantity?.toString()
-                )
-            }
-            val planAccumulations = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_ACCUMULATION_KEY }.map { m ->
-                KeyValueResponse(
-                    DateTimeHelper.toString(m.planDate!!, DateTimeFormat.yyyyMMdd),
-                    if (x.unit == ProcessUnit.BLOCK) m.blockQuantity?.toString() else m.sheetQuantity?.toString()
-                )
-            }.sortedBy { m -> m.key }
-
-            val workResultData = workResults.filter { m -> m.processCode == x.processCode && m.layerCode == x.layerCode }
-                .groupBy { m -> Triple( m.processCode, m.layerCode, DateTimeHelper.toString(m.summaryResultDate!!, DateTimeFormat.yyyyMMdd)) }.map { m ->
-                    KeyValueResponse(
-                        m.key.third,
-                        if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { t -> t.goodTapeQuantity ?: 0 }.toString() else m.value.sumOf { t -> t.goodSheetQuantity ?: 0 }.toString()
-                    )
-                }.sortedBy { m -> m.key }
-            val workResultAccumulations = calculateAccumulation(workResultData)
-
-            val planData = mutableListOf<PlanDataByProcessModel>()
             val productPlan = ProductPlanDetailModel(
                 frame_1 = planProduct.frame_1,
                 mold = planProduct.mold,
@@ -139,6 +106,30 @@ class PlanService(
             }
             productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
 
+            val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
+            val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.map { m ->
+                KeyValueResponse(
+                    DateTimeHelper.toString(m.planDate!!, DateTimeFormat.yyyyMMdd),
+                    if (x.unit == ProcessUnit.BLOCK) m.blockQuantity?.toString() else m.sheetQuantity?.toString()
+                )
+            }
+            val planAccumulations = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_ACCUMULATION_KEY }.map { m ->
+                KeyValueResponse(
+                    DateTimeHelper.toString(m.planDate!!, DateTimeFormat.yyyyMMdd),
+                    if (x.unit == ProcessUnit.BLOCK) m.blockQuantity?.toString() else m.sheetQuantity?.toString()
+                )
+            }.sortedBy { m -> m.key }
+
+            val workResultData = workResults.filter { m -> m.processCode == x.processCode && m.layerCode == x.layerCode }
+                .groupBy { m -> Triple( m.processCode, m.layerCode, DateTimeHelper.toString(m.summaryResultDate!!, DateTimeFormat.yyyyMMdd)) }.map { m ->
+                    KeyValueResponse(
+                        m.key.third,
+                        if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { t -> t.goodTapeQuantity ?: 0 }.toString() else m.value.sumOf { t -> t.goodSheetQuantity ?: 0 }.toString()
+                    )
+                }.sortedBy { m -> m.key }
+            val workResultAccumulations = calculateAccumulation(workResultData, productPlan.sumInventory)
+
+            val planData = mutableListOf<PlanDataByProcessModel>()
             planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
             planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, titleKey = PlanTitle.PLAN_ACCUMULATION_KEY, quantityByCalendars = planAccumulations))
             planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
@@ -152,25 +143,13 @@ class PlanService(
     }
 
     fun exportExcel(request: PlanSearchRequest): FileContentModel {
-        var colStartDate = OffsetDateTime.now()
-        var colEndDate = OffsetDateTime.now()
-//        if (request.filterType == OrderFilterType.DATE) {
-//            if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
-//            colStartDate = request.startDate
-//            colEndDate = request.endDate
-//        }
-//        if (request.filterType == OrderFilterType.ORDER) {
-//            val plan = planRep.getPlanByOrderCode(request.orderCode ?: "")
-//                ?: throw BusinessException(CommonUtils.getMessage("plan.notExistInOrder"))
-//            colStartDate = plan.startDate
-//            colEndDate = plan.endDate
-//        }
+        if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
-        val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
+        val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
         val planProducts = planProductRep.getListPlanProduct(request)
-        val dataExports = getDataExportExcel(planProducts, colStartDate, colEndDate)
+        val dataExports = getDataExportExcel(planProducts, request.startDate!!, request.endDate!!)
         if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanTemplate.xlsx")
@@ -779,6 +758,28 @@ class PlanService(
                 blockSh = planProduct.blockSh
             )
             productExport.productPlanDetails = parentPlanProcess.filter { x -> x.planProductId == planProduct.id }.map { x ->
+                val productPlan = ProductPlanDetailModel(
+                    frame_1 = planProduct.frame_1,
+                    mold = planProduct.mold,
+                    layerCode = x.layerCode,
+                    processCode = x.processCode,
+                    processName = x.processName,
+                    processNameJp = x.processNameJp,
+                    completionRate = x.completionRate,
+                    processConvertCode = x.processConvertCode,
+                    processSequence = x.processSequence,
+                    inventory = x.inventory
+                )
+                productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id && m.layerCode == x.layerCode }.map { m ->
+                    ProcessChildrenModel(
+                        layerCode = m.layerCode,
+                        processCode = m.processCode,
+                        processName = m.processName,
+                        inventory = m.inventory
+                    )
+                }
+                productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
+
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
                 val planDetail = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
                     KeyValueResponse(
@@ -800,33 +801,9 @@ class PlanService(
                             if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { t -> t.goodTapeQuantity ?: 0 }.toString() else m.value.sumOf { t -> t.goodSheetQuantity ?: 0 }.toString()
                         )
                     }.sortedBy { m -> m.key }
-                val workResultAccumulations = calculateAccumulation(workResultData)
+                val workResultAccumulations = calculateAccumulation(workResultData, productPlan.sumInventory)
 
                 val planData = mutableListOf<PlanDataByProcessModel>()
-
-                val productPlan = ProductPlanDetailModel(
-                    frame_1 = planProduct.frame_1,
-                    mold = planProduct.mold,
-                    layerCode = x.layerCode,
-                    processCode = x.processCode,
-                    processName = x.processName,
-                    processNameJp = x.processNameJp,
-                    completionRate = x.completionRate,
-                    processConvertCode = x.processConvertCode,
-                    processSequence = x.processSequence,
-                    inventory = x.inventory
-                )
-                productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id && m.layerCode == x.layerCode }.map { m ->
-                    ProcessChildrenModel(
-                        layerCode = m.layerCode,
-                        processCode = m.processCode,
-                        processName = m.processName,
-                        inventory = m.inventory
-                    )
-                }
-                productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 }
-                    ?: 0) + (productPlan.inventory ?: 0)
-
                 planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
                 planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, titleKey = PlanTitle.PLAN_ACCUMULATION_KEY, quantityByCalendars = planAccumulations))
                 planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
@@ -838,7 +815,6 @@ class PlanService(
             }.sortedWith(compareBy<ProductPlanDetailModel> { x -> x.layerCode?.toInt() }.thenBy { x -> x.processSequence })
             data.add(productExport)
         }
-
 
         return data
     }
@@ -869,27 +845,19 @@ class PlanService(
 
     fun getPlanSummary(request: PlanSearchRequest): PlanSummaryResponse {
         val response = PlanSummaryResponse()
-        var colStartDate = OffsetDateTime.now()
-        var colEndDate = OffsetDateTime.now()
-//        if (request.filterType == OrderFilterType.DATE) {
-//            if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
-//            colStartDate = request.startDate
-//            colEndDate = request.endDate
-//        }
-//        if (request.filterType == OrderFilterType.ORDER) {
-//            val plan = planRep.getPlanByOrderCode(request.orderCode ?: "")
-//                ?: throw BusinessException(CommonUtils.getMessage("plan.notExistInOrder"))
-//            colStartDate = plan.startDate
-//            colEndDate = plan.endDate
-//        }
+        if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
-        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
+        response.columns = DateTimeHelper.toCalendarColumn(
+            DateTimeHelper.toTimeZone7(request.startDate)!!,
+            DateTimeHelper.toTimeZone7(request.endDate)!!,
+            holidayCalenders
+        )
 
         val processGroups = processGroupRep.getForPlanSummary()
 
         val planProducts = planProductRep.getListPlanProduct(request)
-        val dataExports = getDataExportExcel(planProducts, colStartDate, colEndDate)
+        val dataExports = getDataExportExcel(planProducts, request.startDate!!, request.endDate!!)
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
                 && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
@@ -1157,8 +1125,7 @@ class PlanService(
 
         val style = ExcelHelper.getCellStyleCommon(workbook)
         var rowNumber = 1
-        var index = 0
-        for (data in dataSummary.data!!) {
+        for ((index, data) in dataSummary.data!!.withIndex()) {
             if (index == 0) {
                 generateExcelColProcessInPlanSummary(workbook, sheet, rowNumber, style, data, styleCollections)
 
@@ -1236,7 +1203,6 @@ class PlanService(
                     rowNumber = rowIndex
                 }
             }
-            index++
         }
 
         val byteArrayOutputStream = ByteArrayOutputStream()

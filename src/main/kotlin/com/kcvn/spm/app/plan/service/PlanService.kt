@@ -897,7 +897,6 @@ class PlanService(
 
         val dataSummary = dataExportFlattens.groupBy { x -> x.processConvertCode }.map { x ->
             val process = processGroups.find { m -> m.processStatisticCode == x.key }
-
             val summary = PlanSummaryModel(
                 processName = process?.description,
                 processNameJp = process?.descriptionJp,

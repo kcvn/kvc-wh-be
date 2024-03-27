@@ -28,6 +28,15 @@ class PlanProductRepository(private val context: DSLContext) {
             .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
             .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .where(condition)
+            .groupBy(
+                PLAN_PRODUCT.ID,
+                PLAN_PRODUCT.PLAN_ID,
+                PLAN_PRODUCT.PRODUCT_NAME,
+                PLAN_PRODUCT.FRAME_1,
+                PLAN_PRODUCT.MOLD,
+                PLAN_PRODUCT.PCS_SH,
+                PLAN_PRODUCT.BLOCK_SH
+            )
 
         val count = query.count()
         val data = query
@@ -51,7 +60,17 @@ class PlanProductRepository(private val context: DSLContext) {
             PLAN_PRODUCT.BLOCK_SH
         ).from(PLAN_PRODUCT)
             .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
+            .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .where(condition)
+            .groupBy(
+                PLAN_PRODUCT.ID,
+                PLAN_PRODUCT.PLAN_ID,
+                PLAN_PRODUCT.PRODUCT_NAME,
+                PLAN_PRODUCT.FRAME_1,
+                PLAN_PRODUCT.MOLD,
+                PLAN_PRODUCT.PCS_SH,
+                PLAN_PRODUCT.BLOCK_SH
+            )
 
         val data = query
             .orderBy(PLAN_PRODUCT.PRODUCT_NAME.sort(SortOrder.ASC))

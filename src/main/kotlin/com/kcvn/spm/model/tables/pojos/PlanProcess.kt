@@ -34,7 +34,8 @@ data class PlanProcess(
     var unit: String? = null,
     var processSequence: Int? = null,
     var processNameJp: String? = null,
-    var processGroup: String? = null
+    var processGroup: String? = null,
+    var processStatisticCode: String? = null
 ): Serializable {
 
 
@@ -160,6 +161,12 @@ data class PlanProcess(
         }
         else if (this.processGroup != o.processGroup)
             return false
+        if (this.processStatisticCode == null) {
+            if (o.processStatisticCode != null)
+                return false
+        }
+        else if (this.processStatisticCode != o.processStatisticCode)
+            return false
         return true
     }
 
@@ -185,6 +192,7 @@ data class PlanProcess(
         result = prime * result + (if (this.processSequence == null) 0 else this.processSequence.hashCode())
         result = prime * result + (if (this.processNameJp == null) 0 else this.processNameJp.hashCode())
         result = prime * result + (if (this.processGroup == null) 0 else this.processGroup.hashCode())
+        result = prime * result + (if (this.processStatisticCode == null) 0 else this.processStatisticCode.hashCode())
         return result
     }
 
@@ -210,6 +218,7 @@ data class PlanProcess(
         sb.append(", ").append(processSequence)
         sb.append(", ").append(processNameJp)
         sb.append(", ").append(processGroup)
+        sb.append(", ").append(processStatisticCode)
 
         sb.append(")")
         return sb.toString()

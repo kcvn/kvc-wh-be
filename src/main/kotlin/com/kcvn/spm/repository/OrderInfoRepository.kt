@@ -11,12 +11,14 @@ import com.kcvn.spm.model.tables.pojos.OrderInfo
 import com.kcvn.spm.model.tables.pojos.OrderVersionDropdown
 import com.kcvn.spm.model.tables.references.ORDER_INFO
 import com.kcvn.spm.model.tables.references.ORDER_VERSION_DROPDOWN
+import com.kcvn.spm.model.tables.references.TAPE_INFO
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
 
 @Repository
 class OrderInfoRepository (private val context: DSLContext): SortingRepository() {
@@ -158,6 +160,15 @@ class OrderInfoRepository (private val context: DSLContext): SortingRepository()
         }
     }
 
+    fun getProductNameByOder(startDate: OffsetDateTime? , endDate: OffsetDateTime?) : List<String?>{
+        return context
+            .selectDistinct(ORDER_INFO.PRODUCT_NAME)
+            .from(ORDER_INFO)
+            .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
+                .and(ORDER_INFO.IS_LATEST.eq(true))
+                .and(ORDER_INFO.IS_DELETED.eq(false)))
+            .fetchInto(String::class.java)
+    }
     fun getOrderVersionDropdown(): List<OrderVersionDropdown> {
         return context.selectFrom(ORDER_VERSION_DROPDOWN)
             .where(ORDER_VERSION_DROPDOWN.IS_DELETED.eq(false))

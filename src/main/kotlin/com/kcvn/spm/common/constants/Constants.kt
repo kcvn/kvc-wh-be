@@ -226,6 +226,9 @@ class ProcessPlan {
         const val MACHINENUMBER = "Số máy sử dụng"
         const val PROCESS_DUC_LO ="Đục lỗ"
         const val PROCESS_DUC_LO_M = "T/H"
+        const val AVERAGE_PLAN = "KH trung bình"
+
+
     }
 }
 

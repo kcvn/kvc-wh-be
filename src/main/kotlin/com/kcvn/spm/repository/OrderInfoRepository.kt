@@ -3,10 +3,13 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.order.payload.model.OrderDetailByDateModel
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.OrderVersion
 import com.kcvn.spm.common.helper.DateTimeHelper
+import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.OrderInfo
 import com.kcvn.spm.model.tables.pojos.OrderVersionDropdown
 import com.kcvn.spm.model.tables.references.ORDER_INFO
@@ -21,9 +24,9 @@ import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 
 @Repository
-class OrderInfoRepository (private val context: DSLContext): SortingRepository() {
+class OrderInfoRepository(private val context: DSLContext) : SortingRepository() {
 
-    fun getPagingListOrder(request: OrderSearchRequest, pageable: Pageable): Pair<List<OrderDetailModel>, Int> {
+    fun getPagingListOrder(request: OrderSearchRequest, pageable: Pageable, isExport: Boolean = false): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
         if (!request.productName.isNullOrEmpty()) {
             condition = condition.and(ORDER_INFO.PRODUCT_NAME.containsIgnoreCase(request.productName))
@@ -43,8 +46,7 @@ class OrderInfoRepository (private val context: DSLContext): SortingRepository()
         if (!request.version.isNullOrEmpty()) {
             if (request.version == OrderVersion.LATEST) {
                 condition = condition.and(ORDER_INFO.IS_LATEST.eq(true))
-            }
-            else {
+            } else {
                 val versions = request.version?.split(",")?.map { x -> x.toInt() }
                 if (!versions.isNullOrEmpty())
                     condition = condition.and(ORDER_INFO.VERSION.`in`(versions))
@@ -54,10 +56,6 @@ class OrderInfoRepository (private val context: DSLContext): SortingRepository()
         condition = condition.and(ORDER_INFO.IS_DELETED.eq(false))
 
         val sortFields = getSortFields(pageable.sort, ORDER_INFO.PRODUCT_NAME).toMutableList()
-        val sortVersion = pageable.sort.find { x -> x.property == "version" }
-        if (sortVersion == null) {
-            sortFields.add(sortFields.size - 1, ORDER_INFO.VERSION.desc())
-        }
 
         if (request.version == OrderVersion.LATEST) {
             val query = context.select(
@@ -79,16 +77,19 @@ class OrderInfoRepository (private val context: DSLContext): SortingRepository()
                     ORDER_INFO.SR_NOSR
                 )
 
-            val count = query.count()
-            val data = query
-                .orderBy(sortFields)
-                .limit(pageable.pageSize)
-                .offset(pageable.offset)
-                .fetchInto(OrderDetailModel::class.java)
+            if (isExport) {
+                val data = query.orderBy(sortFields).fetchInto(OrderDetailModel::class.java)
+                return Pair(data, data.size)
+            } else {
+                val count = query.count()
+                val data = query.orderBy(sortFields).limit(pageable.pageSize).offset(pageable.offset)
+                    .fetchInto(OrderDetailModel::class.java)
+                return Pair(data, count)
+            }
 
-            return Pair(data, count)
-        }
-        else {
+
+        } else {
+            sortFields.add(sortFields.size - 1, ORDER_INFO.VERSION.desc())
             val query = context.select(
                 ORDER_INFO.PRODUCT_NAME,
                 DSL.sum(ORDER_INFO.QUANTITY).`as`("quantity"),
@@ -110,14 +111,15 @@ class OrderInfoRepository (private val context: DSLContext): SortingRepository()
                     ORDER_INFO.VERSION
                 )
 
-            val count = query.count()
-            val data = query
-                .orderBy(sortFields)
-                .limit(pageable.pageSize)
-                .offset(pageable.offset)
-                .fetchInto(OrderDetailModel::class.java)
-
-            return Pair(data, count)
+            if (isExport) {
+                val data = query.orderBy(sortFields).fetchInto(OrderDetailModel::class.java)
+                return Pair(data, data.size)
+            } else {
+                val count = query.count()
+                val data = query.orderBy(sortFields).limit(pageable.pageSize).offset(pageable.offset)
+                    .fetchInto(OrderDetailModel::class.java)
+                return Pair(data, count)
+            }
         }
     }
 
@@ -126,7 +128,7 @@ class OrderInfoRepository (private val context: DSLContext): SortingRepository()
         val versions = productVersions.map { x -> x.second.toIntOrNull() }
         if (isLatest) {
             val data = context.selectFrom(ORDER_INFO).where(
-                ORDER_INFO.PRODUCT_NAME.`in`(productNames).and(ORDER_INFO.IS_DELETED.eq(false))
+                ORDER_INFO.PRODUCT_NAME.`in`(productNames).and(ORDER_INFO.IS_DELETED.eq(false)).and(ORDER_INFO.IS_LATEST.eq(true))
             ).fetchInto(OrderInfo::class.java).map { x ->
                 OrderDetailByDateModel(
                     x.productName,
@@ -143,8 +145,7 @@ class OrderInfoRepository (private val context: DSLContext): SortingRepository()
                 )
             }
             return data
-        }
-        else {
+        } else {
             val data = context.selectFrom(ORDER_INFO).where(
                 ORDER_INFO.PRODUCT_NAME.`in`(productNames).and(ORDER_INFO.VERSION.`in`(versions))
                     .and(ORDER_INFO.IS_DELETED.eq(false))
@@ -176,10 +177,90 @@ class OrderInfoRepository (private val context: DSLContext): SortingRepository()
             .fetchInto(OrderVersionDropdown::class.java)
     }
 
+    fun addOrderInfo(orders: List<OrderInfo>, isIncreaseVersion: Boolean, startDate: OffsetDateTime, endDate: OffsetDateTime) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val productNames = orders.map { x -> x.productName }.distinct()
+            val orderExists = transactionalContext.selectFrom(ORDER_INFO)
+                .where(ORDER_INFO.PRODUCT_NAME.`in`(productNames)).and(ORDER_INFO.IS_DELETED.eq(false))
+                .and(ORDER_INFO.ORDER_DATE.ge(startDate)).and(ORDER_INFO.ORDER_DATE.le(endDate))
+                .fetchInto(OrderInfo::class.java)
+
+            var lstVersion = mutableListOf<Int>()
+            val orderIds = orderExists.filter { x ->
+                orders.any { m -> m.orderDate != null && m.productName == x.productName && m.orderDate!!.isEqual(x.orderDate) }
+            }.map { x -> x.id }
+            if (isIncreaseVersion) {
+                transactionalContext.update(ORDER_INFO)
+                    .set(ORDER_INFO.IS_LATEST, false)
+                    .where(ORDER_INFO.ID.`in`(orderIds))
+                    .execute()
+            } else {
+                transactionalContext.deleteFrom(ORDER_INFO)
+                    .where(ORDER_INFO.ID.`in`(orderIds))
+                    .execute()
+            }
+            val query = orders.map { item ->
+                val order = orderExists.filter { x -> x.orderDate != null && x.productName == item.productName && x.orderDate!!.isEqual(item.orderDate) }
+                    .sortedByDescending { x -> x.version }.firstOrNull()
+                var version = order?.version ?: 0
+                if (isIncreaseVersion && order != null) {
+                    version += 1
+                }
+                lstVersion.add(version)
+                transactionalContext.insertInto(
+                    ORDER_INFO,
+                    ORDER_INFO.PRODUCT_NAME,
+                    ORDER_INFO.FRAME_1,
+                    ORDER_INFO.LAYER_COUNT,
+                    ORDER_INFO.PCS_SH,
+                    ORDER_INFO.BLOCK_SH,
+                    ORDER_INFO.SR_NOSR,
+                    ORDER_INFO.VERSION,
+                    ORDER_INFO.ORDER_DATE,
+                    ORDER_INFO.QUANTITY,
+                    ORDER_INFO.IS_LATEST,
+                    ORDER_INFO.CREATED_BY
+                ).values(
+                    item.productName,
+                    item.frame_1,
+                    item.layerCount,
+                    item.pcsSh,
+                    item.blockSh,
+                    item.srNosr,
+                    version,
+                    item.orderDate,
+                    item.quantity,
+                    true,
+                    CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                )
+            }
+            transactionalContext.batch(query).execute()
+
+            val orderVersion = transactionalContext.selectFrom(ORDER_VERSION_DROPDOWN)
+                .where(ORDER_VERSION_DROPDOWN.IS_DELETED.eq(false))
+                .fetchInto(OrderVersionDropdown::class.java)
+
+            lstVersion = lstVersion.filter { x -> !orderVersion.any { m -> m.version == x.toString() } }.distinct().toMutableList()
+            val versionQuery = lstVersion.map { item ->
+                transactionalContext.insertInto(
+                    ORDER_VERSION_DROPDOWN,
+                    ORDER_VERSION_DROPDOWN.VERSION,
+                    ORDER_VERSION_DROPDOWN.LABEL,
+                    ORDER_VERSION_DROPDOWN.CREATED_BY
+                ).values(
+                    item.toString(),
+                    "V${StringHelper.intToStringD2(item)}",
+                    CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                )
+            }
+            transactionalContext.batch(versionQuery).execute()
+        }
+    }
+
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         return when (fieldName) {
-            "version" -> ORDER_INFO.VERSION
             "productname" -> ORDER_INFO.PRODUCT_NAME
             "frame_1" -> ORDER_INFO.FRAME_1
             "layercount" -> ORDER_INFO.LAYER_COUNT

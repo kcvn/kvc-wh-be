@@ -8,6 +8,7 @@ import java.io.FileInputStream
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.util.*
 
 class ExcelHelper {
     companion object {
@@ -32,6 +33,11 @@ class ExcelHelper {
         }
 
         fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: String?) {
+            row.createCell(colIndex).setCellValue(value)
+            row.getCell(colIndex).cellStyle = styleTemplate
+        }
+
+        fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: Date?) {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate
         }

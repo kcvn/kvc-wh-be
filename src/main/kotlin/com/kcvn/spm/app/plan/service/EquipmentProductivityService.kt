@@ -45,7 +45,8 @@ class EquipmentProductivityService(
     private val planDetailRep: PlanDetailRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val commonCategoryRep: CommonCategoryRepository,
-    private val processMasterRep:ProcessMasterRepository
+    private val processMasterRep:ProcessMasterRepository,
+    private val processGroupRep: ProcessGroupRepository
 ) {
 
     fun getPaginatedEquipmentProductivityPlan(
@@ -78,24 +79,24 @@ class EquipmentProductivityService(
 
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
-                        var equipmentMachineValue: BigDecimal? = BigDecimal.ZERO
+                        var equipmentMachineValue: BigDecimal?
                         var numberMachine: Double?
                         val equipmentMachineModel = if (equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo")) {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
                         } else {
                             equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 }
                         }
-                        numberMachine = equipmentMachineModel?.equipmentCode?.toDouble()
-//                        equipmentMachineValue = when {
-//                            equipmentMachineModel != null -> {
-//                                when (equipmentProductivityModel.unit) {
-//                                    ProcessUnit.SHEET -> equipmentMachineModel.sheetDay
-//                                    ProcessUnit.SET -> equipmentMachineModel.setDay
-//                                    else -> equipmentMachineModel.blockDay
-//                                }
-//                            }
-//                            else -> null
-//                        }
+                        numberMachine = equipmentMachineModel?.machineNumber?.toDouble()
+                        equipmentMachineValue = when {
+                            equipmentMachineModel != null -> {
+                                when (equipmentProductivityModel.unit) {
+                                    ProcessUnit.SHEET -> equipmentMachineModel.sltbSheet
+                                    ProcessUnit.SET -> equipmentMachineModel.sltbSet
+                                    else -> equipmentMachineModel.sltbBlock
+                                }
+                            }
+                            else -> null
+                        }
                         val processDetailModel = ProcessDetailModel(
                             name = processSummaryDetailModel.type,
                             totalProcess = null,
@@ -128,6 +129,20 @@ class EquipmentProductivityService(
                                 )
                                 processDetailModel.processDetailList.add(machineDetailListModel)
 
+                                //average plan
+                                val averageDetailListModel = ProcessDetailListModel(
+                                    type = ProcessPlan.AVERAGE_PLAN,
+                                    quantityByCalendars = result.columns?.map { column ->
+                                        KeyValueResponse(
+                                            key = column.key,
+                                            value = ((equipmentMachineValue?.toInt() ?: 0) * (numberMachine?.toInt() ?: 0)).toString()
+                                        )
+                                    }?.toMutableList() ?: mutableListOf()
+                                )
+                                processDetailModel.processDetailList.add(averageDetailListModel)
+
+
+
                                 //machineRate
                                 val machineNumberDetailListModel = ProcessDetailListModel(
                                     type = ProcessPlan.MACHINENUMBER,
@@ -148,7 +163,7 @@ class EquipmentProductivityService(
                                         }
                                         KeyValueResponse(
                                             key = column.key,
-                                            value = newValue+"/"+ numberMachine?.toInt().toString()+"/n"+rate.toInt().toString()+"%",
+                                            value = newValue + "/" + (numberMachine?.toInt() ?: 0).toString() + "\n" + (rate.toInt()).toString(),
                                             sort = color.toBigDecimal()
                                         )
                                     }?.toMutableList() ?: mutableListOf()
@@ -190,6 +205,7 @@ class EquipmentProductivityService(
         }
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
+        val processGroups = processGroupRep.getForPlanEquipmentProductivity()
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
 
         val planProducts = planProductRep.getListPlanProduct(request)
@@ -204,15 +220,17 @@ class EquipmentProductivityService(
         val listFrame1 = dataFrame.map { x-> x.value }
 
         val dataSummary = dataExportFlattens.groupBy { x -> Pair(x.processConvertCode, x.frame_1) }.map { x ->
-            val process = x.value.first()
+            val process = processGroups.find { m -> m.processStatisticCode == x.key.first }
+            val processMaster = x.value.first()
+
             val summary = PlanSummaryModel(
-                processName = process.processName,
-                processNameJp = process.processNameJp,
+                processName = process?.description,
+                processNameJp = process?.descriptionJp,
                 processConvertCode = x.key.first,
-                processSequence = process.processSequence,
-                frame1 = process.frame_1,
-                processCode = process.processCode,
-                unit = process.unit,
+                processSequence = process?.sortOrder?.toInt(),
+                frame1 = processMaster.frame_1,
+                processCode = processMaster.processCode,
+                unit = processMaster.unit,
                 details = mutableListOf(
                     PlanSummaryDetailModel(
                         type = "",
@@ -236,16 +254,17 @@ class EquipmentProductivityService(
             if (dataDucLo.isNotEmpty()) {
 
                 var moldByFrame1s = Mold.DATA_BY_FRAME1(frame1)
+                val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.T }
                 val listMoldRequest: MutableList<String> = mutableListOf()
                 if(request.mold !=null){
                     listMoldRequest.add(request.mold!!)
                     moldByFrame1s = listMoldRequest
                 }
                 val ducLo = PlanSummaryModel(
-                    processName = CommonUtils.getMessage("excel.rowDucLo"),
-                    processNameJp = dataDucLo.first().processNameJp,
+                    processName = process?.description,
+                    processNameJp = process?.descriptionJp,
                     processConvertCode = "${ProcessConvertCode.T}/${ProcessConvertCode.TH}",
-                    processSequence = dataDucLo.first().processSequence,
+                    processSequence = process?.sortOrder?.toInt(),
                     details = mutableListOf(),
                     frame1 = dataDucLo.first().frame1,
                     processCode = dataDucLo.first().processCode,
@@ -284,11 +303,13 @@ class EquipmentProductivityService(
 
             val dataInMach = dataSummary.filter { x -> x.frame1 == frame1 &&(x.processConvertCode == ProcessConvertCode.TAN || x.processConvertCode == ProcessConvertCode.ZEN)  }
             if (dataInMach.isNotEmpty()) {
+                val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_MACH }
+
                 val inMach = PlanSummaryModel(
-                    processName = CommonUtils.getMessage("excel.rowInMach"),
-                    processNameJp = dataInMach.first().processNameJp,
+                    processName = process?.description,
+                    processNameJp = process?.descriptionJp,
                     processConvertCode = "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}",
-                    processSequence = dataInMach.first().processSequence,
+                    processSequence = process?.sortOrder?.toInt(),
                     frame1 = dataInMach.first().frame1,
                     processCode = dataInMach.first().processCode,
                     unit =dataInMach.first().unit,
@@ -312,11 +333,13 @@ class EquipmentProductivityService(
 
             val dataInLo = dataSummary.filter { x -> x.frame1 == frame1 &&(x.processConvertCode == ProcessConvertCode.HP_ALL || x.processConvertCode == ProcessConvertCode.HP) }
             if (dataInLo.isNotEmpty()) {
+                val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_LO }
+
                 val inLo = PlanSummaryModel(
-                    processName = CommonUtils.getMessage("excel.rowInLo"),
-                    processNameJp = dataInLo.first().processNameJp,
+                    processName = process?.description,
+                    processNameJp = process?.descriptionJp,
                     processConvertCode = "${ProcessConvertCode.HP_ALL}/${ProcessConvertCode.HP}",
-                    processSequence = dataInLo.first().processSequence,
+                    processSequence = process?.sortOrder?.toInt(),
                     frame1 = dataInLo.first().frame1,
                     processCode = dataInLo.first().processCode,
                     unit =dataInLo.first().unit,
@@ -339,11 +362,13 @@ class EquipmentProductivityService(
 
             val dataGhepLop = dataSummary.filter { x -> x.frame1 == frame1 &&(!x.processConvertCode.isNullOrEmpty() && x.processConvertCode!!.startsWith(ProcessConvertCode.M)) }
             if (dataGhepLop.isNotEmpty()) {
+                val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.GHEP_LOP_SUM }
+
                 val ghepLop = PlanSummaryModel(
-                    processName = CommonUtils.getMessage("excel.rowGhepLop"),
-                    processNameJp = dataGhepLop.first().processNameJp,
+                    processName = process?.description,
+                    processNameJp = process?.descriptionJp,
                     processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
-                    processSequence = dataGhepLop.first().processSequence,
+                    processSequence = process?.sortOrder?.toInt(),
                     frame1 = dataGhepLop.first().frame1,
                     processCode = dataGhepLop.first().processCode,
                     unit =dataGhepLop.first().unit,
@@ -363,6 +388,38 @@ class EquipmentProductivityService(
                 dataSummary.removeAll(dataGhepLop)
                 dataSummary.add(ghepLop)
             }
+
+            if(frame1.equals(Frame1.MU)){
+                val dataGhepLopGiaNhiet = dataSummary.filter { x -> x.frame1 == frame1 &&(!x.processConvertCode.isNullOrEmpty() && x.processConvertCode!!.startsWith(ProcessConvertCode.M)) }
+                if (dataGhepLopGiaNhiet.isNotEmpty()) {
+                    val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.GHEPLOP_GIAAPNHIET }
+
+                    val ghepLopGiaNhiet = PlanSummaryModel(
+                        processName = process?.description,
+                        processNameJp = process?.descriptionJp,
+                        processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
+                        processSequence = process?.sortOrder?.toInt(),
+                        frame1 = dataGhepLopGiaNhiet.first().frame1,
+                        processCode = dataGhepLopGiaNhiet.first().processCode,
+                        unit =dataGhepLopGiaNhiet.first().unit,
+                        details = mutableListOf(
+                            PlanSummaryDetailModel(
+                                type = CommonUtils.getMessage(""),
+                                planSummaryData = dataGhepLopGiaNhiet.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
+                                    .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
+                                        val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
+                                        data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                            .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                        data
+                                    }.toList()
+                            )
+                        )
+                    )
+                    dataSummary.removeAll(dataGhepLopGiaNhiet)
+                    dataSummary.add(ghepLopGiaNhiet)
+                }
+            }
+
         }
 
         response.data = dataSummary.sortedBy { x -> x.processSequence }
@@ -443,7 +500,7 @@ class EquipmentProductivityService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val equipmentProductivity = EquipmentProductivity(
                 grpProcess = ExcelHelper.getCellValue(row, 1).let { if (it.length > 5) it.substring(0, 5) else it },
-                equipmentCode = "eCode",
+                equipmentCode = ExcelHelper.getCellValue(row, 11),
                 mold = ExcelHelper.getCellValue(row, 2),
                 task = BigDecimal(ExcelHelper.getCellValue(row, 6)),
                 time = ExcelHelper.getCellValue(row, 4).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
@@ -498,8 +555,8 @@ class EquipmentProductivityService(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) * BigDecimal(100)
                 ),
                 sheetHour_100 = truncateDecimal(BigDecimal(ExcelHelper.getCellValue(row, 7))),
-                machineNumber = ExcelHelper.getCellValue(row, 9).toInt(),
-                processCode = "",
+                machineNumber = ExcelHelper.getCellValue(row, 9).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
+                processCode = ExcelHelper.getCellValue(row, 10).let { if (it.length > 6) it.substring(0, 6) else it },
                 description = "insert"
             )
 
@@ -610,7 +667,10 @@ class EquipmentProductivityService(
         rowIndex++
 
         val processConvertCodeDataRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, processConvertCodeDataRow, 1, style, data.processConvertCode,isBold = true,isAlignCenter = true,isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
+        ExcelHelper.setCellValueCustom(workbook, processConvertCodeDataRow, 1, style, data.processConvertCode,isBold = true,isAlignCenter = true,isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
+        val processEmptyRow = sheet.getRow(rowIndex++) ?: sheet.createRow(rowIndex)
+        ExcelHelper.setCellValueCustom(workbook, processEmptyRow, 1, style, "",isBold = true,isAlignCenter = true,isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
+
     }
     private fun generateExcelRowPlanData(
         workbook: Workbook,
@@ -625,14 +685,17 @@ class EquipmentProductivityService(
         val fixRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
         val fixRowSecond = sheet.getRow(rowIndex+1) ?: sheet.createRow(rowIndex)
         val fixRowThird = sheet.getRow(rowIndex+2) ?: sheet.createRow(rowIndex)
+        val fixRowFour = sheet.getRow(rowIndex+3) ?: sheet.createRow(rowIndex)
 
         ExcelHelper.setCellValueCustom(workbook, fixRow, 2, style, data.name,isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,isAlignCenter = true,isBold = true)
         ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 2, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
-        ExcelHelper.setCellValueCustom(workbook, fixRowThird, 2, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
+        ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 2, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
+        ExcelHelper.setCellValueCustom(workbook, fixRowFour, 2, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
 
         ExcelHelper.setCellValueCustom(workbook, fixRow, 3, style, data.totalProcess.toString(),isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,isAlignCenter = true,isBold = true)
         ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 3, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
-        ExcelHelper.setCellValueCustom(workbook, fixRowThird, 3, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
+        ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 3, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
+        ExcelHelper.setCellValueCustom(workbook, fixRowFour, 3, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
         for (planData in data.processDetailList) {
             val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
             ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, planData.type,isBorderBottom = true,isBold = false)

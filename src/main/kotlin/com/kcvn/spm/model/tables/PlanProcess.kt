@@ -20,7 +20,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row18
+import org.jooq.Row19
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -156,6 +156,11 @@ open class PlanProcess(
      */
     val PROCESS_NAME_JP: TableField<PlanProcessRecord, String?> = createField(DSL.name("process_name_jp"), SQLDataType.VARCHAR(100), this, "")
 
+    /**
+     * The column <code>public.plan_process.process_group</code>.
+     */
+    val PROCESS_GROUP: TableField<PlanProcessRecord, String?> = createField(DSL.name("process_group"), SQLDataType.VARCHAR(5), this, "")
+
     private constructor(alias: Name, aliased: Table<PlanProcessRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<PlanProcessRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -213,18 +218,18 @@ open class PlanProcess(
     override fun rename(name: Table<*>): PlanProcess = PlanProcess(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row18 type methods
+    // Row19 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row18<String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, Int?, String?> = super.fieldsRow() as Row18<String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, Int?, String?>
+    override fun fieldsRow(): Row19<String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, Int?, String?, String?> = super.fieldsRow() as Row19<String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, Int?, String?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, Int?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, Int?, String?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, Int?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, Int?, String?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

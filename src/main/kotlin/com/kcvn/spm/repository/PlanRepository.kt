@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 class PlanRepository(private val context: DSLContext) {
     fun getPlanByOrderCode(orderCode: String): Plan? {
         return context.selectFrom(PLAN)
-            .where(PLAN.ORDER_CODE.eq(orderCode).and(PLAN.IS_ACTIVE.eq(true)).and(PLAN.IS_DELETED.eq(false)))
+            .where(PLAN.IS_ACTIVE.eq(true).and(PLAN.IS_DELETED.eq(false)))
             .fetchInto(Plan::class.java)
             .firstOrNull()
     }

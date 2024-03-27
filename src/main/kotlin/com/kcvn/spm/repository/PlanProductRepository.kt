@@ -1,9 +1,9 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
-import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.model.tables.pojos.PlanProduct
 import com.kcvn.spm.model.tables.references.PLAN
+import com.kcvn.spm.model.tables.references.PLAN_PROCESS
 import com.kcvn.spm.model.tables.references.PLAN_PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -77,21 +77,15 @@ class PlanProductRepository(private val context: DSLContext) {
         if (!request.mold.isNullOrEmpty()) {
             condition = condition.and(PLAN_PRODUCT.MOLD.eq(request.mold))
         }
-
-        when (request.filterType) {
-            OrderFilterType.DATE -> {
-                if (request.startDate != null) {
-                    condition = condition.and(PLAN.START_DATE.ge(request.startDate))
-                }
-                if (request.endDate != null) {
-                    condition = condition.and(PLAN.START_DATE.le(request.endDate))
-                }
-            }
-
-            OrderFilterType.ORDER -> {
-                if (!request.orderCode.isNullOrEmpty())
-                    condition = condition.and(PLAN.ORDER_CODE.eq(request.orderCode))
-            }
+        if (!request.processGroups.isNullOrEmpty()) {
+            val lstProcessGroup = request.processGroups!!.split(",").map { x -> x.trim() }
+            condition = condition.and(PLAN_PROCESS.PROCESS_GROUP.`in`(lstProcessGroup))
+        }
+        if (request.startDate != null) {
+            condition = condition.and(PLAN.START_DATE.ge(request.startDate))
+        }
+        if (request.endDate != null) {
+            condition = condition.and(PLAN.START_DATE.le(request.endDate))
         }
         condition = condition.and(PLAN.IS_ACTIVE.eq(true)).and(PLAN_PRODUCT.IS_DELETED.eq(false))
 

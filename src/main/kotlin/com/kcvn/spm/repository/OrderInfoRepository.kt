@@ -63,7 +63,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                 ORDER_INFO.FRAME_1,
                 ORDER_INFO.LAYER_COUNT,
                 ORDER_INFO.PCS_SH,
-                ORDER_INFO.BLOCK_SH,
+                ORDER_INFO.BLOCK_SH.`as`("shBlock"),
                 ORDER_INFO.SR_NOSR
             ).from(ORDER_INFO)
                 .where(condition)
@@ -95,7 +95,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                 ORDER_INFO.FRAME_1,
                 ORDER_INFO.LAYER_COUNT,
                 ORDER_INFO.PCS_SH,
-                ORDER_INFO.BLOCK_SH,
+                ORDER_INFO.BLOCK_SH.`as`("shBlock"),
                 ORDER_INFO.SR_NOSR,
                 ORDER_INFO.VERSION
             ).from(ORDER_INFO)
@@ -160,6 +160,14 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         }
     }
 
+    fun getProductNameByOder(startDate: OffsetDateTime? , endDate: OffsetDateTime?) : List<OrderInfo?>{
+        return context
+            .selectFrom(ORDER_INFO)
+            .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
+                .and(ORDER_INFO.IS_LATEST.eq(true))
+                .and(ORDER_INFO.IS_DELETED.eq(false)))
+            .fetchInto(OrderInfo::class.java)
+    }
     fun getOrderVersionDropdown(): List<OrderVersionDropdown> {
         return context.selectFrom(ORDER_VERSION_DROPDOWN)
             .where(ORDER_VERSION_DROPDOWN.IS_DELETED.eq(false))

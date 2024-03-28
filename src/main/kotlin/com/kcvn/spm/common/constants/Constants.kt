@@ -70,7 +70,6 @@ class Mold {
                 else -> listOf(this.ML, this.KVC, this.SKE, this.SUR, this.SWR)
             }
         }
-
     }
 }
 
@@ -102,9 +101,9 @@ class DateTimeFormat {
 
 class Color{
     companion object {
-        const val WHITE  = 0
-        const val YELLOW = 1
-        const val ORANGE = 2
+        const val WHITE  = "0"
+        const val YELLOW = "1"
+        const val ORANGE = "2"
     }
 }
 
@@ -171,6 +170,7 @@ class ProcessStatisticCode {
         const val M_ALL = "M ALL"
         const val M_TAN = "M TAN"
         const val GHEPLOP_GIAAPNHIET = "M 熱圧着"
+        const val TK_CSP = "TKCSP"
     }
 }
 
@@ -226,6 +226,9 @@ class ProcessPlan {
         const val MACHINENUMBER = "Số máy sử dụng"
         const val PROCESS_DUC_LO ="Đục lỗ"
         const val PROCESS_DUC_LO_M = "T/H"
+        const val AVERAGE_PLAN = "KH trung bình"
+
+
     }
 }
 

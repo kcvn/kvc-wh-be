@@ -1,9 +1,9 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
-import com.kcvn.spm.common.constants.OrderFilterType
 import com.kcvn.spm.model.tables.pojos.PlanProduct
 import com.kcvn.spm.model.tables.references.PLAN
+import com.kcvn.spm.model.tables.references.PLAN_PROCESS
 import com.kcvn.spm.model.tables.references.PLAN_PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -26,7 +26,17 @@ class PlanProductRepository(private val context: DSLContext) {
             PLAN_PRODUCT.BLOCK_SH
         ).from(PLAN_PRODUCT)
             .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
+            .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .where(condition)
+            .groupBy(
+                PLAN_PRODUCT.ID,
+                PLAN_PRODUCT.PLAN_ID,
+                PLAN_PRODUCT.PRODUCT_NAME,
+                PLAN_PRODUCT.FRAME_1,
+                PLAN_PRODUCT.MOLD,
+                PLAN_PRODUCT.PCS_SH,
+                PLAN_PRODUCT.BLOCK_SH
+            )
 
         val count = query.count()
         val data = query
@@ -50,7 +60,17 @@ class PlanProductRepository(private val context: DSLContext) {
             PLAN_PRODUCT.BLOCK_SH
         ).from(PLAN_PRODUCT)
             .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
+            .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .where(condition)
+            .groupBy(
+                PLAN_PRODUCT.ID,
+                PLAN_PRODUCT.PLAN_ID,
+                PLAN_PRODUCT.PRODUCT_NAME,
+                PLAN_PRODUCT.FRAME_1,
+                PLAN_PRODUCT.MOLD,
+                PLAN_PRODUCT.PCS_SH,
+                PLAN_PRODUCT.BLOCK_SH
+            )
 
         val data = query
             .orderBy(PLAN_PRODUCT.PRODUCT_NAME.sort(SortOrder.ASC))
@@ -77,21 +97,15 @@ class PlanProductRepository(private val context: DSLContext) {
         if (!request.mold.isNullOrEmpty()) {
             condition = condition.and(PLAN_PRODUCT.MOLD.eq(request.mold))
         }
-
-        when (request.filterType) {
-            OrderFilterType.DATE -> {
-                if (request.startDate != null) {
-                    condition = condition.and(PLAN.START_DATE.ge(request.startDate))
-                }
-                if (request.endDate != null) {
-                    condition = condition.and(PLAN.START_DATE.le(request.endDate))
-                }
-            }
-
-            OrderFilterType.ORDER -> {
-                if (!request.orderCode.isNullOrEmpty())
-                    condition = condition.and(PLAN.ORDER_CODE.eq(request.orderCode))
-            }
+        if (!request.processGroups.isNullOrEmpty()) {
+            val lstProcessGroup = request.processGroups!!.split(",").map { x -> x.trim() }
+            condition = condition.and(PLAN_PROCESS.PROCESS_GROUP.`in`(lstProcessGroup))
+        }
+        if (request.startDate != null) {
+            condition = condition.and(PLAN.START_DATE.ge(request.startDate))
+        }
+        if (request.endDate != null) {
+            condition = condition.and(PLAN.START_DATE.le(request.endDate))
         }
         condition = condition.and(PLAN.IS_ACTIVE.eq(true)).and(PLAN_PRODUCT.IS_DELETED.eq(false))
 

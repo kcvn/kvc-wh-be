@@ -172,4 +172,20 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
 
     }
 
+    fun getCompletionRateMinProduct() : List<CompletionRateProduct?> {
+        val queryProductCreateMin = context
+            .select(DSL.min(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE))
+            .from(COMPLETION_RATE_PRODUCT)
+        return  context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.eq(queryProductCreateMin)
+                .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(CompletionRateProduct::class.java)
+    }
+
+    fun getProductDetail(productName: String) : List<CompletionRateProduct?> {
+        return  context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.eq(productName)
+                .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(CompletionRateProduct::class.java)
+    }
 }

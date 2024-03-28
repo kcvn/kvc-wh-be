@@ -14,8 +14,6 @@ import java.time.OffsetDateTime
 @Suppress("UNCHECKED_CAST")
 data class Plan(
     var id: String? = null,
-    var orderId: String? = null,
-    var orderCode: String? = null,
     var startDate: OffsetDateTime? = null,
     var endDate: OffsetDateTime? = null,
     var version: Int? = null,
@@ -28,7 +26,8 @@ data class Plan(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var planCode: String? = null
 ): Serializable {
 
 
@@ -45,18 +44,6 @@ data class Plan(
                 return false
         }
         else if (this.id != o.id)
-            return false
-        if (this.orderId == null) {
-            if (o.orderId != null)
-                return false
-        }
-        else if (this.orderId != o.orderId)
-            return false
-        if (this.orderCode == null) {
-            if (o.orderCode != null)
-                return false
-        }
-        else if (this.orderCode != o.orderCode)
             return false
         if (this.startDate == null) {
             if (o.startDate != null)
@@ -112,6 +99,12 @@ data class Plan(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.planCode == null) {
+            if (o.planCode != null)
+                return false
+        }
+        else if (this.planCode != o.planCode)
+            return false
         return true
     }
 
@@ -119,8 +112,6 @@ data class Plan(
         val prime = 31
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
-        result = prime * result + (if (this.orderId == null) 0 else this.orderId.hashCode())
-        result = prime * result + (if (this.orderCode == null) 0 else this.orderCode.hashCode())
         result = prime * result + (if (this.startDate == null) 0 else this.startDate.hashCode())
         result = prime * result + (if (this.endDate == null) 0 else this.endDate.hashCode())
         result = prime * result + (if (this.version == null) 0 else this.version.hashCode())
@@ -130,6 +121,7 @@ data class Plan(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.planCode == null) 0 else this.planCode.hashCode())
         return result
     }
 
@@ -137,8 +129,6 @@ data class Plan(
         val sb = StringBuilder("Plan (")
 
         sb.append(id)
-        sb.append(", ").append(orderId)
-        sb.append(", ").append(orderCode)
         sb.append(", ").append(startDate)
         sb.append(", ").append(endDate)
         sb.append(", ").append(version)
@@ -148,6 +138,7 @@ data class Plan(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(planCode)
 
         sb.append(")")
         return sb.toString()

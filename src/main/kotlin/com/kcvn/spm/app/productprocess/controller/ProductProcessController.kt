@@ -87,4 +87,16 @@ class ProductProcessController(
         val data = productProcessService.importExcelProduct1(file)
         return ResponseEntity(data, HttpStatus.OK)
     }
+
+    @GetMapping("/download-template-master-data-excel")
+    fun downloadTemplateMasterDataExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productProcessService.downloadTemplate()
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @PostMapping(value = ["/import-excel-master-data"], consumes = ["multipart/form-data"])
+    fun importExcelMasterData( @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = productProcessService.importExcelProcessMasterData(file)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
 }

@@ -6,20 +6,17 @@ package com.kcvn.spm.model.tables
 
 import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.PLAN_PKEY
-import com.kcvn.spm.model.keys.PLAN__PLAN_ORDER_FKEY
 import com.kcvn.spm.model.tables.records.PlanRecord
 
 import java.time.OffsetDateTime
 import java.util.function.Function
-
-import kotlin.collections.List
 
 import org.jooq.Field
 import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row12
+import org.jooq.Row11
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -71,16 +68,6 @@ open class Plan(
     val ID: TableField<PlanRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
-     * The column <code>public.plan.order_id</code>.
-     */
-    val ORDER_ID: TableField<PlanRecord, String?> = createField(DSL.name("order_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
-
-    /**
-     * The column <code>public.plan.order_code</code>.
-     */
-    val ORDER_CODE: TableField<PlanRecord, String?> = createField(DSL.name("order_code"), SQLDataType.VARCHAR(50).nullable(false), this, "")
-
-    /**
      * The column <code>public.plan.start_date</code>.
      */
     val START_DATE: TableField<PlanRecord, OffsetDateTime?> = createField(DSL.name("start_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
@@ -125,6 +112,11 @@ open class Plan(
      */
     val IS_DELETED: TableField<PlanRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.plan.plan_code</code>.
+     */
+    val PLAN_CODE: TableField<PlanRecord, String?> = createField(DSL.name("plan_code"), SQLDataType.VARCHAR(50), this, "")
+
     private constructor(alias: Name, aliased: Table<PlanRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<PlanRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -146,22 +138,6 @@ open class Plan(
     constructor(child: Table<out Record>, key: ForeignKey<out Record, PlanRecord>): this(Internal.createPathAlias(child, key), child, key, PLAN, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<PlanRecord> = PLAN_PKEY
-    override fun getReferences(): List<ForeignKey<PlanRecord, *>> = listOf(PLAN__PLAN_ORDER_FKEY)
-
-    private lateinit var _order: Order
-
-    /**
-     * Get the implicit join path to the <code>public.order</code> table.
-     */
-    fun order(): Order {
-        if (!this::_order.isInitialized)
-            _order = Order(this, PLAN__PLAN_ORDER_FKEY)
-
-        return _order;
-    }
-
-    val order: Order
-        get(): Order = order()
     override fun `as`(alias: String): Plan = Plan(DSL.name(alias), this)
     override fun `as`(alias: Name): Plan = Plan(alias, this)
     override fun `as`(alias: Table<*>): Plan = Plan(alias.getQualifiedName(), this)
@@ -182,18 +158,18 @@ open class Plan(
     override fun rename(name: Table<*>): Plan = Plan(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row12 type methods
+    // Row11 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row12<String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row12<String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row11<String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?> = super.fieldsRow() as Row11<String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

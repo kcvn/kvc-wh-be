@@ -161,7 +161,7 @@ class PlanService(
             planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, titleKey = PlanTitle.PLAN_ACCUMULATION_KEY, quantityByCalendars = planAccumulations))
             planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
             planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY, quantityByCalendars = workResultAccumulations))
-            planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations, response.columns!!)))
 
             productPlan.planData = planData
             productPlan
@@ -169,7 +169,7 @@ class PlanService(
         return response
     }
 
-    private fun getDataExportExcel(planProducts: List<PlanProduct>, colStartDate: OffsetDateTime, colEndDate: OffsetDateTime): List<PlanExportExcelModel> {
+    private fun getDataExportExcel(planProducts: List<PlanProduct>, colStartDate: OffsetDateTime, colEndDate: OffsetDateTime, columns: List<CalendarResponse>): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
         val productNames = planProducts.mapNotNull { x -> x.productName }.distinct()
 
@@ -246,7 +246,7 @@ class PlanService(
                 planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, titleKey = PlanTitle.PLAN_ACCUMULATION_KEY, quantityByCalendars = planAccumulations))
                 planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
                 planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY, quantityByCalendars = workResultAccumulations))
-                planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations, columns)))
 
                 productPlan.planData = planData
                 productPlan
@@ -267,12 +267,16 @@ class PlanService(
         return response
     }
 
-    private fun calculateDifference(sourceData: List<KeyValueResponse>, compareData: List<KeyValueResponse>): List<KeyValueResponse> {
+    private fun calculateDifference(sourceData: List<KeyValueResponse>, compareData: List<KeyValueResponse>, columns: List<CalendarResponse>): List<KeyValueResponse> {
         val response = mutableListOf<KeyValueResponse>()
-        for (item in compareData) {
-            val sourceValue = sourceData.find { x -> x.key == item.key }
-            val diffValue = (item.value?.toInt() ?: 0) - (sourceValue?.value?.toInt() ?: 0)
-            response.add(KeyValueResponse(item.key, diffValue.toString()))
+        for (col in columns) {
+            val sourceValue = sourceData.find { x -> x.key == col.key }
+            val compareValue = compareData.find { x -> x.key == col.key }
+
+            if (sourceValue != null || compareValue != null) {
+                val diffValue = (compareValue?.value?.toInt() ?: 0) - (sourceValue?.value?.toInt() ?: 0)
+                response.add(KeyValueResponse(col.key, diffValue.toString()))
+            }
         }
         return response
     }
@@ -296,7 +300,7 @@ class PlanService(
 
         val planProducts = planProductRep.getListPlanProduct(request)
         if (dataExports.isEmpty()) {
-            dataExports.addAll(getDataExportExcel(planProducts, request.startDate!!, request.endDate!!))
+            dataExports.addAll(getDataExportExcel(planProducts, request.startDate!!, request.endDate!!, response.columns!!))
         }
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
@@ -665,7 +669,7 @@ class PlanService(
         val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
         val planProducts = planProductRep.getListPlanProduct(request)
-        val dataExports = getDataExportExcel(planProducts, request.startDate!!, request.endDate!!)
+        val dataExports = getDataExportExcel(planProducts, request.startDate!!, request.endDate!!, columns)
         if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanTemplate.xlsx")

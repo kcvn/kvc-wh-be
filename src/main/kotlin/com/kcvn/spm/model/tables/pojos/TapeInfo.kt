@@ -15,8 +15,6 @@ import java.time.OffsetDateTime
 data class TapeInfo(
     var id: String? = null,
     var productName: String? = null,
-    var month: String? = null,
-    var year: String? = null,
     var requestDateStart: OffsetDateTime? = null,
     var requestDateEnd: OffsetDateTime? = null,
     var createdDate: OffsetDateTime? = null,
@@ -30,7 +28,9 @@ data class TapeInfo(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var monthReport: Int? = null,
+    var yearReport: Int? = null
 ): Serializable {
 
 
@@ -53,18 +53,6 @@ data class TapeInfo(
                 return false
         }
         else if (this.productName != o.productName)
-            return false
-        if (this.month == null) {
-            if (o.month != null)
-                return false
-        }
-        else if (this.month != o.month)
-            return false
-        if (this.year == null) {
-            if (o.year != null)
-                return false
-        }
-        else if (this.year != o.year)
             return false
         if (this.requestDateStart == null) {
             if (o.requestDateStart != null)
@@ -138,6 +126,18 @@ data class TapeInfo(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.monthReport == null) {
+            if (o.monthReport != null)
+                return false
+        }
+        else if (this.monthReport != o.monthReport)
+            return false
+        if (this.yearReport == null) {
+            if (o.yearReport != null)
+                return false
+        }
+        else if (this.yearReport != o.yearReport)
+            return false
         return true
     }
 
@@ -146,8 +146,6 @@ data class TapeInfo(
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.productName == null) 0 else this.productName.hashCode())
-        result = prime * result + (if (this.month == null) 0 else this.month.hashCode())
-        result = prime * result + (if (this.year == null) 0 else this.year.hashCode())
         result = prime * result + (if (this.requestDateStart == null) 0 else this.requestDateStart.hashCode())
         result = prime * result + (if (this.requestDateEnd == null) 0 else this.requestDateEnd.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
@@ -160,6 +158,8 @@ data class TapeInfo(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.monthReport == null) 0 else this.monthReport.hashCode())
+        result = prime * result + (if (this.yearReport == null) 0 else this.yearReport.hashCode())
         return result
     }
 
@@ -168,8 +168,6 @@ data class TapeInfo(
 
         sb.append(id)
         sb.append(", ").append(productName)
-        sb.append(", ").append(month)
-        sb.append(", ").append(year)
         sb.append(", ").append(requestDateStart)
         sb.append(", ").append(requestDateEnd)
         sb.append(", ").append(createdDate)
@@ -182,6 +180,8 @@ data class TapeInfo(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(monthReport)
+        sb.append(", ").append(yearReport)
 
         sb.append(")")
         return sb.toString()

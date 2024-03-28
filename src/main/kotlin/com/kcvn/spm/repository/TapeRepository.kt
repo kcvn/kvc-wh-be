@@ -13,18 +13,18 @@ import org.springframework.stereotype.Repository
 @Repository
 class TapeRepository (private val context: DSLContext) : SortingRepository()
 {
-    fun getTapeDetailByMonth (month: String, year: String) : TapeInfo? {
+    fun getTapeDetailByMonth (month: Int, year: Int) : TapeInfo? {
         return context.selectFrom(TAPE_INFO)
-            .where(TAPE_INFO.MONTH.eq(month)
-                .and(TAPE_INFO.YEAR.eq(year))
+            .where(TAPE_INFO.MONTH_REPORT.eq(month)
+                .and(TAPE_INFO.YEAR_REPORT.eq(year))
                 .and(TAPE_INFO.IS_DELETED.eq(false)))
             .fetchAnyInto(TapeInfo::class.java)
     }
 
-    fun deleteTapeByMonth (month: String?, year: String?) {
+    fun deleteTapeByMonth (month: Int?, year: Int?) {
         context.deleteFrom(TAPE_INFO)
-            .where(TAPE_INFO.MONTH.eq(month)
-                .and(TAPE_INFO.YEAR.eq(year)))
+            .where(TAPE_INFO.MONTH_REPORT.eq(month)
+                .and(TAPE_INFO.YEAR_REPORT.eq(year)))
             .execute()
     }
 
@@ -32,8 +32,8 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
         val records = request.map { x ->
             DSL.row(
                 x?.productName,
-                x?.month,
-                x?.year,
+                x?.monthReport,
+                x?.yearReport,
                 x?.requestDateStart,
                 x?.requestDateEnd,
                 x?.tapeShared,
@@ -47,8 +47,8 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
         val insertValuesStep = context.insertInto(
             TAPE_INFO,
             TAPE_INFO.PRODUCT_NAME,
-            TAPE_INFO.MONTH,
-            TAPE_INFO.YEAR,
+            TAPE_INFO.MONTH_REPORT,
+            TAPE_INFO.YEAR_REPORT,
             TAPE_INFO.REQUEST_DATE_START,
             TAPE_INFO.REQUEST_DATE_END,
             TAPE_INFO.TAPE_SHARED,

@@ -73,16 +73,6 @@ open class TapeInfo(
     val PRODUCT_NAME: TableField<TapeInfoRecord, String?> = createField(DSL.name("product_name"), SQLDataType.VARCHAR(12).nullable(false), this, "")
 
     /**
-     * The column <code>public.tape_info.month</code>.
-     */
-    val MONTH: TableField<TapeInfoRecord, String?> = createField(DSL.name("month"), SQLDataType.VARCHAR(2).nullable(false), this, "")
-
-    /**
-     * The column <code>public.tape_info.year</code>.
-     */
-    val YEAR: TableField<TapeInfoRecord, String?> = createField(DSL.name("year"), SQLDataType.VARCHAR(4).nullable(false), this, "")
-
-    /**
      * The column <code>public.tape_info.request_date_start</code>.
      */
     val REQUEST_DATE_START: TableField<TapeInfoRecord, OffsetDateTime?> = createField(DSL.name("request_date_start"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
@@ -142,6 +132,16 @@ open class TapeInfo(
      */
     val IS_DELETED: TableField<TapeInfoRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.tape_info.month_report</code>.
+     */
+    val MONTH_REPORT: TableField<TapeInfoRecord, Int?> = createField(DSL.name("month_report"), SQLDataType.INTEGER.nullable(false), this, "")
+
+    /**
+     * The column <code>public.tape_info.year_report</code>.
+     */
+    val YEAR_REPORT: TableField<TapeInfoRecord, Int?> = createField(DSL.name("year_report"), SQLDataType.INTEGER.nullable(false), this, "")
+
     private constructor(alias: Name, aliased: Table<TapeInfoRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<TapeInfoRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -185,16 +185,16 @@ open class TapeInfo(
     // -------------------------------------------------------------------------
     // Row16 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row16<String?, String?, String?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, String?, Int?, Double?, Double?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row16<String?, String?, String?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, String?, Int?, Double?, Double?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row16<String?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, String?, Int?, Double?, Double?, String?, OffsetDateTime?, String?, Boolean?, Int?, Int?> = super.fieldsRow() as Row16<String?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, String?, Int?, Double?, Double?, String?, OffsetDateTime?, String?, Boolean?, Int?, Int?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, String?, Int?, Double?, Double?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, String?, Int?, Double?, Double?, String?, OffsetDateTime?, String?, Boolean?, Int?, Int?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, String?, Int?, Double?, Double?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, OffsetDateTime?, OffsetDateTime?, OffsetDateTime?, String?, String?, Int?, Double?, Double?, String?, OffsetDateTime?, String?, Boolean?, Int?, Int?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

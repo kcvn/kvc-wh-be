@@ -17,8 +17,17 @@ import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.OrderInfo
-import com.kcvn.spm.repository.*
-import org.apache.poi.ss.usermodel.*
+import com.kcvn.spm.repository.HolidaysCalenderRepository
+import com.kcvn.spm.repository.OrderInfoRepository
+import com.kcvn.spm.repository.OrderRepository
+import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.WorkResultRepository
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.DateUtil
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -54,13 +63,21 @@ class OrderService(
         val orderDetails = orderInfoRep.getPagingListOrder(request, pageable, isExport)
 
         val productVersion = orderDetails.first.map { x -> Pair(x.productName!!, x.version ?: "") }
-        val quantityByCalendars = orderInfoRep.getQuantityByCalendar(productVersion, (request.version == OrderVersion.LATEST))
+        val quantityByCalendars = orderInfoRep.getQuantityByCalendar(
+            productVersion,
+            request.startDate,
+            request.endDate,
+            (request.version == OrderVersion.LATEST)
+        )
 
         response.data = orderDetails.first.map { model ->
             val quantityByCalendar = quantityByCalendars.filter {
-                m -> m.productName == model.productName && (m.version ?: "") == (model.version ?: "")
-            }.map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
-            model.quantityByCalendars = quantityByCalendar
+                m -> m.productName == model.productName && (request.version == OrderVersion.LATEST || (m.version ?: "") == (model.version ?: ""))
+            }
+
+            model.quantityByCalendars = quantityByCalendar.map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
+
+            if (request.version ==OrderVersion.LATEST) model.version = quantityByCalendar.firstOrNull()?.version
             if (!model.version.isNullOrEmpty()) {
                 model.version = "V${StringHelper.intToStringD2(model.version)}"
             }

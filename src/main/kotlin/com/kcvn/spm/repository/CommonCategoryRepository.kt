@@ -5,7 +5,6 @@ import com.kcvn.spm.model.tables.pojos.CommonCategory
 import com.kcvn.spm.model.tables.pojos.ProcessMasterData
 import com.kcvn.spm.model.tables.references.COMMON_CATEGORY
 import com.kcvn.spm.model.tables.references.PROCESS_MASTER_DATA
-import com.kcvn.spm.model.tables.references.PRODUCT_PROCESS
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

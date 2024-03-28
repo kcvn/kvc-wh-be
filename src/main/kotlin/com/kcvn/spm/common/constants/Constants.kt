@@ -101,9 +101,9 @@ class DateTimeFormat {
 
 class Color{
     companion object {
-        const val WHITE  = 0
-        const val YELLOW = 1
-        const val ORANGE = 2
+        const val WHITE  = "0"
+        const val YELLOW = "1"
+        const val ORANGE = "2"
     }
 }
 
@@ -170,6 +170,7 @@ class ProcessStatisticCode {
         const val M_ALL = "M ALL"
         const val M_TAN = "M TAN"
         const val GHEPLOP_GIAAPNHIET = "M 熱圧着"
+        const val TK_CSP = "TKCSP"
     }
 }
 

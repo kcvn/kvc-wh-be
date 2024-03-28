@@ -52,11 +52,4 @@ class PlanController(private val planService: PlanService) {
         val data = planService.getPlanSummary(request)
         return ResponseEntity<PlanSummaryResponse>(data, HttpStatus.OK)
     }
-
-    @GetMapping("/summary/export-excel")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
-    fun exportExcelSummary(request: PlanSearchRequest): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = planService.exportExcelSummary(request)
-        return ResponseEntity(BaseResponse(data), HttpStatus.OK)
-    }
 }

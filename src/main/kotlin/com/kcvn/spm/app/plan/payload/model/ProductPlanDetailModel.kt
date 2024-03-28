@@ -12,6 +12,7 @@ data class ProductPlanDetailModel(
     var completionRate: BigDecimal? = null,
     var processConvertCode: String? = null,
     var processStatisticCode: String? = null,
+    var processGroup: String? = null,
     var processSequence: Int? = null,
     var inventory: Int? = null,
     var sumInventory: Int? = null,

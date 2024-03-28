@@ -9,6 +9,8 @@ import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.*
+import com.kcvn.spm.common.constants.*
+import com.kcvn.spm.common.constants.Color
 
 class ExcelHelper {
     companion object {
@@ -42,7 +44,7 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle = styleTemplate
         }
 
-        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false) {
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null) {
             row.createCell(colIndex).setCellValue(value)
             val cellStyle = workbook.createCellStyle()
             cellStyle.cloneStyleFrom(style)
@@ -55,6 +57,14 @@ class ExcelHelper {
             if (isHoliday) {
                 cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            if(!color.isNullOrEmpty()){
+                if(color == Color.YELLOW){
+                    cellStyle.fillForegroundColor = IndexedColors.LIGHT_YELLOW.index
+                }
+                else if(color == Color.ORANGE){
+                    cellStyle.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
+                }
             }
             row.getCell(colIndex).cellStyle = cellStyle
         }

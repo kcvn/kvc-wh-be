@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.report.materials.service
 
+import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.report.materials.payload.request.ImportTapeRequest
 import com.kcvn.spm.app.report.materials.payload.response.ImportTapeErrResponse
 import com.kcvn.spm.common.constants.ExcelConstant
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
+import java.text.DecimalFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -29,7 +31,8 @@ import java.time.temporal.ChronoUnit
 class MaterialsService(
     private val tapeInfoRep : TapeRepository,
     private val orderInfoRep : OrderInfoRepository,
-    private val completionRateProductRepository: CompletionRateProductRepository
+    private val completionRateProductRepository: CompletionRateProductRepository,
+    private val masterDataService: MasterDataService,
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
         val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTape.xlsx"
@@ -138,7 +141,7 @@ class MaterialsService(
 
         // Lấy ra list sản phẩm trong bảng đơn hàng
         val listOrderInfo = orderInfoRep.getProductNameByOder(request.startDate, request.endDate)
-        val listProductOrder: MutableList<String> = listOrderInfo.mapNotNull { it?.productName }.toMutableList()
+        val listProductOrder: MutableList<String> = listOrderInfo.mapNotNull { it?.productName }.distinct().toMutableList()
 
         // Tạo list để lưu tên sản phẩm trong file import
         val listProductFileImport : MutableList<String> = mutableListOf()
@@ -153,6 +156,7 @@ class MaterialsService(
         val listProductCompletionRate = completionRateProductRepository.getCompletionRateMinProduct()
         // Đọc file import
         var check = true
+        val masterData = masterDataService.getMasterDataSelection()
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val messageErr = ImportTapeErrResponse()
             val productName = ExcelHelper.getCellValue(row, 0)
@@ -178,6 +182,11 @@ class MaterialsService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 1))
                     )
                 )
+            }else {
+                check = false
+                if (!masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) }) {
+                    messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
+                }
             }
             if (tapeType.isEmpty()) {
                 check = false
@@ -187,6 +196,11 @@ class MaterialsService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 2))
                     )
                 )
+            }else {
+                check = false
+                if (!masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 2) }) {
+                    messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
+                }
             }
             if (unitPrice.isEmpty()) {
                 check = false
@@ -281,7 +295,9 @@ class MaterialsService(
 
                 val intoMoney = quantityTape * unitPrice.toDouble()
                 messageErr.quantityTape = quantityTape
-                messageErr.intoMoney = intoMoney
+                val df = DecimalFormat("#.####")
+                val formattedNumber = df.format(intoMoney).toDouble()
+                messageErr.intoMoney = formattedNumber
             }
 
 
@@ -364,7 +380,7 @@ class MaterialsService(
         val sheet = workbook.createSheet()
         val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
         headerRow.height = titleRow.height
-
+        var test = titleRow.lastCellNum
         for (i in 0 until titleRow.lastCellNum) {
             val headerStyle = titleRow.getCell(i).cellStyle
             val headerCellValue = ExcelHelper.getCellValue(titleRow, i)
@@ -386,7 +402,7 @@ class MaterialsService(
                 ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }?.cellStyle ?: style, item.tapeShared)
                 ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }?.cellStyle ?: style, item.typeTape)
                 ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }?.cellStyle ?: style, item.unitPrice.toString())
-                ExcelHelper.setCellValue(dataRow, 8, (item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: resultCellStyle), item.listMessageErr.joinToString(separator = "; "))
+                ExcelHelper.setCellValue(dataRow, 4, (item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: resultCellStyle), item.listMessageErr.joinToString(separator = "; "))
             }
         }
         workbook.removeSheetAt(0)

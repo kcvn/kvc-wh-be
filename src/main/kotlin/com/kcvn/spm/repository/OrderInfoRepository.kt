@@ -162,8 +162,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
 
     fun getProductNameByOder(startDate: OffsetDateTime? , endDate: OffsetDateTime?) : List<OrderInfo?>{
         return context
-            .selectDistinct(ORDER_INFO.PRODUCT_NAME)
-            .from(ORDER_INFO)
+            .selectFrom(ORDER_INFO)
             .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
                 .and(ORDER_INFO.IS_LATEST.eq(true))
                 .and(ORDER_INFO.IS_DELETED.eq(false)))

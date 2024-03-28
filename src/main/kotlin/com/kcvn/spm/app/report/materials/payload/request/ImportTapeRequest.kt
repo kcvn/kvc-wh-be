@@ -7,5 +7,5 @@ class ImportTapeRequest {
     val yearReport: String? = null
     val startDate: OffsetDateTime? = null
     val endDate: OffsetDateTime? = null
-    val hasUpdateTape: Boolean = false
+    val existTape: Boolean = false
 }

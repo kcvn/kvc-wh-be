@@ -16,7 +16,11 @@ import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestPart
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 
 @RestController
@@ -40,8 +44,8 @@ class OrderController(
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_ORDER.value) || hasRole('ADMIN')")
-    fun importExcel(isIncreaseVersion: Boolean?, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = orderService.importExcelOrder(file, isIncreaseVersion)
+    fun importExcel(increaseVersion: Boolean?, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = orderService.importExcelOrder(file, increaseVersion)
         return ResponseEntity(data, HttpStatus.OK)
     }
 

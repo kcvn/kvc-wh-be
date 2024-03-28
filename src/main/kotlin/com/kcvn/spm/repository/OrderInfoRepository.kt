@@ -46,7 +46,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             if (request.version == OrderVersion.LATEST) {
                 condition = condition.and(ORDER_INFO.IS_LATEST.eq(true))
             } else {
-                val versions = request.version?.split(",")?.map { x -> x.toInt() }
+                val versions = request.version?.split(",")?.mapNotNull { x -> x.toIntOrNull() }
                 if (!versions.isNullOrEmpty())
                     condition = condition.and(ORDER_INFO.VERSION.`in`(versions))
             }

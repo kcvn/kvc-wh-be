@@ -1,11 +1,13 @@
 package com.kcvn.spm.app.report.materials.service
 
 import com.kcvn.spm.app.masterdata.service.MasterDataService
+import com.kcvn.spm.app.report.materials.payload.request.GetReportMaterialsRequest
 import com.kcvn.spm.app.report.materials.payload.request.ImportTapeRequest
 import com.kcvn.spm.app.report.materials.payload.response.ImportTapeErrResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.CellStyleModel
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -16,6 +18,7 @@ import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.TapeRepository
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -60,15 +63,15 @@ class MaterialsService(
         val monthEndDate = request.endDate?.plusHours(7)?.monthValue ?: 0
         val yearStartDate = request.startDate?.plusHours(7)?.year ?: 0
         val yearEndDate = request.endDate?.plusHours(7)?.year ?: 0
-        val monthReport = request.monthReport?.toIntOrNull() ?: 0
-        val yearReport = request.yearReport?.toIntOrNull() ?: 0
-        if(request.monthReport?.toInt() == 1){
+        val monthReport = request.monthReport
+        val yearReport = request.yearReport
+        if(request.monthReport == 1){
             if(!((monthStartDate != 12 && monthStartDate == 1 && yearStartDate == yearReport)
-                || (monthStartDate == 12 && yearReport - yearStartDate == 1))){
+                || (monthStartDate == 12 && yearReport!! - yearStartDate == 1))){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.startDate"))
                 }
         }else {
-            if(!((monthReport - monthStartDate == 1 || monthReport == monthStartDate) && yearReport == yearStartDate)){
+            if(!((monthReport!! - monthStartDate == 1 || monthReport == monthStartDate) && yearReport == yearStartDate)){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.startDate"))
             }
         }
@@ -78,31 +81,31 @@ class MaterialsService(
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.endDate"))
             }
         }else {
-            if(!((monthEndDate - monthReport  == 1 || monthReport == monthEndDate) && yearReport == yearEndDate)){
+            if(!((monthEndDate - (monthReport ?: 0)  == 1 || monthReport == monthEndDate) && yearReport == yearEndDate)){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.endDate"))
             }
         }
         // Validate thời gian yêu cầu của các tháng báo cáo phải là liên tiếp
 
-        val monthPre: String
-        val yearPre: String
-        val monthNext: String
-        val yearNext: String
+        val monthPre: Int
+        val yearPre: Int
+        val monthNext: Int
+        val yearNext: Int
         // Kiểm tra xem tháng của import vào trường hợp đặc biệt tháng 12 và 1 thì phải sang năm mới
 
         if(monthReport == 1){
-            monthPre = "12"
-            yearPre = (yearReport - 1).toString()
+            monthPre = 12
+            yearPre = yearReport - 1
         }else {
-            monthPre = (monthReport - 1).toString()
-            yearPre = yearReport.toString()
+            monthPre = monthReport!! - 1
+            yearPre = yearReport
         }
         if(monthReport == 12){
-            monthNext = "1"
-            yearNext = (yearReport + 1).toString()
+            monthNext = 1
+            yearNext = yearReport + 1
         }else {
-            monthNext = (monthReport + 1).toString()
-            yearNext = yearReport.toString()
+            monthNext = monthReport + 1
+            yearNext = yearReport
         }
         // check xem có tồn tại dữ liệu của tháng trước không
 
@@ -282,6 +285,7 @@ class MaterialsService(
             listProductImport.add(ExcelHelper.getCellValue(row, 0))
 
             // Tính số lượng nếu mà validate không có lỗi
+            val df = DecimalFormat("#.####")
             if(check){
                 val completionRates = completionRateProductRepository.getProductDetail(productName)
 
@@ -298,16 +302,16 @@ class MaterialsService(
 
                 val intoMoney = quantityTape * unitPrice.toDouble()
                 messageErr.quantityTape = quantityTape
-                val df = DecimalFormat("#.####")
+
                 val formattedNumber = df.format(intoMoney).toDouble()
                 messageErr.intoMoney = formattedNumber
             }
 
 
-            messageErr.productName = ExcelHelper.getCellValue(row, 0)
-            messageErr.tapeShared = ExcelHelper.getCellValue(row, 1)
-            messageErr.typeTape = ExcelHelper.getCellValue(row, 2)
-            messageErr.unitPrice = ExcelHelper.getCellValue(row, 3).toDoubleOrNull()
+            messageErr.productName = productName
+            messageErr.tapeShared = tapeShared
+            messageErr.typeTape = tapeType
+            messageErr.unitPrice = df.format(unitPrice).toDoubleOrNull()
             messageErr.cellStyles = row.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
 
             listOderInfoValidate.add(messageErr)
@@ -349,8 +353,8 @@ class MaterialsService(
                     quantityTape = x.quantityTape,
                     unitPrice = x.unitPrice,
                     intoMoney = x.intoMoney,
-                    month = request.monthReport,
-                    year = request.yearReport,
+                    monthReport = request.monthReport,
+                    yearReport = request.yearReport,
                     requestDateStart = request.startDate,
                     requestDateEnd = request.endDate
                 )
@@ -412,5 +416,13 @@ class MaterialsService(
         workbook.write(byteArrayOutputStream)
 
         return byteArrayOutputStream.toByteArray()
+    }
+
+    fun getReportMaterials(request: GetReportMaterialsRequest, pageable: Pageable) : BasePagingResponse<TapeInfo?> {
+        val result =  tapeInfoRep.getAllReportMaterials(request, pageable)
+        val response = BasePagingResponse<TapeInfo?>()
+        response.data = result.first
+        response.totalRecords = result.second ?: 0
+        return response
     }
 }

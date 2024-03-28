@@ -70,7 +70,6 @@ class Mold {
                 else -> listOf(this.ML, this.KVC, this.SKE, this.SUR, this.SWR)
             }
         }
-
     }
 }
 

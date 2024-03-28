@@ -14,7 +14,6 @@ import com.kcvn.spm.model.tables.pojos.OrderInfo
 import com.kcvn.spm.model.tables.pojos.OrderVersionDropdown
 import com.kcvn.spm.model.tables.references.ORDER_INFO
 import com.kcvn.spm.model.tables.references.ORDER_VERSION_DROPDOWN
-import com.kcvn.spm.model.tables.references.TAPE_INFO
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -64,7 +63,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                 ORDER_INFO.FRAME_1,
                 ORDER_INFO.LAYER_COUNT,
                 ORDER_INFO.PCS_SH,
-                ORDER_INFO.BLOCK_SH,
+                ORDER_INFO.BLOCK_SH.`as`("shBlock"),
                 ORDER_INFO.SR_NOSR
             ).from(ORDER_INFO)
                 .where(condition)
@@ -96,7 +95,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                 ORDER_INFO.FRAME_1,
                 ORDER_INFO.LAYER_COUNT,
                 ORDER_INFO.PCS_SH,
-                ORDER_INFO.BLOCK_SH,
+                ORDER_INFO.BLOCK_SH.`as`("shBlock"),
                 ORDER_INFO.SR_NOSR,
                 ORDER_INFO.VERSION
             ).from(ORDER_INFO)

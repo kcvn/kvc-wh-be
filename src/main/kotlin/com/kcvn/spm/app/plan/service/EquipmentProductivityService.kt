@@ -39,7 +39,6 @@ import java.time.format.DateTimeFormatter
 @Transactional
 class EquipmentProductivityService(
     private val equipmentProductivityRepository: EquipmentProductivityRepository,
-    private val planRepository: PlanRepository,
     private val planProductRep: PlanProductRepository,
     private val planProcessRep: PlanProcessRepository,
     private val planDetailRep: PlanDetailRepository,
@@ -190,26 +189,14 @@ class EquipmentProductivityService(
 
     fun getPlanSummary(request: PlanSearchRequest): PlanSummaryResponse {
         val response = PlanSummaryResponse()
-        var colStartDate = OffsetDateTime.now()
-        var colEndDate = OffsetDateTime.now()
-        if (request.filterType == OrderFilterType.DATE) {
-            if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
-            colStartDate = request.startDate
-            colEndDate = request.endDate
-        }
-        if (request.filterType == OrderFilterType.ORDER) {
-            val plan = planRepository.getPlanByOrderCode(request.orderCode ?: "")
-                ?: throw BusinessException(CommonUtils.getMessage("plan.notExistInOrder"))
-            colStartDate = plan.startDate
-            colEndDate = plan.endDate
-        }
+        if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         val processGroups = processGroupRep.getForPlanEquipmentProductivity()
-        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
+        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
         val planProducts = planProductRep.getListPlanProduct(request)
-        val dataExports = getDataExportExcel(planProducts, colStartDate, colEndDate)
+        val dataExports = getDataExportExcel(planProducts, request.startDate!!, request.endDate!!)
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter {
                 x -> !x.processConvertCode.isNullOrEmpty()
                 && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
@@ -570,22 +557,10 @@ class EquipmentProductivityService(
     request: PlanSearchRequest,
     @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
     pageable: Pageable) : FileContentModel{
-        var colStartDate = OffsetDateTime.now()
-        var colEndDate = OffsetDateTime.now()
-        if (request.filterType == OrderFilterType.DATE) {
-            if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
-            colStartDate = request.startDate
-            colEndDate = request.endDate
-        }
-        if (request.filterType == OrderFilterType.ORDER) {
-            val plan = planRepository.getPlanByOrderCode(request.orderCode ?: "")
-                ?: throw BusinessException(CommonUtils.getMessage("plan.notExistInOrder"))
-            colStartDate = plan.startDate
-            colEndDate = plan.endDate
-        }
+        if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
-        val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(colStartDate)!!, DateTimeHelper.toTimeZone7(colEndDate)!!, holidayCalenders)
+        val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
         val dataExports = getPaginatedEquipmentProductivityPlan(request,pageable)
         if (dataExports?.data?.isEmpty() == true) throw BusinessException(CommonUtils.getMessage("plan.export.noData"))

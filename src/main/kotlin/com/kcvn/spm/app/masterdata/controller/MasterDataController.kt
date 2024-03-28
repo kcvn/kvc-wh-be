@@ -20,15 +20,5 @@ class MasterDataController (private val masterDataService: MasterDataService) {
         return ResponseEntity<MasterDataSelectionResponse>(data, HttpStatus.OK)
     }
 
-    @GetMapping("/download-template-excel")
-    fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = masterDataService.downloadTemplate()
-        return ResponseEntity(data, HttpStatus.OK)
-    }
 
-    @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
-    fun importCsv( @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = masterDataService.importExcelProcessMasterData(file)
-        return ResponseEntity(data, HttpStatus.OK)
-    }
 }

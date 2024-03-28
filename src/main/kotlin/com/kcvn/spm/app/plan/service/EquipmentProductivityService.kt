@@ -154,7 +154,10 @@ class EquipmentProductivityService(
                                         } else {
                                             "0"
                                         }
-                                        val rate = ((value) / (equipmentMachineValueDouble)) / (numberMachine ?: 1.0) * 100.0
+                                        var rate = 0.0
+                                        if(equipmentMachineValueDouble != 0.0){
+                                            rate = ((value) / (equipmentMachineValueDouble)) / (numberMachine ?: 1.0) * 100.0
+                                        }
                                         val color = when {
                                             rate > 100 -> Color.ORANGE
                                             rate > 90 -> Color.YELLOW
@@ -351,15 +354,8 @@ class EquipmentProductivityService(
             if (dataGhepLop.isNotEmpty()) {
                 val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.GHEP_LOP_SUM }
 
-                val ghepLop = PlanSummaryModel(
-                    processName = process?.description,
-                    processNameJp = process?.descriptionJp,
-                    processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
-                    processSequence = process?.sortOrder?.toInt(),
-                    frame1 = dataGhepLop.first().frame1,
-                    processCode = dataGhepLop.first().processCode,
-                    unit =dataGhepLop.first().unit,
-                    details = mutableListOf(
+                val detailsList = if (!frame1.equals(Frame1.MU)) {
+                    mutableListOf(
                         PlanSummaryDetailModel(
                             type = CommonUtils.getMessage(""),
                             planSummaryData = dataGhepLop.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
@@ -371,28 +367,83 @@ class EquipmentProductivityService(
                                 }.toList()
                         )
                     )
+                } else {
+                    mutableListOf()
+                }
+
+                val ghepLop = PlanSummaryModel(
+                    processName = process?.description,
+                    processNameJp = process?.descriptionJp,
+                    processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
+                    processSequence = process?.sortOrder?.toInt(),
+                    frame1 = dataGhepLop.first().frame1,
+                    processCode = dataGhepLop.first().processCode,
+                    unit = dataGhepLop.first().unit,
+                    details = detailsList
                 )
+
+                if(frame1.equals(Frame1.MU)){
+                    ghepLop.details?.removeFirst()
+                    val mGAN = dataExportFlattens.filter { x ->
+                        x.processStatisticCode == ProcessStatisticCode.GHEPLOP_GIAAPNHIET
+                    }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                        PlanSummaryDetailModel(
+                            type = "Ghép lớp gia áp nhiệt",
+                            planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                                .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                                    val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                    data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                        .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                    data
+                                }
+                        )
+                    }.firstOrNull()
+                    if (mGAN != null) {
+                        ghepLop.details!!.add(mGAN)
+                    }
+
+                    val mGLT = dataExportFlattens.filter { x ->
+                        !x.processConvertCode.isNullOrEmpty()
+                                && x.processStatisticCode != ProcessStatisticCode.GHEPLOP_GIAAPNHIET
+                                && x.processConvertCode!!.startsWith(ProcessConvertCode.M)
+                    }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                        PlanSummaryDetailModel(
+                            type = "Ghép lớp thường",
+                            planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                                .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                                    val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                    data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                        .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                    data
+                                }
+                        )
+                    }.firstOrNull()
+                    if (mGLT != null) {
+                        ghepLop.details!!.add(mGLT)
+                    }
+                }
+
                 dataSummary.removeAll(dataGhepLop)
                 dataSummary.add(ghepLop)
             }
 
             if(frame1.equals(Frame1.MU)){
-                val dataGhepLopGiaNhiet = dataSummary.filter { x -> x.frame1 == frame1 &&(!x.processConvertCode.isNullOrEmpty() && x.processConvertCode!!.startsWith(ProcessConvertCode.M)) }
-                if (dataGhepLopGiaNhiet.isNotEmpty()) {
-                    val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.GHEPLOP_GIAAPNHIET }
+                val dataThaoKhungCsp = dataSummary.filter { x -> x.frame1 == frame1 &&(x.processConvertCode == ProcessConvertCode.TK) &&(x.processCode =="214220") }
+                if (dataThaoKhungCsp.isNotEmpty()) {
+                    val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.TK_CSP }
 
-                    val ghepLopGiaNhiet = PlanSummaryModel(
+                    val thaoKhungCsp = PlanSummaryModel(
                         processName = process?.description,
                         processNameJp = process?.descriptionJp,
-                        processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
+                        processConvertCode = ProcessConvertCode.TK,
                         processSequence = process?.sortOrder?.toInt(),
-                        frame1 = dataGhepLopGiaNhiet.first().frame1,
-                        processCode = dataGhepLopGiaNhiet.first().processCode,
-                        unit =dataGhepLopGiaNhiet.first().unit,
+                        frame1 = dataThaoKhungCsp.first().frame1,
+                        processCode = dataThaoKhungCsp.first().processCode,
+                        unit =dataThaoKhungCsp.first().unit,
                         details = mutableListOf(
                             PlanSummaryDetailModel(
                                 type = CommonUtils.getMessage(""),
-                                planSummaryData = dataGhepLopGiaNhiet.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
+                                planSummaryData = dataThaoKhungCsp.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
                                     .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
                                         val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
                                         data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
@@ -402,8 +453,8 @@ class EquipmentProductivityService(
                             )
                         )
                     )
-                    dataSummary.removeAll(dataGhepLopGiaNhiet)
-                    dataSummary.add(ghepLopGiaNhiet)
+                    dataSummary.removeAll(dataThaoKhungCsp)
+                    dataSummary.add(thaoKhungCsp)
                 }
             }
 
@@ -653,8 +704,7 @@ class EquipmentProductivityService(
         rowNumber: Int,
         style: CellStyle,
         columns: List<CalendarResponse>,
-        data: ProcessDetailModel
-    ): Int {
+        data: ProcessDetailModel): Int {
 
         var rowIndex = rowNumber
         val fixRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
@@ -664,20 +714,22 @@ class EquipmentProductivityService(
 
         ExcelHelper.setCellValueCustom(workbook, fixRow, 2, style, data.name,isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,isAlignCenter = true,isBold = true)
         ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 2, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
-        ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 2, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
+        ExcelHelper.setCellValueCustom(workbook, fixRowThird, 2, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
         ExcelHelper.setCellValueCustom(workbook, fixRowFour, 2, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
 
         ExcelHelper.setCellValueCustom(workbook, fixRow, 3, style, data.totalProcess.toString(),isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,isAlignCenter = true,isBold = true)
         ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 3, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
-        ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 3, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
+        ExcelHelper.setCellValueCustom(workbook, fixRowThird, 3, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
         ExcelHelper.setCellValueCustom(workbook, fixRowFour, 3, style, "",isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
         for (planData in data.processDetailList) {
             val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
             ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, planData.type,isBorderBottom = true,isBold = false)
             var colIndex = 5
             for (col in columns) {
-                val value = planData.quantityByCalendars.find { x -> x.key == col.key }?.value
-                ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday)
+                val plan = planData.quantityByCalendars.find { x -> x.key == col.key }
+                val value = plan?.value
+                val color = plan?.sort.toString()
+                ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday, color)
                 colIndex++
             }
             rowIndex++

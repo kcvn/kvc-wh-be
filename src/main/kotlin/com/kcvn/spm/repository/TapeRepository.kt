@@ -6,6 +6,7 @@ import com.kcvn.spm.model.tables.pojos.TapeInfo
 import com.kcvn.spm.model.tables.references.*
 import org.jooq.DSLContext
 import org.jooq.TableField
+import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.stereotype.Repository
 
@@ -18,6 +19,50 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
                 .and(TAPE_INFO.YEAR.eq(year))
                 .and(TAPE_INFO.IS_DELETED.eq(false)))
             .fetchAnyInto(TapeInfo::class.java)
+    }
+
+    fun deleteTapeByMonth (month: String?, year: String?) {
+        context.deleteFrom(TAPE_INFO)
+            .where(TAPE_INFO.MONTH.eq(month)
+                .and(TAPE_INFO.YEAR.eq(year)))
+            .execute()
+    }
+
+    fun bulkInsert(request: List<TapeInfo?>){
+        val records = request.map { x ->
+            DSL.row(
+                x?.productName,
+                x?.month,
+                x?.year,
+                x?.requestDateStart,
+                x?.requestDateEnd,
+                x?.tapeShared,
+                x?.typeTape,
+                x?.quantityTape,
+                x?.unitPrice,
+                x?.intoMoney
+            )
+        }.toTypedArray()
+
+        val insertValuesStep = context.insertInto(
+            TAPE_INFO,
+            TAPE_INFO.PRODUCT_NAME,
+            TAPE_INFO.MONTH,
+            TAPE_INFO.YEAR,
+            TAPE_INFO.REQUEST_DATE_START,
+            TAPE_INFO.REQUEST_DATE_END,
+            TAPE_INFO.TAPE_SHARED,
+            TAPE_INFO.TYPE_TAPE,
+            TAPE_INFO.QUANTITY_TAPE,
+            TAPE_INFO.UNIT_PRICE,
+            TAPE_INFO.INTO_MONEY
+        )
+
+        for (record in records) {
+            insertValuesStep.values(record)
+        }
+
+        insertValuesStep.execute()
     }
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {

@@ -182,12 +182,15 @@ class MaterialsService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 1))
                     )
                 )
-            }else {
-                check = false
-                if (!masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) }) {
-                    messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
-                }
             }
+
+            if (tapeShared.isNotEmpty() && !masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) }) {
+                check = false
+                messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
+            }
+
+
+
             if (tapeType.isEmpty()) {
                 check = false
                 messageErr.listMessageErr.add(
@@ -196,12 +199,12 @@ class MaterialsService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 2))
                     )
                 )
-            }else {
-                check = false
-                if (!masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 2) }) {
-                    messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
-                }
             }
+            if (tapeType.isNotEmpty() && !masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 2) }) {
+                check = false
+                messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
+            }
+
             if (unitPrice.isEmpty()) {
                 check = false
                 messageErr.listMessageErr.add(
@@ -380,7 +383,6 @@ class MaterialsService(
         val sheet = workbook.createSheet()
         val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
         headerRow.height = titleRow.height
-        var test = titleRow.lastCellNum
         for (i in 0 until titleRow.lastCellNum) {
             val headerStyle = titleRow.getCell(i).cellStyle
             val headerCellValue = ExcelHelper.getCellValue(titleRow, i)

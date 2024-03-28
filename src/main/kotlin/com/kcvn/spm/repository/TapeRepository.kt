@@ -1,13 +1,16 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.report.materials.payload.request.GetReportMaterialsRequest
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TapeInfo
 import com.kcvn.spm.model.tables.references.*
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -64,40 +67,76 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
 
         insertValuesStep.execute()
     }
+
+    fun getAllReportMaterials(request: GetReportMaterialsRequest, pageable: Pageable) : Pair<List<TapeInfo?>, Int?>{
+        var condition: Condition = DSL.noCondition()
+        if(!request.productName.isNullOrEmpty()){
+            condition = condition.and(DSL.lower(TAPE_INFO.PRODUCT_NAME).contains(DSL.lower(request.productName)))
+        }
+        if(!request.tapeShared.isNullOrEmpty()){
+            condition = condition.and(TAPE_INFO.TAPE_SHARED.eq(request.tapeShared))
+        }
+        if(!request.typeTape.isNullOrEmpty()){
+            condition = condition.and(TAPE_INFO.TYPE_TAPE.eq(request.typeTape))
+        }
+        if(request.startTime != null){
+            val startMonth = request.startTime?.monthValue
+            val startYear = request.startTime?.year
+            condition = condition.and(TAPE_INFO.MONTH_REPORT.ge(startMonth))
+                .and(TAPE_INFO.YEAR_REPORT.ge(startYear))
+        }
+        if(request.endTime != null){
+            val endMonth = request.endTime?.monthValue
+            val endYear = request.endTime?.year
+            condition = condition.and(TAPE_INFO.MONTH_REPORT.le(endMonth))
+                .and(TAPE_INFO.YEAR_REPORT.le(endYear))
+        }
+        val query = context.selectFrom(TAPE_INFO)
+            .where(condition
+                .and(TAPE_INFO.IS_DELETED.eq(false)))
+            .orderBy(getSortFields(pageable.sort, TAPE_INFO.CREATED_DATE))
+            .fetchInto(TapeInfo::class.java)
+        val queryTotal = context.selectCount()
+            .from(TAPE_INFO)
+            .where(condition
+                .and(TAPE_INFO.IS_DELETED.eq(false)))
+        val totalCount = context.fetchOne(queryTotal)?.value1()
+        return Pair(query, totalCount)
+    }
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {
-            "inventoryDate" -> {
-                INVENTORY_PRODUCT.INVENTORY_DATE
-            }
             "productName" -> {
-                PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE
+                TAPE_INFO.PRODUCT_NAME
+            }
+            "requestDateStart" -> {
+                TAPE_INFO.REQUEST_DATE_START
             }
             "processName" -> {
                 PROCESS_MASTER.PROCESS_NAME
             }
-            "processCode" -> {
-                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE
+            "requestDateEnd" -> {
+                TAPE_INFO.REQUEST_DATE_END
             }
-            "layerCode" -> {
-                PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
+            "tapeShared" -> {
+                TAPE_INFO.TAPE_SHARED
             }
-            "productQuantity" -> {
-                INVENTORY_PRODUCT.PRODUCT_QUANTITY
+            "typeTape" -> {
+                TAPE_INFO.TYPE_TAPE
             }
-            "sheetQuantity" -> {
-                INVENTORY_PRODUCT.SHEET_QUANTITY
+            "quantityTape" -> {
+                TAPE_INFO.QUANTITY_TAPE
             }
-            "pcsSh" -> {
-                PRODUCT.PCS_SH
+            "unitPrice" -> {
+                TAPE_INFO.UNIT_PRICE
             }
-            "orderCode" -> {
-                INVENTORY_PRODUCT.ORDER_CODE
+            "intoMoney" -> {
+                TAPE_INFO.INTO_MONEY
             }
-            "tapeLotNo" -> {
-                INVENTORY_PRODUCT.TAPE_LOT_NO
+            "monthReport" -> {
+                TAPE_INFO.MONTH_REPORT
             }
-            "code" -> {
-                INVENTORY_PRODUCT.CODE
+            "yearReport" -> {
+                TAPE_INFO.YEAR_REPORT
             }
             else -> {
                 val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")

@@ -1,11 +1,13 @@
 package com.kcvn.spm.app.report.materials.service
 
 import com.kcvn.spm.app.masterdata.service.MasterDataService
+import com.kcvn.spm.app.report.materials.payload.request.GetReportMaterialsRequest
 import com.kcvn.spm.app.report.materials.payload.request.ImportTapeRequest
 import com.kcvn.spm.app.report.materials.payload.response.ImportTapeErrResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.CellStyleModel
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -16,6 +18,7 @@ import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.TapeRepository
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -415,7 +418,11 @@ class MaterialsService(
         return byteArrayOutputStream.toByteArray()
     }
 
-    fun getReportMaterials(){
-
+    fun getReportMaterials(request: GetReportMaterialsRequest, pageable: Pageable) : BasePagingResponse<TapeInfo?> {
+        val result =  tapeInfoRep.getAllReportMaterials(request, pageable)
+        val response = BasePagingResponse<TapeInfo?>()
+        response.data = result.first
+        response.totalRecords = result.second ?: 0
+        return response
     }
 }

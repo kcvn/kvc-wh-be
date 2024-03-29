@@ -46,11 +46,10 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             if (request.version == OrderVersion.LATEST) {
                 condition = condition.and(ORDER_INFO.IS_LATEST.eq(true))
             } else {
-                val versions = request.version?.split(",")?.map { x -> x.toInt() }
+                val versions = request.version?.split(",")?.mapNotNull { x -> x.toIntOrNull() }
                 if (!versions.isNullOrEmpty())
                     condition = condition.and(ORDER_INFO.VERSION.`in`(versions))
             }
-
         }
         condition = condition.and(ORDER_INFO.IS_DELETED.eq(false))
 
@@ -85,7 +84,6 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                     .fetchInto(OrderDetailModel::class.java)
                 return Pair(data, count)
             }
-
 
         } else {
             sortFields.add(sortFields.size - 1, ORDER_INFO.VERSION.desc())
@@ -122,45 +120,66 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         }
     }
 
-    fun getQuantityByCalendar(productVersions: List<Pair<String, String>>, isLatest: Boolean): List<OrderDetailByDateModel> {
+    fun getQuantityByCalendar(
+        productVersions: List<Pair<String, String>>,
+        startDate: OffsetDateTime?,
+        endDate: OffsetDateTime?,
+        isLatest: Boolean
+    ): List<OrderDetailByDateModel> {
         val productNames = productVersions.map { x -> x.first }
         val versions = productVersions.map { x -> x.second.toIntOrNull() }
+        var condition = DSL.noCondition().and(ORDER_INFO.PRODUCT_NAME.`in`(productNames))
+            .and(ORDER_INFO.IS_DELETED.eq(false))
+        if (startDate != null) {
+            condition = condition.and(ORDER_INFO.ORDER_DATE.ge(startDate))
+        }
+        if (endDate != null) {
+            condition = condition.and(ORDER_INFO.ORDER_DATE.le(endDate))
+        }
         if (isLatest) {
-            val data = context.selectFrom(ORDER_INFO).where(
-                ORDER_INFO.PRODUCT_NAME.`in`(productNames).and(ORDER_INFO.IS_DELETED.eq(false)).and(ORDER_INFO.IS_LATEST.eq(true))
-            ).fetchInto(OrderInfo::class.java).map { x ->
-                OrderDetailByDateModel(
-                    x.productName,
-                    x.version.toString(),
-                    DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.yyyyMMdd),
-                    x.quantity
+            var data = context.selectFrom(ORDER_INFO)
+                .where(condition.and(ORDER_INFO.IS_LATEST.eq(true)))
+                .fetchInto(OrderInfo::class.java).map { x ->
+                    OrderDetailByDateModel(
+                        x.productName,
+                        x.version.toString(),
+                        DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.yyyyMMdd),
+                        x.quantity
+                    )
+                }
+
+            val versionByProducts = data.groupBy { x -> x.productName }.map { x ->
+                Pair(
+                    x.key,
+                    x.value.sortedWith(compareBy<OrderDetailByDateModel> { m -> m.orderDate }.thenByDescending { m -> m.version }).firstOrNull()?.version ?: ""
                 )
-            }.groupBy { x -> Pair(x.productName, x.orderDate) }.map { x ->
+            }
+
+            data = data.groupBy { x -> Pair(x.productName, x.orderDate) }.map { x ->
                 OrderDetailByDateModel(
                     x.key.first,
-                    "",
+                    versionByProducts.find { m -> m.first == x.key.first }?.second,
                     x.key.second,
                     x.value.sumOf { m -> m.quantity ?: 0 }
                 )
             }
             return data
         } else {
-            val data = context.selectFrom(ORDER_INFO).where(
-                ORDER_INFO.PRODUCT_NAME.`in`(productNames).and(ORDER_INFO.VERSION.`in`(versions))
-                    .and(ORDER_INFO.IS_DELETED.eq(false))
-            ).fetchInto(OrderInfo::class.java).map { x ->
-                OrderDetailByDateModel(
-                    x.productName,
-                    x.version.toString(),
-                    DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.yyyyMMdd),
-                    x.quantity
-                )
-            }
+            val data = context.selectFrom(ORDER_INFO)
+                .where(condition.and(ORDER_INFO.VERSION.`in`(versions)))
+                .fetchInto(OrderInfo::class.java).map { x ->
+                    OrderDetailByDateModel(
+                        x.productName,
+                        x.version.toString(),
+                        DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.yyyyMMdd),
+                        x.quantity
+                    )
+                }
             return data
         }
     }
 
-    fun getProductNameByOder(startDate: OffsetDateTime? , endDate: OffsetDateTime?) : List<OrderInfo?>{
+    fun getProductNameByOder(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<OrderInfo?> {
         return context
             .selectFrom(ORDER_INFO)
             .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
@@ -168,6 +187,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                 .and(ORDER_INFO.IS_DELETED.eq(false)))
             .fetchInto(OrderInfo::class.java)
     }
+
     fun getOrderVersionDropdown(): List<OrderVersionDropdown> {
         return context.selectFrom(ORDER_VERSION_DROPDOWN)
             .where(ORDER_VERSION_DROPDOWN.IS_DELETED.eq(false))

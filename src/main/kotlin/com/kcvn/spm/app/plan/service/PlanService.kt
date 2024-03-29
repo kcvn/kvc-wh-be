@@ -14,7 +14,6 @@ import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.KeyAppSetting
-import com.kcvn.spm.common.constants.MasterDataType
 import com.kcvn.spm.common.constants.Mold
 import com.kcvn.spm.common.constants.PlanProcessSummary
 import com.kcvn.spm.common.constants.PlanStyleKey
@@ -33,7 +32,6 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.PlanProduct
 import com.kcvn.spm.repository.AppSettingRepository
-import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.HolidaysCalenderRepository
 import com.kcvn.spm.repository.PlanDetailRepository
 import com.kcvn.spm.repository.PlanProcessRepository
@@ -67,7 +65,6 @@ class PlanService(
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val processGroupRep: ProcessGroupRepository,
     private val appSettingRep: AppSettingRepository,
-    private val commonCategoryRep: CommonCategoryRepository
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -161,7 +158,7 @@ class PlanService(
             planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, titleKey = PlanTitle.PLAN_ACCUMULATION_KEY, quantityByCalendars = planAccumulations))
             planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
             planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY, quantityByCalendars = workResultAccumulations))
-            planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
+            planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations, response.columns!!)))
 
             productPlan.planData = planData
             productPlan
@@ -169,7 +166,7 @@ class PlanService(
         return response
     }
 
-    private fun getDataExportExcel(planProducts: List<PlanProduct>, colStartDate: OffsetDateTime, colEndDate: OffsetDateTime): List<PlanExportExcelModel> {
+    private fun getDataExportExcel(planProducts: List<PlanProduct>, colStartDate: OffsetDateTime, colEndDate: OffsetDateTime, columns: List<CalendarResponse>): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
         val productNames = planProducts.mapNotNull { x -> x.productName }.distinct()
 
@@ -246,7 +243,7 @@ class PlanService(
                 planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN_ACCUMULATION, titleKey = PlanTitle.PLAN_ACCUMULATION_KEY, quantityByCalendars = planAccumulations))
                 planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
                 planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL_ACCUMULATION, titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY, quantityByCalendars = workResultAccumulations))
-                planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations)))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.DIFFERENCE, titleKey = PlanTitle.DIFFERENCE_KEY, quantityByCalendars = calculateDifference(planAccumulations, workResultAccumulations, columns)))
 
                 productPlan.planData = planData
                 productPlan
@@ -267,12 +264,16 @@ class PlanService(
         return response
     }
 
-    private fun calculateDifference(sourceData: List<KeyValueResponse>, compareData: List<KeyValueResponse>): List<KeyValueResponse> {
+    private fun calculateDifference(sourceData: List<KeyValueResponse>, compareData: List<KeyValueResponse>, columns: List<CalendarResponse>): List<KeyValueResponse> {
         val response = mutableListOf<KeyValueResponse>()
-        for (item in compareData) {
-            val sourceValue = sourceData.find { x -> x.key == item.key }
-            val diffValue = (item.value?.toInt() ?: 0) - (sourceValue?.value?.toInt() ?: 0)
-            response.add(KeyValueResponse(item.key, diffValue.toString()))
+        for (col in columns) {
+            val sourceValue = sourceData.find { x -> x.key == col.key }
+            val compareValue = compareData.find { x -> x.key == col.key }
+
+            if (sourceValue != null || compareValue != null) {
+                val diffValue = (compareValue?.value?.toInt() ?: 0) - (sourceValue?.value?.toInt() ?: 0)
+                response.add(KeyValueResponse(col.key, diffValue.toString()))
+            }
         }
         return response
     }
@@ -296,7 +297,7 @@ class PlanService(
 
         val planProducts = planProductRep.getListPlanProduct(request)
         if (dataExports.isEmpty()) {
-            dataExports.addAll(getDataExportExcel(planProducts, request.startDate!!, request.endDate!!))
+            dataExports.addAll(getDataExportExcel(planProducts, request.startDate!!, request.endDate!!, response.columns!!))
         }
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
@@ -665,7 +666,7 @@ class PlanService(
         val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
         val planProducts = planProductRep.getListPlanProduct(request)
-        val dataExports = getDataExportExcel(planProducts, request.startDate!!, request.endDate!!)
+        val dataExports = getDataExportExcel(planProducts, request.startDate!!, request.endDate!!, columns)
         if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanTemplate.xlsx")
@@ -674,20 +675,8 @@ class PlanService(
         generateDataSheetPlan(workbook, columns, planProducts, dataExports)
         val headerStyle = workbook.getSheetAt(0).getRow(0).getCell(0).cellStyle
 
-        if (request.frame_1.isNullOrEmpty()) {
-            val planSummary = getPlanSummary(request, dataExports.toMutableList())
-            generateDataSheetSummary(workbook, columns, planSummary.data, "Tổng hợp", headerStyle)
-            val frame1s = commonCategoryRep.getByType(listOf(MasterDataType.KHUNG_1))
-            for (item in frame1s) {
-                request.frame_1 = item.value
-                val planSummaryByFrame = getPlanSummary(request, dataExports.filter { x -> x.frame_1 == item.value }.toMutableList())
-                generateDataSheetSummary(workbook, columns, planSummaryByFrame.data, item.value ?: "", headerStyle)
-            }
-        }
-        else{
-            val planSummary = getPlanSummary(request, dataExports.toMutableList())
-            generateDataSheetSummary(workbook, columns, planSummary.data, request.frame_1!!, headerStyle)
-        }
+        val planSummary = getPlanSummary(request, dataExports.toMutableList())
+        generateDataSheetSummary(workbook, columns, planSummary.data, headerStyle)
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
@@ -707,7 +696,7 @@ class PlanService(
     private fun generateDataSheetPlan(workbook: Workbook, columns: List<CalendarResponse>, planProducts: List<PlanProduct>, dataExports: List<PlanExportExcelModel>) {
         val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0)
-        var headerCol = 12
+        var headerCol = 15
         val headerStyle = headerRow.getCell(0).cellStyle
         for (col in columns) {
             ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
@@ -737,24 +726,28 @@ class PlanService(
                 val styleProcess = if (isNextProduct) firstRowStyle else styleCommon
                 var dataRow = sheet.getRow(rowProcessIndex) ?: sheet.createRow(rowProcessIndex)
 
-                ExcelHelper.setCellValue(dataRow, 5, styleProcess, planProcess.layerCode)
-                ExcelHelper.setCellValue(dataRow, 6, styleProcess, planProcess.processCode)
+                ExcelHelper.setCellValue(dataRow, 6, styleProcess, planProcess.layerCode)
                 ExcelHelper.setCellValue(dataRow, 7, styleProcess, planProcess.processGroup)
-                ExcelHelper.setCellValue(dataRow, 8, styleProcess, "${planProcess.completionRate?.toString()} %")
-                ExcelHelper.setCellValue(dataRow, 9, styleProcess, planProcess.inventory?.toString())
-                ExcelHelper.setCellValue(dataRow, 10, styleProcess, planProcess.sumInventory?.toString())
+                ExcelHelper.setCellValue(dataRow, 8, styleProcess, planProcess.processCode)
+                ExcelHelper.setCellValue(dataRow, 9, styleProcess, planProcess.processName)
+                ExcelHelper.setCellValue(dataRow, 10, styleProcess, "")
+                ExcelHelper.setCellValue(dataRow, 11, styleProcess, if (planProcess.completionRate != null) "${planProcess.completionRate?.toString()} %" else "")
+                ExcelHelper.setCellValue(dataRow, 12, styleProcess, planProcess.inventory?.toString())
+                ExcelHelper.setCellValue(dataRow, 13, styleProcess, planProcess.sumInventory?.toString())
 
                 rowProcessIndex++
                 if (!planProcess.processChildren.isNullOrEmpty()) {
                     for (children in planProcess.processChildren!!) {
                         dataRow = sheet.getRow(rowProcessIndex) ?: sheet.createRow(rowProcessIndex)
 
-                        ExcelHelper.setCellValue(dataRow, 5, styleCommon, children.layerCode)
-                        ExcelHelper.setCellValue(dataRow, 6, styleCommon, children.processCode)
-                        ExcelHelper.setCellValue(dataRow, 7, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 8, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 9, styleCommon, children.inventory?.toString())
-                        ExcelHelper.setCellValue(dataRow, 10, styleCommon, "")
+                        ExcelHelper.setCellValue(dataRow, 6, styleProcess, planProcess.layerCode)
+                        ExcelHelper.setCellValue(dataRow, 7, styleProcess, "")
+                        ExcelHelper.setCellValue(dataRow, 8, styleProcess, children.processCode)
+                        ExcelHelper.setCellValue(dataRow, 9, styleProcess, children.processName)
+                        ExcelHelper.setCellValue(dataRow, 10, styleProcess, children.layerCode)
+                        ExcelHelper.setCellValue(dataRow, 11, styleProcess, "")
+                        ExcelHelper.setCellValue(dataRow, 12, styleProcess, children.inventory?.toString())
+                        ExcelHelper.setCellValue(dataRow, 13, styleProcess, "")
 
                         rowProcessIndex++
                     }
@@ -765,15 +758,16 @@ class PlanService(
                     val style = if (isNextProduct) firstRowStyle else styleCommon
                     dataRow = sheet.getRow(rowDataIndex) ?: sheet.createRow(rowDataIndex)
 
-                    ExcelHelper.setCellValue(dataRow, 0, style, dataExport.productName)
-                    ExcelHelper.setCellValue(dataRow, 1, style, dataExport.pcsSh?.toString())
-                    ExcelHelper.setCellValue(dataRow, 2, style, dataExport.blockSh?.toString())
-                    ExcelHelper.setCellValue(dataRow, 3, style, dataExport.frame_1)
-                    ExcelHelper.setCellValue(dataRow, 4, style, dataExport.mold)
+                    ExcelHelper.setCellValue(dataRow, 0, style, dataExport.productName?.substring(dataExport.productName!!.length - 7, dataExport.productName!!.length))
+                    ExcelHelper.setCellValue(dataRow, 1, style, dataExport.productName)
+                    ExcelHelper.setCellValue(dataRow, 2, style, dataExport.pcsSh?.toString())
+                    ExcelHelper.setCellValue(dataRow, 3, style, dataExport.blockSh?.toString())
+                    ExcelHelper.setCellValue(dataRow, 4, style, dataExport.frame_1)
+                    ExcelHelper.setCellValue(dataRow, 5, style, dataExport.mold)
 
-                    ExcelHelper.setCellValue(dataRow, 11, style, "${planProcess.processConvertCode} ${item.title}")
+                    ExcelHelper.setCellValue(dataRow, 14, style, "${planProcess.processConvertCode} ${item.title}")
 
-                    var colIndex = 12
+                    var colIndex = 15
                     for (col in columns) {
                         val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                         ExcelHelper.setCellValue(dataRow, colIndex, (if (col.isHoliday) holidayStyle else style), value)
@@ -786,12 +780,14 @@ class PlanService(
                 if (rowDataIndex > rowProcessIndex) {
                     for (i in rowProcessIndex until rowDataIndex) {
                         dataRow = sheet.getRow(i) ?: sheet.createRow(i)
-                        ExcelHelper.setCellValue(dataRow, 5, styleCommon, planProcess.layerCode)
-                        ExcelHelper.setCellValue(dataRow, 6, styleCommon, "")
+                        ExcelHelper.setCellValue(dataRow, 6, styleCommon, planProcess.layerCode)
                         ExcelHelper.setCellValue(dataRow, 7, styleCommon, "")
                         ExcelHelper.setCellValue(dataRow, 8, styleCommon, "")
                         ExcelHelper.setCellValue(dataRow, 9, styleCommon, "")
                         ExcelHelper.setCellValue(dataRow, 10, styleCommon, "")
+                        ExcelHelper.setCellValue(dataRow, 11, styleCommon, "")
+                        ExcelHelper.setCellValue(dataRow, 12, styleCommon, "")
+                        ExcelHelper.setCellValue(dataRow, 13, styleCommon, "")
                     }
                     rowNumber = rowDataIndex
                 } else {
@@ -799,14 +795,15 @@ class PlanService(
                     else {
                         for (i in rowDataIndex until rowProcessIndex) {
                             dataRow = sheet.getRow(i) ?: sheet.createRow(i)
-                            ExcelHelper.setCellValue(dataRow, 0, styleCommon, dataExport.productName)
-                            ExcelHelper.setCellValue(dataRow, 1, styleCommon, dataExport.pcsSh?.toString())
-                            ExcelHelper.setCellValue(dataRow, 2, styleCommon, dataExport.blockSh?.toString())
-                            ExcelHelper.setCellValue(dataRow, 3, styleCommon, dataExport.frame_1)
-                            ExcelHelper.setCellValue(dataRow, 4, styleCommon, dataExport.mold)
-                            ExcelHelper.setCellValue(dataRow, 11, styleCommon, "")
+                            ExcelHelper.setCellValue(dataRow, 0, styleCommon, dataExport.productName?.substring(dataExport.productName!!.length - 7, dataExport.productName!!.length))
+                            ExcelHelper.setCellValue(dataRow, 1, styleCommon, dataExport.productName)
+                            ExcelHelper.setCellValue(dataRow, 2, styleCommon, dataExport.pcsSh?.toString())
+                            ExcelHelper.setCellValue(dataRow, 3, styleCommon, dataExport.blockSh?.toString())
+                            ExcelHelper.setCellValue(dataRow, 4, styleCommon, dataExport.frame_1)
+                            ExcelHelper.setCellValue(dataRow, 5, styleCommon, dataExport.mold)
+                            ExcelHelper.setCellValue(dataRow, 14, styleCommon, "")
 
-                            var colIndex = 12
+                            var colIndex = 15
                             for (col in columns) {
                                 ExcelHelper.setCellValue(dataRow, colIndex, (if (col.isHoliday) holidayStyle else styleCommon), "")
                                 colIndex++
@@ -819,8 +816,8 @@ class PlanService(
         }
     }
 
-    private fun generateDataSheetSummary(workbook: Workbook, columns: List<CalendarResponse>, dataSummary: List<PlanSummaryModel>?, sheetName: String, headerStyle: CellStyle) {
-        val sheet = workbook.createSheet(sheetName)
+    private fun generateDataSheetSummary(workbook: Workbook, columns: List<CalendarResponse>, dataSummary: List<PlanSummaryModel>?, headerStyle: CellStyle) {
+        val sheet = workbook.createSheet("Tổng hợp")
         val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
         headerRow.height = 800
 

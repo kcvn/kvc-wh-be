@@ -8,6 +8,10 @@ class NumberHelper {
         fun truncateDecimal(input: BigDecimal): BigDecimal {
             return input.setScale(2, RoundingMode.HALF_UP)
         }
+
+        fun formatDoubleValue(value: Double): String {
+            return String.format("%.1f", value)
+        }
     }
 
 }

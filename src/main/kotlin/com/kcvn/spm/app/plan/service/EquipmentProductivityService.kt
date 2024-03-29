@@ -81,11 +81,7 @@ class EquipmentProductivityService(
                     for (processSummaryDetailModel in details) {
                         var equipmentMachineValue: BigDecimal?
                         var numberMachine: Double?
-                        val equipmentMachineModel = if (equipmentProductivityModel.processName == CommonUtils.getMessage("excel.rowDucLo")) {
-                            equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 && it.mold == processSummaryDetailModel.type }
-                        } else {
-                            equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 }
-                        }
+                        val equipmentMachineModel = equipmentMachine.firstOrNull { it.grpProcess == groupProcessCode && it.frame_1 == planSummaryModel.frame1 && it.mold?.contains(processSummaryDetailModel.type ?: "") == true }
                         numberMachine = equipmentMachineModel?.machineNumber?.toDouble()
                         equipmentMachineValue = when {
                             equipmentMachineModel != null -> {

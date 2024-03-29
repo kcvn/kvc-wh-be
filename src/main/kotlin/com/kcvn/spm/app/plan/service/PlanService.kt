@@ -895,7 +895,7 @@ class PlanService(
                                 && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH)
                         }.groupBy { x -> x.mold }.mapNotNull { x ->
                             PlanSummaryDetailModel(
-                                type = x.key,
+                                type = if (frame1 != Frame1.MU) "" else x.key,
                                 planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
                                     .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
                                         val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
@@ -907,7 +907,7 @@ class PlanService(
                         }.firstOrNull()
                         if (dataMold == null) {
                             dataMold = PlanSummaryDetailModel(
-                                type = mold,
+                                type = if (frame1 != Frame1.MU) "" else mold,
                                 planSummaryData = mutableListOf(PlanDataByProcessModel(title = ProcessPlan.PROCESS, titleKey = ProcessPlan.PROCESS, quantityByCalendars = listOf()))
                             )
                         }

@@ -8,6 +8,7 @@ import com.kcvn.spm.common.constants.*
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.NumberHelper.Companion.formatDoubleValue
 import com.kcvn.spm.common.helper.NumberHelper.Companion.truncateDecimal
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.CalendarResponse
@@ -106,6 +107,7 @@ class EquipmentProductivityService(
                                 //process
                                 val processDetailListModel = ProcessDetailListModel(
                                     type = planDataByProcessModel.title ?: "",
+                                    typeKey = EquipmentType.PROCESS,
                                     quantityByCalendars = planDataByProcessModel.quantityByCalendars?.toMutableList() ?: mutableListOf()
                                 )
                                 processDetailModel.processDetailList.add(processDetailListModel)
@@ -119,6 +121,7 @@ class EquipmentProductivityService(
                                 //machine
                                 val machineDetailListModel = ProcessDetailListModel(
                                     type = ProcessPlan.MACHINE,
+                                    typeKey = EquipmentType.CAP_MACHINE,
                                     quantityByCalendars = result.columns?.map { column ->
                                         KeyValueResponse(
                                             key = column.key,
@@ -131,6 +134,7 @@ class EquipmentProductivityService(
                                 //average plan
                                 val averageDetailListModel = ProcessDetailListModel(
                                     type = ProcessPlan.AVERAGE_PLAN,
+                                    typeKey = EquipmentType.AVERAGE,
                                     quantityByCalendars = result.columns?.map { column ->
                                         KeyValueResponse(
                                             key = column.key,
@@ -140,17 +144,15 @@ class EquipmentProductivityService(
                                 )
                                 processDetailModel.processDetailList.add(averageDetailListModel)
 
-
-
                                 //machineRate
                                 val machineNumberDetailListModel = ProcessDetailListModel(
                                     type = ProcessPlan.MACHINENUMBER,
+                                    typeKey = EquipmentType.MACHINE_RATE,
                                     quantityByCalendars = planDataByProcessModel.quantityByCalendars?.map { column ->
                                         val value = column.value?.toDoubleOrNull() ?: 0.0
                                         val equipmentMachineValueDouble = equipmentMachineValue?.toDouble() ?: 0.0
                                         val newValue = if (equipmentMachineValueDouble != 0.0) {
-                                            val formattedValue = "%.1f".format(value / equipmentMachineValueDouble)
-                                            formattedValue
+                                            formatDoubleValue(value / equipmentMachineValueDouble)
                                         } else {
                                             "0"
                                         }
@@ -163,17 +165,20 @@ class EquipmentProductivityService(
                                             rate > 90 -> Color.YELLOW
                                             else -> Color.WHITE
                                         }
+                                        val valueRate = when{
+                                                numberMachine == null || numberMachine.toInt() == 0->""
+                                                else -> newValue + "/" + (numberMachine.toInt()).toString() + "\n" + (rate.toInt()).toString()
+                                        }
                                         KeyValueResponse(
                                             key = column.key,
-                                            value = newValue + "/" + (numberMachine?.toInt() ?: 0).toString() + "\n" + (rate.toInt()).toString(),
+                                            value = valueRate,
                                             sort = color.toBigDecimal()
                                         )
                                     }?.toMutableList() ?: mutableListOf()
                                 )
                                 processDetailModel.processDetailList.add(machineNumberDetailListModel)
-
-
                             }
+
                         }
                         equipmentProductivityModel.processDetail?.add(processDetailModel)
                     }
@@ -354,7 +359,7 @@ class EquipmentProductivityService(
             if (dataGhepLop.isNotEmpty()) {
                 val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.GHEP_LOP_SUM }
 
-                val detailsList = if (!frame1.equals(Frame1.MU)) {
+                val detailsList = if (frame1 != Frame1.MU) {
                     mutableListOf(
                         PlanSummaryDetailModel(
                             type = CommonUtils.getMessage(""),
@@ -382,8 +387,7 @@ class EquipmentProductivityService(
                     details = detailsList
                 )
 
-                if(frame1.equals(Frame1.MU)){
-                    ghepLop.details?.removeFirst()
+                if(frame1 == Frame1.MU){
                     val mGAN = dataExportFlattens.filter { x ->
                         x.processStatisticCode == ProcessStatisticCode.GHEPLOP_GIAAPNHIET
                     }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
@@ -427,8 +431,8 @@ class EquipmentProductivityService(
                 dataSummary.add(ghepLop)
             }
 
-            if(frame1.equals(Frame1.MU)){
-                val dataThaoKhungCsp = dataSummary.filter { x -> x.frame1 == frame1 &&(x.processConvertCode == ProcessConvertCode.TK) &&(x.processCode =="214220") }
+            if(frame1 == Frame1.MU){
+                val dataThaoKhungCsp = dataSummary.filter { x -> x.frame1 == frame1 &&(x.processConvertCode == ProcessConvertCode.TK) }
                 if (dataThaoKhungCsp.isNotEmpty()) {
                     val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.TK_CSP }
 
@@ -440,24 +444,31 @@ class EquipmentProductivityService(
                         frame1 = dataThaoKhungCsp.first().frame1,
                         processCode = dataThaoKhungCsp.first().processCode,
                         unit =dataThaoKhungCsp.first().unit,
-                        details = mutableListOf(
-                            PlanSummaryDetailModel(
-                                type = CommonUtils.getMessage(""),
-                                planSummaryData = dataThaoKhungCsp.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
-                                    .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
-                                        val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)
-                                        data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
-                                            .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
-                                        data
-                                    }.toList()
-                            )
-                        )
+                        details = mutableListOf()
                     )
+
+                    val csp = dataExportFlattens.filter { x ->
+                        !x.processConvertCode.isNullOrEmpty()
+                                && x.processCode == "214220"
+                    }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
+                        PlanSummaryDetailModel(
+                            type = "",
+                            planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                                .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                                    val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                    data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                        .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                    data
+                                }
+                        )
+                    }.firstOrNull()
+                    if (csp != null) {
+                        thaoKhungCsp.details!!.add(csp)
+                    }
                     dataSummary.removeAll(dataThaoKhungCsp)
                     dataSummary.add(thaoKhungCsp)
                 }
             }
-
         }
 
         response.data = dataSummary.sortedBy { x -> x.processSequence }

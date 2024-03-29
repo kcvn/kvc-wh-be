@@ -146,8 +146,6 @@ class MaterialsService(
         val listOrderInfo = orderInfoRep.getProductNameByOder(request.startDate, request.endDate)
         val listProductOrder: MutableList<String> = listOrderInfo.mapNotNull { it?.productName }.distinct().toMutableList()
 
-        // Tạo list để lưu tên sản phẩm trong file import
-        val listProductFileImport : MutableList<String> = mutableListOf()
 
         // List lưu những sản phẩm validation
         val listOderInfoValidate : MutableList<ImportTapeErrResponse> = mutableListOf()
@@ -187,7 +185,7 @@ class MaterialsService(
                 )
             }
 
-            if (tapeShared.isNotEmpty() && !masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) }) {
+            if (tapeShared.isNotEmpty() && !masterData.tapeCommonSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) }) {
                 check = false
                 messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
             }
@@ -203,7 +201,7 @@ class MaterialsService(
                     )
                 )
             }
-            if (tapeType.isNotEmpty() && !masterData.tapeTypeSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 2) }) {
+            if (tapeType.isNotEmpty() && !masterData.tapeTypeSelections.any { x -> x.label?.trim() == ExcelHelper.getCellValue(row, 2).trim() }) {
                 check = false
                 messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
             }
@@ -285,7 +283,7 @@ class MaterialsService(
             listProductImport.add(ExcelHelper.getCellValue(row, 0))
 
             // Tính số lượng nếu mà validate không có lỗi
-            val df = DecimalFormat("#.####")
+
             if(check){
                 val completionRates = completionRateProductRepository.getProductDetail(productName)
 
@@ -303,7 +301,7 @@ class MaterialsService(
                 val intoMoney = quantityTape * unitPrice.toDouble()
                 messageErr.quantityTape = quantityTape
 
-                val formattedNumber = df.format(intoMoney).toDouble()
+                val formattedNumber = intoMoney.toDouble()
                 messageErr.intoMoney = formattedNumber
             }
 
@@ -311,7 +309,7 @@ class MaterialsService(
             messageErr.productName = productName
             messageErr.tapeShared = tapeShared
             messageErr.typeTape = tapeType
-            messageErr.unitPrice = df.format(unitPrice).toDoubleOrNull()
+            messageErr.unitPrice = unitPrice.toDoubleOrNull()
             messageErr.cellStyles = row.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
 
             listOderInfoValidate.add(messageErr)
@@ -321,8 +319,8 @@ class MaterialsService(
         // Kiểm tra những sản phẩm có trong order mà không có trong file import
         for (item in listProductOrder){
             val messageErr = ImportTapeErrResponse()
-            val checkProduct = listProductFileImport.firstOrNull{
-                it == item
+            val checkProduct = listOderInfoValidate.firstOrNull{
+                it.productName == item
             }
             if(checkProduct == null){
                 check = false

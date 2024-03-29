@@ -152,7 +152,15 @@ class ExternalReportShippingType {
     }
 }
 
+class EquipmentType{
+    companion object {
+        const val PROCESS = "0"
+        const val CAP_MACHINE = "1"
+        const val AVERAGE = "2"
+        const val MACHINE_RATE = "3"
 
+    }
+}
 
 class ProcessStatisticCode {
     companion object {

@@ -539,7 +539,7 @@ class PlanService(
             }.firstOrNull()
             if (mTan == null) {
                 mTan = PlanSummaryDetailModel(
-                    type = ProcessConvertCode.M_ANY,
+                    type = "M2*3, M3*4...",
                     planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
                 )
             }

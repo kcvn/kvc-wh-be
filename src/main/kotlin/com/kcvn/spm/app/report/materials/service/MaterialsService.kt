@@ -55,7 +55,7 @@ class MaterialsService(
         return BaseResponse(response)
     }
 
-    fun importExcelTape (request: ImportTapeRequest,
+    fun  importExcelTape (request: ImportTapeRequest,
                          file: MultipartFile): BaseResponse<FileContentModel> {
         // Validate ngày yêu cầu đơn hàng với tháng báo cáo
 
@@ -161,9 +161,10 @@ class MaterialsService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val messageErr = ImportTapeErrResponse()
             val productName = ExcelHelper.getCellValue(row, 0)
-            val tapeShared = ExcelHelper.getCellValue(row, 1)
-            val tapeType = ExcelHelper.getCellValue(row, 2)
-            val unitPrice = ExcelHelper.getCellValue(row, 3)
+            val exportType = ExcelHelper.getCellValue(row, 1)
+            val tapeShared = ExcelHelper.getCellValue(row, 2)
+            val tapeType = ExcelHelper.getCellValue(row, 3)
+            val unitPrice = ExcelHelper.getCellValue(row, 4)
 
             // Validate file import
             if (productName.isEmpty()) {
@@ -175,12 +176,21 @@ class MaterialsService(
                     )
                 )
             }
-            if (tapeShared.isEmpty()) {
+            if (exportType.isEmpty()) {
                 check = false
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 1))
+                    )
+                )
+            }
+            if (tapeShared.isEmpty()) {
+                check = false
+                messageErr.listMessageErr.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
                     )
                 )
             }
@@ -197,7 +207,7 @@ class MaterialsService(
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
                     )
                 )
             }
@@ -206,12 +216,17 @@ class MaterialsService(
                 messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
             }
 
+            if (exportType.isNotEmpty() && !masterData.exportTypeSelections.any { x -> x.label?.trim() == ExcelHelper.getCellValue(row, 1).trim() }) {
+                check = false
+                messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
+            }
+
             if (unitPrice.isEmpty()) {
                 check = false
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
                     )
                 )
             }
@@ -227,14 +242,14 @@ class MaterialsService(
                 check = false
                 messageErr.listMessageErr.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 1), 20)))
+                    arrayOf(ExcelHelper.getCellValue(headerRow, 2), 20)))
             }
 
             if (tapeType.isNotEmpty() && tapeType.length > 20){
                 check = false
                 messageErr.listMessageErr.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 2), 20)))
+                    arrayOf(ExcelHelper.getCellValue(headerRow, 3), 20)))
             }
 
             if (unitPrice.isNotEmpty() && row.getCell(3).cellType != CellType.NUMERIC){
@@ -242,7 +257,7 @@ class MaterialsService(
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
                         "validate.excel.isNumber",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
                     )
                 )
             }
@@ -403,10 +418,11 @@ class MaterialsService(
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 dataRow.height = rowHeight
                 ExcelHelper.setCellValue(dataRow, 0, item.cellStyles.find { x -> x.index == 0 }?.cellStyle ?: style, item.productName)
-                ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }?.cellStyle ?: style, item.tapeShared)
-                ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }?.cellStyle ?: style, item.typeTape)
-                ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }?.cellStyle ?: style, item.unitPrice.toString())
-                ExcelHelper.setCellValue(dataRow, 4, (item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: resultCellStyle), item.listMessageErr.joinToString(separator = "; "))
+                ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }?.cellStyle ?: style, item.exportTye)
+                ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }?.cellStyle ?: style, item.tapeShared)
+                ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }?.cellStyle ?: style, item.typeTape)
+                ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: style, item.unitPrice.toString())
+                ExcelHelper.setCellValue(dataRow, 5, (item.cellStyles.find { x -> x.index == 5 }?.cellStyle ?: resultCellStyle), item.listMessageErr.joinToString(separator = "; "))
             }
         }
         workbook.removeSheetAt(0)

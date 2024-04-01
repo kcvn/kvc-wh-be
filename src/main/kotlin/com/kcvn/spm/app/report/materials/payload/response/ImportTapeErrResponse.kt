@@ -14,5 +14,6 @@ data class ImportTapeErrResponse (
     var blockSh: Int = 0,
     var quantityTape: Int = 0,
     var intoMoney: Double? = 0.0,
-    var cellStyles: List<CellStyleModel> = mutableListOf()
+    var cellStyles: List<CellStyleModel> = mutableListOf(),
+    var exportTye: String? = null
 )

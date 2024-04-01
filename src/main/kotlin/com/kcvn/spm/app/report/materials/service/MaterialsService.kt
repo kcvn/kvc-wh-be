@@ -316,7 +316,7 @@ class MaterialsService(
         val listPriceMax: MutableList<ImportTapeErrResponse> = mutableListOf()
         val listOderInfoValidateGr = listOderInfoValidate.groupBy { it.productName }
         for(item in listOderInfoValidateGr){
-            val itemListOderInfoValidateGr  = item.value.sortedBy { it.unitPrice }.last
+            val itemListOderInfoValidateGr  = item.value.sortedBy { it.unitPrice }.last()
             val itemPriceMax = ImportTapeErrResponse(
                 unitPrice = itemListOderInfoValidateGr.unitPrice,
                 productName = item.key

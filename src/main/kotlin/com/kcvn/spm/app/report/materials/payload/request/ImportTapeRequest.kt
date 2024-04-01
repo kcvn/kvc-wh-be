@@ -7,5 +7,4 @@ class ImportTapeRequest {
     var yearReport: Int? = null
     var startDate: OffsetDateTime? = null
     var endDate: OffsetDateTime? = null
-    var existTape: Boolean = false
 }

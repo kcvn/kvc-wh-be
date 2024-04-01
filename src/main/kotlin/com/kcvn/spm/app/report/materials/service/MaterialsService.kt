@@ -1,11 +1,13 @@
 package com.kcvn.spm.app.report.materials.service
 
+import com.kcvn.spm.app.report.materials.payload.response.CheckImportTapeResponse
 import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.report.materials.payload.request.GetReportMaterialsRequest
 import com.kcvn.spm.app.report.materials.payload.request.ImportTapeRequest
 import com.kcvn.spm.app.report.materials.payload.response.ImportTapeErrResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -23,8 +25,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.FileInputStream
-import java.text.DecimalFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -38,7 +40,7 @@ class MaterialsService(
     private val masterDataService: MasterDataService,
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTape.xlsx"
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeTemplate.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -55,7 +57,7 @@ class MaterialsService(
         return BaseResponse(response)
     }
 
-    fun importExcelTape (request: ImportTapeRequest,
+    fun  importExcelTape (request: ImportTapeRequest,
                          file: MultipartFile): BaseResponse<FileContentModel> {
         // Validate ngày yêu cầu đơn hàng với tháng báo cáo
 
@@ -135,7 +137,7 @@ class MaterialsService(
 
         val headerRow = sheet.getRow(0)
 
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTape.xlsx"
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeTemplate.xlsx"
 
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
@@ -161,9 +163,10 @@ class MaterialsService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val messageErr = ImportTapeErrResponse()
             val productName = ExcelHelper.getCellValue(row, 0)
-            val tapeShared = ExcelHelper.getCellValue(row, 1)
-            val tapeType = ExcelHelper.getCellValue(row, 2)
-            val unitPrice = ExcelHelper.getCellValue(row, 3)
+            val exportType = ExcelHelper.getCellValue(row, 1)
+            val tapeShared = ExcelHelper.getCellValue(row, 2)
+            val tapeType = ExcelHelper.getCellValue(row, 3)
+            val unitPrice = ExcelHelper.getCellValue(row, 4)
 
             // Validate file import
             if (productName.isEmpty()) {
@@ -175,7 +178,7 @@ class MaterialsService(
                     )
                 )
             }
-            if (tapeShared.isEmpty()) {
+            if (exportType.isEmpty()) {
                 check = false
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
@@ -184,8 +187,17 @@ class MaterialsService(
                     )
                 )
             }
+            if (tapeShared.isEmpty()) {
+                check = false
+                messageErr.listMessageErr.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
+                    )
+                )
+            }
 
-            if (tapeShared.isNotEmpty() && !masterData.tapeCommonSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 1) }) {
+            if (tapeShared.isNotEmpty() && !masterData.tapeCommonSelections.any { x -> x.label == ExcelHelper.getCellValue(row, 2) }) {
                 check = false
                 messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
             }
@@ -197,13 +209,18 @@ class MaterialsService(
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
                     )
                 )
             }
-            if (tapeType.isNotEmpty() && !masterData.tapeTypeSelections.any { x -> x.label?.trim() == ExcelHelper.getCellValue(row, 2).trim() }) {
+            if (tapeType.isNotEmpty() && !masterData.tapeTypeSelections.any { x -> x.label?.trim() == ExcelHelper.getCellValue(row, 3).trim() }) {
                 check = false
-                messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 2))))
+                messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
+            }
+
+            if (exportType.isNotEmpty() && !masterData.exportTypeSelections.any { x -> x.label?.trim() == ExcelHelper.getCellValue(row, 1).trim() }) {
+                check = false
+                messageErr.listMessageErr.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 1))))
             }
 
             if (unitPrice.isEmpty()) {
@@ -211,7 +228,7 @@ class MaterialsService(
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
                     )
                 )
             }
@@ -227,22 +244,22 @@ class MaterialsService(
                 check = false
                 messageErr.listMessageErr.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 1), 20)))
+                    arrayOf(ExcelHelper.getCellValue(headerRow, 2), 20)))
             }
 
             if (tapeType.isNotEmpty() && tapeType.length > 20){
                 check = false
                 messageErr.listMessageErr.add(CommonUtils.getMessage(
                     "validate.excel.maxLength",
-                    arrayOf(ExcelHelper.getCellValue(headerRow, 2), 20)))
+                    arrayOf(ExcelHelper.getCellValue(headerRow, 3), 20)))
             }
 
-            if (unitPrice.isNotEmpty() && row.getCell(3).cellType != CellType.NUMERIC){
+            if (unitPrice.isNotEmpty() && row.getCell(4).cellType != CellType.NUMERIC){
                 check = false
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
                         "validate.excel.isNumber",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
                     )
                 )
             }
@@ -282,39 +299,33 @@ class MaterialsService(
 
             listProductImport.add(ExcelHelper.getCellValue(row, 0))
 
-            // Tính số lượng nếu mà validate không có lỗi
-
-            if(check){
-                val completionRates = completionRateProductRepository.getProductDetail(productName)
-
-                var quantityTape = 0
-                val productOrder = listOrderInfo.filter { it?.productName == productName }
-                for (item in productOrder){
-                    val rate = completionRates.filter {
-                        it?.effectiveDate!! < item?.orderDate
-                    }
-                        .sortedByDescending { it?.effectiveDate }
-                        .first()
-                    quantityTape += (item?.quantity ?: 0) / ((item?.blockSh ?: 0) * (rate?.rate?.toInt() ?: 0))
-                }
-
-                val intoMoney = quantityTape * unitPrice.toDouble()
-                messageErr.quantityTape = quantityTape
-
-                val formattedNumber = intoMoney.toDouble()
-                messageErr.intoMoney = formattedNumber
-            }
 
 
             messageErr.productName = productName
             messageErr.tapeShared = tapeShared
             messageErr.typeTape = tapeType
             messageErr.unitPrice = unitPrice.toDoubleOrNull()
+            messageErr.exportTye = exportType
             messageErr.cellStyles = row.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
 
             listOderInfoValidate.add(messageErr)
 
         }
+
+        // Lấy ra những đơn giá cao nhất của sản phẩm
+        val listPriceMax: MutableList<ImportTapeErrResponse> = mutableListOf()
+        val listOderInfoValidateGr = listOderInfoValidate.groupBy { it.productName }
+        for(item in listOderInfoValidateGr){
+            val itemListOderInfoValidateGr  = item.value.sortedBy { it.unitPrice }.last()
+            val itemPriceMax = ImportTapeErrResponse(
+                unitPrice = itemListOderInfoValidateGr.unitPrice,
+                productName = item.key
+            )
+            listPriceMax.add(itemPriceMax)
+        }
+
+
+
 
         // Kiểm tra những sản phẩm có trong order mà không có trong file import
         for (item in listProductOrder){
@@ -339,8 +350,27 @@ class MaterialsService(
 
         if(check){
             // Xóa toàn bộ các bản ghi trong tháng nếu tháng đó đã có dữ liệu
-            if(request.existTape){
-                tapeInfoRep.deleteTapeByMonth(request.monthReport, request.yearReport)
+            tapeInfoRep.deleteTapeByMonth(request.monthReport, request.yearReport)
+
+            // tính ra giá tiền
+            for (item in listOderInfoValidate) {
+                val completionRates = completionRateProductRepository.getProductDetail(item.productName)
+
+                var quantityTape = 0
+                val productOrder = listOrderInfo.filter { it?.productName == item.productName }
+                // Tính ra số lượng của tape
+                for (item1 in productOrder) {
+                    val rate = completionRates.filter {
+                        it?.effectiveDate!! < item1?.orderDate
+                    }
+                        .sortedByDescending { it?.effectiveDate }
+                        .first()
+                    quantityTape += ((item1?.quantity ?: 0) / ((item1?.blockSh ?: 0) * (rate?.rate?.toInt() ?: 0)))
+                }
+                val unitPrice = listPriceMax.firstOrNull { it.productName == item.productName }?.unitPrice ?: 0.0
+                val intoMoney = quantityTape * unitPrice
+                item.quantityTape = quantityTape
+                item.intoMoney = intoMoney
             }
 
             val requestImport = listOderInfoValidate.map {
@@ -354,7 +384,8 @@ class MaterialsService(
                     monthReport = request.monthReport,
                     yearReport = request.yearReport,
                     requestDateStart = request.startDate,
-                    requestDateEnd = request.endDate
+                    requestDateEnd = request.endDate,
+                    exportType = x.exportTye
                 )
             }
 
@@ -403,10 +434,11 @@ class MaterialsService(
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 dataRow.height = rowHeight
                 ExcelHelper.setCellValue(dataRow, 0, item.cellStyles.find { x -> x.index == 0 }?.cellStyle ?: style, item.productName)
-                ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }?.cellStyle ?: style, item.tapeShared)
-                ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }?.cellStyle ?: style, item.typeTape)
-                ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }?.cellStyle ?: style, item.unitPrice.toString())
-                ExcelHelper.setCellValue(dataRow, 4, (item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: resultCellStyle), item.listMessageErr.joinToString(separator = "; "))
+                ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }?.cellStyle ?: style, item.exportTye)
+                ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }?.cellStyle ?: style, item.tapeShared)
+                ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }?.cellStyle ?: style, item.typeTape)
+                ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: style, item.unitPrice.toString())
+                ExcelHelper.setCellValue(dataRow, 5, (item.cellStyles.find { x -> x.index == 5 }?.cellStyle ?: resultCellStyle), item.listMessageErr.joinToString(separator = "; "))
             }
         }
         workbook.removeSheetAt(0)
@@ -423,4 +455,53 @@ class MaterialsService(
         response.totalRecords = result.second ?: 0
         return response
     }
+
+    fun checkImportTape(month: Int , year: Int) : CheckImportTapeResponse {
+        val data = CheckImportTapeResponse()
+        val query = tapeInfoRep.checkImportTape(month, year)
+        if(query != null){
+            data.hasImportTape = true
+            return data
+        }
+        return data
+    }
+
+    fun exportExcel(request: GetReportMaterialsRequest, pageable: Pageable) : BaseResponse<FileContentModel>{
+        val query = tapeInfoRep.getAllReportMaterials(request, pageable)
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportTapeTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        if (query.first.isNotEmpty()) {
+            val style = ExcelHelper.getCellStyleCommon(workbook)
+            var rowNumber = 1
+            for (item in query.first) {
+                val dataRow: Row = sheet.createRow(rowNumber++)
+                ExcelHelper.setCellValue(dataRow, 0, style, "${item?.monthReport}/${item?.yearReport}")
+                ExcelHelper.setCellValue(dataRow, 1, style, DateTimeHelper.convertOffSetDateTimeUtc7ToString(item?.requestDateStart))
+                ExcelHelper.setCellValue(dataRow, 2, style, DateTimeHelper.convertOffSetDateTimeUtc7ToString(item?.requestDateEnd))
+                ExcelHelper.setCellValue(dataRow, 3, style, item?.productName)
+                ExcelHelper.setCellValue(dataRow, 4, style, item?.exportType)
+                ExcelHelper.setCellValue(dataRow, 5, style, item?.tapeShared)
+                ExcelHelper.setCellValue(dataRow, 6, style, item?.typeTape)
+                ExcelHelper.setCellValue(dataRow, 7, style, item?.unitPrice.toString())
+            }
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("export.tapeInfo.Template", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
+    }
+
 }

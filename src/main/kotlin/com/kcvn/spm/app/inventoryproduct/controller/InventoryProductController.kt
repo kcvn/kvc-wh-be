@@ -17,7 +17,11 @@ import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestPart
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
 
@@ -28,17 +32,17 @@ class InventoryProductController(
 ) {
     @GetMapping("/check-inventory-date")
     fun checkInventoryDate(date: OffsetDateTime
-    ) : ResponseEntity<BaseResponse<CheckInventoryDateResponse>>{
+    ): ResponseEntity<BaseResponse<CheckInventoryDateResponse>> {
         val data = inventoryProductService.checkInventoryDate(date)
 
         val formattedDate = convertOffSetDateTimeUtc7ToString(date)
 
-        return if( data!= null && data.hasInventoryDate){
+        return if (data != null && data.hasInventoryDate) {
             ResponseEntity(
-                BaseResponse(data = data, message = CommonUtils.getMessage("check.inventoryDateProduct",arrayOf(formattedDate.toString()))),
+                BaseResponse(data = data, message = CommonUtils.getMessage("check.inventoryDateProduct", arrayOf(formattedDate.toString()))),
                 HttpStatus.OK
             )
-        }else{
+        } else {
             ResponseEntity(
                 BaseResponse(data = data, message = "Ok"),
                 HttpStatus.OK
@@ -55,14 +59,14 @@ class InventoryProductController(
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
-    fun importCsv(date:OffsetDateTime ,@RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = inventoryProductService.importExelInventoryProduct(date,file)
+    fun importCsv(date: OffsetDateTime, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = inventoryProductService.importExelInventoryProduct(date, file)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
-    fun  getAllInventoryProduct (
+    fun getAllInventoryProduct(
         request: InventoryProductRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
@@ -72,10 +76,9 @@ class InventoryProductController(
             SortDefault(sort = ["processName"], direction = Sort.Direction.ASC)
         )
         pageable: Pageable?
-    ) :  ResponseEntity<BasePagingResponse<InventoryProductResponse?>> {
-         val result = inventoryProductService.getListInventoryProduct(request,pageable!!)
-
-        return   ResponseEntity(result, HttpStatus.OK)
+    ): ResponseEntity<BasePagingResponse<InventoryProductResponse?>> {
+        val result = inventoryProductService.getListInventoryProduct(request, pageable!!)
+        return ResponseEntity(result, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")
@@ -91,7 +94,7 @@ class InventoryProductController(
         )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = inventoryProductService.exportExcel(request,pageable)
+        val data = inventoryProductService.exportExcel(request, pageable)
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

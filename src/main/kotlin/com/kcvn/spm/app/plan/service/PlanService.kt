@@ -23,6 +23,7 @@ import com.kcvn.spm.common.constants.Frame1
 import com.kcvn.spm.common.constants.KeyAppSetting
 import com.kcvn.spm.common.constants.MasterDataType
 import com.kcvn.spm.common.constants.Mold
+import com.kcvn.spm.common.constants.PlanProcessSummary
 import com.kcvn.spm.common.constants.PlanStyleKey
 import com.kcvn.spm.common.constants.PlanTitle
 import com.kcvn.spm.common.constants.ProcessConvertCode
@@ -321,7 +322,7 @@ class PlanService(
         }
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
-                && (processGroups.any { m -> m.processStatisticCode == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
+                && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
         }
 
         val dataSummary = dataExportFlattens.groupBy { x -> x.processConvertCode }.map { x ->
@@ -481,7 +482,7 @@ class PlanService(
             val ghepLop = PlanSummaryModel(
                 processName = process?.description,
                 processNameJp = process?.descriptionJp,
-                processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
+                processConvertCode = "${ProcessConvertCode.M_ALL}/M2*3,M3*4,...",
                 processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(
@@ -843,7 +844,7 @@ class PlanService(
         val dataExports = getDataExportExcelEquipment(planProducts, request.startDate!!, request.endDate!!)
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
-                && (processGroups.any { m -> m.processStatisticCode == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
+                && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
         }
 
         val types = listOf(MasterDataType.KHUNG_1)
@@ -998,7 +999,7 @@ class PlanService(
                 val detailsList = if (frame1 != Frame1.MU) {
                     mutableListOf(
                         PlanSummaryDetailModel(
-                            type = CommonUtils.getMessage(""),
+                            type = "",
                             planSummaryData = dataGhepLop.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
                                 .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
                                     val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first)

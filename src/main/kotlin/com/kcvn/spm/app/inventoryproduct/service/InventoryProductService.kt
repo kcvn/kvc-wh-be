@@ -18,7 +18,11 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
 import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import org.apache.poi.ss.usermodel.*
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -61,7 +65,7 @@ class InventoryProductService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = "Import_ThongTinTonKho_Template.xlsx",
+            fileName = CommonUtils.getMessage("fileName.importInventoryTemplate"),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -309,25 +313,6 @@ class InventoryProductService(
             return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
         }
 
-//        val resultRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) == CommonUtils.getMessage("validate.excel.importSuccess") }
-//        for (row in resultRows) {
-//            val rowNum = row.rowNum
-//            sheet.removeRow(row)
-//            if (rowNum >= 0 && rowNum < sheet.lastRowNum) {
-//                sheet.shiftRows(rowNum + 1, sheet.lastRowNum, -1)
-//            }
-//        }
-//
-//        val byteArrayOutputStream = ByteArrayOutputStream()
-//        workbook.write(byteArrayOutputStream)
-//
-//        val excelBytes = byteArrayOutputStream.toByteArray()
-//
-//        val response = FileContentModel(
-//            fileName = CommonUtils.getMessage("export.excel.result.import.inventoryProduct", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
-//            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
-//            content = excelBytes
-//        )
         val resultRows = sheet.filter {
             x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess")
             && x.rowNum >= rowIndex

@@ -1403,7 +1403,7 @@ class PlanService(
                 }
             }
             val planSummary = getPlanSummary(request, dataExports.toMutableList())
-            dataSummary.add(Pair("SUM", planSummary.data))
+            dataSummary.add(Pair("TOTAL", planSummary.data))
         } else {
             val planSummary = getPlanSummary(request, dataExports.toMutableList())
             dataSummary.add(Pair(request.frame_1!!, planSummary.data))

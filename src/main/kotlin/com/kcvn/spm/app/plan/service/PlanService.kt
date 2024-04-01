@@ -1709,6 +1709,22 @@ class PlanService(
             
             val styleCollections = mutableListOf<CellStyleModel>()
             val style = ExcelHelper.getCellStyleCommon(workbook)
+
+            val holidayStyle = workbook.createCellStyle()
+            holidayStyle.cloneStyleFrom(style)
+            holidayStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+            holidayStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+
+            val orangeStyle = workbook.createCellStyle()
+            orangeStyle.cloneStyleFrom(style)
+            orangeStyle.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
+            orangeStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+
+            val yellowStyle = workbook.createCellStyle()
+            yellowStyle.cloneStyleFrom(style)
+            yellowStyle.fillForegroundColor = IndexedColors.LIGHT_YELLOW.index
+            yellowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+
             var rowNumber = 1
             var index = 0
             val groupedByFrame1: Map<String?, List<EquipmentProductivityModel>> = dataEquipment.groupBy { it.frame1 }
@@ -1747,24 +1763,37 @@ class PlanService(
                             ExcelHelper.setCellValue(dataRow, 0, style, frame1Value)
                             ExcelHelper.setCellValue(dataRow, 4, style, data.type)
 
+                            if (data.type == ProcessPlan.MACHINENUMBER) {
+                                dataRow.height = 700
+                            }
+
                             var colIndex = 5
                             for (col in columns) {
-                                val value = data.quantityByCalendars.find { x -> x.key == col.key }?.value
-                                ExcelHelper.setCellValue(dataRow, colIndex, style, value)
+                                val quantityByCalendar = data.quantityByCalendars.find { x -> x.key == col.key }
+                                val st = if (data.type == ProcessPlan.MACHINENUMBER) {
+                                    when (quantityByCalendar?.sort) {
+                                        Color.YELLOW.toBigDecimalOrNull() -> yellowStyle
+                                        Color.ORANGE.toBigDecimalOrNull() -> orangeStyle
+                                        else -> if (col.isHoliday) holidayStyle else style
+                                    }
+                                } else {
+                                    if (col.isHoliday) holidayStyle else style
+                                }
+
+                                ExcelHelper.setCellValue(dataRow, colIndex, st, quantityByCalendar?.value)
                                 colIndex++
                             }
                             rowDataIndex++
                         }
-
                         rowTitleIndex++
                     }
 
                     rowNumber = rowProcessIndex
                     index++
                 }
-                rowNumber++
                 val endRow = sheet.createRow(rowNumber)
                 ExcelHelper.setCellValue(endRow, 0, style, "")
+                rowNumber++
             }
         }
 

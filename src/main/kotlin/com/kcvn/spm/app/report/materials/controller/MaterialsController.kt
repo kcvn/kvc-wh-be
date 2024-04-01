@@ -64,7 +64,7 @@ class MaterialsController(
         val data = materialsService.checkImportTape(monthReport, yearReport)
         return if( data.hasImportTape){
             ResponseEntity(
-                BaseResponse(data = data, message = CommonUtils.getMessage("validate.checkImportTape",arrayOf(month, year))),
+                BaseResponse(data = data, message = CommonUtils.getMessage("validate.checkImportTape",arrayOf(monthReport, yearReport))),
                 HttpStatus.OK
             )
         }else{

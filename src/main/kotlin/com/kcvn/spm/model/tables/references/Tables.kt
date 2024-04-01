@@ -37,6 +37,7 @@ import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.TapeInfo
+import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
 
 
@@ -205,6 +206,11 @@ val SYNC_HISTORY: SyncHistory = SyncHistory.SYNC_HISTORY
  * The table <code>public.tape_info</code>.
  */
 val TAPE_INFO: TapeInfo = TapeInfo.TAPE_INFO
+
+/**
+ * The table <code>public.update_tape</code>.
+ */
+val UPDATE_TAPE: UpdateTape = UpdateTape.UPDATE_TAPE
 
 /**
  * The table <code>public.work_result</code>.

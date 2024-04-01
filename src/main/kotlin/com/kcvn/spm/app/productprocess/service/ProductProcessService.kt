@@ -22,7 +22,11 @@ import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
-import org.apache.poi.ss.usermodel.*
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -827,24 +831,6 @@ class ProductProcessService(
         return byteArrayOutputStream.toByteArray()
     }
 
-    fun downloadTemplateMasterData(): BaseResponse<FileContentModel> {
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessMasterDataTemplate.xlsx"
-        val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
-
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        workbook.write(byteArrayOutputStream)
-
-        val excelBytes = byteArrayOutputStream.toByteArray()
-
-        val response = FileContentModel(
-            fileName = "ImportProcessMasterData",
-            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
-            content = excelBytes
-        )
-
-        return BaseResponse(response)
-    }
-
     fun importExcelProcessMasterData(file: MultipartFile): BaseResponse<FileContentModel> {
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
@@ -862,8 +848,6 @@ class ProductProcessService(
 
         var count = 0
         val total = sheet.lastRowNum
-
-
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
 

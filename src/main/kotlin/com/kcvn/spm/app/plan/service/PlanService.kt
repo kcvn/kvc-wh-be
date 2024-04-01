@@ -481,7 +481,7 @@ class PlanService(
             val ghepLop = PlanSummaryModel(
                 processName = process?.description,
                 processNameJp = process?.descriptionJp,
-                processConvertCode = "${ProcessConvertCode.M_ALL}/${ProcessConvertCode.M_ANY}",
+                processConvertCode = "${ProcessConvertCode.M_ALL}/M2*3,M3*4,...",
                 processSequence = process?.sortOrder?.toInt(),
                 details = mutableListOf(
                     PlanSummaryDetailModel(

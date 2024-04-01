@@ -37,6 +37,7 @@ import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.TapeInfo
+import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
 
 import kotlin.collections.List
@@ -225,6 +226,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val TAPE_INFO: TapeInfo get() = TapeInfo.TAPE_INFO
 
     /**
+     * The table <code>public.update_tape</code>.
+     */
+    val UPDATE_TAPE: UpdateTape get() = UpdateTape.UPDATE_TAPE
+
+    /**
      * The table <code>public.work_result</code>.
      */
     val WORK_RESULT: WorkResult get() = WorkResult.WORK_RESULT
@@ -265,6 +271,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         ProductProcess.PRODUCT_PROCESS,
         SyncHistory.SYNC_HISTORY,
         TapeInfo.TAPE_INFO,
+        UpdateTape.UPDATE_TAPE,
         WorkResult.WORK_RESULT
     )
 }

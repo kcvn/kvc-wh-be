@@ -30,7 +30,8 @@ data class TapeInfo(
     @set:JvmName("setIsDeleted")
     var isDeleted: Boolean? = null,
     var monthReport: Int? = null,
-    var yearReport: Int? = null
+    var yearReport: Int? = null,
+    var exportType: String? = null
 ): Serializable {
 
 
@@ -138,6 +139,12 @@ data class TapeInfo(
         }
         else if (this.yearReport != o.yearReport)
             return false
+        if (this.exportType == null) {
+            if (o.exportType != null)
+                return false
+        }
+        else if (this.exportType != o.exportType)
+            return false
         return true
     }
 
@@ -160,6 +167,7 @@ data class TapeInfo(
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         result = prime * result + (if (this.monthReport == null) 0 else this.monthReport.hashCode())
         result = prime * result + (if (this.yearReport == null) 0 else this.yearReport.hashCode())
+        result = prime * result + (if (this.exportType == null) 0 else this.exportType.hashCode())
         return result
     }
 
@@ -182,6 +190,7 @@ data class TapeInfo(
         sb.append(", ").append(isDeleted)
         sb.append(", ").append(monthReport)
         sb.append(", ").append(yearReport)
+        sb.append(", ").append(exportType)
 
         sb.append(")")
         return sb.toString()

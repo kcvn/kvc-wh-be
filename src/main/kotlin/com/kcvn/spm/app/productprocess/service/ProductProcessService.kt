@@ -846,11 +846,8 @@ class ProductProcessService(
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
-        val count = 0
+        var count = 0
         val total = sheet.lastRowNum
-
-
-        ExcelHelper.createColResult(headerRow, sheet)
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
 
@@ -887,7 +884,7 @@ class ProductProcessService(
 //                row.createCell(colIndexResult)
 //            }
             // row.getCell(colIndexResult ).setCellValue(result)
-
+            count++
         }
 
 

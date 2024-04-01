@@ -699,14 +699,14 @@ class PlanService(
                     unit = planSummaryModel.unit,
                     processDetail = mutableListOf()
                 )
-                val groupProcessCode = listGroupProcessCode?.firstOrNull { x -> x.processCode == planSummaryModel.processCode }?.groupProcessCode
+                val groupProcessCode = listGroupProcessCode?.filter { x -> x.processCode == planSummaryModel.processCode }?.map { it.groupProcessCode }
 
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
                         var equipmentMachineValue: BigDecimal?
                         var numberMachine: Double?
                         val equipmentMachineModel = equipmentMachine.firstOrNull {
-                            it.grpProcess == groupProcessCode
+                                groupProcessCode?.contains(it.grpProcess) == true
                                 && it.frame_1 == planSummaryModel.frame1
                                 && it.mold?.contains(processSummaryDetailModel.type ?: "") == true
                         }
@@ -1091,6 +1091,10 @@ class PlanService(
                     dataSummary.removeAll(dataThaoKhungCsp)
                     dataSummary.add(thaoKhungCsp)
                 }
+            }else{
+                val dataThaoKhung = dataSummary.filter { x -> x.frame1 == frame1 && (x.processConvertCode == ProcessConvertCode.TK) }
+                dataSummary.removeAll(dataThaoKhung)
+
             }
         }
 

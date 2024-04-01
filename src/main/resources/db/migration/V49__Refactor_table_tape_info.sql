@@ -1,0 +1,1 @@
+ALTER TABLE public.tape_info ADD export_type varchar(50) NOT NULL;

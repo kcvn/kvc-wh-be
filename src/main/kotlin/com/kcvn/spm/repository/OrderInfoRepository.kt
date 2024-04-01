@@ -86,7 +86,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             }
 
         } else {
-            sortFields.add(sortFields.size - 1, ORDER_INFO.VERSION.desc())
+            val sortFieldIndex =if (sortFields.isNotEmpty()) sortFields.size - 1 else 0
+            sortFields.add(sortFieldIndex, ORDER_INFO.VERSION.desc())
             val query = context.select(
                 ORDER_INFO.PRODUCT_NAME,
                 DSL.sum(ORDER_INFO.QUANTITY).`as`("quantity"),

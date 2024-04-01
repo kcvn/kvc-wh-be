@@ -48,7 +48,7 @@ class Frame1 {
 }
 
 
-class ProcessCode{
+class ProcessCode {
     companion object {
         const val KTTN = "217020"
     }
@@ -62,7 +62,7 @@ class Mold {
         const val SWR = "SWR"
         const val SUR = "SUR"
 
-        fun DATA_BY_FRAME1(frame1: String?) : List<String> {
+        fun DATA_BY_FRAME1(frame1: String?): List<String> {
             return when (frame1) {
                 Frame1.ML -> listOf(this.ML)
                 Frame1.MU -> listOf(this.KVC, this.SKE)
@@ -99,9 +99,9 @@ class DateTimeFormat {
     }
 }
 
-class Color{
+class Color {
     companion object {
-        const val WHITE  = "0"
+        const val WHITE = "0"
         const val YELLOW = "1"
         const val ORANGE = "2"
     }
@@ -145,14 +145,13 @@ class ExternalReportShippingType {
         const val PRODUCTION_PLAN_TITLE = "生産計画　Ke hoach san xuat"
         const val QUANTITY_REMAINING_TITLE = "出荷残数 Sluong xuat hang còn"
         const val TAPE_INVENTORY_TITLE = "5月27日テープ在庫Tồn kho tape ( set )"
-        const val EXPIRED_TAPE  = "10月の期限切れテープTape hết hạn (set )"
-
+        const val EXPIRED_TAPE = "10月の期限切れテープTape hết hạn (set )"
 
 
     }
 }
 
-class EquipmentType{
+class EquipmentType {
     companion object {
         const val PROCESS = "0"
         const val CAP_MACHINE = "1"
@@ -200,6 +199,9 @@ class ProcessConvertCode {
         const val SNAP = "SNAP"
         const val TK = "TK"
         const val INS = "INS"
+        const val DAN_2L = "DAN 2L"
+        const val DAN_PET = "PET+"
+        const val THAO_PET = "PET-"
     }
 }
 
@@ -232,7 +234,7 @@ class ProcessPlan {
         const val PROCESS = "Process"
         const val MACHINE = "Cap(1machine)"
         const val MACHINENUMBER = "Số máy sử dụng"
-        const val PROCESS_DUC_LO ="Đục lỗ"
+        const val PROCESS_DUC_LO = "Đục lỗ"
         const val PROCESS_DUC_LO_M = "T/H"
         const val AVERAGE_PLAN = "KH trung bình"
 
@@ -265,7 +267,10 @@ class PlanProcessSummary {
             ProcessConvertCode.SHN,
             ProcessConvertCode.SNAP,
             ProcessConvertCode.TK,
-            ProcessConvertCode.INS
+            ProcessConvertCode.INS,
+            ProcessConvertCode.DAN_2L,
+            ProcessConvertCode.DAN_PET,
+            ProcessConvertCode.THAO_PET
         )
     }
 }

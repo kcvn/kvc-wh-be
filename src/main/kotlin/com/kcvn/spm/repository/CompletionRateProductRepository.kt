@@ -182,7 +182,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             .fetchInto(CompletionRateProduct::class.java)
     }
 
-    fun getProductDetail(productName: String) : List<CompletionRateProduct?> {
+    fun getProductDetail(productName: String?) : List<CompletionRateProduct?> {
         return  context.selectFrom(COMPLETION_RATE_PRODUCT)
             .where(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.eq(productName)
                 .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))

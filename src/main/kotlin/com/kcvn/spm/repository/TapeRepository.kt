@@ -43,7 +43,8 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
                 x?.typeTape,
                 x?.quantityTape,
                 x?.unitPrice,
-                x?.intoMoney
+                x?.intoMoney,
+                x?.exportType
             )
         }.toTypedArray()
 
@@ -58,7 +59,8 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
             TAPE_INFO.TYPE_TAPE,
             TAPE_INFO.QUANTITY_TAPE,
             TAPE_INFO.UNIT_PRICE,
-            TAPE_INFO.INTO_MONEY
+            TAPE_INFO.INTO_MONEY,
+            TAPE_INFO.EXPORT_TYPE
         )
 
         for (record in records) {
@@ -102,6 +104,14 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
                 .and(TAPE_INFO.IS_DELETED.eq(false)))
         val totalCount = context.fetchOne(queryTotal)?.value1()
         return Pair(query, totalCount)
+    }
+
+    fun checkImportTape (month: Int, year: Int) : TapeInfo? {
+        return context.selectFrom(TAPE_INFO)
+            .where(TAPE_INFO.MONTH_REPORT.eq(month)
+                .and(TAPE_INFO.YEAR_REPORT.eq(year))
+                .and(TAPE_INFO.IS_DELETED.eq(false)))
+            .fetchAnyInto(TapeInfo::class.java)
     }
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {

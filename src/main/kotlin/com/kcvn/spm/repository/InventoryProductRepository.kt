@@ -22,6 +22,38 @@ import java.time.OffsetDateTime
 @Repository
 class InventoryProductRepository(private val context: DSLContext) : SortingRepository()
 {
+
+    fun getInventoryProductByProductName(products:List<String> , date:OffsetDateTime?): List<InventoryProductResponse>{
+        var condition: Condition = DSL.noCondition()
+
+        if(date != null){
+            condition = condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date))
+        }
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(products))
+
+        val data = context.select(
+            INVENTORY_PRODUCT.INVENTORY_DATE.`as`("inventoryDate"),
+            PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
+            INVENTORY_PRODUCT.PRODUCT_QUANTITY.`as`("productQuantity"),
+            INVENTORY_PRODUCT.SHEET_QUANTITY.`as`("sheetQuantity"),
+        )
+            .from(INVENTORY_PRODUCT
+                .join(PROCESS_PROCEDURE_STRUCTURE)
+                .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+                .leftJoin(PROCESS_MASTER)
+                .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                    .and(PROCESS_MASTER.IS_DELETED.eq(false)))
+                .leftJoin(PRODUCT)
+                .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                    .and(PRODUCT.IS_DELETED.eq(false))))
+            .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(InventoryProductResponse::class.java)
+
+        return data
+    }
+
+
     fun findDateInventoryProduct (date: OffsetDateTime) : InventoryProduct?{
         return context.selectFrom(INVENTORY_PRODUCT)
             .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)

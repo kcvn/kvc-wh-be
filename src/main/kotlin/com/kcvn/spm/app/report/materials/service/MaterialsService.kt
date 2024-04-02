@@ -40,7 +40,7 @@ class MaterialsService(
     private val masterDataService: MasterDataService,
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeTemplate.xlsx"
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/Import_GiaTape_template.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -137,7 +137,7 @@ class MaterialsService(
 
         val headerRow = sheet.getRow(0)
 
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeTemplate.xlsx"
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/Import_GiaTape_template.xlsx"
 
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))

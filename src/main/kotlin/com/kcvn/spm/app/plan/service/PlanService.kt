@@ -1755,6 +1755,7 @@ class PlanService(
                             rowDataIndex++
                         }
                         rowTitleIndex++
+                        rowNumber = rowTitleIndex
                     }
 
                     rowNumber = rowProcessIndex

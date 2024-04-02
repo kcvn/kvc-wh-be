@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.report.externalquality.service
 
+import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.service.OrderService
@@ -10,6 +11,7 @@ import com.kcvn.spm.app.report.externalquality.payload.response.ExternalQualityR
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExternalReportDetailType
 import com.kcvn.spm.common.constants.ExternalReportShippingType
+import com.kcvn.spm.common.constants.OrderVersion
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
@@ -37,27 +39,30 @@ class ExternalQualityReportService(
     fun getDataReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): ExternalQualityReportResponse {
 
         val response = ExternalQualityReportResponse()
-        val orderSearchRequest = OrderSearchRequest()
+
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
         val daysToSubtract: Long = 10
         response.subColumns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders, daysToSubtract)
+
+        val orderSearchRequest = OrderSearchRequest()
         orderSearchRequest.endDate = request.endDate
         orderSearchRequest.startDate = request.startDate
         orderSearchRequest.productName = request.productName
+        orderSearchRequest.version = OrderVersion.LATEST
         val order = orderSer.getPaginatedOrder(orderSearchRequest,pageable)
         val listProductOrder = order.data
         var mappingPaging: List<ExternalQualityReportModel> = listProductOrder!!.map { product ->
             val externalQuality = ExternalQualityReportModel()
             externalQuality.productName = product.productName
             externalQuality.productShortcutName = product.productShortcutName
+            externalQuality.blockSh = product.shBlock
             externalQuality
         }
         val listProductName = listProductOrder.map { it.productName }
         val listProduct = productRep.getByName(listProductName.filterNotNull())
         val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())
         val listWorkResult = request.startDate?.let { request.endDate?.let { it1 -> workResultRep.getForReport(it, it1,listProductName) } }
-
         for(externalQuality in mappingPaging){
             if (listCompletionRate != null) {
                 externalQuality.completionRate = listCompletionRate.find { x-> x.productName.equals(externalQuality.productName) }?.rate
@@ -65,32 +70,36 @@ class ExternalQualityReportService(
         }
         mappingPaging = processMappingPaging(mappingPaging, listProduct)
 
+
+
         //get list name UpdateTape
         val genericNames = getGenericNameUpdateTape(mappingPaging)
-
         //get list Update Tape
         val updateTapes = updateTapeRepository.getUpdateTapeForReport(genericNames,request.startDate,request.endDate)
-
-
-
-
+        // get list name product
+        val productNames = getListNameProduct(mappingPaging)
+        // get list Inventory
+        val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames,request.endDate)
         //add Details Data here
         for(mappingItem in mappingPaging){
-            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes)
+            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails)
         }
-
         val valueReportDate= findValueDateReport(response.columns,response.subColumns)
         //add Shipping Data here
         for(mappingItem in mappingPaging){
             addShippingData(mappingItem,valueReportDate)
         }
-
-
-
-
         response.data = mappingPaging
+        response.totalRecords = order.totalRecords
         return response
     }
+
+    fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{
+        var data = 0
+        data = inventoryProducts.filter { x-> x.productName == productName }.sumOf { x -> x.sheetQuantity!! }
+        return data
+    }
+
 
     fun processMappingPaging(mappingPaging: List<ExternalQualityReportModel>, listProduct: List<Product>): List<ExternalQualityReportModel> {
         val mulMappingPaging = mappingPaging.toMutableList()
@@ -111,7 +120,8 @@ class ExternalQualityReportService(
                         pcsSh = product.pcsSh,
                         tapeCommon = product.tapeCommon,
                         exportType = part1,
-                        blockSh = product.shBlock
+                        blockSh = product.shBlock,
+                        layerCount = product.layerCount
                     )
                     newExternalQualityList.add(externalQualityPart1)
 
@@ -129,6 +139,8 @@ class ExternalQualityReportService(
                         tapeCommon = product.tapeCommon
                         exportType = product.exportType
                         blockSh = product.shBlock
+                        layerCount = product.layerCount
+
                     }
                     newExternalQualityList.add(externalQuality)
                 }
@@ -149,11 +161,22 @@ class ExternalQualityReportService(
         return genericNames
     }
 
+    fun getListNameProduct(listExternalQuantityReport:  List<ExternalQualityReportModel>) :List<String>{
+
+        val productNames: MutableList<String> = mutableListOf()
+
+        for(item in listExternalQuantityReport){
+            item.productName?.let { productNames.add(it) }
+        }
+        return productNames
+    }
+
     fun addDetailsExternalQualityReport(externalQualityReportModel: ExternalQualityReportModel,
                                         listProductOrder:  List<OrderDetailModel>,
                                         columns:  List<CalendarResponse>,
                                         listWorkResult: List<WorkResult>?,
-                                        updateTapes:List<UpdateTape>){
+                                        updateTapes:List<UpdateTape>,
+                                        inventoryProducts:  List<InventoryProductResponse>){
 
         //common data
         val detailData : MutableList<ExternalQualityDetailModel> = mutableListOf()
@@ -171,7 +194,14 @@ class ExternalQualityReportService(
         val goodQualityTapeInventorySet = inventoryTape - tapeExpired
         val goodQualityTapeInventoryBlock = goodQualityTapeInventorySet * externalQualityReportModel.blockSh!!
 
-        //order quantity
+        externalQualityReportModel.tapeInventoryQuantity = inventoryTape
+        externalQualityReportModel.tapeExpireQuantity = tapeExpired
+        externalQualityReportModel.goodQualityTapeInventorySet = goodQualityTapeInventorySet
+        externalQualityReportModel.goodQualityTapeInventoryBlock = goodQualityTapeInventoryBlock
+        externalQualityReportModel.sumWorkResultQuantity =
+            externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
+
+        //ORDER QUANTITY
         val detailOrderQuantity =  ExternalQualityDetailModel("ORDER_QUANTITY", ExternalReportDetailType.ORDER_QUANTITY)
         val orderQuantityCalendarsSave =listProductOrder.first { x -> x.productName == externalQualityReportModel.productName }.quantityByCalendars!!.toMutableList()
         val orderQuantityCalendars: MutableList<KeyValueResponse> = mutableListOf()
@@ -186,7 +216,7 @@ class ExternalQualityReportService(
         detailData.add(detailOrderQuantity)
 
         //ACCUMULATED_ORDER_QUANTITY
-        val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY)
+        val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.goodQualityTapeInventoryBlock)
         val accumulatedOrderQuantityCalendars = calculateAccumulation(orderQuantityCalendars)
         accumulatedOrderQuantity.quantityByCalendars = accumulatedOrderQuantityCalendars
         detailData.add(accumulatedOrderQuantity)
@@ -219,16 +249,12 @@ class ExternalQualityReportService(
         difference2.quantityByCalendars = calculateDifferenceCalendars(accumulatedOrderQuantityCalendars,accumulatedProductionResultCalendars)
         detailData.add(difference2)
 
-
-
-        val fakeCalender: MutableList<KeyValueResponse> = mutableListOf()
-        columns.map { x ->   fakeCalender.add(KeyValueResponse(x.key,"100"))}
         //PLANNED_TAPE_SET
 
-        val plannedTapeSet = ExternalQualityDetailModel("PLANNED_TAPE_SET", ExternalReportDetailType.PLANNED_TAPE_SET)
+        val plannedTapeSet = ExternalQualityDetailModel("PLANNED_TAPE_SET", ExternalReportDetailType.PLANNED_TAPE_SET, externalQualityReportModel.goodQualityTapeInventorySet)
         val plannedTapeSetCalendars: MutableList<KeyValueResponse> = mutableListOf()
         columns.forEach{ x ->
-            val tape = updateTape.firstOrNull() { tape -> tape.responseDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) } == x.key }
+            val tape = updateTape.firstOrNull{ tape -> tape.responseDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) } == x.key }
             if(tape!=null){
                 plannedTapeSetCalendars.add(KeyValueResponse(x.key, tape.deliveryQuantity.toString()))
 
@@ -245,7 +271,7 @@ class ExternalQualityReportService(
         detailData.add(accumulatedPlannedTapeSet)
 
         //PLANNED_TAPE_BLOCK
-        val plannedTapeBlock = ExternalQualityDetailModel("PLANNED_TAPE_BLOCK", ExternalReportDetailType.PLANNED_TAPE_BLOCK)
+        val plannedTapeBlock = ExternalQualityDetailModel("PLANNED_TAPE_BLOCK", ExternalReportDetailType.PLANNED_TAPE_BLOCK,externalQualityReportModel.goodQualityTapeInventoryBlock)
         val plannedTapeBlockCalendars: MutableList<KeyValueResponse> = mutableListOf()
         val blockShProduct = externalQualityReportModel.blockSh
         accumulatedPlannedTapeSet.quantityByCalendars.forEach{ x ->
@@ -261,26 +287,45 @@ class ExternalQualityReportService(
         plannedTapeBlock.quantityByCalendars = plannedTapeBlockCalendars
         detailData.add(plannedTapeBlock)
 
-
         //ACCUMULATED_PLANNED_TAPE_BLOCK
         val accumulatedPlannedTapeBlock = ExternalQualityDetailModel("ACCUMULATED_PLANNED_TAPE_BLOCK", ExternalReportDetailType.ACCUMULATED_PLANNED_TAPE_BLOCK)
-        accumulatedPlannedTapeBlock.quantityByCalendars = calculateAccumulation(plannedTapeBlock.quantityByCalendars,goodQualityTapeInventoryBlock)
+        val accumulatedPlannedTapeBlockCalendar = calculateAccumulation(plannedTapeBlock.quantityByCalendars,goodQualityTapeInventoryBlock)
+        accumulatedPlannedTapeBlock.quantityByCalendars = accumulatedPlannedTapeBlockCalendar
         detailData.add(accumulatedPlannedTapeBlock)
+
         //TAPE_REQUIRED_FOR_PRODUCTION_BLOCK
         val tapeRequiredForProductionBlock = ExternalQualityDetailModel("TAPE_REQUIRED_FOR_PRODUCTION_BLOCK", ExternalReportDetailType.TAPE_REQUIRED_FOR_PRODUCTION_BLOCK)
-        tapeRequiredForProductionBlock.quantityByCalendars = fakeCalender
+        val tapeRequiredForProductionBlockCalendar : MutableList<KeyValueResponse> = mutableListOf()
+        difference2.quantityByCalendars.forEach { x->
+            if(x.value?.toInt()!! >0){
+                tapeRequiredForProductionBlockCalendar.add(KeyValueResponse(x.key,"0"))
+            }else{
+                val inverseNumber = x.value?.toInt()!! * -1
+                tapeRequiredForProductionBlockCalendar.add(KeyValueResponse(x.key,inverseNumber.toString()))
+            }
+        }
+        tapeRequiredForProductionBlock.quantityByCalendars = tapeRequiredForProductionBlockCalendar
         detailData.add(tapeRequiredForProductionBlock)
+
         //TAPE_DIFFERENCE_BLOCK
         val tapeDifferenceBlock = ExternalQualityDetailModel("TAPE_DIFFERENCE_BLOCK", ExternalReportDetailType.TAPE_DIFFERENCE_BLOCK)
-        tapeDifferenceBlock.quantityByCalendars = fakeCalender
+        val tapeDifferenceBlockCalendar: MutableList<KeyValueResponse> = mutableListOf()
+
+        accumulatedPlannedTapeBlockCalendar.forEach { x ->
+            val prepareTapeValue = tapeRequiredForProductionBlockCalendar.firstOrNull { tape -> tape.key == x.key }?.value?.toInt() ?: 0
+
+            val newValue = if ((x.value?.toInt() ?: 0) <= 0) {
+                x.value
+            } else {
+                (x.value?.toInt() ?: 0) - (prepareTapeValue)
+            }
+
+            tapeDifferenceBlockCalendar.add(KeyValueResponse(x.key, newValue.toString()))
+        }
+
+
+        tapeDifferenceBlock.quantityByCalendars = tapeDifferenceBlockCalendar
         detailData.add(tapeDifferenceBlock)
-
-
-
-
-
-
-
 
         //end
         externalQualityReportModel.details = detailData
@@ -323,9 +368,9 @@ class ExternalQualityReportService(
             val exchangeRateDifferences = (numberOrder - numberWorkResult).toString()
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
             shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
-            shippingData.add(KeyValueResponse("tape_inventory_title_number","4000"))
+            shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity.toString()))
             shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))
-            shippingData.add(KeyValueResponse("expired_tape_number","0"))
+            shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity.toString()))
             shippingData.add(KeyValueResponse("",""))
             shippingData.add(KeyValueResponse("",""))
             externalQualityReportModel.shippingData = shippingData

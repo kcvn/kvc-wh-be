@@ -233,7 +233,7 @@ class ProcessPlan {
     companion object {
         const val PROCESS = "Process"
         const val MACHINE = "Cap(1machine)"
-        const val MACHINENUMBER = "Số máy sử dụng"
+        const val MACHINENUMBER = "Số máy cần dùng/hiện có"
         const val PROCESS_DUC_LO = "Đục lỗ"
         const val PROCESS_DUC_LO_M = "T/H"
         const val AVERAGE_PLAN = "KH trung bình"

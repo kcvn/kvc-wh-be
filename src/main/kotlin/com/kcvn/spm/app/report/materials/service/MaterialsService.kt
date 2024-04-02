@@ -27,9 +27,11 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.round
 
 @Service
 @Transactional
@@ -359,20 +361,40 @@ class MaterialsService(
                 var quantityTape = 0
                 val productOrder = listOrderInfo.filter { it?.productName == item.productName }
                 // Tính ra số lượng của tape
+//                var test = 0
+//                if(item.productName == "VPX03BFF82V1"){
+//                    for (item1 in productOrder) {
+//                        val rate = completionRates.filter {
+//                            it?.effectiveDate!! < item1?.orderDate
+//                        }
+//                            .sortedByDescending { it?.effectiveDate }
+//                            .first()
+//                        quantityTape += if(item1?.blockSh == null || rate?.rate == null || item1.quantity == null
+//                            || item1.blockSh == 0 || rate.rate == BigDecimal(0)
+//                        ){
+//                            0
+//                        } else {
+//                            round(((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble())))).toInt()
+//                        }
+//                    }
+//                    test = quantityTape
+//                }
                 for (item1 in productOrder) {
                     val rate = completionRates.filter {
                         it?.effectiveDate!! < item1?.orderDate
                     }
                         .sortedByDescending { it?.effectiveDate }
                         .first()
-                    quantityTape += if(item1?.blockSh == null || rate?.rate == null || item1.quantity == null){
+                    quantityTape += if(item1?.blockSh == null || rate?.rate == null || item1.quantity == null
+                        || item1.blockSh == 0 || round(rate.rate!!.toDouble()) == 0.0
+                    ){
                         0
                     } else {
-                        ((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble()))).toInt()
+                        round(((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble())))).toInt()
                     }
                 }
                 val unitPrice = listPriceMax.firstOrNull { it.productName == item.productName }?.unitPrice ?: 0.0
-                val intoMoney = quantityTape * unitPrice
+                val intoMoney = round(quantityTape * unitPrice )
                 item.quantityTape = quantityTape
                 item.intoMoney = intoMoney
             }

@@ -539,7 +539,7 @@ class PlanService(
             }.firstOrNull()
             if (mTan == null) {
                 mTan = PlanSummaryDetailModel(
-                    type = ProcessConvertCode.M_ANY,
+                    type = "M2*3, M3*4...",
                     planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
                 )
             }
@@ -1118,7 +1118,7 @@ class PlanService(
                     dataSummary.removeAll(dataThaoKhungCsp)
                     dataSummary.add(thaoKhungCsp)
                 }
-            }else{
+            } else {
                 val dataThaoKhung = dataSummary.filter { x -> x.frame1 == frame1 && (x.processConvertCode == ProcessConvertCode.TK) }
                 dataSummary.removeAll(dataThaoKhung)
 
@@ -1269,19 +1269,6 @@ class PlanService(
         return BaseResponse(null, CommonUtils.getMessage("Insert Ok", arrayOf(count, total + 1)))
     }
 
-    private fun generateExcelRowFrameEquipment(
-        workbook: Workbook,
-        sheet: Sheet,
-        rowNumber: Int,
-        style: CellStyle,
-        data: String
-    ): Int {
-        val processNameDataRow = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
-        ExcelHelper.setCellValueCustom(workbook, processNameDataRow, 0, style, data, isBold = true)
-        return rowNumber
-
-    }
-
     private fun generateExcelRowProcessEquipment(
         workbook: Workbook,
         sheet: Sheet,
@@ -1305,10 +1292,12 @@ class PlanService(
         ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, data.processConvertCode, isBold = false, isAlignCenter = true, isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
 
         rowIndex++
-        for (i in 3 until ((data.processDetail?.size ?: 1) * 4)) {
+        var processDetailSize = (data.processDetail?.size ?: 1)
+        if (processDetailSize == 0) processDetailSize = 1
+        for (i in 3 until (processDetailSize * 4)) {
             dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
 
-            if (i == ((data.processDetail?.size ?: 1) * 4) - 1) {
+            if (i == (processDetailSize * 4) - 1) {
                 ExcelHelper.setCellValueCustom(
                     workbook, dataRow, 1, style, "", isBold = false, isAlignCenter = true,
                     isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true
@@ -1344,54 +1333,16 @@ class PlanService(
         ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processConvertCode)
 
         rowIndex++
-        for (i in 3 until ((data.processDetail?.size ?: 1) * 4)) {
+        var processDetailSize = (data.processDetail?.size ?: 1)
+        if (processDetailSize == 0) processDetailSize = 1
+        for (i in 3 until (processDetailSize * 4)) {
             dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-            val st = if (i == ((data.processDetail?.size ?: 1) * 4) - 1) {
+            val st = if (i == (processDetailSize * 4) - 1) {
                 styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
             } else {
                 styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
             }
             ExcelHelper.setCellValue(dataRow, 1, st, "")
-            rowIndex++
-        }
-        return rowIndex
-    }
-
-    private fun generateExcelRowPlanDataEquipment(
-        workbook: Workbook,
-        sheet: Sheet,
-        rowNumber: Int,
-        style: CellStyle,
-        columns: List<CalendarResponse>,
-        data: ProcessDetailModel
-    ): Int {
-
-        var rowIndex = rowNumber
-        val fixRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        val fixRowSecond = sheet.getRow(rowIndex + 1) ?: sheet.createRow(rowIndex)
-        val fixRowThird = sheet.getRow(rowIndex + 2) ?: sheet.createRow(rowIndex)
-        val fixRowFour = sheet.getRow(rowIndex + 3) ?: sheet.createRow(rowIndex)
-
-        ExcelHelper.setCellValueCustom(workbook, fixRow, 2, style, data.name, isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false, isAlignCenter = true, isBold = true)
-        ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 2, style, "", isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
-        ExcelHelper.setCellValueCustom(workbook, fixRowThird, 2, style, "", isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
-        ExcelHelper.setCellValueCustom(workbook, fixRowFour, 2, style, "", isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
-
-        ExcelHelper.setCellValueCustom(workbook, fixRow, 3, style, data.totalProcess.toString(), isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false, isAlignCenter = true, isBold = true)
-        ExcelHelper.setCellValueCustom(workbook, fixRowSecond, 3, style, "", isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
-        ExcelHelper.setCellValueCustom(workbook, fixRowThird, 3, style, "", isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
-        ExcelHelper.setCellValueCustom(workbook, fixRowFour, 3, style, "", isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true)
-        for (planData in data.processDetailList) {
-            val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-            ExcelHelper.setCellValueCustom(workbook, dataRow, 4, style, planData.type, isBorderBottom = true, isBold = false)
-            var colIndex = 5
-            for (col in columns) {
-                val plan = planData.quantityByCalendars.find { x -> x.key == col.key }
-                val value = plan?.value
-                val color = plan?.sort.toString()
-                ExcelHelper.setCellValueWithCalendar(workbook, dataRow, colIndex, style, value, col.isHoliday, color)
-                colIndex++
-            }
             rowIndex++
         }
         return rowIndex
@@ -1429,7 +1380,7 @@ class PlanService(
                 }
             }
             val planSummary = getPlanSummary(request, dataExports.toMutableList())
-            dataSummary.add(Pair("SUM", planSummary.data))
+            dataSummary.add(Pair("TOTAL", planSummary.data))
         } else {
             val planSummary = getPlanSummary(request, dataExports.toMutableList())
             dataSummary.add(Pair(request.frame_1!!, planSummary.data))
@@ -1733,7 +1684,7 @@ class PlanService(
                 ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
                 headerCol++
             }
-            
+
             val styleCollections = mutableListOf<CellStyleModel>()
             val style = ExcelHelper.getCellStyleCommon(workbook)
 
@@ -1762,7 +1713,6 @@ class PlanService(
                     } else {
                         generateExcelRowProcessEquipment(sheet, rowNumber, planProcess, styleCollections)
                     }
-
                     var rowTitleIndex = rowNumber
                     for (item in planProcess.processDetail!!) {
                         var dataRow = sheet.getRow(rowTitleIndex) ?: sheet.createRow(rowTitleIndex)
@@ -1813,18 +1763,18 @@ class PlanService(
                             rowDataIndex++
                         }
                         rowTitleIndex++
+                        rowNumber = rowTitleIndex
                     }
 
                     rowNumber = rowProcessIndex
                     index++
                 }
+
                 val endRow = sheet.createRow(rowNumber)
                 ExcelHelper.setCellValue(endRow, 0, style, "")
                 rowNumber++
             }
         }
-
     }
-    //endregion
-
 }
+//endregion

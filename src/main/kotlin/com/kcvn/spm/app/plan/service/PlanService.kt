@@ -72,6 +72,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.ceil
 
 @Service
 @Transactional
@@ -808,7 +809,9 @@ class PlanService(
                                         }
                                         var rate = 0.0
                                         if (sltbMachineValueDouble != 0.0) {
-                                            rate = value / sltbMachineValueDouble * 100.0
+                                            if (numberMachine != null) {
+                                                rate = newValue.toDouble() / numberMachine.toDouble() *100
+                                            }
                                         }
                                         val color = when {
                                             rate > 100 -> Color.ORANGE
@@ -817,7 +820,7 @@ class PlanService(
                                         }
                                         val valueRate = when {
                                             numberMachine == null || numberMachine.toInt() == 0 -> ""
-                                            else -> newValue + "/" + (numberMachine.toInt()).toString() + "\n" + (rate.toInt()).toString()
+                                            else -> newValue + "/" + (numberMachine.toInt()).toString() + "\n" + (ceil(rate).toInt()).toString()
                                         }
                                         KeyValueResponse(
                                             key = column.key,
@@ -1116,9 +1119,6 @@ class PlanService(
                     if (thaoKhungCsp.details.isNullOrEmpty()) {
                         val planSummaryData: MutableList<PlanDataByProcessModel> = mutableListOf()
                         planSummaryData.add(PlanDataByProcessModel(ProcessPlan.PROCESS, ProcessPlan.PROCESS, listOf()))
-                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.MACHINE, ProcessPlan.MACHINE, listOf()))
-                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.AVERAGE_PLAN, ProcessPlan.AVERAGE_PLAN, listOf()))
-                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.MACHINENUMBER, ProcessPlan.MACHINENUMBER, listOf()))
                         thaoKhungCsp.details?.add(PlanSummaryDetailModel(type = "", planSummaryData = planSummaryData))
                     }
                     dataSummary.removeAll(dataThaoKhungCsp)

@@ -281,5 +281,31 @@ class WorkResultRepository(
             .fetchInto(WorkResult::class.java)
     }
 
+    fun addRange(data: List<WorkResult>) {
+        val dataChunks = data.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+                val records = chunkItem.map { x -> transactionalContext.newRecord(WORK_RESULT, x) }
+                val query = records.map { x -> transactionalContext.insertInto(WORK_RESULT).set(x) }
+                transactionalContext.batch(query).execute()
+            }
+        }
+    }
+
+    fun removeRange(data: List<WorkResult>) {
+        val dataChunks = data.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+                val query = chunkItem.map { x ->
+                    transactionalContext
+                        .deleteFrom(WORK_RESULT)
+                        .where(WORK_RESULT.ID.eq(x.id))
+                }
+                transactionalContext.batch(query).execute()
+            }
+        }
+    }
 
 }

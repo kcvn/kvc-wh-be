@@ -101,12 +101,13 @@ class PlanProductRepository(private val context: DSLContext) {
             val lstProcessGroup = request.processGroups!!.split(",").map { x -> x.trim() }
             condition = condition.and(PLAN_PROCESS.PROCESS_GROUP.`in`(lstProcessGroup))
         }
-        if (request.startDate != null) {
-            condition = condition.and(PLAN.START_DATE.ge(request.startDate))
+        if (request.startDate != null && request.endDate != null) {
+            condition = condition.and(
+                (PLAN.START_DATE.ge(request.startDate).and(PLAN.START_DATE.le(request.endDate)))
+                    .or(PLAN.START_DATE.le(request.startDate).and(PLAN.END_DATE.ge(request.startDate)))
+            )
         }
-        if (request.endDate != null) {
-            condition = condition.and(PLAN.START_DATE.le(request.endDate))
-        }
+
         condition = condition.and(PLAN.IS_ACTIVE.eq(true)).and(PLAN_PRODUCT.IS_DELETED.eq(false))
 
         return condition

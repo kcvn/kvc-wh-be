@@ -40,7 +40,7 @@ class MaterialsService(
     private val masterDataService: MasterDataService,
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
-        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeTemplate.xlsx"
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/Import_GiaTape_template.xlsx"
         val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -137,7 +137,7 @@ class MaterialsService(
 
         val headerRow = sheet.getRow(0)
 
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeTemplate.xlsx"
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/Import_GiaTape_template.xlsx"
 
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
@@ -365,7 +365,11 @@ class MaterialsService(
                     }
                         .sortedByDescending { it?.effectiveDate }
                         .first()
-                    quantityTape += ((item1?.quantity ?: 0) / ((item1?.blockSh ?: 0) * (rate?.rate?.toInt() ?: 0)))
+                    quantityTape += if(item1?.blockSh == null || rate?.rate == null || item1.quantity == null){
+                        0
+                    } else {
+                        ((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble()))).toInt()
+                    }
                 }
                 val unitPrice = listPriceMax.firstOrNull { it.productName == item.productName }?.unitPrice ?: 0.0
                 val intoMoney = quantityTape * unitPrice

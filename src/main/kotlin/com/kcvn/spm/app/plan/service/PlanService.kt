@@ -893,7 +893,7 @@ class PlanService(
                 var moldByFrame1s = Mold.DATA_BY_FRAME1(frame1)
                 val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.T }
                 val listMoldRequest: MutableList<String> = mutableListOf()
-                if (request.mold != null) {
+                if (!request.mold.isNullOrEmpty()) {
                     listMoldRequest.add(request.mold!!)
                     moldByFrame1s = listMoldRequest
                 }

@@ -365,7 +365,11 @@ class MaterialsService(
                     }
                         .sortedByDescending { it?.effectiveDate }
                         .first()
-                    quantityTape += ((item1?.quantity ?: 0) / ((item1?.blockSh ?: 0) * (rate?.rate?.toInt() ?: 0)))
+                    quantityTape += if(item1?.blockSh == null || rate?.rate == null || item1.quantity == null){
+                        0
+                    } else {
+                        ((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble()))).toInt()
+                    }
                 }
                 val unitPrice = listPriceMax.firstOrNull { it.productName == item.productName }?.unitPrice ?: 0.0
                 val intoMoney = quantityTape * unitPrice

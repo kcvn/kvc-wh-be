@@ -33,13 +33,14 @@ class ExternalQualityReportService(
     private val productRep: ProductRepository,
     private val completionRateProductRep: CompletionRateProductRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
-    private val updateTapeRepository: UpdateTapeRepository
+    private val updateTapeRepository: UpdateTapeRepository,
+    private val orderInfoRepository: OrderInfoRepository
 ) {
 
     fun getDataReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): ExternalQualityReportResponse {
 
         val response = ExternalQualityReportResponse()
-
+        val check = orderInfoRepository.getListOrderForReport(request,pageable)
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
         val daysToSubtract: Long = 10

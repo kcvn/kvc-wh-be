@@ -86,7 +86,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             }
 
         } else {
-            val sortFieldIndex =if (sortFields.isNotEmpty()) sortFields.size - 1 else 0
+            val sortFieldIndex = if (sortFields.isNotEmpty()) sortFields.size - 1 else 0
             sortFields.add(sortFieldIndex, ORDER_INFO.VERSION.desc())
             val query = context.select(
                 ORDER_INFO.PRODUCT_NAME,

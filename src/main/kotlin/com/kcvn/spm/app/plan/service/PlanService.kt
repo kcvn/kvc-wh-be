@@ -704,7 +704,9 @@ class PlanService(
 
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
-                        var equipmentMachineValue: BigDecimal?
+                        var capMachineValue: BigDecimal?
+                        var sltbMachineValue: BigDecimal?
+
                         var numberMachine: Double?
                         val equipmentMachineModel = equipmentMachine.firstOrNull {
                                 groupProcessCode?.contains(it.grpProcess) == true
@@ -712,7 +714,18 @@ class PlanService(
                                 && it.mold?.contains(processSummaryDetailModel.type ?: "") == true
                         }
                         numberMachine = equipmentMachineModel?.machineNumber?.toDouble()
-                        equipmentMachineValue = when {
+                        capMachineValue = when {
+                            equipmentMachineModel != null -> {
+                                when (equipmentProductivityModel.unit) {
+                                    ProcessUnit.SHEET -> equipmentMachineModel.capSheet
+                                    ProcessUnit.SET -> equipmentMachineModel.capSet
+                                    else -> equipmentMachineModel.capBlock
+                                }
+                            }
+
+                            else -> null
+                        }
+                        sltbMachineValue = when {
                             equipmentMachineModel != null -> {
                                 when (equipmentProductivityModel.unit) {
                                     ProcessUnit.SHEET -> equipmentMachineModel.sltbSheet
@@ -751,7 +764,7 @@ class PlanService(
                                     quantityByCalendars = result.columns?.map { column ->
                                         KeyValueResponse(
                                             key = column.key,
-                                            value = equipmentMachineValue?.toInt()?.toString() ?: ""
+                                            value = capMachineValue?.toInt()?.toString() ?: ""
                                         )
                                     }?.toMutableList() ?: mutableListOf()
                                 )
@@ -764,7 +777,7 @@ class PlanService(
                                     quantityByCalendars = result.columns?.map { column ->
                                         KeyValueResponse(
                                             key = column.key,
-                                            value = ((equipmentMachineValue?.toInt() ?: 0) * (numberMachine?.toInt() ?: 0)).toString()
+                                            value = sltbMachineValue?.toInt()?.toString() ?: ""
                                         )
                                     }?.toMutableList() ?: mutableListOf()
                                 )
@@ -776,15 +789,15 @@ class PlanService(
                                     typeKey = EquipmentType.MACHINE_RATE,
                                     quantityByCalendars = planDataByProcessModel.quantityByCalendars?.map { column ->
                                         val value = column.value?.toDoubleOrNull() ?: 0.0
-                                        val equipmentMachineValueDouble = equipmentMachineValue?.toDouble() ?: 0.0
-                                        val newValue = if (equipmentMachineValueDouble != 0.0) {
-                                            NumberHelper.formatDoubleValue(value / equipmentMachineValueDouble)
+                                        val sltbMachineValueDouble = sltbMachineValue?.toDouble() ?: 0.0
+                                        val newValue = if (sltbMachineValueDouble != 0.0) {
+                                            NumberHelper.formatDoubleValue(value / sltbMachineValueDouble)
                                         } else {
                                             "0"
                                         }
                                         var rate = 0.0
-                                        if (equipmentMachineValueDouble != 0.0) {
-                                            rate = ((value) / (equipmentMachineValueDouble)) / (numberMachine ?: 1.0) * 100.0
+                                        if (sltbMachineValueDouble != 0.0) {
+                                            rate = value / sltbMachineValueDouble * 100.0
                                         }
                                         val color = when {
                                             rate > 100 -> Color.ORANGE

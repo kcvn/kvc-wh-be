@@ -46,19 +46,31 @@ class ProcessMasterRepository(
             .fetchInto(ProcessMasterData::class.java)
     }
 
+    fun addRange(data: List<ProcessMaster>) {
+        val dataChunks = data.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+                val records = chunkItem.map { x -> transactionalContext.newRecord(PROCESS_MASTER, x) }
+                val query = records.map { x -> transactionalContext.insertInto(PROCESS_MASTER).set(x) }
+                transactionalContext.batch(query).execute()
+            }
+        }
+    }
 
-
-//    fun batchInsert(data: List<ProcessMaster>, chunkSize: Int = 100) {
-//        val chunkedData = data.chunked(chunkSize)
-//        context.transaction { configuration ->
-//            val transactionalContext = DSL.using(configuration)
-//            for (chunks in chunkedData) {
-//                val records = chunks.map { x -> transactionalContext.newRecord(PROCESS_MASTER, x) }
-//                transactionalContext
-//                    .batchInsert(records)
-//                    .execute()
-//            }
-//        }
-//    }
+    fun removeRange(data: List<ProcessMaster>) {
+        val dataChunks = data.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+                val query = chunkItem.map { x ->
+                    transactionalContext
+                        .deleteFrom(PROCESS_MASTER)
+                        .where(PROCESS_MASTER.ID.eq(x.id))
+                }
+                transactionalContext.batch(query).execute()
+            }
+        }
+    }
 
 }

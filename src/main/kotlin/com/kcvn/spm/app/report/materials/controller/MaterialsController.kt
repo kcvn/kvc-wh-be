@@ -59,12 +59,12 @@ class MaterialsController(
     }
 
     @GetMapping("/check-import")
-    fun checkInventoryDate(month: Int, year: Int
+    fun checkInventoryDate(monthReport: Int, yearReport: Int
     ) : ResponseEntity<BaseResponse<CheckImportTapeResponse>>{
-        val data = materialsService.checkImportTape(month, year)
+        val data = materialsService.checkImportTape(monthReport, yearReport)
         return if( data.hasImportTape){
             ResponseEntity(
-                BaseResponse(data = data, message = CommonUtils.getMessage("validate.checkImportTape",arrayOf(month, year))),
+                BaseResponse(data = data, message = CommonUtils.getMessage("validate.checkImportTape",arrayOf(monthReport, yearReport))),
                 HttpStatus.OK
             )
         }else{

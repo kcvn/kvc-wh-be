@@ -1083,7 +1083,7 @@ class PlanService(
                         processNameJp = process?.descriptionJp,
                         processConvertCode = ProcessConvertCode.TK,
                         processSequence = process?.sortOrder?.toInt(),
-                        frame1 = dataThaoKhungCsp.first().frame1,
+                        frame1 = frame1,
                         processCode = dataThaoKhungCsp.first().processCode,
                         unit = dataThaoKhungCsp.first().unit,
                         details = mutableListOf()
@@ -1106,6 +1106,14 @@ class PlanService(
                     }.firstOrNull()
                     if (csp != null) {
                         thaoKhungCsp.details!!.add(csp)
+                    }
+                    if(thaoKhungCsp.details.isNullOrEmpty()){
+                        val planSummaryData :  MutableList<PlanDataByProcessModel> = mutableListOf()
+                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.PROCESS,ProcessPlan.PROCESS, listOf()))
+                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.MACHINE,ProcessPlan.MACHINE, listOf()))
+                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.AVERAGE_PLAN,ProcessPlan.AVERAGE_PLAN, listOf()))
+                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.MACHINENUMBER,ProcessPlan.MACHINENUMBER, listOf()))
+                        thaoKhungCsp.details?.add(PlanSummaryDetailModel(type = "", planSummaryData = planSummaryData))
                     }
                     dataSummary.removeAll(dataThaoKhungCsp)
                     dataSummary.add(thaoKhungCsp)

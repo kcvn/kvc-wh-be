@@ -701,18 +701,23 @@ class PlanService(
                     processDetail = mutableListOf()
                 )
                 val groupProcessCode = listGroupProcessCode?.filter { x -> x.processCode == planSummaryModel.processCode }?.map { it.groupProcessCode }
-
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
                         var capMachineValue: BigDecimal?
                         var sltbMachineValue: BigDecimal?
-
                         var numberMachine: Double?
+
                         val equipmentMachineModel = equipmentMachine.firstOrNull {
-                                groupProcessCode?.contains(it.grpProcess) == true
-                                && it.frame_1 == planSummaryModel.frame1
-                                && it.mold?.contains(processSummaryDetailModel.type ?: "") == true
+                            groupProcessCode?.contains(it.grpProcess) == true &&
+                                    it.frame_1 == planSummaryModel.frame1 &&
+                                    (it.mold?.contains(processSummaryDetailModel.type ?: "") == true ||
+                                            it.equipmentCode?.contains(processSummaryDetailModel.type ?: "") == true)
+                        } ?: equipmentMachine.firstOrNull {
+                            groupProcessCode?.contains(it.grpProcess) == true &&
+                                    it.frame_1 == planSummaryModel.frame1
                         }
+
+
                         numberMachine = equipmentMachineModel?.machineNumber?.toDouble()
                         capMachineValue = when {
                             equipmentMachineModel != null -> {

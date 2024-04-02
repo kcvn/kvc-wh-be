@@ -120,11 +120,14 @@ class PlanService(
             ?: throw BusinessException(CommonUtils.getMessage("data.notExist"))
 
         val planProcesses = planProcessRep.getListPlanProcess(request.planProductId)
-        val parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }
+        var parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }
         val childrenPlanProcess = planProcesses.filter { x -> x.parentId != null }
 
-        val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
-        val planDetails = planDetailRep.getPlanDetail(planProcessIds)
+        var planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
+        val planDetails = planDetailRep.getPlanDetail(planProcessIds, request.startDate!!, request.endDate!!)
+
+        planProcessIds = planDetails.mapNotNull { x -> x.planProcessId }
+        parentPlanProcess = parentPlanProcess.filter { x -> planProcessIds.any { m -> m == x.id } }
 
         val workResults = workResultRep.getForPlan(request.startDate!!, request.endDate!!, listOf(planProduct.productName ?: ""))
 
@@ -192,11 +195,14 @@ class PlanService(
         val productNames = planProducts.mapNotNull { x -> x.productName }.distinct()
 
         val planProcesses = planProcessRep.getListPlanProcess(planProductIds)
-        val parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
+        var parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
         val childrenPlanProcess = planProcesses.filter { x -> x.parentId != null }
 
-        val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
-        val planDetails = planDetailRep.getPlanDetail(planProcessIds)
+        var planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
+        val planDetails = planDetailRep.getPlanDetail(planProcessIds, colStartDate, colEndDate)
+
+        planProcessIds = planDetails.mapNotNull { x -> x.planProcessId }
+        parentPlanProcess = parentPlanProcess.filter { x -> planProcessIds.any { m -> m == x.id } }
 
         val workResults = workResultRep.getForPlan(colStartDate, colEndDate, productNames)
 
@@ -1133,12 +1139,14 @@ class PlanService(
     private fun getDataExportExcelEquipment(planProducts: List<PlanProduct>, colStartDate: OffsetDateTime, colEndDate: OffsetDateTime): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
         val planProcesses = planProcessRep.getListPlanProcess(planProductIds)
-        val parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
+        var parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
         val childrenPlanProcess = planProcesses.filter { x -> x.parentId != null }
 
-        val planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
-        val planDetails = planDetailRep.getPlanDetail(planProcessIds).filter { x -> x.planDate != null && x.planDate!! in colStartDate..colEndDate }
+        var planProcessIds = parentPlanProcess.mapNotNull { x -> x.id }
+        val planDetails = planDetailRep.getPlanDetail(planProcessIds, colStartDate, colEndDate)
 
+        planProcessIds = planDetails.mapNotNull { x -> x.planProcessId }
+        parentPlanProcess = parentPlanProcess.filter { x -> planProcessIds.any { m -> m == x.id } }
 
         val data = mutableListOf<PlanExportExcelModel>()
 

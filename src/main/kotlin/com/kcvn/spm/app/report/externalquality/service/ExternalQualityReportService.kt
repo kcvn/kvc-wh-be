@@ -43,7 +43,6 @@ class ExternalQualityReportService(
 
     fun exportExcelExternalQualityReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
         val dataExport = getDataReport(request,pageable)
-        val check = dataExport.data
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportExternalQualityReportTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
@@ -67,7 +66,7 @@ class ExternalQualityReportService(
             }
         }
         //create data filter
-        var rowNumber = 2
+        val rowNumber = 2
         val numberRowData = 12
 
         if (dataExport.data?.isNotEmpty() == true) {
@@ -188,8 +187,7 @@ class ExternalQualityReportService(
     }
 
     fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{
-        var data = 0
-        data = inventoryProducts.filter { x-> x.productName == productName }.sumOf { x -> x.sheetQuantity!! }
+        val data: Int = inventoryProducts.filter { x-> x.productName == productName }.sumOf { x -> x.sheetQuantity!! }
         return data
     }
 

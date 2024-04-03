@@ -3,6 +3,8 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.order.payload.model.OrderDetailByDateModel
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
+import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityReportModel
+import com.kcvn.spm.app.report.externalquality.payload.request.ExternalQualityReportSearchRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.OrderVersion
@@ -14,6 +16,7 @@ import com.kcvn.spm.model.tables.pojos.OrderInfo
 import com.kcvn.spm.model.tables.pojos.OrderVersionDropdown
 import com.kcvn.spm.model.tables.references.ORDER_INFO
 import com.kcvn.spm.model.tables.references.ORDER_VERSION_DROPDOWN
+import com.kcvn.spm.model.tables.references.PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -25,6 +28,55 @@ import java.time.OffsetDateTime
 @Repository
 class OrderInfoRepository(private val context: DSLContext) : SortingRepository() {
 
+    fun getListOrderForReport(request: ExternalQualityReportSearchRequest, pageable: Pageable):Pair<List<ExternalQualityReportModel>, Int>{
+        var condition: Condition = DSL.noCondition()
+        if (!request.productName.isNullOrEmpty()) {
+            condition = condition.and(ORDER_INFO.PRODUCT_NAME.containsIgnoreCase(request.productName))
+        }
+        if (!request.mold.isNullOrEmpty()) {
+            condition = condition.and(PRODUCT.MOLD.eq(request.mold))
+        }
+
+        if (!request.tapeCommon.isNullOrEmpty()) {
+            condition = condition.and(PRODUCT.TAPE_COMMON.eq(request.tapeCommon))
+        }
+        if (!request.exportType.isNullOrEmpty()) {
+            condition = condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
+        }
+        condition = condition.and(ORDER_INFO.IS_DELETED.eq(false)).and(ORDER_INFO.IS_LATEST.eq(true))
+        val sortFields = getSortFields(pageable.sort, ORDER_INFO.PRODUCT_NAME).toMutableList()
+
+        val query = context.select(
+            ORDER_INFO.PRODUCT_NAME.`as`("productName"),
+            DSL.right(ORDER_INFO.PRODUCT_NAME, 7).`as`("productShortcutName"),
+            PRODUCT.MOLD.`as`("mold"),
+            DSL.field("unnest(string_to_array(PRODUCT.EXPORT_TYPE, ', '))").`as`("exportType"),
+            ORDER_INFO.PCS_SH.`as`("pcsSh"),
+            ORDER_INFO.BLOCK_SH.`as`("blockSh"),
+            PRODUCT.SNAP_MOLD.`as`("snapMold"),
+            ORDER_INFO.LAYER_COUNT.`as`("layerCount"),
+            PRODUCT.TAPE_COMMON.`as`("tapeCommon"),
+        ).from(ORDER_INFO)
+            .join(PRODUCT)
+            .on(ORDER_INFO.PRODUCT_NAME.eq(PRODUCT.NAME).and(PRODUCT.IS_DELETED.eq(false)))
+            .where(condition)
+            .groupBy(
+                ORDER_INFO.PRODUCT_NAME,
+                ORDER_INFO.LAYER_COUNT,
+                ORDER_INFO.PCS_SH,
+                ORDER_INFO.BLOCK_SH,
+                PRODUCT.TAPE_COMMON,
+                PRODUCT.SNAP_MOLD,
+                PRODUCT.EXPORT_TYPE,
+                PRODUCT.MOLD,
+            )
+
+        val count = query.count()
+        val data = query.orderBy(sortFields).limit(pageable.pageSize).offset(pageable.offset)
+            .fetchInto(ExternalQualityReportModel::class.java)
+        return Pair(data, count)
+
+    }
     fun getPagingListOrder(request: OrderSearchRequest, pageable: Pageable, isExport: Boolean = false): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
         if (!request.productName.isNullOrEmpty()) {

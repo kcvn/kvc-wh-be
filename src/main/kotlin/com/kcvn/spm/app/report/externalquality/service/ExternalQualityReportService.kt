@@ -8,19 +8,26 @@ import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityDeta
 import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityReportModel
 import com.kcvn.spm.app.report.externalquality.payload.request.ExternalQualityReportSearchRequest
 import com.kcvn.spm.app.report.externalquality.payload.response.ExternalQualityReportResponse
-import com.kcvn.spm.common.constants.DateTimeFormat
-import com.kcvn.spm.common.constants.ExternalReportDetailType
-import com.kcvn.spm.common.constants.ExternalReportShippingType
-import com.kcvn.spm.common.constants.OrderVersion
+import com.kcvn.spm.common.constants.*
 import com.kcvn.spm.common.helper.DateTimeHelper
+import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.UpdateTape
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.*
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -33,6 +40,99 @@ class ExternalQualityReportService(
     private val updateTapeRepository: UpdateTapeRepository,
     private val orderInfoRepository: OrderInfoRepository
 ) {
+
+    fun exportExcelExternalQualityReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
+        val dataExport = getDataReport(request,pageable)
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportExternalQualityReportTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+        val headerRow = sheet.getRow(0)
+        val secondRow = sheet.getRow(1)
+        var headerCol = 14
+        val style = headerRow.getCell(0).cellStyle
+        // create subColumns // 14 columns from 1
+        if(dataExport.subColumns.isNotEmpty()){
+            for (col in dataExport.subColumns) {
+                ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, style, col.value, false)
+                headerCol++
+            }
+            headerCol= 14
+        }
+        //create columns
+        if(dataExport.columns.isNotEmpty()){
+            for (col in dataExport.columns) {
+                ExcelHelper.setCellValueWithCalendar(workbook, secondRow, headerCol, style, col.value, false)
+                headerCol++
+            }
+        }
+        //create data filter
+        val rowNumber = 2
+        val numberRowData = 12
+
+        if (dataExport.data?.isNotEmpty() == true) {
+            var rowProductIndex = rowNumber
+            var rowShippingIndex = rowNumber
+            var rowReportIndex =rowNumber
+            for (productReport in dataExport.data!!) {
+                for (i in 0 until numberRowData) {
+                    val dataRow = sheet.getRow(rowProductIndex) ?: sheet.createRow(rowProductIndex)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 0, style, productReport.productShortcutName, isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 1, style, productReport.productName, isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 2, style, productReport.mold, isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 3, style, productReport.exportType, isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 4, style, productReport.pcsSh.toString(), isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 5, style, productReport.blockSh.toString(), isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 6, style, productReport.productLine, isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 7, style, productReport.snapMold, isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 8, style, productReport.layerCount.toString(), isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 9, style, productReport.tapeCommon, isAlignCenter = true, isBold = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.completionRate.toString(), isAlignCenter = true, isBold = true)
+                    rowProductIndex++
+                }
+            }
+            for (productReport in dataExport.data!!) {
+                for (shippingData in productReport.shippingData) {
+                    val dataRow = sheet.getRow(rowShippingIndex) ?: sheet.createRow(rowShippingIndex)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 11, style, shippingData.value, isAlignCenter = true, isBold = true)
+                    rowShippingIndex++
+                }
+            }
+
+            for (productReport in dataExport.data!!) {
+                for (reportData in productReport.details) {
+                    val dataRow = sheet.getRow(rowReportIndex) ?: sheet.createRow(rowReportIndex)
+                    ExcelHelper.setCellValue(dataRow, 12, style, reportData.title)
+                    ExcelHelper.setCellValue(dataRow, 13, style, reportData.inventory?.toString() ?: "")
+                    headerCol=14
+                    for(col in reportData.quantityByCalendars){
+                        ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, false,isReportDetails = true)
+                        headerCol++
+                    }
+
+                    rowReportIndex++
+                }
+            }
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportReportExternalQuality", arrayOf(
+                LocalDateTime.now().format(
+                    DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
+    }
+
+
 
     fun getDataReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): ExternalQualityReportResponse {
 
@@ -54,8 +154,8 @@ class ExternalQualityReportService(
         val order = orderSer.getPaginatedOrder(orderSearchRequest,pageable)
         val listProductOrder = order.data
 
-        val listProductName = listProductOrder?.map { it.productName }
-        val listCompletionRate = completionRateProductRep.getByProduct(listProductName?.filterNotNull())
+        val listProductName = mappingPaging.map { it.productName }
+        val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())
         val listWorkResult = request.startDate?.let { request.endDate?.let { it1 -> workResultRep.getForReport(it, it1,listProductName) } }
         for(externalQuality in mappingPaging){
             if (listCompletionRate != null) {
@@ -84,8 +184,7 @@ class ExternalQualityReportService(
     }
 
     fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{
-        var data = 0
-        data = inventoryProducts.filter { x-> x.productName == productName }.sumOf { x -> x.sheetQuantity!! }
+        val data: Int = inventoryProducts.filter { x-> x.productName == productName }.sumOf { x -> x.sheetQuantity!! }
         return data
     }
 
@@ -141,10 +240,10 @@ class ExternalQualityReportService(
 
         //ORDER QUANTITY
         val detailOrderQuantity =  ExternalQualityDetailModel("ORDER_QUANTITY", ExternalReportDetailType.ORDER_QUANTITY)
-        val orderQuantityCalendarsSave =listProductOrder?.first { x -> x.productName == externalQualityReportModel.productName }?.quantityByCalendars!!.toMutableList()
+        val orderQuantityCalendarsSave =listProductOrder?.firstOrNull { x -> x.productName == externalQualityReportModel.productName }?.quantityByCalendars?.toMutableList()
         val orderQuantityCalendars: MutableList<KeyValueResponse> = mutableListOf()
         columns.forEach { (key) ->
-            val existingEntry = orderQuantityCalendarsSave.find { it.key == key }
+            val existingEntry = orderQuantityCalendarsSave?.find { it.key == key }
             if (existingEntry == null) { orderQuantityCalendars.add(KeyValueResponse(key, "0")) }
             else{
                 orderQuantityCalendars.add(KeyValueResponse(key, value=existingEntry.value))

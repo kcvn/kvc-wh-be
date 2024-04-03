@@ -56,7 +56,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             PRODUCT.SNAP_MOLD.`as`("snapMold"),
             ORDER_INFO.LAYER_COUNT.`as`("layerCount"),
             PRODUCT.TAPE_COMMON.`as`("tapeCommon"),
-        ).from(ORDER_INFO)
+            PRODUCT.PRODUCT_LINE.`as`("productLine"),
+            ).from(ORDER_INFO)
             .join(PRODUCT)
             .on(ORDER_INFO.PRODUCT_NAME.eq(PRODUCT.NAME).and(PRODUCT.IS_DELETED.eq(false)))
             .where(condition)
@@ -69,6 +70,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                 PRODUCT.SNAP_MOLD,
                 PRODUCT.EXPORT_TYPE,
                 PRODUCT.MOLD,
+                PRODUCT.PRODUCT_LINE
             )
 
         val count = query.count()

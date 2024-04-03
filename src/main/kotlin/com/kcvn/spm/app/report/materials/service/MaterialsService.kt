@@ -308,7 +308,7 @@ class MaterialsService(
             messageErr.productName = productName
             messageErr.tapeShared = tapeShared
             messageErr.typeTape = tapeType
-            messageErr.unitPrice = unitPrice.toDoubleOrNull()
+            messageErr.unitPrice = round(unitPrice.toDouble()*1000)/1000
             messageErr.exportTye = exportType
             messageErr.cellStyles = row.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
 

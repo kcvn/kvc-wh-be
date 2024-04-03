@@ -268,7 +268,7 @@ class WorkResultRepository(
             .fetchInto(WorkResult::class.java)
     }
 
-    fun getForReport(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String?>): List<WorkResult> {
+    fun getForReport(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String?>?): List<WorkResult> {
         return context.selectFrom(WORK_RESULT)
             .where(
                 WORK_RESULT.SUMMARY_RESULT_DATE.ge(startDate)

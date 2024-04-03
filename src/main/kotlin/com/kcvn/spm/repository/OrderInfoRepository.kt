@@ -36,18 +36,19 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         if (!request.mold.isNullOrEmpty()) {
             condition = condition.and(PRODUCT.MOLD.eq(request.mold))
         }
-        if (!request.exportType.isNullOrEmpty()) {
-            condition = condition.and(PRODUCT.EXPORT_TYPE.contains(request.exportType))
-        }
+
         if (!request.tapeCommon.isNullOrEmpty()) {
             condition = condition.and(PRODUCT.TAPE_COMMON.eq(request.tapeCommon))
+        }
+        if (!request.exportType.isNullOrEmpty()) {
+            condition = condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
         }
         condition = condition.and(ORDER_INFO.IS_DELETED.eq(false)).and(ORDER_INFO.IS_LATEST.eq(true))
         val sortFields = getSortFields(pageable.sort, ORDER_INFO.PRODUCT_NAME).toMutableList()
 
         val query = context.select(
             ORDER_INFO.PRODUCT_NAME.`as`("productName"),
-            ORDER_INFO.PRODUCT_NAME.`as`("productShortcutName"),
+            DSL.right(ORDER_INFO.PRODUCT_NAME, 7).`as`("productShortcutName"),
             PRODUCT.MOLD.`as`("mold"),
             DSL.field("unnest(string_to_array(PRODUCT.EXPORT_TYPE, ', '))").`as`("exportType"),
             ORDER_INFO.PCS_SH.`as`("pcsSh"),

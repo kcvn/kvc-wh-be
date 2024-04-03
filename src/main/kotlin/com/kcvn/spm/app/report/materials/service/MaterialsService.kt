@@ -27,10 +27,8 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import kotlin.math.round
 
 @Service
@@ -115,8 +113,10 @@ class MaterialsService(
 
         val queryTapePre = tapeInfoRep.getTapeDetailByMonth(monthPre,yearPre)
         if(queryTapePre != null){
-            val subtraction = request.startDate?.plusHours(7)!!.until(queryTapePre.requestDateEnd, ChronoUnit.DAYS)
-            if(subtraction != 1L){
+            //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
+            val dayReport = queryTapePre.requestDateEnd?.dayOfMonth
+            val dayQueryTapePre = request.startDate?.plusHours(7)?.dayOfMonth
+            if(dayQueryTapePre!! - dayReport!! != 1){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
         }
@@ -124,8 +124,10 @@ class MaterialsService(
 
         val queryTapeNext = tapeInfoRep.getTapeDetailByMonth(monthNext,yearNext)
         if(queryTapeNext != null){
-            val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
-            if(subtraction != 1L){
+            //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
+            val dayReport = queryTapePre!!.requestDateStart?.dayOfMonth
+            val dayQueryTapeNext = request.endDate?.plusHours(7)?.dayOfMonth
+            if(dayReport!! - dayQueryTapeNext!! != 1){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
         }
@@ -319,7 +321,7 @@ class MaterialsService(
             messageErr.productName = productName
             messageErr.tapeShared = tapeShared
             messageErr.typeTape = tapeType
-            messageErr.unitPrice = round(unitPrice.toDouble()*1000)/1000
+            messageErr.unitPrice = round(unitPrice.toDouble()*10000)/10000
             messageErr.exportTye = exportType
             messageErr.cellStyles = row.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
 
@@ -389,7 +391,7 @@ class MaterialsService(
                     }
                 }
                 val unitPrice = listPriceMax.firstOrNull { it.productName == item.productName }?.unitPrice ?: 0.0
-                val intoMoney = round(quantityTape * unitPrice )
+                val intoMoney = round(quantityTape * unitPrice *10000)/10000
                 item.quantityTape = quantityTape
                 item.intoMoney = intoMoney
             }
@@ -505,7 +507,9 @@ class MaterialsService(
                 ExcelHelper.setCellValue(dataRow, 4, style, item?.exportType)
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.tapeShared)
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.typeTape)
-                ExcelHelper.setCellValue(dataRow, 7, style, item?.unitPrice.toString())
+                ExcelHelper.setCellValue(dataRow, 7, style, item?.quantityTape.toString())
+                ExcelHelper.setCellValue(dataRow, 8, style, String.format("%,.4f",item?.unitPrice.toString()))
+                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.4f",item?.intoMoney.toString()))
             }
         }
 

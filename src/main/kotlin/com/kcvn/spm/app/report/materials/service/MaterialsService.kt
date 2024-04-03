@@ -336,7 +336,11 @@ class MaterialsService(
             val itemListOderInfoValidateGr  = item.value.sortedBy { it.unitPrice }.last()
             val itemPriceMax = ImportTapeErrResponse(
                 unitPrice = itemListOderInfoValidateGr.unitPrice,
-                productName = item.key
+                productName = item.key,
+                tapeShared = itemListOderInfoValidateGr.tapeShared,
+                typeTape = itemListOderInfoValidateGr.typeTape,
+                exportTye = itemListOderInfoValidateGr.exportTye,
+                cellStyles = itemListOderInfoValidateGr.cellStyles
             )
             listPriceMax.add(itemPriceMax)
         }
@@ -364,13 +368,13 @@ class MaterialsService(
             }
         }
 
-
         if(check){
             // Xóa toàn bộ các bản ghi trong tháng nếu tháng đó đã có dữ liệu
             tapeInfoRep.deleteTapeByMonth(request.monthReport, request.yearReport)
 
             // tính ra giá tiền
-            for (item in listOderInfoValidate) {
+            var count = 0
+            for (item in listPriceMax) {
                 val completionRates = completionRateProductRepository.getProductDetail(item.productName)
 
                 var quantityTape = 0
@@ -390,13 +394,13 @@ class MaterialsService(
                         round(((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble()) / 100))).toInt()
                     }
                 }
-                val unitPrice = listPriceMax.firstOrNull { it.productName == item.productName }?.unitPrice ?: 0.0
-                val intoMoney = round(quantityTape * unitPrice *10000)/10000
+                val intoMoney = round(quantityTape * (item.unitPrice ?: 0.0) * 10000)/10000
                 item.quantityTape = quantityTape
                 item.intoMoney = intoMoney
+                count++
             }
 
-            val requestImport = listOderInfoValidate.map {
+            val requestImport = listPriceMax.map {
                 x -> TapeInfo(
                     productName = x.productName,
                     tapeShared = x.tapeShared,
@@ -415,7 +419,7 @@ class MaterialsService(
             tapeInfoRep.bulkInsert(requestImport)
             return  BaseResponse(
                 null,
-                CommonUtils.getMessage("import.success", arrayOf(total, total))
+                CommonUtils.getMessage("import.success", arrayOf(count,total))
             )
 
         }else {

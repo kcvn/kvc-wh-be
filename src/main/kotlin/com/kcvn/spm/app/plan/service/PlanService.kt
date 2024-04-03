@@ -23,7 +23,6 @@ import com.kcvn.spm.common.constants.Frame1
 import com.kcvn.spm.common.constants.KeyAppSetting
 import com.kcvn.spm.common.constants.MasterDataType
 import com.kcvn.spm.common.constants.Mold
-import com.kcvn.spm.common.constants.PlanProcessSummary
 import com.kcvn.spm.common.constants.PlanStyleKey
 import com.kcvn.spm.common.constants.PlanTitle
 import com.kcvn.spm.common.constants.ProcessConvertCode
@@ -72,6 +71,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.ceil
 
 @Service
 @Transactional
@@ -328,7 +328,10 @@ class PlanService(
         }
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
-                && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
+                && (
+                    processGroups.any { m -> !m.summaryCode.isNullOrEmpty() && m.summaryCode!!.split("/").contains(x.processConvertCode) }
+                    || (x.processConvertCode!!.startsWith(ProcessConvertCode.M) && processGroups.any { m -> m.summaryCode == ProcessStatisticCode.GHEP_LOP_SUM })
+                )
         }
 
         val dataSummary = dataExportFlattens.groupBy { x -> x.processConvertCode }.map { x ->
@@ -808,7 +811,9 @@ class PlanService(
                                         }
                                         var rate = 0.0
                                         if (sltbMachineValueDouble != 0.0) {
-                                            rate = value / sltbMachineValueDouble * 100.0
+                                            if (numberMachine != null) {
+                                                rate = newValue.toDouble() / numberMachine.toDouble() *100
+                                            }
                                         }
                                         val color = when {
                                             rate > 100 -> Color.ORANGE
@@ -817,7 +822,7 @@ class PlanService(
                                         }
                                         val valueRate = when {
                                             numberMachine == null || numberMachine.toInt() == 0 -> ""
-                                            else -> newValue + "/" + (numberMachine.toInt()).toString() + "\n" + (rate.toInt()).toString()
+                                            else -> newValue + "/" + (numberMachine.toInt()).toString() + "\n" + (ceil(rate).toInt()).toString()
                                         }
                                         KeyValueResponse(
                                             key = column.key,
@@ -842,7 +847,6 @@ class PlanService(
 
     }
 
-
     private fun getPlanSummaryEquipment(request: PlanSearchRequest): PlanSummaryResponse {
         val response = PlanSummaryResponse()
         if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
@@ -855,7 +859,10 @@ class PlanService(
         val dataExports = getDataExportExcelEquipment(planProducts, request.startDate!!, request.endDate!!)
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
-                && (PlanProcessSummary.DATA.any { m -> m == x.processConvertCode } || x.processConvertCode!!.startsWith(ProcessConvertCode.M))
+                && (
+                    processGroups.any { m -> !m.summaryCode.isNullOrEmpty() && m.summaryCode!!.split("/").contains(x.processConvertCode) }
+                    || (x.processConvertCode!!.startsWith(ProcessConvertCode.M) && processGroups.any { m -> m.summaryCode == ProcessStatisticCode.GHEP_LOP_SUM })
+                )
         }
 
         val types = listOf(MasterDataType.KHUNG_1)
@@ -891,12 +898,11 @@ class PlanService(
             summary
         }.toMutableList()
 
-
         for (frame1 in listFrame1) {
             val dataDucLo = dataSummary.filter { x -> x.frame1 == frame1 && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH) }
             if (dataDucLo.isNotEmpty()) {
-
-                var moldByFrame1s = Mold.DATA_BY_FRAME1(frame1)
+                var moldByFrame1s = (appSettingRep.findByKey("${KeyAppSetting.MOLD_BY_FRAME1}_${frame1}")?.value?.split(",")
+                    ?: Mold.DATA_BY_FRAME1(frame1)).filter { x -> request.mold.isNullOrEmpty() || x == request.mold }
                 val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.T }
                 val listMoldRequest: MutableList<String> = mutableListOf()
                 if (!request.mold.isNullOrEmpty()) {
@@ -1116,9 +1122,6 @@ class PlanService(
                     if (thaoKhungCsp.details.isNullOrEmpty()) {
                         val planSummaryData: MutableList<PlanDataByProcessModel> = mutableListOf()
                         planSummaryData.add(PlanDataByProcessModel(ProcessPlan.PROCESS, ProcessPlan.PROCESS, listOf()))
-                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.MACHINE, ProcessPlan.MACHINE, listOf()))
-                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.AVERAGE_PLAN, ProcessPlan.AVERAGE_PLAN, listOf()))
-                        planSummaryData.add(PlanDataByProcessModel(ProcessPlan.MACHINENUMBER, ProcessPlan.MACHINENUMBER, listOf()))
                         thaoKhungCsp.details?.add(PlanSummaryDetailModel(type = "", planSummaryData = planSummaryData))
                     }
                     dataSummary.removeAll(dataThaoKhungCsp)
@@ -1688,9 +1691,6 @@ class PlanService(
                                 ExcelHelper.setCellValue(dataRow, colIndex, st, value)
                                 colIndex++
                             }
-//                            if (rowIndex == rowNumber) {
-//                                styleCollections.addAll(dataRow.map { x -> CellStyleModel(x.columnIndex, x.cellStyle, PlanStyleKey.PLAN_SUMMARY_DETAIL) })
-//                            }
                             rowIndex++
                         }
                         rowNumber = rowIndex

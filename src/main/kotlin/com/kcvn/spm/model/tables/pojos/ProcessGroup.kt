@@ -28,7 +28,8 @@ data class ProcessGroup(
     var isDeleted: Boolean? = null,
     var allowShowProduct: Boolean? = null,
     var allowShowPlanSummary: Boolean? = null,
-    var allowShowEquipmentProductivity: Boolean? = null
+    var allowShowEquipmentProductivity: Boolean? = null,
+    var summaryCode: String? = null
 ): Serializable {
 
 
@@ -118,6 +119,12 @@ data class ProcessGroup(
         }
         else if (this.allowShowEquipmentProductivity != o.allowShowEquipmentProductivity)
             return false
+        if (this.summaryCode == null) {
+            if (o.summaryCode != null)
+                return false
+        }
+        else if (this.summaryCode != o.summaryCode)
+            return false
         return true
     }
 
@@ -137,6 +144,7 @@ data class ProcessGroup(
         result = prime * result + (if (this.allowShowProduct == null) 0 else this.allowShowProduct.hashCode())
         result = prime * result + (if (this.allowShowPlanSummary == null) 0 else this.allowShowPlanSummary.hashCode())
         result = prime * result + (if (this.allowShowEquipmentProductivity == null) 0 else this.allowShowEquipmentProductivity.hashCode())
+        result = prime * result + (if (this.summaryCode == null) 0 else this.summaryCode.hashCode())
         return result
     }
 
@@ -156,6 +164,7 @@ data class ProcessGroup(
         sb.append(", ").append(allowShowProduct)
         sb.append(", ").append(allowShowPlanSummary)
         sb.append(", ").append(allowShowEquipmentProductivity)
+        sb.append(", ").append(summaryCode)
 
         sb.append(")")
         return sb.toString()

@@ -31,9 +31,10 @@ class ExternalQualityReportController (private val externalQualityReportService:
     @GetMapping("/export-excel")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun exportExcel(
-        request: ExternalQualityReportSearchRequest
+        request: ExternalQualityReportSearchRequest,
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE) pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = BaseResponse<FileContentModel>()
+        val data = externalQualityReportService.exportExcelExternalQualityReport(request,pageable)
         return ResponseEntity<BaseResponse<FileContentModel>>(data, HttpStatus.OK)
     }
 }

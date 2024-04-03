@@ -44,7 +44,7 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle = styleTemplate
         }
 
-        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null) {
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false) {
             row.createCell(colIndex).setCellValue(value)
             val cellStyle = workbook.createCellStyle()
             cellStyle.cloneStyleFrom(style)
@@ -54,6 +54,11 @@ class ExcelHelper {
             cellStyle.borderRight = BorderStyle.THIN
             cellStyle.borderBottom = style.borderBottom
 
+            if(isReportDetails){
+                cellStyle.borderTop = BorderStyle.THIN
+                cellStyle.borderBottom = BorderStyle.THIN
+
+            }
             if (isHoliday) {
                 cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND

@@ -299,6 +299,17 @@ class MaterialsService(
                 }
             }
 
+            val checkDuplicateData = listOderInfoValidate.firstOrNull { it.productName == productName
+                    && it.exportTye == exportType}
+            if(checkDuplicateData != null){
+                check = false
+                messageErr.listMessageErr.add(
+                    CommonUtils.getMessage(
+                        "validate.checkDuplicateDataProduct"
+                    )
+                )
+            }
+
 
 
             listProductImport.add(ExcelHelper.getCellValue(row, 0))
@@ -365,7 +376,7 @@ class MaterialsService(
                 // Tính ra số lượng của tape
                 for (item1 in productOrder) {
                     val rate = completionRates.filter {
-                        it?.effectiveDate!! < item1?.orderDate
+                        it?.effectiveDate!! <= item1?.orderDate
                     }
                         .sortedByDescending { it?.effectiveDate }
                         .first()

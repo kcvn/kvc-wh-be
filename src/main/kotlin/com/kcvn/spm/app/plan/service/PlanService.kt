@@ -1428,7 +1428,7 @@ class PlanService(
         var headerCol = 15
         val headerStyle = headerRow.getCell(0).cellStyle
         for (col in columns) {
-            ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
+            ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, false)
             headerCol++
         }
 

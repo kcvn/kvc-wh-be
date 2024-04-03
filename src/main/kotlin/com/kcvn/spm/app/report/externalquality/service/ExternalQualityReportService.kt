@@ -114,9 +114,6 @@ class ExternalQualityReportService(
             }
         }
 
-
-
-
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
@@ -157,8 +154,8 @@ class ExternalQualityReportService(
         val order = orderSer.getPaginatedOrder(orderSearchRequest,pageable)
         val listProductOrder = order.data
 
-        val listProductName = listProductOrder?.map { it.productName }
-        val listCompletionRate = completionRateProductRep.getByProduct(listProductName?.filterNotNull())
+        val listProductName = mappingPaging.map { it.productName }
+        val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())
         val listWorkResult = request.startDate?.let { request.endDate?.let { it1 -> workResultRep.getForReport(it, it1,listProductName) } }
         for(externalQuality in mappingPaging){
             if (listCompletionRate != null) {
@@ -243,10 +240,10 @@ class ExternalQualityReportService(
 
         //ORDER QUANTITY
         val detailOrderQuantity =  ExternalQualityDetailModel("ORDER_QUANTITY", ExternalReportDetailType.ORDER_QUANTITY)
-        val orderQuantityCalendarsSave =listProductOrder?.first { x -> x.productName == externalQualityReportModel.productName }?.quantityByCalendars!!.toMutableList()
+        val orderQuantityCalendarsSave =listProductOrder?.firstOrNull { x -> x.productName == externalQualityReportModel.productName }?.quantityByCalendars?.toMutableList()
         val orderQuantityCalendars: MutableList<KeyValueResponse> = mutableListOf()
         columns.forEach { (key) ->
-            val existingEntry = orderQuantityCalendarsSave.find { it.key == key }
+            val existingEntry = orderQuantityCalendarsSave?.find { it.key == key }
             if (existingEntry == null) { orderQuantityCalendars.add(KeyValueResponse(key, "0")) }
             else{
                 orderQuantityCalendars.add(KeyValueResponse(key, value=existingEntry.value))

@@ -1176,6 +1176,7 @@ class PlanService(
                     processStatisticCode = x.processStatisticCode,
                     processGroup = x.processGroup,
                     processSequence = x.processSequence,
+                    unit = x.unit,
                     inventory = x.inventory
                 )
                 productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id && m.layerCode == x.layerCode }.map { m ->

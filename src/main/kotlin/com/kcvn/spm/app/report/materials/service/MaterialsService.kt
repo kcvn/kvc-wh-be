@@ -512,8 +512,8 @@ class MaterialsService(
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.tapeShared)
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.typeTape)
                 ExcelHelper.setCellValue(dataRow, 7, style, item?.quantityTape.toString())
-                ExcelHelper.setCellValue(dataRow, 8, style, String.format("%,.4f",item?.unitPrice.toString()))
-                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.4f",item?.intoMoney.toString()))
+                ExcelHelper.setCellValue(dataRow, 8, style,String.format("%,.4f",item?.unitPrice))
+                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.4f",item?.intoMoney))
             }
         }
 

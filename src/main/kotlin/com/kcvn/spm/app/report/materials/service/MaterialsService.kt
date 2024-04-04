@@ -394,7 +394,7 @@ class MaterialsService(
                         round(((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble()) / 100))).toInt()
                     }
                 }
-                val intoMoney = round(quantityTape * (item.unitPrice ?: 0.0) * 10000)/10000
+                val intoMoney = round(quantityTape * (item.unitPrice ?: 0.0) * 100)/100
                 item.quantityTape = quantityTape
                 item.intoMoney = intoMoney
                 count++
@@ -512,8 +512,8 @@ class MaterialsService(
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.tapeShared)
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.typeTape)
                 ExcelHelper.setCellValue(dataRow, 7, style, item?.quantityTape.toString())
-                ExcelHelper.setCellValue(dataRow, 8, style, String.format("%,.4f",item?.unitPrice.toString()))
-                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.4f",item?.intoMoney.toString()))
+                ExcelHelper.setCellValue(dataRow, 8, style,String.format("%,.4f",item?.unitPrice))
+                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.4f",item?.intoMoney))
             }
         }
 

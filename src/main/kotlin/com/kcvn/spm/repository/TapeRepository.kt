@@ -97,6 +97,8 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
             .where(condition
                 .and(TAPE_INFO.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, TAPE_INFO.CREATED_DATE))
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
             .fetchInto(TapeInfo::class.java)
 
         val queryTotal = context.selectCount()

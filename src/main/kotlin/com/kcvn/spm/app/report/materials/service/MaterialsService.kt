@@ -394,7 +394,7 @@ class MaterialsService(
                         round(((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble()) / 100))).toInt()
                     }
                 }
-                val intoMoney = round(quantityTape * (item.unitPrice ?: 0.0) * 10000)/10000
+                val intoMoney = round(quantityTape * (item.unitPrice ?: 0.0) * 100)/100
                 item.quantityTape = quantityTape
                 item.intoMoney = intoMoney
                 count++

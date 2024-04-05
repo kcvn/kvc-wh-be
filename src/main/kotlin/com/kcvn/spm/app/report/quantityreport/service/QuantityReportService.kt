@@ -40,6 +40,7 @@ import java.time.format.DateTimeFormatter
 class QuantityReportService(
     private val orderRep: OrderRepository,
     private val orderDetailRep: OrderDetailRepository,
+    private val orderInfoRep : OrderInfoRepository,
     private val productRep: ProductRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val productProcessRep: ProductProcessRepository,
@@ -68,20 +69,20 @@ class QuantityReportService(
             }
 
             // Lấy ra những order theo tháng tính sản lượng
-            val listNameOrder = orderRep.getNameOrderByMonth(request)
-            val listNameOrderDistinct = listNameOrder.distinct()
-            // lấy ra những order thỏa mãn mà có version hiện tại là cao nhất
-            val listIdOrderVersionMax = orderRep.getIdOderVersionMax(listNameOrderDistinct)
-            val listIdOrderVersionMaxDistinct = listIdOrderVersionMax.distinct()
-            // lấy ra những sản phẩm dưạ trên version cao nhất của order
-            val listIdProductOnOderDetailByOderVersionMax = orderDetailRep.getIdProductOnOderDetailByOderVersionMax(listIdOrderVersionMaxDistinct)
-            val listIdProductOnOderDetailByOderVersionMaxDistinct = listIdProductOnOderDetailByOderVersionMax.distinct()
+//            val listNameOrder = orderRep.getNameOrderByMonth(request)
+//            val listNameOrderDistinct = listNameOrder.distinct()
+//            // lấy ra những order thỏa mãn mà có version hiện tại là cao nhất
+//            val listIdOrderVersionMax = orderRep.getIdOderVersionMax(listNameOrderDistinct)
+//            val listIdOrderVersionMaxDistinct = listIdOrderVersionMax.distinct()
+//            // lấy ra những sản phẩm dưạ trên version cao nhất của order
+//            val listIdProductOnOderDetailByOderVersionMax = orderDetailRep.getIdProductOnOderDetailByOderVersionMax(listIdOrderVersionMaxDistinct)
+//            val listIdProductOnOderDetailByOderVersionMaxDistinct = listIdProductOnOderDetailByOderVersionMax.distinct()
             // lấy ra chi tiết order dựa vào sản phẩm có version cao nhất và tháng tính sản lượng
-            val orderDetails = orderDetailRep.getOrderDetailByProductId(listIdProductOnOderDetailByOderVersionMaxDistinct, request)
+            val orderDetails = orderInfoRep.getOrderInfoByTimeRange(request.startDate, request.endDate)
 
-            val productIDs = orderDetails.map { x -> x.productId }
-            val productsWithRate = productRep.getProductDetailWithCompletionRateByIds(productIDs)
-            val productNames = productsWithRate.mapNotNull { x -> x?.name }.distinct()
+            val productNames = orderDetails.map { x -> x.productName }.distinct()
+            val productsWithRate = productRep.getProductDetailWithCompletionRateByNames(productNames)
+            //val productNames = productsWithRate.mapNotNull { x -> x?.name }.distinct()
             val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
             val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
             val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
@@ -103,22 +104,22 @@ class QuantityReportService(
                 )
             }
 
-            val listOrder = orderRep.getOrderById(listIdOrderVersionMaxDistinct)
-            val listOrderGroupedByOrderCode = listOrder.groupBy { x -> x.orderCode }
-            val listOrderWithHighestVersion =
-                listOrderGroupedByOrderCode.mapValues { (_, value) -> value.maxByOrNull { it.version ?: 0 } }.map { x ->
-                    Order(
-                        id = x.value?.id,
-                        orderCode = x.value?.orderCode,
-                        startDate = x.value?.startDate,
-                        endDate = x.value?.endDate,
-                        version = x.value?.version,
-                    )
-                }
+//            val listOrder = orderRep.getOrderById(listIdOrderVersionMaxDistinct)
+//            val listOrderGroupedByOrderCode = listOrder.groupBy { x -> x.orderCode }
+//            val listOrderWithHighestVersion =
+//                listOrderGroupedByOrderCode.mapValues { (_, value) -> value.maxByOrNull { it.version ?: 0 } }.map { x ->
+//                    Order(
+//                        id = x.value?.id,
+//                        orderCode = x.value?.orderCode,
+//                        startDate = x.value?.startDate,
+//                        endDate = x.value?.endDate,
+//                        version = x.value?.version,
+//                    )
+//                }
 
             val listOrderDetailCalculate = orderDetails.map { x ->
-                val ord = listOrderWithHighestVersion.find { m -> m.id == x.orderId }
-                val prods = productsWithRate.filter { m -> m?.id == x.productId }
+                //val ord = listOrderWithHighestVersion.find { m -> m.id == x.orderId }
+                val prods = productsWithRate.filter { m -> m?.name == x.productName }
 
                 val prod = prods.firstOrNull()
 
@@ -138,7 +139,7 @@ class QuantityReportService(
                     CalculateQuantityOfProcessRequest()
                 } else {
                     CalculateQuantityOfProcessRequest(
-                        version = ord?.version,
+                        version = x.version,
                         productName = prod?.name,
                         blockSh = prod?.shBlock,
                         quantityBlock = x.quantity,

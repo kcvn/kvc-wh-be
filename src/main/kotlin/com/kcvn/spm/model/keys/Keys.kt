@@ -27,8 +27,12 @@ import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.OrderVersionDropdown
 import com.kcvn.spm.model.tables.Plan
 import com.kcvn.spm.model.tables.PlanDetail
+import com.kcvn.spm.model.tables.PlanDetailTemp
 import com.kcvn.spm.model.tables.PlanProcess
+import com.kcvn.spm.model.tables.PlanProcessTemp
 import com.kcvn.spm.model.tables.PlanProduct
+import com.kcvn.spm.model.tables.PlanProductTemp
+import com.kcvn.spm.model.tables.PlanTemp
 import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessMasterData
@@ -36,6 +40,7 @@ import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeInfo
 import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
@@ -61,9 +66,13 @@ import com.kcvn.spm.model.tables.records.OrderInfoRecord
 import com.kcvn.spm.model.tables.records.OrderRecord
 import com.kcvn.spm.model.tables.records.OrderVersionDropdownRecord
 import com.kcvn.spm.model.tables.records.PlanDetailRecord
+import com.kcvn.spm.model.tables.records.PlanDetailTempRecord
 import com.kcvn.spm.model.tables.records.PlanProcessRecord
+import com.kcvn.spm.model.tables.records.PlanProcessTempRecord
 import com.kcvn.spm.model.tables.records.PlanProductRecord
+import com.kcvn.spm.model.tables.records.PlanProductTempRecord
 import com.kcvn.spm.model.tables.records.PlanRecord
+import com.kcvn.spm.model.tables.records.PlanTempRecord
 import com.kcvn.spm.model.tables.records.ProcessGroupRecord
 import com.kcvn.spm.model.tables.records.ProcessMasterDataRecord
 import com.kcvn.spm.model.tables.records.ProcessMasterRecord
@@ -71,6 +80,7 @@ import com.kcvn.spm.model.tables.records.ProcessProcedureStructureRecord
 import com.kcvn.spm.model.tables.records.ProductProcessRecord
 import com.kcvn.spm.model.tables.records.ProductRecord
 import com.kcvn.spm.model.tables.records.SyncHistoryRecord
+import com.kcvn.spm.model.tables.records.SystemLockRecord
 import com.kcvn.spm.model.tables.records.TapeInfoRecord
 import com.kcvn.spm.model.tables.records.UpdateTapeRecord
 import com.kcvn.spm.model.tables.records.WorkResultRecord
@@ -109,8 +119,12 @@ val ORDER_INFO_PKEY: UniqueKey<OrderInfoRecord> = Internal.createUniqueKey(Order
 val ORDER_VERSION_DROPDOWN_PKEY: UniqueKey<OrderVersionDropdownRecord> = Internal.createUniqueKey(OrderVersionDropdown.ORDER_VERSION_DROPDOWN, DSL.name("order_version_dropdown_pkey"), arrayOf(OrderVersionDropdown.ORDER_VERSION_DROPDOWN.ID), true)
 val PLAN_PKEY: UniqueKey<PlanRecord> = Internal.createUniqueKey(Plan.PLAN, DSL.name("plan_pkey"), arrayOf(Plan.PLAN.ID), true)
 val PLAN_DETAIL_PKEY: UniqueKey<PlanDetailRecord> = Internal.createUniqueKey(PlanDetail.PLAN_DETAIL, DSL.name("plan_detail_pkey"), arrayOf(PlanDetail.PLAN_DETAIL.ID), true)
+val PLAN_DETAIL_TEMP_PKEY: UniqueKey<PlanDetailTempRecord> = Internal.createUniqueKey(PlanDetailTemp.PLAN_DETAIL_TEMP, DSL.name("plan_detail_temp_pkey"), arrayOf(PlanDetailTemp.PLAN_DETAIL_TEMP.ID), true)
 val PLAN_PROCESS_PKEY: UniqueKey<PlanProcessRecord> = Internal.createUniqueKey(PlanProcess.PLAN_PROCESS, DSL.name("plan_process_pkey"), arrayOf(PlanProcess.PLAN_PROCESS.ID), true)
+val PLAN_PROCESS_TEMP_PKEY: UniqueKey<PlanProcessTempRecord> = Internal.createUniqueKey(PlanProcessTemp.PLAN_PROCESS_TEMP, DSL.name("plan_process_temp_pkey"), arrayOf(PlanProcessTemp.PLAN_PROCESS_TEMP.ID), true)
 val PLAN_PRODUCT_PKEY: UniqueKey<PlanProductRecord> = Internal.createUniqueKey(PlanProduct.PLAN_PRODUCT, DSL.name("plan_product_pkey"), arrayOf(PlanProduct.PLAN_PRODUCT.ID), true)
+val PLAN_PRODUCT_TEMP_PKEY: UniqueKey<PlanProductTempRecord> = Internal.createUniqueKey(PlanProductTemp.PLAN_PRODUCT_TEMP, DSL.name("plan_product_temp_pkey"), arrayOf(PlanProductTemp.PLAN_PRODUCT_TEMP.ID), true)
+val PLAN_TEMP_PKEY: UniqueKey<PlanTempRecord> = Internal.createUniqueKey(PlanTemp.PLAN_TEMP, DSL.name("plan_temp_pkey"), arrayOf(PlanTemp.PLAN_TEMP.ID), true)
 val PROCESS_GROUP_PKEY: UniqueKey<ProcessGroupRecord> = Internal.createUniqueKey(ProcessGroup.PROCESS_GROUP, DSL.name("process_group_pkey"), arrayOf(ProcessGroup.PROCESS_GROUP.ID), true)
 val PROCESS_MASTER_PKEY: UniqueKey<ProcessMasterRecord> = Internal.createUniqueKey(ProcessMaster.PROCESS_MASTER, DSL.name("process_master_pkey"), arrayOf(ProcessMaster.PROCESS_MASTER.ID), true)
 val PROCESS_MASTER_DATA_KEY: UniqueKey<ProcessMasterDataRecord> = Internal.createUniqueKey(ProcessMasterData.PROCESS_MASTER_DATA, DSL.name("process_master_data_key"), arrayOf(ProcessMasterData.PROCESS_MASTER_DATA.ID), true)
@@ -118,6 +132,7 @@ val PROCESS_PROCEDURE_STRUCTURE_PKEY: UniqueKey<ProcessProcedureStructureRecord>
 val PRODUCT_PKEY: UniqueKey<ProductRecord> = Internal.createUniqueKey(Product.PRODUCT, DSL.name("product_pkey"), arrayOf(Product.PRODUCT.ID), true)
 val PRODUCT_PROCESS_PKEY: UniqueKey<ProductProcessRecord> = Internal.createUniqueKey(ProductProcess.PRODUCT_PROCESS, DSL.name("product_process_pkey"), arrayOf(ProductProcess.PRODUCT_PROCESS.ID), true)
 val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
+val SYSTEM_LOCK_PKEY: UniqueKey<SystemLockRecord> = Internal.createUniqueKey(SystemLock.SYSTEM_LOCK, DSL.name("system_lock_pkey"), arrayOf(SystemLock.SYSTEM_LOCK.ID), true)
 val TAPE_INFO_PKEY: UniqueKey<TapeInfoRecord> = Internal.createUniqueKey(TapeInfo.TAPE_INFO, DSL.name("tape_info_pkey"), arrayOf(TapeInfo.TAPE_INFO.ID), true)
 val UPDATE_TAPE_PKEY: UniqueKey<UpdateTapeRecord> = Internal.createUniqueKey(UpdateTape.UPDATE_TAPE, DSL.name("update_tape_pkey"), arrayOf(UpdateTape.UPDATE_TAPE.ID), true)
 val WORK_RESULT_PKEY: UniqueKey<WorkResultRecord> = Internal.createUniqueKey(WorkResult.WORK_RESULT, DSL.name("work_result_pkey"), arrayOf(WorkResult.WORK_RESULT.ID), true)
@@ -134,5 +149,8 @@ val AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_USER_ID_FK: ForeignKey<AuthUserRoleRecor
 val INFORMATION_CALCULATE_QUANTITY__INFORMATION_CALCULATE_QUANTIT_CALCULATE_QUANTITY_RESULT_ID_FKEY: ForeignKey<InformationCalculateQuantityRecord, CalculateQuantityResultRecord> = Internal.createForeignKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantit_calculate_quantity_result_id_fkey"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID), com.kcvn.spm.model.keys.CALCULATE_QUANTITY_RESULT_PKEY, arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
 val INFORMATION_CALCULATE_QUANTITY_DETAIL__INFORMATION_CALCULATE_QUANTITY_DETAIL_INFORMATION_CALCULATE_QUA: ForeignKey<InformationCalculateQuantityDetailRecord, InformationCalculateQuantityRecord> = Internal.createForeignKey(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL, DSL.name("information_calculate_quantity_detail_information_calculate_qua"), arrayOf(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID), com.kcvn.spm.model.keys.INFORMATION_CALCULATE_QUANTITY_PKEY, arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)
 val PLAN_DETAIL__PLAN_DETAIL_FKEY: ForeignKey<PlanDetailRecord, PlanProcessRecord> = Internal.createForeignKey(PlanDetail.PLAN_DETAIL, DSL.name("plan_detail_fkey"), arrayOf(PlanDetail.PLAN_DETAIL.PLAN_PROCESS_ID), com.kcvn.spm.model.keys.PLAN_PROCESS_PKEY, arrayOf(PlanProcess.PLAN_PROCESS.ID), true)
+val PLAN_DETAIL_TEMP__PLAN_DETAIL_TEMP_FKEY: ForeignKey<PlanDetailTempRecord, PlanProcessTempRecord> = Internal.createForeignKey(PlanDetailTemp.PLAN_DETAIL_TEMP, DSL.name("plan_detail_temp_fkey"), arrayOf(PlanDetailTemp.PLAN_DETAIL_TEMP.PLAN_PROCESS_ID), com.kcvn.spm.model.keys.PLAN_PROCESS_TEMP_PKEY, arrayOf(PlanProcessTemp.PLAN_PROCESS_TEMP.ID), true)
 val PLAN_PROCESS__PLAN_PROCESS_FKEY: ForeignKey<PlanProcessRecord, PlanProductRecord> = Internal.createForeignKey(PlanProcess.PLAN_PROCESS, DSL.name("plan_process_fkey"), arrayOf(PlanProcess.PLAN_PROCESS.PLAN_PRODUCT_ID), com.kcvn.spm.model.keys.PLAN_PRODUCT_PKEY, arrayOf(PlanProduct.PLAN_PRODUCT.ID), true)
+val PLAN_PROCESS_TEMP__PLAN_PROCESS_TEMP_FKEY: ForeignKey<PlanProcessTempRecord, PlanProductTempRecord> = Internal.createForeignKey(PlanProcessTemp.PLAN_PROCESS_TEMP, DSL.name("plan_process_temp_fkey"), arrayOf(PlanProcessTemp.PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID), com.kcvn.spm.model.keys.PLAN_PRODUCT_TEMP_PKEY, arrayOf(PlanProductTemp.PLAN_PRODUCT_TEMP.ID), true)
 val PLAN_PRODUCT__PLAN_PRODUCT_FKEY: ForeignKey<PlanProductRecord, PlanRecord> = Internal.createForeignKey(PlanProduct.PLAN_PRODUCT, DSL.name("plan_product_fkey"), arrayOf(PlanProduct.PLAN_PRODUCT.PLAN_ID), com.kcvn.spm.model.keys.PLAN_PKEY, arrayOf(Plan.PLAN.ID), true)
+val PLAN_PRODUCT_TEMP__PLAN_PRODUCT_TEMP_FKEY: ForeignKey<PlanProductTempRecord, PlanTempRecord> = Internal.createForeignKey(PlanProductTemp.PLAN_PRODUCT_TEMP, DSL.name("plan_product_temp_fkey"), arrayOf(PlanProductTemp.PLAN_PRODUCT_TEMP.PLAN_ID), com.kcvn.spm.model.keys.PLAN_TEMP_PKEY, arrayOf(PlanTemp.PLAN_TEMP.ID), true)

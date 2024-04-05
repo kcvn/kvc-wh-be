@@ -204,7 +204,7 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
         return sortField
     }
 
-    fun getProductDetailWithCompletionRateByIds(productIds: List<String?>): List<ProductDetailResponse?> {
+    fun getProductDetailWithCompletionRateByNames(productNames: List<String?>): List<ProductDetailResponse?> {
         val data = context.select(
             PRODUCT.ID,
             PRODUCT.NAME,
@@ -230,7 +230,7 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
         ).from(PRODUCT)
             .leftJoin(COMPLETION_RATE_PRODUCT)
             .on(PRODUCT.NAME.eq(COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
-            .where(PRODUCT.ID.`in`(productIds).and(PRODUCT.IS_DELETED.eq(false)))
+            .where(PRODUCT.NAME.`in`(productNames).and(PRODUCT.IS_DELETED.eq(false)))
             .orderBy(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.desc())
             .fetchInto(ProductDetailResponse::class.java)
         return data

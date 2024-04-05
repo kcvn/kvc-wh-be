@@ -513,7 +513,7 @@ class MaterialsService(
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.typeTape)
                 ExcelHelper.setCellValue(dataRow, 7, style, item?.quantityTape.toString())
                 ExcelHelper.setCellValue(dataRow, 8, style,String.format("%,.4f",item?.unitPrice))
-                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.4f",item?.intoMoney))
+                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.2f",item?.intoMoney))
             }
         }
 

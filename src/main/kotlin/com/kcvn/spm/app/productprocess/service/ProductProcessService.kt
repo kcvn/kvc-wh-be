@@ -314,18 +314,23 @@ class ProductProcessService(
         // đọc file lấy dữ liệu ở file excel lưu vào 1 list default
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val process = ProductProcessResponse()
-            val cellProcessCode = row.getCell(1)
-            val processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
-                cellProcessCode.numericCellValue.toInt().toString()
-            else {
-                ExcelHelper.getCellValue(row, 1)
-            }
 
+            val cellProcessCode = row.getCell(1)
+            val processCode = if (cellProcessCode != null && cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
+                cellProcessCode.numericCellValue.toInt().toString()
+            else if (cellProcessCode != null && cellProcessCode.cellType == CellType.STRING && cellProcessCode.stringCellValue.isNotBlank())
+                cellProcessCode.stringCellValue
+            else {
+                ""
+            }
             val cellLayerCode = row.getCell(2)
-            val layerCode = if (cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+            val layerCode = if (cellLayerCode != null && cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
                 StringHelper.intToStringD2(row.getCell(2).numericCellValue.toInt())
-            } else {
+            }else if(cellLayerCode != null && cellLayerCode.cellType == CellType.STRING && cellLayerCode.stringCellValue.isNotBlank()){
                 ExcelHelper.getCellValue(row, 2)
+            }
+            else {
+                ""
             }
             process.productName = ExcelHelper.getCellValue(row, 0)
             process.processCode = processCode
@@ -345,7 +350,7 @@ class ProductProcessService(
             val inventoryLayerGroup = if (ExcelHelper.getCellValue(row, 6).isEmpty()) {
                 ""
             } else {
-                if (row.getCell(6).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+                if (row.getCell(6) != null && row.getCell(6).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
                     StringHelper.intToStringD2(row.getCell(6).numericCellValue.toInt())
                 } else {
                     ExcelHelper.getCellValue(row, 6)
@@ -355,7 +360,7 @@ class ProductProcessService(
             val dayOfImplementation = if (ExcelHelper.getCellValue(row, 7).isEmpty()) {
                 ""
             } else {
-                if (row.getCell(7).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+                if (row.getCell(7) != null && row.getCell(7).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
                     row.getCell(7).numericCellValue.toInt().toString()
                 } else {
                     ExcelHelper.getCellValue(row, 7)
@@ -695,7 +700,7 @@ class ProductProcessService(
                     it.productName == item.productName
                         && it.layerCode == item.layerCode
                         && it.processCode == item.processCode
-                        && it.layerCode!!.toInt() > 1
+                        && (it.layerCode!!.toIntOrNull() ?: 0) > 1
                 }
                 if (checkLastProcess != null) {
                     val layerItemInt = item.inventoryLayerGroup?.toIntOrNull() ?: 0

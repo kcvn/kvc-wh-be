@@ -331,6 +331,13 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         }
     }
 
+ fun getOrderInfoByTimeRange(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<OrderInfo> {
+    return context.selectFrom(ORDER_INFO)
+        .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
+            .and(ORDER_INFO.IS_LATEST.eq(true))
+            .and(ORDER_INFO.IS_DELETED.eq(false)))
+        .fetchInto(OrderInfo::class.java)
+}
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         return when (fieldName) {

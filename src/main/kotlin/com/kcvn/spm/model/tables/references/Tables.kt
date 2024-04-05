@@ -27,8 +27,12 @@ import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.OrderVersionDropdown
 import com.kcvn.spm.model.tables.Plan
 import com.kcvn.spm.model.tables.PlanDetail
+import com.kcvn.spm.model.tables.PlanDetailTemp
 import com.kcvn.spm.model.tables.PlanProcess
+import com.kcvn.spm.model.tables.PlanProcessTemp
 import com.kcvn.spm.model.tables.PlanProduct
+import com.kcvn.spm.model.tables.PlanProductTemp
+import com.kcvn.spm.model.tables.PlanTemp
 import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessMasterData
@@ -36,6 +40,7 @@ import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeInfo
 import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
@@ -158,14 +163,34 @@ val PLAN: Plan = Plan.PLAN
 val PLAN_DETAIL: PlanDetail = PlanDetail.PLAN_DETAIL
 
 /**
+ * The table <code>public.plan_detail_temp</code>.
+ */
+val PLAN_DETAIL_TEMP: PlanDetailTemp = PlanDetailTemp.PLAN_DETAIL_TEMP
+
+/**
  * The table <code>public.plan_process</code>.
  */
 val PLAN_PROCESS: PlanProcess = PlanProcess.PLAN_PROCESS
 
 /**
+ * The table <code>public.plan_process_temp</code>.
+ */
+val PLAN_PROCESS_TEMP: PlanProcessTemp = PlanProcessTemp.PLAN_PROCESS_TEMP
+
+/**
  * The table <code>public.plan_product</code>.
  */
 val PLAN_PRODUCT: PlanProduct = PlanProduct.PLAN_PRODUCT
+
+/**
+ * The table <code>public.plan_product_temp</code>.
+ */
+val PLAN_PRODUCT_TEMP: PlanProductTemp = PlanProductTemp.PLAN_PRODUCT_TEMP
+
+/**
+ * The table <code>public.plan_temp</code>.
+ */
+val PLAN_TEMP: PlanTemp = PlanTemp.PLAN_TEMP
 
 /**
  * The table <code>public.process_group</code>.
@@ -201,6 +226,11 @@ val PRODUCT_PROCESS: ProductProcess = ProductProcess.PRODUCT_PROCESS
  * The table <code>public.sync_history</code>.
  */
 val SYNC_HISTORY: SyncHistory = SyncHistory.SYNC_HISTORY
+
+/**
+ * The table <code>public.system_lock</code>.
+ */
+val SYSTEM_LOCK: SystemLock = SystemLock.SYSTEM_LOCK
 
 /**
  * The table <code>public.tape_info</code>.

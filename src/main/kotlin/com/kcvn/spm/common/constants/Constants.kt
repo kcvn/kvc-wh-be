@@ -6,6 +6,10 @@ import com.kcvn.spm.common.payload.KeyValueResponse
 class Constants {
     companion object {
         const val SYSTEM = "SYSTEM"
+
+        const val SYSTEM_LOCK_IMPORT_ORDER = "IMPORT_ORDER"
+        const val SYSTEM_LOCK_CREATE_PLAN = "CREATE_PLAN"
+        const val SYSTEM_LOCK_PRODUCT_PROCESS = "PRODUCT_PROCESS"
     }
 }
 

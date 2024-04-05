@@ -226,7 +226,7 @@ class CompletionRateService(
                 layerCompletionRateErrorList.add(
                     LayerCompletionRateError(
                         name,
-                        null,
+                        rateInput,
                         CommonUtils.getMessage("product.is.exist")
                     )
                 )
@@ -467,7 +467,7 @@ class CompletionRateService(
                 layerCompletionRateErrorList.add(
                     LayerCompletionRateError(
                         name,
-                        null,
+                        rateInput,
                         CommonUtils.getMessage("product.is.exist")
                     )
                 )
@@ -664,7 +664,7 @@ class CompletionRateService(
                 layerCompletionRateErrorList.add(
                     LayerCompletionRateError(
                         name,
-                        null,
+                        rateInput,
                         CommonUtils.getMessage("product.is.exist")
                     )
                 )

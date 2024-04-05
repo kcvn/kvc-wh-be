@@ -278,12 +278,12 @@ class ExternalQualityReportService(
 
         //DIFFERENCE_1
         val difference1 = ExternalQualityDetailModel("DIFFERENCE_1", ExternalReportDetailType.DIFFERENCE_1)
-        difference1.quantityByCalendars = calculateDifferenceCalendars(orderQuantityCalendars, productionResultCalendars)
+        difference1.quantityByCalendars = calculateDifferenceCalendars(productionResultCalendars,orderQuantityCalendars)
         detailData.add(difference1)
 
         //DIFFERENCE_2
         val difference2 = ExternalQualityDetailModel("DIFFERENCE_2", ExternalReportDetailType.DIFFERENCE_2)
-        difference2.quantityByCalendars = calculateDifferenceCalendars(accumulatedOrderQuantityCalendars,accumulatedProductionResultCalendars)
+        difference2.quantityByCalendars = calculateDifferenceCalendars(accumulatedProductionResultCalendars,accumulatedOrderQuantityCalendars)
         detailData.add(difference2)
 
         //PLANNED_TAPE_SET
@@ -398,7 +398,7 @@ class ExternalQualityReportService(
 
             val numberOrder = shippingData.find { it.key == "number_order" }?.value?.toIntOrNull() ?: 0
             val numberWorkResult = shippingData.find { it.key == "number_work_result" }?.value?.toIntOrNull() ?: 0
-            val exchangeRateDifferences = (numberOrder - numberWorkResult).toString()
+            val exchangeRateDifferences = (numberWorkResult - numberOrder).toString()
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
             shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
             shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity.toString()))

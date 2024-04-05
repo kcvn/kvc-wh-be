@@ -251,6 +251,7 @@ class QuantityReportService(
 
     fun lockedQuantity(request: String): BaseResponse<Boolean> {
         val calculateQuantityReport = calculateQuantityReportRep.findById(request)
+        calculateQuantityReport!!.status = true
         calculateQuantityReportRep.update(calculateQuantityReport)
         return BaseResponse(true, message = CommonUtils.getMessage("quantity.locked.success"))
     }

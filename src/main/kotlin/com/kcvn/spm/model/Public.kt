@@ -27,8 +27,12 @@ import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.OrderVersionDropdown
 import com.kcvn.spm.model.tables.Plan
 import com.kcvn.spm.model.tables.PlanDetail
+import com.kcvn.spm.model.tables.PlanDetailTemp
 import com.kcvn.spm.model.tables.PlanProcess
+import com.kcvn.spm.model.tables.PlanProcessTemp
 import com.kcvn.spm.model.tables.PlanProduct
+import com.kcvn.spm.model.tables.PlanProductTemp
+import com.kcvn.spm.model.tables.PlanTemp
 import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
 import com.kcvn.spm.model.tables.ProcessMasterData
@@ -36,6 +40,7 @@ import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeInfo
 import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
@@ -176,14 +181,34 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val PLAN_DETAIL: PlanDetail get() = PlanDetail.PLAN_DETAIL
 
     /**
+     * The table <code>public.plan_detail_temp</code>.
+     */
+    val PLAN_DETAIL_TEMP: PlanDetailTemp get() = PlanDetailTemp.PLAN_DETAIL_TEMP
+
+    /**
      * The table <code>public.plan_process</code>.
      */
     val PLAN_PROCESS: PlanProcess get() = PlanProcess.PLAN_PROCESS
 
     /**
+     * The table <code>public.plan_process_temp</code>.
+     */
+    val PLAN_PROCESS_TEMP: PlanProcessTemp get() = PlanProcessTemp.PLAN_PROCESS_TEMP
+
+    /**
      * The table <code>public.plan_product</code>.
      */
     val PLAN_PRODUCT: PlanProduct get() = PlanProduct.PLAN_PRODUCT
+
+    /**
+     * The table <code>public.plan_product_temp</code>.
+     */
+    val PLAN_PRODUCT_TEMP: PlanProductTemp get() = PlanProductTemp.PLAN_PRODUCT_TEMP
+
+    /**
+     * The table <code>public.plan_temp</code>.
+     */
+    val PLAN_TEMP: PlanTemp get() = PlanTemp.PLAN_TEMP
 
     /**
      * The table <code>public.process_group</code>.
@@ -219,6 +244,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.sync_history</code>.
      */
     val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
+
+    /**
+     * The table <code>public.system_lock</code>.
+     */
+    val SYSTEM_LOCK: SystemLock get() = SystemLock.SYSTEM_LOCK
 
     /**
      * The table <code>public.tape_info</code>.
@@ -261,8 +291,12 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         OrderVersionDropdown.ORDER_VERSION_DROPDOWN,
         Plan.PLAN,
         PlanDetail.PLAN_DETAIL,
+        PlanDetailTemp.PLAN_DETAIL_TEMP,
         PlanProcess.PLAN_PROCESS,
+        PlanProcessTemp.PLAN_PROCESS_TEMP,
         PlanProduct.PLAN_PRODUCT,
+        PlanProductTemp.PLAN_PRODUCT_TEMP,
+        PlanTemp.PLAN_TEMP,
         ProcessGroup.PROCESS_GROUP,
         ProcessMaster.PROCESS_MASTER,
         ProcessMasterData.PROCESS_MASTER_DATA,
@@ -270,6 +304,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         Product.PRODUCT,
         ProductProcess.PRODUCT_PROCESS,
         SyncHistory.SYNC_HISTORY,
+        SystemLock.SYSTEM_LOCK,
         TapeInfo.TAPE_INFO,
         UpdateTape.UPDATE_TAPE,
         WorkResult.WORK_RESULT

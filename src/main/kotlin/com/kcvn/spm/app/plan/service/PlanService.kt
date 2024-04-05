@@ -1141,6 +1141,7 @@ class PlanService(
 
     private fun getDataExportExcelEquipment(planProducts: List<PlanProduct>, colStartDate: OffsetDateTime, colEndDate: OffsetDateTime): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
+
         val planProcesses = planProcessRep.getListPlanProcess(planProductIds)
         var parentPlanProcess = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
         val childrenPlanProcess = planProcesses.filter { x -> x.parentId != null }
@@ -1163,14 +1164,6 @@ class PlanService(
                 blockSh = planProduct.blockSh
             )
             productExport.productPlanDetails = parentPlanProcess.filter { x -> x.planProductId == planProduct.id }.map { x ->
-                val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
-                val planDetail = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
-                    KeyValueResponse(
-                        DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                        if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
-                    )
-                }
-                val planData = mutableListOf<PlanDataByProcessModel>()
                 val productPlan = ProductPlanDetailModel(
                     frame_1 = planProduct.frame_1,
                     mold = planProduct.mold,
@@ -1180,11 +1173,13 @@ class PlanService(
                     processNameJp = x.processNameJp,
                     completionRate = x.completionRate,
                     processConvertCode = x.processConvertCode,
+                    processStatisticCode = x.processStatisticCode,
+                    processGroup = x.processGroup,
                     processSequence = x.processSequence,
-                    inventory = x.inventory,
-                    unit = x.unit
+                    unit = x.unit,
+                    inventory = x.inventory
                 )
-                productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
+                productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id && m.layerCode == x.layerCode }.map { m ->
                     ProcessChildrenModel(
                         layerCode = m.layerCode,
                         processCode = m.processCode,
@@ -1192,12 +1187,23 @@ class PlanService(
                         inventory = m.inventory
                     )
                 }
-                productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 }
-                    ?: 0) + (productPlan.inventory ?: 0)
-                planData.add(PlanDataByProcessModel(title = ProcessPlan.PROCESS, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
+                productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
+
+                val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
+                val planDetail = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
+                    KeyValueResponse(
+                        DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
+                        if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
+                    )
+                }
+
+
+                val planData = mutableListOf<PlanDataByProcessModel>()
+                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
+
                 productPlan.planData = planData
                 productPlan
-            }.sortedBy { x -> x.processSequence }
+            }.sortedWith(compareBy<ProductPlanDetailModel> { x -> x.layerCode?.toInt() }.thenBy { x -> x.processSequence })
             data.add(productExport)
         }
 
@@ -1428,7 +1434,7 @@ class PlanService(
         var headerCol = 15
         val headerStyle = headerRow.getCell(0).cellStyle
         for (col in columns) {
-            ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
+            ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, false)
             headerCol++
         }
 

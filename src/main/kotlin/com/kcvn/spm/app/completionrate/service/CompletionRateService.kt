@@ -217,10 +217,22 @@ class CompletionRateService(
 
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
+        val productNamesSet = HashSet<String>()
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val rateInputString = ExcelHelper.getCellValue(row, 1)
             val rateInput = rateInputString.toDoubleOrNull()
             val name = ExcelHelper.getCellValue(row, 0)
+            if (productNamesSet.contains(name)) {
+                layerCompletionRateErrorList.add(
+                    LayerCompletionRateError(
+                        name,
+                        rateInput,
+                        CommonUtils.getMessage("product.is.exist")
+                    )
+                )
+                continue
+            }
+            productNamesSet.add(name)
             if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
                 total--
                 continue
@@ -442,12 +454,23 @@ class CompletionRateService(
 
         val processCodeExist = processMasterRepository.getListProcessCode()
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
+        val productNamesSet = HashSet<String>()
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val rateInputString = ExcelHelper.getCellValue(row, 1)
             val rateInput = rateInputString.toDoubleOrNull()
             val name = ExcelHelper.getCellValue(row, 0)
             if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
                 total--
+                continue
+            }
+            if (productNamesSet.contains(name)) {
+                layerCompletionRateErrorList.add(
+                    LayerCompletionRateError(
+                        name,
+                        rateInput,
+                        CommonUtils.getMessage("product.is.exist")
+                    )
+                )
                 continue
             }
             val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
@@ -628,12 +651,23 @@ class CompletionRateService(
         var total = sheet.lastRowNum - rowIndex
         val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
+        val productNamesSet = HashSet<String>()
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val rateInputString = ExcelHelper.getCellValue(row, 1)
             val rateInput = rateInputString.toDoubleOrNull()
             val name = ExcelHelper.getCellValue(row, 0)
             if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
                 total--
+                continue
+            }
+            if (productNamesSet.contains(name)) {
+                layerCompletionRateErrorList.add(
+                    LayerCompletionRateError(
+                        name,
+                        rateInput,
+                        CommonUtils.getMessage("product.is.exist")
+                    )
+                )
                 continue
             }
             val key = ExcelHelper.getCellValue(row, 0)

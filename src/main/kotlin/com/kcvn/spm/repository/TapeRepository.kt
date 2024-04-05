@@ -81,15 +81,15 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
         if(!request.typeTape.isNullOrEmpty()){
             condition = condition.and(TAPE_INFO.TYPE_TAPE.eq(request.typeTape))
         }
-        if(request.startTime != null){
-            val startMonth = request.startTime?.monthValue
-            val startYear = request.startTime?.year
+        if(request.startDate != null){
+            val startMonth = request.startDate?.monthValue
+            val startYear = request.startDate?.year
             condition = condition.and(TAPE_INFO.MONTH_REPORT.ge(startMonth))
                 .and(TAPE_INFO.YEAR_REPORT.ge(startYear))
         }
-        if(request.endTime != null){
-            val endMonth = request.endTime?.monthValue
-            val endYear = request.endTime?.year
+        if(request.endDate != null){
+            val endMonth = request.endDate?.monthValue
+            val endYear = request.endDate?.year
             condition = condition.and(TAPE_INFO.MONTH_REPORT.le(endMonth))
                 .and(TAPE_INFO.YEAR_REPORT.le(endYear))
         }
@@ -97,7 +97,10 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
             .where(condition
                 .and(TAPE_INFO.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, TAPE_INFO.CREATED_DATE))
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
             .fetchInto(TapeInfo::class.java)
+
         val queryTotal = context.selectCount()
             .from(TAPE_INFO)
             .where(condition

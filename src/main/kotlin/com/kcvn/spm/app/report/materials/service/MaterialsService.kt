@@ -27,10 +27,8 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import kotlin.math.round
 
 @Service
@@ -115,8 +113,10 @@ class MaterialsService(
 
         val queryTapePre = tapeInfoRep.getTapeDetailByMonth(monthPre,yearPre)
         if(queryTapePre != null){
-            val subtraction = request.startDate?.until(queryTapePre.requestDateEnd, ChronoUnit.DAYS)
-            if(subtraction != 1L){
+            //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
+            val dayReport = queryTapePre.requestDateEnd?.dayOfMonth
+            val dayQueryTapePre = request.startDate?.plusHours(7)?.dayOfMonth
+            if(dayQueryTapePre!! - dayReport!! != 1){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
         }
@@ -124,8 +124,10 @@ class MaterialsService(
 
         val queryTapeNext = tapeInfoRep.getTapeDetailByMonth(monthNext,yearNext)
         if(queryTapeNext != null){
-            val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate, ChronoUnit.DAYS)
-            if(subtraction != 1L){
+            //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
+            val dayReport = queryTapePre!!.requestDateStart?.dayOfMonth
+            val dayQueryTapeNext = request.endDate?.plusHours(7)?.dayOfMonth
+            if(dayReport!! - dayQueryTapeNext!! != 1){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
         }
@@ -179,6 +181,23 @@ class MaterialsService(
                         arrayOf(ExcelHelper.getCellValue(headerRow, 0))
                     )
                 )
+            }else {
+                val checkCompletionRate = listProductCompletionRate.firstOrNull{
+                    it?.productName == productName
+                }
+                if(checkCompletionRate == null){
+                    check = false
+                    messageErr.listMessageErr.add(
+                        CommonUtils.getMessage(
+                            "validate.importTape.completionRateProduct1"))
+                }else {
+                    if(checkCompletionRate.effectiveDate!! > request.startDate){
+                        check = false
+                        messageErr.listMessageErr.add(
+                            CommonUtils.getMessage(
+                                "validate.importTape.completionRateProduct2"))
+                    }
+                }
             }
             if (exportType.isEmpty()) {
                 check = false
@@ -275,29 +294,25 @@ class MaterialsService(
                     messageErr.listMessageErr.add(
                         CommonUtils.getMessage(
                             "validate.importTape.productName1",
-                            arrayOf(request.startDate!!.format(DateTimeFormatter.ofPattern("yyyy_MM_dd")),
-                                request.endDate!!.format(DateTimeFormatter.ofPattern("yyyy_MM_dd")))
+                            arrayOf(request.startDate!!.plusHours(7).format(DateTimeFormatter.ofPattern("yyyy_MM_dd")),
+                                request.endDate!!.plusHours(7).format(DateTimeFormatter.ofPattern("yyyy_MM_dd")))
                         )
                     )
                 }
             }
 
-            val checkCompletionRate = listProductCompletionRate.firstOrNull{
-                it?.productName == productName
-            }
-            if(checkCompletionRate == null){
+            val checkDuplicateData = listOderInfoValidate.firstOrNull { it.productName == productName
+                    && it.exportTye == exportType}
+            if(checkDuplicateData != null){
                 check = false
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
-                        "validate.importTape.completionRateProduct1"))
-            }else {
-                if(checkCompletionRate.effectiveDate!! > request.startDate){
-                    check = false
-                    messageErr.listMessageErr.add(
-                        CommonUtils.getMessage(
-                            "validate.importTape.completionRateProduct2"))
-                }
+                        "validate.checkDuplicateDataProduct"
+                    )
+                )
             }
+
+
 
             listProductImport.add(ExcelHelper.getCellValue(row, 0))
 
@@ -306,7 +321,7 @@ class MaterialsService(
             messageErr.productName = productName
             messageErr.tapeShared = tapeShared
             messageErr.typeTape = tapeType
-            messageErr.unitPrice = unitPrice.toDoubleOrNull()
+            messageErr.unitPrice = round(unitPrice.toDouble()*10000)/10000
             messageErr.exportTye = exportType
             messageErr.cellStyles = row.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
 
@@ -321,7 +336,11 @@ class MaterialsService(
             val itemListOderInfoValidateGr  = item.value.sortedBy { it.unitPrice }.last()
             val itemPriceMax = ImportTapeErrResponse(
                 unitPrice = itemListOderInfoValidateGr.unitPrice,
-                productName = item.key
+                productName = item.key,
+                tapeShared = itemListOderInfoValidateGr.tapeShared,
+                typeTape = itemListOderInfoValidateGr.typeTape,
+                exportTye = itemListOderInfoValidateGr.exportTye,
+                cellStyles = itemListOderInfoValidateGr.cellStyles
             )
             listPriceMax.add(itemPriceMax)
         }
@@ -341,47 +360,29 @@ class MaterialsService(
                 messageErr.listMessageErr.add(
                     CommonUtils.getMessage(
                         "validate.importTape.productName2",
-                        arrayOf(request.startDate!!.format(DateTimeFormatter.ofPattern("yyyy_MM_dd")),
-                            request.endDate!!.format(DateTimeFormatter.ofPattern("yyyy_MM_dd")))
+                        arrayOf(request.startDate!!.plusHours(7).format(DateTimeFormatter.ofPattern("yyyy_MM_dd")),
+                            request.endDate!!.plusHours(7).format(DateTimeFormatter.ofPattern("yyyy_MM_dd")))
                     )
                 )
                 listOderInfoValidate.add(messageErr)
             }
         }
 
-
         if(check){
             // Xóa toàn bộ các bản ghi trong tháng nếu tháng đó đã có dữ liệu
             tapeInfoRep.deleteTapeByMonth(request.monthReport, request.yearReport)
 
             // tính ra giá tiền
-            for (item in listOderInfoValidate) {
+            var count = 0
+            for (item in listPriceMax) {
                 val completionRates = completionRateProductRepository.getProductDetail(item.productName)
 
                 var quantityTape = 0
                 val productOrder = listOrderInfo.filter { it?.productName == item.productName }
                 // Tính ra số lượng của tape
-//                var test = 0
-//                if(item.productName == "VPX03BFF82V1"){
-//                    for (item1 in productOrder) {
-//                        val rate = completionRates.filter {
-//                            it?.effectiveDate!! < item1?.orderDate
-//                        }
-//                            .sortedByDescending { it?.effectiveDate }
-//                            .first()
-//                        quantityTape += if(item1?.blockSh == null || rate?.rate == null || item1.quantity == null
-//                            || item1.blockSh == 0 || rate.rate == BigDecimal(0)
-//                        ){
-//                            0
-//                        } else {
-//                            round(((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble())))).toInt()
-//                        }
-//                    }
-//                    test = quantityTape
-//                }
                 for (item1 in productOrder) {
                     val rate = completionRates.filter {
-                        it?.effectiveDate!! < item1?.orderDate
+                        it?.effectiveDate!! <= item1?.orderDate
                     }
                         .sortedByDescending { it?.effectiveDate }
                         .first()
@@ -390,16 +391,16 @@ class MaterialsService(
                     ){
                         0
                     } else {
-                        round(((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble())))).toInt()
+                        round(((item1.quantity ?: 0) / ((item1.blockSh!!.toDouble() ) * (rate.rate!!.toDouble()) / 100))).toInt()
                     }
                 }
-                val unitPrice = listPriceMax.firstOrNull { it.productName == item.productName }?.unitPrice ?: 0.0
-                val intoMoney = round(quantityTape * unitPrice )
+                val intoMoney = round(quantityTape * (item.unitPrice ?: 0.0) * 100)/100
                 item.quantityTape = quantityTape
                 item.intoMoney = intoMoney
+                count++
             }
 
-            val requestImport = listOderInfoValidate.map {
+            val requestImport = listPriceMax.map {
                 x -> TapeInfo(
                     productName = x.productName,
                     tapeShared = x.tapeShared,
@@ -418,7 +419,7 @@ class MaterialsService(
             tapeInfoRep.bulkInsert(requestImport)
             return  BaseResponse(
                 null,
-                CommonUtils.getMessage("import.success", arrayOf(total, total))
+                CommonUtils.getMessage("import.success", arrayOf(count,total))
             )
 
         }else {
@@ -510,7 +511,9 @@ class MaterialsService(
                 ExcelHelper.setCellValue(dataRow, 4, style, item?.exportType)
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.tapeShared)
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.typeTape)
-                ExcelHelper.setCellValue(dataRow, 7, style, item?.unitPrice.toString())
+                ExcelHelper.setCellValue(dataRow, 7, style, item?.quantityTape.toString())
+                ExcelHelper.setCellValue(dataRow, 8, style,String.format("%,.4f",item?.unitPrice))
+                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.2f",item?.intoMoney))
             }
         }
 

@@ -184,7 +184,7 @@ class ExternalQualityReportService(
     }
 
     fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{
-        val data: Int = inventoryProducts.filter { x-> x.productName == productName }.sumOf { x -> x.sheetQuantity!! }
+        val data: Int = inventoryProducts.filter { x-> x.productName == productName }.sumOf { x -> x.productQuantity!! }
         return data
     }
 
@@ -253,7 +253,7 @@ class ExternalQualityReportService(
         detailData.add(detailOrderQuantity)
 
         //ACCUMULATED_ORDER_QUANTITY
-        val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.goodQualityTapeInventoryBlock)
+        val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.sumWorkResultQuantity)
         val accumulatedOrderQuantityCalendars = calculateAccumulation(orderQuantityCalendars)
         accumulatedOrderQuantity.quantityByCalendars = accumulatedOrderQuantityCalendars
         detailData.add(accumulatedOrderQuantity)
@@ -283,7 +283,7 @@ class ExternalQualityReportService(
 
         //DIFFERENCE_2
         val difference2 = ExternalQualityDetailModel("DIFFERENCE_2", ExternalReportDetailType.DIFFERENCE_2)
-        difference2.quantityByCalendars = calculateDifferenceCalendars(accumulatedProductionResultCalendars,accumulatedOrderQuantityCalendars)
+        difference2.quantityByCalendars = calculateAccumulationWithInventory(orderQuantityCalendars,externalQualityReportModel.sumWorkResultQuantity)
         detailData.add(difference2)
 
         //PLANNED_TAPE_SET
@@ -428,5 +428,20 @@ class ExternalQualityReportService(
         return response
     }
 
+    private fun calculateAccumulationWithInventory(data: List<KeyValueResponse>, inventory: Int? = 0): List<KeyValueResponse> {
+        var value =0
+        val convertInventory = inventory ?: 0
+        val response = mutableListOf<KeyValueResponse>()
+        for ((index, item) in data.withIndex()) {
+            if(index == 0){ value = convertInventory - (item.value?.toInt() ?: 0)
+
+            }
+            else{
+                value -= (item.value?.toInt() ?: 0)
+            }
+            response.add(KeyValueResponse(item.key, value.toString()))
+        }
+        return response
+    }
 
 }

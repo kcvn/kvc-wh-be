@@ -17,7 +17,9 @@ import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.time.OffsetDateTime
+
 
 @Repository
 class InventoryProductRepository(private val context: DSLContext) : SortingRepository()
@@ -26,8 +28,8 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
     fun getInventoryProductByProductName(products:List<String> , date:OffsetDateTime?): List<InventoryProductResponse>{
         var condition: Condition = DSL.noCondition()
 
-        if(date != null){
-            condition = condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date))
+        if (date != null) {
+            condition =condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.cast(LocalDate::class.java).eq(date.toLocalDate()))
         }
         condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(products))
 

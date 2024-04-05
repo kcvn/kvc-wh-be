@@ -33,6 +33,7 @@ import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.round
 
 
 @Service
@@ -185,7 +186,11 @@ class QuantityReportService(
                     processCount = x.processCount,
                     blockQuantity = x.quantityBlock,
                     blockSh = x.blockSh,
-                    quantityProcessStatistic = ((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate!!.toDouble()) / 100)).toInt(),
+                    quantityProcessStatistic = if (x.completionRate!!.toInt() == 0) {
+                        0
+                    } else {
+                        round(((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate.toDouble()) / 100))).toInt()
+                    },
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
                 )
             }

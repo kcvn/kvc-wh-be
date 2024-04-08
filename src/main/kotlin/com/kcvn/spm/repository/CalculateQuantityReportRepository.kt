@@ -222,4 +222,14 @@ class CalculateQuantityReportRepository(
             .where(INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID.eq(id))
             .execute()
     }
+
+    fun getCalculateQuantityResultByMonthReport(month: Int?, year: Int?): CalculateQuantityResult? {
+        return context.selectFrom(CALCULATE_QUANTITY_RESULT)
+            .where(
+                CALCULATE_QUANTITY_RESULT.MONTH_NUMBER.eq(month)
+                    .and(CALCULATE_QUANTITY_RESULT.YEAR_NUMBER.eq(year))
+                    .and(CALCULATE_QUANTITY_RESULT.IS_DELETED.eq(false))
+            )
+            .fetchOneInto(CalculateQuantityResult::class.java)
+    }
 }

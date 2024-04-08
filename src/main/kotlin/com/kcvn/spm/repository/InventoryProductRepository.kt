@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
+import com.kcvn.spm.common.constants.ProcessCode
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
@@ -17,14 +18,15 @@ import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 
 @Repository
 class InventoryProductRepository(private val context: DSLContext) : SortingRepository()
 {
-
     fun getInventoryProductByProductName(products:List<String> , date:OffsetDateTime?): List<InventoryProductResponse>{
         var condition: Condition = DSL.noCondition()
 
@@ -32,6 +34,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             condition =condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.cast(LocalDate::class.java).eq(date.toLocalDate()))
         }
         condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(products))
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(ProcessCode.KTTN))
 
         val data = context.select(
             INVENTORY_PRODUCT.INVENTORY_DATE.`as`("inventoryDate"),
@@ -54,7 +57,6 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
 
         return data
     }
-
 
     fun findDateInventoryProduct (date: OffsetDateTime) : InventoryProduct?{
         return context.selectFrom(INVENTORY_PRODUCT)
@@ -84,6 +86,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
             val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
+            record.updatedDate = Instant.now().atOffset(ZoneOffset.UTC)
             transactionalContext.update(INVENTORY_PRODUCT).set(record)
                 .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
                     .eq(record.processProcedureStructureId)

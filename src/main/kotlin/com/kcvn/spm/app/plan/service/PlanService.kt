@@ -85,7 +85,7 @@ class PlanService(
     private val appSettingRep: AppSettingRepository,
     private val commonCategoryRep: CommonCategoryRepository,
     private val equipmentProductivityRep: EquipmentProductivityRepository,
-    private val processMasterRep: ProcessMasterRepository,
+    private val processMasterRep: ProcessMasterRepository
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -1884,4 +1884,3 @@ class PlanService(
 
     //endregion
 }
-

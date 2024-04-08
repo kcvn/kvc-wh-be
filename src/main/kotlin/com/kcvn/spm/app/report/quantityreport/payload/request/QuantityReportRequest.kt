@@ -6,4 +6,6 @@ class QuantityReportRequest {
     var productName: String? = null
     var startDate: OffsetDateTime? = null
     var endDate: OffsetDateTime? = null
+    var monthReport: Int? = null
+    var yearReport: Int? = null
 }

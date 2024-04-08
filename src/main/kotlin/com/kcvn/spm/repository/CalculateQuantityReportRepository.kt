@@ -80,8 +80,16 @@ class CalculateQuantityReportRepository(
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {
-            "monthReport" -> {
-                CALCULATE_QUANTITY_RESULT.MONTH_REPORT
+            "monthNumber" -> {
+                CALCULATE_QUANTITY_RESULT.MONTH_NUMBER
+            }
+
+            "yearNumber" -> {
+                CALCULATE_QUANTITY_RESULT.YEAR_NUMBER
+            }
+
+            "productName" -> {
+                INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME
             }
 
             else -> {
@@ -110,6 +118,8 @@ class CalculateQuantityReportRepository(
                 CALCULATE_QUANTITY_RESULT.CALCULATE_DATE,
                 CALCULATE_QUANTITY_RESULT.UPDATED_DATE,
                 CALCULATE_QUANTITY_RESULT.UPDATED_BY,
+                CALCULATE_QUANTITY_RESULT.MONTH_NUMBER,
+                CALCULATE_QUANTITY_RESULT.YEAR_NUMBER
             ).values(
                 quantityResult.monthReport,
                 quantityResult.startDate,
@@ -119,6 +129,8 @@ class CalculateQuantityReportRepository(
                 quantityResult.calculateDate,
                 quantityResult.updatedDate,
                 quantityResult.updatedBy,
+                quantityResult.monthNumber,
+                quantityResult.yearNumber
             ).returningResult(CALCULATE_QUANTITY_RESULT).fetchAnyInto(CalculateQuantityResult::class.java)
 
             if (quantityResultInsert != null) {
@@ -232,4 +244,6 @@ class CalculateQuantityReportRepository(
             )
             .fetchOneInto(CalculateQuantityResult::class.java)
     }
+
+
 }

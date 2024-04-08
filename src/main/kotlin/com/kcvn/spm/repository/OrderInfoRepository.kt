@@ -28,7 +28,7 @@ import java.time.OffsetDateTime
 @Repository
 class OrderInfoRepository(private val context: DSLContext) : SortingRepository() {
 
-    fun getListOrderForReport(request: ExternalQualityReportSearchRequest, pageable: Pageable):Pair<List<ExternalQualityReportModel>, Int>{
+    fun getListOrderForReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): Pair<List<ExternalQualityReportModel>, Int> {
         var condition: Condition = DSL.noCondition()
         if (!request.productName.isNullOrEmpty()) {
             condition = condition.and(ORDER_INFO.PRODUCT_NAME.containsIgnoreCase(request.productName))
@@ -57,7 +57,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             ORDER_INFO.LAYER_COUNT.`as`("layerCount"),
             PRODUCT.TAPE_COMMON.`as`("tapeCommon"),
             PRODUCT.PRODUCT_LINE.`as`("productLine"),
-            ).from(ORDER_INFO)
+        ).from(ORDER_INFO)
             .join(PRODUCT)
             .on(ORDER_INFO.PRODUCT_NAME.eq(PRODUCT.NAME).and(PRODUCT.IS_DELETED.eq(false)))
             .where(condition)
@@ -79,6 +79,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         return Pair(data, count)
 
     }
+
     fun getPagingListOrder(request: OrderSearchRequest, pageable: Pageable, isExport: Boolean = false): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
         if (!request.productName.isNullOrEmpty()) {
@@ -331,13 +332,14 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         }
     }
 
- fun getOrderInfoByTimeRange(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<OrderInfo> {
-    return context.selectFrom(ORDER_INFO)
-        .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
-            .and(ORDER_INFO.IS_LATEST.eq(true))
-            .and(ORDER_INFO.IS_DELETED.eq(false)))
-        .fetchInto(OrderInfo::class.java)
-}
+    fun getOrderInfoByTimeRange(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<OrderInfo> {
+        return context.selectFrom(ORDER_INFO)
+            .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
+                .and(ORDER_INFO.IS_LATEST.eq(true))
+                .and(ORDER_INFO.IS_DELETED.eq(false)))
+            .fetchInto(OrderInfo::class.java)
+    }
+
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         return when (fieldName) {

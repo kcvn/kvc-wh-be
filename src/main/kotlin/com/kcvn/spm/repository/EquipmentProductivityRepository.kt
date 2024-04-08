@@ -78,4 +78,10 @@ class EquipmentProductivityRepository(private val context: DSLContext) {
         }
         return result
     }
+
+    fun getByProcessGroup(processGroupCodes: List<String>): List<EquipmentProductivity> {
+        return context.selectFrom(EQUIPMENT_PRODUCTIVITY)
+            .where(EQUIPMENT_PRODUCTIVITY.IS_DELETED.eq(false).and(EQUIPMENT_PRODUCTIVITY.GRP_PROCESS.`in`(processGroupCodes)))
+            .fetchInto(EquipmentProductivity::class.java)
+    }
 }

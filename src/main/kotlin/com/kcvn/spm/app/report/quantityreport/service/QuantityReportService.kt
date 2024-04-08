@@ -247,6 +247,8 @@ class QuantityReportService(
                         round(((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate.toDouble()) / 100))).toInt()
                     },
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                    monthNumber = request.monthReport,
+                    yearNumber = request.yearReport,
                 )
             }
 
@@ -264,6 +266,8 @@ class QuantityReportService(
                     processStatistic = key.processStatisticCode,
                     totalQuantityOfProcess = items.sumOf { it.quantityProcessStatistic!! },
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                    monthNumber = request.monthReport,
+                    yearNumber = request.yearReport,
                 )
             }
 

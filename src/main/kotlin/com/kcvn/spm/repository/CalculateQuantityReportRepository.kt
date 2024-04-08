@@ -144,7 +144,9 @@ class CalculateQuantityReportRepository(
                         INFORMATION_CALCULATE_QUANTITY.CREATED_BY,
                         INFORMATION_CALCULATE_QUANTITY.UPDATED_BY,
                         INFORMATION_CALCULATE_QUANTITY.UPDATED_DATE,
-                        INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID
+                        INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID,
+                        INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER,
+                        INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER
                     ).values(
                         informationQuantity.monthReport,
                         informationQuantity.productName,
@@ -153,7 +155,9 @@ class CalculateQuantityReportRepository(
                         informationQuantity.createdBy,
                         informationQuantity.updatedBy,
                         informationQuantity.updatedDate,
-                        quantityResultInsert.id
+                        quantityResultInsert.id,
+                        informationQuantity.monthNumber,
+                        informationQuantity.yearNumber
                     ).returningResult(INFORMATION_CALCULATE_QUANTITY)
                         .fetchAnyInto(InformationCalculateQuantity::class.java)
 
@@ -175,7 +179,9 @@ class CalculateQuantityReportRepository(
                                     INFORMATION_CALCULATE_QUANTITY_DETAIL.BLOCK_SH,
                                     INFORMATION_CALCULATE_QUANTITY_DETAIL.CREATED_BY,
                                     INFORMATION_CALCULATE_QUANTITY_DETAIL.QUANTITY_PROCESS_STATISTIC,
-                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.MONTH_NUMBER,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.YEAR_NUMBER
                                 ).values(
                                     informationCalculateQuantityDetail.monthReport,
                                     informationCalculateQuantityDetail.productName,
@@ -187,7 +193,9 @@ class CalculateQuantityReportRepository(
                                     informationCalculateQuantityDetail.blockSh,
                                     informationCalculateQuantityDetail.createdBy,
                                     informationCalculateQuantityDetail.quantityProcessStatistic,
-                                    informationCalculateQuantityInsert.id
+                                    informationCalculateQuantityInsert.id,
+                                    informationCalculateQuantityInsert.monthNumber,
+                                    informationCalculateQuantityInsert.yearNumber
                                 ).returningResult(INFORMATION_CALCULATE_QUANTITY_DETAIL)
                                     .fetchAnyInto(InformationCalculateQuantityDetail::class.java)
                             }

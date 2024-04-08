@@ -24,7 +24,7 @@ class QuantityReportRepository(
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.productName.isNullOrEmpty()) {
-                condition = condition.and(INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.contains(request.productName))
+                condition = condition.and(DSL.lower(INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME).contains(DSL.lower(request.productName)))
             }
             if (request.startDate != null) {
                 condition = condition.and(INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.ge(request.startDate))

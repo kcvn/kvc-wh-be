@@ -67,8 +67,7 @@ class QuantityReportController(
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["yearNumber"], direction = Sort.Direction.DESC),
-            SortDefault(sort = ["monthNumber"], direction = Sort.Direction.DESC)
+            SortDefault(sort = ["monthReport"], direction = Sort.Direction.DESC),
         ) pageable: Pageable,
     ) : ResponseEntity<PagingQuantityReportResponse>{
         val data = quantityReportService.getListQuantityReport(request,pageable)
@@ -102,8 +101,7 @@ class QuantityReportController(
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["yearNumber"], direction = Sort.Direction.DESC),
-            SortDefault(sort = ["monthNumber"], direction = Sort.Direction.DESC)
+            SortDefault(sort = ["monthReport"], direction = Sort.Direction.DESC),
         ) pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = quantityReportService.exportQuantityReportExcel(request, pageable)

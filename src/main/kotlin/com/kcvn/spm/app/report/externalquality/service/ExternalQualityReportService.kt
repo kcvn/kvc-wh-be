@@ -407,15 +407,6 @@ class ExternalQualityReportService(
             externalQualityReportModel.shippingData = shippingData
     }
 
-//    fun findValueDateReport(reportList:List<CalendarResponse>, accumulatedReportList:List<CalendarResponse>): String? {
-//
-//        val valueMap = reportList.firstOrNull()?.value
-//        val result=  accumulatedReportList.find { x-> x.value == valueMap }?.key
-//
-//        return result
-//    }
-
-
     private fun calculateAccumulation(data: List<KeyValueResponse>, firstValue: Int? = null): List<KeyValueResponse> {
         var value = firstValue ?: 0
         val response = mutableListOf<KeyValueResponse>()

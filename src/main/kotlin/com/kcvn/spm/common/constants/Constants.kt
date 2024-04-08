@@ -182,6 +182,7 @@ class ProcessStatisticCode {
         const val M_TAN = "M TAN"
         const val GHEPLOP_GIAAPNHIET = "M 熱圧着"
         const val TK_CSP = "TKCSP"
+        const val SNAP = "SNAP"
     }
 }
 

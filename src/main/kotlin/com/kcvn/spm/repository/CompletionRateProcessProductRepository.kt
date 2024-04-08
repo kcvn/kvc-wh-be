@@ -74,7 +74,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
 
 
         }
-        
+
         val crppSubquery = context.select(
             COMPLETION_RATE_PROCESS_PRODUCT.KEY,
             COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE,
@@ -138,8 +138,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
     }
 
 
-
-    fun add(data: CompletionRateProcessProduct) : CompletionRateProcessProduct? {
+    fun add(data: CompletionRateProcessProduct): CompletionRateProcessProduct? {
         var result: CompletionRateProcessProduct? = null
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
@@ -160,7 +159,6 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                         COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE
                     )
                     .values(
-
                         data.key,
                         data.productNameShortcut,
                         data.processCode,
@@ -170,7 +168,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
                         data.createdBy ?: CommonUtils.loggedInUser(),
                         data.isDeleted ?: false,
                         data.updatedDate ?: OffsetDateTime.now(),
-                        data.expirationDate ?: null,
+                        data.expirationDate,
                         data.effectiveDate
                     )
                     .returningResult(COMPLETION_RATE_PROCESS_PRODUCT)
@@ -204,6 +202,22 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .fetchOne()
         return record?.into(CompletionRateProcessProduct::class.java)
 
+    }
+
+    fun getByProductName(productNames: List<String>, date: OffsetDateTime? = null): List<CompletionRateProcessProduct> {
+        var condition = DSL.noCondition()
+        if (date != null) {
+            condition = condition.and(
+                COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE.isNull()
+                    .or(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE.ge(date))
+            )
+        }
+        condition = condition.and(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT.`in`(productNames))
+            .and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false))
+
+        return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
+            .where(condition)
+            .fetchInto(CompletionRateProcessProduct::class.java)
     }
 
 }

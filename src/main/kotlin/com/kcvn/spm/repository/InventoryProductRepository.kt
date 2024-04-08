@@ -18,14 +18,15 @@ import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 
 @Repository
 class InventoryProductRepository(private val context: DSLContext) : SortingRepository()
 {
-
     fun getInventoryProductByProductName(products:List<String> , date:OffsetDateTime?): List<InventoryProductResponse>{
         var condition: Condition = DSL.noCondition()
 
@@ -57,7 +58,6 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         return data
     }
 
-
     fun findDateInventoryProduct (date: OffsetDateTime) : InventoryProduct?{
         return context.selectFrom(INVENTORY_PRODUCT)
             .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)
@@ -86,6 +86,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
             val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
+            record.updatedDate = Instant.now().atOffset(ZoneOffset.UTC)
             transactionalContext.update(INVENTORY_PRODUCT).set(record)
                 .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
                     .eq(record.processProcedureStructureId)

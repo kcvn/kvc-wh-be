@@ -29,7 +29,9 @@ data class CalculateQuantityResult(
     var isDeleted: Boolean? = null,
     var orderDateFromTo: String? = null,
     var createdDate: OffsetDateTime? = null,
-    var createdBy: String? = null
+    var createdBy: String? = null,
+    var monthNumber: Int? = null,
+    var yearNumber: Int? = null
 ): Serializable {
 
 
@@ -131,6 +133,18 @@ data class CalculateQuantityResult(
         }
         else if (this.createdBy != o.createdBy)
             return false
+        if (this.monthNumber == null) {
+            if (o.monthNumber != null)
+                return false
+        }
+        else if (this.monthNumber != o.monthNumber)
+            return false
+        if (this.yearNumber == null) {
+            if (o.yearNumber != null)
+                return false
+        }
+        else if (this.yearNumber != o.yearNumber)
+            return false
         return true
     }
 
@@ -152,6 +166,8 @@ data class CalculateQuantityResult(
         result = prime * result + (if (this.orderDateFromTo == null) 0 else this.orderDateFromTo.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
+        result = prime * result + (if (this.monthNumber == null) 0 else this.monthNumber.hashCode())
+        result = prime * result + (if (this.yearNumber == null) 0 else this.yearNumber.hashCode())
         return result
     }
 
@@ -173,6 +189,8 @@ data class CalculateQuantityResult(
         sb.append(", ").append(orderDateFromTo)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
+        sb.append(", ").append(monthNumber)
+        sb.append(", ").append(yearNumber)
 
         sb.append(")")
         return sb.toString()

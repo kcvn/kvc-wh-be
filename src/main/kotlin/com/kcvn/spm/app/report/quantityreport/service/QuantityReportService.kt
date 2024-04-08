@@ -10,6 +10,7 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.ProcessStatisticCode
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -20,7 +21,6 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
-import com.kcvn.spm.model.tables.pojos.Order
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -33,6 +33,7 @@ import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.round
 
 
 @Service
@@ -53,12 +54,83 @@ class QuantityReportService(
         return if (calculateQuantityReport != null && calculateQuantityReport.status == true) {
             BaseResponse(data = false, message = CommonUtils.getMessage("calculated.locked.error"))
         } else {
+            // Validate ngày yêu cầu đơn hàng với tháng báo cáo
+
+            val monthStartDate = request.startDate?.plusHours(7)?.monthValue ?: 0
+            val monthEndDate = request.endDate?.plusHours(7)?.monthValue ?: 0
+            val yearStartDate = request.startDate?.plusHours(7)?.year ?: 0
+            val yearEndDate = request.endDate?.plusHours(7)?.year ?: 0
+            val monthReport = request.monthReport
+            val yearReport = request.yearReport
+            if(request.monthReport == 1){
+                if(!((monthStartDate != 12 && monthStartDate == 1 && yearStartDate == yearReport)
+                            || (monthStartDate == 12 && yearReport!! - yearStartDate == 1))){
+                    throw BusinessException(CommonUtils.getMessage("validate.importTape.startDate"))
+                }
+            }else {
+                if(!((monthReport!! - monthStartDate == 1 || monthReport == monthStartDate) && yearReport == yearStartDate)){
+                    throw BusinessException(CommonUtils.getMessage("validate.importTape.startDate"))
+                }
+            }
+            if(monthReport == 12){
+                if(!((monthEndDate != 1 && monthEndDate == 12 && yearEndDate == yearReport)
+                            || (monthEndDate == 1 && yearEndDate - yearReport == 1))){
+                    throw BusinessException(CommonUtils.getMessage("validate.importTape.endDate"))
+                }
+            }else {
+                if(!((monthEndDate - (monthReport ?: 0)  == 1 || monthReport == monthEndDate) && yearReport == yearEndDate)){
+                    throw BusinessException(CommonUtils.getMessage("validate.importTape.endDate"))
+                }
+            }
+            // Validate thời gian yêu cầu của các tháng báo cáo phải là liên tiếp
+
+            val monthPre: Int
+            val yearPre: Int
+            val monthNext: Int
+            val yearNext: Int
+            // Kiểm tra xem tháng của import vào trường hợp đặc biệt tháng 12 và 1 thì phải sang năm mới
+
+            if(monthReport == 1){
+                monthPre = 12
+                yearPre = yearReport - 1
+            }else {
+                monthPre = monthReport!! - 1
+                yearPre = yearReport
+            }
+            if(monthReport == 12){
+                monthNext = 1
+                yearNext = yearReport + 1
+            }else {
+                monthNext = monthReport + 1
+                yearNext = yearReport
+            }
+            // check xem có tồn tại dữ liệu của tháng trước không
+
+            val queryCalculateQuantityReportPre = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthPre,yearPre)
+            if(queryCalculateQuantityReportPre != null){
+                //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
+                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.dayOfMonth
+                val dayReport = request.startDate?.plusHours(7)?.dayOfMonth
+                if(dayReport!! - dayQueryTapePre!! != 1){
+                    throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
+                }
+            }
+            // check xem có tồn tại dữ liệu của tháng sau không
+
+            val queryCalculateQuantityReportNext = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthNext,yearNext)
+            if(queryCalculateQuantityReportNext != null){
+                //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
+                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.dayOfMonth
+                val dayReport = request.endDate?.plusHours(7)?.dayOfMonth
+                if(dayQueryTapeNext!! - dayReport!! != 1){
+                    throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
+                }
+            }
+
             val listCalculateQuantityProcess = mutableListOf<CalculateQuantityOfProcessRequest>()
             val listOrderDetailError = mutableListOf<ErrorOrderDetail>()
 
-            //val orderIds = listOrderWithHighestVersion.map { x -> x.id }
-         //   val orderDetails = orderDetailRep.getOrderDetailsByOrderIdsAndMonth(orderIds, request)
-////////////////////////////////////////////////
+
             // Nếu mà có bản ghi tồn tại thì xóa bản ghi cũ đi và thêm lại tính sản lượng mới
             if(calculateQuantityReport != null) {
                 val listIdInformationCalculateQuantity = calculateQuantityReportRep.getIdInformationCalculateQuantity(calculateQuantityReport.id)
@@ -67,16 +139,6 @@ class QuantityReportService(
                 calculateQuantityReportRep.deleteInformationCalculateQuantity(calculateQuantityReport.id)
                 calculateQuantityReportRep.deleteByIdReport(calculateQuantityReport.id)
             }
-
-            // Lấy ra những order theo tháng tính sản lượng
-//            val listNameOrder = orderRep.getNameOrderByMonth(request)
-//            val listNameOrderDistinct = listNameOrder.distinct()
-//            // lấy ra những order thỏa mãn mà có version hiện tại là cao nhất
-//            val listIdOrderVersionMax = orderRep.getIdOderVersionMax(listNameOrderDistinct)
-//            val listIdOrderVersionMaxDistinct = listIdOrderVersionMax.distinct()
-//            // lấy ra những sản phẩm dưạ trên version cao nhất của order
-//            val listIdProductOnOderDetailByOderVersionMax = orderDetailRep.getIdProductOnOderDetailByOderVersionMax(listIdOrderVersionMaxDistinct)
-//            val listIdProductOnOderDetailByOderVersionMaxDistinct = listIdProductOnOderDetailByOderVersionMax.distinct()
             // lấy ra chi tiết order dựa vào sản phẩm có version cao nhất và tháng tính sản lượng
             val orderDetails = orderInfoRep.getOrderInfoByTimeRange(request.startDate, request.endDate)
 
@@ -185,7 +247,11 @@ class QuantityReportService(
                     processCount = x.processCount,
                     blockQuantity = x.quantityBlock,
                     blockSh = x.blockSh,
-                    quantityProcessStatistic = ((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate!!.toDouble()) / 100)).toInt(),
+                    quantityProcessStatistic = if (x.completionRate!!.toInt() == 0) {
+                        0
+                    } else {
+                        round(((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate.toDouble()) / 100))).toInt()
+                    },
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
                 )
             }
@@ -232,6 +298,9 @@ class QuantityReportService(
                 endDate = request.endDate,
                 calculateBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
                 calculateDate = OffsetDateTime.now(),
+                monthNumber = request.monthReport,
+                yearNumber = request.yearReport,
+
             )
 
             calculateQuantityReportRep.addCalculateQuantityResult(
@@ -246,6 +315,7 @@ class QuantityReportService(
 
     fun lockedQuantity(request: String): BaseResponse<Boolean> {
         val calculateQuantityReport = calculateQuantityReportRep.findById(request)
+        calculateQuantityReport!!.status = true
         calculateQuantityReportRep.update(calculateQuantityReport)
         return BaseResponse(true, message = CommonUtils.getMessage("quantity.locked.success"))
     }

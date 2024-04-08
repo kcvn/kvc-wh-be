@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -31,7 +32,7 @@ class QuantityReportController(
 ) {
     @PostMapping("/calculate-quantity")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CA_REPORT_QUANTITY.value) || hasRole('ADMIN')")
-    fun CalculateQuantity(request: CalculateQuantityRequest): ResponseEntity<BaseResponse<Boolean>> {
+    fun CalculateQuantity(@RequestBody request: CalculateQuantityRequest): ResponseEntity<BaseResponse<Boolean>> {
         val data = quantityReportService.calculateQuantity(request)
         return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)
     }

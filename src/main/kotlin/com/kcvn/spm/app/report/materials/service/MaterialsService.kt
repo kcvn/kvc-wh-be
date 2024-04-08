@@ -125,7 +125,7 @@ class MaterialsService(
         val queryTapeNext = tapeInfoRep.getTapeDetailByMonth(monthNext,yearNext)
         if(queryTapeNext != null){
             //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
-            val dayReport = queryTapePre!!.requestDateStart?.dayOfMonth
+            val dayReport = queryTapeNext.requestDateStart?.dayOfMonth
             val dayQueryTapeNext = request.endDate?.plusHours(7)?.dayOfMonth
             if(dayReport!! - dayQueryTapeNext!! != 1){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))

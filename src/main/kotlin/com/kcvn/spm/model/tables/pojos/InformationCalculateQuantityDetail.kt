@@ -31,7 +31,9 @@ data class InformationCalculateQuantityDetail(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var monthNumber: Int? = null,
+    var yearNumber: Int? = null
 ): Serializable {
 
 
@@ -139,6 +141,18 @@ data class InformationCalculateQuantityDetail(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.monthNumber == null) {
+            if (o.monthNumber != null)
+                return false
+        }
+        else if (this.monthNumber != o.monthNumber)
+            return false
+        if (this.yearNumber == null) {
+            if (o.yearNumber != null)
+                return false
+        }
+        else if (this.yearNumber != o.yearNumber)
+            return false
         return true
     }
 
@@ -161,6 +175,8 @@ data class InformationCalculateQuantityDetail(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.monthNumber == null) 0 else this.monthNumber.hashCode())
+        result = prime * result + (if (this.yearNumber == null) 0 else this.yearNumber.hashCode())
         return result
     }
 
@@ -183,6 +199,8 @@ data class InformationCalculateQuantityDetail(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(monthNumber)
+        sb.append(", ").append(yearNumber)
 
         sb.append(")")
         return sb.toString()

@@ -172,18 +172,6 @@ class QuantityReportService(
                 )
             }
 
-//            val listOrder = orderRep.getOrderById(listIdOrderVersionMaxDistinct)
-//            val listOrderGroupedByOrderCode = listOrder.groupBy { x -> x.orderCode }
-//            val listOrderWithHighestVersion =
-//                listOrderGroupedByOrderCode.mapValues { (_, value) -> value.maxByOrNull { it.version ?: 0 } }.map { x ->
-//                    Order(
-//                        id = x.value?.id,
-//                        orderCode = x.value?.orderCode,
-//                        startDate = x.value?.startDate,
-//                        endDate = x.value?.endDate,
-//                        version = x.value?.version,
-//                    )
-//                }
 
             val listOrderDetailCalculate = orderDetails.map { x ->
                 //val ord = listOrderWithHighestVersion.find { m -> m.id == x.orderId }
@@ -279,10 +267,6 @@ class QuantityReportService(
                 )
             }
 
-
-            println(listOrderDetailError)
-            println(listInformationQuantity)
-            println(listInformationCalculateQuantityDetails)
 
             val quantityResult = CalculateQuantityResult(
                 monthReport = request.startDate,

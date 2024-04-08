@@ -349,7 +349,9 @@ class QuantityReportService(
                 calculateBy = x.calculateBy,
                 calculateDate = x.calculateDate,
                 lockedBy = x.lockedBy,
-                lockedDate = x.lockedDate
+                lockedDate = x.lockedDate,
+                monthNumber = x.monthNumber,
+                yearNumber = x.yearNumber
             )
         }
         return response

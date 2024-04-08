@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/plan")
 class PlanController(private val planService: PlanService) {
     @GetMapping("/get-list")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
     fun getList(
         request: PlanSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
@@ -33,21 +34,21 @@ class PlanController(private val planService: PlanService) {
     }
 
     @GetMapping("/detail")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
     fun getPlanDetail(request: PlanDetailRequest): ResponseEntity<ProductPlanDetailResponse> {
         val data = planService.getPlanDetail(request)
         return ResponseEntity<ProductPlanDetailResponse>(data, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_WORK_PLAN.value) || hasRole('ADMIN')")
     fun exportExcel(request: PlanSearchRequest): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = planService.exportExcel(request)
         return ResponseEntity(BaseResponse(data), HttpStatus.OK)
     }
 
     @GetMapping("/summary")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
     fun getListSummary(request: PlanSearchRequest): ResponseEntity<PlanSummaryResponse> {
         val data = planService.getPlanSummary(request)
         return ResponseEntity<PlanSummaryResponse>(data, HttpStatus.OK)

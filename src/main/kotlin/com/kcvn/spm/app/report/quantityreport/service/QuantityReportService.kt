@@ -21,6 +21,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
+import com.kcvn.spm.model.tables.pojos.OrderInfo
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -39,8 +40,7 @@ import kotlin.math.round
 @Service
 @Transactional
 class QuantityReportService(
-    private val orderRep: OrderRepository,
-    private val orderDetailRep: OrderDetailRepository,
+    private val completionRateProductRepository: CompletionRateProductRepository,
     private val orderInfoRep : OrderInfoRepository,
     private val productRep: ProductRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
@@ -49,10 +49,10 @@ class QuantityReportService(
     private val quantityReportRep: QuantityReportRepository,
     private val processGroupRep: ProcessGroupRepository,
 ) {
-    fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<Boolean> {
+    fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<FileContentModel?> {
         val calculateQuantityReport = calculateQuantityReportRep.findByMonthReport(request)
         return if (calculateQuantityReport != null && calculateQuantityReport.status == true) {
-            BaseResponse(data = false, message = CommonUtils.getMessage("calculated.locked.error"))
+            BaseResponse(data = null, message = CommonUtils.getMessage("calculated.locked.error"))
         } else {
             // Validate ngày yêu cầu đơn hàng với tháng báo cáo
 
@@ -143,6 +143,12 @@ class QuantityReportService(
             val orderDetails = orderInfoRep.getOrderInfoByTimeRange(request.startDate, request.endDate)
 
             val productNames = orderDetails.map { x -> x.productName }.distinct()
+            val dataNonExistentProductsInDB
+                    = completionRateProductRepository.getNonExistentProductsInDB(orderDetails, request.startDate)
+            if(dataNonExistentProductsInDB.isNotEmpty()){
+                val dataErr = exportExcelErr(dataNonExistentProductsInDB)
+                return BaseResponse(data = dataErr, message = CommonUtils.getMessage("validate.quantityReportErr"))
+            }
             val productsWithRate = productRep.getProductDetailWithCompletionRateByNames(productNames)
             //val productNames = productsWithRate.mapNotNull { x -> x?.name }.distinct()
             val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
@@ -281,7 +287,7 @@ class QuantityReportService(
             val quantityResult = CalculateQuantityResult(
                 monthReport = request.startDate,
                 orderDateFromTo = "${
-                    request.startDate?.let {
+                    request.startDate?.plusHours(7)?.let {
                         DateTimeHelper.toString(
                             it,
                             DateTimeFormat.dd_MM_yyyy
@@ -309,7 +315,7 @@ class QuantityReportService(
                 listInformationCalculateQuantityDetails
             )
 
-            BaseResponse(data = true, message = CommonUtils.getMessage("calculated.success"))
+            BaseResponse(data = null, message = CommonUtils.getMessage("calculated.success"))
         }
     }
 
@@ -520,5 +526,55 @@ class QuantityReportService(
         )
         workbook.close()
         return BaseResponse(response)
+    }
+
+    fun exportExcelErr(productNames: List<OrderInfo?>) : FileContentModel{
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportRateCalculateQuantityErr.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        // Tạo một CellStyle mới
+        val redFontStyle = workbook.createCellStyle()
+
+        // Tạo một Font mới
+        val redFont = workbook.createFont()
+
+        // Đặt màu chữ là đỏ
+        redFont.setColor(IndexedColors.RED.getIndex())
+        redFont.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+        redFont.fontHeightInPoints = 12.toShort()
+        // Đặt font cho CellStyle
+        redFontStyle.setFont(redFont)
+        redFontStyle.borderBottom = BorderStyle.THIN
+        redFontStyle.borderTop = BorderStyle.THIN
+        redFontStyle.borderRight = BorderStyle.THIN
+        redFontStyle.borderLeft = BorderStyle.THIN
+        redFontStyle.wrapText = true
+        redFontStyle.verticalAlignment = VerticalAlignment.CENTER
+
+        var rowNumber = 1
+        for (item in productNames) {
+            val dataRow: Row = sheet.createRow(rowNumber++)
+            ExcelHelper.setCellValue(dataRow, 0, style, item?.productName)
+            ExcelHelper.setCellValue(dataRow, 1, redFontStyle, CommonUtils.getMessage("validate.rateQuantityReport", arrayOf(
+                item?.orderDate?.plusHours(7)!!.format(DateTimeFormatter.ofPattern("yyyy_MM_dd")))))
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportRateQuantityReportErr", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return response
     }
 }

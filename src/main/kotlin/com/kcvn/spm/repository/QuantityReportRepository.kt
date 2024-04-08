@@ -32,6 +32,7 @@ class QuantityReportRepository(
             if (request.endDate != null) {
                 condition = condition.and(INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.le(request.endDate))
             }
+
         }
 
         val sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()

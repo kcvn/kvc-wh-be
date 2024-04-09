@@ -9,6 +9,7 @@ import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityRepo
 import com.kcvn.spm.app.report.externalquality.payload.request.ExternalQualityReportSearchRequest
 import com.kcvn.spm.app.report.externalquality.payload.response.ExternalQualityReportResponse
 import com.kcvn.spm.common.constants.*
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BaseResponse
@@ -16,6 +17,7 @@ import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.ExportConfiguration
 import com.kcvn.spm.model.tables.pojos.UpdateTape
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.*
@@ -26,8 +28,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.time.OffsetDateTime
 
 @Service
 @Transactional
@@ -38,7 +39,8 @@ class ExternalQualityReportService(
     private val completionRateProductRep: CompletionRateProductRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val updateTapeRepository: UpdateTapeRepository,
-    private val orderInfoRepository: OrderInfoRepository
+    private val orderInfoRepository: OrderInfoRepository,
+    private val exportConfigurationRep: ExportConfigurationRepository
 ) {
 
     fun exportExcelExternalQualityReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
@@ -101,8 +103,8 @@ class ExternalQualityReportService(
             for (productReport in dataExport.data!!) {
                 for (reportData in productReport.details) {
                     val dataRow = sheet.getRow(rowReportIndex) ?: sheet.createRow(rowReportIndex)
-                    ExcelHelper.setCellValue(dataRow, 12, style, reportData.title)
-                    ExcelHelper.setCellValue(dataRow, 13, style, reportData.inventory?.toString() ?: "")
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 12, style, reportData.title)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 13, style, reportData.inventory?.toString() ?: "")
                     headerCol=14
                     for(col in reportData.quantityByCalendars){
                         ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, false,isReportDetails = true)
@@ -120,9 +122,8 @@ class ExternalQualityReportService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportReportExternalQuality", arrayOf(
-                LocalDateTime.now().format(
-                    DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            fileName = CommonUtils.getMessage("fileName.exportReportExternalQuality",
+                        arrayOf(request.startDate?.toLocalDate().toString(),request.endDate?.toLocalDate().toString())),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -139,6 +140,9 @@ class ExternalQualityReportService(
         val response = ExternalQualityReportResponse()
         val orderInfo = orderInfoRepository.getListOrderForReport(request,pageable)
         val mappingPaging = orderInfo.first
+        val listProductName = mappingPaging.map { it.productName }
+        val getExportConfiguration = exportConfigurationRep.getExportConfig(listProductName,request.startDate,request.endDate)
+        checkExportConfiguration(mappingPaging,getExportConfiguration,request.startDate,request.endDate)
         response.totalRecords = orderInfo.second
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
@@ -154,7 +158,6 @@ class ExternalQualityReportService(
         val order = orderSer.getPaginatedOrder(orderSearchRequest,pageable)
         val listProductOrder = order.data
 
-        val listProductName = mappingPaging.map { it.productName }
         val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())
         val listWorkResult = request.startDate?.let { request.endDate?.let { it1 -> workResultRep.getForReport(it, it1,listProductName) } }
         for(externalQuality in mappingPaging){
@@ -183,9 +186,28 @@ class ExternalQualityReportService(
         return response
     }
 
+    fun checkExportConfiguration(mappingPaging: List<ExternalQualityReportModel>, exportConfigurations: List<ExportConfiguration>, startDate: OffsetDateTime?, endDate: OffsetDateTime?) {
+        for(item in mappingPaging){
+            val exportType = item.exportTypeConvert
+            if (exportType != null) {
+                if (exportType.contains(",")) {
+                    val exportTypes = exportType.split(",").map { it.trim() }
+                    for (type in exportTypes) {
+                        val config = exportConfigurations.filter { x-> x.productName == item.productName && x.exportType == type }
+                        if(config.isEmpty()){
+                            throw BusinessException(CommonUtils.getMessage("product.config",arrayOf(item.productName as Any,type,startDate?.toLocalDate().toString(),endDate?.toLocalDate().toString())
+                            ))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{
-        val data: Int = inventoryProducts.filter { x-> x.productName == productName }.sumOf { x -> x.productQuantity!! }
-        return data
+        val data = inventoryProducts.filter { x-> x.productName == productName }
+        if(data.isEmpty()) throw BusinessException(CommonUtils.getMessage("check.inventoryProduct",arrayOf(productName as Any)))
+        return data.sumOf { x -> x.productQuantity!! }
     }
 
     fun getGenericNameUpdateTape(listExternalQuantityReport:  List<ExternalQualityReportModel>) :List<String>{
@@ -237,7 +259,6 @@ class ExternalQualityReportService(
         externalQualityReportModel.goodQualityTapeInventoryBlock = goodQualityTapeInventoryBlock
         externalQualityReportModel.sumWorkResultQuantity =
             externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
-
         //ORDER QUANTITY
         val detailOrderQuantity =  ExternalQualityDetailModel("ORDER_QUANTITY", ExternalReportDetailType.ORDER_QUANTITY)
         val orderQuantityCalendarsSave =listProductOrder?.firstOrNull { x -> x.productName == externalQualityReportModel.productName }?.quantityByCalendars?.toMutableList()

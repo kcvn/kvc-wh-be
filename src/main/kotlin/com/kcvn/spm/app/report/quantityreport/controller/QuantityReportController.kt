@@ -37,6 +37,7 @@ class QuantityReportController(
         if(data.data != null){
             return ResponseEntity(data, HttpStatus.BAD_REQUEST)
         }
+        
         return ResponseEntity<BaseResponse<FileContentModel?>>(data, HttpStatus.OK)
     }
 

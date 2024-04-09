@@ -460,6 +460,9 @@ class QuantityReportService(
         val data = CheckCalculateQuantityResponse()
         val query = calculateQuantityReportRep.findByMonthReport(request)
         if(query != null){
+            if(query.status == true){
+                throw BusinessException(CommonUtils.getMessage("calculated.locked.error"))
+            }
             data.hasCalculateQuantity = true
             return data
         }

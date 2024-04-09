@@ -285,7 +285,7 @@ class ExternalQualityReportService(
         columns.forEach{ x ->
         val productWorkResult = listWorkResult?.filter { workResult -> x.key.equals(workResult.summaryResultDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) })
                                                         && workResult.itemName == externalQualityReportModel.productName }
-        val sumItemQuantity = productWorkResult?.map { it.totalTapeQuantity }?.sumOf { it ?: 0 } ?: 0
+        val sumItemQuantity = productWorkResult?.map { it.unfinishedQuantity }?.sumOf { it ?: 0 } ?: 0
         productionResultCalendars.add(KeyValueResponse(x.key, sumItemQuantity.toString())) }
 
         productionResult.quantityByCalendars = productionResultCalendars
@@ -413,12 +413,13 @@ class ExternalQualityReportService(
 
             val valueNumberWorkResult = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.ACCUMULATED_PRODUCTION_RESULT)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
             shippingData.add(KeyValueResponse("number_work_result",valueNumberWorkResult))
-            shippingData.add(KeyValueResponse("",""))
+
             shippingData.add(KeyValueResponse("quantity_remaining_title",ExternalReportShippingType.QUANTITY_REMAINING_TITLE))
 
 
             val exchangeRateDifferences = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.DIFFERENCE_1)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
+            shippingData.add(KeyValueResponse("",""))
             shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
             shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity.toString()))
             shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))

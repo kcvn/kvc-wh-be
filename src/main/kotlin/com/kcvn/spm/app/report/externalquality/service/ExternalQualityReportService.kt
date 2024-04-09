@@ -103,8 +103,8 @@ class ExternalQualityReportService(
             for (productReport in dataExport.data!!) {
                 for (reportData in productReport.details) {
                     val dataRow = sheet.getRow(rowReportIndex) ?: sheet.createRow(rowReportIndex)
-                    ExcelHelper.setCellValue(dataRow, 12, style, reportData.title)
-                    ExcelHelper.setCellValue(dataRow, 13, style, reportData.inventory?.toString() ?: "")
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 12, style, reportData.title)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 13, style, reportData.inventory?.toString() ?: "")
                     headerCol=14
                     for(col in reportData.quantityByCalendars){
                         ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, false,isReportDetails = true)

@@ -77,12 +77,12 @@ class QuantityReportController(
     }
 
     @GetMapping("/check-quantity-report")
-    fun checkInventoryDate(request: CalculateQuantityRequest
+    fun checkQuantityReport(request: CalculateQuantityRequest
     ) : ResponseEntity<BaseResponse<CheckCalculateQuantityResponse>>{
         val data = quantityReportService.checkCalculateQuantity(request)
 
-        val month = request.endDate?.monthValue
-        val year = request.endDate?.year
+        val month = request.monthReport
+        val year = request.yearReport
         return if(data.hasCalculateQuantity ){
             ResponseEntity(
                 BaseResponse(data = data, message = CommonUtils.getMessage("quantity.validation",arrayOf(month.toString(), year.toString()))),

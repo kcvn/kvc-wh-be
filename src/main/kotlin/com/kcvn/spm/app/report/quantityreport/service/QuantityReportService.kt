@@ -247,6 +247,8 @@ class QuantityReportService(
                         round(((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate.toDouble()) / 100))).toInt()
                     },
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                    monthNumber = request.monthReport,
+                    yearNumber = request.yearReport,
                 )
             }
 
@@ -264,6 +266,8 @@ class QuantityReportService(
                     processStatistic = key.processStatisticCode,
                     totalQuantityOfProcess = items.sumOf { it.quantityProcessStatistic!! },
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                    monthNumber = request.monthReport,
+                    yearNumber = request.yearReport,
                 )
             }
 
@@ -355,22 +359,18 @@ class QuantityReportService(
         val group = data.groupBy {
             ProductOrderDateKeyModel(
                 it.productName,
-                it.monthReport
+                it.monthNumber,
+                it.yearNumber
             )
         }
 
         val listQuantityReportModel = group.map { x ->
             QuantityReportModel(
                 x.key.productName,
-                x.key.orderDate.let {
-                    it?.let { it1 ->
-                        DateTimeHelper.toString(
-                            it1,
-                            DateTimeFormat.MM_yyyy
-                        )
-                    }
-                },
-                x.value.map { m -> KeyValueResponse(m.processStatistic, m.totalQuantityOfProcess.toString()) })
+                x.key.monthNumber,
+                x.key.yearNumber,
+                x.value.map { m -> KeyValueResponse(m.processStatistic, m.totalQuantityOfProcess.toString()) }.toMutableList()
+            )
         }
 
         val productNames = listQuantityReportModel.mapNotNull { x -> x.productName }.distinct()
@@ -420,6 +420,36 @@ class QuantityReportService(
         }
 
         val response = PagingQuantityReportResponse()
+        listQuantityReportModel.forEach { x ->
+            run {
+                val inlo = ((x.lstProcess.find { m -> m.key == ProcessStatisticCode.HP_TAN }?.value?.toInt() ?: 0 ) +
+                        (x.lstProcess.find { m -> m.key == ProcessStatisticCode.HP_ALL }?.value?.toInt() ?: 0)).toString()
+                val rsInlo = KeyValueResponse(
+                    key = ProcessStatisticCode.IN_LO,
+                    value = inlo,
+                )
+                x.lstProcess.add(rsInlo)
+
+                val inmach = ((x.lstProcess.find { m -> m.key == ProcessStatisticCode.TAN }?.value?.toInt() ?: 0 ) +
+                        (x.lstProcess.find { m -> m.key == ProcessStatisticCode.ZEN }?.value?.toInt() ?: 0)).toString()
+                val rsInmach = KeyValueResponse(
+                    key = ProcessStatisticCode.IN_MACH,
+                    value = inmach,
+                )
+                x.lstProcess.add(rsInmach)
+
+                val gheplop = ((x.lstProcess.find { m -> m.key == ProcessStatisticCode.M_TAN }?.value?.toInt() ?: 0 ) +
+                        (x.lstProcess.find { m -> m.key == ProcessStatisticCode.M_ALL }?.value?.toInt() ?: 0)).toString()
+                val rsGheplop = KeyValueResponse(
+                    key = ProcessStatisticCode.GHEP_LOP,
+                    value = gheplop,
+                )
+                x.lstProcess.add(rsGheplop)
+            }
+        }
+
+
+
         response.data = listQuantityReportModel
         response.columns = columns.sortedBy { x -> x.sort }.distinct().toList()
         response.totalRecords = listQuantityReportModel.count()
@@ -464,7 +494,8 @@ class QuantityReportService(
 
         val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
         ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, data.productName,isBold = true,isAlignCenter = true)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.monthReport,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.monthNumber.toString(),isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 3, style, data.yearNumber.toString(),isBold = true,isAlignCenter = true)
         var colIndex = 3
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value

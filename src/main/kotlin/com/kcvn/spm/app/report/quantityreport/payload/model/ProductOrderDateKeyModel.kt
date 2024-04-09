@@ -4,5 +4,6 @@ import java.time.OffsetDateTime
 
 data class ProductOrderDateKeyModel(
     val productName:String?,
-    val orderDate:OffsetDateTime?
+    val monthNumber: Int?,
+    val yearNumber: Int?,
 )

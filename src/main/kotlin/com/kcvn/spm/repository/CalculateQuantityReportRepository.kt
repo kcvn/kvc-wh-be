@@ -69,7 +69,7 @@ class CalculateQuantityReportRepository(
     fun getPagingListCalculateQuantityResult(pageable: Pageable): Pair<List<CalculateQuantityResult>, Int> {
         val data = context.selectFrom(CALCULATE_QUANTITY_RESULT)
             .where(CALCULATE_QUANTITY_RESULT.IS_DELETED.eq(false))
-            .orderBy(getSortFields(pageable.sort, CALCULATE_QUANTITY_RESULT.MONTH_REPORT))
+            .orderBy(getSortFields(pageable.sort, CALCULATE_QUANTITY_RESULT.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(CalculateQuantityResult::class.java)
 
@@ -86,10 +86,6 @@ class CalculateQuantityReportRepository(
 
             "yearNumber" -> {
                 CALCULATE_QUANTITY_RESULT.YEAR_NUMBER
-            }
-
-            "productName" -> {
-                INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME
             }
 
             else -> {
@@ -163,7 +159,8 @@ class CalculateQuantityReportRepository(
 
                     if (informationCalculateQuantityInsert != null) {
                         for (informationCalculateQuantityDetail in listInformationCalculateQuantityDetails) {
-                            if (informationCalculateQuantityDetail.monthReport == informationCalculateQuantityInsert.monthReport
+                            if (informationCalculateQuantityDetail.monthNumber == informationCalculateQuantityInsert.monthNumber
+                                && informationCalculateQuantityDetail.yearNumber == informationCalculateQuantityInsert.yearNumber
                                 && informationCalculateQuantityDetail.productName == informationCalculateQuantityInsert.productName
                                 && informationCalculateQuantityDetail.processStatisticCode == informationCalculateQuantityInsert.processStatistic
                             ) {

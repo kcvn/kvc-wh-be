@@ -5,6 +5,7 @@ import java.time.OffsetDateTime
 
 data class QuantityReportModel (
     var productName : String? = null,
-    var monthReport : String? = null,
-    var lstProcess: List<KeyValueResponse> = listOf()
+    var monthNumber : Int? = null,
+    var yearNumber : Int? = null,
+    var lstProcess: MutableList<KeyValueResponse> = mutableListOf()
 )

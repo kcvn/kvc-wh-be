@@ -8,6 +8,7 @@ data class ExternalQualityReportModel(
     var productShortcutName: String? = null,
     var mold: String? = null,
     var exportType: String? = null,
+    var exportTypeConvert: String? = null,
     var pcsSh: Int? = null,
     var blockSh: Int? = null,
     var productLine: String? = null,

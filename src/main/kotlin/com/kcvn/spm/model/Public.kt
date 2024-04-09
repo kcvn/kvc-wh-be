@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
 import com.kcvn.spm.model.tables.EquipmentProductivity
+import com.kcvn.spm.model.tables.ExportConfiguration
 import com.kcvn.spm.model.tables.HolidaysCalendar
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
@@ -129,6 +130,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.equipment_productivity</code>.
      */
     val EQUIPMENT_PRODUCTIVITY: EquipmentProductivity get() = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY
+
+    /**
+     * The table <code>public.export_configuration</code>.
+     */
+    val EXPORT_CONFIGURATION: ExportConfiguration get() = ExportConfiguration.EXPORT_CONFIGURATION
 
     /**
      * The table <code>public.holidays_calendar</code>.
@@ -281,6 +287,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,
         CompletionRateProduct.COMPLETION_RATE_PRODUCT,
         EquipmentProductivity.EQUIPMENT_PRODUCTIVITY,
+        ExportConfiguration.EXPORT_CONFIGURATION,
         HolidaysCalendar.HOLIDAYS_CALENDAR,
         InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY,
         InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL,

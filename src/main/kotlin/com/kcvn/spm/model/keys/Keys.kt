@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
 import com.kcvn.spm.model.tables.EquipmentProductivity
+import com.kcvn.spm.model.tables.ExportConfiguration
 import com.kcvn.spm.model.tables.HolidaysCalendar
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
@@ -57,6 +58,7 @@ import com.kcvn.spm.model.tables.records.CompletionRateProcessProductRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProcessRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProductRecord
 import com.kcvn.spm.model.tables.records.EquipmentProductivityRecord
+import com.kcvn.spm.model.tables.records.ExportConfigurationRecord
 import com.kcvn.spm.model.tables.records.HolidaysCalendarRecord
 import com.kcvn.spm.model.tables.records.InformationCalculateQuantityDetailRecord
 import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
@@ -109,6 +111,7 @@ val COMPLETION_RATE_PROCESS_PKEY: UniqueKey<CompletionRateProcessRecord> = Inter
 val COMPLETION_RATE_PROCESS_PRODUCT_PKEY: UniqueKey<CompletionRateProcessProductRecord> = Internal.createUniqueKey(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT, DSL.name("completion_rate_process_product_pkey"), arrayOf(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.ID), true)
 val COMPLETION_RATE_PRODUCT_PKEY: UniqueKey<CompletionRateProductRecord> = Internal.createUniqueKey(CompletionRateProduct.COMPLETION_RATE_PRODUCT, DSL.name("completion_rate_product_pkey"), arrayOf(CompletionRateProduct.COMPLETION_RATE_PRODUCT.ID), true)
 val EQUIPMENT_PRODUCTIVITY_PKEY: UniqueKey<EquipmentProductivityRecord> = Internal.createUniqueKey(EquipmentProductivity.EQUIPMENT_PRODUCTIVITY, DSL.name("equipment_productivity_pkey"), arrayOf(EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.ID), true)
+val EXPORT_CONFIG_PKEY: UniqueKey<ExportConfigurationRecord> = Internal.createUniqueKey(ExportConfiguration.EXPORT_CONFIGURATION, DSL.name("export_config_pkey"), arrayOf(ExportConfiguration.EXPORT_CONFIGURATION.ID), true)
 val HOLIDAYS_CALENDAR_PKEY: UniqueKey<HolidaysCalendarRecord> = Internal.createUniqueKey(HolidaysCalendar.HOLIDAYS_CALENDAR, DSL.name("holidays_calendar_pkey"), arrayOf(HolidaysCalendar.HOLIDAYS_CALENDAR.ID), true)
 val INFORMATION_CALCULATE_QUANTITY_PKEY: UniqueKey<InformationCalculateQuantityRecord> = Internal.createUniqueKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantity_pkey"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)
 val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityDetailRecord> = Internal.createUniqueKey(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL, DSL.name("information_calculate_quantity_pk"), arrayOf(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL.ID), true)

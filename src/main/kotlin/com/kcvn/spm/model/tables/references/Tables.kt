@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
 import com.kcvn.spm.model.tables.EquipmentProductivity
+import com.kcvn.spm.model.tables.ExportConfiguration
 import com.kcvn.spm.model.tables.HolidaysCalendar
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
@@ -111,6 +112,11 @@ val COMPLETION_RATE_PRODUCT: CompletionRateProduct = CompletionRateProduct.COMPL
  * The table <code>public.equipment_productivity</code>.
  */
 val EQUIPMENT_PRODUCTIVITY: EquipmentProductivity = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY
+
+/**
+ * The table <code>public.export_configuration</code>.
+ */
+val EXPORT_CONFIGURATION: ExportConfiguration = ExportConfiguration.EXPORT_CONFIGURATION
 
 /**
  * The table <code>public.holidays_calendar</code>.

@@ -28,9 +28,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -197,18 +195,13 @@ class ExternalQualityReportService(
                     for (type in exportTypes) {
                         val config = exportConfigurations.filter { x-> x.productName == item.productName && x.exportType == type }
                         if(config.isEmpty()){
-                            throw BusinessException(CommonUtils.getMessage(
-                                "product.config",
-                                arrayOf(item.productName as Any,type,startDate?.toLocalDate().toString(),endDate?.toLocalDate().toString())
-
+                            throw BusinessException(CommonUtils.getMessage("product.config",arrayOf(item.productName as Any,type,startDate?.toLocalDate().toString(),endDate?.toLocalDate().toString())
                             ))
-
                         }
                     }
                 }
             }
         }
-
     }
 
     fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{

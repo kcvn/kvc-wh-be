@@ -13,6 +13,6 @@ data class ProductProcessModel (
     var processProcedureStructureId: String? = null,
     var processSequence: Int? = null,
     var inventoryLayerGroup: String? = null,
-    var dayOfImplementation: String? = null,
+    var dayOfImplementation: Int? = null,
     var unit: String? = null
 )

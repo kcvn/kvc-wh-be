@@ -51,10 +51,11 @@ class Frame1 {
     }
 }
 
-
-class ProcessCode {
+class SR_OR_NSR {
     companion object {
-        const val KTTN = "217020"
+        const val SR = "SR"
+        const val CSP = "CSP"
+        const val NSR = "NSR"
     }
 }
 
@@ -207,6 +208,13 @@ class ProcessConvertCode {
         const val DAN_2L = "DAN 2L"
         const val DAN_PET = "PET+"
         const val THAO_PET = "PET-"
+    }
+}
+
+class ProcessCode {
+    companion object {
+        const val INS = "217020"
+        const val TKCSP = "214220"
     }
 }
 

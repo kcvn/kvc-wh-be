@@ -1,16 +1,27 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.model.tables.pojos.Plan
-import com.kcvn.spm.model.tables.references.PLAN
+import com.kcvn.spm.model.tables.pojos.PlanDetailTemp
+import com.kcvn.spm.model.tables.pojos.PlanProcessTemp
+import com.kcvn.spm.model.tables.pojos.PlanProductTemp
+import com.kcvn.spm.model.tables.pojos.PlanTemp
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
 class PlanRepository(private val context: DSLContext) {
-    fun getPlanByOrderCode(orderCode: String): Plan? {
-        return context.selectFrom(PLAN)
-            .where(PLAN.IS_ACTIVE.eq(true).and(PLAN.IS_DELETED.eq(false)))
-            .fetchInto(Plan::class.java)
-            .firstOrNull()
+
+    fun createPlanTemp(
+        plan: PlanTemp,
+        planProducts: List<PlanProductTemp>,
+        planProcesses: List<Pair<String, List<PlanProcessTemp>>>,
+        planChildrenProcesses: List<Pair<String, List<PlanProcessTemp>>>,
+        planDetails: List<Pair<String, List<PlanDetailTemp>>>
+    ) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+
+
+        }
     }
 }

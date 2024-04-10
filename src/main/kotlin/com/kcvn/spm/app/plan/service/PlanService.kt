@@ -144,7 +144,7 @@ class PlanService(
                 processSequence = x.processSequence,
                 inventory = x.inventory
             )
-            productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id && m.layerCode == x.layerCode }.map { m ->
+            productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
                 ProcessChildrenModel(
                     layerCode = m.layerCode,
                     processCode = m.processCode,
@@ -232,7 +232,7 @@ class PlanService(
                     processSequence = x.processSequence,
                     inventory = x.inventory
                 )
-                productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id && m.layerCode == x.layerCode }.map { m ->
+                productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
                     ProcessChildrenModel(
                         layerCode = m.layerCode,
                         processCode = m.processCode,

@@ -15,13 +15,13 @@ class ExportConfigurationRepository (private val context: DSLContext){
     fun getExportConfig(productNames:  List<String?>, startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<ExportConfiguration> {
         var condition = DSL.noCondition().and(EXPORT_CONFIGURATION.IS_DELETED.eq(false))
         if (endDate != null) {
-            condition= condition.and(EXPORT_CONFIGURATION.EXPIRATION_DATE.le(endDate))
+            condition= condition.and(EXPORT_CONFIGURATION.EXPIRATION_DATE.ge(endDate))
         }
         if (startDate != null) {
-            condition= condition.and(EXPORT_CONFIGURATION.EFFECTIVE_DATE.ge(startDate))
+            condition= condition.and(EXPORT_CONFIGURATION.EFFECTIVE_DATE.le(startDate))
         }
-        return context.selectFrom(EXPORT_CONFIGURATION)
+        val data= context.selectFrom(EXPORT_CONFIGURATION)
             .where(condition.and(EXPORT_CONFIGURATION.PRODUCT_NAME.`in`(productNames)))
-            .fetchInto(ExportConfiguration::class.java)
+        return data.fetchInto(ExportConfiguration::class.java)
     }
 }

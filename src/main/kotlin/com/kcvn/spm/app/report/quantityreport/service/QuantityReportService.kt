@@ -107,7 +107,7 @@ class QuantityReportService(
             val queryCalculateQuantityReportPre = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthPre,yearPre)
             if(queryCalculateQuantityReportPre != null){
                 //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
-                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.dayOfMonth
+                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.plusHours(7)?.dayOfMonth
                 val dayReport = request.startDate?.plusHours(7)?.dayOfMonth
                 if(dayReport!! - dayQueryTapePre!! != 1){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
@@ -118,14 +118,14 @@ class QuantityReportService(
             val queryCalculateQuantityReportNext = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthNext,yearNext)
             if(queryCalculateQuantityReportNext != null){
                 //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
-                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.dayOfMonth
+                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.plusHours(7)?.dayOfMonth
                 val dayReport = request.endDate?.plusHours(7)?.dayOfMonth
-                val checkLog = AppSetting(
-                    key = "CHECK_LOG",
-                    value = "${dayQueryTapeNext!! - dayReport!!}",
-                    description = "dayQueryTapeNext: ${dayQueryTapeNext} dayReport : + ${dayReport}"
-                )
-                appSettingRepository.add(checkLog)
+//                val checkLog = AppSetting(
+//                    key = "CHECK_LOG",
+//                    value = "${dayQueryTapeNext!! - dayReport!!}",
+//                    description = "dayQueryTapeNext: ${dayQueryTapeNext} dayReport : + ${dayReport}"
+//                )
+//                appSettingRepository.add(checkLog)
                 if(dayQueryTapeNext!! - dayReport!! != 1){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }

@@ -27,6 +27,7 @@ import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.OrderVersionDropdown
 import com.kcvn.spm.model.tables.Plan
+import com.kcvn.spm.model.tables.PlanCalendarConfig
 import com.kcvn.spm.model.tables.PlanDetail
 import com.kcvn.spm.model.tables.PlanDetailTemp
 import com.kcvn.spm.model.tables.PlanProcess
@@ -182,6 +183,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val PLAN: Plan get() = Plan.PLAN
 
     /**
+     * The table <code>public.plan_calendar_config</code>.
+     */
+    val PLAN_CALENDAR_CONFIG: PlanCalendarConfig get() = PlanCalendarConfig.PLAN_CALENDAR_CONFIG
+
+    /**
      * The table <code>public.plan_detail</code>.
      */
     val PLAN_DETAIL: PlanDetail get() = PlanDetail.PLAN_DETAIL
@@ -297,6 +303,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         OrderInfo.ORDER_INFO,
         OrderVersionDropdown.ORDER_VERSION_DROPDOWN,
         Plan.PLAN,
+        PlanCalendarConfig.PLAN_CALENDAR_CONFIG,
         PlanDetail.PLAN_DETAIL,
         PlanDetailTemp.PLAN_DETAIL_TEMP,
         PlanProcess.PLAN_PROCESS,

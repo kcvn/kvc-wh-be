@@ -274,7 +274,7 @@ class WorkResultRepository(
                 WORK_RESULT.SUMMARY_RESULT_DATE.ge(startDate)
                     .and(WORK_RESULT.SUMMARY_RESULT_DATE.le(endDate))
                     .and(WORK_RESULT.ITEM_NAME.`in`(productNames))
-                    .and(WORK_RESULT.PROCESS_CODE.eq(ProcessCode.KTTN))
+                    .and(WORK_RESULT.PROCESS_CODE.eq(ProcessCode.INS))
                     .and(WORK_RESULT.IS_DELETED.eq(false))
             )
             .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))

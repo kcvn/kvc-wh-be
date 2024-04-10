@@ -250,8 +250,8 @@ class ProductProcessService(
                 ExcelHelper.setCellValue(dataRow, 3, style, item?.processName)
                 ExcelHelper.setCellValue(dataRow, 4, style, item?.processNameJp)
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.processConvertCode)
-                ExcelHelper.setCellValue(dataRow, 6, style, item?.processInventoryCode)
-                ExcelHelper.setCellValue(dataRow, 7, style, item?.processStatisticCode)
+                ExcelHelper.setCellValue(dataRow, 6, style, item?.processStatisticCode)
+                ExcelHelper.setCellValue(dataRow, 7, style, item?.processInventoryCode)
                 ExcelHelper.setCellValue(dataRow, 8, style, item?.dayOfImplementation)
             }
         }
@@ -301,7 +301,7 @@ class ProductProcessService(
 
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportProcessTemplate.xlsx"
 
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 7))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val total = sheet.lastRowNum
@@ -336,17 +336,17 @@ class ProductProcessService(
             process.processCode = processCode
             process.layerCode = layerCode
             process.processConvertCode = ExcelHelper.getCellValue(row, 3)
-            val processInventoryCode = if (ExcelHelper.getCellValue(row, 4).isEmpty()) {
+            val processInventoryCode = if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
                 ""
             } else {
-                if (row.getCell(4).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
-                    StringHelper.intToStringD2(row.getCell(4).numericCellValue.toInt())
+                if (row.getCell(5).cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
+                    StringHelper.intToStringD2(row.getCell(5).numericCellValue.toInt())
                 } else {
-                    ExcelHelper.getCellValue(row, 4)
+                    ExcelHelper.getCellValue(row, 5)
                 }
             }
             process.processInventoryCode = processInventoryCode
-            process.processStatisticCode = ExcelHelper.getCellValue(row, 5)
+            process.processStatisticCode = ExcelHelper.getCellValue(row, 4)
             val inventoryLayerGroup = if (ExcelHelper.getCellValue(row, 6).isEmpty()) {
                 ""
             } else {
@@ -555,7 +555,7 @@ class ProductProcessService(
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
                     ))
                 }
                 if (!item.processStatisticCode.isNullOrEmpty()) {
@@ -600,13 +600,13 @@ class ProductProcessService(
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
                 }
                 if (!item.processStatisticCode.isNullOrEmpty() && item.processStatisticCode!!.length > 10) {
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 5), 10)))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4), 10)))
                 }
 
                 if (!item.processConvertCode.isNullOrEmpty() && !masterData.processConvertCodes.any { x -> x.label?.trim() == item.processConvertCode?.trim() }) {
@@ -619,7 +619,7 @@ class ProductProcessService(
                     checkList = false
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
                         "validate.excel.notExist",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
                 }
 
 
@@ -823,8 +823,8 @@ class ProductProcessService(
                 ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }?.cellStyle ?: style, item.processCode)
                 ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }?.cellStyle ?: style, item.layerCode)
                 ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }?.cellStyle ?: style, item.processConvertCode)
-                ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: style, item.processInventoryCode)
-                ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }?.cellStyle ?: style, item.processStatisticCode)
+                ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: style, item.processStatisticCode)
+                ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }?.cellStyle ?: style, item.processInventoryCode)
                 ExcelHelper.setCellValue(dataRow, 6, item.cellStyles.find { x -> x.index == 6 }?.cellStyle ?: style, item.inventoryLayerGroup)
                 ExcelHelper.setCellValue(dataRow, 7, item.cellStyles.find { x -> x.index == 7 }?.cellStyle ?: style, item.dayOfImplementation)
                 ExcelHelper.setCellValue(dataRow, 8, (item.cellStyles.find { x -> x.index == 8 }?.cellStyle ?: resultCellStyle), item.messageErrs?.joinToString(separator = "; "))

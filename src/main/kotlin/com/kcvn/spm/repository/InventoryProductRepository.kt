@@ -34,7 +34,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             condition =condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.cast(LocalDate::class.java).eq(date.toLocalDate()))
         }
         condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(products))
-        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(ProcessCode.KTTN))
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(ProcessCode.INS))
 
         val data = context.select(
             INVENTORY_PRODUCT.INVENTORY_DATE.`as`("inventoryDate"),

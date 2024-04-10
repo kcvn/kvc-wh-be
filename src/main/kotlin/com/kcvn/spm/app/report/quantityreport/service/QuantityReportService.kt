@@ -480,13 +480,13 @@ class QuantityReportService(
         cellStyle.cloneStyleFrom(style)
         cellStyle.alignment = HorizontalAlignment.CENTER
         cellStyle.borderTop = style.borderTop
-        cellStyle.borderLeft = BorderStyle.THIN
-        cellStyle.borderRight = BorderStyle.THIN
+        cellStyle.borderLeft = style.borderLeft
+        cellStyle.borderRight = style.borderRight
         cellStyle.borderBottom = style.borderBottom
 
         cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
         cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-
+        row.rowStyle = cellStyle
     }
 
     private fun generateExcelRowPlan(
@@ -500,10 +500,9 @@ class QuantityReportService(
         var rowIndex = rowNumber
 
         val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, data.productName,isBold = true,isAlignCenter = true)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.monthNumber.toString(),isBold = true,isAlignCenter = true)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 3, style, data.yearNumber.toString(),isBold = true,isAlignCenter = true)
-        var colIndex = 3
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 0, style, data.productName,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, "${data.monthNumber.toString()}/${data.yearNumber.toString()}",isBold = true,isAlignCenter = true)
+        var colIndex = 2
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value
             ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value)
@@ -520,8 +519,8 @@ class QuantityReportService(
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0)
-        var headerCol = 3
-        val headerStyle = headerRow.getCell(1).cellStyle
+        var headerCol = 2
+        val headerStyle = headerRow.getCell(0).cellStyle
         val columns = dataExport.columns
         if (dataExport.data != null){
             if (columns != null) {

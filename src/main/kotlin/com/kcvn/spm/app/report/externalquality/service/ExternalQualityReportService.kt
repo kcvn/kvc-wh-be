@@ -136,19 +136,21 @@ class ExternalQualityReportService(
 
 
     fun getDataReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): ExternalQualityReportResponse {
-
+        val startDate = DateTimeHelper.toTimeZone7(request.startDate)
+        val endDate = DateTimeHelper.toTimeZone7(request.endDate)
         val response = ExternalQualityReportResponse()
         val orderInfo = orderInfoRepository.getListOrderForReport(request,pageable)
         val mappingPaging = orderInfo.first
         val listProductName = mappingPaging.map { it.productName }
-        val getExportConfiguration = exportConfigurationRep.getExportConfig(listProductName,request.startDate,request.endDate)
-        checkExportConfiguration(mappingPaging,getExportConfiguration,request.startDate,request.endDate)
+        val getExportConfiguration = exportConfigurationRep.getExportConfig(listProductName,startDate,endDate)
+
+        checkExportConfiguration(mappingPaging,getExportConfiguration,startDate,endDate)
         response.totalRecords = orderInfo.second
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
-        response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
+        response.columns = DateTimeHelper.toCalendarColumn(startDate!!, endDate!!, holidayCalenders)
         val daysToSubtract: Long = 10
-        response.subColumns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders, daysToSubtract)
+        response.subColumns = DateTimeHelper.toCalendarColumn(startDate, endDate, holidayCalenders, daysToSubtract)
 
         val orderSearchRequest = OrderSearchRequest()
         orderSearchRequest.endDate = request.endDate
@@ -168,11 +170,11 @@ class ExternalQualityReportService(
         //get list name UpdateTape
         val genericNames = getGenericNameUpdateTape(mappingPaging)
         //get list Update Tape
-        val updateTapes = updateTapeRepository.getUpdateTapeForReport(genericNames,request.startDate,request.endDate)
+        val updateTapes = updateTapeRepository.getUpdateTapeForReport(genericNames,startDate,endDate)
         // get list name product
         val productNames = getListNameProduct(mappingPaging)
         // get list Inventory
-        val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames,request.endDate)
+        val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames,endDate)
         //add Details Data here
         for(mappingItem in mappingPaging){
             addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails)

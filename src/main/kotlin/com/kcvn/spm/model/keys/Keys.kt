@@ -27,6 +27,7 @@ import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.OrderVersionDropdown
 import com.kcvn.spm.model.tables.Plan
+import com.kcvn.spm.model.tables.PlanCalendarConfig
 import com.kcvn.spm.model.tables.PlanDetail
 import com.kcvn.spm.model.tables.PlanDetailTemp
 import com.kcvn.spm.model.tables.PlanProcess
@@ -67,6 +68,7 @@ import com.kcvn.spm.model.tables.records.OrderDetailRecord
 import com.kcvn.spm.model.tables.records.OrderInfoRecord
 import com.kcvn.spm.model.tables.records.OrderRecord
 import com.kcvn.spm.model.tables.records.OrderVersionDropdownRecord
+import com.kcvn.spm.model.tables.records.PlanCalendarConfigRecord
 import com.kcvn.spm.model.tables.records.PlanDetailRecord
 import com.kcvn.spm.model.tables.records.PlanDetailTempRecord
 import com.kcvn.spm.model.tables.records.PlanProcessRecord
@@ -121,6 +123,7 @@ val ORDER_DETAIL_PKEY: UniqueKey<OrderDetailRecord> = Internal.createUniqueKey(O
 val ORDER_INFO_PKEY: UniqueKey<OrderInfoRecord> = Internal.createUniqueKey(OrderInfo.ORDER_INFO, DSL.name("order_info_pkey"), arrayOf(OrderInfo.ORDER_INFO.ID), true)
 val ORDER_VERSION_DROPDOWN_PKEY: UniqueKey<OrderVersionDropdownRecord> = Internal.createUniqueKey(OrderVersionDropdown.ORDER_VERSION_DROPDOWN, DSL.name("order_version_dropdown_pkey"), arrayOf(OrderVersionDropdown.ORDER_VERSION_DROPDOWN.ID), true)
 val PLAN_PKEY: UniqueKey<PlanRecord> = Internal.createUniqueKey(Plan.PLAN, DSL.name("plan_pkey"), arrayOf(Plan.PLAN.ID), true)
+val PLAN_CALENDAR_CONFIG_PKEY: UniqueKey<PlanCalendarConfigRecord> = Internal.createUniqueKey(PlanCalendarConfig.PLAN_CALENDAR_CONFIG, DSL.name("plan_calendar_config_pkey"), arrayOf(PlanCalendarConfig.PLAN_CALENDAR_CONFIG.ID), true)
 val PLAN_DETAIL_PKEY: UniqueKey<PlanDetailRecord> = Internal.createUniqueKey(PlanDetail.PLAN_DETAIL, DSL.name("plan_detail_pkey"), arrayOf(PlanDetail.PLAN_DETAIL.ID), true)
 val PLAN_DETAIL_TEMP_PKEY: UniqueKey<PlanDetailTempRecord> = Internal.createUniqueKey(PlanDetailTemp.PLAN_DETAIL_TEMP, DSL.name("plan_detail_temp_pkey"), arrayOf(PlanDetailTemp.PLAN_DETAIL_TEMP.ID), true)
 val PLAN_PROCESS_PKEY: UniqueKey<PlanProcessRecord> = Internal.createUniqueKey(PlanProcess.PLAN_PROCESS, DSL.name("plan_process_pkey"), arrayOf(PlanProcess.PLAN_PROCESS.ID), true)

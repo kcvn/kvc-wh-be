@@ -208,7 +208,7 @@ class ExternalQualityReportService(
 
     fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{
         val data = inventoryProducts.filter { x-> x.productName == productName }
-        if(data.isEmpty()) throw BusinessException(CommonUtils.getMessage("check.inventoryProduct",arrayOf(productName as Any)))
+//        if(data.isEmpty()) throw BusinessException(CommonUtils.getMessage("check.inventoryProduct",arrayOf(productName as Any)))
         return data.sumOf { x -> x.productQuantity!! }
     }
 

@@ -321,7 +321,8 @@ class ExternalQualityReportService(
         val plannedTapeSet = ExternalQualityDetailModel("PLANNED_TAPE_SET", ExternalReportDetailType.PLANNED_TAPE_SET, externalQualityReportModel.goodQualityTapeInventorySet)
         val plannedTapeSetCalendars: MutableList<KeyValueResponse> = mutableListOf()
         subColumns.forEach{ x ->
-            val tape = updateTape.filter{ tape -> tape.responseDate?.let { DateTimeHelper.toString(it.plusDays(10), DateTimeFormat.yyyyMMdd) } == x.key }
+            val tape = updateTape.filter{ tape -> tape.responseDate?.let { DateTimeHelper.toTimeZone7((it.plusDays(10)))
+                ?.let { it1 -> DateTimeHelper.toString(it1, DateTimeFormat.yyyyMMdd) } } == x.key }
             if(tape.isNotEmpty()){
                 plannedTapeSetCalendars.add(KeyValueResponse(x.key, tape.sumOf { it.deliveryQuantity ?: 0 }.toString()))
             }else{

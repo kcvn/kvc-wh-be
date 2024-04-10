@@ -473,20 +473,19 @@ class QuantityReportService(
         return data
     }
 
+    fun setCellHeaderStyle(style: CellStyle){
+        style.alignment = HorizontalAlignment.CENTER
+        style.borderTop = style.borderTop
+        style.borderLeft = BorderStyle.THIN
+        style.borderRight = BorderStyle.THIN
+        style.borderBottom = style.borderBottom
+        style.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+        style.fillPattern = FillPatternType.SOLID_FOREGROUND
+    }
 
     fun setCellHeader(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?) {
         row.createCell(colIndex).setCellValue(value)
-        val cellStyle = workbook.createCellStyle()
-        cellStyle.cloneStyleFrom(style)
-        cellStyle.alignment = HorizontalAlignment.CENTER
-        cellStyle.borderTop = style.borderTop
-        cellStyle.borderLeft = style.borderLeft
-        cellStyle.borderRight = style.borderRight
-        cellStyle.borderBottom = style.borderBottom
-
-        cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
-        cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-        row.rowStyle = cellStyle
+        row.rowStyle = style
     }
 
     private fun generateExcelRowPlan(
@@ -505,7 +504,7 @@ class QuantityReportService(
         var colIndex = 2
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value
-            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value)
+            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value,isAlignCenter = true)
             colIndex++
         }
         rowIndex++
@@ -521,6 +520,7 @@ class QuantityReportService(
         val headerRow = sheet.getRow(0)
         var headerCol = 2
         val headerStyle = headerRow.getCell(0).cellStyle
+        setCellHeaderStyle(headerStyle)
         val columns = dataExport.columns
         if (dataExport.data != null){
             if (columns != null) {

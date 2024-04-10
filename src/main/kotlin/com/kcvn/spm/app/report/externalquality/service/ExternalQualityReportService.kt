@@ -22,6 +22,7 @@ import com.kcvn.spm.model.tables.pojos.UpdateTape
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -29,6 +30,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.time.OffsetDateTime
+
 
 @Service
 @Transactional
@@ -150,14 +152,17 @@ class ExternalQualityReportService(
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         response.columns = DateTimeHelper.toCalendarColumn(startDate!!, endDate!!, holidayCalenders)
         val daysToSubtract: Long = 10
-        response.subColumns = DateTimeHelper.toCalendarColumn(startDate, endDate, holidayCalenders, daysToSubtract)
 
+        val subColumns = DateTimeHelper.toCalendarColumn(startDate, endDate, holidayCalenders, daysToSubtract)
+        response.subColumns = subColumns
         val orderSearchRequest = OrderSearchRequest()
         orderSearchRequest.endDate = request.endDate
         orderSearchRequest.startDate = request.startDate
         orderSearchRequest.productName = request.productName
         orderSearchRequest.version = OrderVersion.LATEST
-        val order = orderSer.getPaginatedOrder(orderSearchRequest,pageable)
+
+        val pageableOrder: Pageable = PageRequest.of(PagingDefault.PAGE, PagingDefault.EXPORT_SIZE)
+        val order = orderSer.getPaginatedOrder(orderSearchRequest,pageableOrder)
         val listProductOrder = order.data
 
         val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())
@@ -177,7 +182,7 @@ class ExternalQualityReportService(
         val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames,endDate)
         //add Details Data here
         for(mappingItem in mappingPaging){
-            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails)
+            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails, subColumns)
         }
         val valueReportDate= request.endDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) }
         //add Shipping Data here
@@ -237,7 +242,8 @@ class ExternalQualityReportService(
                                         columns:  List<CalendarResponse>,
                                         listWorkResult: List<WorkResult>?,
                                         updateTapes:List<UpdateTape>,
-                                        inventoryProducts:  List<InventoryProductResponse>){
+                                        inventoryProducts:  List<InventoryProductResponse>,
+                                        subColumns: List<CalendarResponse>){
 
         //common data
         val detailData : MutableList<ExternalQualityDetailModel> = mutableListOf()
@@ -312,8 +318,8 @@ class ExternalQualityReportService(
         //PLANNED_TAPE_SET
         val plannedTapeSet = ExternalQualityDetailModel("PLANNED_TAPE_SET", ExternalReportDetailType.PLANNED_TAPE_SET, externalQualityReportModel.goodQualityTapeInventorySet)
         val plannedTapeSetCalendars: MutableList<KeyValueResponse> = mutableListOf()
-        columns.forEach{ x ->
-            val tape = updateTape.filter{ tape -> tape.responseDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) } == x.key }
+        subColumns.forEach{ x ->
+            val tape = updateTape.filter{ tape -> tape.responseDate?.let { DateTimeHelper.toString(it.plusDays(10), DateTimeFormat.yyyyMMdd) } == x.key }
             if(tape.isNotEmpty()){
                 plannedTapeSetCalendars.add(KeyValueResponse(x.key, tape.sumOf { it.deliveryQuantity ?: 0 }.toString()))
             }else{

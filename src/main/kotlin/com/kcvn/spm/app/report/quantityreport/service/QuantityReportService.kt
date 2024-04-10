@@ -480,8 +480,8 @@ class QuantityReportService(
         cellStyle.cloneStyleFrom(style)
         cellStyle.alignment = HorizontalAlignment.CENTER
         cellStyle.borderTop = style.borderTop
-        cellStyle.borderLeft = style.borderLeft
-        cellStyle.borderRight = style.borderRight
+        cellStyle.borderLeft = BorderStyle.THIN
+        cellStyle.borderRight = BorderStyle.THIN
         cellStyle.borderBottom = style.borderBottom
 
         cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index

@@ -22,6 +22,7 @@ import com.kcvn.spm.model.tables.pojos.UpdateTape
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -29,6 +30,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.time.OffsetDateTime
+
 
 @Service
 @Transactional
@@ -157,7 +159,9 @@ class ExternalQualityReportService(
         orderSearchRequest.startDate = request.startDate
         orderSearchRequest.productName = request.productName
         orderSearchRequest.version = OrderVersion.LATEST
-        val order = orderSer.getPaginatedOrder(orderSearchRequest,pageable)
+
+        val pageableOrder: Pageable = PageRequest.of(PagingDefault.PAGE, PagingDefault.EXPORT_SIZE)
+        val order = orderSer.getPaginatedOrder(orderSearchRequest,pageableOrder)
         val listProductOrder = order.data
 
         val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())

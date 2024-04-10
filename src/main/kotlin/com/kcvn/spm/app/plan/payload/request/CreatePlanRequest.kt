@@ -4,5 +4,6 @@ import java.time.OffsetDateTime
 
 data class CreatePlanRequest (
     var startDate: OffsetDateTime? = null,
-    var endDate: OffsetDateTime? = null
+    var endDate: OffsetDateTime? = null,
+    var description: String? = null
 )

@@ -16,7 +16,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row12
+import org.jooq.Row14
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -122,6 +122,16 @@ open class PlanTemp(
      */
     val IS_DELETED: TableField<PlanTempRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.plan_temp.month</code>.
+     */
+    val MONTH: TableField<PlanTempRecord, Int?> = createField(DSL.name("month"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+
+    /**
+     * The column <code>public.plan_temp.year</code>.
+     */
+    val YEAR: TableField<PlanTempRecord, Int?> = createField(DSL.name("year"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+
     private constructor(alias: Name, aliased: Table<PlanTempRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<PlanTempRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -163,18 +173,18 @@ open class PlanTemp(
     override fun rename(name: Table<*>): PlanTemp = PlanTemp(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row12 type methods
+    // Row14 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row12<String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row12<String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row14<String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Int?, Int?> = super.fieldsRow() as Row14<String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Int?, Int?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Int?, Int?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, OffsetDateTime?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Int?, Int?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

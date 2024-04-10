@@ -27,6 +27,7 @@ import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
 import com.kcvn.spm.model.tables.OrderVersionDropdown
 import com.kcvn.spm.model.tables.Plan
+import com.kcvn.spm.model.tables.PlanCalendarConfig
 import com.kcvn.spm.model.tables.PlanDetail
 import com.kcvn.spm.model.tables.PlanDetailTemp
 import com.kcvn.spm.model.tables.PlanProcess
@@ -162,6 +163,11 @@ val ORDER_VERSION_DROPDOWN: OrderVersionDropdown = OrderVersionDropdown.ORDER_VE
  * The table <code>public.plan</code>.
  */
 val PLAN: Plan = Plan.PLAN
+
+/**
+ * The table <code>public.plan_calendar_config</code>.
+ */
+val PLAN_CALENDAR_CONFIG: PlanCalendarConfig = PlanCalendarConfig.PLAN_CALENDAR_CONFIG
 
 /**
  * The table <code>public.plan_detail</code>.

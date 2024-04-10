@@ -18,10 +18,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
-import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
-import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
-import com.kcvn.spm.model.tables.pojos.OrderInfo
+import com.kcvn.spm.model.tables.pojos.*
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -48,6 +45,7 @@ class QuantityReportService(
     private val calculateQuantityReportRep: CalculateQuantityReportRepository,
     private val quantityReportRep: QuantityReportRepository,
     private val processGroupRep: ProcessGroupRepository,
+    private val appSettingRepository: AppSettingRepository
 ) {
     fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<FileContentModel?> {
         val calculateQuantityReport = calculateQuantityReportRep.findByMonthReport(request)
@@ -122,6 +120,12 @@ class QuantityReportService(
                 //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
                 val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.dayOfMonth
                 val dayReport = request.endDate?.plusHours(7)?.dayOfMonth
+                val checkLog = AppSetting(
+                    key = "CHECK_LOG",
+                    value = "${dayQueryTapeNext!! - dayReport!!}",
+                    description = "dayQueryTapeNext: ${dayQueryTapeNext} dayReport : + ${dayReport}"
+                )
+                appSettingRepository.add(checkLog)
                 if(dayQueryTapeNext!! - dayReport!! != 1){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }

@@ -18,4 +18,13 @@ class AppSettingRepository(private val context: DSLContext) {
             .fetchInto(AppSetting::class.java)
             .firstOrNull()
     }
+
+    fun add(appSetting: AppSetting): AppSetting {
+        context.insertInto(APP_SETTING)
+            .set(APP_SETTING.KEY, appSetting.key)
+            .set(APP_SETTING.VALUE, appSetting.value)
+            .set(APP_SETTING.DESCRIPTION, appSetting.description)
+            .execute()
+        return appSetting
+    }
 }

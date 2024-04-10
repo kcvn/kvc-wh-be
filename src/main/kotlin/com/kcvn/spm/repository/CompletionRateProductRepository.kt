@@ -3,6 +3,7 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
+import com.kcvn.spm.model.tables.pojos.OrderInfo
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PRODUCT
 import org.jooq.Condition
@@ -187,5 +188,17 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             .where(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.eq(productName)
                 .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
             .fetchInto(CompletionRateProduct::class.java)
+    }
+
+    fun getNonExistentProductsInDB(productNames: List<OrderInfo?>, startDate: OffsetDateTime?): List<OrderInfo?> {
+        // Lấy danh sách tên sản phẩm từ cơ sở dữ liệu
+        val dbProductNames = context.select(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)
+            .from(COMPLETION_RATE_PRODUCT)
+            .where(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)
+                .and(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.ge(startDate)))
+            .fetchInto(String::class.java)
+
+        // Trả về danh sách tên sản phẩm có trong productNames nhưng không có trong cơ sở dữ liệu
+        return productNames.filterNotNull().filter { it.productName !in dbProductNames }
     }
 }

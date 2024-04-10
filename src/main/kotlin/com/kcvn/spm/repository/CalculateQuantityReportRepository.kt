@@ -49,8 +49,8 @@ class CalculateQuantityReportRepository(
     fun findByMonthReport(request: CalculateQuantityRequest): CalculateQuantityResult? {
         return context.selectFrom(CALCULATE_QUANTITY_RESULT)
             .where(
-                CALCULATE_QUANTITY_RESULT.START_DATE.ge(request.startDate)
-                    .and(CALCULATE_QUANTITY_RESULT.END_DATE.le(request.endDate))
+                CALCULATE_QUANTITY_RESULT.MONTH_NUMBER.eq(request.monthReport)
+                    .and(CALCULATE_QUANTITY_RESULT.YEAR_NUMBER.eq(request.yearReport))
                     .and(CALCULATE_QUANTITY_RESULT.IS_DELETED.eq(false))
             )
             .fetchOneInto(CalculateQuantityResult::class.java)
@@ -69,7 +69,7 @@ class CalculateQuantityReportRepository(
     fun getPagingListCalculateQuantityResult(pageable: Pageable): Pair<List<CalculateQuantityResult>, Int> {
         val data = context.selectFrom(CALCULATE_QUANTITY_RESULT)
             .where(CALCULATE_QUANTITY_RESULT.IS_DELETED.eq(false))
-            .orderBy(getSortFields(pageable.sort, CALCULATE_QUANTITY_RESULT.MONTH_REPORT))
+            .orderBy(getSortFields(pageable.sort, CALCULATE_QUANTITY_RESULT.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(CalculateQuantityResult::class.java)
 
@@ -80,8 +80,12 @@ class CalculateQuantityReportRepository(
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val sortField: TableField<*, *> = when (sortFieldName) {
-            "monthReport" -> {
-                CALCULATE_QUANTITY_RESULT.MONTH_REPORT
+            "monthNumber" -> {
+                CALCULATE_QUANTITY_RESULT.MONTH_NUMBER
+            }
+
+            "yearNumber" -> {
+                CALCULATE_QUANTITY_RESULT.YEAR_NUMBER
             }
 
             else -> {
@@ -110,6 +114,8 @@ class CalculateQuantityReportRepository(
                 CALCULATE_QUANTITY_RESULT.CALCULATE_DATE,
                 CALCULATE_QUANTITY_RESULT.UPDATED_DATE,
                 CALCULATE_QUANTITY_RESULT.UPDATED_BY,
+                CALCULATE_QUANTITY_RESULT.MONTH_NUMBER,
+                CALCULATE_QUANTITY_RESULT.YEAR_NUMBER
             ).values(
                 quantityResult.monthReport,
                 quantityResult.startDate,
@@ -119,6 +125,8 @@ class CalculateQuantityReportRepository(
                 quantityResult.calculateDate,
                 quantityResult.updatedDate,
                 quantityResult.updatedBy,
+                quantityResult.monthNumber,
+                quantityResult.yearNumber
             ).returningResult(CALCULATE_QUANTITY_RESULT).fetchAnyInto(CalculateQuantityResult::class.java)
 
             if (quantityResultInsert != null) {
@@ -132,7 +140,9 @@ class CalculateQuantityReportRepository(
                         INFORMATION_CALCULATE_QUANTITY.CREATED_BY,
                         INFORMATION_CALCULATE_QUANTITY.UPDATED_BY,
                         INFORMATION_CALCULATE_QUANTITY.UPDATED_DATE,
-                        INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID
+                        INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID,
+                        INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER,
+                        INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER
                     ).values(
                         informationQuantity.monthReport,
                         informationQuantity.productName,
@@ -141,13 +151,16 @@ class CalculateQuantityReportRepository(
                         informationQuantity.createdBy,
                         informationQuantity.updatedBy,
                         informationQuantity.updatedDate,
-                        quantityResultInsert.id
+                        quantityResultInsert.id,
+                        informationQuantity.monthNumber,
+                        informationQuantity.yearNumber
                     ).returningResult(INFORMATION_CALCULATE_QUANTITY)
                         .fetchAnyInto(InformationCalculateQuantity::class.java)
 
                     if (informationCalculateQuantityInsert != null) {
                         for (informationCalculateQuantityDetail in listInformationCalculateQuantityDetails) {
-                            if (informationCalculateQuantityDetail.monthReport == informationCalculateQuantityInsert.monthReport
+                            if (informationCalculateQuantityDetail.monthNumber == informationCalculateQuantityInsert.monthNumber
+                                && informationCalculateQuantityDetail.yearNumber == informationCalculateQuantityInsert.yearNumber
                                 && informationCalculateQuantityDetail.productName == informationCalculateQuantityInsert.productName
                                 && informationCalculateQuantityDetail.processStatisticCode == informationCalculateQuantityInsert.processStatistic
                             ) {
@@ -163,7 +176,9 @@ class CalculateQuantityReportRepository(
                                     INFORMATION_CALCULATE_QUANTITY_DETAIL.BLOCK_SH,
                                     INFORMATION_CALCULATE_QUANTITY_DETAIL.CREATED_BY,
                                     INFORMATION_CALCULATE_QUANTITY_DETAIL.QUANTITY_PROCESS_STATISTIC,
-                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.MONTH_NUMBER,
+                                    INFORMATION_CALCULATE_QUANTITY_DETAIL.YEAR_NUMBER
                                 ).values(
                                     informationCalculateQuantityDetail.monthReport,
                                     informationCalculateQuantityDetail.productName,
@@ -175,7 +190,9 @@ class CalculateQuantityReportRepository(
                                     informationCalculateQuantityDetail.blockSh,
                                     informationCalculateQuantityDetail.createdBy,
                                     informationCalculateQuantityDetail.quantityProcessStatistic,
-                                    informationCalculateQuantityInsert.id
+                                    informationCalculateQuantityInsert.id,
+                                    informationCalculateQuantityInsert.monthNumber,
+                                    informationCalculateQuantityInsert.yearNumber
                                 ).returningResult(INFORMATION_CALCULATE_QUANTITY_DETAIL)
                                     .fetchAnyInto(InformationCalculateQuantityDetail::class.java)
                             }
@@ -232,4 +249,6 @@ class CalculateQuantityReportRepository(
             )
             .fetchOneInto(CalculateQuantityResult::class.java)
     }
+
+
 }

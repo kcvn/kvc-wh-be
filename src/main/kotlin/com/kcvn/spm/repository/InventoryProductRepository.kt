@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
+import com.kcvn.spm.common.constants.ProcessCode
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
@@ -33,6 +34,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             condition =condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.cast(LocalDate::class.java).eq(date.toLocalDate()))
         }
         condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(products))
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(ProcessCode.KTTN))
 
         val data = context.select(
             INVENTORY_PRODUCT.INVENTORY_DATE.`as`("inventoryDate"),

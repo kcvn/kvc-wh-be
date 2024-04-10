@@ -57,7 +57,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             ORDER_INFO.LAYER_COUNT.`as`("layerCount"),
             PRODUCT.TAPE_COMMON.`as`("tapeCommon"),
             PRODUCT.PRODUCT_LINE.`as`("productLine"),
-        ).from(ORDER_INFO)
+            PRODUCT.EXPORT_TYPE.`as`("exportTypeConvert"),
+            ).from(ORDER_INFO)
             .join(PRODUCT)
             .on(ORDER_INFO.PRODUCT_NAME.eq(PRODUCT.NAME).and(PRODUCT.IS_DELETED.eq(false)))
             .where(condition)

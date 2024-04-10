@@ -18,9 +18,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
-import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
-import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
+import com.kcvn.spm.model.tables.pojos.*
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -39,8 +37,7 @@ import kotlin.math.round
 @Service
 @Transactional
 class QuantityReportService(
-    private val orderRep: OrderRepository,
-    private val orderDetailRep: OrderDetailRepository,
+    private val completionRateProductRepository: CompletionRateProductRepository,
     private val orderInfoRep : OrderInfoRepository,
     private val productRep: ProductRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
@@ -48,11 +45,12 @@ class QuantityReportService(
     private val calculateQuantityReportRep: CalculateQuantityReportRepository,
     private val quantityReportRep: QuantityReportRepository,
     private val processGroupRep: ProcessGroupRepository,
+    private val appSettingRepository: AppSettingRepository
 ) {
-    fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<Boolean> {
+    fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<FileContentModel?> {
         val calculateQuantityReport = calculateQuantityReportRep.findByMonthReport(request)
         return if (calculateQuantityReport != null && calculateQuantityReport.status == true) {
-            BaseResponse(data = false, message = CommonUtils.getMessage("calculated.locked.error"))
+            BaseResponse(data = null, message = CommonUtils.getMessage("calculated.locked.error"))
         } else {
             // Validate ngày yêu cầu đơn hàng với tháng báo cáo
 
@@ -122,6 +120,12 @@ class QuantityReportService(
                 //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
                 val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.dayOfMonth
                 val dayReport = request.endDate?.plusHours(7)?.dayOfMonth
+                val checkLog = AppSetting(
+                    key = "CHECK_LOG",
+                    value = "${dayQueryTapeNext!! - dayReport!!}",
+                    description = "dayQueryTapeNext: ${dayQueryTapeNext} dayReport : + ${dayReport}"
+                )
+                appSettingRepository.add(checkLog)
                 if(dayQueryTapeNext!! - dayReport!! != 1){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
@@ -143,6 +147,12 @@ class QuantityReportService(
             val orderDetails = orderInfoRep.getOrderInfoByTimeRange(request.startDate, request.endDate)
 
             val productNames = orderDetails.map { x -> x.productName }.distinct()
+            val dataNonExistentProductsInDB
+                    = completionRateProductRepository.getNonExistentProductsInDB(orderDetails, request.startDate)
+            if(dataNonExistentProductsInDB.isNotEmpty()){
+                val dataErr = exportExcelErr(dataNonExistentProductsInDB)
+                return BaseResponse(data = dataErr, message = CommonUtils.getMessage("validate.quantityReportErr"))
+            }
             val productsWithRate = productRep.getProductDetailWithCompletionRateByNames(productNames)
             //val productNames = productsWithRate.mapNotNull { x -> x?.name }.distinct()
             val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
@@ -166,18 +176,6 @@ class QuantityReportService(
                 )
             }
 
-//            val listOrder = orderRep.getOrderById(listIdOrderVersionMaxDistinct)
-//            val listOrderGroupedByOrderCode = listOrder.groupBy { x -> x.orderCode }
-//            val listOrderWithHighestVersion =
-//                listOrderGroupedByOrderCode.mapValues { (_, value) -> value.maxByOrNull { it.version ?: 0 } }.map { x ->
-//                    Order(
-//                        id = x.value?.id,
-//                        orderCode = x.value?.orderCode,
-//                        startDate = x.value?.startDate,
-//                        endDate = x.value?.endDate,
-//                        version = x.value?.version,
-//                    )
-//                }
 
             val listOrderDetailCalculate = orderDetails.map { x ->
                 //val ord = listOrderWithHighestVersion.find { m -> m.id == x.orderId }
@@ -253,6 +251,8 @@ class QuantityReportService(
                         round(((x.processCount!! * x.quantityBlock!!) / (x.blockSh!!.times(x.completionRate.toDouble()) / 100))).toInt()
                     },
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                    monthNumber = request.monthReport,
+                    yearNumber = request.yearReport,
                 )
             }
 
@@ -270,18 +270,16 @@ class QuantityReportService(
                     processStatistic = key.processStatisticCode,
                     totalQuantityOfProcess = items.sumOf { it.quantityProcessStatistic!! },
                     createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                    monthNumber = request.monthReport,
+                    yearNumber = request.yearReport,
                 )
             }
 
 
-            println(listOrderDetailError)
-            println(listInformationQuantity)
-            println(listInformationCalculateQuantityDetails)
-
             val quantityResult = CalculateQuantityResult(
                 monthReport = request.startDate,
                 orderDateFromTo = "${
-                    request.startDate?.let {
+                    request.startDate?.plusHours(7)?.let {
                         DateTimeHelper.toString(
                             it,
                             DateTimeFormat.dd_MM_yyyy
@@ -309,7 +307,7 @@ class QuantityReportService(
                 listInformationCalculateQuantityDetails
             )
 
-            BaseResponse(data = true, message = CommonUtils.getMessage("calculated.success"))
+            BaseResponse(data = null, message = CommonUtils.getMessage("calculated.success"))
         }
     }
 
@@ -343,7 +341,9 @@ class QuantityReportService(
                 calculateBy = x.calculateBy,
                 calculateDate = x.calculateDate,
                 lockedBy = x.lockedBy,
-                lockedDate = x.lockedDate
+                lockedDate = x.lockedDate,
+                monthNumber = x.monthNumber,
+                yearNumber = x.yearNumber
             )
         }
         return response
@@ -363,22 +363,18 @@ class QuantityReportService(
         val group = data.groupBy {
             ProductOrderDateKeyModel(
                 it.productName,
-                it.monthReport
+                it.monthNumber,
+                it.yearNumber
             )
         }
 
         val listQuantityReportModel = group.map { x ->
             QuantityReportModel(
                 x.key.productName,
-                x.key.orderDate.let {
-                    it?.let { it1 ->
-                        DateTimeHelper.toString(
-                            it1,
-                            DateTimeFormat.MM_yyyy
-                        )
-                    }
-                },
-                x.value.map { m -> KeyValueResponse(m.processStatistic, m.totalQuantityOfProcess.toString()) })
+                x.key.monthNumber,
+                x.key.yearNumber,
+                x.value.map { m -> KeyValueResponse(m.processStatistic, m.totalQuantityOfProcess.toString()) }.toMutableList()
+            )
         }
 
         val productNames = listQuantityReportModel.mapNotNull { x -> x.productName }.distinct()
@@ -428,6 +424,36 @@ class QuantityReportService(
         }
 
         val response = PagingQuantityReportResponse()
+        listQuantityReportModel.forEach { x ->
+            run {
+                val inlo = ((x.lstProcess.find { m -> m.key == ProcessStatisticCode.HP_TAN }?.value?.toInt() ?: 0 ) +
+                        (x.lstProcess.find { m -> m.key == ProcessStatisticCode.HP_ALL }?.value?.toInt() ?: 0)).toString()
+                val rsInlo = KeyValueResponse(
+                    key = ProcessStatisticCode.IN_LO,
+                    value = inlo,
+                )
+                x.lstProcess.add(rsInlo)
+
+                val inmach = ((x.lstProcess.find { m -> m.key == ProcessStatisticCode.TAN }?.value?.toInt() ?: 0 ) +
+                        (x.lstProcess.find { m -> m.key == ProcessStatisticCode.ZEN }?.value?.toInt() ?: 0)).toString()
+                val rsInmach = KeyValueResponse(
+                    key = ProcessStatisticCode.IN_MACH,
+                    value = inmach,
+                )
+                x.lstProcess.add(rsInmach)
+
+                val gheplop = ((x.lstProcess.find { m -> m.key == ProcessStatisticCode.M_TAN }?.value?.toInt() ?: 0 ) +
+                        (x.lstProcess.find { m -> m.key == ProcessStatisticCode.M_ALL }?.value?.toInt() ?: 0)).toString()
+                val rsGheplop = KeyValueResponse(
+                    key = ProcessStatisticCode.GHEP_LOP,
+                    value = gheplop,
+                )
+                x.lstProcess.add(rsGheplop)
+            }
+        }
+
+
+
         response.data = listQuantityReportModel
         response.columns = columns.sortedBy { x -> x.sort }.distinct().toList()
         response.totalRecords = listQuantityReportModel.count()
@@ -438,6 +464,9 @@ class QuantityReportService(
         val data = CheckCalculateQuantityResponse()
         val query = calculateQuantityReportRep.findByMonthReport(request)
         if(query != null){
+            if(query.status == true){
+                throw BusinessException(CommonUtils.getMessage("calculated.locked.error"))
+            }
             data.hasCalculateQuantity = true
             return data
         }
@@ -472,7 +501,8 @@ class QuantityReportService(
 
         val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
         ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, data.productName,isBold = true,isAlignCenter = true)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.monthReport,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.monthNumber.toString(),isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 3, style, data.yearNumber.toString(),isBold = true,isAlignCenter = true)
         var colIndex = 3
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value
@@ -520,5 +550,55 @@ class QuantityReportService(
         )
         workbook.close()
         return BaseResponse(response)
+    }
+
+    fun exportExcelErr(productNames: List<OrderInfo?>) : FileContentModel{
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportRateCalculateQuantityErr.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        // Tạo một CellStyle mới
+        val redFontStyle = workbook.createCellStyle()
+
+        // Tạo một Font mới
+        val redFont = workbook.createFont()
+
+        // Đặt màu chữ là đỏ
+        redFont.setColor(IndexedColors.RED.getIndex())
+        redFont.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+        redFont.fontHeightInPoints = 12.toShort()
+        // Đặt font cho CellStyle
+        redFontStyle.setFont(redFont)
+        redFontStyle.borderBottom = BorderStyle.THIN
+        redFontStyle.borderTop = BorderStyle.THIN
+        redFontStyle.borderRight = BorderStyle.THIN
+        redFontStyle.borderLeft = BorderStyle.THIN
+        redFontStyle.wrapText = true
+        redFontStyle.verticalAlignment = VerticalAlignment.CENTER
+
+        var rowNumber = 1
+        for (item in productNames) {
+            val dataRow: Row = sheet.createRow(rowNumber++)
+            ExcelHelper.setCellValue(dataRow, 0, style, item?.productName)
+            ExcelHelper.setCellValue(dataRow, 1, redFontStyle, CommonUtils.getMessage("validate.rateQuantityReport", arrayOf(
+                item?.orderDate?.plusHours(7)!!.format(DateTimeFormatter.ofPattern("yyyy_MM_dd")))))
+        }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportRateQuantityReportErr", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return response
     }
 }

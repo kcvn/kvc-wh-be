@@ -32,21 +32,22 @@ class QuantityReportRepository(
             if (request.endDate != null) {
                 condition = condition.and(INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.le(request.endDate))
             }
+
         }
 
-        val sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()
-        val sortProductName = pageable.sort.find { x -> x.property == "productName" }
-        if (sortProductName != null){
-                sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.desc())
-        }
-        val sortMonthReport = pageable.sort.find { x -> x.property == "monthReport" }
-        if (sortMonthReport!=null){
-            sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.asc())
-        }
+//        val sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()
+//        val sortProductName = pageable.sort.find { x -> x.property == "productName" }
+//        if (sortProductName != null){
+//                sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.desc())
+//        }
+//        val sortMonthReport = pageable.sort.find { x -> x.property == "monthReport" }
+//        if (sortMonthReport!=null){
+//            sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.asc())
+//        }
 
         val data = context.selectFrom(INFORMATION_CALCULATE_QUANTITY)
             .where(condition.and(INFORMATION_CALCULATE_QUANTITY.IS_DELETED.eq(false)))
-            .orderBy(sortFields)
+            .orderBy(getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.CREATED_DATE))
 
             .fetchInto(InformationCalculateQuantity::class.java)
 
@@ -60,8 +61,11 @@ class QuantityReportRepository(
             "productName" -> {
                 INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME
             }
-            "monthReport" -> {
-                INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT
+            "monthNumber" -> {
+                INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER
+            }
+            "yearNumber" -> {
+                INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER
             }
 
             else -> {

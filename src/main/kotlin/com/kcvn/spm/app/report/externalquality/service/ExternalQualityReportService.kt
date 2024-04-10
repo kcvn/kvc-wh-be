@@ -127,7 +127,7 @@ class ExternalQualityReportService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.exportReportExternalQuality",
-                        arrayOf(request.startDate?.toLocalDate().toString(),request.endDate?.toLocalDate().toString())),
+                        arrayOf((DateTimeHelper.toTimeZone7(request.startDate))?.toLocalDate().toString(),(DateTimeHelper.toTimeZone7(request.endDate))?.toLocalDate().toString())),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )

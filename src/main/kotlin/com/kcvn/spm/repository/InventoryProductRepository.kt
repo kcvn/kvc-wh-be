@@ -34,7 +34,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             condition =condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.cast(LocalDate::class.java).eq(date.toLocalDate()))
         }
         condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(products))
-        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(ProcessCode.KTTN))
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(ProcessCode.INS))
 
         val data = context.select(
             INVENTORY_PRODUCT.INVENTORY_DATE.`as`("inventoryDate"),
@@ -187,6 +187,26 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
         val total = context.fetchOne(totalData)?.value1()
         return  Pair(data, total)
+    }
+
+    fun getByProductName(productNames: List<String>, date: OffsetDateTime?): List<InventoryProductResponse> {
+        val data = context.select(
+            INVENTORY_PRODUCT.INVENTORY_DATE,
+            INVENTORY_PRODUCT.PRODUCT_QUANTITY,
+            INVENTORY_PRODUCT.SHEET_QUANTITY,
+            INVENTORY_PRODUCT.ORDER_CODE,
+            INVENTORY_PRODUCT.TAPE_LOT_NO,
+            PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
+            PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
+            PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
+        ).from(INVENTORY_PRODUCT)
+            .join(PROCESS_PROCEDURE_STRUCTURE).on(
+                INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+            ).where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date).and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(InventoryProductResponse::class.java)
+
+        return data
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

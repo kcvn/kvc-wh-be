@@ -125,7 +125,7 @@ class QuantityReportService(
                 val appSetting = AppSetting(
                     key = "QUANTITY_REPORT",
                     value = "${ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport)}",
-                    description = "dayQueryTapeNext : ${dayQueryTapeNext} --- dayReport : ${dayReport}
+                    description = "dayQueryTapeNext : ${dayQueryTapeNext} --- dayReport : ${dayReport}"
                 )
                 appSettingRepository.add(appSetting)
                 if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L || ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L){

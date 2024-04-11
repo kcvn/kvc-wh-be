@@ -47,7 +47,6 @@ class QuantityReportService(
     private val calculateQuantityReportRep: CalculateQuantityReportRepository,
     private val quantityReportRep: QuantityReportRepository,
     private val processGroupRep: ProcessGroupRepository,
-    private val appSettingRep: AppSettingRepository
 
 ) {
     fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<FileContentModel?> {
@@ -110,16 +109,10 @@ class QuantityReportService(
             val queryCalculateQuantityReportPre = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthPre,yearPre)
             if(queryCalculateQuantityReportPre != null){
                 //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
-                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.toLocalDateTime()
-                val dayReport = request.startDate?.toLocalDateTime()
+                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.toLocalDate()
+                val dayReport = request.startDate?.toLocalDate()
 
                 if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L) || (ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != -1L)){
-                    val test = AppSetting(
-                        key = "test",
-                        value = "test",
-                        description = "dayQueryTapePre : ${dayQueryTapePre} - dayReport : ${dayReport}",
-                    )
-                    appSettingRep.add(test)
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }
@@ -127,15 +120,9 @@ class QuantityReportService(
 
             val queryCalculateQuantityReportNext = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthNext,yearNext)
             if(queryCalculateQuantityReportNext != null){
-                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.toLocalDateTime()
-                val dayReport = request.endDate?.toLocalDateTime()
+                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.toLocalDate()
+                val dayReport = request.endDate?.toLocalDate()
                 if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L || ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L){
-                    val test = AppSetting(
-                        key = "test",
-                        value = "test",
-                        description = "dayQueryTapeNext : ${dayQueryTapeNext} - dayReport : ${dayReport}",
-                    )
-                    appSettingRep.add(test)
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }
@@ -506,7 +493,7 @@ class QuantityReportService(
         var colIndex = 2
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value
-            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value,isAlignCenter = true)
+            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value,isAlignCenter = true, isNumberFormat = true)
             colIndex++
         }
         rowIndex++

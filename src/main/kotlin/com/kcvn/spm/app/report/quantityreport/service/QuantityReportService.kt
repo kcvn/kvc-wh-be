@@ -33,6 +33,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.absoluteValue
 import kotlin.math.round
 
 
@@ -112,7 +113,7 @@ class QuantityReportService(
                 val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.toLocalDate()
                 val dayReport = request.startDate?.toLocalDate()
 
-                if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L) || (ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != -1L)){
+                if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre).absoluteValue != 1L)){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }
@@ -122,7 +123,7 @@ class QuantityReportService(
             if(queryCalculateQuantityReportNext != null){
                 val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.toLocalDate()
                 val dayReport = request.endDate?.toLocalDate()
-                if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L || ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L){
+                if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport).absoluteValue != 1L){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }

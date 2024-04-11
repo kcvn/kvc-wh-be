@@ -30,6 +30,7 @@ import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import kotlin.math.absoluteValue
 import kotlin.math.round
 
 @Service
@@ -117,7 +118,7 @@ class MaterialsService(
             //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
             val dayReport = queryTapePre.requestDateEnd?.toLocalDate()
             val dayQueryTapePre = request.startDate?.toLocalDate()
-            if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L) || (ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != -1L)){
+            if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre).absoluteValue != 1L)){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
         }
@@ -128,7 +129,7 @@ class MaterialsService(
             //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
             val dayReport = queryTapeNext.requestDateStart?.toLocalDate()
             val dayQueryTapeNext = request.endDate?.toLocalDate()
-            if((ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L) || (ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L)){
+            if((ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport).absoluteValue != 1L)){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
         }

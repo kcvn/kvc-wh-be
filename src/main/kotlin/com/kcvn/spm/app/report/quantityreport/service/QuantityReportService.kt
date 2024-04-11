@@ -118,6 +118,7 @@ class QuantityReportService(
                         value = "test",
                         description = "dayQueryTapePre : ${dayQueryTapePre} - dayReport : ${dayReport}",
                     )
+                    appSettingRepository.add(test)
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }

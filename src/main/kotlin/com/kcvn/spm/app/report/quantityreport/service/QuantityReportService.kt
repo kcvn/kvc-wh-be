@@ -494,7 +494,7 @@ class QuantityReportService(
         var colIndex = 2
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value
-            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value,isAlignCenter = true)
+            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value,isAlignCenter = true, isNumberFormat = true)
             colIndex++
         }
         rowIndex++

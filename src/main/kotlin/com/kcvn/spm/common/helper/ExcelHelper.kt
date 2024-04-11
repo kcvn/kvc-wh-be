@@ -86,8 +86,9 @@ class ExcelHelper {
             isBorderBottom: Boolean = true,
             isBold: Boolean = false,
             isAlignCenter: Boolean = false,
-            indexColor: Short? = null
-        ) {
+            indexColor: Short? = null,
+            isNumberFormat: Boolean = false
+            ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
             row.createCell(colIndex).setCellValue(value)
@@ -108,6 +109,12 @@ class ExcelHelper {
                 font.fontHeightInPoints = fontTemplate.fontHeightInPoints
                 font.bold = true
                 style.setFont(font)
+            }
+            if(isNumberFormat){
+                val dataFormat = workbook.createDataFormat()
+                style.dataFormat = dataFormat.getFormat("#,##0")
+                val numberValue = value?.toDouble() ?: 0.0
+                row.createCell(colIndex).setCellValue(numberValue)
             }
             row.getCell(colIndex).cellStyle = style
         }

@@ -113,6 +113,11 @@ class QuantityReportService(
                 val dayReport = request.startDate?.toLocalDateTime()
 
                 if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L) || (ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != -1L)){
+                    val test = AppSetting(
+                        key = "test",
+                        value = "test",
+                        description = "dayQueryTapePre : ${dayQueryTapePre} - dayReport : ${dayReport}",
+                    )
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }

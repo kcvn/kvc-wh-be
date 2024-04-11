@@ -8,6 +8,7 @@ import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Null
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
@@ -195,7 +196,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
         val dbProductNames = context.select(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)
             .from(COMPLETION_RATE_PRODUCT)
             .where(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)
-                .and(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.ge(startDate)))
+                .and(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.le(startDate)))
             .fetchInto(String::class.java)
 
         // Trả về danh sách tên sản phẩm có trong productNames nhưng không có trong cơ sở dữ liệu

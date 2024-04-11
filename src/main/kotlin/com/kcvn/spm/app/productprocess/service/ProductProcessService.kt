@@ -252,7 +252,8 @@ class ProductProcessService(
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.processConvertCode)
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.processStatisticCode)
                 ExcelHelper.setCellValue(dataRow, 7, style, item?.processInventoryCode)
-                ExcelHelper.setCellValue(dataRow, 8, style, item?.dayOfImplementation)
+                ExcelHelper.setCellValue(dataRow, 8, style, item?.inventoryLayerGroup)
+                ExcelHelper.setCellValue(dataRow, 9, style, item?.dayOfImplementation)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

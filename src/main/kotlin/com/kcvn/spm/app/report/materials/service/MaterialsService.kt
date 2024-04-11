@@ -193,6 +193,8 @@ class MaterialsService(
                         CommonUtils.getMessage(
                             "validate.importTape.completionRateProduct1"))
                 }else {
+
+
                     if(checkCompletionRate.effectiveDate!! > request.startDate){
                         check = false
                         messageErr.listMessageErr.add(

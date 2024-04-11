@@ -152,6 +152,7 @@ class QuantityReportService(
             }
             val productsWithRate = productRep.getProductDetailWithCompletionRateByNames(productNames)
             //val productNames = productsWithRate.mapNotNull { x -> x?.name }.distinct()
+
             val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
             val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
             val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)

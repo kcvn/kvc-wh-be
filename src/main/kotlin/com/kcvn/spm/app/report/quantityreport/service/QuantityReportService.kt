@@ -45,7 +45,6 @@ class QuantityReportService(
     private val calculateQuantityReportRep: CalculateQuantityReportRepository,
     private val quantityReportRep: QuantityReportRepository,
     private val processGroupRep: ProcessGroupRepository,
-    private val appSettingRepository: AppSettingRepository
 ) {
     fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<FileContentModel?> {
         val calculateQuantityReport = calculateQuantityReportRep.findByMonthReport(request)
@@ -383,7 +382,7 @@ class QuantityReportService(
         val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
         val processGroups = processGroupRep.getForProduct()
 
-        val columns = productProcesses.filter { x ->
+        val columns = productProcesses.asSequence().filter { x ->
             !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
         }.map { x ->
             val processGroup =
@@ -473,19 +472,10 @@ class QuantityReportService(
         return data
     }
 
-    fun setCellHeaderStyle(style: CellStyle){
-        style.alignment = HorizontalAlignment.CENTER
-        style.borderTop = style.borderTop
-        style.borderLeft = BorderStyle.THIN
-        style.borderRight = BorderStyle.THIN
-        style.borderBottom = style.borderBottom
-        style.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
-        style.fillPattern = FillPatternType.SOLID_FOREGROUND
-    }
 
     fun setCellHeader(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?) {
         row.createCell(colIndex).setCellValue(value)
-        row.rowStyle = style
+        row.getCell(colIndex).cellStyle = style
     }
 
     private fun generateExcelRowPlan(
@@ -519,8 +509,7 @@ class QuantityReportService(
         val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0)
         var headerCol = 2
-        val headerStyle = headerRow.getCell(0).cellStyle
-        setCellHeaderStyle(headerStyle)
+        val headerStyle = ExcelHelper.setCellHeaderStyle(workbook)
         val columns = dataExport.columns
         if (dataExport.data != null){
             if (columns != null) {
@@ -565,7 +554,7 @@ class QuantityReportService(
         val redFont = workbook.createFont()
 
         // Đặt màu chữ là đỏ
-        redFont.setColor(IndexedColors.RED.getIndex())
+        redFont.color = IndexedColors.RED.getIndex()
         redFont.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
         redFont.fontHeightInPoints = 12.toShort()
         // Đặt font cho CellStyle

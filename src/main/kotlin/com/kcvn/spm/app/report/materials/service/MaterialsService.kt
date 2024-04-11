@@ -115,8 +115,8 @@ class MaterialsService(
         val queryTapePre = tapeInfoRep.getTapeDetailByMonth(monthPre,yearPre)
         if(queryTapePre != null){
             //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
-            val dayReport = queryTapePre.requestDateEnd
-            val dayQueryTapePre = request.startDate
+            val dayReport = queryTapePre.requestDateEnd?.plusHours(7)
+            val dayQueryTapePre = request.startDate?.plusHours(7)
             if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L) || (ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L)){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
@@ -126,8 +126,8 @@ class MaterialsService(
         val queryTapeNext = tapeInfoRep.getTapeDetailByMonth(monthNext,yearNext)
         if(queryTapeNext != null){
             //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
-            val dayReport = queryTapeNext.requestDateStart
-            val dayQueryTapeNext = request.endDate
+            val dayReport = queryTapeNext.requestDateStart?.plusHours(7)
+            val dayQueryTapeNext = request.endDate?.plusHours(7)
             if((ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L) || (ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L)){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }

@@ -109,8 +109,8 @@ class QuantityReportService(
             val queryCalculateQuantityReportPre = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthPre,yearPre)
             if(queryCalculateQuantityReportPre != null){
                 //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
-                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate
-                val dayReport = request.startDate
+                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.plusHours(7)
+                val dayReport = request.startDate?.plusHours(7)
 
                 if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L) || (ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != -1L)){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
@@ -120,8 +120,8 @@ class QuantityReportService(
 
             val queryCalculateQuantityReportNext = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthNext,yearNext)
             if(queryCalculateQuantityReportNext != null){
-                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate
-                val dayReport = request.endDate
+                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.plusHours(7)
+                val dayReport = request.endDate?.plusHours(7)
                 if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L || ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }

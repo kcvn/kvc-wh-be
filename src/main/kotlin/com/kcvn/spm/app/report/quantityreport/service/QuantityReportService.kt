@@ -109,8 +109,8 @@ class QuantityReportService(
             val queryCalculateQuantityReportPre = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthPre,yearPre)
             if(queryCalculateQuantityReportPre != null){
                 //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
-                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.plusHours(7)
-                val dayReport = request.startDate?.plusHours(7)
+                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.toLocalDateTime()
+                val dayReport = request.startDate?.toLocalDateTime()
 
                 if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L) || (ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != -1L)){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
@@ -120,15 +120,15 @@ class QuantityReportService(
 
             val queryCalculateQuantityReportNext = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthNext,yearNext)
             if(queryCalculateQuantityReportNext != null){
-                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.plusHours(7)
-                val dayReport = request.endDate?.plusHours(7)
-                val appSetting = AppSetting(
-                    key = "QUANTITY_REPORT",
-                    value = "${ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport)}",
-                    description = "dayQueryTapeNext : ${dayQueryTapeNext} --- dayReport : ${dayReport}"
-                )
-                appSettingRepository.add(appSetting)
+                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.toLocalDateTime()
+                val dayReport = request.endDate?.toLocalDateTime()
                 if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L || ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L){
+                    val test = AppSetting(
+                        key = "test",
+                        value = "test",
+                        description = "dayQueryTapeNext : ${dayQueryTapeNext} - dayReport : ${dayReport}",
+                    )
+                    appSettingRepository.add(test)
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }

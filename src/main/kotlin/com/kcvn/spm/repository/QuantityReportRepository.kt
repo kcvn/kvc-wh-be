@@ -1,9 +1,12 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
+import com.kcvn.spm.app.report.quantityreport.payload.response.InformationCalculateQuantityResponse
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
 import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
+import com.kcvn.spm.model.tables.references.CALCULATE_QUANTITY_RESULT
 import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -20,7 +23,7 @@ class QuantityReportRepository(
     fun getPagingListQuantityReport(
         request: QuantityReportRequest?,
         pageable: Pageable,
-    ): Pair<List<InformationCalculateQuantity>, Int> {
+    ): Pair<List<InformationCalculateQuantityResponse>, Int> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.productName.isNullOrEmpty()) {
@@ -45,11 +48,24 @@ class QuantityReportRepository(
 //            sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.asc())
 //        }
 
-        val data = context.selectFrom(INFORMATION_CALCULATE_QUANTITY)
+        val data = context.select(
+            INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME,
+            INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER,
+            INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER,
+            INFORMATION_CALCULATE_QUANTITY.TOTAL_QUANTITY_OF_PROCESS,
+            INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT,
+            INFORMATION_CALCULATE_QUANTITY.PROCESS_STATISTIC,
+            INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID,
+            CALCULATE_QUANTITY_RESULT.ORDER_DATE_FROM_TO
+        )
+            .from(INFORMATION_CALCULATE_QUANTITY
+                .join(CALCULATE_QUANTITY_RESULT)
+                .on(INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID
+                    .eq(CALCULATE_QUANTITY_RESULT.ID)))
             .where(condition.and(INFORMATION_CALCULATE_QUANTITY.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.CREATED_DATE))
 
-            .fetchInto(InformationCalculateQuantity::class.java)
+            .fetchInto(InformationCalculateQuantityResponse::class.java)
 
         val total = context.fetchCount(INFORMATION_CALCULATE_QUANTITY, condition.and(INFORMATION_CALCULATE_QUANTITY.IS_DELETED.eq(false)))
 

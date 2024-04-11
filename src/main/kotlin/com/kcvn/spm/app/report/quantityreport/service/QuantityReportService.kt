@@ -47,7 +47,7 @@ class QuantityReportService(
     private val calculateQuantityReportRep: CalculateQuantityReportRepository,
     private val quantityReportRep: QuantityReportRepository,
     private val processGroupRep: ProcessGroupRepository,
-    private val appSettingRepository: AppSettingRepository
+    private val appSettingRep: AppSettingRepository
 ) {
     fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<FileContentModel?> {
         val calculateQuantityReport = calculateQuantityReportRep.findByMonthReport(request)
@@ -118,7 +118,7 @@ class QuantityReportService(
                         value = "test",
                         description = "dayQueryTapePre : ${dayQueryTapePre} - dayReport : ${dayReport}",
                     )
-                    appSettingRepository.add(test)
+                    appSettingRep.add(test)
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }
@@ -134,7 +134,7 @@ class QuantityReportService(
                         value = "test",
                         description = "dayQueryTapeNext : ${dayQueryTapeNext} - dayReport : ${dayReport}",
                     )
-                    appSettingRepository.add(test)
+                    appSettingRep.add(test)
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }

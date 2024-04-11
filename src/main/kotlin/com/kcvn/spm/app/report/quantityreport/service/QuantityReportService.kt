@@ -122,6 +122,12 @@ class QuantityReportService(
             if(queryCalculateQuantityReportNext != null){
                 val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.plusHours(7)
                 val dayReport = request.endDate?.plusHours(7)
+                val appSetting = AppSetting(
+                    key = "QUANTITY_REPORT",
+                    value = "${ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport)}",
+                    description = "dayQueryTapeNext : ${dayQueryTapeNext} --- dayReport : ${dayReport}"
+                )
+                appSettingRepository.add(appSetting)
                 if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L || ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }

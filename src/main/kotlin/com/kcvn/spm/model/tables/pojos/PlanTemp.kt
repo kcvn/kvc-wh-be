@@ -28,9 +28,7 @@ data class PlanTemp(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null,
-    var month: Int? = null,
-    var year: Int? = null
+    var isDeleted: Boolean? = null
 ): Serializable {
 
 
@@ -114,18 +112,6 @@ data class PlanTemp(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
-        if (this.month == null) {
-            if (o.month != null)
-                return false
-        }
-        else if (this.month != o.month)
-            return false
-        if (this.year == null) {
-            if (o.year != null)
-                return false
-        }
-        else if (this.year != o.year)
-            return false
         return true
     }
 
@@ -144,8 +130,6 @@ data class PlanTemp(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
-        result = prime * result + (if (this.month == null) 0 else this.month.hashCode())
-        result = prime * result + (if (this.year == null) 0 else this.year.hashCode())
         return result
     }
 
@@ -164,8 +148,6 @@ data class PlanTemp(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
-        sb.append(", ").append(month)
-        sb.append(", ").append(year)
 
         sb.append(")")
         return sb.toString()

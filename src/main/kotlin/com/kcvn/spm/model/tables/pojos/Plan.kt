@@ -28,9 +28,7 @@ data class Plan(
     @set:JvmName("setIsDeleted")
     var isDeleted: Boolean? = null,
     var planCode: String? = null,
-    var description: String? = null,
-    var month: Int? = null,
-    var year: Int? = null
+    var description: String? = null
 ): Serializable {
 
 
@@ -114,18 +112,6 @@ data class Plan(
         }
         else if (this.description != o.description)
             return false
-        if (this.month == null) {
-            if (o.month != null)
-                return false
-        }
-        else if (this.month != o.month)
-            return false
-        if (this.year == null) {
-            if (o.year != null)
-                return false
-        }
-        else if (this.year != o.year)
-            return false
         return true
     }
 
@@ -144,8 +130,6 @@ data class Plan(
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         result = prime * result + (if (this.planCode == null) 0 else this.planCode.hashCode())
         result = prime * result + (if (this.description == null) 0 else this.description.hashCode())
-        result = prime * result + (if (this.month == null) 0 else this.month.hashCode())
-        result = prime * result + (if (this.year == null) 0 else this.year.hashCode())
         return result
     }
 
@@ -164,8 +148,6 @@ data class Plan(
         sb.append(", ").append(isDeleted)
         sb.append(", ").append(planCode)
         sb.append(", ").append(description)
-        sb.append(", ").append(month)
-        sb.append(", ").append(year)
 
         sb.append(")")
         return sb.toString()

@@ -5,6 +5,7 @@ import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityO
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
 import com.kcvn.spm.app.report.quantityreport.payload.response.CheckCalculateQuantityResponse
+import com.kcvn.spm.app.report.quantityreport.payload.response.InformationCalculateQuantityResponse
 import com.kcvn.spm.app.report.quantityreport.payload.response.PagingQuantityReportResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
@@ -31,6 +32,7 @@ import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import kotlin.math.round
 
 
@@ -107,9 +109,10 @@ class QuantityReportService(
             val queryCalculateQuantityReportPre = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthPre,yearPre)
             if(queryCalculateQuantityReportPre != null){
                 //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
-                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.plusHours(7)?.dayOfMonth
-                val dayReport = request.startDate?.plusHours(7)?.dayOfMonth
-                if(dayReport!! - dayQueryTapePre!! != 1){
+                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate
+                val dayReport = request.startDate
+
+                if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != 1L) || (ChronoUnit.DAYS.between(dayReport,dayQueryTapePre) != -1L)){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }
@@ -117,16 +120,9 @@ class QuantityReportService(
 
             val queryCalculateQuantityReportNext = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthNext,yearNext)
             if(queryCalculateQuantityReportNext != null){
-                //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
-                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.plusHours(7)?.dayOfMonth
-                val dayReport = request.endDate?.plusHours(7)?.dayOfMonth
-//                val checkLog = AppSetting(
-//                    key = "CHECK_LOG",
-//                    value = "${dayQueryTapeNext!! - dayReport!!}",
-//                    description = "dayQueryTapeNext: ${dayQueryTapeNext} dayReport : + ${dayReport}"
-//                )
-//                appSettingRepository.add(checkLog)
-                if(dayQueryTapeNext!! - dayReport!! != 1){
+                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate
+                val dayReport = request.endDate
+                if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != 1L || ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport) != -1L){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }
@@ -359,12 +355,13 @@ class QuantityReportService(
         return response
     }
 
-    private fun mappingInformationCalculateQuantityResponse(data: List<InformationCalculateQuantity>): PagingQuantityReportResponse {
+    private fun mappingInformationCalculateQuantityResponse(data: List<InformationCalculateQuantityResponse>): PagingQuantityReportResponse {
         val group = data.groupBy {
             ProductOrderDateKeyModel(
                 it.productName,
                 it.monthNumber,
-                it.yearNumber
+                it.yearNumber,
+                it.orderDateFromTo
             )
         }
 
@@ -373,6 +370,7 @@ class QuantityReportService(
                 x.key.productName,
                 x.key.monthNumber,
                 x.key.yearNumber,
+                x.key.orderDateFromTo,
                 x.value.map { m -> KeyValueResponse(m.processStatistic, m.totalQuantityOfProcess.toString()) }.toMutableList()
             )
         }

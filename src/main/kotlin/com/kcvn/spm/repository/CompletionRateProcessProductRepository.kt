@@ -190,7 +190,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
     }
 
 
-    fun getCompletionRateProcessProductWithMaxEffectivedateByName(name: String): CompletionRateProcessProduct? {
+    fun getCompletionRateProcessProductWithMaxEffectiveDateByName(name: String): CompletionRateProcessProduct? {
 
         val record = context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
             .where(
@@ -204,15 +204,9 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
 
     }
 
-    fun getByProductName(productNames: List<String>, date: OffsetDateTime? = null): List<CompletionRateProcessProduct> {
-        var condition = DSL.noCondition()
-        if (date != null) {
-            condition = condition.and(
-                COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE.isNull()
-                    .or(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE.ge(date))
-            )
-        }
-        condition = condition.and(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT.`in`(productNames))
+    fun getByProductName(productNames: List<String>): List<CompletionRateProcessProduct> {
+        val condition = COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT.`in`(productNames)
+            .and(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE.isNull())
             .and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false))
 
         return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)

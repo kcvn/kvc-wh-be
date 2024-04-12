@@ -77,7 +77,7 @@ class DateTimeHelper {
                 val response = CalendarResponse(
                     key = toString(currentDate, DateTimeFormat.yyyyMMdd),
                     value = toString(currentDate.minusDays(daysToSubtract), DateTimeFormat.MM_dd),
-                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
+                    isHoliday = holidayCalender.any { toTimeZone7(it)?.toLocalDate() == currentDate.toLocalDate() }
                         || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY
                         || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
                 )

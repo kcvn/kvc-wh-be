@@ -39,11 +39,13 @@ class DateTimeHelper {
             return  localDateTime?.format(formatter)
         }
 
-        fun convertStringToOffSetDateTime(date: String): OffsetDateTime {
-            val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
+        fun convertStringToOffSetDateTime(date: String?,format :String = DateTimeFormat.dd_MM_yyyy): OffsetDateTime {
+            val formatter = DateTimeFormatter.ofPattern(format)
             val localDate = LocalDate.parse(date, formatter)
             return OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
         }
+
+
 
         fun toString(date: OffsetDateTime, format: String): String {
             return date.format(DateTimeFormatter.ofPattern(format))

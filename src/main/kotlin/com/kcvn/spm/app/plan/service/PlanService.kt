@@ -712,43 +712,19 @@ class PlanService(
                 val groupProcessCode = listGroupProcessCode?.filter { x -> x.processCode == planSummaryModel.processCode }?.map { it.groupProcessCode }
                 planSummaryModel.details?.let { details ->
                     for (processSummaryDetailModel in details) {
-                        var capMachineValue: BigDecimal?
-                        var sltbMachineValue: BigDecimal?
-                        val quantityMachine: Double?
-
-                        val equipmentMachineModel = equipmentMachine.firstOrNull {
+                        //get equipment machine by process code, frame1, type
+                        val filteredEquipmentMachine = equipmentMachine.filter {
                             groupProcessCode?.contains(it.grpProcess) == true &&
-                                it.frame_1 == planSummaryModel.frame1 &&
-                                (it.mold?.contains(processSummaryDetailModel.type ?: "") == true ||
-                                    it.equipmentCode?.contains(processSummaryDetailModel.type ?: "") == true)
-                        } ?: equipmentMachine.firstOrNull {
-                            groupProcessCode?.contains(it.grpProcess) == true &&
-                                it.frame_1 == planSummaryModel.frame1
+                                    it.frame_1 == planSummaryModel.frame1 &&
+                                    (it.mold?.contains(processSummaryDetailModel.type ?: "") == true ||
+                                            it.equipmentCode?.contains(processSummaryDetailModel.type ?: "") == true)
                         }
 
-
-                        quantityMachine = equipmentMachineModel?.quantityMachine?.toDouble()
-                        capMachineValue = when {
-                            equipmentMachineModel != null -> {
-                                when (equipmentProductivityModel.unit) {
-                                    ProcessUnit.SHEET -> equipmentMachineModel.capSheet
-                                    ProcessUnit.SET -> equipmentMachineModel.capSet
-                                    else -> equipmentMachineModel.capBlock
-                                }
+                        val equipmentMachineModel = filteredEquipmentMachine.ifEmpty {
+                            equipmentMachine.filter {
+                                groupProcessCode?.contains(it.grpProcess) == true &&
+                                        it.frame_1 == planSummaryModel.frame1
                             }
-
-                            else -> null
-                        }
-                        sltbMachineValue = when {
-                            equipmentMachineModel != null -> {
-                                when (equipmentProductivityModel.unit) {
-                                    ProcessUnit.SHEET -> equipmentMachineModel.sltbSheet
-                                    ProcessUnit.SET -> equipmentMachineModel.sltbSet
-                                    else -> equipmentMachineModel.sltbBlock
-                                }
-                            }
-
-                            else -> null
                         }
                         val processDetailModel = ProcessDetailModel(
                             name = processSummaryDetailModel.type,
@@ -757,6 +733,8 @@ class PlanService(
                         )
                         processSummaryDetailModel.planSummaryData?.let { planData ->
                             for (planDataByProcessModel in planData) {
+                                val quantityMachine = equipmentMachineModel.firstOrNull()?.quantityMachine?.toDouble()
+
                                 //process
                                 val processDetailListModel = ProcessDetailListModel(
                                     type = planDataByProcessModel.title ?: "",
@@ -765,80 +743,29 @@ class PlanService(
                                 )
                                 processDetailModel.processDetailList.add(processDetailListModel)
                                 //calculate total
-                                if (planDataByProcessModel.title == ProcessPlan.PROCESS) {
-                                    processDetailModel.totalProcess = processDetailListModel.quantityByCalendars
+                                processDetailModel.totalProcess = processDetailListModel.quantityByCalendars
                                         .mapNotNull { it.value?.toDoubleOrNull() }
                                         .sum()
                                         .toInt()
-                                }
+
                                 //machine
-                                val machineDetailListModel = ProcessDetailListModel(
-                                    type = ProcessPlan.MACHINE,
-                                    typeKey = EquipmentType.CAP_MACHINE,
-                                    quantityByCalendars = result.columns?.map { column ->
-                                        KeyValueResponse(
-                                            key = column.key,
-                                            value = capMachineValue?.toInt()?.toString() ?: ""
-                                        )
-                                    }?.toMutableList() ?: mutableListOf()
-                                )
+                                val machineDetailListModel = getMachineDetail(result.columns, equipmentMachineModel,equipmentProductivityModel)
                                 processDetailModel.processDetailList.add(machineDetailListModel)
 
                                 //average plan
-                                val averageDetailListModel = ProcessDetailListModel(
-                                    type = ProcessPlan.AVERAGE_PLAN,
-                                    typeKey = EquipmentType.AVERAGE,
-                                    quantityByCalendars = result.columns?.map { column ->
-                                        KeyValueResponse(
-                                            key = column.key,
-                                            value = sltbMachineValue?.toInt()?.toString() ?: ""
-                                        )
-                                    }?.toMutableList() ?: mutableListOf()
-                                )
+                                val averageDetailListModel = getMachineDetail(result.columns, equipmentMachineModel,equipmentProductivityModel,false)
                                 processDetailModel.processDetailList.add(averageDetailListModel)
-
                                 //machineRate
-                                val machineNumberDetailListModel = ProcessDetailListModel(
-//                                    type = ProcessPlan.MACHINENUMBER,
-                                    type = "",
-                                    typeKey = EquipmentType.MACHINE_RATE,
-                                    quantityByCalendars = planDataByProcessModel.quantityByCalendars?.map { column ->
-                                        val value = column.value?.toDoubleOrNull() ?: 0.0
-                                        val sltbMachineValueDouble = sltbMachineValue?.toDouble() ?: 0.0
-                                        val newValue = if (sltbMachineValueDouble != 0.0) {
-                                            NumberHelper.formatDoubleValue(value / sltbMachineValueDouble)
-                                        } else {
-                                            "0"
-                                        }
-                                        var rate = 0.0
-                                        if (sltbMachineValueDouble != 0.0) {
-                                            if (quantityMachine != null) {
-                                                rate = newValue.toDouble() / quantityMachine.toDouble() *100
-                                            }
-                                        }
-                                        val color = when {
-                                            rate > 100 -> Color.ORANGE
-                                            rate > 90 -> Color.YELLOW
-                                            else -> Color.WHITE
-                                        }
-                                        val valueRate = when {
-                                            quantityMachine == null || quantityMachine.toInt() == 0 -> ""
-                                            else -> newValue + "/" + (quantityMachine.toInt()).toString() + "\n" + (ceil(rate).toInt()).toString()
-                                        }
-                                        KeyValueResponse(
-                                            key = column.key,
-                                            value = valueRate,
-                                            sort = color.toBigDecimal()
-                                        )
-                                    }?.toMutableList() ?: mutableListOf()
-                                )
-                                processDetailModel.processDetailList.add(machineNumberDetailListModel)
-                            }
+                                val machineQuantityDetailListModel = calculateMachineDetail(quantityMachine, processDetailListModel.quantityByCalendars, machineDetailListModel.quantityByCalendars)
+                                processDetailModel.processDetailList.add(machineQuantityDetailListModel)
 
+                            }
                         }
                         equipmentProductivityModel.processDetail?.add(processDetailModel)
                     }
+
                 }
+
                 equipmentProductivityList.add(equipmentProductivityModel)
             }
         }
@@ -847,6 +774,91 @@ class PlanService(
         return result
 
     }
+
+    fun getMachineDetail(columns:  List<CalendarResponse>?,
+                         equipmentMachineModel: List<EquipmentProductivity>,
+                         equipmentProductivityModel: EquipmentProductivityModel,
+                         isGetCapMachine: Boolean = true): ProcessDetailListModel{
+        var capMachineValue: BigDecimal?
+        val machineDetailListModel = ProcessDetailListModel(
+            type = if (isGetCapMachine) ProcessPlan.MACHINE else ProcessPlan.AVERAGE_PLAN,
+            typeKey = if (isGetCapMachine) EquipmentType.CAP_MACHINE else EquipmentType.AVERAGE,
+            quantityByCalendars = columns?.map { column ->
+                val convertDate =DateTimeHelper.convertStringToOffSetDateTime(column.key, DateTimeFormat.yyyyMMdd).toLocalDate()
+                val convertEquipment = equipmentMachineModel.firstOrNull{x-> DateTimeHelper.toTimeZone7(x.productionStartDate)?.toLocalDate()!! <= convertDate && DateTimeHelper.toTimeZone7(x.productionEndDate)?.toLocalDate()!! >= convertDate}
+               if(isGetCapMachine){
+                   capMachineValue = when {
+                       convertEquipment != null -> {
+                           when (equipmentProductivityModel.unit) {
+                               ProcessUnit.SHEET -> convertEquipment.capSheet
+                               ProcessUnit.SET -> convertEquipment.capSet
+                               else -> convertEquipment.capBlock
+                           }
+                       }
+                       else -> null
+                   }
+               }else{
+                   capMachineValue = when {
+                       convertEquipment != null -> {
+                           when (equipmentProductivityModel.unit) {
+                               ProcessUnit.SHEET -> convertEquipment.sltbSheet
+                               ProcessUnit.SET -> convertEquipment.sltbSet
+                               else -> convertEquipment.sltbBlock
+                           }
+                       }
+                       else -> null
+                   }
+               }
+                KeyValueResponse(
+                    key = column.key,
+                    value =capMachineValue?.toInt()?.toString() ?: ""
+                )
+            }?.toMutableList() ?: mutableListOf()
+        )
+        return machineDetailListModel
+    }
+
+    fun calculateMachineDetail(quantityMachine: Double?,
+                               processDetails:List<KeyValueResponse>?,
+                               averageProductionDetails:List<KeyValueResponse>?): ProcessDetailListModel{
+        val machineNumberDetailListModel = ProcessDetailListModel(
+            type = ProcessPlan.MACHINENUMBER,
+            typeKey = EquipmentType.MACHINE_RATE,
+            quantityByCalendars = processDetails?.map { column ->
+            val value = column.value?.toDoubleOrNull() ?: 0.0
+            val averageProductionValueDouble = averageProductionDetails?.firstOrNull { x -> x.key == column.key }?.value?.toDoubleOrNull() ?: 0.0
+            val newValue = if (averageProductionValueDouble != 0.0) {
+                NumberHelper.formatDoubleValue(value / averageProductionValueDouble)
+            } else {
+                "0"
+            }
+            var rate = 0.0
+            if (averageProductionValueDouble != 0.0) {
+                if (quantityMachine != null) {
+                    rate = newValue.toDouble() / quantityMachine.toDouble() *100
+                }
+            }
+            val color = when {
+                rate > 100 -> Color.ORANGE
+                rate > 90 -> Color.YELLOW
+                else -> Color.WHITE
+            }
+            val valueRate = when {
+                quantityMachine == null || quantityMachine.toInt() == 0 -> ""
+                else -> newValue + "/" + (quantityMachine.toInt()).toString() + "\n" + (ceil(rate).toInt()).toString()
+            }
+            KeyValueResponse(
+                key = column.key,
+                value = valueRate,
+                sort = color.toBigDecimal()
+            )
+        }?.toMutableList() ?: mutableListOf()
+        )
+
+        return machineNumberDetailListModel
+    }
+
+
 
     private fun getPlanSummaryEquipment(request: PlanSearchRequest): PlanSummaryResponse {
         val response = PlanSummaryResponse()
@@ -940,7 +952,7 @@ class PlanService(
                         if (dataMold == null) {
                             dataMold = PlanSummaryDetailModel(
                                 type = if (frame1 != Frame1.MU) "" else mold,
-                                planSummaryData = mutableListOf(PlanDataByProcessModel(title = ProcessPlan.PROCESS, titleKey = ProcessPlan.PROCESS, quantityByCalendars = listOf()))
+                                planSummaryData = mutableListOf(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = listOf()))
                             )
                         }
                         ducLo.details!!.add(dataMold)

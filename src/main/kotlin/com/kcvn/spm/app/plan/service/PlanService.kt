@@ -822,7 +822,7 @@ class PlanService(
                                processDetails:List<KeyValueResponse>?,
                                averageProductionDetails:List<KeyValueResponse>?): ProcessDetailListModel{
         val machineNumberDetailListModel = ProcessDetailListModel(
-            type = ProcessPlan.MACHINENUMBER,
+            type = ProcessPlan.QUANTITY_MACHINE,
             typeKey = EquipmentType.MACHINE_RATE,
             quantityByCalendars = processDetails?.map { column ->
             val value = column.value?.toDoubleOrNull() ?: 0.0
@@ -1858,14 +1858,14 @@ class PlanService(
                             ExcelHelper.setCellValue(dataRow, 0, style, frame1Value)
                             ExcelHelper.setCellValue(dataRow, 4, style, data.type)
 
-                            if (data.type == ProcessPlan.MACHINENUMBER) {
+                            if (data.type == ProcessPlan.QUANTITY_MACHINE) {
                                 dataRow.height = 700
                             }
 
                             var colIndex = 5
                             for (col in columns) {
                                 val quantityByCalendar = data.quantityByCalendars.find { x -> x.key == col.key }
-                                val st = if (data.type == ProcessPlan.MACHINENUMBER) {
+                                val st = if (data.type == ProcessPlan.QUANTITY_MACHINE) {
                                     when (quantityByCalendar?.sort) {
                                         Color.YELLOW.toBigDecimalOrNull() -> yellowStyle
                                         Color.ORANGE.toBigDecimalOrNull() -> orangeStyle

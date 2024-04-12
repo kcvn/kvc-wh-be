@@ -118,24 +118,50 @@ class CompletionRateService(
     }
 
 
-    fun createErrorSheet(layerCompletionRateErrorList: List<LayerCompletionRateError>,  templateErrorExportUrl: String, style: CellStyle?): Pair<Sheet,Workbook> {
+    fun createErrorSheet(layerCompletionRateErrorList: List<LayerCompletionRateError>, templateErrorExportUrl: String): Pair<Sheet, Workbook> {
         val templateWorkbook = WorkbookFactory.create(FileInputStream(templateErrorExportUrl))
         val sheetTemplateWorkBook = templateWorkbook.getSheetAt(0)
-       var rowIndex =1
+        var rowIndex = 1
+
+        // Create a cell style for general text
+        val generalStyle = templateWorkbook.createCellStyle()
+        generalStyle.cloneStyleFrom(sheetTemplateWorkBook.getRow(0).getCell(0).cellStyle)
+        val font = templateWorkbook.createFont()
+        font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+        font.fontHeightInPoints = 12
+        generalStyle.setFont(font)
+        generalStyle.alignment = HorizontalAlignment.CENTER
+
+        // Create a cell style for percentage
+        val percentageStyle = templateWorkbook.createCellStyle()
+        percentageStyle.cloneStyleFrom(generalStyle)
+        percentageStyle.dataFormat = templateWorkbook.createDataFormat().getFormat("0.00%")
+
+        // Create a cell style for error message
+        val errorStyle = templateWorkbook.createCellStyle()
+        errorStyle.cloneStyleFrom(generalStyle)
+        val errorFont = templateWorkbook.createFont()
+        errorStyle.alignment = HorizontalAlignment.LEFT
+        errorFont.color = IndexedColors.RED.index
+        errorStyle.setFont(errorFont)
+
         layerCompletionRateErrorList.forEach { error ->
             val newRow = sheetTemplateWorkBook.createRow(rowIndex)
-            newRow.createCell(0).setCellValue(error.key ?: "")
-            error.rate?.let { newRow.createCell(1).setCellValue(it) }
+
+            val keyCell = newRow.createCell(0)
+            keyCell.setCellValue(error.key ?: "")
+            keyCell.cellStyle = generalStyle
+
+            val rateCell = newRow.createCell(1)
+            rateCell.setCellValue((error.rate ?: 0.0))
+
+
+            rateCell.cellStyle = percentageStyle
+
             val errorMessageCell = newRow.createCell(2)
             errorMessageCell.setCellValue(error.errorMessage ?: "")
-            val cellStyle = templateWorkbook.createCellStyle()
-            cellStyle.cloneStyleFrom(errorMessageCell.cellStyle)
-            val font = templateWorkbook.createFont()
-            font.color = IndexedColors.RED.index
-            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
-            font.fontHeightInPoints = 12
-            cellStyle.setFont(font)
-            errorMessageCell.cellStyle = cellStyle
+            errorMessageCell.cellStyle = errorStyle
+
             rowIndex++
         }
 
@@ -349,8 +375,7 @@ class CompletionRateService(
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
         val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionRateErrorTemplate.xlsx"
-        val styleCell = sheet.getRow(1).getCell(1).cellStyle
-        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleCell)
+        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl)
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         errorWorkbook.second.write(byteArrayOutputStream)
@@ -585,9 +610,7 @@ class CompletionRateService(
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
         val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionRateErrorTemplate.xlsx"
-        val styleRow = sheet.getRow(1).rowStyle
-
-        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleRow)
+        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl)
         val byteArrayOutputStream = ByteArrayOutputStream()
         errorWorkbook.second.write(byteArrayOutputStream)
 
@@ -741,7 +764,7 @@ class CompletionRateService(
                                 }
                             } else {
                                 val completionRateUpdate =
-                                    completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectivedateByName(key)
+                                    completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectiveDateByName(key)
                                 if (completionRateUpdate != null) {
                                     if (effectiveDate.toLocalDate() < completionRateUpdate.effectiveDate?.toLocalDate()) {
                                         errorMessages.add(checkImportCompletionRateDate)
@@ -782,8 +805,7 @@ class CompletionRateService(
             return BaseResponse(null, CommonUtils.getMessage(importSuccessMessageKey, arrayOf(count, total + 1)))
         }
         val templateErrorExportUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionRateErrorTemplate.xlsx"
-        val styleRow = sheet.getRow(1).rowStyle
-        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl,styleRow)
+        val errorWorkbook = createErrorSheet(layerCompletionRateErrorList, templateErrorExportUrl)
         val byteArrayOutputStream = ByteArrayOutputStream()
         errorWorkbook.second.write(byteArrayOutputStream)
         val excelBytes = byteArrayOutputStream.toByteArray()

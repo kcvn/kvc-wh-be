@@ -492,7 +492,8 @@ class QuantityReportService(
         val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
         ExcelHelper.setCellValueCustom(workbook, rowPlan, 0, style, data.productName,isBold = true,isAlignCenter = true)
         ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, "${data.monthNumber.toString()}/${data.yearNumber.toString()}",isBold = true,isAlignCenter = true)
-        var colIndex = 2
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.orderDateFromTo,isBold = true,isAlignCenter = true)
+        var colIndex = 3
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value
             ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value,isAlignCenter = true, isNumberFormat = true)
@@ -509,7 +510,7 @@ class QuantityReportService(
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0)
-        var headerCol = 2
+        var headerCol = 3
         val headerStyle = ExcelHelper.setCellHeaderStyle(workbook)
         val columns = dataExport.columns
         if (dataExport.data != null){

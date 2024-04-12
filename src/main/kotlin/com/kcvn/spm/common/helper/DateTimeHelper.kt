@@ -39,11 +39,13 @@ class DateTimeHelper {
             return  localDateTime?.format(formatter)
         }
 
-        fun convertStringToOffSetDateTime(date: String): OffsetDateTime {
-            val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
+        fun convertStringToOffSetDateTime(date: String?,format :String = DateTimeFormat.dd_MM_yyyy): OffsetDateTime {
+            val formatter = DateTimeFormatter.ofPattern(format)
             val localDate = LocalDate.parse(date, formatter)
             return OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
         }
+
+
 
         fun toString(date: OffsetDateTime, format: String): String {
             return date.format(DateTimeFormatter.ofPattern(format))
@@ -77,7 +79,7 @@ class DateTimeHelper {
                 val response = CalendarResponse(
                     key = toString(currentDate, DateTimeFormat.yyyyMMdd),
                     value = toString(currentDate.minusDays(daysToSubtract), DateTimeFormat.MM_dd),
-                    isHoliday = holidayCalender.any { it.toLocalDate() == currentDate.toLocalDate() }
+                    isHoliday = holidayCalender.any { toTimeZone7(it)?.toLocalDate() == currentDate.toLocalDate() }
                         || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY
                         || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
                 )

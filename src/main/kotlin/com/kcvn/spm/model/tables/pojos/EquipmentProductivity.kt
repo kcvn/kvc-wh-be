@@ -15,7 +15,7 @@ import java.time.OffsetDateTime
 @Suppress("UNCHECKED_CAST")
 data class EquipmentProductivity(
     var id: String? = null,
-    var equipmentCode: String? = null,
+    var processName: String? = null,
     var description: String? = null,
     var frame_1: String? = null,
     var grpProcess: String? = null,
@@ -62,11 +62,11 @@ data class EquipmentProductivity(
         }
         else if (this.id != o.id)
             return false
-        if (this.equipmentCode == null) {
-            if (o.equipmentCode != null)
+        if (this.processName == null) {
+            if (o.processName != null)
                 return false
         }
-        else if (this.equipmentCode != o.equipmentCode)
+        else if (this.processName != o.processName)
             return false
         if (this.description == null) {
             if (o.description != null)
@@ -237,7 +237,7 @@ data class EquipmentProductivity(
         val prime = 31
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
-        result = prime * result + (if (this.equipmentCode == null) 0 else this.equipmentCode.hashCode())
+        result = prime * result + (if (this.processName == null) 0 else this.processName.hashCode())
         result = prime * result + (if (this.description == null) 0 else this.description.hashCode())
         result = prime * result + (if (this.frame_1 == null) 0 else this.frame_1.hashCode())
         result = prime * result + (if (this.grpProcess == null) 0 else this.grpProcess.hashCode())
@@ -272,7 +272,7 @@ data class EquipmentProductivity(
         val sb = StringBuilder("EquipmentProductivity (")
 
         sb.append(id)
-        sb.append(", ").append(equipmentCode)
+        sb.append(", ").append(processName)
         sb.append(", ").append(description)
         sb.append(", ").append(frame_1)
         sb.append(", ").append(grpProcess)

@@ -33,6 +33,7 @@ import com.kcvn.spm.model.tables.pojos.PlanTemp
 import com.kcvn.spm.model.tables.pojos.Product
 import com.kcvn.spm.repository.CompletionRateProcessProductRepository
 import com.kcvn.spm.repository.EquipmentProductivityRepository
+import com.kcvn.spm.repository.HolidaysCalenderRepository
 import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.PlanCalendarConfigRepository
@@ -62,7 +63,8 @@ class CreatePlanService(
     private val equipmentProductivityRep: EquipmentProductivityRepository,
     private val systemLockRep: SystemLockRepository,
     private val planRep: PlanRepository,
-    private val planCalendarConfigRep: PlanCalendarConfigRepository
+    private val planCalendarConfigRep: PlanCalendarConfigRepository,
+    private val holidaysCalenderRep: HolidaysCalenderRepository
 ) {
 
     private val typeOfSystemLocks = listOf(
@@ -112,7 +114,11 @@ class CreatePlanService(
             val completionRateInfo = completionRateProcessProductRep.getByProductName(productShortcutNames)
 
             val processGroupCodes = productProcesses.mapNotNull { x -> x.processGroup }
-            val equipmentInfo = equipmentProductivityRep.getByProcessGroup(processGroupCodes)
+            val equipmentInfo = equipmentProductivityRep.getByProcessGroup(processGroupCodes).map { item ->
+                item.sltbBlock = (item.sltbBlock ?: BigDecimal(0)) * BigDecimal(item.quantityMachine ?: 0)
+                item.sltbSheet = (item.sltbSheet ?: BigDecimal(0)) * BigDecimal(item.quantityMachine ?: 0)
+                item
+            }
             val processStatisticCodeChecks = listOf(ProcessStatisticCode.T, ProcessStatisticCode.GHEPLOP_GIAAPNHIET, ProcessStatisticCode.SNAP)
 
             val planValidates = mutableListOf<PlanValidateModel>()
@@ -146,13 +152,17 @@ class CreatePlanService(
                 if (equipmentByProducts.isEmpty()) {
                     errors.add("Chưa có cấu hình năng suất máy cho line ${product!!.frame_1}")
                 } else {
+                    val processGroups = parentProcesses.mapNotNull { x -> x.processGroup }.distinct()
+                    for (grp in processGroups) {
+                        val eqConfigs = equipmentByProducts.filter { x -> x.grpProcess == grp }
+                        if (eqConfigs.isEmpty()) {
+                            errors.add("Chưa có cấu hình năng suất máy cho nhóm công đoạn ${grp}")
+                        }
+                    }
                     for (process in parentProcesses) {
                         var eqConfigs = equipmentByProducts.filter { x -> x.grpProcess == process.processGroup }
-                        if (eqConfigs.isEmpty()) {
-                            errors.add("Chưa có cấu hình năng suất máy cho nhóm công đoạn ${process.processGroup}")
-                        } else {
+                        if (eqConfigs.isNotEmpty()) {
                             if (product!!.frame_1 != Frame1.MU) continue
-
                             if (
                                 processStatisticCodeChecks.contains(process.processStatisticCode)
                                 || process.processConvertCode == ProcessConvertCode.DAN_2L
@@ -172,8 +182,9 @@ class CreatePlanService(
             }
 
             if (planValidates.isEmpty()) {
+                val holidays = holidaysCalenderRep.getHolidaysCalender()
                 if (request.inventoryDate == null) {
-                    createPlanNoInventory(request, planCalendarConfig, orderInfo, productInfo, productProcesses, completionRateInfo, equipmentInfo)
+                    createPlanNoInventory(request, planCalendarConfig, orderInfo, productInfo, productProcesses, completionRateInfo, equipmentInfo, holidays)
                 } else {
                     return BaseResponse(message = "Chức năng chưa được xử lý")
                 }
@@ -234,7 +245,8 @@ class CreatePlanService(
         productInfo: List<Product>,
         productProcesses: List<ProductProcessModel>,
         completionRateInfo: List<CompletionRateProcessProduct>,
-        equipmentInfo: List<EquipmentProductivity>
+        equipmentInfo: List<EquipmentProductivity>,
+        holidays: List<OffsetDateTime>
     ) {
         try {
             val productGroupByDates = sortProduct(orderInfo, productInfo, listOf(), productProcesses)
@@ -297,7 +309,8 @@ class CreatePlanService(
                             product,
                             completionRate.rate ?: BigDecimal(0),
                             eqConfig,
-                            equipmentUsedInfoByDate
+                            equipmentUsedInfoByDate,
+                            holidays
                         )
                         planProcess.planDetails = currentPlanDetail
                         planProcess.childrenProcesses = childrenProcesses.filter { x -> x.processInventoryCode == iParentProcess.processCode }
@@ -570,7 +583,8 @@ class CreatePlanService(
         productInfo: Product,
         completionRate: BigDecimal,
         equipmentInfoDefault: EquipmentProductivity,
-        equipmentUsedInfo: List<Pair<OffsetDateTime, EquipmentProductivity>>
+        equipmentUsedInfo: List<Pair<OffsetDateTime, EquipmentProductivity>>,
+        holidays: List<OffsetDateTime>
     ): MutableList<PlanDetailCreateModel> {
         val data = mutableListOf<PlanDetailCreateModel>()
 
@@ -588,6 +602,10 @@ class CreatePlanService(
             }
 
             while (sheetQuantity > 0 || blockQuantity > 0) {
+                if (holidays.any { x -> x.isEqual(planDate) }) {
+                    planDate = planDate.plusDays(-1)
+                    continue
+                }
                 val eqUsedConfig = equipmentUsedInfo.firstOrNull { x ->
                     x.first == planDate && x.second.grpProcess == productProcess.processGroup
                         && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
@@ -625,7 +643,7 @@ class CreatePlanService(
             capSheet = equipmentInfoDefault.capSheet,
             capSet = equipmentInfoDefault.capSet,
             capBlock = equipmentInfoDefault.capBlock,
-            machineNumber = equipmentInfoDefault.machineNumber,
+            quantityMachine = equipmentInfoDefault.quantityMachine,
             processCode = equipmentInfoDefault.processCode
         )
         return data
@@ -653,7 +671,7 @@ class CreatePlanService(
             capSheet = equipmentInfoDefault.capSheet,
             capSet = equipmentInfoDefault.capSet,
             capBlock = equipmentInfoDefault.capBlock,
-            machineNumber = equipmentInfoDefault.machineNumber,
+            quantityMachine = equipmentInfoDefault.quantityMachine,
             processCode = equipmentInfoDefault.processCode
         )
         return data

@@ -624,7 +624,7 @@ class CreatePlanService(
     private fun settingEquipmentConfig(equipmentUsedInfo: EquipmentProductivity?, equipmentInfoDefault: EquipmentProductivity): EquipmentProductivity {
         val data = EquipmentProductivity(
             id = equipmentInfoDefault.id,
-            equipmentCode = equipmentInfoDefault.equipmentCode,
+            processName = equipmentInfoDefault.processName,
             description = equipmentInfoDefault.description,
             frame_1 = equipmentInfoDefault.frame_1,
             grpProcess = equipmentInfoDefault.grpProcess,
@@ -652,7 +652,7 @@ class CreatePlanService(
     private fun settingEquipmentConfig(planDetail: PlanDetailCreateModel, equipmentInfoDefault: EquipmentProductivity): EquipmentProductivity {
         val data = EquipmentProductivity(
             id = equipmentInfoDefault.id,
-            equipmentCode = equipmentInfoDefault.equipmentCode,
+            processName = equipmentInfoDefault.processName,
             description = equipmentInfoDefault.description,
             frame_1 = equipmentInfoDefault.frame_1,
             grpProcess = equipmentInfoDefault.grpProcess,

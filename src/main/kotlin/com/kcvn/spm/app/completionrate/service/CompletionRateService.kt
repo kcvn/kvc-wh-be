@@ -764,7 +764,7 @@ class CompletionRateService(
                                 }
                             } else {
                                 val completionRateUpdate =
-                                    completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectivedateByName(key)
+                                    completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectiveDateByName(key)
                                 if (completionRateUpdate != null) {
                                     if (effectiveDate.toLocalDate() < completionRateUpdate.effectiveDate?.toLocalDate()) {
                                         errorMessages.add(checkImportCompletionRateDate)

@@ -255,6 +255,18 @@ class ProcessPlan {
     }
 }
 
+class DefaultRate {
+    companion object {
+        const val MAX_RATE = 100.0
+    }
+}
+
+class DefaultValueDouble {
+    companion object {
+        const val MIN_VALUE = 0.0
+    }
+}
+
 class ProcessUnit {
     companion object {
         const val SHEET = "Sheet"

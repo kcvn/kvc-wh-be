@@ -4,6 +4,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.service.OrderService
+import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityDetailExistModel
 import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityDetailModel
 import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityReportModel
 import com.kcvn.spm.app.report.externalquality.payload.request.ExternalQualityReportSearchRequest
@@ -146,9 +147,9 @@ class ExternalQualityReportService(
         val orderInfo = orderInfoRepository.getListOrderForReport(request,pageable)
         val mappingPaging = orderInfo.first
         val listProductName = mappingPaging.map { it.productName }
-        val getExportConfiguration = exportConfigurationRep.getExportConfig(listProductName,startDate,endDate)
+        val exportConfiguration = exportConfigurationRep.getExportConfig(listProductName,startDate,endDate)
 
-        checkExportConfiguration(mappingPaging,getExportConfiguration,startDate,endDate)
+        checkExportConfiguration(mappingPaging,exportConfiguration,startDate,endDate)
         response.totalRecords = orderInfo.second
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
@@ -182,9 +183,11 @@ class ExternalQualityReportService(
         val productNames = getListNameProduct(mappingPaging)
         // get list Inventory
         val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames,endDate)
+        //create list data exist
+        val listDataExist :MutableList<ExternalQualityDetailExistModel> = mutableListOf()
         //add Details Data here
         for(mappingItem in mappingPaging){
-            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails, subColumns)
+            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails, subColumns,exportConfiguration,listDataExist)
         }
         val valueReportDate= request.endDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) }
         //add Shipping Data here
@@ -245,7 +248,9 @@ class ExternalQualityReportService(
                                         listWorkResult: List<WorkResult>?,
                                         updateTapes:List<UpdateTape>,
                                         inventoryProducts:  List<InventoryProductResponse>,
-                                        subColumns: List<CalendarResponse>){
+                                        subColumns: List<CalendarResponse>,
+                                        exportConfiguration: List<ExportConfiguration>,
+                                        listDataExist: MutableList<ExternalQualityDetailExistModel> = mutableListOf()){
 
         //common data
         val detailData : MutableList<ExternalQualityDetailModel> = mutableListOf()
@@ -268,19 +273,76 @@ class ExternalQualityReportService(
         externalQualityReportModel.goodQualityTapeInventorySet = goodQualityTapeInventorySet
         externalQualityReportModel.goodQualityTapeInventoryBlock = goodQualityTapeInventoryBlock
         externalQualityReportModel.sumWorkResultQuantity =
-            externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
+        externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
+
         //ORDER QUANTITY
         val detailOrderQuantity =  ExternalQualityDetailModel("ORDER_QUANTITY", ExternalReportDetailType.ORDER_QUANTITY)
         val orderQuantityCalendarsSave =listProductOrder?.firstOrNull { x -> x.productName == externalQualityReportModel.productName }?.quantityByCalendars?.toMutableList()
-        val orderQuantityCalendars: MutableList<KeyValueResponse> = mutableListOf()
-        columns.forEach { (key) ->
-            val existingEntry = orderQuantityCalendarsSave?.find { it.key == key }
-            if (existingEntry == null) { orderQuantityCalendars.add(KeyValueResponse(key, "0")) }
-            else{
-                orderQuantityCalendars.add(KeyValueResponse(key, value=existingEntry.value))
-            }}
+        var orderQuantityCalendars: MutableList<KeyValueResponse> = mutableListOf()
+        val saveOrderQuantityCalendars: MutableList<KeyValueResponse> = mutableListOf()
 
-        detailOrderQuantity.quantityByCalendars= orderQuantityCalendars
+        //EXPORT PRODUCTION CONFIGURATION
+        val exportRate: Double
+        val hasConfigurationType = externalQualityReportModel.exportTypeConvert?.contains(",")
+        if(hasConfigurationType == true){
+            exportRate = exportConfiguration.firstOrNull { x-> x.productName == externalQualityReportModel.productName &&
+                    x.exportType == externalQualityReportModel.exportType }?.rate?.toDouble() ?: DefaultRate.MAX_RATE
+            val externalQualityExist = listDataExist.firstOrNull {
+               x-> x.productName ==  externalQualityReportModel.productName &&
+                   x.mold == externalQualityReportModel.mold &&
+                   x.exportTypeConvert == externalQualityReportModel.exportTypeConvert &&
+                   x.blockSh == externalQualityReportModel.blockSh &&
+                   x.completionRate == externalQualityReportModel.completionRate &&
+                   x.snapMold == externalQualityReportModel.snapMold
+           }
+            if(externalQualityExist == null){
+                //tao ban moi
+                val externalQualityExistConvert = ExternalQualityDetailExistModel(
+                    productName = externalQualityReportModel.productName,
+                    mold = externalQualityReportModel.mold,
+                    exportTypeConvert = externalQualityReportModel.exportTypeConvert,
+                    blockSh = externalQualityReportModel.blockSh,
+                    completionRate = externalQualityReportModel.completionRate,
+                    snapMold = externalQualityReportModel.snapMold
+                )
+                columns.forEach { (key) ->
+                    val existingEntry = orderQuantityCalendarsSave?.find { it.key == key }
+                    if (existingEntry == null) { saveOrderQuantityCalendars.add(KeyValueResponse(key, "0")) }
+                    else{
+                        val valueEntry = ((existingEntry.value)?.toDouble() ?: DefaultValueDouble.MIN_VALUE) * (exportRate / DefaultRate.MAX_RATE)
+                        saveOrderQuantityCalendars.add(KeyValueResponse(key, value= valueEntry.toInt().toString()))
+                    }}
+                externalQualityExistConvert.quantityByCalendars= saveOrderQuantityCalendars
+                detailOrderQuantity.quantityByCalendars= saveOrderQuantityCalendars
+                listDataExist.add(externalQualityExistConvert)
+                orderQuantityCalendars = saveOrderQuantityCalendars
+            }else{
+                val externalQualityCalendarExist = externalQualityExist.quantityByCalendars
+
+                externalQualityCalendarExist.forEach { x ->
+                    val existingEntry = orderQuantityCalendarsSave?.find { it.key == x.key }
+                    if (existingEntry == null) {
+                        orderQuantityCalendars.add(KeyValueResponse(x.key, "0"))
+                    } else {
+                        val valueEntry = ((existingEntry.value)?.toDouble() ?: 0.0) -  ((x.value)?.toDouble() ?: 0.0)
+                        orderQuantityCalendars.add(KeyValueResponse(x.key, value= valueEntry.toInt().toString()))
+                    }
+                }
+                detailOrderQuantity.quantityByCalendars = orderQuantityCalendars
+
+            }
+        }else{
+            columns.forEach { (key) ->
+                val existingEntry = orderQuantityCalendarsSave?.find { it.key == key }
+                if (existingEntry == null) { orderQuantityCalendars.add(KeyValueResponse(key, "0")) }
+                else{
+                    val valueEntry = (existingEntry.value)?.toDouble()
+                    orderQuantityCalendars.add(KeyValueResponse(key, value= valueEntry?.toInt().toString()))
+                }}
+
+            detailOrderQuantity.quantityByCalendars= orderQuantityCalendars
+        }
+
         detailData.add(detailOrderQuantity)
 
         //ACCUMULATED_ORDER_QUANTITY

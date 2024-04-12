@@ -121,13 +121,21 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
         set(value): Unit = set(24, value)
         get(): BigDecimal? = get(24) as BigDecimal?
 
-    open var machineNumber: Int?
+    open var quantityMachine: Int?
         set(value): Unit = set(25, value)
         get(): Int? = get(25) as Int?
 
     open var processCode: String?
         set(value): Unit = set(26, value)
         get(): String? = get(26) as String?
+
+    open var productionStartDate: OffsetDateTime?
+        set(value): Unit = set(27, value)
+        get(): OffsetDateTime? = get(27) as OffsetDateTime?
+
+    open var productionEndDate: OffsetDateTime?
+        set(value): Unit = set(28, value)
+        get(): OffsetDateTime? = get(28) as OffsetDateTime?
 
     // -------------------------------------------------------------------------
     // Primary key information
@@ -138,7 +146,7 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
     /**
      * Create a detached, initialised EquipmentProductivityRecord
      */
-    constructor(id: String? = null, equipmentCode: String? = null, description: String? = null, frame_1: String? = null, grpProcess: String? = null, mold: String? = null, operatingRate: BigDecimal? = null, time: Int? = null, count: BigDecimal? = null, task: BigDecimal? = null, sheetHour_100: BigDecimal? = null, blockSh: BigDecimal? = null, sltbHour: BigDecimal? = null, sltbSheet: BigDecimal? = null, sltbSet: BigDecimal? = null, sltbBlock: BigDecimal? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, capHour: BigDecimal? = null, capSheet: BigDecimal? = null, capSet: BigDecimal? = null, capBlock: BigDecimal? = null, machineNumber: Int? = null, processCode: String? = null): this() {
+    constructor(id: String? = null, equipmentCode: String? = null, description: String? = null, frame_1: String? = null, grpProcess: String? = null, mold: String? = null, operatingRate: BigDecimal? = null, time: Int? = null, count: BigDecimal? = null, task: BigDecimal? = null, sheetHour_100: BigDecimal? = null, blockSh: BigDecimal? = null, sltbHour: BigDecimal? = null, sltbSheet: BigDecimal? = null, sltbSet: BigDecimal? = null, sltbBlock: BigDecimal? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, capHour: BigDecimal? = null, capSheet: BigDecimal? = null, capSet: BigDecimal? = null, capBlock: BigDecimal? = null, quantityMachine: Int? = null, processCode: String? = null, productionStartDate: OffsetDateTime? = null, productionEndDate: OffsetDateTime? = null): this() {
         this.id = id
         this.equipmentCode = equipmentCode
         this.description = description
@@ -164,8 +172,10 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
         this.capSheet = capSheet
         this.capSet = capSet
         this.capBlock = capBlock
-        this.machineNumber = machineNumber
+        this.quantityMachine = quantityMachine
         this.processCode = processCode
+        this.productionStartDate = productionStartDate
+        this.productionEndDate = productionEndDate
         resetChangedOnNotNull()
     }
 
@@ -199,8 +209,10 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
             this.capSheet = value.capSheet
             this.capSet = value.capSet
             this.capBlock = value.capBlock
-            this.machineNumber = value.machineNumber
+            this.quantityMachine = value.quantityMachine
             this.processCode = value.processCode
+            this.productionStartDate = value.productionStartDate
+            this.productionEndDate = value.productionEndDate
             resetChangedOnNotNull()
         }
     }

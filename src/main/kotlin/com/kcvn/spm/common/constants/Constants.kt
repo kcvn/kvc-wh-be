@@ -246,12 +246,24 @@ class ProcessPlan {
     companion object {
         const val PROCESS = "Process"
         const val MACHINE = "Cap(1machine)"
-        const val MACHINENUMBER = "Số máy cần dùng/hiện có"
+        const val QUANTITY_MACHINE = "Số máy cần dùng/hiện có"
         const val PROCESS_DUC_LO = "Đục lỗ"
         const val PROCESS_DUC_LO_M = "T/H"
         const val AVERAGE_PLAN = "KH trung bình"
 
 
+    }
+}
+
+class DefaultRate {
+    companion object {
+        const val MAX_RATE = 100.0
+    }
+}
+
+class DefaultValueDouble {
+    companion object {
+        const val MIN_VALUE = 0.0
     }
 }
 

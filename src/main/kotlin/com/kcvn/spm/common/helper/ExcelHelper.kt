@@ -86,8 +86,9 @@ class ExcelHelper {
             isBorderBottom: Boolean = true,
             isBold: Boolean = false,
             isAlignCenter: Boolean = false,
-            indexColor: Short? = null
-        ) {
+            indexColor: Short? = null,
+            isNumberFormat: Boolean = false
+            ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
             row.createCell(colIndex).setCellValue(value)
@@ -108,6 +109,12 @@ class ExcelHelper {
                 font.fontHeightInPoints = fontTemplate.fontHeightInPoints
                 font.bold = true
                 style.setFont(font)
+            }
+            if(isNumberFormat){
+                val dataFormat = workbook.createDataFormat()
+                style.dataFormat = dataFormat.getFormat("#,##0")
+                val numberValue = value?.toDouble() ?: 0.0
+                row.createCell(colIndex).setCellValue(numberValue)
             }
             row.getCell(colIndex).cellStyle = style
         }
@@ -147,6 +154,22 @@ class ExcelHelper {
             return isEmpty
         }
 
+        fun setCellHeaderStyle(workbook: Workbook): CellStyle {
+            val style: CellStyle = workbook.createCellStyle()
+            style.alignment = HorizontalAlignment.CENTER
+            style.verticalAlignment = VerticalAlignment.CENTER
+            style.borderTop = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderBottom = BorderStyle.THIN
+            style.fillPattern = FillPatternType.NO_FILL
+            val font: Font = workbook.createFont()
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+            font.bold = true
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
+            return style
+        }
         fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int, formats: Array<String>): Boolean {
             for (i in startCol until endCol + 1) {
                 val cell = headerRowImport.getCell(i)

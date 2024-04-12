@@ -29,6 +29,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import kotlin.math.absoluteValue
 import kotlin.math.round
 
 @Service
@@ -114,9 +116,9 @@ class MaterialsService(
         val queryTapePre = tapeInfoRep.getTapeDetailByMonth(monthPre,yearPre)
         if(queryTapePre != null){
             //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
-            val dayReport = queryTapePre.requestDateEnd?.dayOfMonth
-            val dayQueryTapePre = request.startDate?.plusHours(7)?.dayOfMonth
-            if(dayQueryTapePre!! - dayReport!! != 1){
+            val dayReport = queryTapePre.requestDateEnd?.plusHours(7)?.toLocalDate()
+            val dayQueryTapePre = request.startDate?.plusHours(7)?.toLocalDate()
+            if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre).absoluteValue != 1L)){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
         }
@@ -125,9 +127,9 @@ class MaterialsService(
         val queryTapeNext = tapeInfoRep.getTapeDetailByMonth(monthNext,yearNext)
         if(queryTapeNext != null){
             //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
-            val dayReport = queryTapeNext.requestDateStart?.dayOfMonth
-            val dayQueryTapeNext = request.endDate?.plusHours(7)?.dayOfMonth
-            if(dayReport!! - dayQueryTapeNext!! != 1){
+            val dayReport = queryTapeNext.requestDateStart?.plusHours(7)?.toLocalDate()
+            val dayQueryTapeNext = request.endDate?.plusHours(7)?.toLocalDate()
+            if((ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport).absoluteValue != 1L)){
                 throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
             }
         }
@@ -191,6 +193,8 @@ class MaterialsService(
                         CommonUtils.getMessage(
                             "validate.importTape.completionRateProduct1"))
                 }else {
+
+
                     if(checkCompletionRate.effectiveDate!! > request.startDate){
                         check = false
                         messageErr.listMessageErr.add(

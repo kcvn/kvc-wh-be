@@ -7,5 +7,6 @@ data class QuantityReportModel (
     var productName : String? = null,
     var monthNumber : Int? = null,
     var yearNumber : Int? = null,
+    var orderDateFromTo: String? = null,
     var lstProcess: MutableList<KeyValueResponse> = mutableListOf()
 )

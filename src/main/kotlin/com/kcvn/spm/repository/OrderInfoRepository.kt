@@ -43,6 +43,12 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         if (!request.exportType.isNullOrEmpty()) {
             condition = condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
         }
+        if(request.startDate !=null ){
+            condition = condition.and(ORDER_INFO.ORDER_DATE.ge(DateTimeHelper.toTimeZone7(request.startDate)))
+        }
+        if(request.endDate !=null ){
+            condition = condition.and(ORDER_INFO.ORDER_DATE.le(DateTimeHelper.toTimeZone7(request.endDate)))
+        }
         condition = condition.and(ORDER_INFO.IS_DELETED.eq(false)).and(ORDER_INFO.IS_LATEST.eq(true))
         val sortFields = getSortFields(pageable.sort, ORDER_INFO.PRODUCT_NAME).toMutableList()
 

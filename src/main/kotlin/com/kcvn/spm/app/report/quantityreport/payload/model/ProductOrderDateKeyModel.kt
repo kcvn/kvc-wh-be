@@ -6,4 +6,5 @@ data class ProductOrderDateKeyModel(
     val productName:String?,
     val monthNumber: Int?,
     val yearNumber: Int?,
+    val orderDateFromTo: String?
 )

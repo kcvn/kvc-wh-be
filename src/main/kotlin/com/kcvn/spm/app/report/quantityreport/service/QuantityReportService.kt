@@ -5,6 +5,7 @@ import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityO
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
 import com.kcvn.spm.app.report.quantityreport.payload.response.CheckCalculateQuantityResponse
+import com.kcvn.spm.app.report.quantityreport.payload.response.InformationCalculateQuantityResponse
 import com.kcvn.spm.app.report.quantityreport.payload.response.PagingQuantityReportResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
@@ -31,6 +32,8 @@ import java.io.FileInputStream
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import kotlin.math.absoluteValue
 import kotlin.math.round
 
 
@@ -45,7 +48,7 @@ class QuantityReportService(
     private val calculateQuantityReportRep: CalculateQuantityReportRepository,
     private val quantityReportRep: QuantityReportRepository,
     private val processGroupRep: ProcessGroupRepository,
-    private val appSettingRepository: AppSettingRepository
+
 ) {
     fun calculateQuantity(request: CalculateQuantityRequest): BaseResponse<FileContentModel?> {
         val calculateQuantityReport = calculateQuantityReportRep.findByMonthReport(request)
@@ -107,9 +110,10 @@ class QuantityReportService(
             val queryCalculateQuantityReportPre = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthPre,yearPre)
             if(queryCalculateQuantityReportPre != null){
                 //val subtraction = request.startDate?.plusHours(7)!!.dayOfMonth.until(queryTapePre.requestDateEnd!!.dayOfMonth)
-                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.dayOfMonth
-                val dayReport = request.startDate?.plusHours(7)?.dayOfMonth
-                if(dayReport!! - dayQueryTapePre!! != 1){
+                val dayQueryTapePre = queryCalculateQuantityReportPre.endDate?.plusHours(7)?.toLocalDate()
+                val dayReport = request.startDate?.plusHours(7)?.toLocalDate()
+
+                if((ChronoUnit.DAYS.between(dayReport,dayQueryTapePre).absoluteValue != 1L)){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }
@@ -117,16 +121,9 @@ class QuantityReportService(
 
             val queryCalculateQuantityReportNext = calculateQuantityReportRep.getCalculateQuantityResultByMonthReport(monthNext,yearNext)
             if(queryCalculateQuantityReportNext != null){
-                //val subtraction = queryTapeNext.requestDateStart!!.until(request.endDate!!.plusHours(7), ChronoUnit.DAYS)
-                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.dayOfMonth
-                val dayReport = request.endDate?.plusHours(7)?.dayOfMonth
-                val checkLog = AppSetting(
-                    key = "CHECK_LOG",
-                    value = "${dayQueryTapeNext!! - dayReport!!}",
-                    description = "dayQueryTapeNext: ${dayQueryTapeNext} dayReport : + ${dayReport}"
-                )
-                appSettingRepository.add(checkLog)
-                if(dayQueryTapeNext!! - dayReport!! != 1){
+                val dayQueryTapeNext = queryCalculateQuantityReportNext.startDate?.plusHours(7)?.toLocalDate()
+                val dayReport = request.endDate?.plusHours(7)?.toLocalDate()
+                if(ChronoUnit.DAYS.between(dayQueryTapeNext, dayReport).absoluteValue != 1L){
                     throw BusinessException(CommonUtils.getMessage("validate.importTape.orderRequestDate"))
                 }
             }
@@ -155,6 +152,7 @@ class QuantityReportService(
             }
             val productsWithRate = productRep.getProductDetailWithCompletionRateByNames(productNames)
             //val productNames = productsWithRate.mapNotNull { x -> x?.name }.distinct()
+
             val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
             val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
             val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
@@ -359,12 +357,13 @@ class QuantityReportService(
         return response
     }
 
-    private fun mappingInformationCalculateQuantityResponse(data: List<InformationCalculateQuantity>): PagingQuantityReportResponse {
+    private fun mappingInformationCalculateQuantityResponse(data: List<InformationCalculateQuantityResponse>): PagingQuantityReportResponse {
         val group = data.groupBy {
             ProductOrderDateKeyModel(
                 it.productName,
                 it.monthNumber,
-                it.yearNumber
+                it.yearNumber,
+                it.orderDateFromTo
             )
         }
 
@@ -373,6 +372,7 @@ class QuantityReportService(
                 x.key.productName,
                 x.key.monthNumber,
                 x.key.yearNumber,
+                x.key.orderDateFromTo,
                 x.value.map { m -> KeyValueResponse(m.processStatistic, m.totalQuantityOfProcess.toString()) }.toMutableList()
             )
         }
@@ -383,7 +383,7 @@ class QuantityReportService(
         val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
         val processGroups = processGroupRep.getForProduct()
 
-        val columns = productProcesses.filter { x ->
+        val columns = productProcesses.asSequence().filter { x ->
             !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
         }.map { x ->
             val processGroup =
@@ -476,17 +476,7 @@ class QuantityReportService(
 
     fun setCellHeader(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?) {
         row.createCell(colIndex).setCellValue(value)
-        val cellStyle = workbook.createCellStyle()
-        cellStyle.cloneStyleFrom(style)
-        cellStyle.alignment = HorizontalAlignment.CENTER
-        cellStyle.borderTop = style.borderTop
-        cellStyle.borderLeft = BorderStyle.THIN
-        cellStyle.borderRight = BorderStyle.THIN
-        cellStyle.borderBottom = style.borderBottom
-
-        cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
-        cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
-
+        row.getCell(colIndex).cellStyle = style
     }
 
     private fun generateExcelRowPlan(
@@ -500,13 +490,12 @@ class QuantityReportService(
         var rowIndex = rowNumber
 
         val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, data.productName,isBold = true,isAlignCenter = true)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.monthNumber.toString(),isBold = true,isAlignCenter = true)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 3, style, data.yearNumber.toString(),isBold = true,isAlignCenter = true)
-        var colIndex = 3
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 0, style, data.productName,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, "${data.monthNumber.toString()}/${data.yearNumber.toString()}",isBold = true,isAlignCenter = true)
+        var colIndex = 2
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value
-            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value)
+            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value,isAlignCenter = true, isNumberFormat = true)
             colIndex++
         }
         rowIndex++
@@ -520,8 +509,8 @@ class QuantityReportService(
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0)
-        var headerCol = 3
-        val headerStyle = headerRow.getCell(1).cellStyle
+        var headerCol = 2
+        val headerStyle = ExcelHelper.setCellHeaderStyle(workbook)
         val columns = dataExport.columns
         if (dataExport.data != null){
             if (columns != null) {
@@ -566,7 +555,7 @@ class QuantityReportService(
         val redFont = workbook.createFont()
 
         // Đặt màu chữ là đỏ
-        redFont.setColor(IndexedColors.RED.getIndex())
+        redFont.color = IndexedColors.RED.getIndex()
         redFont.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
         redFont.fontHeightInPoints = 12.toShort()
         // Đặt font cho CellStyle

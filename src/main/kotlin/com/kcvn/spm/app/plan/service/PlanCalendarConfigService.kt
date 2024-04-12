@@ -20,8 +20,8 @@ class PlanCalendarConfigService(
 ) {
 
     fun getConfigByMonth(request: PlanCalendarConfigGetRequest): BaseResponse<PlanCalendarConfigModel> {
-        val month = request.date.month.value
-        val year = request.date.year
+        val month = request.planMonth.split("/")[0].toInt()
+        val year = request.planMonth.split("/")[1].toInt()
         val data = planCalendarConfigRep.getConfigByMonth(month, year) ?: return BaseResponse()
 
         val response = PlanCalendarConfigModel(
@@ -40,8 +40,8 @@ class PlanCalendarConfigService(
     }
 
     fun updateConfig(request: PlanCalendarConfigUpdateRequest): BaseResponse<Boolean> {
-        val month = request.month.monthValue
-        val year = request.month.year
+        val month = request.planMonth.split("/")[0].toInt()
+        val year = request.planMonth.split("/")[1].toInt()
 
         val data =  PlanCalendarConfig(
             month = month,

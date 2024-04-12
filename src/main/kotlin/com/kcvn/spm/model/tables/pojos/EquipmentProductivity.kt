@@ -41,8 +41,10 @@ data class EquipmentProductivity(
     var capSheet: BigDecimal? = null,
     var capSet: BigDecimal? = null,
     var capBlock: BigDecimal? = null,
-    var machineNumber: Int? = null,
-    var processCode: String? = null
+    var quantityMachine: Int? = null,
+    var processCode: String? = null,
+    var productionStartDate: OffsetDateTime? = null,
+    var productionEndDate: OffsetDateTime? = null
 ): Serializable {
 
 
@@ -204,17 +206,29 @@ data class EquipmentProductivity(
         }
         else if (this.capBlock != o.capBlock)
             return false
-        if (this.machineNumber == null) {
-            if (o.machineNumber != null)
+        if (this.quantityMachine == null) {
+            if (o.quantityMachine != null)
                 return false
         }
-        else if (this.machineNumber != o.machineNumber)
+        else if (this.quantityMachine != o.quantityMachine)
             return false
         if (this.processCode == null) {
             if (o.processCode != null)
                 return false
         }
         else if (this.processCode != o.processCode)
+            return false
+        if (this.productionStartDate == null) {
+            if (o.productionStartDate != null)
+                return false
+        }
+        else if (this.productionStartDate != o.productionStartDate)
+            return false
+        if (this.productionEndDate == null) {
+            if (o.productionEndDate != null)
+                return false
+        }
+        else if (this.productionEndDate != o.productionEndDate)
             return false
         return true
     }
@@ -247,8 +261,10 @@ data class EquipmentProductivity(
         result = prime * result + (if (this.capSheet == null) 0 else this.capSheet.hashCode())
         result = prime * result + (if (this.capSet == null) 0 else this.capSet.hashCode())
         result = prime * result + (if (this.capBlock == null) 0 else this.capBlock.hashCode())
-        result = prime * result + (if (this.machineNumber == null) 0 else this.machineNumber.hashCode())
+        result = prime * result + (if (this.quantityMachine == null) 0 else this.quantityMachine.hashCode())
         result = prime * result + (if (this.processCode == null) 0 else this.processCode.hashCode())
+        result = prime * result + (if (this.productionStartDate == null) 0 else this.productionStartDate.hashCode())
+        result = prime * result + (if (this.productionEndDate == null) 0 else this.productionEndDate.hashCode())
         return result
     }
 
@@ -280,8 +296,10 @@ data class EquipmentProductivity(
         sb.append(", ").append(capSheet)
         sb.append(", ").append(capSet)
         sb.append(", ").append(capBlock)
-        sb.append(", ").append(machineNumber)
+        sb.append(", ").append(quantityMachine)
         sb.append(", ").append(processCode)
+        sb.append(", ").append(productionStartDate)
+        sb.append(", ").append(productionEndDate)
 
         sb.append(")")
         return sb.toString()

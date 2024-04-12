@@ -14,6 +14,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -36,6 +37,18 @@ class QuantityReportRepository(
                 condition = condition.and(INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.le(request.endDate))
             }
 
+        }
+
+        val sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()
+        val sortTime = pageable.sort.find { x -> x.property == "timeSort" }
+        if(sortTime != null){
+            if(sortTime.direction == Sort.Direction.ASC){
+                sortFields.add(0, INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER.asc())
+                sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER.asc())
+            } else {
+                sortFields.add(0, INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER.desc())
+                sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER.desc())
+            }
         }
 
 //        val sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()
@@ -63,7 +76,7 @@ class QuantityReportRepository(
                 .on(INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID
                     .eq(CALCULATE_QUANTITY_RESULT.ID)))
             .where(condition.and(INFORMATION_CALCULATE_QUANTITY.IS_DELETED.eq(false)))
-            .orderBy(getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.CREATED_DATE))
+            .orderBy(sortFields)
 
             .fetchInto(InformationCalculateQuantityResponse::class.java)
 
@@ -85,8 +98,7 @@ class QuantityReportRepository(
             }
 
             else -> {
-                val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
-                throw InvalidDataAccessApiUsageException(errorMessage)
+                INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME
             }
         }
 

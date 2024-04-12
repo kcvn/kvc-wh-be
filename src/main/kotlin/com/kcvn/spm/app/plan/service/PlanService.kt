@@ -714,7 +714,7 @@ class PlanService(
                     for (processSummaryDetailModel in details) {
                         var capMachineValue: BigDecimal?
                         var sltbMachineValue: BigDecimal?
-                        var numberMachine: Double?
+                        val quantityMachine: Double?
 
                         val equipmentMachineModel = equipmentMachine.firstOrNull {
                             groupProcessCode?.contains(it.grpProcess) == true &&
@@ -727,7 +727,7 @@ class PlanService(
                         }
 
 
-                        numberMachine = equipmentMachineModel?.machineNumber?.toDouble()
+                        quantityMachine = equipmentMachineModel?.quantityMachine?.toDouble()
                         capMachineValue = when {
                             equipmentMachineModel != null -> {
                                 when (equipmentProductivityModel.unit) {
@@ -799,7 +799,8 @@ class PlanService(
 
                                 //machineRate
                                 val machineNumberDetailListModel = ProcessDetailListModel(
-                                    type = ProcessPlan.MACHINENUMBER,
+//                                    type = ProcessPlan.MACHINENUMBER,
+                                    type = "",
                                     typeKey = EquipmentType.MACHINE_RATE,
                                     quantityByCalendars = planDataByProcessModel.quantityByCalendars?.map { column ->
                                         val value = column.value?.toDoubleOrNull() ?: 0.0
@@ -811,8 +812,8 @@ class PlanService(
                                         }
                                         var rate = 0.0
                                         if (sltbMachineValueDouble != 0.0) {
-                                            if (numberMachine != null) {
-                                                rate = newValue.toDouble() / numberMachine.toDouble() *100
+                                            if (quantityMachine != null) {
+                                                rate = newValue.toDouble() / quantityMachine.toDouble() *100
                                             }
                                         }
                                         val color = when {
@@ -821,8 +822,8 @@ class PlanService(
                                             else -> Color.WHITE
                                         }
                                         val valueRate = when {
-                                            numberMachine == null || numberMachine.toInt() == 0 -> ""
-                                            else -> newValue + "/" + (numberMachine.toInt()).toString() + "\n" + (ceil(rate).toInt()).toString()
+                                            quantityMachine == null || quantityMachine.toInt() == 0 -> ""
+                                            else -> newValue + "/" + (quantityMachine.toInt()).toString() + "\n" + (ceil(rate).toInt()).toString()
                                         }
                                         KeyValueResponse(
                                             key = column.key,
@@ -1275,7 +1276,7 @@ class PlanService(
                     BigDecimal(ExcelHelper.getCellValue(row, 3)) * BigDecimal(100)
                 ),
                 sheetHour_100 = NumberHelper.truncateDecimal(BigDecimal(ExcelHelper.getCellValue(row, 7))),
-                machineNumber = ExcelHelper.getCellValue(row, 9).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
+                quantityMachine = ExcelHelper.getCellValue(row, 9).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
                 processCode = ExcelHelper.getCellValue(row, 10).let { if (it.length > 6) it.substring(0, 6) else it },
                 description = "insert"
             )

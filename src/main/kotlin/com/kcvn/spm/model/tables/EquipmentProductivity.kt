@@ -185,14 +185,26 @@ open class EquipmentProductivity(
     val CAP_BLOCK: TableField<EquipmentProductivityRecord, BigDecimal?> = createField(DSL.name("cap_block"), SQLDataType.NUMERIC(10, 2).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.NUMERIC)), this, "")
 
     /**
-     * The column <code>public.equipment_productivity.machine_number</code>.
+     * The column <code>public.equipment_productivity.quantity_machine</code>.
      */
-    val MACHINE_NUMBER: TableField<EquipmentProductivityRecord, Int?> = createField(DSL.name("machine_number"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+    val QUANTITY_MACHINE: TableField<EquipmentProductivityRecord, Int?> = createField(DSL.name("quantity_machine"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
 
     /**
      * The column <code>public.equipment_productivity.process_code</code>.
      */
     val PROCESS_CODE: TableField<EquipmentProductivityRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(6), this, "")
+
+    /**
+     * The column
+     * <code>public.equipment_productivity.production_start_date</code>.
+     */
+    val PRODUCTION_START_DATE: TableField<EquipmentProductivityRecord, OffsetDateTime?> = createField(DSL.name("production_start_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
+
+    /**
+     * The column
+     * <code>public.equipment_productivity.production_end_date</code>.
+     */
+    val PRODUCTION_END_DATE: TableField<EquipmentProductivityRecord, OffsetDateTime?> = createField(DSL.name("production_end_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
 
     private constructor(alias: Name, aliased: Table<EquipmentProductivityRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<EquipmentProductivityRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

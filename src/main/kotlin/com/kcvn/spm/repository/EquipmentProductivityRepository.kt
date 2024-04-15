@@ -23,7 +23,7 @@ class EquipmentProductivityRepository(private val context: DSLContext) {
             val transactionalContext = DSL.using(configuration)
             result = transactionalContext.insertInto(
                 EQUIPMENT_PRODUCTIVITY,
-                EQUIPMENT_PRODUCTIVITY.EQUIPMENT_CODE,
+                EQUIPMENT_PRODUCTIVITY.PROCESS_NAME,
                 EQUIPMENT_PRODUCTIVITY.GRP_PROCESS,
                 EQUIPMENT_PRODUCTIVITY.DESCRIPTION,
                 EQUIPMENT_PRODUCTIVITY.FRAME_1,
@@ -49,7 +49,7 @@ class EquipmentProductivityRepository(private val context: DSLContext) {
                 EQUIPMENT_PRODUCTIVITY.IS_DELETED,
                 EQUIPMENT_PRODUCTIVITY.UPDATED_DATE
             ).values(
-                data.equipmentCode,
+                data.processName,
                 data.grpProcess,
                 data.description,
                 data.frame_1,

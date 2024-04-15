@@ -4,12 +4,18 @@ import com.kcvn.spm.app.plan.payload.model.PlanProductCreateModel
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Plan
+import com.kcvn.spm.model.tables.pojos.PlanDetail
+import com.kcvn.spm.model.tables.pojos.PlanProcess
 import com.kcvn.spm.model.tables.pojos.PlanProcessTemp
+import com.kcvn.spm.model.tables.pojos.PlanProduct
 import com.kcvn.spm.model.tables.pojos.PlanProductTemp
 import com.kcvn.spm.model.tables.pojos.PlanTemp
 import com.kcvn.spm.model.tables.references.PLAN
+import com.kcvn.spm.model.tables.references.PLAN_DETAIL
 import com.kcvn.spm.model.tables.references.PLAN_DETAIL_TEMP
+import com.kcvn.spm.model.tables.references.PLAN_PROCESS
 import com.kcvn.spm.model.tables.references.PLAN_PROCESS_TEMP
+import com.kcvn.spm.model.tables.references.PLAN_PRODUCT
 import com.kcvn.spm.model.tables.references.PLAN_PRODUCT_TEMP
 import com.kcvn.spm.model.tables.references.PLAN_TEMP
 import org.jooq.DSLContext
@@ -157,6 +163,99 @@ class PlanRepository(private val context: DSLContext) {
                 }.flatten()
                 transactionalContext.batch(queryPlanDetail).execute()
             }
+        }
+    }
+
+    fun getPlanTemp(): Plan? {
+        return context.selectFrom(PLAN_TEMP)
+            .where(PLAN.IS_DELETED.eq(false))
+            .fetchInto(Plan::class.java)
+            .firstOrNull()
+    }
+
+    fun createPlan(plan: Plan, planProducts: List<PlanProduct>, planProcesses: List<PlanProcess>, planDetails: List<PlanDetail>) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+            transactionalContext.insertInto(
+                PLAN,
+                PLAN.ID,
+                PLAN.PLAN_CODE,
+                PLAN.DESCRIPTION,
+                PLAN.MONTH,
+                PLAN.YEAR,
+                PLAN.START_DATE,
+                PLAN.END_DATE,
+                PLAN.IS_ACTIVE,
+                PLAN.VERSION,
+                PLAN.CREATED_BY
+            ).values(
+                plan.id, plan.planCode, plan.description, plan.month, plan.year,
+                plan.startDate, plan.endDate, plan.isActive, plan.version, createdBy
+            ).execute()
+
+            val queryPlanProduct = planProducts.map { item ->
+                transactionalContext.insertInto(
+                    PLAN_PRODUCT,
+                    PLAN_PRODUCT.ID,
+                    PLAN_PRODUCT.PLAN_ID,
+                    PLAN_PRODUCT.PRODUCT_NAME,
+                    PLAN_PRODUCT.FRAME_1,
+                    PLAN_PRODUCT.MOLD,
+                    PLAN_PRODUCT.PCS_SH,
+                    PLAN_PRODUCT.BLOCK_SH,
+                    PLAN_PRODUCT.CREATED_BY
+                ).values(
+                    item.id, item.planId, item.productName, item.frame_1, item.mold, item.pcsSh, item.blockSh, createdBy
+                )
+            }
+            transactionalContext.batch(queryPlanProduct).execute()
+
+            val queryPlanProcess = planProcesses.map { item ->
+                transactionalContext.insertInto(
+                    PLAN_PROCESS,
+                    PLAN_PROCESS.ID,
+                    PLAN_PROCESS.PLAN_ID,
+                    PLAN_PROCESS.PLAN_PRODUCT_ID,
+                    PLAN_PROCESS.PROCESS_CODE,
+                    PLAN_PROCESS.PROCESS_NAME,
+                    PLAN_PROCESS.PROCESS_CONVERT_CODE,
+                    PLAN_PROCESS.LAYER_CODE,
+                    PLAN_PROCESS.COMPLETION_RATE,
+                    PLAN_PROCESS.INVENTORY,
+                    PLAN_PROCESS.UNIT,
+                    PLAN_PROCESS.PROCESS_SEQUENCE,
+                    PLAN_PROCESS.PROCESS_NAME_JP,
+                    PLAN_PROCESS.PROCESS_GROUP,
+                    PLAN_PROCESS.PROCESS_STATISTIC_CODE,
+                    PLAN_PROCESS.PARENT_ID,
+                    PLAN_PROCESS.CREATED_BY
+                ).values(
+                    item.id, item.planId, item.planProductId, item.processCode, item.processName, item.processConvertCode,
+                    item.layerCode, item.completionRate, item.inventory, item.unit, item.processSequence, item.processNameJp,
+                    item.processGroup, item.processStatisticCode, item.parentId, createdBy
+                )
+            }
+            transactionalContext.batch(queryPlanProcess).execute()
+
+            val queryPlanDetail = planDetails.map { item ->
+                transactionalContext.insertInto(
+                    PLAN_DETAIL,
+                    PLAN_DETAIL.ID,
+                    PLAN_DETAIL.PLAN_ID,
+                    PLAN_DETAIL.PLAN_PRODUCT_ID,
+                    PLAN_DETAIL.PLAN_PROCESS_ID,
+                    PLAN_DETAIL.TITLE,
+                    PLAN_DETAIL.PLAN_DATE,
+                    PLAN_DETAIL.SHEET_QUANTITY,
+                    PLAN_DETAIL.BLOCK_QUANTITY,
+                    PLAN_DETAIL.CREATED_BY
+                ).values(
+                    item.id, item.planId, item.planProductId, item.planProcessId, item.title, item.planDate, item.sheetQuantity, item.blockQuantity, createdBy
+                )
+            }
+            transactionalContext.batch(queryPlanDetail).execute()
         }
     }
 }

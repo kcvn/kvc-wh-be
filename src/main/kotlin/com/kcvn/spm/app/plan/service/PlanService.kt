@@ -49,6 +49,7 @@ import com.kcvn.spm.repository.HolidaysCalenderRepository
 import com.kcvn.spm.repository.PlanDetailRepository
 import com.kcvn.spm.repository.PlanProcessRepository
 import com.kcvn.spm.repository.PlanProductRepository
+import com.kcvn.spm.repository.PlanRepository
 import com.kcvn.spm.repository.ProcessGroupRepository
 import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.WorkResultRepository
@@ -76,6 +77,7 @@ import kotlin.math.ceil
 @Service
 @Transactional
 class PlanService(
+    private val planRep: PlanRepository,
     private val planProductRep: PlanProductRepository,
     private val planProcessRep: PlanProcessRepository,
     private val planDetailRep: PlanDetailRepository,
@@ -1894,6 +1896,22 @@ class PlanService(
                 rowNumber++
             }
         }
+    }
+
+    //endregion
+
+    //region PLAN_TEMP
+
+    fun approve(): BaseResponse<Boolean> {
+        val planTemp = planRep.getPlanTemp() ?: throw BusinessException ("Chưa có kế hoạch nào cần phê duyệt")
+
+        val planProductTemps = planProductRep.getPlanProductTemp()
+        val planProcessTemps = planProcessRep.getPlanProcessTemp()
+        val planDetailTemps = planDetailRep.getPlanDetailTemp()
+
+        planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
+
+        return BaseResponse(true, "Phê duyệt kế hoạch thành công")
     }
 
     //endregion

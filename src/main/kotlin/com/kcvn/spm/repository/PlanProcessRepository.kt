@@ -2,7 +2,9 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.model.tables.pojos.PlanProcess
+import com.kcvn.spm.model.tables.pojos.PlanProcessTemp
 import com.kcvn.spm.model.tables.references.PLAN_PROCESS
+import com.kcvn.spm.model.tables.references.PLAN_PROCESS_TEMP
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
@@ -28,6 +30,12 @@ class PlanProcessRepository(private val context: DSLContext): SortingRepository(
         return context.selectFrom(PLAN_PROCESS)
             .where(PLAN_PROCESS.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .orderBy(sortFields).fetchInto(PlanProcess::class.java)
+    }
+
+    fun getPlanProcessTemp(): List<PlanProcess> {
+        return context.selectFrom(PLAN_PROCESS_TEMP)
+            .where(PLAN_PROCESS_TEMP.IS_DELETED.eq(false))
+            .fetchInto(PlanProcess::class.java)
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

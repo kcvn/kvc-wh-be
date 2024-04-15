@@ -56,4 +56,16 @@ class PlanCalendarConfigRepository(private val context: DSLContext) {
                 .execute()
         }
     }
+
+    fun isOverlap(data: PlanCalendarConfig): Boolean {
+        var condition = DSL.noCondition()
+        condition = condition.and(PLAN_CALENDAR_CONFIG.IS_DELETED.eq(false))
+            .and(
+                (PLAN_CALENDAR_CONFIG.END_DATE.ge(data.startDate).and(PLAN_CALENDAR_CONFIG.END_DATE.le(data.endDate)))
+                    .or(PLAN_CALENDAR_CONFIG.START_DATE.le(data.endDate).and(PLAN_CALENDAR_CONFIG.END_DATE.ge(data.endDate)))
+            )
+
+        val exist = context.selectFrom(PLAN_CALENDAR_CONFIG).where(condition).fetchInto(PlanCalendarConfig::class.java).firstOrNull()
+        return exist != null
+    }
 }

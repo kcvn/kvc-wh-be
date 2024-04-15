@@ -2,9 +2,11 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.model.tables.pojos.PlanProduct
+import com.kcvn.spm.model.tables.pojos.PlanProductTemp
 import com.kcvn.spm.model.tables.references.PLAN
 import com.kcvn.spm.model.tables.references.PLAN_PROCESS
 import com.kcvn.spm.model.tables.references.PLAN_PRODUCT
+import com.kcvn.spm.model.tables.references.PLAN_PRODUCT_TEMP
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -84,6 +86,12 @@ class PlanProductRepository(private val context: DSLContext) {
             .where(PLAN_PRODUCT.ID.eq(id).and(PLAN_PRODUCT.IS_DELETED.eq(false)))
             .fetchInto(PlanProduct::class.java)
             .firstOrNull()
+    }
+
+    fun getPlanProductTemp(): List<PlanProduct> {
+        return context.selectFrom(PLAN_PRODUCT_TEMP)
+            .where(PLAN_PRODUCT_TEMP.IS_DELETED.eq(false))
+            .fetchInto(PlanProduct::class.java)
     }
 
     private fun searchCondition(request: PlanSearchRequest): Condition {

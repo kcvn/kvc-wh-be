@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -52,5 +53,12 @@ class PlanController(private val planService: PlanService) {
     fun getListSummary(request: PlanSearchRequest): ResponseEntity<PlanSummaryResponse> {
         val data = planService.getPlanSummary(request)
         return ResponseEntity<PlanSummaryResponse>(data, HttpStatus.OK)
+    }
+
+    @PostMapping("/approve")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+    fun approve(): ResponseEntity<BaseResponse<Boolean>> {
+        val data = planService.approve()
+        return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)
     }
 }

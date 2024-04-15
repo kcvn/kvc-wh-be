@@ -716,8 +716,9 @@ class PlanService(
                         val filteredEquipmentMachine = equipmentMachine.filter {
                             groupProcessCode?.contains(it.grpProcess) == true &&
                                     it.frame_1 == planSummaryModel.frame1 &&
-                                    (it.mold?.contains(processSummaryDetailModel.type ?: "") == true ||
-                                            it.equipmentCode?.contains(processSummaryDetailModel.type ?: "") == true)
+                                    (it.mold?.contains(processSummaryDetailModel.type ?: "") == true
+                                            ||it.processName?.contains(processSummaryDetailModel.type ?: "") == true
+                                            )
                         }
 
                         val equipmentMachineModel = filteredEquipmentMachine.ifEmpty {
@@ -1233,7 +1234,7 @@ class PlanService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val equipmentProductivity = EquipmentProductivity(
                 grpProcess = ExcelHelper.getCellValue(row, 1).let { if (it.length > 5) it.substring(0, 5) else it },
-                equipmentCode = ExcelHelper.getCellValue(row, 11),
+                processName = ExcelHelper.getCellValue(row, 11),
                 mold = ExcelHelper.getCellValue(row, 2),
                 task = BigDecimal(ExcelHelper.getCellValue(row, 6)),
                 time = ExcelHelper.getCellValue(row, 4).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),

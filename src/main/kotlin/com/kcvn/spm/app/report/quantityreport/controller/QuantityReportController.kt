@@ -68,9 +68,9 @@ class QuantityReportController(
         request: QuantityReportRequest?,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["yearNumber"], direction = Sort.Direction.DESC),
             SortDefault(sort = ["monthNumber"], direction = Sort.Direction.DESC),
-            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
         ) pageable: Pageable,
     ) : ResponseEntity<PagingQuantityReportResponse>{
         val data = quantityReportService.getListQuantityReport(request,pageable)
@@ -98,7 +98,7 @@ class QuantityReportController(
     }
 
     @GetMapping("/export-excel")
-//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_REPORT_QUANTITY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_REPORT_QUANTITY.value) || hasRole('ADMIN')")
     fun exportQuantityReportExcel(
         request: QuantityReportRequest?,
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)

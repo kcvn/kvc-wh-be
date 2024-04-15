@@ -65,9 +65,9 @@ open class EquipmentProductivity(
     val ID: TableField<EquipmentProductivityRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
-     * The column <code>public.equipment_productivity.equipment_code</code>.
+     * The column <code>public.equipment_productivity.process_name</code>.
      */
-    val EQUIPMENT_CODE: TableField<EquipmentProductivityRecord, String?> = createField(DSL.name("equipment_code"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val PROCESS_NAME: TableField<EquipmentProductivityRecord, String?> = createField(DSL.name("process_name"), SQLDataType.VARCHAR(20).nullable(false), this, "")
 
     /**
      * The column <code>public.equipment_productivity.description</code>.

@@ -69,30 +69,33 @@ class ExternalQualityReportService(
         }
         //create data filter
         val rowNumber = 2
-        val numberRowData = 12
+        var numberRowData = 12
 
         if (dataExport.data?.isNotEmpty() == true) {
             var rowProductIndex = rowNumber
             var rowShippingIndex = rowNumber
             var rowReportIndex =rowNumber
             for (productReport in dataExport.data!!) {
+                if(productReport.exportType?.contains(",") == true) {
+                    numberRowData = 18
+                }
                 for (i in 0 until numberRowData) {
                     val dataRow = sheet.getRow(rowProductIndex) ?: sheet.createRow(rowProductIndex)
                     ExcelHelper.run {
                         setCellValueCustom(workbook,dataRow, 0, style, productReport.productShortcutName, isAlignCenter = true)
                         setCellValueCustom(workbook,dataRow, 1, style, productReport.productName, isAlignCenter = true)
                         setCellValueCustom(workbook,dataRow, 2, style, productReport.mold, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 3, style, productReport.exportType, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 4, style, productReport.pcsSh.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 5, style, productReport.blockSh.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 6, style, productReport.productLine, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 7, style, productReport.snapMold, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 8, style, productReport.layerCount.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 9, style, productReport.tapeCommon, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 10, style, productReport.completionRate.toString(), isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 3, style, productReport.pcsSh.toString(), isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 4, style, productReport.blockSh.toString(), isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 5, style, productReport.productLine, isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 6, style, productReport.snapMold, isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 7, style, productReport.layerCount.toString(), isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 8, style, productReport.tapeCommon, isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 9, style, productReport.completionRate.toString(), isAlignCenter = true)
                     }
                     rowProductIndex++
                 }
+                numberRowData = 12
             }
             for (productReport in dataExport.data!!) {
                 for (shippingData in productReport.shippingData) {
@@ -100,6 +103,27 @@ class ExternalQualityReportService(
                     ExcelHelper.setCellValueCustom(workbook,dataRow, 11, style, shippingData.value, isAlignCenter = true)
                     rowShippingIndex++
                 }
+            }
+            rowShippingIndex = 2
+            for (productReport in dataExport.data!!) {
+                for (i in 0 until 6) {
+                    val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, "", isAlignCenter = true)
+                }
+               if(productReport.exportType1 !=null){
+                   for (i in 0 until 6) {
+                       val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
+                       ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.exportType1, isAlignCenter = true)
+                   }
+               }
+                if(productReport.exportType2 !=null){
+                    for (i in 0 until 6) {
+                        val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
+                        ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.exportType2, isAlignCenter = true)
+                    }
+                }
+
+
             }
 
             for (productReport in dataExport.data!!) {

@@ -56,14 +56,13 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             ORDER_INFO.PRODUCT_NAME.`as`("productName"),
             DSL.right(ORDER_INFO.PRODUCT_NAME, 7).`as`("productShortcutName"),
             PRODUCT.MOLD.`as`("mold"),
-            DSL.field("unnest(string_to_array(PRODUCT.EXPORT_TYPE, ', '))").`as`("exportType"),
             ORDER_INFO.PCS_SH.`as`("pcsSh"),
             ORDER_INFO.BLOCK_SH.`as`("blockSh"),
             PRODUCT.SNAP_MOLD.`as`("snapMold"),
             ORDER_INFO.LAYER_COUNT.`as`("layerCount"),
             PRODUCT.TAPE_COMMON.`as`("tapeCommon"),
             PRODUCT.PRODUCT_LINE.`as`("productLine"),
-            PRODUCT.EXPORT_TYPE.`as`("exportTypeConvert"),
+            PRODUCT.EXPORT_TYPE.`as`("exportType"),
             ).from(ORDER_INFO)
             .join(PRODUCT)
             .on(ORDER_INFO.PRODUCT_NAME.eq(PRODUCT.NAME).and(PRODUCT.IS_DELETED.eq(false)))

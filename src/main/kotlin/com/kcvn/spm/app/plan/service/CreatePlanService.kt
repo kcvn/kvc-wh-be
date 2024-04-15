@@ -273,7 +273,7 @@ class CreatePlanService(
                 val planProductCreateModel = generatePlanProductModel(product)
 
                 val parentProcesses = processes.filter { x ->
-                    !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
+                    !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
                         && x.processConvertCode != processIns.processConvertCode
                 }.sortedByDescending { x -> x.dayOfImplementation ?: 0 }
                 val childrenProcesses = processes.filter { x ->
@@ -519,7 +519,7 @@ class CreatePlanService(
                 blockSh = product.blockSh,
                 planProcesses = x.value.asSequence().map { m -> m.planProcesses }.flatten().groupBy { m -> Pair(m.processCode, m.layerCode) }.map { m ->
                     val process = m.value.first()
-                    PlanProcessCreateModel(
+                    val result = PlanProcessCreateModel(
                         processCode = m.key.first,
                         processName = process.processName,
                         processConvertCode = process.processConvertCode,
@@ -534,6 +534,8 @@ class CreatePlanService(
                         childrenProcesses = process.childrenProcesses,
                         planDetails = m.value.map { t -> t.planDetails }.flatten().toMutableList(),
                     )
+                    result.planDetails.addAll(calculateAccumulation(result.planDetails))
+                    result
                 }.toMutableList()
             )
         }
@@ -571,35 +573,34 @@ class CreatePlanService(
     }
 
     private fun mappingPlanProcessModel(planProcesses: MutableList<PlanProcessCreateModel>): MutableList<PlanProcessCreateModel> {
-        val data = planProcesses.groupBy { x -> x.processCode }
-            .map { x ->
-                val process = x.value.first()
-                val result = PlanProcessCreateModel(
-                    processCode = x.key,
-                    processName = process.processName,
-                    processConvertCode = process.processConvertCode,
-                    layerCode = process.layerCode,
-                    completionRate = process.completionRate,
-                    inventory = process.inventory,
-                    unit = process.unit,
-                    processSequence = process.processSequence,
-                    processNameJp = process.processNameJp,
-                    processGroup = process.processGroup,
-                    processStatisticCode = process.processStatisticCode,
-                    childrenProcesses = process.childrenProcesses,
-                    planDetails = x.value.asSequence().map { m -> m.planDetails }.flatten().groupBy { m -> m.planDate }.map { m ->
-                        PlanDetailCreateModel(
-                            title = m.value.first().title,
-                            planDate = m.key,
-                            sheetQuantity = m.value.sumOf { t -> t.sheetQuantity ?: 0 },
-                            blockQuantity = m.value.sumOf { t -> t.blockQuantity ?: 0 }
-                        )
-                    }.toMutableList()
-                )
-                val accumulations = calculateAccumulation(result.planDetails)
-                result.planDetails.addAll(accumulations)
-                result
-            }.toMutableList()
+        val data = mutableListOf<PlanProcessCreateModel>()
+        for (item in planProcesses.groupBy { x -> x.processCode }) {
+            val process = item.value.first()
+            val result = PlanProcessCreateModel(
+                processCode = item.key,
+                processName = process.processName,
+                processConvertCode = process.processConvertCode,
+                layerCode = process.layerCode,
+                completionRate = process.completionRate,
+                inventory = process.inventory,
+                unit = process.unit,
+                processSequence = process.processSequence,
+                processNameJp = process.processNameJp,
+                processGroup = process.processGroup,
+                processStatisticCode = process.processStatisticCode,
+                childrenProcesses = process.childrenProcesses.distinct().toMutableList(),
+                planDetails = item.value.asSequence().map { m -> m.planDetails }.flatten().groupBy { m -> m.planDate }.map { m ->
+                    PlanDetailCreateModel(
+                        title = m.value.first().title,
+                        planDate = m.key,
+                        sheetQuantity = m.value.sumOf { t -> t.sheetQuantity ?: 0 },
+                        blockQuantity = m.value.sumOf { t -> t.blockQuantity ?: 0 }
+                    )
+                }.toMutableList()
+            )
+            data.add(result)
+        }
+
 
         return data
     }

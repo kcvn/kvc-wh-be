@@ -77,7 +77,7 @@ import kotlin.math.ceil
 @Service
 @Transactional
 class PlanService(
-    private val planRep: PlanRepository
+    private val planRep: PlanRepository,
     private val planProductRep: PlanProductRepository,
     private val planProcessRep: PlanProcessRepository,
     private val planDetailRep: PlanDetailRepository,

@@ -43,7 +43,9 @@ import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
+import com.kcvn.spm.model.tables.TapeEnRoute
 import com.kcvn.spm.model.tables.TapeInfo
+import com.kcvn.spm.model.tables.TapeInventory
 import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
 
@@ -263,9 +265,19 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val SYSTEM_LOCK: SystemLock get() = SystemLock.SYSTEM_LOCK
 
     /**
+     * The table <code>public.tape_en_route</code>.
+     */
+    val TAPE_EN_ROUTE: TapeEnRoute get() = TapeEnRoute.TAPE_EN_ROUTE
+
+    /**
      * The table <code>public.tape_info</code>.
      */
     val TAPE_INFO: TapeInfo get() = TapeInfo.TAPE_INFO
+
+    /**
+     * The table <code>public.tape_inventory</code>.
+     */
+    val TAPE_INVENTORY: TapeInventory get() = TapeInventory.TAPE_INVENTORY
 
     /**
      * The table <code>public.update_tape</code>.
@@ -319,7 +331,9 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         ProductProcess.PRODUCT_PROCESS,
         SyncHistory.SYNC_HISTORY,
         SystemLock.SYSTEM_LOCK,
+        TapeEnRoute.TAPE_EN_ROUTE,
         TapeInfo.TAPE_INFO,
+        TapeInventory.TAPE_INVENTORY,
         UpdateTape.UPDATE_TAPE,
         WorkResult.WORK_RESULT
     )

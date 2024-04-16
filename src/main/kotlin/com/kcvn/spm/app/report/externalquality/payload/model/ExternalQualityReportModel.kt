@@ -20,8 +20,13 @@ data class ExternalQualityReportModel(
     var sumWorkResultQuantity: Int? = null,
     var goodQualityTapeInventorySet: Int? = 0,
     var goodQualityTapeInventoryBlock: Int? =0,
-    var tapeInventoryQuantity: Int? = null,
-    var tapeExpireQuantity: Int? = null,
+    var tapeInventoryQuantity1: Int? = null,
+    var tapeExpireQuantity1: Int? = null,
+    var tapeInventoryQuantity2: Int? = null,
+    var tapeExpireQuantity2: Int? = null,
+    var exportType1: String? = null,
+    var exportType2: String? = null,
+    var exportTypes: List<KeyValueCustom> = listOf(),
     var shippingData: List<KeyValueResponse> = listOf(),
     var details: List<ExternalQualityDetailModel> = listOf()
 )

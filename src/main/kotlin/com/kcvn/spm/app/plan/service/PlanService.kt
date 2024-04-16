@@ -49,6 +49,7 @@ import com.kcvn.spm.repository.HolidaysCalenderRepository
 import com.kcvn.spm.repository.PlanDetailRepository
 import com.kcvn.spm.repository.PlanProcessRepository
 import com.kcvn.spm.repository.PlanProductRepository
+import com.kcvn.spm.repository.PlanRepository
 import com.kcvn.spm.repository.ProcessGroupRepository
 import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.WorkResultRepository
@@ -76,6 +77,7 @@ import kotlin.math.ceil
 @Service
 @Transactional
 class PlanService(
+    private val planRep: PlanRepository,
     private val planProductRep: PlanProductRepository,
     private val planProcessRep: PlanProcessRepository,
     private val planDetailRep: PlanDetailRepository,
@@ -716,8 +718,9 @@ class PlanService(
                         val filteredEquipmentMachine = equipmentMachine.filter {
                             groupProcessCode?.contains(it.grpProcess) == true &&
                                     it.frame_1 == planSummaryModel.frame1 &&
-                                    (it.mold?.contains(processSummaryDetailModel.type ?: "") == true ||
-                                            it.equipmentCode?.contains(processSummaryDetailModel.type ?: "") == true)
+                                    (it.mold?.contains(processSummaryDetailModel.type ?: "") == true
+                                            ||it.processName?.contains(processSummaryDetailModel.type ?: "") == true
+                                            )
                         }
 
                         val equipmentMachineModel = filteredEquipmentMachine.ifEmpty {
@@ -1233,7 +1236,7 @@ class PlanService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val equipmentProductivity = EquipmentProductivity(
                 grpProcess = ExcelHelper.getCellValue(row, 1).let { if (it.length > 5) it.substring(0, 5) else it },
-                equipmentCode = ExcelHelper.getCellValue(row, 11),
+                processName = ExcelHelper.getCellValue(row, 11),
                 mold = ExcelHelper.getCellValue(row, 2),
                 task = BigDecimal(ExcelHelper.getCellValue(row, 6)),
                 time = ExcelHelper.getCellValue(row, 4).run { if (endsWith(".0")) substring(0, length - 2) else this }.toInt(),
@@ -1893,6 +1896,22 @@ class PlanService(
                 rowNumber++
             }
         }
+    }
+
+    //endregion
+
+    //region PLAN_TEMP
+
+    fun approve(): BaseResponse<Boolean> {
+        val planTemp = planRep.getPlanTemp() ?: throw BusinessException ("Chưa có kế hoạch nào cần phê duyệt")
+
+        val planProductTemps = planProductRep.getPlanProductTemp()
+        val planProcessTemps = planProcessRep.getPlanProcessTemp()
+        val planDetailTemps = planDetailRep.getPlanDetailTemp()
+
+        planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
+
+        return BaseResponse(true, "Phê duyệt kế hoạch thành công")
     }
 
     //endregion

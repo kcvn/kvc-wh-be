@@ -23,7 +23,7 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
         set(value): Unit = set(0, value)
         get(): String? = get(0) as String?
 
-    open var equipmentCode: String?
+    open var processName: String?
         set(value): Unit = set(1, value)
         get(): String? = get(1) as String?
 
@@ -146,9 +146,9 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
     /**
      * Create a detached, initialised EquipmentProductivityRecord
      */
-    constructor(id: String? = null, equipmentCode: String? = null, description: String? = null, frame_1: String? = null, grpProcess: String? = null, mold: String? = null, operatingRate: BigDecimal? = null, time: Int? = null, count: BigDecimal? = null, task: BigDecimal? = null, sheetHour_100: BigDecimal? = null, blockSh: BigDecimal? = null, sltbHour: BigDecimal? = null, sltbSheet: BigDecimal? = null, sltbSet: BigDecimal? = null, sltbBlock: BigDecimal? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, capHour: BigDecimal? = null, capSheet: BigDecimal? = null, capSet: BigDecimal? = null, capBlock: BigDecimal? = null, quantityMachine: Int? = null, processCode: String? = null, productionStartDate: OffsetDateTime? = null, productionEndDate: OffsetDateTime? = null): this() {
+    constructor(id: String? = null, processName: String? = null, description: String? = null, frame_1: String? = null, grpProcess: String? = null, mold: String? = null, operatingRate: BigDecimal? = null, time: Int? = null, count: BigDecimal? = null, task: BigDecimal? = null, sheetHour_100: BigDecimal? = null, blockSh: BigDecimal? = null, sltbHour: BigDecimal? = null, sltbSheet: BigDecimal? = null, sltbSet: BigDecimal? = null, sltbBlock: BigDecimal? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, capHour: BigDecimal? = null, capSheet: BigDecimal? = null, capSet: BigDecimal? = null, capBlock: BigDecimal? = null, quantityMachine: Int? = null, processCode: String? = null, productionStartDate: OffsetDateTime? = null, productionEndDate: OffsetDateTime? = null): this() {
         this.id = id
-        this.equipmentCode = equipmentCode
+        this.processName = processName
         this.description = description
         this.frame_1 = frame_1
         this.grpProcess = grpProcess
@@ -185,7 +185,7 @@ open class EquipmentProductivityRecord() : UpdatableRecordImpl<EquipmentProducti
     constructor(value: com.kcvn.spm.model.tables.pojos.EquipmentProductivity?): this() {
         if (value != null) {
             this.id = value.id
-            this.equipmentCode = value.equipmentCode
+            this.processName = value.processName
             this.description = value.description
             this.frame_1 = value.frame_1
             this.grpProcess = value.grpProcess

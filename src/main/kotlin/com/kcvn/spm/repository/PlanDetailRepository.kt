@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.model.tables.pojos.PlanDetail
 import com.kcvn.spm.model.tables.references.PLAN_DETAIL
+import com.kcvn.spm.model.tables.references.PLAN_DETAIL_TEMP
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -17,6 +18,12 @@ class PlanDetailRepository(private val context: DSLContext) {
         }
         return context.selectFrom(PLAN_DETAIL)
             .where(condition)
+            .fetchInto(PlanDetail::class.java)
+    }
+
+    fun getPlanDetailTemp(): List<PlanDetail> {
+        return context.selectFrom(PLAN_DETAIL_TEMP)
+            .where(PLAN_DETAIL_TEMP.IS_DELETED.eq(false))
             .fetchInto(PlanDetail::class.java)
     }
 }

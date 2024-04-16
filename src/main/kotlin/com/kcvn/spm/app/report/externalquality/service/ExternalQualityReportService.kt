@@ -4,12 +4,13 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.service.OrderService
+import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityDetailExistModel
 import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityDetailModel
 import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityReportModel
+import com.kcvn.spm.app.report.externalquality.payload.model.KeyValueCustom
 import com.kcvn.spm.app.report.externalquality.payload.request.ExternalQualityReportSearchRequest
 import com.kcvn.spm.app.report.externalquality.payload.response.ExternalQualityReportResponse
 import com.kcvn.spm.common.constants.*
-import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BaseResponse
@@ -17,7 +18,6 @@ import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.ExportConfiguration
 import com.kcvn.spm.model.tables.pojos.UpdateTape
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.*
@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.time.OffsetDateTime
 
 
 @Service
@@ -42,7 +41,6 @@ class ExternalQualityReportService(
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val updateTapeRepository: UpdateTapeRepository,
     private val orderInfoRepository: OrderInfoRepository,
-    private val exportConfigurationRep: ExportConfigurationRepository
 ) {
 
     fun exportExcelExternalQualityReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
@@ -54,7 +52,7 @@ class ExternalQualityReportService(
         val secondRow = sheet.getRow(1)
         var headerCol = 14
         val style = headerRow.getCell(0).cellStyle
-        // create subColumns // 14 columns from 1
+        // create subColumns 14 columns from 1
         if(dataExport.subColumns.isNotEmpty()){
             for (col in dataExport.subColumns) {
                 ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, style, col.value, false)
@@ -71,30 +69,33 @@ class ExternalQualityReportService(
         }
         //create data filter
         val rowNumber = 2
-        val numberRowData = 12
+        var numberRowData = 12
 
         if (dataExport.data?.isNotEmpty() == true) {
             var rowProductIndex = rowNumber
             var rowShippingIndex = rowNumber
             var rowReportIndex =rowNumber
             for (productReport in dataExport.data!!) {
+                if(productReport.exportType?.contains(",") == true) {
+                    numberRowData = 18
+                }
                 for (i in 0 until numberRowData) {
                     val dataRow = sheet.getRow(rowProductIndex) ?: sheet.createRow(rowProductIndex)
                     ExcelHelper.run {
                         setCellValueCustom(workbook,dataRow, 0, style, productReport.productShortcutName, isAlignCenter = true)
                         setCellValueCustom(workbook,dataRow, 1, style, productReport.productName, isAlignCenter = true)
                         setCellValueCustom(workbook,dataRow, 2, style, productReport.mold, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 3, style, productReport.exportType, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 4, style, productReport.pcsSh.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 5, style, productReport.blockSh.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 6, style, productReport.productLine, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 7, style, productReport.snapMold, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 8, style, productReport.layerCount.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 9, style, productReport.tapeCommon, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 10, style, productReport.completionRate.toString(), isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 3, style, productReport.pcsSh.toString(), isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 4, style, productReport.blockSh.toString(), isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 5, style, productReport.productLine, isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 6, style, productReport.snapMold, isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 7, style, productReport.layerCount.toString(), isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 8, style, productReport.tapeCommon, isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 9, style, productReport.completionRate.toString(), isAlignCenter = true)
                     }
                     rowProductIndex++
                 }
+                numberRowData = 12
             }
             for (productReport in dataExport.data!!) {
                 for (shippingData in productReport.shippingData) {
@@ -102,6 +103,27 @@ class ExternalQualityReportService(
                     ExcelHelper.setCellValueCustom(workbook,dataRow, 11, style, shippingData.value, isAlignCenter = true)
                     rowShippingIndex++
                 }
+            }
+            rowShippingIndex = 2
+            for (productReport in dataExport.data!!) {
+                for (i in 0 until 6) {
+                    val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, "", isAlignCenter = true)
+                }
+               if(productReport.exportType1 !=null){
+                   for (i in 0 until 6) {
+                       val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
+                       ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.exportType1, isAlignCenter = true)
+                   }
+               }
+                if(productReport.exportType2 !=null){
+                    for (i in 0 until 6) {
+                        val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
+                        ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.exportType2, isAlignCenter = true)
+                    }
+                }
+
+
             }
 
             for (productReport in dataExport.data!!) {
@@ -122,9 +144,7 @@ class ExternalQualityReportService(
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
-
         val excelBytes = byteArrayOutputStream.toByteArray()
-
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("fileName.exportReportExternalQuality",
                         arrayOf((DateTimeHelper.toTimeZone7(request.startDate))?.toLocalDate().toString(),(DateTimeHelper.toTimeZone7(request.endDate))?.toLocalDate().toString())),
@@ -146,9 +166,6 @@ class ExternalQualityReportService(
         val orderInfo = orderInfoRepository.getListOrderForReport(request,pageable)
         val mappingPaging = orderInfo.first
         val listProductName = mappingPaging.map { it.productName }
-        val getExportConfiguration = exportConfigurationRep.getExportConfig(listProductName,startDate,endDate)
-
-        checkExportConfiguration(mappingPaging,getExportConfiguration,startDate,endDate)
         response.totalRecords = orderInfo.second
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
@@ -182,40 +199,26 @@ class ExternalQualityReportService(
         val productNames = getListNameProduct(mappingPaging)
         // get list Inventory
         val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames,endDate)
+        //create list data exist
+        val listDataExist :MutableList<ExternalQualityDetailExistModel> = mutableListOf()
         //add Details Data here
         for(mappingItem in mappingPaging){
-            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails, subColumns)
+            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails, subColumns,listDataExist)
         }
         val valueReportDate= request.endDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) }
         //add Shipping Data here
         for(mappingItem in mappingPaging){
             addShippingData(mappingItem,valueReportDate)
         }
+        for(mappingItem in mappingPaging){
+            addExportType(mappingItem)
+        }
         response.data = mappingPaging
         return response
     }
 
-    fun checkExportConfiguration(mappingPaging: List<ExternalQualityReportModel>, exportConfigurations: List<ExportConfiguration>, startDate: OffsetDateTime?, endDate: OffsetDateTime?) {
-        for(item in mappingPaging){
-            val exportType = item.exportTypeConvert
-            if (exportType != null) {
-                if (exportType.contains(",")) {
-                    val exportTypes = exportType.split(",").map { it.trim() }
-                    for (type in exportTypes) {
-                        val config = exportConfigurations.filter { x-> x.productName == item.productName && x.exportType == type }
-                        if(config.isEmpty()){
-                            throw BusinessException(CommonUtils.getMessage("product.config",arrayOf(item.productName as Any,type,startDate?.toLocalDate().toString(),endDate?.toLocalDate().toString())
-                            ))
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{
         val data = inventoryProducts.filter { x-> x.productName == productName }
-//        if(data.isEmpty()) throw BusinessException(CommonUtils.getMessage("check.inventoryProduct",arrayOf(productName as Any)))
         return data.sumOf { x -> x.productQuantity!! }
     }
 
@@ -227,6 +230,16 @@ class ExternalQualityReportService(
             genericNames.add(item.productShortcutName+item.exportType+item.tapeCommon)
         }
         return genericNames
+    }
+    fun parseExportTypes(exportType: String?): List<String> {
+        if (exportType != null) {
+            return if (exportType.contains(",")) {
+                exportType.split(",").map { it.trim() }
+            } else {
+                listOf(exportType.trim())
+            }
+        }
+        return listOf()
     }
 
     fun getListNameProduct(listExternalQuantityReport:  List<ExternalQualityReportModel>) :List<String>{
@@ -245,42 +258,26 @@ class ExternalQualityReportService(
                                         listWorkResult: List<WorkResult>?,
                                         updateTapes:List<UpdateTape>,
                                         inventoryProducts:  List<InventoryProductResponse>,
-                                        subColumns: List<CalendarResponse>){
+                                        subColumns: List<CalendarResponse>,
+                                        listDataExist: MutableList<ExternalQualityDetailExistModel> = mutableListOf()){
 
-        //common data
         val detailData : MutableList<ExternalQualityDetailModel> = mutableListOf()
-        val genericName=  externalQualityReportModel.productShortcutName+externalQualityReportModel.exportType+externalQualityReportModel.tapeCommon
-        val deliveryTypeShortName = externalQualityReportModel.exportType + externalQualityReportModel.productShortcutName
-        val sharedTape = externalQualityReportModel.tapeCommon
-        val updateTape = updateTapes.filter { x-> x.genericName == genericName }
-        val updateTapeCommon = updateTape.filter { x-> x.deliveryTypeShortName == deliveryTypeShortName && x.sharedTape ==  sharedTape}
-        var inventoryTape = 0
-        var tapeExpired =0
-        if(updateTapeCommon.isNotEmpty()){
-            tapeExpired = updateTapeCommon.filter { it.totalNg != null }.sumOf { it.totalNg!! }
-            inventoryTape = updateTapeCommon.filter { it.logPd1Inventory != null }.sumOf { it.logPd1Inventory!! }
-        }
-        val goodQualityTapeInventorySet = inventoryTape - tapeExpired
-        val goodQualityTapeInventoryBlock = goodQualityTapeInventorySet * externalQualityReportModel.blockSh!!
 
-        externalQualityReportModel.tapeInventoryQuantity = inventoryTape
-        externalQualityReportModel.tapeExpireQuantity = tapeExpired
-        externalQualityReportModel.goodQualityTapeInventorySet = goodQualityTapeInventorySet
-        externalQualityReportModel.goodQualityTapeInventoryBlock = goodQualityTapeInventoryBlock
-        externalQualityReportModel.sumWorkResultQuantity =
-            externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
         //ORDER QUANTITY
         val detailOrderQuantity =  ExternalQualityDetailModel("ORDER_QUANTITY", ExternalReportDetailType.ORDER_QUANTITY)
         val orderQuantityCalendarsSave =listProductOrder?.firstOrNull { x -> x.productName == externalQualityReportModel.productName }?.quantityByCalendars?.toMutableList()
         val orderQuantityCalendars: MutableList<KeyValueResponse> = mutableListOf()
-        columns.forEach { (key) ->
-            val existingEntry = orderQuantityCalendarsSave?.find { it.key == key }
-            if (existingEntry == null) { orderQuantityCalendars.add(KeyValueResponse(key, "0")) }
-            else{
-                orderQuantityCalendars.add(KeyValueResponse(key, value=existingEntry.value))
-            }}
 
-        detailOrderQuantity.quantityByCalendars= orderQuantityCalendars
+            columns.forEach { (key) ->
+                val existingEntry = orderQuantityCalendarsSave?.find { it.key == key }
+                if (existingEntry == null) { orderQuantityCalendars.add(KeyValueResponse(key, "0")) }
+                else{
+                    val valueEntry = (existingEntry.value)?.toDouble()
+                    orderQuantityCalendars.add(KeyValueResponse(key, value= valueEntry?.toInt().toString()))
+                }}
+
+            detailOrderQuantity.quantityByCalendars= orderQuantityCalendars
+
         detailData.add(detailOrderQuantity)
 
         //ACCUMULATED_ORDER_QUANTITY
@@ -316,6 +313,41 @@ class ExternalQualityReportService(
         val difference2 = ExternalQualityDetailModel("DIFFERENCE_2", ExternalReportDetailType.DIFFERENCE_2)
         difference2.quantityByCalendars = calculateAccumulationWithInventory(orderQuantityCalendars,externalQualityReportModel.sumWorkResultQuantity)
         detailData.add(difference2)
+
+        // LOGIC TAPE
+
+    val exportTypes = parseExportTypes(externalQualityReportModel.exportType)
+
+    var isFirstExportType = true
+    for(exportType in exportTypes){
+        val genericName=  externalQualityReportModel.productShortcutName+exportType+externalQualityReportModel.tapeCommon
+        val deliveryTypeShortName = exportType + externalQualityReportModel.productShortcutName
+        val sharedTape = externalQualityReportModel.tapeCommon
+        val updateTape = updateTapes.filter { x-> x.genericName == genericName }
+        val updateTapeCommon = updateTape.filter { x-> x.deliveryTypeShortName == deliveryTypeShortName && x.sharedTape ==  sharedTape}
+        var inventoryTape = 0
+        var tapeExpired =0
+        if(updateTapeCommon.isNotEmpty()){
+            tapeExpired = updateTapeCommon.filter { it.totalNg != null }.sumOf { it.totalNg!! }
+            inventoryTape = updateTapeCommon.filter { it.logPd1Inventory != null }.sumOf { it.logPd1Inventory!! }
+        }
+        val goodQualityTapeInventorySet = inventoryTape - tapeExpired
+        val goodQualityTapeInventoryBlock = goodQualityTapeInventorySet * externalQualityReportModel.blockSh!!
+        if(isFirstExportType){
+            externalQualityReportModel.tapeInventoryQuantity1 = inventoryTape
+            externalQualityReportModel.tapeExpireQuantity1 = tapeExpired
+            externalQualityReportModel.exportType1 = exportType
+            isFirstExportType = false
+        }else{
+            externalQualityReportModel.tapeInventoryQuantity2 = inventoryTape
+            externalQualityReportModel.tapeExpireQuantity2 = tapeExpired
+            externalQualityReportModel.exportType2 = exportType
+        }
+
+        externalQualityReportModel.goodQualityTapeInventorySet = goodQualityTapeInventorySet
+        externalQualityReportModel.goodQualityTapeInventoryBlock = goodQualityTapeInventoryBlock
+        externalQualityReportModel.sumWorkResultQuantity =
+            externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
 
         //PLANNED_TAPE_SET
         val plannedTapeSet = ExternalQualityDetailModel("PLANNED_TAPE_SET", ExternalReportDetailType.PLANNED_TAPE_SET, externalQualityReportModel.goodQualityTapeInventorySet)
@@ -393,6 +425,7 @@ class ExternalQualityReportService(
         tapeDifferenceBlock.quantityByCalendars = tapeDifferenceBlockCalendar
         detailData.add(tapeDifferenceBlock)
 
+        }
         //end
         externalQualityReportModel.details = detailData
     }
@@ -413,8 +446,34 @@ class ExternalQualityReportService(
 
         return difference1Calendars
     }
+    fun addExportType(externalQualityReportModel: ExternalQualityReportModel){
+        val exportData : MutableList<KeyValueCustom> = mutableListOf()
+        addExportEmpty(exportData,6)
+        exportData.add(KeyValueCustom("number_order",externalQualityReportModel.exportType1))
+        addExportEmpty(exportData,5)
+        if(externalQualityReportModel.exportType2 != null){
+            exportData.add(KeyValueCustom("number_order",externalQualityReportModel.exportType2))
+            addExportEmpty(exportData,5)
+        }
+        externalQualityReportModel.exportTypes = exportData
 
 
+    }
+    fun addExportEmpty(list: MutableList<KeyValueCustom>, count: Int) {
+        for (i in 1..count) {
+            if (i == count) {
+                list.add(KeyValueCustom("", "", true))
+            } else {
+                list.add(KeyValueCustom("", ""))
+            }
+        }
+    }
+
+    fun addKeyValueEmpty(list: MutableList<KeyValueResponse>, count: Int) {
+        for (i in 1..count) {
+            list.add(KeyValueResponse("", ""))
+        }
+    }
     fun addShippingData(externalQualityReportModel: ExternalQualityReportModel, valueReportDate: String?){
             val shippingData : MutableList<KeyValueResponse> = mutableListOf()
             shippingData.add(KeyValueResponse("production_plan_title", ExternalReportShippingType.PRODUCTION_PLAN_TITLE))
@@ -430,13 +489,21 @@ class ExternalQualityReportService(
 
             val exchangeRateDifferences = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.DIFFERENCE_1)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
-            shippingData.add(KeyValueResponse("",""))
+            addKeyValueEmpty(shippingData,1)
             shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
-            shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity.toString()))
+            shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity1.toString()))
             shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))
-            shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity.toString()))
-            shippingData.add(KeyValueResponse("",""))
-            shippingData.add(KeyValueResponse("",""))
+            shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity1.toString()))
+            addKeyValueEmpty(shippingData,2)
+
+            if(externalQualityReportModel.exportType?.contains(",") == true){
+                shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
+                shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity2.toString()))
+                shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))
+                shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity2.toString()))
+                addKeyValueEmpty(shippingData,2)
+            }
+
             externalQualityReportModel.shippingData = shippingData
     }
 

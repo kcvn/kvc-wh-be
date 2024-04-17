@@ -1909,6 +1909,12 @@ class PlanService(
         val planProcessTemps = planProcessRep.getPlanProcessTemp()
         val planDetailTemps = planDetailRep.getPlanDetailTemp()
 
+        val planExist = planRep.getByMonth(planTemp.month!!, planTemp.year!!)
+        if (planExist != null) {
+            planTemp.version = (planExist.version ?: 0) + 1
+            planRep.inActive(planExist.id!!)
+        }
+
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")

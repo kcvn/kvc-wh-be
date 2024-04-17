@@ -45,6 +45,15 @@ class DateTimeHelper {
             return OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
         }
 
+        fun isFormatdate(date: String?): Boolean {
+            return try {
+                val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.M_dd_yyyy)
+                LocalDate.parse(date, formatter)
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
 
 
         fun toString(date: OffsetDateTime, format: String): String {

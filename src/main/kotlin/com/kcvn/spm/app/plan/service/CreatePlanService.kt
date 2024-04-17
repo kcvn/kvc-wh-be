@@ -98,7 +98,7 @@ class CreatePlanService(
         if (request.inventoryDate != null && (request.inventoryDate!! < startDate || request.inventoryDate!! > endDate))
             throw BusinessException("Ngày chốt tồn kho đang nằm ngoài khoảng thời gian của tháng sản xuất")
 
-        val orderInfo = orderInfoRep.getOrderInfoByTimeRange(startDate, endDate).filter { x -> x.productName == "VPX03BHB06V2" }
+        val orderInfo = orderInfoRep.getOrderInfoByTimeRange(startDate, endDate, request.productNames)
         if (orderInfo.isEmpty())
             throw BusinessException("Không có dữ liệu xuất hàng " +
                 "từ ngày ${DateTimeHelper.toString(startDate, DateTimeFormat.dd_MM_yyyy)} " +

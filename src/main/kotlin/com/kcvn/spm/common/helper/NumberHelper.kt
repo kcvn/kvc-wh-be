@@ -17,6 +17,10 @@ class NumberHelper {
         fun roundedUp(number: BigDecimal): Int {
             return ceil(number.toDouble()).toInt()
         }
+
+        fun isNumeric(input: String): Boolean {
+            return input.toDoubleOrNull() != null
+        }
     }
 
 }

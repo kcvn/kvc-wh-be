@@ -274,11 +274,11 @@ class CreatePlanService(
                 val parentProcesses = processes.filter { x ->
                     !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
                         && x.processConvertCode != processSource!!.processConvertCode
-                }.sortedByDescending { x -> x.dayOfImplementation ?: 0 }
+                }.sortedWith(compareByDescending<ProductProcessModel> { it.dayOfImplementation ?: 0 }.thenByDescending { it.processSequence })
                 val childrenProcesses = processes.filter { x ->
                     !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode == ProcessStatisticCode.KO
                         && x.processConvertCode != processSource!!.processConvertCode
-                }.sortedByDescending { x -> x.dayOfImplementation ?: 0 }
+                }.sortedWith(compareByDescending<ProductProcessModel> { it.dayOfImplementation ?: 0 }.thenByDescending { it.processSequence })
 
                 var completionRateSource = completionRates.find { x ->
                     x.layerCode?.toIntOrNull() == processSource!!.layerCode?.toIntOrNull() && x.processCode == processSource!!.processCode
@@ -298,13 +298,13 @@ class CreatePlanService(
                         parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                         childrenProcesses, product, equipmentInfo, equipmentUsedInfoByDate, holidays
                     )
+                    planProductCreateModel.planProcesses.addAll(planCalculator.planProcessResults)
+
                     processSource = planCalculator.processSource
                     if (processSource == null) break
 
                     completionRateSource = planCalculator.completionRateSource
                     planDetailSource = planCalculator.planDetailSource
-
-                    planProductCreateModel.planProcesses.addAll(planCalculator.planProcessResults)
 
                     val processOfNextLayer = childrenProcesses.find { x ->
                         x.layerCode?.toIntOrNull() != currentLayerCode && x.processConvertCode == processSource!!.processConvertCode
@@ -840,12 +840,13 @@ class CreatePlanService(
         var sheetQuantity = 0
         var blockQuantity = 0
         val data = mutableListOf<PlanDetailCreateModel>()
-        for (item in planDetails) {
-            sheetQuantity += (item.sheetQuantity ?: 0)
-            blockQuantity += (item.blockQuantity ?: 0)
+        val details = planDetails.groupBy { x -> x.planDate }.toSortedMap(compareBy { it })
+        for (item in details) {
+            sheetQuantity += item.value.sumOf { it.sheetQuantity ?: 0 }
+            blockQuantity += item.value.sumOf { it.blockQuantity ?: 0 }
             data.add(PlanDetailCreateModel(
                 title = PlanTitle.PLAN_ACCUMULATION_KEY,
-                planDate = item.planDate,
+                planDate = item.key,
                 sheetQuantity = sheetQuantity,
                 blockQuantity = blockQuantity
             ))

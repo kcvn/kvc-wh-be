@@ -1,6 +1,7 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.model.tables.pojos.TapeInventory
+import com.kcvn.spm.model.tables.pojos.UpdateTape
 import com.kcvn.spm.model.tables.references.TAPE_INVENTORY
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -11,6 +12,16 @@ import java.time.OffsetDateTime
 @Repository
 
 class TapeInventoryRepository(private val context: DSLContext) {
+    fun getTapeForReport(productNameShortCut:  List<String>, inventoryClosingDate: OffsetDateTime?): List<TapeInventory>{
+
+        var condition = DSL.noCondition().and(TAPE_INVENTORY.IS_DELETED.eq(false))
+        if(inventoryClosingDate!=null) condition= condition.and(TAPE_INVENTORY.STOCKTAKING_DAY.eq(inventoryClosingDate))
+
+        val data = context.selectFrom(TAPE_INVENTORY)
+            .where(condition.and(TAPE_INVENTORY.PRODUCT_NAME_SHORT_CUT.`in`(productNameShortCut)))
+            .fetchInto(TapeInventory::class.java)
+        return data
+    }
     fun getTapeEnRouteListByDate(stocktakingDay:OffsetDateTime?): List<TapeInventory> {
         var condition: Condition = DSL.noCondition()
         if(stocktakingDay!=null){
@@ -26,9 +37,6 @@ class TapeInventoryRepository(private val context: DSLContext) {
             .where(TAPE_INVENTORY.ID.`in`(tapeInventories.map { it.id }))
             .execute()
     }
-
-
-
     fun add(tapeInventory: TapeInventory): TapeInventory? {
         var result: TapeInventory? = null
         context.transaction { configuration ->

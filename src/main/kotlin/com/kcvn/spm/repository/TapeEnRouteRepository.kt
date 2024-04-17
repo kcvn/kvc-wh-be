@@ -6,9 +6,33 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
 
 @Repository
 class TapeEnRouteRepository(private val context: DSLContext)  {
+
+
+    fun getTapeEnRouteForReport(productNameShortCut:  List<String>, startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<TapeEnRoute>{
+
+
+        var condition = DSL.noCondition().and(TAPE_EN_ROUTE.IS_DELETED.eq(false))
+
+        if (endDate != null) {
+            condition = condition.and(TAPE_EN_ROUTE.RESPONSE_DATE.le(endDate))
+        }
+        if (startDate != null) {
+            condition = condition.and(TAPE_EN_ROUTE.RESPONSE_DATE.ge(startDate))
+        }
+
+        var specCondition = DSL.noCondition()
+        for (shortcut in productNameShortCut) {
+            specCondition = specCondition.or(TAPE_EN_ROUTE.SPEC.like("%$shortcut%"))
+        }
+        val data = context.selectFrom(TAPE_EN_ROUTE)
+            .where(condition.and(specCondition))
+            .fetchInto(TapeEnRoute::class.java)
+        return data
+    }
 
     fun getTapeEnRouteList(couponCode:String): List<TapeEnRoute> {
         var condition: Condition = DSL.noCondition()

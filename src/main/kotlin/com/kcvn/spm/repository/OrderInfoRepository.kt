@@ -40,9 +40,6 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         if (!request.tapeCommon.isNullOrEmpty()) {
             condition = condition.and(PRODUCT.TAPE_COMMON.eq(request.tapeCommon))
         }
-        if (!request.exportType.isNullOrEmpty()) {
-            condition = condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
-        }
         if(request.startDate !=null ){
             condition = condition.and(ORDER_INFO.ORDER_DATE.ge(DateTimeHelper.toTimeZone7(request.startDate)))
         }

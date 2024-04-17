@@ -11,6 +11,7 @@ import java.time.format.DateTimeParseException
 import java.util.*
 import com.kcvn.spm.common.constants.*
 import com.kcvn.spm.common.constants.Color
+import java.text.DecimalFormat
 
 class ExcelHelper {
     companion object {
@@ -33,7 +34,20 @@ class ExcelHelper {
                 return ""
             }
         }
-
+        fun getCellValueCustom(row: Row, columnIndex: Int): String {
+            val cell = row.getCell(columnIndex)
+            return when (cell.cellType) {
+                CellType.STRING -> cell.stringCellValue
+                CellType.NUMERIC -> if(DateUtil.isCellDateFormatted(cell)) {
+                    cell.dateCellValue.toString()
+                } else {
+                    DecimalFormat("0.####").format(cell.numericCellValue)
+                }
+                CellType.BOOLEAN -> cell.booleanCellValue.toString()
+                CellType.FORMULA -> cell.cellFormula
+                else -> ""
+            }
+        }
         fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: String?) {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate

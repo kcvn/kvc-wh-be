@@ -68,7 +68,7 @@ class ExternalQualityReportController (private val externalQualityReportService:
 
     @PostMapping(value = ["/check-import/tape-en-route"], consumes = ["multipart/form-data"])
 //    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
-    fun checkImportTapeEnRouteExcel(couponCode: String, @RequestPart("file") file: MultipartFile,isDeleteAll: Boolean = false): ResponseEntity<BaseResponse<CheckImportResponse>> {
+    fun checkImportTapeEnRouteExcel(couponCode: String, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<CheckImportResponse>> {
         val result = externalQualityReportService.checkImportTapeEnRouteExcel(couponCode, file)
         return ResponseEntity(result, HttpStatus.OK)
     }

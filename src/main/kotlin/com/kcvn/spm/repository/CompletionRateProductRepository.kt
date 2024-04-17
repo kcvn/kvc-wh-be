@@ -18,6 +18,27 @@ import java.time.ZoneOffset
 
 @Repository
 class CompletionRateProductRepository(private val context: DSLContext) : SortingRepository() {
+    fun getForReport(productNames: List<String>?, applicationDate: OffsetDateTime?): List<CompletionRateProduct>? {
+        var condition: Condition = DSL.noCondition()
+        condition = condition.and(
+            COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)
+        )
+        if(applicationDate!=null){
+            condition = condition.and(
+                COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.le(applicationDate)
+                    .and(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.ge(applicationDate))
+            ).or(
+                COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.le(applicationDate)
+                    .and(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.isNull)
+            )
+        }
+        
+        return context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(condition.and(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames))
+            )
+            .fetchInto(CompletionRateProduct::class.java)
+    }
+
     fun getByProduct(productNames: List<String>?): List<CompletionRateProduct>? {
         return context.selectFrom(COMPLETION_RATE_PRODUCT)
             .where(

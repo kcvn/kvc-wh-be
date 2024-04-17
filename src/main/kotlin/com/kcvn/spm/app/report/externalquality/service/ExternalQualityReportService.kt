@@ -585,7 +585,7 @@ class ExternalQualityReportService(
         val order = orderSer.getPaginatedOrder(orderSearchRequest,pageableOrder)
         val listProductOrder = order.data
 
-        val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())
+        val listCompletionRate = completionRateProductRep.getForReport(listProductName.filterNotNull(),startDate)
         val listWorkResult = request.startDate?.let { request.endDate?.let { it1 -> workResultRep.getForReport(it, it1,listProductName) } }
         for(externalQuality in mappingPaging){
             if (listCompletionRate != null) {

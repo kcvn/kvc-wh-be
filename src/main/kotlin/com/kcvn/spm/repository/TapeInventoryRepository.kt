@@ -1,7 +1,6 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.model.tables.pojos.TapeInventory
-import com.kcvn.spm.model.tables.pojos.UpdateTape
 import com.kcvn.spm.model.tables.references.TAPE_INVENTORY
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -15,11 +14,18 @@ class TapeInventoryRepository(private val context: DSLContext) {
     fun getTapeForReport(productNameShortCut:  List<String>, inventoryClosingDate: OffsetDateTime?): List<TapeInventory>{
 
         var condition = DSL.noCondition().and(TAPE_INVENTORY.IS_DELETED.eq(false))
-        if(inventoryClosingDate!=null) condition= condition.and(TAPE_INVENTORY.STOCKTAKING_DAY.eq(inventoryClosingDate))
+        if (inventoryClosingDate != null) {
+            condition = condition.and(
+                DSL.year(TAPE_INVENTORY.STOCKTAKING_DAY).eq(inventoryClosingDate.year)
+                    .and(DSL.month(TAPE_INVENTORY.STOCKTAKING_DAY).eq(inventoryClosingDate.monthValue))
+                    .and(DSL.day(TAPE_INVENTORY.STOCKTAKING_DAY).eq(inventoryClosingDate.dayOfMonth))
+            )
+        }
 
-        val data = context.selectFrom(TAPE_INVENTORY)
+        val query = context.selectFrom(TAPE_INVENTORY)
             .where(condition.and(TAPE_INVENTORY.PRODUCT_NAME_SHORT_CUT.`in`(productNameShortCut)))
-            .fetchInto(TapeInventory::class.java)
+
+        val data= query.fetchInto(TapeInventory::class.java)
         return data
     }
     fun getTapeEnRouteListByDate(stocktakingDay:OffsetDateTime?): List<TapeInventory> {

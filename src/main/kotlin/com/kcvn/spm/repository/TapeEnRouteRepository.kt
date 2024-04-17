@@ -28,9 +28,9 @@ class TapeEnRouteRepository(private val context: DSLContext)  {
         for (shortcut in productNameShortCut) {
             specCondition = specCondition.or(TAPE_EN_ROUTE.SPEC.like("%$shortcut%"))
         }
-        val data = context.selectFrom(TAPE_EN_ROUTE)
+        val query = context.selectFrom(TAPE_EN_ROUTE)
             .where(condition.and(specCondition))
-            .fetchInto(TapeEnRoute::class.java)
+        val data = query.fetchInto(TapeEnRoute::class.java)
         return data
     }
 

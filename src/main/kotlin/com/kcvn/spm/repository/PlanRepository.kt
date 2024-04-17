@@ -38,6 +38,11 @@ class PlanRepository(private val context: DSLContext) {
             val transactionalContext = DSL.using(configuration)
             val createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
 
+            transactionalContext.deleteFrom(PLAN_DETAIL_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_PROCESS_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_PRODUCT_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_TEMP).execute()
+
             val planRecord = transactionalContext.insertInto(
                 PLAN_TEMP,
                 PLAN_TEMP.PLAN_CODE,
@@ -168,7 +173,7 @@ class PlanRepository(private val context: DSLContext) {
 
     fun getPlanTemp(): Plan? {
         return context.selectFrom(PLAN_TEMP)
-            .where(PLAN.IS_DELETED.eq(false))
+            .where(PLAN_TEMP.IS_DELETED.eq(false))
             .fetchInto(Plan::class.java)
             .firstOrNull()
     }
@@ -256,6 +261,11 @@ class PlanRepository(private val context: DSLContext) {
                 )
             }
             transactionalContext.batch(queryPlanDetail).execute()
+
+            transactionalContext.deleteFrom(PLAN_DETAIL_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_PROCESS_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_PRODUCT_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_TEMP).execute()
         }
     }
 }

@@ -127,16 +127,15 @@ class CreatePlanService(
                 val product = productInfo.firstOrNull { x -> x.name == item }
                 if (product == null) errors.add("Không tồn tại thông tin sản phẩm")
 
-                val productProcess = productProcesses.filter { x -> x.productName == item && x.processCode?.toIntOrNull() != 0 }.map { item ->
-                    if (item.processConvertCode == ProcessConvertCode.TH) item.processGroup = "20500"
-                    item
+                val productProcess = productProcesses.filter { x -> x.productName == item && x.processCode?.toIntOrNull() != 0 }.map { model ->
+                    if (model.processConvertCode == ProcessConvertCode.TH) model.processGroup = "20500"
+                    model
                 }
                 if (productProcess.isEmpty()) {
                     errors.add("Chưa có thông tin công đoạn")
                 } else {
                     if (productProcess.any { x -> x.processConvertCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã chuyển đổi")
                     if (productProcess.any { x -> x.processStatisticCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã thống kê")
-                    //if (productProcess.any { x -> x.processInventoryCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã gộp tồn kho")
                     if (productProcess.any { x -> x.dayOfImplementation == null || x.dayOfImplementation == 0 }) errors.add("Dữ liệu công đoạn chưa đầy đủ Ngày thứ thực hiện")
                 }
                 val parentProcesses = productProcess.filter { x -> !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO }
@@ -159,7 +158,7 @@ class CreatePlanService(
                     for (grp in processGroups) {
                         val eqConfigs = equipmentByProducts.filter { x -> x.grpProcess == grp }
                         if (eqConfigs.isEmpty()) {
-                            errors.add("Chưa có cấu hình năng suất máy cho nhóm công đoạn ${grp}")
+                            errors.add("Chưa có cấu hình năng suất máy cho nhóm công đoạn $grp")
                         }
                     }
                     for (process in parentProcesses) {
@@ -262,9 +261,9 @@ class CreatePlanService(
             for (iOrder in orders) {
                 val product = productInfo.firstOrNull { x -> x.name == iOrder.productName }
                 val processes = productProcesses.filter { x -> x.productName == iOrder.productName }
-                val processIns = processes.firstOrNull { x -> x.processConvertCode == ProcessConvertCode.INS }
+                val processSource = processes.firstOrNull { x -> x.processConvertCode == ProcessConvertCode.INS }
 
-                if (processes.isEmpty() || product == null || processIns == null) continue
+                if (processes.isEmpty() || product == null || processSource == null) continue
 
                 val completionRates = completionRateInfo.filter { x ->
                     x.productNameShortcut == iOrder.productName!!.substring(iOrder.productName!!.length - 7, iOrder.productName!!.length)
@@ -274,59 +273,29 @@ class CreatePlanService(
 
                 val parentProcesses = processes.filter { x ->
                     !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
-                        && x.processConvertCode != processIns.processConvertCode
+                        && x.processConvertCode != processSource.processConvertCode
                 }.sortedByDescending { x -> x.dayOfImplementation ?: 0 }
                 val childrenProcesses = processes.filter { x ->
                     !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode == ProcessStatisticCode.KO
-                        && x.processConvertCode != processIns.processConvertCode
+                        && x.processConvertCode != processSource.processConvertCode
                 }.sortedByDescending { x -> x.dayOfImplementation ?: 0 }
 
-                val completionRateIns = completionRates.find { x ->
-                    x.layerCode?.toIntOrNull() == processIns.layerCode?.toIntOrNull() && x.processCode == processIns.processCode
+                val completionRateSource = completionRates.find { x ->
+                    x.layerCode?.toIntOrNull() == processSource.layerCode?.toIntOrNull() && x.processCode == processSource.processCode
                 }
-                if (completionRateIns?.rate == null || completionRateIns.rate!! <= BigDecimal(0)) continue
+                if (completionRateSource?.rate == null || completionRateSource.rate!! <= BigDecimal(0)) continue
 
-                val planProcessINS = generatePlanProcessModel(processIns, completionRateIns.rate)
-                var currentPlanDetail = mutableListOf(generatePlanDetailINSModel(iOrder, processIns.unit!!))
-                planProcessINS.planDetails = currentPlanDetail
+                val planProcessINS = generatePlanProcessModel(processSource, completionRateSource.rate)
+                var planDetailSource = mutableListOf(generatePlanDetailINSModel(iOrder, processSource.unit!!))
+                planProcessINS.planDetails = planDetailSource
                 planProductCreateModel.planProcesses.add(planProcessINS)
 
-                var currentProcessUnit = processIns.unit!!
-                var dayOfImplement = processIns.dayOfImplementation ?: 0
-                for (iParentProcess in parentProcesses) {
-                    val diffDay = dayOfImplement - (iParentProcess.dayOfImplementation ?: 0)
-                    val completionRate = completionRates.find { x ->
-                        x.layerCode?.toIntOrNull() == iParentProcess.layerCode?.toIntOrNull() && x.processCode == iParentProcess.processCode
-                    } ?: break
-                    val eqConfig = equipmentInfo.find { x ->
-                        x.frame_1 == product.frame_1 && x.grpProcess == iParentProcess.processGroup && x.mold!!.contains(product.mold!!)
-                    } ?: break
-
-                    val planProcess = generatePlanProcessModel(iParentProcess, completionRate.rate)
-                    currentPlanDetail = generatePlanDetailModel(
-                        currentPlanDetail,
-                        currentProcessUnit,
-                        iParentProcess,
-                        diffDay,
-                        product,
-                        completionRate.rate ?: BigDecimal(0),
-                        eqConfig,
-                        equipmentUsedInfoByDate,
-                        holidays
-                    )
-                    planProcess.planDetails = currentPlanDetail
-                    planProcess.childrenProcesses = childrenProcesses.filter { x -> x.processInventoryCode == iParentProcess.processCode }
-                        .map { x -> generatePlanChildrenProcessModel(x) }.toMutableList()
-                    planProductCreateModel.planProcesses.add(planProcess)
-
-                    dayOfImplement = (iParentProcess.dayOfImplementation ?: 0)
-                    currentProcessUnit = iParentProcess.unit!!
-
-                    val minDate = planProcess.planDetails.minOf { x -> x.planDate!! }
-                    if (minDate.isBefore(startDate)) {
-                        startDate = minDate
-                    }
-                }
+                val planFromIns = calculatePlanFromIns(
+                    processSource, completionRateSource, planDetailSource, completionRates,
+                    parentProcesses.filter { it.layerCode == processSource.layerCode },
+                    childrenProcesses, product, equipmentInfo, equipmentUsedInfoByDate, holidays
+                )
+                planProductCreateModel.planProcesses.addAll(planFromIns)
 
                 planProductCreateModel.planProcesses = mappingPlanProcessModel(planProductCreateModel.planProcesses)
                 planProducts.add(planProductCreateModel)
@@ -339,6 +308,69 @@ class CreatePlanService(
 
         planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate), planProductMappings)
     }
+
+    fun calculatePlanFromIns(
+        processSource: ProductProcessModel,
+        completionRateSource: CompletionRateProcessProduct,
+        planDetailSource: MutableList<PlanDetailCreateModel>,
+        completionRates: List<CompletionRateProcessProduct>,
+        parentProcesses: List<ProductProcessModel>,
+        childrenProcesses: List<ProductProcessModel>,
+        product: Product,
+        equipmentInfo: List<EquipmentProductivity>,
+        equipmentUsedInfoByDate: MutableList<Pair<OffsetDateTime, EquipmentProductivity>>,
+        holidays: List<OffsetDateTime>
+    ): List<PlanProcessCreateModel> {
+        val data = mutableListOf<PlanProcessCreateModel>()
+        var currentPlanDetail = planDetailSource
+        var currentCompletionRate = completionRateSource.rate
+        var currentProcessUnit = processSource.unit!!
+        var dayOfImplement = processSource.dayOfImplementation ?: 0
+        for (iParentProcess in parentProcesses) {
+            val diffDay = dayOfImplement - (iParentProcess.dayOfImplementation ?: 0)
+            val completionRate = completionRates.find { x ->
+                x.layerCode?.toIntOrNull() == iParentProcess.layerCode?.toIntOrNull() && x.processCode == iParentProcess.processCode
+            } ?: break
+            val eqConfig = equipmentInfo.find { x ->
+                x.frame_1 == product.frame_1 && x.grpProcess == iParentProcess.processGroup && x.mold!!.contains(product.mold!!)
+            } ?: break
+
+            val planProcess = generatePlanProcessModel(iParentProcess, completionRate.rate)
+            currentPlanDetail = generatePlanDetailModel(
+                currentPlanDetail,
+                currentProcessUnit,
+                iParentProcess,
+                diffDay,
+                product,
+                currentCompletionRate!!,
+                eqConfig,
+                equipmentUsedInfoByDate,
+                holidays
+            )
+            planProcess.planDetails = currentPlanDetail
+            planProcess.childrenProcesses = childrenProcesses.filter { x -> x.processInventoryCode == iParentProcess.processCode }
+                .map { x -> generatePlanChildrenProcessModel(x) }.toMutableList()
+
+            data.add(planProcess)
+
+            dayOfImplement = (iParentProcess.dayOfImplementation ?: 0)
+            currentProcessUnit = iParentProcess.unit!!
+            currentCompletionRate = completionRate.rate
+
+//            val minDate = planProcess.planDetails.minOf { x -> x.planDate!! }
+//            if (minDate.isBefore(startDate)) {
+//                startDate = minDate
+//            }
+        }
+
+        return data
+    }
+
+
+    //endregion
+
+    //region CREATE_PLAN_HAS_INVENTORY
+
 
 
     //endregion

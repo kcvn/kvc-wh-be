@@ -21,6 +21,8 @@ import com.kcvn.spm.model.tables.references.PLAN_TEMP
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.Instant
+import java.time.ZoneOffset
 
 @Repository
 class PlanRepository(private val context: DSLContext) {
@@ -266,6 +268,20 @@ class PlanRepository(private val context: DSLContext) {
             transactionalContext.deleteFrom(PLAN_PROCESS_TEMP).execute()
             transactionalContext.deleteFrom(PLAN_PRODUCT_TEMP).execute()
             transactionalContext.deleteFrom(PLAN_TEMP).execute()
+        }
+    }
+
+    fun inActive(id: String) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val updateBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+            transactionalContext.update(PLAN)
+                .set(PLAN.IS_ACTIVE, false)
+                .set(PLAN.UPDATED_DATE, Instant.now().atOffset(ZoneOffset.UTC))
+                .set(PLAN.UPDATED_BY, updateBy)
+                .where(PLAN.ID.eq(id))
+                .execute()
         }
     }
 }

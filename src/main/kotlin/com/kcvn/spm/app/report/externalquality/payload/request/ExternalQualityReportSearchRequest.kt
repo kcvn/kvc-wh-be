@@ -4,9 +4,9 @@ import java.time.OffsetDateTime
 
 data class ExternalQualityReportSearchRequest(
     var productName: String? = null,
-    var exportType: String? = null,
     var tapeCommon: String? = null,
     var mold: String? = null,
     var startDate: OffsetDateTime? = null,
-    var endDate: OffsetDateTime? = null
+    var endDate: OffsetDateTime? = null,
+    var inventoryClosingDate: OffsetDateTime
 )

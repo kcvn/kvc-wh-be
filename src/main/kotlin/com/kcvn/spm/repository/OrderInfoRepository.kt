@@ -338,11 +338,16 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         }
     }
 
-    fun getOrderInfoByTimeRange(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<OrderInfo> {
+    fun getOrderInfoByTimeRange(startDate: OffsetDateTime?, endDate: OffsetDateTime?, productNames: String? = null): List<OrderInfo> {
+        var condition = ORDER_INFO.ORDER_DATE.between(startDate, endDate)
+            .and(ORDER_INFO.IS_LATEST.eq(true))
+            .and(ORDER_INFO.IS_DELETED.eq(false))
+        if (!productNames.isNullOrEmpty()) {
+            val lstProductName = productNames.split(",")
+            condition = condition.and(ORDER_INFO.PRODUCT_NAME.`in`(lstProductName))
+        }
         return context.selectFrom(ORDER_INFO)
-            .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
-                .and(ORDER_INFO.IS_LATEST.eq(true))
-                .and(ORDER_INFO.IS_DELETED.eq(false)))
+            .where(condition)
             .fetchInto(OrderInfo::class.java)
     }
 

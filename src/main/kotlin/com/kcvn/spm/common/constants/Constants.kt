@@ -151,10 +151,12 @@ class ExternalReportShippingType {
     companion object {
         const val PRODUCTION_PLAN_TITLE = "生産計画　Ke hoach san xuat"
         const val QUANTITY_REMAINING_TITLE = "出荷残数 Sluong xuat hang còn"
-        const val TAPE_INVENTORY_TITLE = "5月27日テープ在庫Tồn kho tape ( set )"
-        const val EXPIRED_TAPE = "10月の期限切れテープTape hết hạn (set )"
+    }
+}
 
-
+class TapeReportConfig {
+    companion object {
+        const val KEY = "INS_TAPE_REPORT"
     }
 }
 

@@ -51,7 +51,8 @@ class ExternalQualityReportService(
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val orderInfoRepository: OrderInfoRepository,
     private val tapeEnRouteRepository:TapeEnRouteRepository,
-    private val tapeInventoryRepository: TapeInventoryRepository
+    private val tapeInventoryRepository: TapeInventoryRepository,
+    private val appSettingRep: AppSettingRepository
 ) {
     //region IMPORT
 
@@ -571,8 +572,11 @@ class ExternalQualityReportService(
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         response.columns = DateTimeHelper.toCalendarColumn(startDate!!, endDate!!, holidayCalenders)
-        val daysToSubtract: Long = 10
-
+        var daysToSubtract: Long = 10
+        val dayToSubtractConfig = appSettingRep.findByKey(TapeReportConfig.KEY)
+        if (dayToSubtractConfig != null) {
+            daysToSubtract = dayToSubtractConfig.value?.toLong() ?: 10
+        }
         val subColumns = DateTimeHelper.toCalendarColumn(startDate, endDate, holidayCalenders, daysToSubtract)
         response.subColumns = subColumns
         val orderSearchRequest = OrderSearchRequest()
@@ -608,12 +612,12 @@ class ExternalQualityReportService(
         val listDataExist :MutableList<ExternalQualityDetailExistModel> = mutableListOf()
         //add Details Data here
         for(mappingItem in mappingPaging){
-            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,tapeInventory,inventoryDetails, subColumns,listDataExist,tapeEnRoute)
+            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,tapeInventory,inventoryDetails, subColumns,listDataExist,tapeEnRoute,daysToSubtract)
         }
         val valueReportDate= request.endDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) }
         //add Shipping Data here
         for(mappingItem in mappingPaging){
-            addShippingData(mappingItem,valueReportDate)
+            addShippingData(mappingItem,valueReportDate,inventoryClosingDate)
         }
         for(mappingItem in mappingPaging){
             addExportType(mappingItem)
@@ -663,7 +667,8 @@ class ExternalQualityReportService(
                                         inventoryProducts:  List<InventoryProductResponse>,
                                         subColumns: List<CalendarResponse>,
                                         listDataExist: MutableList<ExternalQualityDetailExistModel> = mutableListOf(),
-                                        listTapeEnRoute: List<TapeEnRoute>){
+                                        listTapeEnRoute: List<TapeEnRoute>,
+                                        daysToSubtract: Long){
 
         val detailData : MutableList<ExternalQualityDetailModel> = mutableListOf()
 
@@ -720,10 +725,10 @@ class ExternalQualityReportService(
 
         // LOGIC TAPE
 
-    val exportTypes = parseExportTypes(externalQualityReportModel.exportType)
+        val exportTypes = parseExportTypes(externalQualityReportModel.exportType)
 
-    var isFirstExportType = true
-    for(exportType in exportTypes){
+        var isFirstExportType = true
+        for(exportType in exportTypes){
         val productNameShortCut = externalQualityReportModel.productShortcutName
         val tapeInventory = listTapeInventory.filter { x-> x.productNameShortCut == productNameShortCut && x.exportType == exportType}
         var inventoryTape = 0
@@ -757,7 +762,7 @@ class ExternalQualityReportService(
             x.exportType == exportType && x.spec?.contains(externalQualityReportModel.productShortcutName ?: "") == true}
 
         subColumns.forEach{ x ->
-            val tape = tapeEnRoute.filter{ tape -> tape.responseDate?.let { DateTimeHelper.toTimeZone7((it.plusDays(10)))
+            val tape = tapeEnRoute.filter{ tape -> tape.responseDate?.let { DateTimeHelper.toTimeZone7((it.plusDays(daysToSubtract)))
                 ?.let { it1 -> DateTimeHelper.toString(it1, DateTimeFormat.yyyyMMdd) } } == x.key }
             if(tape.isNotEmpty()){
                 plannedTapeSetCalendars.add(KeyValueResponse(x.key, tape.sumOf { it.deliveredQuantity ?: 0 }.toString()))
@@ -880,8 +885,13 @@ class ExternalQualityReportService(
         }
     }
 
-    fun addShippingData(externalQualityReportModel: ExternalQualityReportModel, valueReportDate: String?){
-            val shippingData : MutableList<KeyValueResponse> = mutableListOf()
+    fun addShippingData(externalQualityReportModel: ExternalQualityReportModel, valueReportDate: String?,inventoryClosingDate: OffsetDateTime?){
+            val inventoryClosingDateMonth = inventoryClosingDate?.month?.value
+            val inventoryClosingDateDay   = inventoryClosingDate?.dayOfMonth
+            val inventoryTitle =CommonUtils.getMessage("report.export.inventoryTitle",arrayOf(inventoryClosingDateMonth.toString(), inventoryClosingDateDay.toString()))
+            val expiredTitle =CommonUtils.getMessage("report.export.expiredTitle",arrayOf((inventoryClosingDateMonth?.plus(1)).toString()))
+
+        val shippingData : MutableList<KeyValueResponse> = mutableListOf()
             shippingData.add(KeyValueResponse("production_plan_title", ExternalReportShippingType.PRODUCTION_PLAN_TITLE))
 
             val valueNumberOrder = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
@@ -896,16 +906,16 @@ class ExternalQualityReportService(
             val exchangeRateDifferences = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.DIFFERENCE_1)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
             addKeyValueEmpty(shippingData,1)
-            shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
+            shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
             shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity1.toString()))
-            shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))
+            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
             shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity1.toString()))
             addKeyValueEmpty(shippingData,2)
 
             if(externalQualityReportModel.exportType?.contains(",") == true){
-                shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
+                shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
                 shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity2.toString()))
-                shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))
+                shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
                 shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity2.toString()))
                 addKeyValueEmpty(shippingData,2)
             }

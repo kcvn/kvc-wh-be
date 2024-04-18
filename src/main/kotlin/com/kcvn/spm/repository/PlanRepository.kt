@@ -150,7 +150,7 @@ class PlanRepository(private val context: DSLContext) {
                 val queryPlanDetail = planProcessRecords.map { x ->
                     val planProduct = planProductRecords.first { m -> m.id == x.planProductId }
                     val planProcess = planProducts.first { m -> m.productName == planProduct.productName }
-                        .planProcesses.first { m -> m.processCode == x.processCode }
+                        .planProcesses.first { m -> m.processCode == x.processCode && m.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull() }
                     val query = planProcess.planDetails.map { m ->
                         transactionalContext.insertInto(
                             PLAN_DETAIL_TEMP,

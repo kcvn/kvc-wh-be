@@ -189,7 +189,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         return  Pair(data, total)
     }
 
-    fun getInventoryForCreatePlan(productNames: List<String>, startDate: OffsetDateTime, endDate: OffsetDateTime): List<InventoryProductResponse> {
+    fun getInventoryForCreatePlan(productNames: List<String>, inventoryDate: OffsetDateTime): List<InventoryProductResponse> {
         val data = context.select(
             INVENTORY_PRODUCT.INVENTORY_DATE,
             INVENTORY_PRODUCT.PRODUCT_QUANTITY,
@@ -203,7 +203,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .join(PROCESS_PROCEDURE_STRUCTURE).on(
                 INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
                     .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-            ).where(INVENTORY_PRODUCT.INVENTORY_DATE.ge(startDate).and(INVENTORY_PRODUCT.INVENTORY_DATE.le(endDate)).and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
+            ).where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(inventoryDate).and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
             .fetchInto(InventoryProductResponse::class.java)
 
         return data

@@ -289,7 +289,7 @@ class CreatePlanService(
                         && x.processConvertCode != processSource!!.processConvertCode
                 }.sortedWith(compareByDescending<ProductProcessModel> { it.dayOfImplementation ?: 0 }.thenByDescending { it.processSequence })
                 val childrenProcesses = processes.filter { x ->
-                    !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode == ProcessStatisticCode.KO
+                    !x.processStatisticCode.isNullOrEmpty() && !x.processInventoryCode.isNullOrEmpty()
                         && x.processConvertCode != processSource!!.processConvertCode
                 }.sortedWith(compareByDescending<ProductProcessModel> { it.dayOfImplementation ?: 0 }.thenByDescending { it.processSequence })
 
@@ -419,7 +419,9 @@ class CreatePlanService(
         val data = PlanCalculatorModel(
             processSource = layeringProcess,
             completionRateSource = completionRates.firstOrNull { x -> x.processCode == layeringProcess?.processCode && x.layerCode == layeringProcess?.layerCode },
-            planDetailSource = planProcesses.map { x -> x.planDetails }.flatten().toMutableList(),
+            planDetailSource = planProcesses.filter { x ->
+                x.processCode == layeringProcess?.processCode && x.layerCode == layeringProcess?.layerCode
+            }.map { x -> x.planDetails }.flatten().toMutableList(),
             planProcessResults = planProcesses
         )
         return data
@@ -442,6 +444,18 @@ class CreatePlanService(
         holidays: List<OffsetDateTime>
     ) {
         var orderInfoAllocations = allocateInventoryIns(orderInfo, productInfo, inventories, productProcesses)
+
+        val parentProcesses = productProcesses.filter { x ->
+            !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
+                && x.processConvertCode != ProcessConvertCode.INS
+        }.sortedWith(compareByDescending<ProductProcessModel> { it.dayOfImplementation ?: 0 }.thenByDescending { it.processSequence })
+        val childrenProcesses = productProcesses.filter { x ->
+            !x.processStatisticCode.isNullOrEmpty() && !x.processInventoryCode.isNullOrEmpty()
+                && x.processConvertCode != ProcessConvertCode.INS
+        }.sortedWith(compareByDescending<ProductProcessModel> { it.dayOfImplementation ?: 0 }.thenByDescending { it.processSequence })
+
+        val mAllParents = parentProcesses.filter { x -> x.processStatisticCode == ProcessStatisticCode.M_ALL }
+        val mAllChild = childrenProcesses.filter { x -> x.processStatisticCode == ProcessStatisticCode.M_ALL }
     }
 
     private fun allocateInventoryIns(
@@ -449,7 +463,7 @@ class CreatePlanService(
         productInfo: List<Product>,
         inventories: List<InventoryProductResponse>,
         productProcesses: List<ProductProcessModel>
-    ):  List<OrderInfo> {
+    ): List<OrderInfo> {
         val inventoryIns = inventories.filter { x -> x.processCode == ProcessCode.INS }.groupBy { it.productName }.mapNotNull { x ->
             val inventory = x.value.first()
             InventoryProductResponse(
@@ -728,13 +742,13 @@ class CreatePlanService(
 
     private fun mappingPlanProcessModel(planProcesses: MutableList<PlanProcessCreateModel>): MutableList<PlanProcessCreateModel> {
         val data = mutableListOf<PlanProcessCreateModel>()
-        for (item in planProcesses.groupBy { x -> x.processCode }) {
+        for (item in planProcesses.groupBy { x -> Pair(x.processCode, x.layerCode) }) {
             val process = item.value.first()
             val result = PlanProcessCreateModel(
-                processCode = item.key,
+                processCode = item.key.first,
                 processName = process.processName,
                 processConvertCode = process.processConvertCode,
-                layerCode = process.layerCode,
+                layerCode = item.key.second,
                 completionRate = process.completionRate,
                 inventory = process.inventory,
                 unit = process.unit,

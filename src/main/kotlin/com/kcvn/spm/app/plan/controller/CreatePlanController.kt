@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.plan.controller
 
+import com.kcvn.spm.app.plan.payload.request.CheckInventoryRequest
 import com.kcvn.spm.app.plan.payload.request.CreatePlanRequest
 import com.kcvn.spm.app.plan.service.CreatePlanService
 import com.kcvn.spm.common.payload.BaseResponse
@@ -18,7 +19,7 @@ class CreatePlanController (private val createPlanService: CreatePlanService) {
 
     @GetMapping("/check-inventory")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
-    fun checkInventory(request: CreatePlanRequest): ResponseEntity<BaseResponse<Boolean>> {
+    fun checkInventory(request: CheckInventoryRequest): ResponseEntity<BaseResponse<Boolean>> {
         val data = createPlanService.checkInventory(request)
         return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)
     }

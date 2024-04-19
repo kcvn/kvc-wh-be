@@ -66,16 +66,16 @@ class ExternalQualityReportController (private val externalQualityReportService:
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @PostMapping(value = ["/check-import/tape-en-route"], consumes = ["multipart/form-data"])
+    @GetMapping(value = ["/check-import/tape-en-route"], consumes = ["multipart/form-data"])
 //    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun checkImportTapeEnRouteExcel(couponCode: String, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<CheckImportResponse>> {
-        val result = externalQualityReportService.checkImportTapeEnRouteExcel(couponCode, file)
+        val result = externalQualityReportService.checkImportTapeEnRouteExcel(couponCode)
         return ResponseEntity(result, HttpStatus.OK)
     }
-    @PostMapping(value = ["/check-import/tape-inventory"], consumes = ["multipart/form-data"])
+    @GetMapping(value = ["/check-import/tape-inventory"], consumes = ["multipart/form-data"])
 //    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun checkImportTapeEnRouteExcel(stocktakingDay: OffsetDateTime, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<CheckImportResponse>> {
-        val result = externalQualityReportService.checkImportTapeInventory(stocktakingDay, file)
+        val result = externalQualityReportService.checkImportTapeInventory(stocktakingDay)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

@@ -75,7 +75,7 @@ class OrderService(
                 m -> m.productName == model.productName && (request.version == OrderVersion.LATEST || (m.version ?: "") == (model.version ?: ""))
             }
 
-            model.quantityByCalendars = quantityByCalendar.map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
+            model.quantityByCalendars = quantityByCalendar.map { m -> KeyValueResponse(m.orderDate, m.quantity.toString(), isHasDifferent = m.isHasDifferent) }
 
             if (request.version ==OrderVersion.LATEST) model.version = quantityByCalendar.firstOrNull()?.version
             if (!model.version.isNullOrEmpty()) {

@@ -311,7 +311,7 @@ class CompletionRateService(
                     }
                     else {
                         val productExistSameDate =
-                            productExists.find { x -> (x.productName == name && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
+                            productExists.find { x -> (x.productName == name && (DateTimeHelper.toTimeZone7(x.effectiveDate))?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = rate
                             completionRateProductRepository.update(productExistSameDate)
@@ -542,7 +542,7 @@ class CompletionRateService(
                         completionRateProcessRepository.add(completionRateProduct)
                         count++
                     } else {
-                        val productExistSameDate = productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
+                        val productExistSameDate = productExists.find { x -> (x.key == key && (DateTimeHelper.toTimeZone7(x.effectiveDate))?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = rate
                             completionRateProcessRepository.update(productExist)
@@ -736,7 +736,7 @@ class CompletionRateService(
                         count++
                     } else {
                         val productExistSameDate =
-                            productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
+                            productExists.find { x -> (x.key == key && (DateTimeHelper.toTimeZone7(x.effectiveDate))?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = rate
                             completionRateProcessProductRepository.update(productExistSameDate)

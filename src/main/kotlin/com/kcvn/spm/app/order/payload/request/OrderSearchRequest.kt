@@ -9,4 +9,5 @@ class OrderSearchRequest {
     var startDate: OffsetDateTime? = null
     var endDate: OffsetDateTime? = null
     var version: String? = null
+    var isChangeQuantity: Boolean? = null
 }

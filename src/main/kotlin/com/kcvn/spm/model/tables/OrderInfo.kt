@@ -16,7 +16,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row16
+import org.jooq.Row17
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -142,6 +142,11 @@ open class OrderInfo(
      */
     val IS_DELETED: TableField<OrderInfoRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.order_info.is_change_quantity</code>.
+     */
+    val IS_CHANGE_QUANTITY: TableField<OrderInfoRecord, Boolean?> = createField(DSL.name("is_change_quantity"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
     private constructor(alias: Name, aliased: Table<OrderInfoRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<OrderInfoRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -183,18 +188,18 @@ open class OrderInfo(
     override fun rename(name: Table<*>): OrderInfo = OrderInfo(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row16 type methods
+    // Row17 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row16<String?, String?, String?, Int?, Int?, Int?, String?, Int?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row16<String?, String?, String?, Int?, Int?, Int?, String?, Int?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row17<String?, String?, String?, Int?, Int?, Int?, String?, Int?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Boolean?> = super.fieldsRow() as Row17<String?, String?, String?, Int?, Int?, Int?, String?, Int?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, Int?, Int?, Int?, String?, Int?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, Int?, Int?, Int?, String?, Int?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, Int?, Int?, Int?, String?, Int?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, Int?, Int?, Int?, String?, Int?, OffsetDateTime?, Int?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

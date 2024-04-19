@@ -43,7 +43,9 @@ import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
+import com.kcvn.spm.model.tables.TapeEnRoute
 import com.kcvn.spm.model.tables.TapeInfo
+import com.kcvn.spm.model.tables.TapeInventory
 import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
 import com.kcvn.spm.model.tables.records.AppSettingRecord
@@ -85,7 +87,9 @@ import com.kcvn.spm.model.tables.records.ProductProcessRecord
 import com.kcvn.spm.model.tables.records.ProductRecord
 import com.kcvn.spm.model.tables.records.SyncHistoryRecord
 import com.kcvn.spm.model.tables.records.SystemLockRecord
+import com.kcvn.spm.model.tables.records.TapeEnRouteRecord
 import com.kcvn.spm.model.tables.records.TapeInfoRecord
+import com.kcvn.spm.model.tables.records.TapeInventoryRecord
 import com.kcvn.spm.model.tables.records.UpdateTapeRecord
 import com.kcvn.spm.model.tables.records.WorkResultRecord
 
@@ -139,7 +143,9 @@ val PRODUCT_PKEY: UniqueKey<ProductRecord> = Internal.createUniqueKey(Product.PR
 val PRODUCT_PROCESS_PKEY: UniqueKey<ProductProcessRecord> = Internal.createUniqueKey(ProductProcess.PRODUCT_PROCESS, DSL.name("product_process_pkey"), arrayOf(ProductProcess.PRODUCT_PROCESS.ID), true)
 val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
 val SYSTEM_LOCK_PKEY: UniqueKey<SystemLockRecord> = Internal.createUniqueKey(SystemLock.SYSTEM_LOCK, DSL.name("system_lock_pkey"), arrayOf(SystemLock.SYSTEM_LOCK.ID), true)
+val TAPE_EN_ROUTE_PKEY: UniqueKey<TapeEnRouteRecord> = Internal.createUniqueKey(TapeEnRoute.TAPE_EN_ROUTE, DSL.name("tape_en_route_pkey"), arrayOf(TapeEnRoute.TAPE_EN_ROUTE.ID), true)
 val TAPE_INFO_PKEY: UniqueKey<TapeInfoRecord> = Internal.createUniqueKey(TapeInfo.TAPE_INFO, DSL.name("tape_info_pkey"), arrayOf(TapeInfo.TAPE_INFO.ID), true)
+val TAPE_INVENTORY_PKEY: UniqueKey<TapeInventoryRecord> = Internal.createUniqueKey(TapeInventory.TAPE_INVENTORY, DSL.name("tape_inventory_pkey"), arrayOf(TapeInventory.TAPE_INVENTORY.ID), true)
 val UPDATE_TAPE_PKEY: UniqueKey<UpdateTapeRecord> = Internal.createUniqueKey(UpdateTape.UPDATE_TAPE, DSL.name("update_tape_pkey"), arrayOf(UpdateTape.UPDATE_TAPE.ID), true)
 val WORK_RESULT_PKEY: UniqueKey<WorkResultRecord> = Internal.createUniqueKey(WorkResult.WORK_RESULT, DSL.name("work_result_pkey"), arrayOf(WorkResult.WORK_RESULT.ID), true)
 

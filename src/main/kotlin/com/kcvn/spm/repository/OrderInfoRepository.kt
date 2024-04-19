@@ -40,9 +40,6 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         if (!request.tapeCommon.isNullOrEmpty()) {
             condition = condition.and(PRODUCT.TAPE_COMMON.eq(request.tapeCommon))
         }
-        if (!request.exportType.isNullOrEmpty()) {
-            condition = condition.and(PRODUCT.EXPORT_TYPE.eq(request.exportType))
-        }
         if(request.startDate !=null ){
             condition = condition.and(ORDER_INFO.ORDER_DATE.ge(DateTimeHelper.toTimeZone7(request.startDate)))
         }
@@ -102,6 +99,9 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         }
         if (request.endDate != null) {
             condition = condition.and(ORDER_INFO.ORDER_DATE.le(request.endDate))
+        }
+        if(request.isChangeQuantity!= null && request.isChangeQuantity == true){
+            condition = condition.and(ORDER_INFO.IS_CHANGE_QUANTITY.eq(request.isChangeQuantity))
         }
         if (!request.version.isNullOrEmpty()) {
             if (request.version == OrderVersion.LATEST) {
@@ -267,55 +267,103 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                 .fetchInto(OrderInfo::class.java)
 
             var lstVersion = mutableListOf<Int>()
-            val orderIds = orderExists.filter { x ->
-                orders.any { m -> m.orderDate != null && m.productName == x.productName && m.orderDate!!.isEqual(x.orderDate) }
-            }.map { x -> x.id }
-            if (isIncreaseVersion) {
-                transactionalContext.update(ORDER_INFO)
-                    .set(ORDER_INFO.IS_LATEST, false)
-                    .where(ORDER_INFO.ID.`in`(orderIds))
-                    .execute()
-            } else {
-                transactionalContext.deleteFrom(ORDER_INFO)
-                    .where(ORDER_INFO.ID.`in`(orderIds))
-                    .execute()
-            }
-            val query = orders.map { item ->
-                val order = orderExists.filter { x -> x.orderDate != null && x.productName == item.productName && x.orderDate!!.isEqual(item.orderDate) }
-                    .sortedByDescending { x -> x.version }.firstOrNull()
-                var version = order?.version ?: 0
-                if (isIncreaseVersion && order != null) {
-                    version += 1
+
+            orders.forEach { item ->
+                val existingOrder = orderExists.find { x -> x.orderDate != null && x.productName == item.productName && x.orderDate!!.isEqual(item.orderDate) }
+                if (existingOrder != null) {
+                    if (!isIncreaseVersion) {
+                        var isChangeQuantity = true
+                        if (existingOrder.quantity == item.quantity) {
+                            isChangeQuantity = false
+                        }
+                        transactionalContext.update(ORDER_INFO)
+                            .set(ORDER_INFO.IS_CHANGE_QUANTITY, isChangeQuantity)
+                            .set(ORDER_INFO.QUANTITY, item.quantity)
+                            .where(ORDER_INFO.ID.eq(existingOrder.id))
+                            .execute()
+                    } else {
+                        val version = existingOrder.version?.plus(1)
+                        var isChangeQuantity = false
+                        if (existingOrder.quantity != item.quantity) {
+                            isChangeQuantity = true
+                            transactionalContext.update(ORDER_INFO)
+                                .set(ORDER_INFO.IS_CHANGE_QUANTITY, true)
+                                .set(ORDER_INFO.IS_LATEST, false)
+                                .where(ORDER_INFO.ID.eq(existingOrder.id))
+                                .execute()
+                        }
+                        else{
+                            transactionalContext.update(ORDER_INFO)
+                                .set(ORDER_INFO.IS_LATEST, false)
+                                .where(ORDER_INFO.ID.eq(existingOrder.id))
+                                .execute()
+                        }
+                        if (version != null) {
+                            lstVersion.add(version)
+                        }
+                        transactionalContext.insertInto(
+                            ORDER_INFO,
+                            ORDER_INFO.PRODUCT_NAME,
+                            ORDER_INFO.FRAME_1,
+                            ORDER_INFO.LAYER_COUNT,
+                            ORDER_INFO.PCS_SH,
+                            ORDER_INFO.BLOCK_SH,
+                            ORDER_INFO.SR_NOSR,
+                            ORDER_INFO.VERSION,
+                            ORDER_INFO.ORDER_DATE,
+                            ORDER_INFO.QUANTITY,
+                            ORDER_INFO.IS_LATEST,
+                            ORDER_INFO.IS_CHANGE_QUANTITY,
+                            ORDER_INFO.CREATED_BY
+                        ).values(
+                            item.productName,
+                            item.frame_1,
+                            item.layerCount,
+                            item.pcsSh,
+                            item.blockSh,
+                            item.srNosr,
+                            version,
+                            item.orderDate,
+                            item.quantity,
+                            true,
+                            isChangeQuantity,
+                            CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                        ).execute()
+                    }
+                } else {
+                    val version = 0
+                    val isChangeQuantity = true
+                    lstVersion.add(version)
+                    transactionalContext.insertInto(
+                        ORDER_INFO,
+                        ORDER_INFO.PRODUCT_NAME,
+                        ORDER_INFO.FRAME_1,
+                        ORDER_INFO.LAYER_COUNT,
+                        ORDER_INFO.PCS_SH,
+                        ORDER_INFO.BLOCK_SH,
+                        ORDER_INFO.SR_NOSR,
+                        ORDER_INFO.VERSION,
+                        ORDER_INFO.ORDER_DATE,
+                        ORDER_INFO.QUANTITY,
+                        ORDER_INFO.IS_LATEST,
+                        ORDER_INFO.IS_CHANGE_QUANTITY,
+                        ORDER_INFO.CREATED_BY
+                    ).values(
+                        item.productName,
+                        item.frame_1,
+                        item.layerCount,
+                        item.pcsSh,
+                        item.blockSh,
+                        item.srNosr,
+                        version,
+                        item.orderDate,
+                        item.quantity,
+                        true,
+                        isChangeQuantity,
+                        CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                    ).execute()
                 }
-                lstVersion.add(version)
-                transactionalContext.insertInto(
-                    ORDER_INFO,
-                    ORDER_INFO.PRODUCT_NAME,
-                    ORDER_INFO.FRAME_1,
-                    ORDER_INFO.LAYER_COUNT,
-                    ORDER_INFO.PCS_SH,
-                    ORDER_INFO.BLOCK_SH,
-                    ORDER_INFO.SR_NOSR,
-                    ORDER_INFO.VERSION,
-                    ORDER_INFO.ORDER_DATE,
-                    ORDER_INFO.QUANTITY,
-                    ORDER_INFO.IS_LATEST,
-                    ORDER_INFO.CREATED_BY
-                ).values(
-                    item.productName,
-                    item.frame_1,
-                    item.layerCount,
-                    item.pcsSh,
-                    item.blockSh,
-                    item.srNosr,
-                    version,
-                    item.orderDate,
-                    item.quantity,
-                    true,
-                    CommonUtils.loggedInUser() ?: Constants.SYSTEM
-                )
             }
-            transactionalContext.batch(query).execute()
 
             val orderVersion = transactionalContext.selectFrom(ORDER_VERSION_DROPDOWN)
                 .where(ORDER_VERSION_DROPDOWN.IS_DELETED.eq(false))
@@ -337,12 +385,16 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             transactionalContext.batch(versionQuery).execute()
         }
     }
+    fun getOrderInfoByTimeRange(startDate: OffsetDateTime?, endDate: OffsetDateTime?, productNames: List<String> = listOf()): List<OrderInfo> {
+        var condition = ORDER_INFO.ORDER_DATE.between(startDate, endDate)
+            .and(ORDER_INFO.IS_LATEST.eq(true))
+            .and(ORDER_INFO.IS_DELETED.eq(false))
+        if (productNames.isNotEmpty()) {
+            condition = condition.and(ORDER_INFO.PRODUCT_NAME.`in`(productNames))
+        }
 
-    fun getOrderInfoByTimeRange(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<OrderInfo> {
         return context.selectFrom(ORDER_INFO)
-            .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
-                .and(ORDER_INFO.IS_LATEST.eq(true))
-                .and(ORDER_INFO.IS_DELETED.eq(false)))
+            .where(condition)
             .fetchInto(OrderInfo::class.java)
     }
 

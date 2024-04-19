@@ -223,11 +223,11 @@ class CompletionRateService(
         val rowIndex = 1
         if (!sheet.any { x -> x.rowNum >= rowIndex }) throw BusinessException(importFileEmptyMessage)
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(importFileEmptyMessage)
-        val utcOffset = ZoneOffset.ofHours(7)
-        val currentDate = OffsetDateTime.now(utcOffset).withHour(0)
-            .withMinute(0)
-            .withSecond(0)
-            .withNano(0)
+
+        val currentDate = DateTimeHelper.toTimeZone7(OffsetDateTime.now())?.withHour(0)
+            ?.withMinute(0)
+            ?.withSecond(0)
+            ?.withNano(0)
         val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
         val headerRow = sheet.getRow(0)
         val templateUrl = "${System.getProperty(userDir)}/target/classes/assets/template/ExportCompletionRateTemplate.xlsx"
@@ -311,13 +311,13 @@ class CompletionRateService(
                     }
                     else {
                         val productExistSameDate =
-                            productExists.find { x -> (x.productName == name && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
+                            productExists.find { x -> (x.productName == name && (DateTimeHelper.toTimeZone7(x.effectiveDate))?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = rate
                             completionRateProductRepository.update(productExistSameDate)
                             count++
                         } else if (convertEffectiveDate != null) {
-                            if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                            if (currentDate?.toLocalDate()!! > convertEffectiveDate.toLocalDate()) {
                                 val minEffectiveDate = productExistMinEffectiveDate?.effectiveDate
                                 if (minEffectiveDate != null) {
                                     if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
@@ -338,7 +338,7 @@ class CompletionRateService(
                                 val completionRateUpdate =
                                     completionRateProductRepository.getCompletionRateProductWithMaxEffectivedateByName(name)
                                 if (completionRateUpdate != null) {
-                                    if (convertEffectiveDate.toLocalDate() < completionRateUpdate.effectiveDate?.toLocalDate()) {
+                                    if (convertEffectiveDate.toLocalDate() <= completionRateUpdate.effectiveDate?.toLocalDate()) {
                                         errorMessages.add(checkImportCompletionRateDate)
                                     } else {
                                         completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
@@ -471,11 +471,10 @@ class CompletionRateService(
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
         var count = 0
         var total = sheet.lastRowNum - rowIndex
-        val utcOffset = ZoneOffset.ofHours(7)
-        val currentDate = OffsetDateTime.now(utcOffset).withHour(0)
-            .withMinute(0)
-            .withSecond(0)
-            .withNano(0)
+        val currentDate = DateTimeHelper.toTimeZone7(OffsetDateTime.now())?.withHour(0)
+            ?.withMinute(0)
+            ?.withSecond(0)
+            ?.withNano(0)
 
         val processCodeExist = processMasterRepository.getListProcessCode()
         var rate: BigDecimal = BigDecimal.ZERO.setScale(2)
@@ -543,14 +542,14 @@ class CompletionRateService(
                         completionRateProcessRepository.add(completionRateProduct)
                         count++
                     } else {
-                        val productExistSameDate = productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
+                        val productExistSameDate = productExists.find { x -> (x.key == key && (DateTimeHelper.toTimeZone7(x.effectiveDate))?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = rate
                             completionRateProcessRepository.update(productExist)
                             count++
 
                         } else if (convertEffectiveDate != null) {
-                            if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                            if (currentDate?.toLocalDate()!! > convertEffectiveDate.toLocalDate()) {
                                 val minEffectiveDate = processExistMinEffectiveDate?.effectiveDate
                                 if (minEffectiveDate != null) {
                                     if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
@@ -573,7 +572,7 @@ class CompletionRateService(
                                     completionRateProcessRepository.getCompletionRateProcessWithMaxEffectivedateByName(key)
 
                                 if (completionRateUpdate != null) {
-                                    if (convertEffectiveDate.toLocalDate() < completionRateUpdate.effectiveDate?.toLocalDate()) {
+                                    if (convertEffectiveDate.toLocalDate() <= completionRateUpdate.effectiveDate?.toLocalDate()) {
                                         errorMessages.add(checkImportCompletionRateDate)
                                     } else {
                                         completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
@@ -664,11 +663,11 @@ class CompletionRateService(
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         val productExists = completionRateProcessProductRepository.getListProcessProductByKey(productKeys)
         val processCodeExist = processProcedureStructureRepository.getListProcessCode()
-        val utcOffset = ZoneOffset.ofHours(7)
-        val currentDate = OffsetDateTime.now(utcOffset).withHour(0)
-            .withMinute(0)
-            .withSecond(0)
-            .withNano(0)
+
+        val currentDate = DateTimeHelper.toTimeZone7(OffsetDateTime.now())?.withHour(0)
+            ?.withMinute(0)
+            ?.withSecond(0)
+            ?.withNano(0)
         val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
         var count = 0
         var total = sheet.lastRowNum - rowIndex
@@ -737,13 +736,13 @@ class CompletionRateService(
                         count++
                     } else {
                         val productExistSameDate =
-                            productExists.find { x -> (x.key == key && x.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
+                            productExists.find { x -> (x.key == key && (DateTimeHelper.toTimeZone7(x.effectiveDate))?.toLocalDate() == convertEffectiveDate?.toLocalDate()) }
                         if (productExistSameDate != null) {
                             productExistSameDate.rate = rate
                             completionRateProcessProductRepository.update(productExistSameDate)
                             count++
                         } else if (convertEffectiveDate != null) {
-                            if (currentDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                            if (currentDate?.toLocalDate()!! > convertEffectiveDate.toLocalDate()) {
                                 val minEffectiveDate = processProductExistMinEffectiveDate?.effectiveDate
                                 if (minEffectiveDate != null) {
                                     if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
@@ -766,9 +765,10 @@ class CompletionRateService(
                                 val completionRateUpdate =
                                     completionRateProcessProductRepository.getCompletionRateProcessProductWithMaxEffectiveDateByName(key)
                                 if (completionRateUpdate != null) {
-                                    if (effectiveDate.toLocalDate() < completionRateUpdate.effectiveDate?.toLocalDate()) {
+                                    if (effectiveDate.toLocalDate() <= completionRateUpdate.effectiveDate?.toLocalDate()) {
                                         errorMessages.add(checkImportCompletionRateDate)
-                                    } else {
+                                    }
+                                    else {
                                         completionRateUpdate.expirationDate = effectiveDate.minusDays(1)
                                         completionRateProcessProductRepository.update(completionRateUpdate)
                                         val completionRateProcessProduct = CompletionRateProcessProduct(
@@ -780,6 +780,7 @@ class CompletionRateService(
                                             expirationDate = null,
                                             effectiveDate = effectiveDate
                                         )
+                                        completionRateProcessProductRepository.update(completionRateUpdate)
                                         completionRateProcessProductRepository.add(completionRateProcessProduct)
                                         count++
                                     }

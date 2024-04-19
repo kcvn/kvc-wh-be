@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.report.externalquality.service
 
+import com.kcvn.spm.app.completionrate.payload.response.CheckImportResponse
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
@@ -11,24 +12,33 @@ import com.kcvn.spm.app.report.externalquality.payload.model.KeyValueCustom
 import com.kcvn.spm.app.report.externalquality.payload.request.ExternalQualityReportSearchRequest
 import com.kcvn.spm.app.report.externalquality.payload.response.ExternalQualityReportResponse
 import com.kcvn.spm.common.constants.*
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.NumberHelper
+import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.CalendarResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.UpdateTape
+import com.kcvn.spm.model.tables.pojos.TapeEnRoute
+import com.kcvn.spm.model.tables.pojos.TapeInventory
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.*
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 
 @Service
@@ -39,10 +49,400 @@ class ExternalQualityReportService(
     private val inventoryProductRep: InventoryProductRepository,
     private val completionRateProductRep: CompletionRateProductRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
-    private val updateTapeRepository: UpdateTapeRepository,
     private val orderInfoRepository: OrderInfoRepository,
+    private val tapeEnRouteRepository:TapeEnRouteRepository,
+    private val tapeInventoryRepository: TapeInventoryRepository,
+    private val appSettingRep: AppSettingRepository
 ) {
+    //region IMPORT
 
+    fun checkImportTapeEnRouteExcel(couponCode: String,  file: MultipartFile): BaseResponse<CheckImportResponse> {
+        val checkTape = tapeEnRouteRepository.getTapeEnRouteList(couponCode)
+        return if(checkTape.isNotEmpty()){
+            BaseResponse(CheckImportResponse(false,CommonUtils.getMessage("validate.importTapeRoute", arrayOf(couponCode))), "")
+        } else{
+            BaseResponse(CheckImportResponse(true,""), "")
+        }
+    }
+    fun checkImportTapeInventory(stocktakingDay: OffsetDateTime, file: MultipartFile): BaseResponse<CheckImportResponse>{
+        val stocktakingDayConvert = DateTimeHelper.toTimeZone7(stocktakingDay)
+        val checkTape = tapeInventoryRepository.getTapeEnRouteListByDate(stocktakingDayConvert)
+        return if(checkTape.isNotEmpty()){
+            BaseResponse(CheckImportResponse(false,CommonUtils.getMessage("validate.importTapeInventory", arrayOf(stocktakingDayConvert!!.toLocalDate()))), "")
+        } else{
+            BaseResponse(CheckImportResponse(true,""), "")
+        }
+    }
+    fun downloadTapeEnRouteTemplate(): BaseResponse<FileContentModel>{
+        val fileUrl = "ImportTapeEnRouteTemplate.xlsx"
+        val fileName = "fileName.importTapeEnRouteTemplate"
+        return downloadTemplate(fileUrl, fileName)
+    }
+    fun downloadTapeInventoryTemplate(): BaseResponse<FileContentModel>{
+        val fileUrl = "ImportTapeInventoryTemplate.xlsx"
+        val fileName = "fileName.importTapeInventoryTemplate"
+        return downloadTemplate(fileUrl, fileName)
+    }
+    fun downloadTemplate(fileUrl:String, fileName: String): BaseResponse<FileContentModel> {
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/"+fileUrl
+        val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage(fileName),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        return BaseResponse(response)
+    }
+    fun importTapeEnRoute(file: MultipartFile, couponCode: String): BaseResponse<FileContentModel> {
+        val tapeEnRoutes = tapeEnRouteRepository.getTapeEnRouteList(couponCode)
+        if(tapeEnRoutes.isNotEmpty()){
+            tapeEnRouteRepository.deleteTapeEnRouteList(tapeEnRoutes)
+        }
+        val workbook = WorkbookFactory.create(file.inputStream)
+        try {
+            val tapeEnRouteList = mutableListOf<TapeEnRoute>()
+            val sheet = workbook.getSheetAt(0)
+            val rowIndex = 1
+
+            if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
+                throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+            val headerRow = sheet.getRow(0)
+                ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
+            val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeEnRouteTemplate.xlsx"
+            val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 1))
+                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+
+            var count = 0
+            var total = 0
+            for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val style = row.getCell(0)?.cellStyle ?: break
+                val messageResults = mutableListOf<String>()
+                var isValidCol = true
+                val exportType = ExcelHelper.getCellValue(row, 0)
+                if(exportType.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.exportType"))
+                }
+
+                val purchaseOrder = ExcelHelper.getCellValue(row, 1)
+                if(purchaseOrder.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.purchaseOrder"))
+                }
+                val itemCode = ExcelHelper.getCellValue(row, 2)
+                if(itemCode.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.itemCode"))
+                }
+
+                val unit = ExcelHelper.getCellValue(row, 3)
+                if(unit.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.unit"))
+                }
+
+                val description = ExcelHelper.getCellValue(row, 4)
+                if(description.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.description"))
+                }
+
+                val spec = ExcelHelper.getCellValue(row, 5)
+                if(spec.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.spec"))
+                }
+
+                val transmit = ExcelHelper.getCellValue(row, 6)
+                if(transmit.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.transmit"))
+                }
+
+
+                val orderedQuantityCheck = ExcelHelper.getCellValue(row, 7)
+                var orderedQuantity: Int? = null
+                if (orderedQuantityCheck.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.orderedQuantity"))
+                } else if (!NumberHelper.isNumeric(orderedQuantityCheck)) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.orderedQuantity.format"))
+                } else {
+
+                    orderedQuantity = StringHelper.removeDecimalSuffix(orderedQuantityCheck).toInt()
+                }
+
+
+                val deliveredQuantityCheck = ExcelHelper.getCellValue(row, 8)
+                var deliveredQuantity: Int? = null
+                if (deliveredQuantityCheck.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.deliveredQuantity"))
+                } else if (!NumberHelper.isNumeric(deliveredQuantityCheck)) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.deliveredQuantity.format"))
+                } else {
+
+                    deliveredQuantity = StringHelper.removeDecimalSuffix(deliveredQuantityCheck).toInt()
+                }
+
+                val responseDateCheck = ExcelHelper.getCellValue(row, 9)
+                val isDateFormat = DateTimeHelper.isFormatdate(responseDateCheck)
+                if(!isDateFormat && deliveredQuantityCheck.isNotEmpty()){
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate.format"))
+
+                }
+                val responseDate = if(deliveredQuantityCheck.isNotEmpty() && isDateFormat) DateTimeHelper.convertStringToOffSetDateTime(responseDateCheck,DateTimeFormat.M_dd_yyyy) else null
+
+                if(responseDateCheck.isEmpty()){
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate"))
+                }
+
+                val tapeLotCheck : String = ExcelHelper.getCellValue(row, 10)
+                var tapeLot: String? = null
+                if(tapeLotCheck.isEmpty()){
+                    tapeLot = tapeLotCheck
+                }
+                val quantityCheck = ExcelHelper.getCellValue(row, 11)
+                var quantity: Int? = null
+                if(quantityCheck.isNotEmpty()){
+                    quantity = StringHelper.removeDecimalSuffix(quantityCheck).toInt()
+                }
+
+                val numberOfBoxesCheck = ExcelHelper.getCellValue(row, 11)
+                var numberOfBoxes:Int? = null
+                if(numberOfBoxesCheck.isNotEmpty()){
+                    numberOfBoxes= StringHelper.removeDecimalSuffix(numberOfBoxesCheck).toInt()
+
+                }
+                val integrationConfirmationCheck = ExcelHelper.getCellValue(row, 12)
+                var integrationConfirmation:Boolean? = null
+                if(integrationConfirmationCheck.isNotEmpty()){
+                    integrationConfirmation = StringHelper.removeDecimalSuffix(integrationConfirmationCheck).toInt() == 1
+                }
+                val contactStatus = ExcelHelper.getCellValue(row, 13)
+                total++
+
+                val tapeEnRoute = TapeEnRoute(
+                    exportType = exportType,
+                    purchaseOrder = purchaseOrder,
+                    itemCode = itemCode,
+                    unit = unit,
+                    description = description,
+                    spec = spec,
+                    transmit = transmit,
+                    orderedQuantity = orderedQuantity,
+                    deliveredQuantity = deliveredQuantity,
+                    responseDate = responseDate,
+                    tapeLot = tapeLot,
+                    quantity = quantity,
+                    numberOfBoxes = numberOfBoxes,
+                    integrationConfirmation = integrationConfirmation,
+                    contactStatus = contactStatus,
+                    couponCode = couponCode
+                )
+                if (isValidCol) {
+                    tapeEnRouteList.add(tapeEnRoute)
+                    count++
+                }
+                val result = messageResults.joinToString(separator = "; ")
+
+                if (row.getCell(colIndexResult) == null) {
+                    row.createCell(colIndexResult)
+                }
+                row.getCell(colIndexResult).setCellValue(result)
+                row.getCell(colIndexResult).cellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
+            }
+            if (count == total) {
+                for(tapeEnRoute in tapeEnRouteList){
+                    tapeEnRouteRepository.addTapeEnRoute(tapeEnRoute)
+                }
+                return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
+            }
+            val errorRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess") }
+            val response = exportFileError(errorRows, workbook, sheet, "fileName.importTapeEnRouteTemplate","importTapeRoute.sheetName")
+            workbook.close()
+            return BaseResponse(
+                response,
+                if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("importTape.success", arrayOf(count, total))
+            )
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            workbook.close()
+        }
+    }
+
+    fun importTapeInventory(file: MultipartFile, stocktakingDay: OffsetDateTime): BaseResponse<FileContentModel> {
+
+        val stocktakingDayConvert = DateTimeHelper.toTimeZone7(stocktakingDay)
+        val tapeInventoriesCheck = tapeInventoryRepository.getTapeEnRouteListByDate(stocktakingDayConvert)
+        if(tapeInventoriesCheck.isNotEmpty()){
+            tapeInventoryRepository.deleteTapeInventoryList(tapeInventoriesCheck)
+        }
+        val workbook = WorkbookFactory.create(file.inputStream)
+        try {
+            val tapeInventories = mutableListOf<TapeInventory>()
+            val sheet = workbook.getSheetAt(0)
+            val rowIndex = 1
+
+            if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
+                throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+            val headerRow = sheet.getRow(0)
+                ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
+            val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeInventoryTemplate.xlsx"
+            val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 1))
+                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+
+            var count = 0
+            var total = 0
+            for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val style = row.getCell(0)?.cellStyle ?: break
+                total++
+                val messageResults = mutableListOf<String>()
+                var isValidCol = true
+                val exportType = ExcelHelper.getCellValue(row, 0)
+                if(exportType.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.exportType"))
+                }
+                val productNameShortCut = ExcelHelper.getCellValue(row, 1)
+                if (productNameShortCut.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.productNameShortCut"))
+                }
+
+                val productName = ExcelHelper.getCellValue(row, 2)
+                if (productName.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.productName"))
+                }
+
+
+                val tapeInWareHouseCheck = ExcelHelper.getCellValue(row, 3)
+                var tapeInWareHouse: Int? = null
+                if (tapeInWareHouseCheck.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeInWareHouse"))
+                } else if (!NumberHelper.isNumeric(tapeInWareHouseCheck)) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeInWareHouse.format"))
+                } else {
+
+                    tapeInWareHouse = StringHelper.removeDecimalSuffix(tapeInWareHouseCheck).toInt()
+                }
+
+                val tapeInDepartmentCheck = ExcelHelper.getCellValue(row, 4)
+                var tapeInDepartment: Int? = null
+                if (tapeInDepartmentCheck.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeInDepartment"))
+                } else if (!NumberHelper.isNumeric(tapeInDepartmentCheck)) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeInDepartment.format"))
+                } else {
+                    tapeInDepartment = StringHelper.removeDecimalSuffix(tapeInDepartmentCheck).toInt()
+                }
+
+                val tapeNGCheck = ExcelHelper.getCellValue(row, 5)
+                var tapeNG: Int? = null
+                if (tapeNGCheck.isEmpty()) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeNG"))
+                } else if (!NumberHelper.isNumeric(tapeNGCheck)) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeNG.format"))
+                } else {
+                    tapeNG = StringHelper.removeDecimalSuffix(tapeNGCheck).toInt()
+                }
+
+
+                val tapeInventory = TapeInventory(
+                    exportType = exportType,
+                    productNameShortCut = productNameShortCut,
+                    productName = productName,
+                    tapeInWarehouse = tapeInWareHouse,
+                    tapeInDepartment = tapeInDepartment,
+                    tapeNg = tapeNG,
+                    stocktakingDay = stocktakingDay
+                )
+                if (isValidCol) {
+                    tapeInventories.add(tapeInventory)
+                    count++
+                }
+                val result = messageResults.joinToString(separator = "; ")
+
+                if (row.getCell(colIndexResult) == null) {
+                    row.createCell(colIndexResult)
+                }
+                row.getCell(colIndexResult).setCellValue(result)
+                row.getCell(colIndexResult).cellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
+            }
+            if (count == total) {
+                for(tapeInventory in tapeInventories){
+                    tapeInventoryRepository.add(tapeInventory)
+                }
+                return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
+            }
+            val errorRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess") }
+            val response = exportFileError(errorRows, workbook, sheet, "fileName.importTapeInventoryTemplate","importTapeInventory.sheetName")
+            workbook.close()
+            return BaseResponse(
+                response,
+                if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("importTape.success", arrayOf(count, total))
+            )
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            workbook.close()
+        }
+    }
+
+    private fun exportFileError(dataRows: List<Row>, workbook: Workbook, importSheet: Sheet, fileName: String,sheetName: String): FileContentModel {
+        val sheet = workbook.createSheet(CommonUtils.getMessage(sheetName))
+        for ((rowNumber, dataRow) in dataRows.withIndex()) {
+            val row = sheet.createRow(rowNumber)
+            row.height = dataRow.height
+            for (colIndex in 0 until dataRow.lastCellNum) {
+                if (rowNumber == 0) {
+                    sheet.setColumnWidth(colIndex, importSheet.getColumnWidth(colIndex))
+                }
+                val cell = dataRow.getCell(colIndex)
+                if(cell !=null){
+                    val style = cell.cellStyle
+                        val value = ExcelHelper.getCellValueCustom(dataRow, colIndex)
+                        ExcelHelper.setCellValue(row, colIndex, style, value)
+                }
+            }
+        }
+        workbook.removeSheetAt(0)
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage(CommonUtils.getMessage(fileName), arrayOf(
+                LocalDateTime.now().format(
+                    DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        return response
+    }
+    //endregion
+    //region EXPORT
     fun exportExcelExternalQualityReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
         val dataExport = getDataReport(request,pageable)
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportExternalQualityReportTemplate.xlsx")
@@ -156,10 +556,12 @@ class ExternalQualityReportService(
 
         return BaseResponse(response)
     }
+    //endregion
 
-
+    //region GET LIST
 
     fun getDataReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): ExternalQualityReportResponse {
+        val inventoryClosingDate = DateTimeHelper.toTimeZone7(request.inventoryClosingDate)
         val startDate = DateTimeHelper.toTimeZone7(request.startDate)
         val endDate = DateTimeHelper.toTimeZone7(request.endDate)
         val response = ExternalQualityReportResponse()
@@ -170,8 +572,11 @@ class ExternalQualityReportService(
 
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         response.columns = DateTimeHelper.toCalendarColumn(startDate!!, endDate!!, holidayCalenders)
-        val daysToSubtract: Long = 10
-
+        var daysToSubtract: Long = 10
+        val dayToSubtractConfig = appSettingRep.findByKey(TapeReportConfig.KEY)
+        if (dayToSubtractConfig != null) {
+            daysToSubtract = dayToSubtractConfig.value?.toLong() ?: 10
+        }
         val subColumns = DateTimeHelper.toCalendarColumn(startDate, endDate, holidayCalenders, daysToSubtract)
         response.subColumns = subColumns
         val orderSearchRequest = OrderSearchRequest()
@@ -184,7 +589,7 @@ class ExternalQualityReportService(
         val order = orderSer.getPaginatedOrder(orderSearchRequest,pageableOrder)
         val listProductOrder = order.data
 
-        val listCompletionRate = completionRateProductRep.getByProduct(listProductName.filterNotNull())
+        val listCompletionRate = completionRateProductRep.getForReport(listProductName.filterNotNull(),startDate)
         val listWorkResult = request.startDate?.let { request.endDate?.let { it1 -> workResultRep.getForReport(it, it1,listProductName) } }
         for(externalQuality in mappingPaging){
             if (listCompletionRate != null) {
@@ -192,9 +597,13 @@ class ExternalQualityReportService(
             }
         }
         //get list name UpdateTape
-        val genericNames = getGenericNameUpdateTape(mappingPaging)
-        //get list Update Tape
-        val updateTapes = updateTapeRepository.getUpdateTapeForReport(genericNames,startDate,endDate)
+        val listShortCutName = getListNameProduct(mappingPaging,isShortCutName = true)
+        val listSpec = getListNameProduct(mappingPaging,isSpec = true)
+        //get list Tape Inventory
+        val tapeInventory = tapeInventoryRepository.getTapeForReport(listShortCutName,inventoryClosingDate)
+        //get list Tape En route
+        val tapeEnRoute = tapeEnRouteRepository.getTapeEnRouteForReport(listSpec,startDate,endDate)
+
         // get list name product
         val productNames = getListNameProduct(mappingPaging)
         // get list Inventory
@@ -203,12 +612,12 @@ class ExternalQualityReportService(
         val listDataExist :MutableList<ExternalQualityDetailExistModel> = mutableListOf()
         //add Details Data here
         for(mappingItem in mappingPaging){
-            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,updateTapes,inventoryDetails, subColumns,listDataExist)
+            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,tapeInventory,inventoryDetails, subColumns,listDataExist,tapeEnRoute,daysToSubtract)
         }
         val valueReportDate= request.endDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) }
         //add Shipping Data here
         for(mappingItem in mappingPaging){
-            addShippingData(mappingItem,valueReportDate)
+            addShippingData(mappingItem,valueReportDate,inventoryClosingDate)
         }
         for(mappingItem in mappingPaging){
             addExportType(mappingItem)
@@ -222,15 +631,6 @@ class ExternalQualityReportService(
         return data.sumOf { x -> x.productQuantity!! }
     }
 
-    fun getGenericNameUpdateTape(listExternalQuantityReport:  List<ExternalQualityReportModel>) :List<String>{
-
-        val genericNames: MutableList<String> = mutableListOf()
-
-        for(item in listExternalQuantityReport){
-            genericNames.add(item.productShortcutName+item.exportType+item.tapeCommon)
-        }
-        return genericNames
-    }
     fun parseExportTypes(exportType: String?): List<String> {
         if (exportType != null) {
             return if (exportType.contains(",")) {
@@ -242,12 +642,19 @@ class ExternalQualityReportService(
         return listOf()
     }
 
-    fun getListNameProduct(listExternalQuantityReport:  List<ExternalQualityReportModel>) :List<String>{
+    fun getListNameProduct(listExternalQuantityReport:  List<ExternalQualityReportModel>, isShortCutName: Boolean =false, isSpec: Boolean = false) :List<String>{
 
         val productNames: MutableList<String> = mutableListOf()
 
         for(item in listExternalQuantityReport){
-            item.productName?.let { productNames.add(it) }
+            if(isShortCutName){
+                item.productShortcutName?.let { productNames.add(it) }
+            }else if(isSpec){
+                item.productShortcutName?.let { productNames.add("$it L1") }
+            }
+            else{
+                item.productName?.let { productNames.add(it) }
+            }
         }
         return productNames
     }
@@ -256,10 +663,12 @@ class ExternalQualityReportService(
                                         listProductOrder:  List<OrderDetailModel>?,
                                         columns:  List<CalendarResponse>,
                                         listWorkResult: List<WorkResult>?,
-                                        updateTapes:List<UpdateTape>,
+                                        listTapeInventory:List<TapeInventory>,
                                         inventoryProducts:  List<InventoryProductResponse>,
                                         subColumns: List<CalendarResponse>,
-                                        listDataExist: MutableList<ExternalQualityDetailExistModel> = mutableListOf()){
+                                        listDataExist: MutableList<ExternalQualityDetailExistModel> = mutableListOf(),
+                                        listTapeEnRoute: List<TapeEnRoute>,
+                                        daysToSubtract: Long){
 
         val detailData : MutableList<ExternalQualityDetailModel> = mutableListOf()
 
@@ -316,20 +725,17 @@ class ExternalQualityReportService(
 
         // LOGIC TAPE
 
-    val exportTypes = parseExportTypes(externalQualityReportModel.exportType)
+        val exportTypes = parseExportTypes(externalQualityReportModel.exportType)
 
-    var isFirstExportType = true
-    for(exportType in exportTypes){
-        val genericName=  externalQualityReportModel.productShortcutName+exportType+externalQualityReportModel.tapeCommon
-        val deliveryTypeShortName = exportType + externalQualityReportModel.productShortcutName
-        val sharedTape = externalQualityReportModel.tapeCommon
-        val updateTape = updateTapes.filter { x-> x.genericName == genericName }
-        val updateTapeCommon = updateTape.filter { x-> x.deliveryTypeShortName == deliveryTypeShortName && x.sharedTape ==  sharedTape}
+        var isFirstExportType = true
+        for(exportType in exportTypes){
+        val productNameShortCut = externalQualityReportModel.productShortcutName
+        val tapeInventory = listTapeInventory.filter { x-> x.productNameShortCut == productNameShortCut && x.exportType == exportType}
         var inventoryTape = 0
         var tapeExpired =0
-        if(updateTapeCommon.isNotEmpty()){
-            tapeExpired = updateTapeCommon.filter { it.totalNg != null }.sumOf { it.totalNg!! }
-            inventoryTape = updateTapeCommon.filter { it.logPd1Inventory != null }.sumOf { it.logPd1Inventory!! }
+        if(tapeInventory.isNotEmpty()){
+            tapeExpired = tapeInventory.filter { it.tapeInWarehouse != null }.sumOf { it.tapeInWarehouse!! } + tapeInventory.filter { it.tapeInDepartment != null }.sumOf { it.tapeInDepartment!! }
+            inventoryTape = tapeInventory.filter { it.tapeNg != null }.sumOf { it.tapeNg!! }
         }
         val goodQualityTapeInventorySet = inventoryTape - tapeExpired
         val goodQualityTapeInventoryBlock = goodQualityTapeInventorySet * externalQualityReportModel.blockSh!!
@@ -352,11 +758,14 @@ class ExternalQualityReportService(
         //PLANNED_TAPE_SET
         val plannedTapeSet = ExternalQualityDetailModel("PLANNED_TAPE_SET", ExternalReportDetailType.PLANNED_TAPE_SET, externalQualityReportModel.goodQualityTapeInventorySet)
         val plannedTapeSetCalendars: MutableList<KeyValueResponse> = mutableListOf()
+        val tapeEnRoute = listTapeEnRoute.filter { x ->
+            x.exportType == exportType && x.spec?.contains(externalQualityReportModel.productShortcutName ?: "") == true}
+
         subColumns.forEach{ x ->
-            val tape = updateTape.filter{ tape -> tape.responseDate?.let { DateTimeHelper.toTimeZone7((it.plusDays(10)))
+            val tape = tapeEnRoute.filter{ tape -> tape.responseDate?.let { DateTimeHelper.toTimeZone7((it.plusDays(daysToSubtract)))
                 ?.let { it1 -> DateTimeHelper.toString(it1, DateTimeFormat.yyyyMMdd) } } == x.key }
             if(tape.isNotEmpty()){
-                plannedTapeSetCalendars.add(KeyValueResponse(x.key, tape.sumOf { it.deliveryQuantity ?: 0 }.toString()))
+                plannedTapeSetCalendars.add(KeyValueResponse(x.key, tape.sumOf { it.deliveredQuantity ?: 0 }.toString()))
             }else{
                 plannedTapeSetCalendars.add(KeyValueResponse(x.key, "0"))
             }
@@ -430,7 +839,6 @@ class ExternalQualityReportService(
         externalQualityReportModel.details = detailData
     }
 
-
     fun calculateDifferenceCalendars(orderQuantityCalendars: List<KeyValueResponse>, productionResultCalendars: List<KeyValueResponse>): MutableList<KeyValueResponse> {
         val difference1Calendars = mutableListOf<KeyValueResponse>()
 
@@ -446,6 +854,7 @@ class ExternalQualityReportService(
 
         return difference1Calendars
     }
+
     fun addExportType(externalQualityReportModel: ExternalQualityReportModel){
         val exportData : MutableList<KeyValueCustom> = mutableListOf()
         addExportEmpty(exportData,6)
@@ -459,6 +868,7 @@ class ExternalQualityReportService(
 
 
     }
+
     fun addExportEmpty(list: MutableList<KeyValueCustom>, count: Int) {
         for (i in 1..count) {
             if (i == count) {
@@ -474,8 +884,14 @@ class ExternalQualityReportService(
             list.add(KeyValueResponse("", ""))
         }
     }
-    fun addShippingData(externalQualityReportModel: ExternalQualityReportModel, valueReportDate: String?){
-            val shippingData : MutableList<KeyValueResponse> = mutableListOf()
+
+    fun addShippingData(externalQualityReportModel: ExternalQualityReportModel, valueReportDate: String?,inventoryClosingDate: OffsetDateTime?){
+            val inventoryClosingDateMonth = inventoryClosingDate?.month?.value
+            val inventoryClosingDateDay   = inventoryClosingDate?.dayOfMonth
+            val inventoryTitle =CommonUtils.getMessage("report.export.inventoryTitle",arrayOf(inventoryClosingDateMonth.toString(), inventoryClosingDateDay.toString()))
+            val expiredTitle =CommonUtils.getMessage("report.export.expiredTitle",arrayOf((inventoryClosingDateMonth?.plus(1)).toString()))
+
+        val shippingData : MutableList<KeyValueResponse> = mutableListOf()
             shippingData.add(KeyValueResponse("production_plan_title", ExternalReportShippingType.PRODUCTION_PLAN_TITLE))
 
             val valueNumberOrder = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
@@ -490,16 +906,16 @@ class ExternalQualityReportService(
             val exchangeRateDifferences = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.DIFFERENCE_1)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
             addKeyValueEmpty(shippingData,1)
-            shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
+            shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
             shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity1.toString()))
-            shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))
+            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
             shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity1.toString()))
             addKeyValueEmpty(shippingData,2)
 
             if(externalQualityReportModel.exportType?.contains(",") == true){
-                shippingData.add(KeyValueResponse("tape_inventory_title",ExternalReportShippingType.TAPE_INVENTORY_TITLE))
+                shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
                 shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity2.toString()))
-                shippingData.add(KeyValueResponse("expired_tape",ExternalReportShippingType.EXPIRED_TAPE))
+                shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
                 shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity2.toString()))
                 addKeyValueEmpty(shippingData,2)
             }
@@ -532,5 +948,6 @@ class ExternalQualityReportService(
         }
         return response
     }
+    //endregion
 
 }

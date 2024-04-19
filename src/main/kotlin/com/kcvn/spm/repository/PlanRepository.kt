@@ -21,6 +21,8 @@ import com.kcvn.spm.model.tables.references.PLAN_TEMP
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.Instant
+import java.time.ZoneOffset
 
 @Repository
 class PlanRepository(private val context: DSLContext) {
@@ -37,6 +39,11 @@ class PlanRepository(private val context: DSLContext) {
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
             val createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+            transactionalContext.deleteFrom(PLAN_DETAIL_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_PROCESS_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_PRODUCT_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_TEMP).execute()
 
             val planRecord = transactionalContext.insertInto(
                 PLAN_TEMP,
@@ -143,7 +150,7 @@ class PlanRepository(private val context: DSLContext) {
                 val queryPlanDetail = planProcessRecords.map { x ->
                     val planProduct = planProductRecords.first { m -> m.id == x.planProductId }
                     val planProcess = planProducts.first { m -> m.productName == planProduct.productName }
-                        .planProcesses.first { m -> m.processCode == x.processCode }
+                        .planProcesses.first { m -> m.processCode == x.processCode && m.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull() }
                     val query = planProcess.planDetails.map { m ->
                         transactionalContext.insertInto(
                             PLAN_DETAIL_TEMP,
@@ -168,7 +175,7 @@ class PlanRepository(private val context: DSLContext) {
 
     fun getPlanTemp(): Plan? {
         return context.selectFrom(PLAN_TEMP)
-            .where(PLAN.IS_DELETED.eq(false))
+            .where(PLAN_TEMP.IS_DELETED.eq(false))
             .fetchInto(Plan::class.java)
             .firstOrNull()
     }
@@ -256,6 +263,25 @@ class PlanRepository(private val context: DSLContext) {
                 )
             }
             transactionalContext.batch(queryPlanDetail).execute()
+
+            transactionalContext.deleteFrom(PLAN_DETAIL_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_PROCESS_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_PRODUCT_TEMP).execute()
+            transactionalContext.deleteFrom(PLAN_TEMP).execute()
+        }
+    }
+
+    fun inActive(id: String) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val updateBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+            transactionalContext.update(PLAN)
+                .set(PLAN.IS_ACTIVE, false)
+                .set(PLAN.UPDATED_DATE, Instant.now().atOffset(ZoneOffset.UTC))
+                .set(PLAN.UPDATED_BY, updateBy)
+                .where(PLAN.ID.eq(id))
+                .execute()
         }
     }
 }

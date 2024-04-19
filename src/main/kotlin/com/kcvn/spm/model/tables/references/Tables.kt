@@ -43,7 +43,9 @@ import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
+import com.kcvn.spm.model.tables.TapeEnRoute
 import com.kcvn.spm.model.tables.TapeInfo
+import com.kcvn.spm.model.tables.TapeInventory
 import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
 
@@ -245,9 +247,19 @@ val SYNC_HISTORY: SyncHistory = SyncHistory.SYNC_HISTORY
 val SYSTEM_LOCK: SystemLock = SystemLock.SYSTEM_LOCK
 
 /**
+ * The table <code>public.tape_en_route</code>.
+ */
+val TAPE_EN_ROUTE: TapeEnRoute = TapeEnRoute.TAPE_EN_ROUTE
+
+/**
  * The table <code>public.tape_info</code>.
  */
 val TAPE_INFO: TapeInfo = TapeInfo.TAPE_INFO
+
+/**
+ * The table <code>public.tape_inventory</code>.
+ */
+val TAPE_INVENTORY: TapeInventory = TapeInventory.TAPE_INVENTORY
 
 /**
  * The table <code>public.update_tape</code>.

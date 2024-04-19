@@ -66,13 +66,13 @@ class ExternalQualityReportController (private val externalQualityReportService:
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @GetMapping(value = ["/check-import/tape-en-route"], consumes = ["multipart/form-data"])
+    @GetMapping(value = ["/check-import/tape-en-route"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_REPORT_EXPORT_ITEM.value) || hasRole('ADMIN')")
     fun checkImportTapeEnRouteExcel(couponCode: String): ResponseEntity<BaseResponse<CheckImportResponse>> {
         val result = externalQualityReportService.checkImportTapeEnRouteExcel(couponCode)
         return ResponseEntity(result, HttpStatus.OK)
     }
-    @GetMapping(value = ["/check-import/tape-inventory"], consumes = ["multipart/form-data"])
+    @GetMapping(value = ["/check-import/tape-inventory"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_REPORT_EXPORT_ITEM.value) || hasRole('ADMIN')")
     fun checkImportTapeEnRouteExcel(stocktakingDay: OffsetDateTime): ResponseEntity<BaseResponse<CheckImportResponse>> {
         val result = externalQualityReportService.checkImportTapeInventory(stocktakingDay)

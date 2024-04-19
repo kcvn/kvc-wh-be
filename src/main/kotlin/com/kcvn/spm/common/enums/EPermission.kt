@@ -47,6 +47,8 @@ enum class EPermission(val value: String) {
     //work plan
     V_WORK_PLAN("work_plan.v"),
     E_WORK_PLAN("work_plan.e"),
+    AP_WORK_PLAN("work_plan.ap"),
+    C_WORK_PLAN_ORDER("work_plan.c_order"),
 
     //production result
     V_PRODUCTION_RESULT("product_result.v"),
@@ -67,4 +69,12 @@ enum class EPermission(val value: String) {
 
     V_REPORT_EXPORT_ITEM("rp_export_item.v"),
     E_REPORT_EXPORT_ITEM("rp_export_item.e"),
+    I_REPORT_EXPORT_ITEM("rp_export_item.i"),
+
+    V_REPORT_EXTERNAL_QUALITY("rp_external_quality.v"),
+    E_REPORT_EXTERNAL_QUALITY("rp_external_quality.e"),
+    I_REPORT_EXTERNAL_QUALITY("rp_external_quality.i"),
+
+
+
 }

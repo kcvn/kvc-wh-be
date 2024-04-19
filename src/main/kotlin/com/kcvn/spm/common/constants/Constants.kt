@@ -111,6 +111,7 @@ class Color {
         const val WHITE = "0"
         const val YELLOW = "1"
         const val ORANGE = "2"
+        const val PINK = "3"
     }
 }
 

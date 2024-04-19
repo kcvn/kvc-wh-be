@@ -56,7 +56,7 @@ class ExternalQualityReportService(
 ) {
     //region IMPORT
 
-    fun checkImportTapeEnRouteExcel(couponCode: String,  file: MultipartFile): BaseResponse<CheckImportResponse> {
+    fun checkImportTapeEnRouteExcel(couponCode: String): BaseResponse<CheckImportResponse> {
         val checkTape = tapeEnRouteRepository.getTapeEnRouteList(couponCode)
         return if(checkTape.isNotEmpty()){
             BaseResponse(CheckImportResponse(false,CommonUtils.getMessage("validate.importTapeRoute", arrayOf(couponCode))), "")
@@ -64,7 +64,7 @@ class ExternalQualityReportService(
             BaseResponse(CheckImportResponse(true,""), "")
         }
     }
-    fun checkImportTapeInventory(stocktakingDay: OffsetDateTime, file: MultipartFile): BaseResponse<CheckImportResponse>{
+    fun checkImportTapeInventory(stocktakingDay: OffsetDateTime): BaseResponse<CheckImportResponse>{
         val stocktakingDayConvert = DateTimeHelper.toTimeZone7(stocktakingDay)
         val checkTape = tapeInventoryRepository.getTapeEnRouteListByDate(stocktakingDayConvert)
         return if(checkTape.isNotEmpty()){
@@ -374,7 +374,7 @@ class ExternalQualityReportService(
                     tapeInWarehouse = tapeInWareHouse,
                     tapeInDepartment = tapeInDepartment,
                     tapeNg = tapeNG,
-                    stocktakingDay = stocktakingDay
+                    stocktakingDay = stocktakingDayConvert
                 )
                 if (isValidCol) {
                     tapeInventories.add(tapeInventory)

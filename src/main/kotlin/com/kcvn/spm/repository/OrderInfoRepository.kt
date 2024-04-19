@@ -207,7 +207,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                         x.productName,
                         x.version.toString(),
                         DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.yyyyMMdd),
-                        x.quantity
+                        x.quantity,
+                        x.isChangeQuantity
                     )
                 }
 
@@ -223,7 +224,9 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                     x.key.first,
                     versionByProducts.find { m -> m.first == x.key.first }?.second,
                     x.key.second,
-                    x.value.sumOf { m -> m.quantity ?: 0 }
+                    x.value.sumOf { m -> m.quantity ?: 0 },
+                    x.value.any { m -> m.isHasDifferent == true }
+
                 )
             }
             return data
@@ -235,7 +238,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                         x.productName,
                         x.version.toString(),
                         DateTimeHelper.toTimeZone7toString(x.orderDate!!, DateTimeFormat.yyyyMMdd),
-                        x.quantity
+                        x.quantity,
+                        x.isChangeQuantity
                     )
                 }
             return data

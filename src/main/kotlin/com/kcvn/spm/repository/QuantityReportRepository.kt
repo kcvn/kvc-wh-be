@@ -45,9 +45,11 @@ class QuantityReportRepository(
             if(sortTime.direction == Sort.Direction.ASC){
                 sortFields.add(0, INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER.asc())
                 sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER.asc())
+                sortFields.add(2, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.asc())
             } else {
                 sortFields.add(0, INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER.desc())
                 sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER.desc())
+                sortFields.add(2, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.asc())
             }
         }
         val sortProduct = pageable.sort.find { x -> x.property == "productNameAsc" }

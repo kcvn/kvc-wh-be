@@ -788,8 +788,12 @@ class PlanService(
             typeKey = if (isGetCapMachine) EquipmentType.CAP_MACHINE else EquipmentType.AVERAGE,
             quantityByCalendars = columns?.map { column ->
                 val convertDate =DateTimeHelper.convertStringToOffSetDateTime(column.key, DateTimeFormat.yyyyMMdd).toLocalDate()
-                val convertEquipment = equipmentMachineModel.firstOrNull{x-> DateTimeHelper.toTimeZone7(x.productionStartDate)?.toLocalDate()!! <= convertDate && DateTimeHelper.toTimeZone7(x.productionEndDate)?.toLocalDate()!! >= convertDate}
-               if(isGetCapMachine){
+                val convertEquipment = equipmentMachineModel.firstOrNull { equipment ->
+                    val productionStartDate = DateTimeHelper.toTimeZone7(equipment.productionStartDate)?.toLocalDate()
+                    val productionEndDateLocal = DateTimeHelper.toTimeZone7(equipment.productionEndDate)?.toLocalDate()
+                    productionStartDate != null && productionStartDate <= convertDate && (productionEndDateLocal == null || productionEndDateLocal >= convertDate)
+                }
+                if(isGetCapMachine){
                    capMachineValue = when {
                        convertEquipment != null -> {
                            when (equipmentProductivityModel.unit) {

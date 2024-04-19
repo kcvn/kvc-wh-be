@@ -5,5 +5,6 @@ import java.math.BigDecimal
 data class KeyValueResponse (
     var key: String? = null,
     var value: String? = null,
-    var sort: BigDecimal? = null
+    var sort: BigDecimal? = null,
+    var isHasDifferent: Boolean? = null
 )

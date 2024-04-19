@@ -4,6 +4,7 @@ import com.kcvn.spm.app.order.payload.model.CheckWorkResultModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
+import com.kcvn.spm.common.constants.Color
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.OrderVersion
@@ -75,7 +76,7 @@ class OrderService(
                 m -> m.productName == model.productName && (request.version == OrderVersion.LATEST || (m.version ?: "") == (model.version ?: ""))
             }
 
-            model.quantityByCalendars = quantityByCalendar.map { m -> KeyValueResponse(m.orderDate, m.quantity.toString()) }
+            model.quantityByCalendars = quantityByCalendar.map { m -> KeyValueResponse(m.orderDate, m.quantity.toString(), isHasDifferent = m.isHasDifferent) }
 
             if (request.version ==OrderVersion.LATEST) model.version = quantityByCalendar.firstOrNull()?.version
             if (!model.version.isNullOrEmpty()) {
@@ -138,7 +139,8 @@ class OrderService(
                     var colIndex = 9
                     for (col in listOrderResponse.columns) {
                         val orderDetail = item.quantityByCalendars?.find { it.key == col.key }
-                        ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, style, orderDetail?.value, col.isHoliday)
+                        val color = if (orderDetail?.isHasDifferent == true) Color.PINK else null
+                        ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, style, orderDetail?.value, col.isHoliday, color= color)
                         colIndex++
                     }
                 }

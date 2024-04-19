@@ -14,7 +14,8 @@ class NumberHelper {
         }
 
         fun roundedUp(number: BigDecimal): Int {
-            return number.toInt() + 1
+            val intNumber = number.toInt()
+            return if (BigDecimal(intNumber) == number) intNumber else intNumber + 1
         }
 
         fun isNumeric(input: String): Boolean {

@@ -314,11 +314,11 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
             PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
                 .and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(productNames))
                 .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-        ).join(PROCESS_MASTER).on(
+        ).leftJoin(PROCESS_MASTER).on(
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                 .and(PROCESS_MASTER.IS_DELETED.eq(false))
-        ).join(PROCESS_MASTER_DATA).on(
-            PROCESS_MASTER.PROCESS_CODE.eq(PROCESS_MASTER_DATA.PROCESS_CODE)
+        ).leftJoin(PROCESS_MASTER_DATA).on(
+            PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER_DATA.PROCESS_CODE)
                 .and(PROCESS_MASTER_DATA.IS_DELETED.eq(false))
         ).where(PRODUCT_PROCESS.IS_DELETED.eq(false))
             .groupBy(

@@ -144,7 +144,10 @@ class CreatePlanService(
                     if (productProcess.any { x -> x.processStatisticCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã thống kê")
                     if (productProcess.any { x -> x.dayOfImplementation == null || x.dayOfImplementation == 0 }) errors.add("Dữ liệu công đoạn chưa đầy đủ Ngày thứ thực hiện")
                 }
-                val parentProcesses = productProcess.filter { x -> !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty() }
+                val parentProcesses = productProcess.filter { x ->
+                    !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
+                        && x.processConvertCode != ProcessConvertCode.INS
+                }
                 val processNotCompletionRate = parentProcesses.filter { x ->
                     !completionRateInfo.any { m ->
                         m.productNameShortcut == item.substring(item.length - 7, item.length)
@@ -388,7 +391,7 @@ class CreatePlanService(
             } ?: break
             val eqConfig = equipmentInfo.find { x ->
                 x.frame_1 == product.frame_1 && x.grpProcess == iParentProcess.processGroup && x.mold!!.contains(product.mold!!)
-            } ?: break
+            } ?: EquipmentProductivity()
 
             val planProcess = generatePlanProcessModel(iParentProcess, completionRate.rate)
             currentPlanDetail = generatePlanDetailModel(

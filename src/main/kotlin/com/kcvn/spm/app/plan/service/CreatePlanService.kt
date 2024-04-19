@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.plan.service
 
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
+import com.kcvn.spm.app.plan.payload.model.AllocationRateByDateModel
 import com.kcvn.spm.app.plan.payload.model.PlanCalculatorModel
 import com.kcvn.spm.app.plan.payload.model.PlanChildrenProcessCreateModel
 import com.kcvn.spm.app.plan.payload.model.PlanDetailCreateModel
@@ -51,6 +52,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -142,7 +144,7 @@ class CreatePlanService(
                     if (productProcess.any { x -> x.processStatisticCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã thống kê")
                     if (productProcess.any { x -> x.dayOfImplementation == null || x.dayOfImplementation == 0 }) errors.add("Dữ liệu công đoạn chưa đầy đủ Ngày thứ thực hiện")
                 }
-                val parentProcesses = productProcess.filter { x -> !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO }
+                val parentProcesses = productProcess.filter { x -> !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty() }
                 val processNotCompletionRate = parentProcesses.filter { x ->
                     !completionRateInfo.any { m ->
                         m.productNameShortcut == item.substring(item.length - 7, item.length)
@@ -270,7 +272,6 @@ class CreatePlanService(
         var equipmentUsedInfoByDate = mutableListOf<Pair<OffsetDateTime, EquipmentProductivity>>()
         for (iProdByDate in productGroupByDates) {
             val orders = iProdByDate.second
-
             for (iOrder in orders) {
                 val product = productInfo.firstOrNull { x -> x.name == iOrder.productName }
                 val processes = productProcesses.filter { x -> x.productName == iOrder.productName }
@@ -443,8 +444,7 @@ class CreatePlanService(
         inventories: List<InventoryProductResponse>,
         holidays: List<OffsetDateTime>
     ) {
-        var orderInfoAllocations = allocateInventoryIns(orderInfo, productInfo, inventories, productProcesses)
-
+        var productNames = orderInfo.mapNotNull { x -> x.productName }.distinct()
         val parentProcesses = productProcesses.filter { x ->
             !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
                 && x.processConvertCode != ProcessConvertCode.INS
@@ -456,57 +456,145 @@ class CreatePlanService(
 
         val mAllParents = parentProcesses.filter { x -> x.processStatisticCode == ProcessStatisticCode.M_ALL }
         val mAllChild = childrenProcesses.filter { x -> x.processStatisticCode == ProcessStatisticCode.M_ALL }
+
+        for (iProductName in productNames) {
+            val processIns = parentProcesses.firstOrNull { x -> x.productName == iProductName && x.processConvertCode == ProcessConvertCode.INS } ?: continue
+            val mAllParent = mAllParents.firstOrNull { it.productName == iProductName } ?: continue
+            val mAllChildren = mAllChild.firstOrNull { it.productName == iProductName } ?: continue
+            val orders = orderInfo.filter { x -> x.productName == iProductName }
+            val inventoryByProducts = inventories.filter { x -> x.productName == iProductName }
+            var orderAllocations = allocateInventoryIns(orders, inventoryByProducts, processIns)
+            if (orderAllocations.isEmpty()) continue
+
+            val completionRates = completionRateInfo.filter { x -> x.productNameShortcut == iProductName.substring(iProductName.length - 7, iProductName.length)}
+
+            val highestPriorityProcesses = parentProcesses.filter { x ->
+                x.productName == iProductName && x.layerCode == mAllParent.layerCode && x.processSequence!! >= mAllParent.processSequence!!
+            }.sortedByDescending { x -> x.processSequence }
+            val secondPriorityProcesses = listOf(
+                parentProcesses.first { x ->
+                    x.productName == iProductName && x.layerCode == mAllParent.layerCode && x.processSequence!! == mAllParent.processSequence!! - 1
+                },
+                parentProcesses.first { x ->
+                    x.productName == iProductName && x.layerCode == mAllChildren.layerCode && x.processSequence!! == mAllChildren.processSequence!! - 1
+                }
+            )
+            val lowestPriorityProcesses = parentProcesses.filter { x ->
+                x.productName == iProductName
+                    && (
+                    (x.layerCode == mAllParent.layerCode && x.processSequence!! < mAllParent.processSequence!! - 1)
+                        || (x.layerCode == mAllChildren.layerCode && x.processSequence!! < mAllChildren.processSequence!! - 1)
+                        || (x.layerCode != mAllParent.layerCode && x.layerCode != mAllChildren.layerCode)
+                    )
+            }
+        }
     }
 
-    private fun allocateInventoryIns(
-        orderInfo: List<OrderInfo>,
-        productInfo: List<Product>,
-        inventories: List<InventoryProductResponse>,
-        productProcesses: List<ProductProcessModel>
-    ): List<OrderInfo> {
-        val inventoryIns = inventories.filter { x -> x.processCode == ProcessCode.INS }.groupBy { it.productName }.mapNotNull { x ->
-            val inventory = x.value.first()
-            InventoryProductResponse(
-                inventoryDate = inventory.inventoryDate,
-                productQuantity = x.value.sumOf { m -> m.productQuantity ?: 0 },
-                sheetQuantity = x.value.sumOf { m -> m.sheetQuantity ?: 0 },
-                orderCode = inventory.orderCode,
-                tapeLotNo = inventory.tapeLotNo,
-                productName = x.key,
-                processName = inventory.processName,
-                processCode = inventory.processCode,
-                layerCode = inventory.layerCode,
-                code = inventory.code,
-                pcsSh = inventory.pcsSh,
-            )
-        }
+    private fun allocateInventoryIns(orderInfo: List<OrderInfo>, inventories: List<InventoryProductResponse>, processIns: ProductProcessModel): List<OrderInfo> {
+        val inventoryIns = inventories.firstOrNull { x -> x.processCode == ProcessCode.INS }
         val orderInfoAllocation = mutableListOf<OrderInfo>()
-        for (product in productInfo) {
-            val inventory = inventoryIns.find { x -> x.productName == product.name }
-            val orderByProductName = orderInfo.filter { x -> x.productName == product.name }.sortedBy { it.orderDate }
-            if (inventory == null) {
-                orderInfoAllocation.addAll(orderByProductName)
-                continue
+        if (inventoryIns == null) {
+            orderInfoAllocation.addAll(orderInfo)
+            return orderInfoAllocation
+        }
+        var quantity = if (processIns.unit == ProcessUnit.SHEET) inventoryIns.sheetQuantity ?: 0 else inventoryIns.productQuantity ?: 0
+        if (quantity <= 0) {
+            orderInfoAllocation.addAll(orderInfo)
+            return orderInfoAllocation
+        }
+        for (order in orderInfo) {
+            if (order.quantity!! > quantity) {
+                order.quantity = order.quantity!! - quantity
+                quantity = 0
+            } else {
+                order.quantity = 0
+                quantity -= order.quantity!!
             }
-            val process = productProcesses.first { x -> x.processConvertCode == ProcessConvertCode.INS && x.productName == product.name }
-            var quantity = if (process.unit == ProcessUnit.SHEET) inventory.sheetQuantity ?: 0 else inventory.productQuantity ?: 0
-            if (quantity <= 0) {
-                orderInfoAllocation.addAll(orderByProductName)
-                continue
-            }
-            for (order in orderByProductName) {
-                if (order.quantity!! > quantity) {
-                    order.quantity = order.quantity!! - quantity
-                    quantity = 0
-                } else {
-                    order.quantity = 0
-                    quantity -= order.quantity!!
-                }
-                if (order.quantity!! > 0) orderInfoAllocation.add(order)
-            }
+            if (order.quantity!! > 0) orderInfoAllocation.add(order)
         }
 
         return orderInfoAllocation
+    }
+
+    private fun allocateInventoryInsFromProcess(orderInfo: List<OrderInfo>, inventoryIns: Int): Pair<List<AllocationRateByDateModel>, List<OrderInfo>> {
+        val orderInfoAllocation = mutableListOf<OrderInfo>()
+        val allocationRates = mutableListOf<AllocationRateByDateModel>()
+        var quantity = inventoryIns
+        for (order in orderInfo) {
+            var quantityUsed = 0
+            if (order.quantity!! > quantity) {
+                order.quantity = order.quantity!! - quantity
+                quantityUsed = quantity
+                quantity = 0
+            } else {
+                quantityUsed = order.quantity!!
+                order.quantity = 0
+                quantity -= order.quantity!!
+            }
+            if (order.quantity!! > 0) orderInfoAllocation.add(order)
+            val rate = ((BigDecimal(quantityUsed) / BigDecimal(inventoryIns)) * BigDecimal(100)).setScale(2, RoundingMode.HALF_UP)
+            allocationRates.add(AllocationRateByDateModel(order.orderDate!!, quantityUsed, rate))
+        }
+
+        return Pair(allocationRates, orderInfoAllocation)
+    }
+
+
+    private fun allocateInventoryHighestPriority(
+        processes: List<ProductProcessModel>,
+        childrenProcesses: List<ProductProcessModel>,
+        orderInfo: List<OrderInfo>,
+        inventories: List<InventoryProductResponse>,
+        completionRateInfo: List<CompletionRateProcessProduct>,
+        holidays: List<OffsetDateTime>
+    ) {
+        val inventoriesByProcess = inventories.filter { x ->
+            orderInfo.any { m -> m.productName == x.productName }
+                && processes.any { m ->
+                    m.productName == x.productName && m.processCode == x.processCode
+                        && m.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull()
+                }
+        }
+        var orderAllocations = orderInfo
+
+        for (iProcess in processes) {
+            val childrenProcess = childrenProcesses.filter { x -> x.processInventoryCode == iProcess.processCode }
+            val inventoriesByChildrenProcess = inventories.filter { x ->
+                orderAllocations.any { m -> m.productName == x.productName }
+                    && childrenProcess.any { m ->
+                    m.productName == x.productName && m.processCode == x.processCode
+                        && m.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull()
+                }
+            }
+            val inventoryProcess = inventoriesByProcess.filter { x -> x.processCode == iProcess.processCode }
+            if (inventoryProcess.isEmpty() && inventoriesByChildrenProcess.isEmpty()) continue
+
+            var currentInventory = if (iProcess.unit == ProcessUnit.SHEET) {
+                inventoryProcess.sumOf { x -> x.sheetQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.sheetQuantity ?: 0 }
+            } else {
+                inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 }
+            }
+
+            val processCalculateFromInventories = mutableListOf(Pair(iProcess.processCode, currentInventory))
+            for (prc in processes.filter { x -> x.processSequence!! > iProcess.processSequence!! }.sortedBy { it.processSequence }) {
+                val completionRate = completionRateInfo.firstOrNull { x ->
+                    x.processCode == prc.processCode && x.layerCode?.toIntOrNull() == prc.layerCode?.toIntOrNull()
+                }?.rate ?: break
+
+                currentInventory = NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                processCalculateFromInventories.add(Pair(prc.processCode, currentInventory))
+            }
+
+            val completionRateIns = completionRateInfo.firstOrNull { x -> x.processCode == ProcessCode.INS }?.rate ?: break
+            val inventoryIns = NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRateIns)
+
+            val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
+
+            orderAllocations =  allocateInventoryIns.second
+
+        }
+
+
     }
 
     //endregion

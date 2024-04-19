@@ -71,7 +71,6 @@ class ExcelHelper {
             if(isReportDetails){
                 cellStyle.borderTop = BorderStyle.THIN
                 cellStyle.borderBottom = BorderStyle.THIN
-
             }
             if (isHoliday) {
                 cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
@@ -84,6 +83,10 @@ class ExcelHelper {
                 else if(color == Color.ORANGE){
                     cellStyle.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
                 }
+                else if(color == Color.PINK){
+                    cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+                }
+                cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
             }
             row.getCell(colIndex).cellStyle = cellStyle
         }

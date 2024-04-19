@@ -14,5 +14,15 @@ data class ImportInventoryErrorModel(
     var productQuantity: Int? = null,
     var sheetQuantity: Int? = null,
     var messageError: String? = null,
-    var cellStyles: List<CellStyleModel> = listOf()
+    var cellStyles: List<CellStyleModel> = listOf(),
+    //new
+    var employeeCode: String? = null,
+    var team: String? = null,
+    var processNameJp: String? = null,
+    var processingDirective: Int? = null,
+    var piecesPerSheet: Int? = null,
+    var processCount: Int? = null,
+    var seidenRepNumber: Int? = null,
+    var productionAreaName: String? = null,
+
 )

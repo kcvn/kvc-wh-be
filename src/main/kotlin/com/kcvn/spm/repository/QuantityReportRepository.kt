@@ -55,12 +55,12 @@ class QuantityReportRepository(
             if(sortProduct.direction == Sort.Direction.ASC){
                 sortFields.add(0, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.asc())
                 sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER.desc())
-                sortFields.add(2, INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER.desc())
+                sortFields.add(2, INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER.desc())
 
             } else {
                 sortFields.add(0, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.desc())
                 sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER.desc())
-                sortFields.add(2, INFORMATION_CALCULATE_QUANTITY.YEAR_NUMBER.desc())
+                sortFields.add(2, INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER.desc())
             }
         }
 

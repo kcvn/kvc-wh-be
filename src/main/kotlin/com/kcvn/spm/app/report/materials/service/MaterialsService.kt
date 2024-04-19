@@ -151,7 +151,7 @@ class MaterialsService(
         val total = sheet.lastRowNum
 
         // Lấy ra list sản phẩm trong bảng đơn hàng
-        val listOrderInfo = orderInfoRep.getProductNameByOder(request.startDate, request.endDate)
+        val listOrderInfo = orderInfoRep.getProductNameByOrder(request.startDate, request.endDate)
         val listProductOrder: MutableList<String> = listOrderInfo.mapNotNull { it?.productName }.distinct().toMutableList()
 
 

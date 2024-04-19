@@ -374,7 +374,7 @@ class ExternalQualityReportService(
                     tapeInWarehouse = tapeInWareHouse,
                     tapeInDepartment = tapeInDepartment,
                     tapeNg = tapeNG,
-                    stocktakingDay = stocktakingDay
+                    stocktakingDay = stocktakingDayConvert
                 )
                 if (isValidCol) {
                     tapeInventories.add(tapeInventory)

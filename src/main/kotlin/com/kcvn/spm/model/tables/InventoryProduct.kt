@@ -16,7 +16,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row13
+import org.jooq.Row22
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -128,6 +128,51 @@ open class InventoryProduct(
      */
     val IS_DELETED: TableField<InventoryProductRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.inventory_product.employee_code</code>.
+     */
+    val EMPLOYEE_CODE: TableField<InventoryProductRecord, String?> = createField(DSL.name("employee_code"), SQLDataType.VARCHAR(20), this, "")
+
+    /**
+     * The column <code>public.inventory_product.team</code>.
+     */
+    val TEAM: TableField<InventoryProductRecord, String?> = createField(DSL.name("team"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.inventory_product.process_name</code>.
+     */
+    val PROCESS_NAME: TableField<InventoryProductRecord, String?> = createField(DSL.name("process_name"), SQLDataType.VARCHAR(50), this, "")
+
+    /**
+     * The column <code>public.inventory_product.process_name_jp</code>.
+     */
+    val PROCESS_NAME_JP: TableField<InventoryProductRecord, String?> = createField(DSL.name("process_name_jp"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.inventory_product.processing_directive</code>.
+     */
+    val PROCESSING_DIRECTIVE: TableField<InventoryProductRecord, Int?> = createField(DSL.name("processing_directive"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.inventory_product.pieces_per_sheet</code>.
+     */
+    val PIECES_PER_SHEET: TableField<InventoryProductRecord, Int?> = createField(DSL.name("pieces_per_sheet"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.inventory_product.production_area_name</code>.
+     */
+    val PRODUCTION_AREA_NAME: TableField<InventoryProductRecord, String?> = createField(DSL.name("production_area_name"), SQLDataType.VARCHAR(50), this, "")
+
+    /**
+     * The column <code>public.inventory_product.process_count</code>.
+     */
+    val PROCESS_COUNT: TableField<InventoryProductRecord, Int?> = createField(DSL.name("process_count"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.inventory_product.seiden_rep_number</code>.
+     */
+    val SEIDEN_REP_NUMBER: TableField<InventoryProductRecord, Int?> = createField(DSL.name("seiden_rep_number"), SQLDataType.INTEGER, this, "")
+
     private constructor(alias: Name, aliased: Table<InventoryProductRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<InventoryProductRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -169,18 +214,18 @@ open class InventoryProduct(
     override fun rename(name: Table<*>): InventoryProduct = InventoryProduct(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row13 type methods
+    // Row22 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row13<String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row13<String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row22<String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, String?, String?, String?, Int?, Int?, String?, Int?, Int?> = super.fieldsRow() as Row22<String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, String?, String?, String?, Int?, Int?, String?, Int?, Int?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, String?, String?, String?, Int?, Int?, String?, Int?, Int?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, String?, String?, String?, Int?, Int?, String?, Int?, Int?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

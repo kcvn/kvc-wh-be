@@ -112,7 +112,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
                     condition = condition.and(ORDER_INFO.VERSION.`in`(versions))
             }
         }
-        condition = condition.and(ORDER_INFO.IS_DELETED.eq(false))
+        condition = condition.and(ORDER_INFO.QUANTITY.gt(0)).and(ORDER_INFO.IS_DELETED.eq(false))
 
         val sortFields = getSortFields(pageable.sort, ORDER_INFO.PRODUCT_NAME).toMutableList()
 
@@ -191,6 +191,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         val productNames = productVersions.map { x -> x.first }
         val versions = productVersions.map { x -> x.second.toIntOrNull() }
         var condition = DSL.noCondition().and(ORDER_INFO.PRODUCT_NAME.`in`(productNames))
+            .and(ORDER_INFO.QUANTITY.gt(0))
             .and(ORDER_INFO.IS_DELETED.eq(false))
         if (startDate != null) {
             condition = condition.and(ORDER_INFO.ORDER_DATE.ge(startDate))
@@ -241,10 +242,11 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         }
     }
 
-    fun getProductNameByOder(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<OrderInfo?> {
+    fun getProductNameByOrder(startDate: OffsetDateTime?, endDate: OffsetDateTime?): List<OrderInfo?> {
         return context
             .selectFrom(ORDER_INFO)
             .where(ORDER_INFO.ORDER_DATE.between(startDate, endDate)
+                .and(ORDER_INFO.QUANTITY.gt(0))
                 .and(ORDER_INFO.IS_LATEST.eq(true))
                 .and(ORDER_INFO.IS_DELETED.eq(false)))
             .fetchInto(OrderInfo::class.java)
@@ -387,6 +389,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
     }
     fun getOrderInfoByTimeRange(startDate: OffsetDateTime?, endDate: OffsetDateTime?, productNames: List<String> = listOf()): List<OrderInfo> {
         var condition = ORDER_INFO.ORDER_DATE.between(startDate, endDate)
+            .and(ORDER_INFO.QUANTITY.gt(0))
             .and(ORDER_INFO.IS_LATEST.eq(true))
             .and(ORDER_INFO.IS_DELETED.eq(false))
         if (productNames.isNotEmpty()) {
@@ -397,6 +400,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             .where(condition)
             .fetchInto(OrderInfo::class.java)
     }
+
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()

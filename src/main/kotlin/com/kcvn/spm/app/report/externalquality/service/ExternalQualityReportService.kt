@@ -195,7 +195,7 @@ class ExternalQualityReportService(
                     deliveredQuantity = StringHelper.removeDecimalSuffix(deliveredQuantityCheck).toInt()
                 }
 
-                val responseDateCheck = ExcelHelper.getCellValue(row, 9)
+                val responseDateCheck = ExcelHelper.getCellValue(row, 9,DateTimeFormat.M_dd_yyyy)
                 val isDateFormat = DateTimeHelper.isFormatdate(responseDateCheck)
                 if(!isDateFormat && deliveredQuantityCheck.isNotEmpty()){
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate.format"))
@@ -269,7 +269,7 @@ class ExternalQualityReportService(
                 return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
             }
             val errorRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess") }
-            val response = exportFileError(errorRows, workbook, sheet, "fileName.importTapeEnRouteTemplate","importTapeRoute.sheetName")
+            val response = exportFileError(errorRows, workbook, sheet, "fileName.importTapeEnRouteTemplate")
             workbook.close()
             return BaseResponse(
                 response,
@@ -311,10 +311,14 @@ class ExternalQualityReportService(
                 total++
                 val messageResults = mutableListOf<String>()
                 var isValidCol = true
-                val exportType = ExcelHelper.getCellValue(row, 0)
+                var exportType = ExcelHelper.getCellValue(row, 0)
                 if(exportType.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.exportType"))
+                }else{
+                    if(exportType == ExportType.SIPBACK){
+                        exportType = ExportType.SHIPBACK
+                    }
                 }
                 val productNameShortCut = ExcelHelper.getCellValue(row, 1)
                 if (productNameShortCut.isEmpty()) {
@@ -395,7 +399,7 @@ class ExternalQualityReportService(
                 return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
             }
             val errorRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess") }
-            val response = exportFileError(errorRows, workbook, sheet, "fileName.importTapeInventoryTemplate","importTapeInventory.sheetName")
+            val response = exportFileError(errorRows, workbook, sheet, "fileName.importTapeInventoryTemplate")
             workbook.close()
             return BaseResponse(
                 response,
@@ -408,8 +412,8 @@ class ExternalQualityReportService(
         }
     }
 
-    private fun exportFileError(dataRows: List<Row>, workbook: Workbook, importSheet: Sheet, fileName: String,sheetName: String): FileContentModel {
-        val sheet = workbook.createSheet(CommonUtils.getMessage(sheetName))
+    private fun exportFileError(dataRows: List<Row>, workbook: Workbook, importSheet: Sheet, fileName: String): FileContentModel {
+        val sheet = workbook.createSheet()
         for ((rowNumber, dataRow) in dataRows.withIndex()) {
             val row = sheet.createRow(rowNumber)
             row.height = dataRow.height

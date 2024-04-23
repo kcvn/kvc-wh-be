@@ -1,0 +1,9 @@
+ALTER TABLE public.inventory_product ADD employee_code varchar(20) NULL;
+ALTER TABLE public.inventory_product ADD team varchar(100) NULL;
+ALTER TABLE public.inventory_product ADD process_name varchar(50) NULL;
+ALTER TABLE public.inventory_product ADD process_name_jp varchar(100) NULL;
+ALTER TABLE public.inventory_product ADD processing_directive int4 NULL;
+ALTER TABLE public.inventory_product ADD pieces_per_sheet int4 NULL;
+ALTER TABLE public.inventory_product ADD production_area_name varchar(50) NULL;
+ALTER TABLE public.inventory_product ADD process_count int4 NULL;
+ALTER TABLE public.inventory_product ADD seiden_rep_number int4 NULL;

@@ -10,6 +10,7 @@ import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.CellStyleModel
@@ -87,7 +88,7 @@ class InventoryProductService(
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProductTemplate.xlsx"
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 8))
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 17))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val requestDelete = InventoryProduct()
@@ -97,24 +98,6 @@ class InventoryProductService(
             val style = row.getCell(0).cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
-            if (ExcelHelper.getCellValue(row, 0).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 0))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 1).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 1))
-                    )
-                )
-            }
             if (ExcelHelper.getCellValue(row, 2).isEmpty()) {
                 check = false
                 messageResults.add(
@@ -130,15 +113,6 @@ class InventoryProductService(
                     CommonUtils.getMessage(
                         "validate.excel.empty",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 3))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 4).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 4))
                     )
                 )
             }
@@ -160,91 +134,118 @@ class InventoryProductService(
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 0).isNotEmpty() && row.getCell(0).toString().length > 8) {
+            if (ExcelHelper.getCellValue(row, 7).isEmpty()) {
+                check = false
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 7))
+                    )
+                )
+            }
+            if (ExcelHelper.getCellValue(row, 9).isEmpty()) {
+                check = false
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 9))
+                    )
+                )
+            }
+            if (ExcelHelper.getCellValue(row, 11).isEmpty()) {
+                check = false
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 11))
+                    )
+                )
+            }
+            if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && row.getCell(2).toString().length > 8) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 6))
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 11))
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 1).isNotEmpty() && row.getCell(1).toString().length > 50) {
+            if (ExcelHelper.getCellValue(row, 3).isNotEmpty() && row.getCell(3).toString().length > 50) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 1), 50)
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 3), 50)
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && row.getCell(2).toString().length > 50) {
+            if (ExcelHelper.getCellValue(row, 5).isNotEmpty() && row.getCell(5).toString().length > 50) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 2), 50)
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 5), 50)
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 3).isNotEmpty() && row.getCell(3).toString().length > 4) {
+            if (ExcelHelper.getCellValue(row, 6).isNotEmpty() && row.getCell(6).toString().length > 4) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 3), 2)
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 6), 2)
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 4).isNotEmpty() && row.getCell(4).toString().length > 100) {
+            if (ExcelHelper.getCellValue(row, 7).isNotEmpty() && row.getCell(7).toString().length > 100) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 4), 100)
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 5).isNotEmpty() && row.getCell(5).toString().length > 12) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 5), 12)
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 6).isNotEmpty() && row.getCell(6).toString().length > 50) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.maxLength",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 6), 50)
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 7).isNotEmpty() && row.getCell(7).cellType != CellType.NUMERIC) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.isNumber",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 7), 100)
                     )
                 )
             }
-            if (ExcelHelper.getCellValue(row, 8).isNotEmpty() && row.getCell(8).cellType != CellType.NUMERIC) {
+            if (ExcelHelper.getCellValue(row, 9).isNotEmpty() && row.getCell(9).toString().length > 12) {
+                check = false
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 9), 12)
+                    )
+                )
+            }
+            if (ExcelHelper.getCellValue(row, 11).isNotEmpty() && row.getCell(11).toString().length > 50) {
+                check = false
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.maxLength",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 11), 50)
+                    )
+                )
+            }
+            if (ExcelHelper.getCellValue(row, 14).isNotEmpty() && row.getCell(14).cellType != CellType.NUMERIC) {
                 check = false
                 messageResults.add(
                     CommonUtils.getMessage(
                         "validate.excel.isNumber",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 8), 100)
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 14), 100)
+                    )
+                )
+            }
+            if (ExcelHelper.getCellValue(row, 15).isNotEmpty() && row.getCell(15).cellType != CellType.NUMERIC) {
+                check = false
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.isNumber",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 15), 100)
                     )
                 )
             }
 
             try {
                 if (check) {
-                    val cellProcessCode = row.getCell(0)
+                    val cellProcessCode = row.getCell(2)
 
                     val processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
                         cellProcessCode.numericCellValue.toInt().toString()
@@ -252,15 +253,15 @@ class InventoryProductService(
                         ExcelHelper.getCellValue(row, 0)
                     }
 
-                    val cellLayerCode = row.getCell(3)
+                    val cellLayerCode = row.getCell(6)
 
                     val layerCode = if (cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0)
                         cellLayerCode.numericCellValue.toInt().toString()
                     else {
-                        ExcelHelper.getCellValue(row, 3)
+                        ExcelHelper.getCellValue(row, 6)
                     }
                     val filter = ImportProcessRequest(
-                        productName = ExcelHelper.getCellValue(row, 5),
+                        productName = ExcelHelper.getCellValue(row, 9),
                         processCode = processCode,
                         layerCode = layerCode
                     )
@@ -269,17 +270,28 @@ class InventoryProductService(
                         messageResults.add(CommonUtils.getMessage("validate.excel.inventoryProduct.dataNull"))
                     } else {
                         val requestImport = InventoryProduct(
+                            //new field
+                            employeeCode = ExcelHelper.getCellValue(row, 0),
+                            team = ExcelHelper.getCellValue(row, 1),
+                            processNameJp = ExcelHelper.getCellValue(row, 4),
+                            processingDirective = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 8)).toIntOrNull(),
+                            piecesPerSheet = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 10)).toIntOrNull(),
+                            productionAreaName = ExcelHelper.getCellValue(row, 12),
+                            processCount = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 13)).toIntOrNull(),
+                            seidenRepNumber = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 16)).toIntOrNull(),
+
+                            //end
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
-                            code = if (ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull() != null) {
-                                ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toLong().toString()
+                            code = if (ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull() != null) {
+                                ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull()?.toLong().toString()
                             } else {
-                                ExcelHelper.getCellValue(row, 2)
+                                ExcelHelper.getCellValue(row, 5)
                             },
-                            tapeLotNo = ExcelHelper.getCellValue(row, 4),
-                            orderCode = ExcelHelper.getCellValue(row, 6),
-                            productQuantity = ExcelHelper.getCellValue(row, 7).toBigDecimalOrNull()?.toInt(),
-                            sheetQuantity = ExcelHelper.getCellValue(row, 8).toBigDecimalOrNull()?.toInt()
+                            tapeLotNo = ExcelHelper.getCellValue(row, 7),
+                            orderCode = ExcelHelper.getCellValue(row, 11),
+                            productQuantity = ExcelHelper.getCellValue(row, 14).toBigDecimalOrNull()?.toInt(),
+                            sheetQuantity = ExcelHelper.getCellValue(row, 15).toBigDecimalOrNull()?.toInt()
                         )
                         val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date, requestImport.code ?: "")
 
@@ -318,19 +330,31 @@ class InventoryProductService(
             && x.rowNum >= rowIndex
         }.map { x ->
             ImportInventoryErrorModel(
-                processCode = ExcelHelper.getCellValue(x, 0),
-                processName = ExcelHelper.getCellValue(x, 1),
-                code = if (ExcelHelper.getCellValue(x, 2).toBigDecimalOrNull() != null) {
-                    ExcelHelper.getCellValue(x, 2).toBigDecimalOrNull()?.toInt().toString()
+                //new field
+                employeeCode = ExcelHelper.getCellValue(x, 0),
+                team = ExcelHelper.getCellValue(x, 1),
+                processNameJp = ExcelHelper.getCellValue(x, 4),
+                processingDirective = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(x, 8)).toIntOrNull(),
+                piecesPerSheet = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(x, 10)).toIntOrNull(),
+                productionAreaName = ExcelHelper.getCellValue(x, 12),
+                processCount = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(x, 13)).toIntOrNull(),
+                seidenRepNumber = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(x, 16)).toIntOrNull(),
+
+                //end
+
+                processCode = ExcelHelper.getCellValue(x, 2),
+                processName = ExcelHelper.getCellValue(x, 3),
+                code = if (ExcelHelper.getCellValue(x, 5).toBigDecimalOrNull() != null) {
+                    ExcelHelper.getCellValue(x, 5).toBigDecimalOrNull()?.toInt().toString()
                 } else {
-                    ExcelHelper.getCellValue(x, 2)
+                    ExcelHelper.getCellValue(x, 5)
                 },
-                layerCode = ExcelHelper.getCellValue(x, 3),
-                tapeLotNo = ExcelHelper.getCellValue(x, 4),
-                productName = ExcelHelper.getCellValue(x, 5),
-                orderCode = ExcelHelper.getCellValue(x, 6),
-                productQuantity = ExcelHelper.getCellValue(x, 7).toBigDecimalOrNull()?.toInt(),
-                sheetQuantity = ExcelHelper.getCellValue(x, 8).toBigDecimalOrNull()?.toInt(),
+                layerCode = ExcelHelper.getCellValue(x, 6),
+                tapeLotNo = ExcelHelper.getCellValue(x, 7),
+                productName = ExcelHelper.getCellValue(x, 9),
+                orderCode = ExcelHelper.getCellValue(x, 11),
+                productQuantity = ExcelHelper.getCellValue(x, 14).toBigDecimalOrNull()?.toInt(),
+                sheetQuantity = ExcelHelper.getCellValue(x, 15).toBigDecimalOrNull()?.toInt(),
                 messageError = ExcelHelper.getCellValue(x, colIndexResult),
                 cellStyles = x.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
             )
@@ -364,15 +388,24 @@ class InventoryProductService(
         for (item in inventories) {
             val dataRow: Row = sheet.createRow(rowNumber)
             dataRow.height = rowHeight
-            ExcelHelper.setCellValue(dataRow, 0, item.cellStyles.find { x -> x.index == 0 }!!.cellStyle, item.processCode)
-            ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }!!.cellStyle, item.processName)
-            ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }!!.cellStyle, item.code)
-            ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }!!.cellStyle, item.layerCode)
-            ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }!!.cellStyle, item.tapeLotNo)
-            ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }!!.cellStyle, item.productName)
-            ExcelHelper.setCellValue(dataRow, 6, item.cellStyles.find { x -> x.index == 6 }!!.cellStyle, item.orderCode)
-            ExcelHelper.setCellValue(dataRow, 7, item.cellStyles.find { x -> x.index == 7 }!!.cellStyle, item.productQuantity?.toString())
-            ExcelHelper.setCellValue(dataRow, 8, item.cellStyles.find { x -> x.index == 8 }!!.cellStyle, item.sheetQuantity?.toString())
+            ExcelHelper.setCellValue(dataRow, 0, item.cellStyles.find { x -> x.index == 0 }!!.cellStyle, item.employeeCode)
+            ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }!!.cellStyle, item.team)
+            ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }!!.cellStyle, item.processNameJp)
+            ExcelHelper.setCellValue(dataRow, 8, item.cellStyles.find { x -> x.index == 8 }!!.cellStyle, item.processingDirective.toString())
+            ExcelHelper.setCellValue(dataRow, 10, item.cellStyles.find { x -> x.index == 10 }!!.cellStyle, item.piecesPerSheet.toString())
+            ExcelHelper.setCellValue(dataRow, 12, item.cellStyles.find { x -> x.index == 12 }!!.cellStyle, item.productionAreaName)
+            ExcelHelper.setCellValue(dataRow, 13, item.cellStyles.find { x -> x.index == 13 }!!.cellStyle, item.processCount.toString())
+            ExcelHelper.setCellValue(dataRow, 16, item.cellStyles.find { x -> x.index == 16 }!!.cellStyle, if(item.seidenRepNumber == null) "" else item.seidenRepNumber.toString())
+
+            ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }!!.cellStyle, item.processCode)
+            ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }!!.cellStyle, item.processName)
+            ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }!!.cellStyle, item.code)
+            ExcelHelper.setCellValue(dataRow, 6, item.cellStyles.find { x -> x.index == 6 }!!.cellStyle, item.layerCode)
+            ExcelHelper.setCellValue(dataRow, 7, item.cellStyles.find { x -> x.index == 7 }!!.cellStyle, item.tapeLotNo)
+            ExcelHelper.setCellValue(dataRow, 9, item.cellStyles.find { x -> x.index == 9 }!!.cellStyle, item.productName)
+            ExcelHelper.setCellValue(dataRow, 11, item.cellStyles.find { x -> x.index == 11 }!!.cellStyle, item.orderCode)
+            ExcelHelper.setCellValue(dataRow, 14, item.cellStyles.find { x -> x.index == 14 }!!.cellStyle, item.productQuantity?.toString())
+            ExcelHelper.setCellValue(dataRow, 15, item.cellStyles.find { x -> x.index == 15 }!!.cellStyle, item.sheetQuantity?.toString())
 
             ExcelHelper.setCellValue(dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }!!.cellStyle, item.messageError)
             rowNumber++

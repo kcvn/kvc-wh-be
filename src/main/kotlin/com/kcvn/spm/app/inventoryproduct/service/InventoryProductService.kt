@@ -95,6 +95,9 @@ class InventoryProductService(
         requestDelete.inventoryDate = date
         inventoryProductRepository.deleteInventoryProduct(requestDelete)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+            if (checkIsEmptyRow(row)) {
+                continue
+            }
             val style = row.getCell(0).cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
@@ -370,6 +373,17 @@ class InventoryProductService(
         )
     }
 
+
+    fun checkIsEmptyRow( row: Row): Boolean {
+        for (i in 0 until row.lastCellNum) {
+            if (row.getCell(i) != null && row.getCell(i).cellType != CellType.BLANK) {
+                return false
+            }
+        }
+        return true
+
+    }
+
     private fun exportErrorFile(inventories: List<ImportInventoryErrorModel>, titleRow: Row, workbook: Workbook, importSheet: Sheet): FileContentModel {
         val sheet = workbook.createSheet()
         val headerRow: Row = sheet.getRow(0) ?: sheet.createRow(0)
@@ -388,24 +402,61 @@ class InventoryProductService(
         for (item in inventories) {
             val dataRow: Row = sheet.createRow(rowNumber)
             dataRow.height = rowHeight
-            ExcelHelper.setCellValue(dataRow, 0, item.cellStyles.find { x -> x.index == 0 }!!.cellStyle, item.employeeCode)
-            ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }!!.cellStyle, item.team)
-            ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }!!.cellStyle, item.processNameJp)
-            ExcelHelper.setCellValue(dataRow, 8, item.cellStyles.find { x -> x.index == 8 }!!.cellStyle, item.processingDirective.toString())
-            ExcelHelper.setCellValue(dataRow, 10, item.cellStyles.find { x -> x.index == 10 }!!.cellStyle, item.piecesPerSheet.toString())
-            ExcelHelper.setCellValue(dataRow, 12, item.cellStyles.find { x -> x.index == 12 }!!.cellStyle, item.productionAreaName)
-            ExcelHelper.setCellValue(dataRow, 13, item.cellStyles.find { x -> x.index == 13 }!!.cellStyle, item.processCount.toString())
-            ExcelHelper.setCellValue(dataRow, 16, item.cellStyles.find { x -> x.index == 16 }!!.cellStyle, if(item.seidenRepNumber == null) "" else item.seidenRepNumber.toString())
-
-            ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }!!.cellStyle, item.processCode)
-            ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }!!.cellStyle, item.processName)
-            ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }!!.cellStyle, item.code)
-            ExcelHelper.setCellValue(dataRow, 6, item.cellStyles.find { x -> x.index == 6 }!!.cellStyle, item.layerCode)
-            ExcelHelper.setCellValue(dataRow, 7, item.cellStyles.find { x -> x.index == 7 }!!.cellStyle, item.tapeLotNo)
-            ExcelHelper.setCellValue(dataRow, 9, item.cellStyles.find { x -> x.index == 9 }!!.cellStyle, item.productName)
-            ExcelHelper.setCellValue(dataRow, 11, item.cellStyles.find { x -> x.index == 11 }!!.cellStyle, item.orderCode)
-            ExcelHelper.setCellValue(dataRow, 14, item.cellStyles.find { x -> x.index == 14 }!!.cellStyle, item.productQuantity?.toString())
-            ExcelHelper.setCellValue(dataRow, 15, item.cellStyles.find { x -> x.index == 15 }!!.cellStyle, item.sheetQuantity?.toString())
+            item.cellStyles.find { x -> x.index == 0 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 0, style.cellStyle,
+                    item.employeeCode?.let { StringHelper.removeDecimalSuffix(it) })
+            }
+            item.cellStyles.find { x -> x.index == 1 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 1, style.cellStyle, item.team)
+            }
+            item.cellStyles.find { x -> x.index == 4 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 4, style.cellStyle, item.processNameJp)
+            }
+            item.cellStyles.find { x -> x.index == 8 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 8, style.cellStyle, item.processingDirective.toString())
+            }
+            item.cellStyles.find { x -> x.index == 10 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 10, style.cellStyle, if(item.piecesPerSheet == null) "" else item.piecesPerSheet.toString())
+            }
+            item.cellStyles.find { x -> x.index == 12 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 12, style.cellStyle,
+                    item.productionAreaName?.let { StringHelper.removeDecimalSuffix(it) })
+            }
+            item.cellStyles.find { x -> x.index == 13 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 13, style.cellStyle, if(item.processCount == null) "" else item.processCount.toString())
+            }
+            item.cellStyles.find { x -> x.index == 16 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 16, style.cellStyle, if(item.seidenRepNumber == null) "" else item.seidenRepNumber.toString())
+            }
+            item.cellStyles.find { x -> x.index == 2 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 2, style.cellStyle,
+                    item.processCode?.let { StringHelper.removeDecimalSuffix(it) })
+            }
+            item.cellStyles.find { x -> x.index == 3 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 3, style.cellStyle, item.processName)
+            }
+            item.cellStyles.find { x -> x.index == 5 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 5, style.cellStyle, item.code)
+            }
+            item.cellStyles.find { x -> x.index == 6 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 6, style.cellStyle,
+                    item.layerCode?.let { StringHelper.removeDecimalSuffix(it) })
+            }
+            item.cellStyles.find { x -> x.index == 7 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 7, style.cellStyle, item.tapeLotNo)
+            }
+            item.cellStyles.find { x -> x.index == 9 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 9, style.cellStyle, item.productName)
+            }
+            item.cellStyles.find { x -> x.index == 11 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 11, style.cellStyle, item.orderCode)
+            }
+            item.cellStyles.find { x -> x.index == 14 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 14, style.cellStyle, item.productQuantity?.toString())
+            }
+            item.cellStyles.find { x -> x.index == 15 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 15, style.cellStyle, item.sheetQuantity?.toString())
+            }
 
             ExcelHelper.setCellValue(dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }!!.cellStyle, item.messageError)
             rowNumber++

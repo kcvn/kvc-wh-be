@@ -102,7 +102,10 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             condition = condition.and(ORDER_INFO.ORDER_DATE.le(request.endDate))
         }
 
-        condition = condition.and(ORDER_INFO.IS_CHANGE_QUANTITY.eq(request.isChangeQuantity))
+        if(request.isChangeQuantity){
+            condition = condition.and(ORDER_INFO.IS_CHANGE_QUANTITY.eq(request.isChangeQuantity))
+
+        }
 
         if (!request.version.isNullOrEmpty()) {
             if (request.version == OrderVersion.LATEST) {

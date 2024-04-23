@@ -1,6 +1,4 @@
 package com.kcvn.spm.app.order.payload.request
-
-import com.google.gson.annotations.SerializedName
 import java.time.OffsetDateTime
 
 class OrderSearchRequest (
@@ -11,5 +9,4 @@ class OrderSearchRequest (
     var startDate: OffsetDateTime? = null,
     var endDate: OffsetDateTime? = null,
     var version: String? = null,
-
     )

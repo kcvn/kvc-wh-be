@@ -85,17 +85,17 @@ open class TapeInventory(
     /**
      * The column <code>public.tape_inventory.tape_in_warehouse</code>.
      */
-    val TAPE_IN_WAREHOUSE: TableField<TapeInventoryRecord, Int?> = createField(DSL.name("tape_in_warehouse"), SQLDataType.INTEGER.nullable(false), this, "")
+    val TAPE_IN_WAREHOUSE: TableField<TapeInventoryRecord, Int?> = createField(DSL.name("tape_in_warehouse"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.tape_inventory.tape_in_department</code>.
      */
-    val TAPE_IN_DEPARTMENT: TableField<TapeInventoryRecord, Int?> = createField(DSL.name("tape_in_department"), SQLDataType.INTEGER.nullable(false), this, "")
+    val TAPE_IN_DEPARTMENT: TableField<TapeInventoryRecord, Int?> = createField(DSL.name("tape_in_department"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.tape_inventory.tape_ng</code>.
      */
-    val TAPE_NG: TableField<TapeInventoryRecord, Int?> = createField(DSL.name("tape_ng"), SQLDataType.INTEGER.nullable(false), this, "")
+    val TAPE_NG: TableField<TapeInventoryRecord, Int?> = createField(DSL.name("tape_ng"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.tape_inventory.created_date</code>.

@@ -22,6 +22,7 @@ import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 
@@ -115,6 +116,17 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         condition = condition.and(ORDER_INFO.QUANTITY.gt(0)).and(ORDER_INFO.IS_DELETED.eq(false))
 
         val sortFields = getSortFields(pageable.sort, ORDER_INFO.PRODUCT_NAME).toMutableList()
+
+        val sortName = pageable.sort.find { x -> x.property == "sortByProduct" }
+        if(sortName != null){
+            if(sortName.direction == Sort.Direction.ASC){
+                sortFields.add(0, ORDER_INFO.PRODUCT_NAME.asc())
+                sortFields.add(1, ORDER_INFO.VERSION.desc())
+            } else {
+                sortFields.add(0, ORDER_INFO.PRODUCT_NAME.desc())
+                sortFields.add(1, ORDER_INFO.VERSION.desc())
+            }
+        }
 
         if (request.version == OrderVersion.LATEST) {
             val query = context.select(
@@ -416,6 +428,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             "productname" -> ORDER_INFO.PRODUCT_NAME
             "frame_1" -> ORDER_INFO.FRAME_1
             "layercount" -> ORDER_INFO.LAYER_COUNT
+            "Version" -> ORDER_INFO.VERSION
             else -> ORDER_INFO.PRODUCT_NAME
         }
     }

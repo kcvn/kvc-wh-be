@@ -34,7 +34,8 @@ class OrderController(
         request: OrderSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC)
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["Version"], direction = Sort.Direction.DESC)
         )
         pageable: Pageable
     ): ResponseEntity<PagingOrderResponse> {
@@ -62,7 +63,8 @@ class OrderController(
         request: OrderSearchRequest,
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC)
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["Version"], direction = Sort.Direction.DESC)
         )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {

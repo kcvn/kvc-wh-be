@@ -27,7 +27,16 @@ data class InventoryProduct(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var employeeCode: String? = null,
+    var team: String? = null,
+    var processName: String? = null,
+    var processNameJp: String? = null,
+    var processingDirective: Int? = null,
+    var piecesPerSheet: Int? = null,
+    var productionAreaName: String? = null,
+    var processCount: Int? = null,
+    var seidenRepNumber: Int? = null
 ): Serializable {
 
 
@@ -117,6 +126,60 @@ data class InventoryProduct(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.employeeCode == null) {
+            if (o.employeeCode != null)
+                return false
+        }
+        else if (this.employeeCode != o.employeeCode)
+            return false
+        if (this.team == null) {
+            if (o.team != null)
+                return false
+        }
+        else if (this.team != o.team)
+            return false
+        if (this.processName == null) {
+            if (o.processName != null)
+                return false
+        }
+        else if (this.processName != o.processName)
+            return false
+        if (this.processNameJp == null) {
+            if (o.processNameJp != null)
+                return false
+        }
+        else if (this.processNameJp != o.processNameJp)
+            return false
+        if (this.processingDirective == null) {
+            if (o.processingDirective != null)
+                return false
+        }
+        else if (this.processingDirective != o.processingDirective)
+            return false
+        if (this.piecesPerSheet == null) {
+            if (o.piecesPerSheet != null)
+                return false
+        }
+        else if (this.piecesPerSheet != o.piecesPerSheet)
+            return false
+        if (this.productionAreaName == null) {
+            if (o.productionAreaName != null)
+                return false
+        }
+        else if (this.productionAreaName != o.productionAreaName)
+            return false
+        if (this.processCount == null) {
+            if (o.processCount != null)
+                return false
+        }
+        else if (this.processCount != o.processCount)
+            return false
+        if (this.seidenRepNumber == null) {
+            if (o.seidenRepNumber != null)
+                return false
+        }
+        else if (this.seidenRepNumber != o.seidenRepNumber)
+            return false
         return true
     }
 
@@ -136,6 +199,15 @@ data class InventoryProduct(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.employeeCode == null) 0 else this.employeeCode.hashCode())
+        result = prime * result + (if (this.team == null) 0 else this.team.hashCode())
+        result = prime * result + (if (this.processName == null) 0 else this.processName.hashCode())
+        result = prime * result + (if (this.processNameJp == null) 0 else this.processNameJp.hashCode())
+        result = prime * result + (if (this.processingDirective == null) 0 else this.processingDirective.hashCode())
+        result = prime * result + (if (this.piecesPerSheet == null) 0 else this.piecesPerSheet.hashCode())
+        result = prime * result + (if (this.productionAreaName == null) 0 else this.productionAreaName.hashCode())
+        result = prime * result + (if (this.processCount == null) 0 else this.processCount.hashCode())
+        result = prime * result + (if (this.seidenRepNumber == null) 0 else this.seidenRepNumber.hashCode())
         return result
     }
 
@@ -155,6 +227,15 @@ data class InventoryProduct(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(employeeCode)
+        sb.append(", ").append(team)
+        sb.append(", ").append(processName)
+        sb.append(", ").append(processNameJp)
+        sb.append(", ").append(processingDirective)
+        sb.append(", ").append(piecesPerSheet)
+        sb.append(", ").append(productionAreaName)
+        sb.append(", ").append(processCount)
+        sb.append(", ").append(seidenRepNumber)
 
         sb.append(")")
         return sb.toString()

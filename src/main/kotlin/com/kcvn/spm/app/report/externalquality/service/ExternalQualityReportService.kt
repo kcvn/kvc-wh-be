@@ -52,7 +52,8 @@ class ExternalQualityReportService(
     private val orderInfoRepository: OrderInfoRepository,
     private val tapeEnRouteRepository:TapeEnRouteRepository,
     private val tapeInventoryRepository: TapeInventoryRepository,
-    private val appSettingRep: AppSettingRepository
+    private val appSettingRep: AppSettingRepository,
+    private val productRepository: ProductRepository
 ) {
     //region IMPORT
 
@@ -117,7 +118,7 @@ class ExternalQualityReportService(
                 ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
             val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeEnRouteTemplate.xlsx"
             val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 1))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
             var count = 0
@@ -126,54 +127,50 @@ class ExternalQualityReportService(
                 val style = row.getCell(0)?.cellStyle ?: break
                 val messageResults = mutableListOf<String>()
                 var isValidCol = true
-                val exportType = ExcelHelper.getCellValue(row, 0)
+
+                val monthOrderCheck = ExcelHelper.getCellValue(row, 0)
+                val monthOrder: Int? = if(monthOrderCheck.isNotEmpty()) {
+                    StringHelper.removeDecimalSuffix(monthOrderCheck).toInt()
+                } else {
+                    null
+                }
+
+                var exportType = ExcelHelper.getCellValue(row, 1)
                 if(exportType.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.exportType"))
+                }else if(exportType == ExportType.SIPBACK){
+                    exportType = ExportType.SHIPBACK
+                }
+                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.format.exportType"))
                 }
 
-                val purchaseOrder = ExcelHelper.getCellValue(row, 1)
+                val supplierCd= ExcelHelper.getCellValue(row, 2)
+
+                val purchaseOrder = ExcelHelper.getCellValue(row, 3)
                 if(purchaseOrder.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.purchaseOrder"))
                 }
-                val itemCode = ExcelHelper.getCellValue(row, 2)
-                if(itemCode.isEmpty()) {
+                val itemCd = ExcelHelper.getCellValue(row, 4)
+                if(itemCd.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.itemCode"))
                 }
 
-                val unit = ExcelHelper.getCellValue(row, 3)
-                if(unit.isEmpty()) {
-                    isValidCol = false
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.unit"))
-                }
+                val description = ExcelHelper.getCellValue(row, 5)
 
-                val description = ExcelHelper.getCellValue(row, 4)
-                if(description.isEmpty()) {
-                    isValidCol = false
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.description"))
-                }
-
-                val spec = ExcelHelper.getCellValue(row, 5)
+                val spec = ExcelHelper.getCellValue(row, 6)
                 if(spec.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.spec"))
                 }
 
-                val transmit = ExcelHelper.getCellValue(row, 6)
-                if(transmit.isEmpty()) {
-                    isValidCol = false
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.transmit"))
-                }
-
-
                 val orderedQuantityCheck = ExcelHelper.getCellValue(row, 7)
                 var orderedQuantity: Int? = null
-                if (orderedQuantityCheck.isEmpty()) {
-                    isValidCol = false
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.orderedQuantity"))
-                } else if (!NumberHelper.isNumeric(orderedQuantityCheck)) {
+                if (!NumberHelper.isNumeric(orderedQuantityCheck)) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.orderedQuantity.format"))
                 } else {
@@ -181,8 +178,16 @@ class ExternalQualityReportService(
                     orderedQuantity = StringHelper.removeDecimalSuffix(orderedQuantityCheck).toInt()
                 }
 
+                val qtyUm = ExcelHelper.getCellValue(row, 8)
+                val opuPFc = ExcelHelper.getCellValue(row, 9)
+                val opuP = ExcelHelper.getCellValue(row, 10)
+                val opDlvDtCheck = ExcelHelper.getCellValue(row, 11,DateTimeFormat.M_dd_yyyy)
+                val isDateFormatOpDlvDt = DateTimeHelper.isFormatdate(opDlvDtCheck)
+                val opDlvDt =if(!isDateFormatOpDlvDt) DateTimeHelper.convertStringToOffSetDateTime(opDlvDtCheck,DateTimeFormat.M_dd_yyyy) else null
 
-                val deliveredQuantityCheck = ExcelHelper.getCellValue(row, 8)
+                val transmit = ExcelHelper.getCellValue(row, 12)
+
+                val deliveredQuantityCheck = ExcelHelper.getCellValue(row, 13)
                 var deliveredQuantity: Int? = null
                 if (deliveredQuantityCheck.isEmpty()) {
                     isValidCol = false
@@ -191,11 +196,10 @@ class ExternalQualityReportService(
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.deliveredQuantity.format"))
                 } else {
-
                     deliveredQuantity = StringHelper.removeDecimalSuffix(deliveredQuantityCheck).toInt()
                 }
 
-                val responseDateCheck = ExcelHelper.getCellValue(row, 9,DateTimeFormat.M_dd_yyyy)
+                val responseDateCheck = ExcelHelper.getCellValue(row, 14,DateTimeFormat.M_dd_yyyy)
                 val isDateFormat = DateTimeHelper.isFormatdate(responseDateCheck)
                 if(!isDateFormat && deliveredQuantityCheck.isNotEmpty()){
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate.format"))
@@ -207,47 +211,40 @@ class ExternalQualityReportService(
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate"))
                 }
 
-                val tapeLotCheck : String = ExcelHelper.getCellValue(row, 10)
-                var tapeLot: String? = null
-                if(tapeLotCheck.isEmpty()){
-                    tapeLot = tapeLotCheck
+                val estimatedDateCheck = ExcelHelper.getCellValue(row, 15,DateTimeFormat.M_dd_yyyy)
+                val isDateFormatEstimatedDate = DateTimeHelper.isFormatdate(estimatedDateCheck)
+                val estimatedDate =if(!isDateFormatEstimatedDate) DateTimeHelper.convertStringToOffSetDateTime(opDlvDtCheck,DateTimeFormat.M_dd_yyyy) else null
+
+                val estimatedMonthCheck =  ExcelHelper.getCellValue(row, 16)
+                val estimatedMonth = if(estimatedMonthCheck.isNotEmpty()) {
+                    StringHelper.removeDecimalSuffix(estimatedMonthCheck).toInt()
+                } else {
+                    null
                 }
-                val quantityCheck = ExcelHelper.getCellValue(row, 11)
-                var quantity: Int? = null
-                if(quantityCheck.isNotEmpty()){
-                    quantity = StringHelper.removeDecimalSuffix(quantityCheck).toInt()
+                if (purchaseOrder.isEmpty() || itemCd.isEmpty() || spec.isEmpty() || orderedQuantityCheck.isEmpty() || responseDateCheck.isEmpty()) {
+                    continue
                 }
 
-                val numberOfBoxesCheck = ExcelHelper.getCellValue(row, 11)
-                var numberOfBoxes:Int? = null
-                if(numberOfBoxesCheck.isNotEmpty()){
-                    numberOfBoxes= StringHelper.removeDecimalSuffix(numberOfBoxesCheck).toInt()
-
-                }
-                val integrationConfirmationCheck = ExcelHelper.getCellValue(row, 12)
-                var integrationConfirmation:Boolean? = null
-                if(integrationConfirmationCheck.isNotEmpty()){
-                    integrationConfirmation = StringHelper.removeDecimalSuffix(integrationConfirmationCheck).toInt() == 1
-                }
-                val contactStatus = ExcelHelper.getCellValue(row, 13)
                 total++
 
                 val tapeEnRoute = TapeEnRoute(
+                    orderPlacementMonth = monthOrder,
                     exportType = exportType,
+                    supplierCd = supplierCd,
                     purchaseOrder = purchaseOrder,
-                    itemCode = itemCode,
-                    unit = unit,
+                    itemCd = itemCd,
                     description = description,
                     spec = spec,
-                    transmit = transmit,
                     orderedQuantity = orderedQuantity,
+                    qtyUm = qtyUm,
+                    opuPFc = opuPFc,
+                    opuP = opuP,
+                    opDlvDt = opDlvDt,
+                    transmit = transmit,
                     deliveredQuantity = deliveredQuantity,
                     responseDate = responseDate,
-                    tapeLot = tapeLot,
-                    quantity = quantity,
-                    numberOfBoxes = numberOfBoxes,
-                    integrationConfirmation = integrationConfirmation,
-                    contactStatus = contactStatus,
+                    estimatedDate = estimatedDate,
+                    estimatedMonth = estimatedMonth,
                     couponCode = couponCode
                 )
                 if (isValidCol) {
@@ -301,30 +298,34 @@ class ExternalQualityReportService(
                 ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
             val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeInventoryTemplate.xlsx"
             val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 1))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 6))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            val productMaster = productRepository.getListNameProduct()
 
             var count = 0
             var total = 0
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
                 val style = row.getCell(0)?.cellStyle ?: break
-                total++
                 val messageResults = mutableListOf<String>()
                 var isValidCol = true
                 var exportType = ExcelHelper.getCellValue(row, 0)
                 if(exportType.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.exportType"))
-                }else{
-                    if(exportType == ExportType.SIPBACK){
-                        exportType = ExportType.SHIPBACK
-                    }
+                }else if(exportType == ExportType.SIPBACK){
+                    exportType = ExportType.SHIPBACK
                 }
+                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT) {
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.format.exportType"))
+                }
+
                 val productNameShortCut = ExcelHelper.getCellValue(row, 1)
                 if (productNameShortCut.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.productNameShortCut"))
                 }
+
 
                 val productName = ExcelHelper.getCellValue(row, 2)
                 if (productName.isEmpty()) {
@@ -332,43 +333,44 @@ class ExternalQualityReportService(
                     messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.productName"))
                 }
 
+                if(!productMaster.contains(productName)){
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.productName.notExist"))
+                }
 
                 val tapeInWareHouseCheck = ExcelHelper.getCellValue(row, 3)
                 var tapeInWareHouse: Int? = null
-                if (tapeInWareHouseCheck.isEmpty()) {
-                    isValidCol = false
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeInWareHouse"))
-                } else if (!NumberHelper.isNumeric(tapeInWareHouseCheck)) {
+                 if (!NumberHelper.isNumeric(tapeInWareHouseCheck) && tapeInWareHouseCheck.isNotEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeInWareHouse.format"))
                 } else {
-
+                    if(tapeInWareHouseCheck.isNotEmpty())
                     tapeInWareHouse = StringHelper.removeDecimalSuffix(tapeInWareHouseCheck).toInt()
                 }
 
                 val tapeInDepartmentCheck = ExcelHelper.getCellValue(row, 4)
                 var tapeInDepartment: Int? = null
-                if (tapeInDepartmentCheck.isEmpty()) {
-                    isValidCol = false
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeInDepartment"))
-                } else if (!NumberHelper.isNumeric(tapeInDepartmentCheck)) {
+                if (!NumberHelper.isNumeric(tapeInDepartmentCheck) && tapeInDepartmentCheck.isNotEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeInDepartment.format"))
                 } else {
+                    if(tapeInDepartmentCheck.isNotEmpty())
                     tapeInDepartment = StringHelper.removeDecimalSuffix(tapeInDepartmentCheck).toInt()
                 }
 
                 val tapeNGCheck = ExcelHelper.getCellValue(row, 5)
                 var tapeNG: Int? = null
-                if (tapeNGCheck.isEmpty()) {
-                    isValidCol = false
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeNG"))
-                } else if (!NumberHelper.isNumeric(tapeNGCheck)) {
+                 if (!NumberHelper.isNumeric(tapeNGCheck) && tapeNGCheck.isNotEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.tapeNG.format"))
                 } else {
+                    if(tapeNGCheck.isNotEmpty())
                     tapeNG = StringHelper.removeDecimalSuffix(tapeNGCheck).toInt()
                 }
+                if (exportType.isEmpty()  || productName.isEmpty()) {
+                    continue
+                }
+                total++
 
 
                 val tapeInventory = TapeInventory(

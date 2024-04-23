@@ -117,8 +117,9 @@ class Color {
 
 class ExportType {
     companion object {
-        const val SHIPBACK = "ship back"
-        const val SIPBACK = "sip back"
+        const val SHIPBACK = "Ship back"
+        const val SIPBACK = "Sip back"
+        const val DIRECT = "Direct"
     }
 }
 

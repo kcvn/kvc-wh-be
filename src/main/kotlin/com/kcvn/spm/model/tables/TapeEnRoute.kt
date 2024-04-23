@@ -9,16 +9,12 @@ import com.kcvn.spm.model.keys.TAPE_EN_ROUTE_PKEY
 import com.kcvn.spm.model.tables.records.TapeEnRouteRecord
 
 import java.time.OffsetDateTime
-import java.util.function.Function
 
 import org.jooq.Field
 import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row22
 import org.jooq.Schema
-import org.jooq.SelectField
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
@@ -78,19 +74,19 @@ open class TapeEnRoute(
     val PURCHASE_ORDER: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("purchase_order"), SQLDataType.VARCHAR(20).nullable(false), this, "")
 
     /**
-     * The column <code>public.tape_en_route.item_code</code>.
+     * The column <code>public.tape_en_route.item_cd</code>.
      */
-    val ITEM_CODE: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("item_code"), SQLDataType.VARCHAR(20), this, "")
+    val ITEM_CD: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("item_cd"), SQLDataType.VARCHAR(20), this, "")
 
     /**
      * The column <code>public.tape_en_route.unit</code>.
      */
-    val UNIT: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("unit"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val UNIT: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("unit"), SQLDataType.VARCHAR(20), this, "")
 
     /**
      * The column <code>public.tape_en_route.description</code>.
      */
-    val DESCRIPTION: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("description"), SQLDataType.VARCHAR(50).nullable(false), this, "")
+    val DESCRIPTION: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("description"), SQLDataType.VARCHAR(50), this, "")
 
     /**
      * The column <code>public.tape_en_route.spec</code>.
@@ -100,12 +96,12 @@ open class TapeEnRoute(
     /**
      * The column <code>public.tape_en_route.transmit</code>.
      */
-    val TRANSMIT: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("transmit"), SQLDataType.VARCHAR(5).nullable(false), this, "")
+    val TRANSMIT: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("transmit"), SQLDataType.VARCHAR(5), this, "")
 
     /**
      * The column <code>public.tape_en_route.ordered_quantity</code>.
      */
-    val ORDERED_QUANTITY: TableField<TapeEnRouteRecord, Int?> = createField(DSL.name("ordered_quantity"), SQLDataType.INTEGER.nullable(false), this, "")
+    val ORDERED_QUANTITY: TableField<TapeEnRouteRecord, Int?> = createField(DSL.name("ordered_quantity"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.tape_en_route.delivered_quantity</code>.
@@ -172,6 +168,46 @@ open class TapeEnRoute(
      */
     val COUPON_CODE: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("coupon_code"), SQLDataType.VARCHAR(20).nullable(false), this, "")
 
+    /**
+     * The column <code>public.tape_en_route.order_placement_month</code>.
+     */
+    val ORDER_PLACEMENT_MONTH: TableField<TapeEnRouteRecord, Int?> = createField(DSL.name("order_placement_month"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.tape_en_route.supplier_cd</code>.
+     */
+    val SUPPLIER_CD: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("supplier_cd"), SQLDataType.VARCHAR(20), this, "")
+
+    /**
+     * The column <code>public.tape_en_route.qty_um</code>.
+     */
+    val QTY_UM: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("qty_um"), SQLDataType.VARCHAR(20), this, "")
+
+    /**
+     * The column <code>public.tape_en_route.opu_p_fc</code>.
+     */
+    val OPU_P_FC: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("opu_p_fc"), SQLDataType.VARCHAR(20), this, "")
+
+    /**
+     * The column <code>public.tape_en_route.opu_p</code>.
+     */
+    val OPU_P: TableField<TapeEnRouteRecord, String?> = createField(DSL.name("opu_p"), SQLDataType.VARCHAR(20), this, "")
+
+    /**
+     * The column <code>public.tape_en_route.op_dlv_dt</code>.
+     */
+    val OP_DLV_DT: TableField<TapeEnRouteRecord, OffsetDateTime?> = createField(DSL.name("op_dlv_dt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
+
+    /**
+     * The column <code>public.tape_en_route.estimated_date</code>.
+     */
+    val ESTIMATED_DATE: TableField<TapeEnRouteRecord, OffsetDateTime?> = createField(DSL.name("estimated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "")
+
+    /**
+     * The column <code>public.tape_en_route.estimated_month</code>.
+     */
+    val ESTIMATED_MONTH: TableField<TapeEnRouteRecord, Int?> = createField(DSL.name("estimated_month"), SQLDataType.INTEGER, this, "")
+
     private constructor(alias: Name, aliased: Table<TapeEnRouteRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<TapeEnRouteRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -211,20 +247,4 @@ open class TapeEnRoute(
      * Rename this table
      */
     override fun rename(name: Table<*>): TapeEnRoute = TapeEnRoute(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row22 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row22<String?, String?, String?, String?, String?, String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, Int?, Int?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?> = super.fieldsRow() as Row22<String?, String?, String?, String?, String?, String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, Int?, Int?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?>
-
-    /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
-     */
-    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, Int?, Int?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
-
-    /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
-     */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, Int?, Int?, Boolean?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

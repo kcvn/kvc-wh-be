@@ -68,7 +68,8 @@ class OrderService(
             productVersion,
             request.startDate,
             request.endDate,
-            (request.version == OrderVersion.LATEST)
+            (request.version == OrderVersion.LATEST),
+            request.isChangeQuantity
         )
 
         response.data = orderDetails.first.map { model ->

@@ -115,6 +115,13 @@ class Color {
     }
 }
 
+class ExportType {
+    companion object {
+        const val SHIPBACK = "ship back"
+        const val SIPBACK = "sip back"
+    }
+}
+
 class OrderFilterType {
     companion object {
         const val DATE = 0

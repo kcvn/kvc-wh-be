@@ -101,9 +101,9 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         if (request.endDate != null) {
             condition = condition.and(ORDER_INFO.ORDER_DATE.le(request.endDate))
         }
-        if(request.isChangeQuantity!= null && request.isChangeQuantity == true){
-            condition = condition.and(ORDER_INFO.IS_CHANGE_QUANTITY.eq(request.isChangeQuantity))
-        }
+
+        condition = condition.and(ORDER_INFO.IS_CHANGE_QUANTITY.eq(request.isChangeQuantity))
+
         if (!request.version.isNullOrEmpty()) {
             if (request.version == OrderVersion.LATEST) {
                 condition = condition.and(ORDER_INFO.IS_LATEST.eq(true))
@@ -198,7 +198,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         productVersions: List<Pair<String, String>>,
         startDate: OffsetDateTime?,
         endDate: OffsetDateTime?,
-        isLatest: Boolean
+        isLatest: Boolean,
+        isChangeQuantity: Boolean? = false
     ): List<OrderDetailByDateModel> {
         val productNames = productVersions.map { x -> x.first }
         val versions = productVersions.map { x -> x.second.toIntOrNull() }
@@ -212,6 +213,9 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             condition = condition.and(ORDER_INFO.ORDER_DATE.le(endDate))
         }
         if (isLatest) {
+            if(isChangeQuantity == true){
+                condition = condition.and(ORDER_INFO.IS_CHANGE_QUANTITY.eq(true))
+            }
             var data = context.selectFrom(ORDER_INFO)
                 .where(condition.and(ORDER_INFO.IS_LATEST.eq(true)))
                 .fetchInto(OrderInfo::class.java).map { x ->

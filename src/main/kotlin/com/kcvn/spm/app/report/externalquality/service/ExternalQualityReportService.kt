@@ -782,6 +782,7 @@ class ExternalQualityReportService(
         //ACCUMULATED_PLANNED_TAPE_SET
         val accumulatedPlannedTapeSet = ExternalQualityDetailModel("ACCUMULATED_PLANNED_TAPE_SET", ExternalReportDetailType.ACCUMULATED_PLANNED_TAPE_SET)
         accumulatedPlannedTapeSet.quantityByCalendars = calculateAccumulation(plannedTapeSet.quantityByCalendars,goodQualityTapeInventorySet)
+            accumulatedPlannedTapeSet.inventory =   externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
         detailData.add(accumulatedPlannedTapeSet)
 
         //PLANNED_TAPE_BLOCK

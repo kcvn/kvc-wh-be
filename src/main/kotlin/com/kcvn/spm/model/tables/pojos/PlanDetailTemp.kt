@@ -27,7 +27,9 @@ data class PlanDetailTemp(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var orderDate: OffsetDateTime? = null,
+    var hasInventory: Boolean? = null
 ): Serializable {
 
 
@@ -117,6 +119,18 @@ data class PlanDetailTemp(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.orderDate == null) {
+            if (o.orderDate != null)
+                return false
+        }
+        else if (this.orderDate != o.orderDate)
+            return false
+        if (this.hasInventory == null) {
+            if (o.hasInventory != null)
+                return false
+        }
+        else if (this.hasInventory != o.hasInventory)
+            return false
         return true
     }
 
@@ -136,6 +150,8 @@ data class PlanDetailTemp(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.orderDate == null) 0 else this.orderDate.hashCode())
+        result = prime * result + (if (this.hasInventory == null) 0 else this.hasInventory.hashCode())
         return result
     }
 
@@ -155,6 +171,8 @@ data class PlanDetailTemp(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(orderDate)
+        sb.append(", ").append(hasInventory)
 
         sb.append(")")
         return sb.toString()

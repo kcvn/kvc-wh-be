@@ -102,6 +102,8 @@ class DateTimeFormat {
         const val yyyy_MM_dd_HH_mm_ss = "yyyy_MM_dd_HH_mm_ss"
         const val MM_yyyy = "MM/yyyy"
         const val M_dd_yyyy = "M/dd/yyyy"
+        const val yyyy_MM_dd = "yyyy/MM/dd"
+
 
     }
 }

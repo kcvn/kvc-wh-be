@@ -27,7 +27,9 @@ data class PlanDetail(
     @set:JvmName("setIsDeleted")
     var isDeleted: Boolean? = null,
     var sheetQuantity: Int? = null,
-    var blockQuantity: Int? = null
+    var blockQuantity: Int? = null,
+    var orderDate: OffsetDateTime? = null,
+    var hasInventory: Boolean? = null
 ): Serializable {
 
 
@@ -117,6 +119,18 @@ data class PlanDetail(
         }
         else if (this.blockQuantity != o.blockQuantity)
             return false
+        if (this.orderDate == null) {
+            if (o.orderDate != null)
+                return false
+        }
+        else if (this.orderDate != o.orderDate)
+            return false
+        if (this.hasInventory == null) {
+            if (o.hasInventory != null)
+                return false
+        }
+        else if (this.hasInventory != o.hasInventory)
+            return false
         return true
     }
 
@@ -136,6 +150,8 @@ data class PlanDetail(
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         result = prime * result + (if (this.sheetQuantity == null) 0 else this.sheetQuantity.hashCode())
         result = prime * result + (if (this.blockQuantity == null) 0 else this.blockQuantity.hashCode())
+        result = prime * result + (if (this.orderDate == null) 0 else this.orderDate.hashCode())
+        result = prime * result + (if (this.hasInventory == null) 0 else this.hasInventory.hashCode())
         return result
     }
 
@@ -155,6 +171,8 @@ data class PlanDetail(
         sb.append(", ").append(isDeleted)
         sb.append(", ").append(sheetQuantity)
         sb.append(", ").append(blockQuantity)
+        sb.append(", ").append(orderDate)
+        sb.append(", ").append(hasInventory)
 
         sb.append(")")
         return sb.toString()

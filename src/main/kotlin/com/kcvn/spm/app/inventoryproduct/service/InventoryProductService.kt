@@ -274,12 +274,12 @@ class InventoryProductService(
                     } else {
                         val requestImport = InventoryProduct(
                             //new field
-                            employeeCode = ExcelHelper.getCellValue(row, 0),
+                            employeeCode = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0)),
                             team = ExcelHelper.getCellValue(row, 1),
                             processNameJp = ExcelHelper.getCellValue(row, 4),
                             processingDirective = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 8)).toIntOrNull(),
                             piecesPerSheet = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 10)).toIntOrNull(),
-                            productionAreaName = ExcelHelper.getCellValue(row, 12),
+                            productionAreaName = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 12)),
                             processCount = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 13)).toIntOrNull(),
                             seidenRepNumber = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 16)).toIntOrNull(),
                             processName =  ExcelHelper.getCellValue(row, 3),

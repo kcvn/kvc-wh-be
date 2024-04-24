@@ -4,6 +4,7 @@ import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.payload.CalendarResponse
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 class DateTimeHelper {
     companion object {
@@ -45,14 +46,34 @@ class DateTimeHelper {
             return OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
         }
 
-        fun isFormatdate(date: String?): Boolean {
+        fun convertStringToOffSetDateTime(date: String?, formats: List<String>): OffsetDateTime? {
+            for (format in formats) {
+                try {
+                    val formatter = DateTimeFormatter.ofPattern(format)
+                    val localDate = LocalDate.parse(date, formatter)
+                    return OffsetDateTime.of(localDate, LocalTime.MIN, ZoneOffset.UTC)
+                } catch (e: DateTimeParseException) {
+                    // If parsing fails, try the next format
+                    continue
+                }
+            }
+            return null
+        }
+
+
+        fun isFormatDate(date: String?, format: String): Boolean {
             return try {
-                val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.M_dd_yyyy)
+                val formatter = DateTimeFormatter.ofPattern(format)
                 LocalDate.parse(date, formatter)
                 true
             } catch (e: Exception) {
                 false
             }
+        }
+        fun isDateFormatDateCustom(date: String?): Boolean {
+            return isFormatDate(date, DateTimeFormat.M_dd_yyyy) ||
+                    isFormatDate(date, DateTimeFormat.yyyy_MM_dd) ||
+                    isFormatDate(date, DateTimeFormat.dd_MM_yyyy)
         }
 
 

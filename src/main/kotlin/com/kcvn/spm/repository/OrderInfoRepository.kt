@@ -22,6 +22,7 @@ import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 
@@ -100,9 +101,12 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         if (request.endDate != null) {
             condition = condition.and(ORDER_INFO.ORDER_DATE.le(request.endDate))
         }
-        if(request.isChangeQuantity!= null && request.isChangeQuantity == true){
+
+        if(request.isChangeQuantity){
             condition = condition.and(ORDER_INFO.IS_CHANGE_QUANTITY.eq(request.isChangeQuantity))
+
         }
+
         if (!request.version.isNullOrEmpty()) {
             if (request.version == OrderVersion.LATEST) {
                 condition = condition.and(ORDER_INFO.IS_LATEST.eq(true))
@@ -115,6 +119,17 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         condition = condition.and(ORDER_INFO.QUANTITY.gt(0)).and(ORDER_INFO.IS_DELETED.eq(false))
 
         val sortFields = getSortFields(pageable.sort, ORDER_INFO.PRODUCT_NAME).toMutableList()
+
+        val sortName = pageable.sort.find { x -> x.property == "sortByProduct" }
+        if(sortName != null){
+            if(sortName.direction == Sort.Direction.ASC){
+                sortFields.add(0, ORDER_INFO.PRODUCT_NAME.asc())
+                sortFields.add(1, ORDER_INFO.VERSION.desc())
+            } else {
+                sortFields.add(0, ORDER_INFO.PRODUCT_NAME.desc())
+                sortFields.add(1, ORDER_INFO.VERSION.desc())
+            }
+        }
 
         if (request.version == OrderVersion.LATEST) {
             val query = context.select(
@@ -186,7 +201,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
         productVersions: List<Pair<String, String>>,
         startDate: OffsetDateTime?,
         endDate: OffsetDateTime?,
-        isLatest: Boolean
+        isLatest: Boolean,
+        isChangeQuantity: Boolean? = false
     ): List<OrderDetailByDateModel> {
         val productNames = productVersions.map { x -> x.first }
         val versions = productVersions.map { x -> x.second.toIntOrNull() }
@@ -200,6 +216,9 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             condition = condition.and(ORDER_INFO.ORDER_DATE.le(endDate))
         }
         if (isLatest) {
+            if(isChangeQuantity == true){
+                condition = condition.and(ORDER_INFO.IS_CHANGE_QUANTITY.eq(true))
+            }
             var data = context.selectFrom(ORDER_INFO)
                 .where(condition.and(ORDER_INFO.IS_LATEST.eq(true)))
                 .fetchInto(OrderInfo::class.java).map { x ->
@@ -412,6 +431,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             "productname" -> ORDER_INFO.PRODUCT_NAME
             "frame_1" -> ORDER_INFO.FRAME_1
             "layercount" -> ORDER_INFO.LAYER_COUNT
+            "Version" -> ORDER_INFO.VERSION
             else -> ORDER_INFO.PRODUCT_NAME
         }
     }

@@ -38,10 +38,17 @@ class ExcelHelper {
             val cell = row.getCell(columnIndex)
             return when (cell.cellType) {
                 CellType.STRING -> cell.stringCellValue
-                CellType.NUMERIC -> if(DateUtil.isCellDateFormatted(cell)) {
-                    cell.dateCellValue.toString()
+                CellType.NUMERIC -> if (DateUtil.isCellDateFormatted(cell)) {
+                    val date = cell.dateCellValue
+                    val newDateFormat = SimpleDateFormat("yyyy/MM/dd")
+                    newDateFormat.format(date)
                 } else {
-                    DecimalFormat("0.####").format(cell.numericCellValue)
+                    val numericValue = cell.numericCellValue
+                    if (numericValue % 1 == 0.0) {
+                        numericValue.toInt().toString()
+                    } else {
+                        numericValue.toString()
+                    }
                 }
                 CellType.BOOLEAN -> cell.booleanCellValue.toString()
                 CellType.FORMULA -> cell.cellFormula

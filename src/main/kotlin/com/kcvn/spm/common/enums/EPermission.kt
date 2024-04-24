@@ -43,12 +43,13 @@ enum class EPermission(val value: String) {
     V_ORDER("order.v"),
     I_ORDER("order.i"),
     E_ORDER("order.e"),
+    C_WORK_PLAN_ORDER("order.c"),
 
     //work plan
     V_WORK_PLAN("work_plan.v"),
     E_WORK_PLAN("work_plan.e"),
     AP_WORK_PLAN("work_plan.ap"),
-    C_WORK_PLAN_ORDER("work_plan.c_order"),
+
 
     //production result
     V_PRODUCTION_RESULT("product_result.v"),

@@ -16,7 +16,7 @@ data class TapeEnRoute(
     var id: String? = null,
     var exportType: String? = null,
     var purchaseOrder: String? = null,
-    var itemCode: String? = null,
+    var itemCd: String? = null,
     var unit: String? = null,
     var description: String? = null,
     var spec: String? = null,
@@ -36,7 +36,15 @@ data class TapeEnRoute(
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
     var isDeleted: Boolean? = null,
-    var couponCode: String? = null
+    var couponCode: String? = null,
+    var orderPlacementMonth: Int? = null,
+    var supplierCd: String? = null,
+    var qtyUm: String? = null,
+    var opuPFc: String? = null,
+    var opuP: String? = null,
+    var opDlvDt: OffsetDateTime? = null,
+    var estimatedDate: OffsetDateTime? = null,
+    var estimatedMonth: Int? = null
 ): Serializable {
 
 
@@ -66,11 +74,11 @@ data class TapeEnRoute(
         }
         else if (this.purchaseOrder != o.purchaseOrder)
             return false
-        if (this.itemCode == null) {
-            if (o.itemCode != null)
+        if (this.itemCd == null) {
+            if (o.itemCd != null)
                 return false
         }
-        else if (this.itemCode != o.itemCode)
+        else if (this.itemCd != o.itemCd)
             return false
         if (this.unit == null) {
             if (o.unit != null)
@@ -180,6 +188,54 @@ data class TapeEnRoute(
         }
         else if (this.couponCode != o.couponCode)
             return false
+        if (this.orderPlacementMonth == null) {
+            if (o.orderPlacementMonth != null)
+                return false
+        }
+        else if (this.orderPlacementMonth != o.orderPlacementMonth)
+            return false
+        if (this.supplierCd == null) {
+            if (o.supplierCd != null)
+                return false
+        }
+        else if (this.supplierCd != o.supplierCd)
+            return false
+        if (this.qtyUm == null) {
+            if (o.qtyUm != null)
+                return false
+        }
+        else if (this.qtyUm != o.qtyUm)
+            return false
+        if (this.opuPFc == null) {
+            if (o.opuPFc != null)
+                return false
+        }
+        else if (this.opuPFc != o.opuPFc)
+            return false
+        if (this.opuP == null) {
+            if (o.opuP != null)
+                return false
+        }
+        else if (this.opuP != o.opuP)
+            return false
+        if (this.opDlvDt == null) {
+            if (o.opDlvDt != null)
+                return false
+        }
+        else if (this.opDlvDt != o.opDlvDt)
+            return false
+        if (this.estimatedDate == null) {
+            if (o.estimatedDate != null)
+                return false
+        }
+        else if (this.estimatedDate != o.estimatedDate)
+            return false
+        if (this.estimatedMonth == null) {
+            if (o.estimatedMonth != null)
+                return false
+        }
+        else if (this.estimatedMonth != o.estimatedMonth)
+            return false
         return true
     }
 
@@ -189,7 +245,7 @@ data class TapeEnRoute(
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.exportType == null) 0 else this.exportType.hashCode())
         result = prime * result + (if (this.purchaseOrder == null) 0 else this.purchaseOrder.hashCode())
-        result = prime * result + (if (this.itemCode == null) 0 else this.itemCode.hashCode())
+        result = prime * result + (if (this.itemCd == null) 0 else this.itemCd.hashCode())
         result = prime * result + (if (this.unit == null) 0 else this.unit.hashCode())
         result = prime * result + (if (this.description == null) 0 else this.description.hashCode())
         result = prime * result + (if (this.spec == null) 0 else this.spec.hashCode())
@@ -208,6 +264,14 @@ data class TapeEnRoute(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         result = prime * result + (if (this.couponCode == null) 0 else this.couponCode.hashCode())
+        result = prime * result + (if (this.orderPlacementMonth == null) 0 else this.orderPlacementMonth.hashCode())
+        result = prime * result + (if (this.supplierCd == null) 0 else this.supplierCd.hashCode())
+        result = prime * result + (if (this.qtyUm == null) 0 else this.qtyUm.hashCode())
+        result = prime * result + (if (this.opuPFc == null) 0 else this.opuPFc.hashCode())
+        result = prime * result + (if (this.opuP == null) 0 else this.opuP.hashCode())
+        result = prime * result + (if (this.opDlvDt == null) 0 else this.opDlvDt.hashCode())
+        result = prime * result + (if (this.estimatedDate == null) 0 else this.estimatedDate.hashCode())
+        result = prime * result + (if (this.estimatedMonth == null) 0 else this.estimatedMonth.hashCode())
         return result
     }
 
@@ -217,7 +281,7 @@ data class TapeEnRoute(
         sb.append(id)
         sb.append(", ").append(exportType)
         sb.append(", ").append(purchaseOrder)
-        sb.append(", ").append(itemCode)
+        sb.append(", ").append(itemCd)
         sb.append(", ").append(unit)
         sb.append(", ").append(description)
         sb.append(", ").append(spec)
@@ -236,6 +300,14 @@ data class TapeEnRoute(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
         sb.append(", ").append(couponCode)
+        sb.append(", ").append(orderPlacementMonth)
+        sb.append(", ").append(supplierCd)
+        sb.append(", ").append(qtyUm)
+        sb.append(", ").append(opuPFc)
+        sb.append(", ").append(opuP)
+        sb.append(", ").append(opDlvDt)
+        sb.append(", ").append(estimatedDate)
+        sb.append(", ").append(estimatedMonth)
 
         sb.append(")")
         return sb.toString()

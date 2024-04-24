@@ -102,6 +102,8 @@ class DateTimeFormat {
         const val yyyy_MM_dd_HH_mm_ss = "yyyy_MM_dd_HH_mm_ss"
         const val MM_yyyy = "MM/yyyy"
         const val M_dd_yyyy = "M/dd/yyyy"
+        const val yyyy_MM_dd = "yyyy/MM/dd"
+
 
     }
 }
@@ -112,6 +114,14 @@ class Color {
         const val YELLOW = "1"
         const val ORANGE = "2"
         const val PINK = "3"
+    }
+}
+
+class ExportType {
+    companion object {
+        const val SHIPBACK = "Ship back"
+        const val SIPBACK = "Sip back"
+        const val DIRECT = "Direct"
     }
 }
 

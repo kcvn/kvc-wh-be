@@ -108,6 +108,8 @@ class ExternalQualityReportService(
         }
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
+            val dateFormats = listOf(DateTimeFormat.M_dd_yyyy, DateTimeFormat.yyyy_MM_dd, DateTimeFormat.dd_MM_yyyy)
+
             val tapeEnRouteList = mutableListOf<TapeEnRoute>()
             val sheet = workbook.getSheetAt(0)
             val rowIndex = 1
@@ -182,8 +184,14 @@ class ExternalQualityReportService(
                 val opuPFc = ExcelHelper.getCellValue(row, 9)
                 val opuP = ExcelHelper.getCellValue(row, 10)
                 val opDlvDtCheck = ExcelHelper.getCellValue(row, 11,DateTimeFormat.M_dd_yyyy)
-                val isDateFormatOpDlvDt = DateTimeHelper.isFormatdate(opDlvDtCheck)
-                val opDlvDt =if(!isDateFormatOpDlvDt) DateTimeHelper.convertStringToOffSetDateTime(opDlvDtCheck,DateTimeFormat.M_dd_yyyy) else null
+
+                val isDateFormatOpDlvDt = DateTimeHelper.isDateFormatDateCustom(opDlvDtCheck)
+
+                val opDlvDt = if (isDateFormatOpDlvDt) {
+                     DateTimeHelper.convertStringToOffSetDateTime(opDlvDtCheck, dateFormats)
+                } else {
+                    null
+                }
 
                 val transmit = ExcelHelper.getCellValue(row, 12)
 
@@ -199,21 +207,26 @@ class ExternalQualityReportService(
                     deliveredQuantity = StringHelper.removeDecimalSuffix(deliveredQuantityCheck).toInt()
                 }
 
-                val responseDateCheck = ExcelHelper.getCellValue(row, 14,DateTimeFormat.M_dd_yyyy)
-                val isDateFormat = DateTimeHelper.isFormatdate(responseDateCheck)
-                if(!isDateFormat && deliveredQuantityCheck.isNotEmpty()){
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate.format"))
+                val responseDateCheck = ExcelHelper.getCellValue(row, 14, DateTimeFormat.M_dd_yyyy)
+                val isDateFormat = DateTimeHelper.isDateFormatDateCustom(responseDateCheck)
 
+                if (!isDateFormat && responseDateCheck.isNotEmpty()) {
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate.format"))
                 }
-                val responseDate = if(deliveredQuantityCheck.isNotEmpty() && isDateFormat) DateTimeHelper.convertStringToOffSetDateTime(responseDateCheck,DateTimeFormat.M_dd_yyyy) else null
+
+                val responseDate = if(responseDateCheck.isNotEmpty() && isDateFormat) DateTimeHelper.convertStringToOffSetDateTime(responseDateCheck,dateFormats) else null
 
                 if(responseDateCheck.isEmpty()){
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate"))
                 }
 
-                val estimatedDateCheck = ExcelHelper.getCellValue(row, 15,DateTimeFormat.M_dd_yyyy)
-                val isDateFormatEstimatedDate = DateTimeHelper.isFormatdate(estimatedDateCheck)
-                val estimatedDate =if(!isDateFormatEstimatedDate) DateTimeHelper.convertStringToOffSetDateTime(opDlvDtCheck,DateTimeFormat.M_dd_yyyy) else null
+                val estimatedDateCheck = ExcelHelper.getCellValue(row, 15, DateTimeFormat.M_dd_yyyy)
+                val isDateFormatEstimatedDate = DateTimeHelper.isFormatDate(estimatedDateCheck, DateTimeFormat.M_dd_yyyy)
+                val estimatedDate = if (!isDateFormatEstimatedDate) {
+                    DateTimeHelper.convertStringToOffSetDateTime(estimatedDateCheck, dateFormats)
+                } else {
+                    null
+                }
 
                 val estimatedMonthCheck =  ExcelHelper.getCellValue(row, 16)
                 val estimatedMonth = if(estimatedMonthCheck.isNotEmpty()) {
@@ -567,6 +580,9 @@ class ExternalQualityReportService(
     //region GET LIST
 
     fun getDataReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): ExternalQualityReportResponse {
+        if(request.inventoryClosingDate == null){
+            return  ExternalQualityReportResponse()
+        }
         val inventoryClosingDate = DateTimeHelper.toTimeZone7(request.inventoryClosingDate)
         val startDate = DateTimeHelper.toTimeZone7(request.startDate)
         val endDate = DateTimeHelper.toTimeZone7(request.endDate)

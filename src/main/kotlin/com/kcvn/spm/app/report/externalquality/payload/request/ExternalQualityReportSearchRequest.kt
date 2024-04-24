@@ -8,5 +8,5 @@ data class ExternalQualityReportSearchRequest(
     var mold: String? = null,
     var startDate: OffsetDateTime? = null,
     var endDate: OffsetDateTime? = null,
-    var inventoryClosingDate: OffsetDateTime
+    var inventoryClosingDate: OffsetDateTime? = null
 )

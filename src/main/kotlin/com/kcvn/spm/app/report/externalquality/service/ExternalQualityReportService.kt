@@ -108,6 +108,8 @@ class ExternalQualityReportService(
         }
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
+            val dateFormats = listOf(DateTimeFormat.M_dd_yyyy, DateTimeFormat.yyyy_MM_dd, DateTimeFormat.dd_MM_yyyy)
+
             val tapeEnRouteList = mutableListOf<TapeEnRoute>()
             val sheet = workbook.getSheetAt(0)
             val rowIndex = 1
@@ -182,8 +184,14 @@ class ExternalQualityReportService(
                 val opuPFc = ExcelHelper.getCellValue(row, 9)
                 val opuP = ExcelHelper.getCellValue(row, 10)
                 val opDlvDtCheck = ExcelHelper.getCellValue(row, 11,DateTimeFormat.M_dd_yyyy)
-                val isDateFormatOpDlvDt = DateTimeHelper.isFormatdate(opDlvDtCheck)
-                val opDlvDt =if(!isDateFormatOpDlvDt) DateTimeHelper.convertStringToOffSetDateTime(opDlvDtCheck,DateTimeFormat.M_dd_yyyy) else null
+
+                val isDateFormatOpDlvDt = DateTimeHelper.isDateFormatDateCustom(opDlvDtCheck)
+
+                val opDlvDt = if (isDateFormatOpDlvDt) {
+                     DateTimeHelper.convertStringToOffSetDateTime(opDlvDtCheck, dateFormats)
+                } else {
+                    null
+                }
 
                 val transmit = ExcelHelper.getCellValue(row, 12)
 
@@ -199,21 +207,26 @@ class ExternalQualityReportService(
                     deliveredQuantity = StringHelper.removeDecimalSuffix(deliveredQuantityCheck).toInt()
                 }
 
-                val responseDateCheck = ExcelHelper.getCellValue(row, 14,DateTimeFormat.M_dd_yyyy)
-                val isDateFormat = DateTimeHelper.isFormatdate(responseDateCheck)
-                if(!isDateFormat && deliveredQuantityCheck.isNotEmpty()){
-                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate.format"))
+                val responseDateCheck = ExcelHelper.getCellValue(row, 14, DateTimeFormat.M_dd_yyyy)
+                val isDateFormat = DateTimeHelper.isDateFormatDateCustom(responseDateCheck)
 
+                if (!isDateFormat && responseDateCheck.isNotEmpty()) {
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate.format"))
                 }
-                val responseDate = if(deliveredQuantityCheck.isNotEmpty() && isDateFormat) DateTimeHelper.convertStringToOffSetDateTime(responseDateCheck,DateTimeFormat.M_dd_yyyy) else null
+
+                val responseDate = if(responseDateCheck.isNotEmpty() && isDateFormat) DateTimeHelper.convertStringToOffSetDateTime(responseDateCheck,dateFormats) else null
 
                 if(responseDateCheck.isEmpty()){
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.responseDate"))
                 }
 
-                val estimatedDateCheck = ExcelHelper.getCellValue(row, 15,DateTimeFormat.M_dd_yyyy)
-                val isDateFormatEstimatedDate = DateTimeHelper.isFormatdate(estimatedDateCheck)
-                val estimatedDate =if(!isDateFormatEstimatedDate) DateTimeHelper.convertStringToOffSetDateTime(opDlvDtCheck,DateTimeFormat.M_dd_yyyy) else null
+                val estimatedDateCheck = ExcelHelper.getCellValue(row, 15, DateTimeFormat.M_dd_yyyy)
+                val isDateFormatEstimatedDate = DateTimeHelper.isFormatDate(estimatedDateCheck, DateTimeFormat.M_dd_yyyy)
+                val estimatedDate = if (!isDateFormatEstimatedDate) {
+                    DateTimeHelper.convertStringToOffSetDateTime(estimatedDateCheck, dateFormats)
+                } else {
+                    null
+                }
 
                 val estimatedMonthCheck =  ExcelHelper.getCellValue(row, 16)
                 val estimatedMonth = if(estimatedMonthCheck.isNotEmpty()) {
@@ -567,6 +580,9 @@ class ExternalQualityReportService(
     //region GET LIST
 
     fun getDataReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): ExternalQualityReportResponse {
+        if(request.inventoryClosingDate == null){
+            return  ExternalQualityReportResponse()
+        }
         val inventoryClosingDate = DateTimeHelper.toTimeZone7(request.inventoryClosingDate)
         val startDate = DateTimeHelper.toTimeZone7(request.startDate)
         val endDate = DateTimeHelper.toTimeZone7(request.endDate)
@@ -699,6 +715,8 @@ class ExternalQualityReportService(
         val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.sumWorkResultQuantity)
         val accumulatedOrderQuantityCalendars = calculateAccumulation(orderQuantityCalendars)
         accumulatedOrderQuantity.quantityByCalendars = accumulatedOrderQuantityCalendars
+        accumulatedOrderQuantity.inventory =   externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
+
         detailData.add(accumulatedOrderQuantity)
 
         //PRODUCTION_RESULT
@@ -721,7 +739,7 @@ class ExternalQualityReportService(
 
         //DIFFERENCE_1
         val difference1 = ExternalQualityDetailModel("DIFFERENCE_1", ExternalReportDetailType.DIFFERENCE_1)
-        difference1.quantityByCalendars = calculateDifferenceCalendars(productionResultCalendars,orderQuantityCalendars)
+        difference1.quantityByCalendars = calculateDifferenceCalendars(accumulatedProductionResultCalendars,accumulatedOrderQuantityCalendars)
         detailData.add(difference1)
 
         //DIFFERENCE_2
@@ -782,7 +800,6 @@ class ExternalQualityReportService(
         //ACCUMULATED_PLANNED_TAPE_SET
         val accumulatedPlannedTapeSet = ExternalQualityDetailModel("ACCUMULATED_PLANNED_TAPE_SET", ExternalReportDetailType.ACCUMULATED_PLANNED_TAPE_SET)
         accumulatedPlannedTapeSet.quantityByCalendars = calculateAccumulation(plannedTapeSet.quantityByCalendars,goodQualityTapeInventorySet)
-            accumulatedPlannedTapeSet.inventory =   externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
         detailData.add(accumulatedPlannedTapeSet)
 
         //PLANNED_TAPE_BLOCK
@@ -903,28 +920,25 @@ class ExternalQualityReportService(
 
             val valueNumberOrder = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
             shippingData.add(KeyValueResponse("number_order",valueNumberOrder))
-
             val valueNumberWorkResult = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.ACCUMULATED_PRODUCTION_RESULT)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
             shippingData.add(KeyValueResponse("number_work_result",valueNumberWorkResult))
-
             shippingData.add(KeyValueResponse("quantity_remaining_title",ExternalReportShippingType.QUANTITY_REMAINING_TITLE))
-
 
             val exchangeRateDifferences = externalQualityReportModel.details.find { it.title.equals(ExternalReportDetailType.DIFFERENCE_1)  }?.quantityByCalendars?.find { x-> x.key.equals(valueReportDate) }?.value
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
             addKeyValueEmpty(shippingData,1)
             shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
-            shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity1.toString()))
-            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
             shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity1.toString()))
+            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
+            shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity1.toString()))
             addKeyValueEmpty(shippingData,2)
 
             if(externalQualityReportModel.exportType?.contains(",") == true){
-                shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
-                shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity2.toString()))
-                shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
-                shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity2.toString()))
-                addKeyValueEmpty(shippingData,2)
+            shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
+            shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity2.toString()))
+            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
+            shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity2.toString()))
+            addKeyValueEmpty(shippingData,2)
             }
 
             externalQualityReportModel.shippingData = shippingData

@@ -109,6 +109,12 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
             .fetchInto(String::class.java)
     }
 
+    fun getProductList(): List<Product> {
+        return context.select(PRODUCT)
+            .from(PRODUCT)
+            .where(PRODUCT.IS_DELETED.eq(false))
+            .fetchInto(Product::class.java)
+    }
 
     fun add(data: Product) {
         context.transaction { configuration ->

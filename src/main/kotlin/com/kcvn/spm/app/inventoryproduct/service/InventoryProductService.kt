@@ -253,7 +253,7 @@ class InventoryProductService(
                     val processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
                         cellProcessCode.numericCellValue.toInt().toString()
                     else {
-                        ExcelHelper.getCellValue(row, 0)
+                        ExcelHelper.getCellValue(row, 2)
                     }
 
                     val cellLayerCode = row.getCell(6)
@@ -282,7 +282,7 @@ class InventoryProductService(
                             productionAreaName = ExcelHelper.getCellValue(row, 12),
                             processCount = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 13)).toIntOrNull(),
                             seidenRepNumber = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 16)).toIntOrNull(),
-
+                            processName =  ExcelHelper.getCellValue(row, 3),
                             //end
                             processProcedureStructureId = filterCheckProcessProcedure.id,
                             inventoryDate = date,
@@ -348,7 +348,7 @@ class InventoryProductService(
                 processCode = ExcelHelper.getCellValue(x, 2),
                 processName = ExcelHelper.getCellValue(x, 3),
                 code = if (ExcelHelper.getCellValue(x, 5).toBigDecimalOrNull() != null) {
-                    ExcelHelper.getCellValue(x, 5).toBigDecimalOrNull()?.toInt().toString()
+                    ExcelHelper.getCellValue(x, 5).toBigDecimalOrNull()?.toLong().toString()
                 } else {
                     ExcelHelper.getCellValue(x, 5)
                 },
@@ -435,8 +435,9 @@ class InventoryProductService(
             item.cellStyles.find { x -> x.index == 3 }?.let { style ->
                 ExcelHelper.setCellValue(dataRow, 3, style.cellStyle, item.processName)
             }
+
             item.cellStyles.find { x -> x.index == 5 }?.let { style ->
-                ExcelHelper.setCellValue(dataRow, 5, style.cellStyle, item.code)
+                ExcelHelper.setCellValue(dataRow, 5, style.cellStyle, item.code?.toBigDecimalOrNull()?.toLong().toString())
             }
             item.cellStyles.find { x -> x.index == 6 }?.let { style ->
                 ExcelHelper.setCellValue(dataRow, 6, style.cellStyle,

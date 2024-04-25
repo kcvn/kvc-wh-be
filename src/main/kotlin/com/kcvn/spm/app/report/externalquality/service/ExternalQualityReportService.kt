@@ -243,7 +243,7 @@ class ExternalQualityReportService(
                 } else {
                     null
                 }
-                if (purchaseOrder.isEmpty() && itemCd.isEmpty() && spec.isEmpty() && orderedQuantityCheck.isEmpty() && responseDateCheck.isEmpty()) {
+                if (purchaseOrder.isEmpty() && itemCd.isEmpty() && spec.isEmpty() && orderedQuantityCheck.isEmpty() && responseDateCheck.isEmpty() && estimatedMonthCheck.isEmpty() && deliveredQuantityCheck.isEmpty() && opDlvDtCheck.isEmpty() && transmit.isEmpty() && estimatedDateCheck.isEmpty() && qtyUm.isEmpty() && opuPFc.isEmpty() && opuP.isEmpty()) {
                     continue
                 }
 
@@ -394,7 +394,7 @@ class ExternalQualityReportService(
                     if(tapeNGCheck.isNotEmpty())
                     tapeNG = StringHelper.removeDecimalSuffix(tapeNGCheck).toInt()
                 }
-                if (exportType.isEmpty()  || productName.isEmpty()) {
+                if (exportType.isEmpty()  && productName.isEmpty() && productNameShortCut.isEmpty() && tapeInWareHouseCheck.isEmpty() && tapeInDepartmentCheck.isEmpty() && tapeNGCheck.isEmpty()){
                     continue
                 }
                 total++

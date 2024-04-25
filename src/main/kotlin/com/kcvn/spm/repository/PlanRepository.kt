@@ -1,10 +1,12 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.plan.payload.model.PlanProductCreateModel
+import com.kcvn.spm.app.plan.payload.model.PlanTempModel
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Plan
 import com.kcvn.spm.model.tables.pojos.PlanDetail
+import com.kcvn.spm.model.tables.pojos.PlanDetailTemp
 import com.kcvn.spm.model.tables.pojos.PlanProcess
 import com.kcvn.spm.model.tables.pojos.PlanProcessTemp
 import com.kcvn.spm.model.tables.pojos.PlanProduct
@@ -161,9 +163,11 @@ class PlanRepository(private val context: DSLContext) {
                             PLAN_DETAIL_TEMP.PLAN_DATE,
                             PLAN_DETAIL_TEMP.SHEET_QUANTITY,
                             PLAN_DETAIL_TEMP.BLOCK_QUANTITY,
+                            PLAN_DETAIL_TEMP.ORDER_DATE,
+                            PLAN_DETAIL_TEMP.HAS_INVENTORY,
                             PLAN_DETAIL_TEMP.CREATED_BY
                         ).values(
-                            x.planId, x.planProductId, x.id, m.title, m.planDate, m.sheetQuantity, m.blockQuantity, createdBy
+                            x.planId, x.planProductId, x.id, m.title, m.planDate, m.sheetQuantity, m.blockQuantity, m.orderDate, m.hasInventory, createdBy
                         )
                     }
                     query
@@ -283,5 +287,44 @@ class PlanRepository(private val context: DSLContext) {
                 .where(PLAN.ID.eq(id))
                 .execute()
         }
+    }
+
+    fun getDataForRePlan(month: Int, year: Int): PlanTempModel? {
+        val response = PlanTempModel()
+        response.plan = context.selectFrom(PLAN_TEMP)
+            .where(PLAN_TEMP.YEAR.eq(year).and(PLAN_TEMP.MONTH.eq(month)).and(PLAN_TEMP.IS_DELETED.eq(false)))
+            .fetchInto(PlanTemp::class.java)
+            .firstOrNull()
+        if (response.plan != null) {
+            response.planProducts = context.selectFrom(PLAN_PRODUCT_TEMP)
+                .where(PLAN_PRODUCT_TEMP.IS_DELETED.eq(false))
+                .fetchInto(PlanProductTemp::class.java)
+
+            response.planProcesses = context.selectFrom(PLAN_PROCESS_TEMP)
+                .where(PLAN_PROCESS_TEMP.IS_DELETED.eq(false))
+                .fetchInto(PlanProcessTemp::class.java)
+
+            response.planDetails = context.selectFrom(PLAN_DETAIL_TEMP)
+                .where(PLAN_DETAIL_TEMP.IS_DELETED.eq(false))
+                .fetchInto(PlanDetailTemp::class.java)
+        } else {
+            response.plan = context.selectFrom(PLAN)
+                .where(PLAN.YEAR.eq(year).and(PLAN.MONTH.eq(month)).and(PLAN.IS_DELETED.eq(false)))
+                .fetchInto(PlanTemp::class.java)
+                .firstOrNull()
+
+            response.planProducts = context.selectFrom(PLAN_PRODUCT)
+                .where(PLAN_PRODUCT.IS_DELETED.eq(false))
+                .fetchInto(PlanProductTemp::class.java)
+
+            response.planProcesses = context.selectFrom(PLAN_PROCESS)
+                .where(PLAN_PROCESS.IS_DELETED.eq(false))
+                .fetchInto(PlanProcessTemp::class.java)
+
+            response.planDetails = context.selectFrom(PLAN_DETAIL)
+                .where(PLAN_DETAIL.IS_DELETED.eq(false))
+                .fetchInto(PlanDetailTemp::class.java)
+        }
+        return response
     }
 }

@@ -7,6 +7,7 @@ import com.kcvn.spm.app.plan.payload.model.PlanChildrenProcessCreateModel
 import com.kcvn.spm.app.plan.payload.model.PlanDetailCreateModel
 import com.kcvn.spm.app.plan.payload.model.PlanProcessCreateModel
 import com.kcvn.spm.app.plan.payload.model.PlanProductCreateModel
+import com.kcvn.spm.app.plan.payload.model.PlanTempModel
 import com.kcvn.spm.app.plan.payload.model.PlanValidateModel
 import com.kcvn.spm.app.plan.payload.request.CheckInventoryRequest
 import com.kcvn.spm.app.plan.payload.request.CreatePlanRequest
@@ -32,14 +33,21 @@ import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.pojos.EquipmentProductivity
 import com.kcvn.spm.model.tables.pojos.OrderInfo
 import com.kcvn.spm.model.tables.pojos.PlanCalendarConfig
+import com.kcvn.spm.model.tables.pojos.PlanDetailTemp
+import com.kcvn.spm.model.tables.pojos.PlanProcessTemp
+import com.kcvn.spm.model.tables.pojos.PlanProductTemp
 import com.kcvn.spm.model.tables.pojos.PlanTemp
 import com.kcvn.spm.model.tables.pojos.Product
+import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.repository.CompletionRateProcessProductRepository
 import com.kcvn.spm.repository.EquipmentProductivityRepository
 import com.kcvn.spm.repository.HolidaysCalenderRepository
 import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.PlanCalendarConfigRepository
+import com.kcvn.spm.repository.PlanDetailRepository
+import com.kcvn.spm.repository.PlanProcessRepository
+import com.kcvn.spm.repository.PlanProductRepository
 import com.kcvn.spm.repository.PlanRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
@@ -69,6 +77,9 @@ class CreatePlanService(
     private val equipmentProductivityRep: EquipmentProductivityRepository,
     private val systemLockRep: SystemLockRepository,
     private val planRep: PlanRepository,
+    private val planProductRep: PlanProductRepository,
+    private val planProcessRep: PlanProcessRepository,
+    private val planDetailRep: PlanDetailRepository,
     private val planCalendarConfigRep: PlanCalendarConfigRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val workResultRep: WorkResultRepository
@@ -198,17 +209,21 @@ class CreatePlanService(
                 if (request.inventoryDate == null) {
                     createPlanNoInventory(request, planCalendarConfig, orderInfo, productInfo, productProcesses, completionRateInfo, equipmentInfo, holidays)
                 } else {
-//                    val inventories = inventoryProductRep.getInventoryForCreatePlan(productNames, request.inventoryDate!!)
-//                    val orderInfoFilter = orderInfo.filter { x ->
-//                        (x.quantity ?: 0) > 0 && (x.orderDate!!.isEqual(request.inventoryDate) || x.orderDate!!.isAfter(request.inventoryDate) )
-//                    }
-//                    if (request.replan == true) {
-//                        val workResults = workResultRep.getForPlan(startDate, request.inventoryDate!!.plusDays(-1), productNames)
-//
-//                    } else {
-//
-//                    }
-                    return BaseResponse(message = "Chức năng chưa được xử lý")
+                    val inventories = inventoryProductRep.getInventoryForCreatePlan(productNames, request.inventoryDate!!)
+                    val orderInfoFilter = orderInfo.filter { x ->
+                        x.orderDate!!.isEqual(request.inventoryDate) || x.orderDate!!.isAfter(request.inventoryDate)
+                    }
+                    val planProductData = calculatePlanProductWithInventory(
+                        orderInfoFilter, productInfo, productProcesses,
+                        completionRateInfo, equipmentInfo, inventories, holidays
+                    )
+                    val planDataTemp = planRep.getDataForRePlan(month, year)
+
+                    if (request.replan == true) {
+                        createPlanWithInventoryHasRePlan(request, planCalendarConfig, planProductData, planDataTemp)
+                    } else {
+                        createPlanWithInventoryNoRePlan(request, planCalendarConfig, planProductData, planDataTemp)
+                    }
                 }
                 return BaseResponse(message = "Tạo kế hoạch thành công")
             }
@@ -272,7 +287,7 @@ class CreatePlanService(
     ) {
         val productGroupByDates = sortProduct(orderInfo, productInfo, listOf(), productProcesses)
         val planProducts = mutableListOf<PlanProductCreateModel>()
-        val endDate = orderInfo.sortedByDescending { x -> x.orderDate }.first().orderDate!!
+
         var equipmentUsedInfoByDate = mutableListOf<Pair<OffsetDateTime, EquipmentProductivity>>()
         for (iProdByDate in productGroupByDates) {
             val orders = iProdByDate.second
@@ -312,7 +327,7 @@ class CreatePlanService(
                 var count = 1
                 while (count <= (product.layerCount ?: 0)) {
                     val planCalculator = calculatePlan(
-                        processSource!!, completionRateSource!!, planDetailSource, completionRates,
+                        iOrder.orderDate!!, processSource!!, completionRateSource!!, planDetailSource, completionRates,
                         parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                         childrenProcesses, product, equipmentInfo, equipmentUsedInfoByDate, holidays
                     )
@@ -347,7 +362,7 @@ class CreatePlanService(
                     if (processOfNextLayer != null) {
                         currentLayerCode = processOfNextLayer.layerCode?.toIntOrNull() ?: 0
                         val planCalculator = calculatePlan(
-                            processSource, completionRateSource, planDetailSource, completionRates,
+                            iOrder.orderDate!!, processSource, completionRateSource, planDetailSource, completionRates,
                             parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                             childrenProcesses, product, equipmentInfo, equipmentUsedInfoByDate, holidays
                         )
@@ -367,10 +382,12 @@ class CreatePlanService(
 
         val startDate = planProductMappings.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten()
             .sortedBy { x -> x.planDate }.first().planDate!!
+        val endDate = orderInfo.sortedByDescending { x -> x.orderDate }.first().orderDate!!
         planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate), planProductMappings)
     }
 
     private fun calculatePlan(
+        orderDate: OffsetDateTime,
         processSource: ProductProcessModel,
         completionRateSource: CompletionRateProcessProduct,
         planDetailSource: MutableList<PlanDetailCreateModel>,
@@ -398,15 +415,8 @@ class CreatePlanService(
 
             val planProcess = generatePlanProcessModel(iParentProcess, completionRate.rate)
             currentPlanDetail = generatePlanDetailModel(
-                currentPlanDetail,
-                currentProcessUnit,
-                iParentProcess,
-                diffDay,
-                product,
-                currentCompletionRate!!,
-                eqConfig,
-                equipmentUsedInfoByDate,
-                holidays
+                orderDate, currentPlanDetail, currentProcessUnit, iParentProcess, diffDay,
+                product, currentCompletionRate!!, eqConfig, equipmentUsedInfoByDate, holidays
             )
             planProcess.planDetails = currentPlanDetail
             planProcess.childrenProcesses = childrenProcesses.filter { x -> x.processInventoryCode == iParentProcess.processCode }
@@ -438,9 +448,274 @@ class CreatePlanService(
 
     //region CREATE_PLAN_WITH_INVENTORY
 
-    private fun createPlanWithInventory(
+    private fun createPlanWithInventoryHasRePlan(
         request: CreatePlanRequest,
         planCalendarConfig: PlanCalendarConfig,
+        planProductData: MutableList<PlanProductCreateModel>,
+        planDataTemp: PlanTempModel?
+    ) {
+        val data = planProductData.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { x -> x.planDate }
+        val startDate = data.first().planDate!!
+        val endDate = data.last().planDate!!
+
+        if (planDataTemp != null) {
+            val planProducts = mutableListOf<PlanProductTemp>()
+            val planProcesses = mutableListOf<PlanProcessTemp>()
+            val planDetails = mutableListOf<PlanDetailTemp>()
+            if (request.productNames.isEmpty()) {
+                planDetails.addAll(planDataTemp.planDetails.filter { x -> x.planDate!!.isBefore(request.inventoryDate!!) })
+                planProcesses.addAll(planDataTemp.planProcesses.filter { x -> planDetails.any { m -> m.planProcessId == x.id } })
+                planProducts.addAll(planDataTemp.planProducts.filter { x -> planProcesses.any { m -> m.planProductId == x.id } })
+            } else {
+                var products = planDataTemp.planProducts.filter { x -> !request.productNames.any { m -> m == x.productName } }
+                var processes = planDataTemp.planProcesses.filter { x -> products.any { m -> m.id == x.planProductId } }
+                var details = planDataTemp.planDetails.filter { x -> products.any { m -> m.id == x.planProductId } }
+
+                planProducts.addAll(products)
+                planProcesses.addAll(processes)
+                planDetails.addAll(details)
+
+                products = planDataTemp.planProducts.filter { x -> request.productNames.any { m -> m == x.productName } }
+                processes = planDataTemp.planProcesses.filter { x -> products.any { m -> m.id == x.planProductId } }
+                details = planDataTemp.planDetails.filter { x -> products.any { m -> m.id == x.planProductId } && x.planDate!!.isBefore(request.inventoryDate!!) }
+
+                planProducts.addAll(products)
+                planProcesses.addAll(processes)
+                planDetails.addAll(details)
+            }
+
+            val productNames = planProducts.mapNotNull { it.productName }
+            val workResults = workResultRep.getForPlan(startDate, request.inventoryDate!!.plusDays(-1), productNames)
+
+            for (item in planProductData) {
+                val planProduct = planProducts.find { x -> x.productName == item.productName }
+                if (planProduct == null) continue
+
+                val wrs = workResults.filter { x -> x.itemName == item.productName }
+                val parentProcesses = planProcesses.filter { x -> x.planProductId == planProduct.id && x.parentId.isNullOrEmpty() }
+                val childrenProcesses = planProcesses.filter { x -> x.planProductId == planProduct.id && !x.parentId.isNullOrEmpty() }
+                val details = planDetails.filter { x -> x.planProductId == planProduct.id }
+
+                for (iProcess in parentProcesses) {
+                    if (item.planProcesses.any { it.processCode == iProcess.processCode && it.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull() }) {
+                        item.planProcesses = item.planProcesses.map { model ->
+                            if (model.processCode == iProcess.processCode && model.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull()) {
+                                val detailCreateModels = details.filter { it.planProcessId == iProcess.id }.map { x ->
+                                    val wr = wrs.find {
+                                        it.processCode == model.processCode && it.layerCode?.toIntOrNull() == model.layerCode?.toIntOrNull()
+                                            && it.summaryResultDate!!.isEqual(x.planDate)
+                                    }
+                                    if (wr == null) {
+                                        PlanDetailCreateModel(
+                                            title = x.title,
+                                            planDate = x.planDate,
+                                            sheetQuantity = x.sheetQuantity,
+                                            blockQuantity = x.blockQuantity,
+                                            orderDate = x.orderDate,
+                                            hasInventory = x.hasInventory
+                                        )
+                                    } else {
+                                        PlanDetailCreateModel(
+                                            title = x.title,
+                                            planDate = x.planDate,
+                                            sheetQuantity = wr.goodSheetQuantity,
+                                            blockQuantity = wr.goodTapeQuantity,
+                                            orderDate = x.orderDate,
+                                            hasInventory = x.hasInventory
+                                        )
+                                    }
+                                }
+                                model.planDetails.addAll(detailCreateModels)
+                            }
+                            model
+                        }.toMutableList()
+                    } else {
+                        val processCreateModel = PlanProcessCreateModel(
+                            processCode = iProcess.processCode,
+                            processName = iProcess.processName,
+                            processConvertCode = iProcess.processConvertCode,
+                            layerCode = iProcess.layerCode,
+                            completionRate = iProcess.completionRate,
+                            inventory = iProcess.inventory,
+                            unit = iProcess.unit,
+                            processSequence = iProcess.processSequence,
+                            processNameJp = iProcess.processNameJp,
+                            processGroup = iProcess.processGroup,
+                            processStatisticCode = iProcess.processStatisticCode,
+                            childrenProcesses = childrenProcesses.filter { it.parentId == iProcess.id }.map { x ->
+                                PlanChildrenProcessCreateModel(
+                                    processCode = x.processCode,
+                                    processName = x.processName,
+                                    processConvertCode = x.processConvertCode,
+                                    layerCode = x.layerCode,
+                                    completionRate = x.completionRate,
+                                    inventory = x.inventory,
+                                    unit = x.unit,
+                                    processSequence = x.processSequence,
+                                    processNameJp = x.processNameJp,
+                                    processGroup = x.processGroup,
+                                    processStatisticCode = x.processStatisticCode
+                                )
+                            }.toMutableList(),
+                            planDetails = details.filter { it.planProcessId == iProcess.id }.map { x ->
+                                val wr = wrs.find {
+                                    it.processCode == iProcess.processCode && it.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull()
+                                        && it.summaryResultDate!!.isEqual(x.planDate)
+                                }
+                                if (wr == null) {
+                                    PlanDetailCreateModel(
+                                        title = x.title,
+                                        planDate = x.planDate,
+                                        sheetQuantity = x.sheetQuantity,
+                                        blockQuantity = x.blockQuantity,
+                                        orderDate = x.orderDate,
+                                        hasInventory = x.hasInventory
+                                    )
+                                } else {
+                                    PlanDetailCreateModel(
+                                        title = x.title,
+                                        planDate = x.planDate,
+                                        sheetQuantity = wr.goodSheetQuantity,
+                                        blockQuantity = wr.goodTapeQuantity,
+                                        orderDate = x.orderDate,
+                                        hasInventory = x.hasInventory
+                                    )
+                                }
+                            }.toMutableList()
+                        )
+                        item.planProcesses.add(processCreateModel)
+                    }
+                }
+            }
+
+            for (iPlanProduct in planProducts.filter { x -> !planProductData.any { it.productName == x.productName } }) {
+                val wrs = workResults.filter { x -> x.itemName == iPlanProduct.productName }
+                val processes = planProcesses.filter { x -> x.planProductId == iPlanProduct.id }
+                val details = planDetails.filter { x -> x.planProductId == iPlanProduct.id }
+                planProductData.add(generatePlanProductModel(iPlanProduct, processes, details, wrs))
+            }
+        }
+
+        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate), planProductData)
+    }
+
+    private fun createPlanWithInventoryNoRePlan(
+        request: CreatePlanRequest,
+        planCalendarConfig: PlanCalendarConfig,
+        planProductData: MutableList<PlanProductCreateModel>,
+        planDataTemp: PlanTempModel?
+    ) {
+        val data = planProductData.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { x -> x.planDate }
+        val startDate = data.first().planDate!!
+        val endDate = data.last().planDate!!
+
+        if (planDataTemp != null) {
+            val planProducts = mutableListOf<PlanProductTemp>()
+            val planProcesses = mutableListOf<PlanProcessTemp>()
+            val planDetails = mutableListOf<PlanDetailTemp>()
+            if (request.productNames.isEmpty()) {
+                planDetails.addAll(planDataTemp.planDetails.filter { x -> x.planDate!!.isBefore(request.inventoryDate!!) })
+                planProcesses.addAll(planDataTemp.planProcesses.filter { x -> planDetails.any { m -> m.planProcessId == x.id } })
+                planProducts.addAll(planDataTemp.planProducts.filter { x -> planProcesses.any { m -> m.planProductId == x.id } })
+            } else {
+                var products = planDataTemp.planProducts.filter { x -> !request.productNames.any { m -> m == x.productName } }
+                var processes = planDataTemp.planProcesses.filter { x -> products.any { m -> m.id == x.planProductId } }
+                var details = planDataTemp.planDetails.filter { x -> products.any { m -> m.id == x.planProductId } }
+
+                planProducts.addAll(products)
+                planProcesses.addAll(processes)
+                planDetails.addAll(details)
+
+                products = planDataTemp.planProducts.filter { x -> request.productNames.any { m -> m == x.productName } }
+                processes = planDataTemp.planProcesses.filter { x -> products.any { m -> m.id == x.planProductId } }
+                details = planDataTemp.planDetails.filter { x -> products.any { m -> m.id == x.planProductId } && x.planDate!!.isBefore(request.inventoryDate!!) }
+
+                planProducts.addAll(products)
+                planProcesses.addAll(processes)
+                planDetails.addAll(details)
+            }
+
+            for (item in planProductData) {
+                val planProduct = planProducts.find { x -> x.productName == item.productName }
+                if (planProduct == null) continue
+
+                val parentProcesses = planProcesses.filter { x -> x.planProductId == planProduct.id && x.parentId.isNullOrEmpty() }
+                val childrenProcesses = planProcesses.filter { x -> x.planProductId == planProduct.id && !x.parentId.isNullOrEmpty() }
+                var details = planDetails.filter { x -> x.planProductId == planProduct.id }
+
+                for (iProcess in parentProcesses) {
+                    if (item.planProcesses.any { it.processCode == iProcess.processCode && it.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull() }) {
+                        item.planProcesses = item.planProcesses.map { model ->
+                            if (model.processCode == iProcess.processCode && model.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull()) {
+                                val detailCreateModels = details.filter { it.planProcessId == iProcess.id }.map { x ->
+                                    PlanDetailCreateModel(
+                                        title = x.title,
+                                        planDate = x.planDate,
+                                        sheetQuantity = x.sheetQuantity,
+                                        blockQuantity = x.blockQuantity,
+                                        orderDate = x.orderDate,
+                                        hasInventory = x.hasInventory
+                                    )
+                                }
+                                model.planDetails.addAll(detailCreateModels)
+                            }
+                            model
+                        }.toMutableList()
+                    } else {
+                        val processCreateModel = PlanProcessCreateModel(
+                            processCode = iProcess.processCode,
+                            processName = iProcess.processName,
+                            processConvertCode = iProcess.processConvertCode,
+                            layerCode = iProcess.layerCode,
+                            completionRate = iProcess.completionRate,
+                            inventory = iProcess.inventory,
+                            unit = iProcess.unit,
+                            processSequence = iProcess.processSequence,
+                            processNameJp = iProcess.processNameJp,
+                            processGroup = iProcess.processGroup,
+                            processStatisticCode = iProcess.processStatisticCode,
+                            childrenProcesses = childrenProcesses.filter { it.parentId == iProcess.id }.map { x ->
+                                PlanChildrenProcessCreateModel(
+                                    processCode = x.processCode,
+                                    processName = x.processName,
+                                    processConvertCode = x.processConvertCode,
+                                    layerCode = x.layerCode,
+                                    completionRate = x.completionRate,
+                                    inventory = x.inventory,
+                                    unit = x.unit,
+                                    processSequence = x.processSequence,
+                                    processNameJp = x.processNameJp,
+                                    processGroup = x.processGroup,
+                                    processStatisticCode = x.processStatisticCode
+                                )
+                            }.toMutableList(),
+                            planDetails = details.filter { it.planProcessId == iProcess.id }.map { x ->
+                                PlanDetailCreateModel(
+                                    title = x.title,
+                                    planDate = x.planDate,
+                                    sheetQuantity = x.sheetQuantity,
+                                    blockQuantity = x.blockQuantity,
+                                    orderDate = x.orderDate,
+                                    hasInventory = x.hasInventory
+                                )
+                            }.toMutableList()
+                        )
+                        item.planProcesses.add(processCreateModel)
+                    }
+                }
+            }
+
+            for (iPlanProduct in planProducts.filter { x -> !planProductData.any { it.productName == x.productName } }) {
+                val processes = planProcesses.filter { x -> x.planProductId == iPlanProduct.id }
+                val details = planDetails.filter { x -> x.planProductId == iPlanProduct.id }
+                planProductData.add(generatePlanProductModel(iPlanProduct, processes, details))
+            }
+        }
+
+        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate), planProductData)
+    }
+
+    private fun calculatePlanProductWithInventory(
         orderInfo: List<OrderInfo>,
         productInfo: List<Product>,
         productProcesses: List<ProductProcessModel>,
@@ -448,7 +723,7 @@ class CreatePlanService(
         equipmentInfo: List<EquipmentProductivity>,
         inventories: List<InventoryProductResponse>,
         holidays: List<OffsetDateTime>
-    ) {
+    ): MutableList<PlanProductCreateModel> {
         val planProducts = mutableListOf<PlanProductCreateModel>()
         val productNames = orderInfo.mapNotNull { x -> x.productName }.distinct()
         val parentProcesses = productProcesses.filter { x ->
@@ -548,7 +823,13 @@ class CreatePlanService(
                 completionRates, product, holidays
             )
             planProductCreateModel.planProcesses.addAll(planAfterAllocate)
+
+            planProducts.add(planProductCreateModel)
         }
+
+        val planProductMappings = mappingPlanProductModel(planProducts)
+
+        return planProductMappings
     }
 
     private fun allocateInventoryIns(orderInfo: List<OrderInfo>, inventories: List<InventoryProductResponse>, processIns: ProductProcessModel): List<OrderInfo> {
@@ -640,7 +921,7 @@ class CreatePlanService(
         }
         var orderAllocations = orderInfo
         val completionRateIns = completionRateInfo.firstOrNull { x -> x.processCode == ProcessCode.INS }?.rate ?: return Pair(orderInfo, listOf())
-        val dataCalculatePlanFromInventory = mutableListOf<Pair<List<Triple<String?, Int, Int>>, List<AllocationRateByDateModel>>>()
+        val dataCalculatePlanFromInventory = mutableListOf<Pair<List<Triple<String?, BigDecimal, Int>>, List<AllocationRateByDateModel>>>()
 
         for (iProcess in processes) {
             if (orderAllocations.isEmpty()) break
@@ -657,11 +938,11 @@ class CreatePlanService(
             }
             if (inventoryProcess.isEmpty() && inventoriesByChildrenProcess.isEmpty()) continue
 
-            var currentInventory = if (iProcess.unit == ProcessUnit.SHEET) {
+            var currentInventory = BigDecimal(if (iProcess.unit == ProcessUnit.SHEET) {
                 inventoryProcess.sumOf { x -> x.sheetQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.sheetQuantity ?: 0 }
             } else {
                 inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 }
-            }
+            })
 
             val processCalculateFromInventories = mutableListOf(Triple(iProcess.processCode, currentInventory, iProcess.layerCode!!.toInt()))
             var currentProcessUnit = iProcess.unit
@@ -672,15 +953,15 @@ class CreatePlanService(
 
                 currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                     if (prc.unit == currentProcessUnit) {
-                        NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                        currentInventory * completionRate
                     } else {
-                        NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate * BigDecimal(productInfo.shBlock!!))
+                        currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)
                     }
                 } else {
                     if (prc.unit == currentProcessUnit) {
-                        NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                        currentInventory * completionRate
                     } else {
-                        NumberHelper.roundedUp((BigDecimal(currentInventory) * completionRate) / BigDecimal(productInfo.shBlock!!))
+                        (currentInventory * completionRate) / BigDecimal(productInfo.shBlock!!)
                     }
                 }
 
@@ -688,7 +969,7 @@ class CreatePlanService(
                 currentProcessUnit = prc.unit
             }
 
-            val inventoryIns = NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRateIns)
+            val inventoryIns = NumberHelper.roundedUp(currentInventory * completionRateIns)
             val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
 
             orderAllocations = allocateInventoryIns.second
@@ -728,7 +1009,7 @@ class CreatePlanService(
                     && m.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull()
             }
         }
-        val lstInventory = mutableListOf<Triple<ProductProcessModel, Int, Int>>()
+        val lstInventory = mutableListOf<Triple<ProductProcessModel, BigDecimal, BigDecimal>>()
         for (iProcess in processesCalculator) {
             val childrenProcess = childrenProcesses.filter { x -> x.processInventoryCode == iProcess.processCode }
             val inventoriesByChildrenProcess = inventories.filter { x ->
@@ -741,18 +1022,18 @@ class CreatePlanService(
             val inventoryProcess = inventoriesByProcess.filter { x -> x.processCode == iProcess.processCode && x.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull() }
             if (inventoryProcess.isEmpty() && inventoriesByChildrenProcess.isEmpty()) return Pair(orderInfo, listOf())
 
-            var sheetInventory: Int
-            var blockInventory: Int
+            var sheetInventory: BigDecimal
+            var blockInventory: BigDecimal
 
             if (iProcess.unit == ProcessUnit.SHEET) {
-                sheetInventory = inventoryProcess.sumOf { x -> x.sheetQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.sheetQuantity ?: 0 }
-                blockInventory = sheetInventory * productInfo.shBlock!!
+                sheetInventory = BigDecimal(inventoryProcess.sumOf { x -> x.sheetQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.sheetQuantity ?: 0 })
+                blockInventory = sheetInventory * BigDecimal(productInfo.shBlock!!)
             } else {
-                blockInventory = inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 }
-                sheetInventory = NumberHelper.roundedUp(BigDecimal(blockInventory) / BigDecimal(productInfo.shBlock!!))
+                blockInventory = BigDecimal(inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 })
+                sheetInventory = blockInventory / BigDecimal(productInfo.shBlock!!)
             }
 
-            if (sheetInventory <= 0 || blockInventory <= 0) return Pair(orderInfo, listOf())
+            if (sheetInventory <= BigDecimal(0) || blockInventory <= BigDecimal(0)) return Pair(orderInfo, listOf())
 
             lstInventory.add(Triple(iProcess, sheetInventory, blockInventory))
         }
@@ -784,15 +1065,15 @@ class CreatePlanService(
 
             currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                 if (iProcess.unit == currentProcessUnit) {
-                    NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                    currentInventory * completionRate
                 } else {
-                    NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate * BigDecimal(productInfo.shBlock!!))
+                    currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)
                 }
             } else {
                 if (iProcess.unit == currentProcessUnit) {
-                    NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                    currentInventory * completionRate
                 } else {
-                    NumberHelper.roundedUp((BigDecimal(currentInventory) * completionRate) / BigDecimal(productInfo.shBlock!!))
+                    (currentInventory * completionRate) / BigDecimal(productInfo.shBlock!!)
                 }
             }
 
@@ -800,7 +1081,7 @@ class CreatePlanService(
             currentProcessUnit = iProcess.unit
         }
 
-        val inventoryIns = NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRateIns)
+        val inventoryIns = NumberHelper.roundedUp(currentInventory * completionRateIns)
         val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
         orderAllocations = allocateInventoryIns.second
 
@@ -842,8 +1123,8 @@ class CreatePlanService(
                 x.processConvertCode!!.startsWith(ProcessConvertCode.M) && x.processInventoryCode.isNullOrEmpty()
             }.map { x -> Pair(x.processSequence!!, x.processConvertCode) }.sortedBy { it.first }
 
-            val processCalculateFromInventories = mutableListOf<Triple<String, Int, Int>>()
-            val preLayeringProcess = mutableListOf<Triple<String, String, Int>>()
+            val processCalculateFromInventories = mutableListOf<Triple<String, BigDecimal, Int>>()
+            val preLayeringProcess = mutableListOf<Triple<String, String, BigDecimal>>()
 
             for (iLayeringProcess in layeringProcess) {
                 val lstProcess = processGroupBy.filter { x ->
@@ -865,7 +1146,7 @@ class CreatePlanService(
                 preLayeringProcess.add(Triple(layering, preLayering.first, preLayering.second))
             }
 
-            var currentInventory = 0
+            var currentInventory = BigDecimal(0)
             var currentProcessUnit = layerProcessAbnormal.first { x -> x.processInventoryCode.isNullOrEmpty() }.unit
 
             for (iProcess in layerProcessAbnormal.filter { x -> x.processInventoryCode.isNullOrEmpty() }) {
@@ -887,38 +1168,38 @@ class CreatePlanService(
                     inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 }
                 }
 
-                if (inventory == 0 && currentInventory == 0) continue
+                if (inventory == 0 && currentInventory == BigDecimal(0)) continue
 
-                if (currentInventory == 0) {
-                    currentInventory = inventory
+                if (currentInventory == BigDecimal(0)) {
+                    currentInventory = BigDecimal(inventory)
                     currentProcessUnit = iProcess.unit
                 }
 
                 val iPreLayeringProcess = preLayeringProcess.find { x -> x.first == iProcess.processConvertCode }
                 if (iPreLayeringProcess != null) {
-                    currentInventory = min(currentInventory, iPreLayeringProcess.third)
+                    currentInventory = BigDecimal(min(currentInventory.toDouble(), iPreLayeringProcess.third.toDouble()))
                 }
 
                 currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                     if (iProcess.unit == currentProcessUnit) {
-                        NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                        currentInventory * completionRate
                     } else {
-                        NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate * BigDecimal(productInfo.shBlock!!))
+                        currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)
                     }
                 } else {
                     if (iProcess.unit == currentProcessUnit) {
-                        NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                        currentInventory * completionRate
                     } else {
-                        NumberHelper.roundedUp((BigDecimal(currentInventory) * completionRate) / BigDecimal(productInfo.shBlock!!))
+                        (currentInventory * completionRate) / BigDecimal(productInfo.shBlock!!)
                     }
                 }
-                currentInventory += inventory
+                currentInventory += BigDecimal(inventory)
 
                 processCalculateFromInventories.add(Triple(iProcess.processCode!!, currentInventory, iProcess.layerCode!!.toInt()))
                 currentProcessUnit = iProcess.unit
             }
 
-            val inventoryIns = NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRateIns)
+            val inventoryIns = NumberHelper.roundedUp(currentInventory * completionRateIns)
             val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
 
             orderAllocations = allocateInventoryIns.second
@@ -931,8 +1212,7 @@ class CreatePlanService(
             )
 
             return Pair(orderAllocations, processCreateModels)
-        }
-        else {
+        } else {
             val firstLayering = processGroupBy.filter { x ->
                 x.value.count { m -> m.processConvertCode!!.startsWith(ProcessConvertCode.M) } == 1
                     && !x.value.any { m -> m.processConvertCode == ProcessConvertCode.INS }
@@ -977,7 +1257,7 @@ class CreatePlanService(
             }
 
             val currentInventory = processCalculateFromInventories.first { x -> x.first == preLayeringProcessCode && x.third == layerCode!!.toInt() }.second
-            val inventoryIns = NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRateIns)
+            val inventoryIns = NumberHelper.roundedUp(currentInventory * completionRateIns)
             val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
 
             orderAllocations = allocateInventoryIns.second
@@ -1000,11 +1280,11 @@ class CreatePlanService(
         completionRateInfo: List<CompletionRateProcessProduct>,
         productInfo: Product,
         layeringProcess: ProductProcessModel? = null,
-        preLayeringProcess: Triple<String, Int, Int>? = null
-    ): List<Triple<String, Int, Int>> {
-        val data = mutableListOf<Triple<String, Int, Int>>()
+        preLayeringProcess: Triple<String, BigDecimal, Int>? = null
+    ): List<Triple<String, BigDecimal, Int>> {
+        val data = mutableListOf<Triple<String, BigDecimal, Int>>()
 
-        var currentInventory = 0
+        var currentInventory = BigDecimal(0)
         var currentProcessUnit = parentProcesses.first().unit
 
         for (iProcess in parentProcesses) {
@@ -1026,31 +1306,31 @@ class CreatePlanService(
                 inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 }
             }
 
-            if (inventory == 0 && currentInventory == 0) continue
+            if (inventory == 0 && currentInventory == BigDecimal(0)) continue
 
-            if (currentInventory == 0) {
-                currentInventory = inventory
+            if (currentInventory == BigDecimal(0)) {
+                currentInventory = BigDecimal(inventory)
                 currentProcessUnit = iProcess.unit
             }
 
             if (preLayeringProcess != null && layeringProcess != null && iProcess.processConvertCode == layeringProcess.processConvertCode) {
-                currentInventory = min(currentInventory, preLayeringProcess.second)
+                currentInventory = BigDecimal(min(currentInventory.toDouble(), preLayeringProcess.second.toDouble()))
             }
 
             currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                 if (iProcess.unit == currentProcessUnit) {
-                    NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                    currentInventory * completionRate
                 } else {
-                    NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate * BigDecimal(productInfo.shBlock!!))
+                    currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)
                 }
             } else {
                 if (iProcess.unit == currentProcessUnit) {
-                    NumberHelper.roundedUp(BigDecimal(currentInventory) * completionRate)
+                    currentInventory * completionRate
                 } else {
-                    NumberHelper.roundedUp((BigDecimal(currentInventory) * completionRate) / BigDecimal(productInfo.shBlock!!))
+                    (currentInventory * completionRate) / BigDecimal(productInfo.shBlock!!)
                 }
             }
-            currentInventory += inventory
+            currentInventory += BigDecimal(inventory)
 
             data.add(Triple(iProcess.processCode!!, currentInventory, iProcess.layerCode!!.toInt()))
             currentProcessUnit = iProcess.unit
@@ -1066,14 +1346,14 @@ class CreatePlanService(
         childrenProcesses: List<ProductProcessModel>,
         completionRateInfo: List<CompletionRateProcessProduct>,
         productInfo: Product,
-        processCalculateFromInventories: List<Triple<String?, Int, Int>>,
+        processCalculateFromInventories: List<Triple<String?, BigDecimal, Int>>,
         holidays: List<OffsetDateTime>
     ): List<PlanProcessCreateModel> {
         val processCreateModels = mutableListOf<PlanProcessCreateModel>()
 
         var count = 1
-        var sumSheetQuantity = 0
-        var sumBlockQuantity = 0
+        var sumSheetQuantity = BigDecimal(0)
+        var sumBlockQuantity = BigDecimal(0)
 
         for (order in orderAllocations.sortedBy { x -> x.orderDate }) {
             var dayOfImplement = processIns.dayOfImplementation ?: 0
@@ -1097,22 +1377,22 @@ class CreatePlanService(
                     currentPlanDate = currentPlanDate.plusDays(-1)
                 }
 
-                var sheetQuantity: Int
-                var blockQuantity: Int
+                var sheetQuantity: BigDecimal
+                var blockQuantity: BigDecimal
                 if (iProcess.unit == ProcessUnit.SHEET) {
                     sheetQuantity = if (count == orderAllocations.size) {
                         processCalculateFromInventory.second - sumSheetQuantity
                     } else {
-                        NumberHelper.roundedUp((BigDecimal(processCalculateFromInventory.second) * order.rate) / BigDecimal(100))
+                        (processCalculateFromInventory.second * order.rate) / BigDecimal(100)
                     }
-                    blockQuantity = sheetQuantity * productInfo.shBlock!!
+                    blockQuantity = sheetQuantity * BigDecimal(productInfo.shBlock!!)
                 } else {
                     blockQuantity = if (count == orderAllocations.size) {
                         processCalculateFromInventory.second - sumBlockQuantity
                     } else {
-                        NumberHelper.roundedUp((BigDecimal(processCalculateFromInventory.second) * order.rate) / BigDecimal(100))
+                        (processCalculateFromInventory.second * order.rate) / BigDecimal(100)
                     }
-                    sheetQuantity = NumberHelper.roundedUp(BigDecimal(blockQuantity) / BigDecimal(productInfo.shBlock!!))
+                    sheetQuantity = blockQuantity / BigDecimal(productInfo.shBlock!!)
                 }
                 sumSheetQuantity += sheetQuantity
                 sumBlockQuantity += blockQuantity
@@ -1120,8 +1400,10 @@ class CreatePlanService(
                 val planDetail = PlanDetailCreateModel(
                     title = PlanTitle.PLAN_KEY,
                     planDate = currentPlanDate,
-                    sheetQuantity = sheetQuantity,
-                    blockQuantity = blockQuantity
+                    sheetQuantity = NumberHelper.roundedUp(sheetQuantity),
+                    blockQuantity = NumberHelper.roundedUp(blockQuantity),
+                    orderDate = order.orderDate,
+                    hasInventory = true
                 )
                 planProcess.planDetails = mutableListOf(planDetail)
                 planProcess.childrenProcesses = childrenProcesses.filter { x -> x.processInventoryCode == iProcess.processCode }
@@ -1156,7 +1438,7 @@ class CreatePlanService(
             var count = 1
             while (count <= (productInfo.layerCount ?: 0)) {
                 val planCalculator = calculatePlan(
-                    processSource, completionRateSource!!, planDetailSource, completionRateInfo,
+                    iOrder.orderDate!!, processSource, completionRateSource!!, planDetailSource, completionRateInfo,
                     parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                     childrenProcesses, productInfo, listOf(), mutableListOf(), holidays
                 )
@@ -1191,7 +1473,7 @@ class CreatePlanService(
                 if (processOfNextLayer != null) {
                     currentLayerCode = processOfNextLayer.layerCode?.toIntOrNull() ?: 0
                     val planCalculator = calculatePlan(
-                        processSource, completionRateSource, planDetailSource, completionRateInfo,
+                        iOrder.orderDate!!, processSource, completionRateSource, planDetailSource, completionRateInfo,
                         parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                         childrenProcesses, productInfo, listOf(), mutableListOf(), holidays
                     )
@@ -1371,7 +1653,79 @@ class CreatePlanService(
         )
     }
 
-    private fun mappingPlanProductModel(planProducts: List<PlanProductCreateModel>): List<PlanProductCreateModel> {
+    private fun generatePlanProductModel(
+        planProduct: PlanProductTemp,
+        planProcesses: List<PlanProcessTemp>,
+        planDetails: List<PlanDetailTemp>,
+        workResults: List<WorkResult> = listOf()
+    ): PlanProductCreateModel {
+        val parentPlanProcesses = planProcesses.filter { it.parentId.isNullOrEmpty() }
+        val childrenPlanProcesses = planProcesses.filter { !it.parentId.isNullOrEmpty() }
+        return PlanProductCreateModel(
+            productName = planProduct.productName,
+            frame_1 = planProduct.frame_1,
+            mold = planProduct.mold,
+            pcsSh = planProduct.pcsSh,
+            blockSh = planProduct.blockSh,
+            planProcesses = parentPlanProcesses.map { item ->
+                PlanProcessCreateModel(
+                    processCode = item.processCode,
+                    processName = item.processName,
+                    processConvertCode = item.processConvertCode,
+                    layerCode = item.layerCode,
+                    completionRate = item.completionRate,
+                    inventory = item.inventory,
+                    unit = item.unit,
+                    processSequence = item.processSequence,
+                    processNameJp = item.processNameJp,
+                    processGroup = item.processGroup,
+                    processStatisticCode = item.processStatisticCode,
+                    childrenProcesses = childrenPlanProcesses.filter { x -> x.parentId == item.id }.map { x ->
+                        PlanChildrenProcessCreateModel(
+                            processCode = x.processCode,
+                            processName = x.processName,
+                            processConvertCode = x.processConvertCode,
+                            layerCode = x.layerCode,
+                            completionRate = x.completionRate,
+                            inventory = x.inventory,
+                            unit = x.unit,
+                            processSequence = x.processSequence,
+                            processNameJp = x.processNameJp,
+                            processGroup = x.processGroup,
+                            processStatisticCode = x.processStatisticCode
+                        )
+                    }.toMutableList(),
+                    planDetails = planDetails.filter { x -> x.planProcessId == item.id }.map { x ->
+                        val wrs = workResults.find {
+                            it.processCode == item.processCode && it.layerCode?.toIntOrNull() == item.layerCode?.toIntOrNull()
+                                && it.summaryResultDate!!.isEqual(x.planDate)
+                        }
+                        if (wrs == null) {
+                            PlanDetailCreateModel(
+                                title = x.title,
+                                planDate = x.planDate,
+                                sheetQuantity = x.sheetQuantity,
+                                blockQuantity = x.blockQuantity,
+                                orderDate = x.orderDate,
+                                hasInventory = x.hasInventory
+                            )
+                        } else {
+                            PlanDetailCreateModel(
+                                title = x.title,
+                                planDate = x.planDate,
+                                sheetQuantity = wrs.goodSheetQuantity,
+                                blockQuantity = wrs.goodTapeQuantity,
+                                orderDate = x.orderDate,
+                                hasInventory = x.hasInventory
+                            )
+                        }
+                    }.toMutableList()
+                )
+            }.toMutableList()
+        )
+    }
+
+    private fun mappingPlanProductModel(planProducts: List<PlanProductCreateModel>): MutableList<PlanProductCreateModel> {
         return planProducts.groupBy { x -> x.productName }.map { x ->
             val product = x.value.first()
             PlanProductCreateModel(
@@ -1401,7 +1755,7 @@ class CreatePlanService(
                     result
                 }.toMutableList()
             )
-        }
+        }.toMutableList()
     }
 
     private fun generatePlanProcessModel(process: ProductProcessModel, completionRate: BigDecimal?, inventory: Int? = 0): PlanProcessCreateModel {
@@ -1487,6 +1841,7 @@ class CreatePlanService(
     }
 
     private fun generatePlanDetailModel(
+        orderDate: OffsetDateTime,
         currentPlanDetail: List<PlanDetailCreateModel>,
         currentProcessUnit: String,
         productProcess: ProductProcessModel,
@@ -1501,15 +1856,15 @@ class CreatePlanService(
 
         for (iCurrPlanDetail in currentPlanDetail) {
             var planDate = iCurrPlanDetail.planDate!!.plusDays((-diffDay).toLong())
-            var sheetQuantity: Int
-            var blockQuantity: Int
+            var sheetQuantity: BigDecimal
+            var blockQuantity: BigDecimal
 
             if (currentProcessUnit == ProcessUnit.SHEET) {
-                sheetQuantity = NumberHelper.roundedUp((BigDecimal(iCurrPlanDetail.sheetQuantity!! * 100) / completionRate))
-                blockQuantity = sheetQuantity * productInfo.shBlock!!
+                sheetQuantity = BigDecimal(iCurrPlanDetail.sheetQuantity!! * 100) / completionRate
+                blockQuantity = sheetQuantity * BigDecimal(productInfo.shBlock!!)
             } else {
-                blockQuantity = NumberHelper.roundedUp((BigDecimal(iCurrPlanDetail.blockQuantity!! * 100) / completionRate))
-                sheetQuantity = blockQuantity / productInfo.shBlock!!
+                blockQuantity = BigDecimal(iCurrPlanDetail.blockQuantity!! * 100) / completionRate
+                sheetQuantity = blockQuantity / BigDecimal(productInfo.shBlock!!)
             }
 
 //            while (sheetQuantity > 0 || blockQuantity > 0) {
@@ -1533,7 +1888,14 @@ class CreatePlanService(
                 planDate = planDate.plusDays(-1)
             }
 
-            val planDetail = PlanDetailCreateModel(title = PlanTitle.PLAN_KEY, planDate = planDate, sheetQuantity = sheetQuantity, blockQuantity = blockQuantity)
+            val planDetail = PlanDetailCreateModel(
+                title = PlanTitle.PLAN_KEY,
+                planDate = planDate,
+                sheetQuantity = NumberHelper.roundedUp(sheetQuantity),
+                blockQuantity = NumberHelper.roundedUp(blockQuantity),
+                orderDate = orderDate,
+                hasInventory = false
+            )
             data.add(planDetail)
         }
         return data

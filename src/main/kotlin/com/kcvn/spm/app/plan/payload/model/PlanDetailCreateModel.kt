@@ -7,4 +7,6 @@ data class PlanDetailCreateModel(
     var planDate: OffsetDateTime? = null,
     var sheetQuantity: Int? = null,
     var blockQuantity: Int? = null,
+    var orderDate: OffsetDateTime? = null,
+    var hasInventory: Boolean? = null
 )

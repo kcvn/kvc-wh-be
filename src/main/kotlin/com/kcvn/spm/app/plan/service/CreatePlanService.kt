@@ -175,10 +175,12 @@ class CreatePlanService(
                 if (equipmentByProducts.isEmpty()) {
                     errors.add("Chưa có cấu hình năng suất máy cho line ${product!!.frame_1}")
                 } else {
-                    val processGroups = parentProcesses.mapNotNull { x -> x.processGroup }.distinct()
+                    val processGroups = parentProcesses.filter { it.processConvertCode != ProcessConvertCode.INS }.mapNotNull { x -> x.processGroup }.distinct()
                     for (grp in processGroups) {
                         val eqConfigs = equipmentByProducts.filter { x -> x.grpProcess == grp }
                         if (eqConfigs.isEmpty()) {
+                            if (grp == "21800") continue
+                            if (grp == "21500" && (product!!.frame_1 == Frame1.SWR || product.frame_1 == Frame1.ML)) continue
                             errors.add("Chưa có cấu hình năng suất máy cho nhóm công đoạn $grp")
                         }
                     }
@@ -380,10 +382,11 @@ class CreatePlanService(
 
         val planProductMappings = mappingPlanProductModel(planProducts)
 
-        val startDate = planProductMappings.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten()
-            .sortedBy { x -> x.planDate }.first().planDate!!
+        val data = planProductMappings.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { it.planDate }
+        val startDate = data.first().planDate!!
         val endDate = orderInfo.sortedByDescending { x -> x.orderDate }.first().orderDate!!
-        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate), planProductMappings)
+        val hasInventory = data.any { it.hasInventory == true }
+        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate, hasInventory), planProductMappings)
     }
 
     private fun calculatePlan(
@@ -457,6 +460,7 @@ class CreatePlanService(
         val data = planProductData.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { x -> x.planDate }
         val startDate = data.first().planDate!!
         val endDate = data.last().planDate!!
+        val hasInventory = data.any { it.hasInventory == true }
 
         if (planDataTemp != null) {
             val planProducts = mutableListOf<PlanProductTemp>()
@@ -596,7 +600,7 @@ class CreatePlanService(
             }
         }
 
-        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate), planProductData)
+        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate, hasInventory), planProductData)
     }
 
     private fun createPlanWithInventoryNoRePlan(
@@ -608,6 +612,7 @@ class CreatePlanService(
         val data = planProductData.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { x -> x.planDate }
         val startDate = data.first().planDate!!
         val endDate = data.last().planDate!!
+        val hasInventory = data.any { it.hasInventory == true }
 
         if (planDataTemp != null) {
             val planProducts = mutableListOf<PlanProductTemp>()
@@ -712,7 +717,7 @@ class CreatePlanService(
             }
         }
 
-        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate), planProductData)
+        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate, hasInventory), planProductData)
     }
 
     private fun calculatePlanProductWithInventory(
@@ -735,8 +740,8 @@ class CreatePlanService(
                 && x.processConvertCode != ProcessConvertCode.INS
         }.sortedWith(compareByDescending<ProductProcessModel> { it.dayOfImplementation ?: 0 }.thenByDescending { it.processSequence })
 
-        val mAllParents = parentProcesses.filter { x -> x.processStatisticCode == ProcessStatisticCode.M_ALL }
-        val mAllChild = childrenProcesses.filter { x -> x.processStatisticCode == ProcessStatisticCode.M_ALL }
+        val mAllParents = parentProcesses.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }
+        val mAllChild = childrenProcesses.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }
 
         for (iProductName in productNames) {
             val processes = productProcesses.filter { x -> x.productName == iProductName }
@@ -923,7 +928,7 @@ class CreatePlanService(
         val completionRateIns = completionRateInfo.firstOrNull { x -> x.processCode == ProcessCode.INS }?.rate ?: return Pair(orderInfo, listOf())
         val dataCalculatePlanFromInventory = mutableListOf<Pair<List<Triple<String?, BigDecimal, Int>>, List<AllocationRateByDateModel>>>()
 
-        for (iProcess in processes) {
+        for (iProcess in processes.sortedByDescending { it.processSequence }) {
             if (orderAllocations.isEmpty()) break
             val childrenProcess = childrenProcesses.filter { x -> x.processInventoryCode == iProcess.processCode }
             val inventoriesByChildrenProcess = inventories.filter { x ->
@@ -953,15 +958,15 @@ class CreatePlanService(
 
                 currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                     if (prc.unit == currentProcessUnit) {
-                        currentInventory * completionRate
+                        (currentInventory * completionRate) / BigDecimal(100)
                     } else {
-                        currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)
+                        (currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)) / BigDecimal(100)
                     }
                 } else {
                     if (prc.unit == currentProcessUnit) {
-                        currentInventory * completionRate
+                        (currentInventory * completionRate) / BigDecimal(100)
                     } else {
-                        (currentInventory * completionRate) / BigDecimal(productInfo.shBlock!!)
+                        (currentInventory * completionRate) / (BigDecimal(productInfo.shBlock!!) * BigDecimal(100))
                     }
                 }
 
@@ -969,7 +974,7 @@ class CreatePlanService(
                 currentProcessUnit = prc.unit
             }
 
-            val inventoryIns = NumberHelper.roundedUp(currentInventory * completionRateIns)
+            val inventoryIns = NumberHelper.roundedUp((currentInventory * completionRateIns) / BigDecimal(100))
             val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
 
             orderAllocations = allocateInventoryIns.second
@@ -1065,15 +1070,15 @@ class CreatePlanService(
 
             currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                 if (iProcess.unit == currentProcessUnit) {
-                    currentInventory * completionRate
+                    (currentInventory * completionRate) / BigDecimal(100)
                 } else {
-                    currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)
+                    (currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)) / BigDecimal(100)
                 }
             } else {
                 if (iProcess.unit == currentProcessUnit) {
-                    currentInventory * completionRate
+                    (currentInventory * completionRate) / BigDecimal(100)
                 } else {
-                    (currentInventory * completionRate) / BigDecimal(productInfo.shBlock!!)
+                    (currentInventory * completionRate) / (BigDecimal(productInfo.shBlock!!) * BigDecimal(100))
                 }
             }
 
@@ -1081,7 +1086,7 @@ class CreatePlanService(
             currentProcessUnit = iProcess.unit
         }
 
-        val inventoryIns = NumberHelper.roundedUp(currentInventory * completionRateIns)
+        val inventoryIns = NumberHelper.roundedUp((currentInventory * completionRateIns) / BigDecimal(100))
         val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
         orderAllocations = allocateInventoryIns.second
 
@@ -1319,15 +1324,15 @@ class CreatePlanService(
 
             currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                 if (iProcess.unit == currentProcessUnit) {
-                    currentInventory * completionRate
+                    (currentInventory * completionRate) / BigDecimal(100)
                 } else {
-                    currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)
+                    (currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)) / BigDecimal(100)
                 }
             } else {
                 if (iProcess.unit == currentProcessUnit) {
-                    currentInventory * completionRate
+                    (currentInventory * completionRate) / BigDecimal(100)
                 } else {
-                    (currentInventory * completionRate) / BigDecimal(productInfo.shBlock!!)
+                    (currentInventory * completionRate) / (BigDecimal(productInfo.shBlock!!) * BigDecimal(100))
                 }
             }
             currentInventory += BigDecimal(inventory)
@@ -1628,7 +1633,8 @@ class CreatePlanService(
         request: CreatePlanRequest,
         planCalendarConfig: PlanCalendarConfig,
         planStartDate: OffsetDateTime,
-        planEndDate: OffsetDateTime
+        planEndDate: OffsetDateTime,
+        hasInventory: Boolean
     ): PlanTemp {
         return PlanTemp(
             planCode = "F${DateTimeHelper.toString(planStartDate, DateTimeFormat.yyyyMMdd)}T${DateTimeHelper.toString(planEndDate, DateTimeFormat.yyyyMMdd)}",
@@ -1638,7 +1644,8 @@ class CreatePlanService(
             startDate = planStartDate,
             endDate = planEndDate,
             version = 0,
-            isActive = true
+            isActive = true,
+            hasInventory = hasInventory
         )
     }
 
@@ -1751,7 +1758,7 @@ class CreatePlanService(
                         childrenProcesses = process.childrenProcesses,
                         planDetails = m.value.map { t -> t.planDetails }.flatten().toMutableList(),
                     )
-                    result.planDetails.addAll(calculateAccumulation(result.planDetails))
+                    //result.planDetails.addAll(calculateAccumulation(result.planDetails))
                     result
                 }.toMutableList()
             )
@@ -1990,23 +1997,23 @@ class CreatePlanService(
         return planDetail
     }
 
-    private fun calculateAccumulation(planDetails: MutableList<PlanDetailCreateModel>): MutableList<PlanDetailCreateModel> {
-        var sheetQuantity = 0
-        var blockQuantity = 0
-        val data = mutableListOf<PlanDetailCreateModel>()
-        val details = planDetails.groupBy { x -> x.planDate }.toSortedMap(compareBy { it })
-        for (item in details) {
-            sheetQuantity += item.value.sumOf { it.sheetQuantity ?: 0 }
-            blockQuantity += item.value.sumOf { it.blockQuantity ?: 0 }
-            data.add(PlanDetailCreateModel(
-                title = PlanTitle.PLAN_ACCUMULATION_KEY,
-                planDate = item.key,
-                sheetQuantity = sheetQuantity,
-                blockQuantity = blockQuantity
-            ))
-        }
-        return data
-    }
+//    private fun calculateAccumulation(planDetails: MutableList<PlanDetailCreateModel>): MutableList<PlanDetailCreateModel> {
+//        var sheetQuantity = 0
+//        var blockQuantity = 0
+//        val data = mutableListOf<PlanDetailCreateModel>()
+//        val details = planDetails.groupBy { x -> x.planDate }.toSortedMap(compareBy { it })
+//        for (item in details) {
+//            sheetQuantity += item.value.sumOf { it.sheetQuantity ?: 0 }
+//            blockQuantity += item.value.sumOf { it.blockQuantity ?: 0 }
+//            data.add(PlanDetailCreateModel(
+//                title = PlanTitle.PLAN_ACCUMULATION_KEY,
+//                planDate = item.key,
+//                sheetQuantity = sheetQuantity,
+//                blockQuantity = blockQuantity
+//            ))
+//        }
+//        return data
+//    }
 
     private fun calculateEquipmentUsedInfo(
         planProcesses: List<PlanProcessCreateModel>,

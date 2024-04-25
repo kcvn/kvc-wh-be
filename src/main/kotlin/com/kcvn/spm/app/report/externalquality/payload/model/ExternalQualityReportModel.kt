@@ -17,7 +17,7 @@ data class ExternalQualityReportModel(
     var tapeCommon: String? = null,
     var completionRate: BigDecimal? = null,
     var sumOrderQuantity: Int? = null,
-    var sumWorkResultQuantity: Int? = null,
+    var sumInventoryQuantity: Int? = null,
     var goodQualityTapeInventorySet: Int? = 0,
     var goodQualityTapeInventoryBlock: Int? =0,
     var tapeInventoryQuantity1: Int? = null,

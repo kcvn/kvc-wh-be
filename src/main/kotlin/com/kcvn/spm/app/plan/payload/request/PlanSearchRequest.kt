@@ -8,5 +8,7 @@ data class PlanSearchRequest(
     var frame_1: String? = null,
     var mold: String? = null,
     var startDate: OffsetDateTime? = null,
-    var endDate: OffsetDateTime? = null
+    var endDate: OffsetDateTime? = null,
+    var inventoryWorkPlan: Boolean? = null,
+    var draftWorkPlan: Boolean? = null
 )

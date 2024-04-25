@@ -7,7 +7,5 @@ data class PlanExportExcelModel (
     var mold: String? = null,
     var pcsSh: Int? = null,
     var blockSh: Int? = null,
-    var productPlanDetails: List<ProductPlanDetailModel>? = listOf(),
-
-
-    )
+    var productPlanDetails: List<ProductPlanDetailModel>? = listOf()
+)

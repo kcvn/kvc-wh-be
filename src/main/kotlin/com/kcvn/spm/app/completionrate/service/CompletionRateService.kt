@@ -499,6 +499,8 @@ class CompletionRateService(
                 )
                 continue
             }
+            productNamesSet.add(name)
+
             val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
             val processExistMinEffectiveDate = productExists
                 ?.filter { it.key == key }
@@ -694,6 +696,8 @@ class CompletionRateService(
                 )
                 continue
             }
+            productNamesSet.add(name)
+
             val key = ExcelHelper.getCellValue(row, 0)
             val errorMessages = mutableListOf<String>()
             val productExist = productExists?.find { x -> x.key == key }

@@ -732,11 +732,12 @@ class ExternalQualityReportService(
         detailData.add(detailOrderQuantity)
 
         //ACCUMULATED_ORDER_QUANTITY
-        val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.sumWorkResultQuantity)
+        val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.sumInventoryQuantity)
         val accumulatedOrderQuantityCalendars = calculateAccumulation(orderQuantityCalendars)
         accumulatedOrderQuantity.quantityByCalendars = accumulatedOrderQuantityCalendars
-        accumulatedOrderQuantity.inventory =   externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
+        externalQualityReportModel.sumInventoryQuantity = externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
 
+        accumulatedOrderQuantity.inventory =   externalQualityReportModel.sumInventoryQuantity
         detailData.add(accumulatedOrderQuantity)
 
         //PRODUCTION_RESULT
@@ -745,7 +746,7 @@ class ExternalQualityReportService(
         columns.forEach{ x ->
         val productWorkResult = listWorkResult?.filter { workResult -> x.key.equals(workResult.summaryResultDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) })
                                                         && workResult.itemName == externalQualityReportModel.productName }
-        val sumItemQuantity = productWorkResult?.map { it.unfinishedQuantity }?.sumOf { it ?: 0 } ?: 0
+        val sumItemQuantity = productWorkResult?.map { it.goodTapeQuantity }?.sumOf { it ?: 0 } ?: 0
         productionResultCalendars.add(KeyValueResponse(x.key, sumItemQuantity.toString())) }
 
         productionResult.quantityByCalendars = productionResultCalendars
@@ -764,7 +765,7 @@ class ExternalQualityReportService(
 
         //DIFFERENCE_2
         val difference2 = ExternalQualityDetailModel("DIFFERENCE_2", ExternalReportDetailType.DIFFERENCE_2)
-        difference2.quantityByCalendars = calculateAccumulationWithInventory(orderQuantityCalendars,externalQualityReportModel.sumWorkResultQuantity)
+        difference2.quantityByCalendars = calculateAccumulationWithInventory(orderQuantityCalendars,externalQualityReportModel.sumInventoryQuantity)
         detailData.add(difference2)
 
         // LOGIC TAPE
@@ -796,7 +797,7 @@ class ExternalQualityReportService(
 
         externalQualityReportModel.goodQualityTapeInventorySet = goodQualityTapeInventorySet
         externalQualityReportModel.goodQualityTapeInventoryBlock = goodQualityTapeInventoryBlock
-        externalQualityReportModel.sumWorkResultQuantity =
+        externalQualityReportModel.sumInventoryQuantity =
             externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
 
         //PLANNED_TAPE_SET

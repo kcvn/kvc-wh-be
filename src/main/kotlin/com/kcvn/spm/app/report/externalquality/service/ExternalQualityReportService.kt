@@ -174,7 +174,7 @@ class ExternalQualityReportService(
                     val productNameShortCut = spec.substring(1, 8)
                     val line1 = spec.substring(12, 13)
                     val frame1 = spec.substring(13, 15)
-                    val productExist = productMaster.find { x-> x.name?.contains(productNameShortCut) == true && x.exportType?.contains(exportType) ==true && x.frame_1==frame1 && x.layerCount== line1.toInt()}
+                    val productExist = productMaster.find { x-> x.name?.contains(productNameShortCut) == true && x.exportType?.contains(exportType) ==true && x.frame_1==frame1 && x.layerCount!! >= line1.toInt()}
                     if(productExist == null){
                         isValidCol = false
                         messageResults.add(CommonUtils.getMessage("validate.spec.productNotExist"))

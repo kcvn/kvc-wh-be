@@ -61,7 +61,7 @@ class ProductProcessController(
         request: ProductProcessSearchRequest,
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["processName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["processSequence"], direction = Sort.Direction.ASC)
         )

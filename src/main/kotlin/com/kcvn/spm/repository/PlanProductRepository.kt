@@ -91,6 +91,7 @@ class PlanProductRepository(private val context: DSLContext) {
             val planTemp = context.selectFrom(PLAN_TEMP).where(PLAN_TEMP.IS_DELETED.eq(false)).fetchInto(PlanTemp::class.java).firstOrNull()
 
             val queryPlan = context.select(
+                PLAN_PRODUCT.ID.`as`("id"),
                 PLAN_PRODUCT.PRODUCT_NAME.`as`("productName"),
                 PLAN_PRODUCT.FRAME_1.`as`("frame_1"),
                 PLAN_PRODUCT.MOLD.`as`("mold"),
@@ -103,6 +104,7 @@ class PlanProductRepository(private val context: DSLContext) {
                 .orderBy(PLAN_PRODUCT.PRODUCT_NAME.sort(SortOrder.ASC))
 
             val queryPlanTemp = context.select(
+                PLAN_PRODUCT_TEMP.ID.`as`("id"),
                 PLAN_PRODUCT_TEMP.PRODUCT_NAME.`as`("productName"),
                 PLAN_PRODUCT_TEMP.FRAME_1.`as`("frame_1"),
                 PLAN_PRODUCT_TEMP.MOLD.`as`("mold"),
@@ -120,6 +122,7 @@ class PlanProductRepository(private val context: DSLContext) {
             return data
         } else {
             val query = context.select(
+                PLAN_PRODUCT.ID,
                 PLAN_PRODUCT.PRODUCT_NAME,
                 PLAN_PRODUCT.FRAME_1,
                 PLAN_PRODUCT.MOLD,
@@ -130,6 +133,7 @@ class PlanProductRepository(private val context: DSLContext) {
                 .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
                 .where(condition)
                 .groupBy(
+                    PLAN_PRODUCT.ID,
                     PLAN_PRODUCT.PRODUCT_NAME,
                     PLAN_PRODUCT.FRAME_1,
                     PLAN_PRODUCT.MOLD,

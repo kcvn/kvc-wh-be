@@ -777,15 +777,17 @@ class CreatePlanService(
                 continue
             }
 
+
+
             val secondPriorityProcesses = listOf(
-                parentProcesses.first { x ->
+                parentProcesses.filter { x ->
                     x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull()
-                        && x.processSequence!! == mAllParent.processSequence!! - 1
-                },
-                parentProcesses.first { x ->
+                        && x.processSequence!! <= mAllParent.processSequence!! - 1
+                }.sortedByDescending { it.processSequence }.first(),
+                parentProcesses.filter { x ->
                     x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllChildren.layerCode?.toIntOrNull()
-                        && x.processSequence!! == mAllChildren.processSequence!! - 1
-                }
+                        && x.processSequence!! <= mAllChildren.processSequence!! - 1
+                }.sortedByDescending { it.processSequence }.first()
             )
             val planSecondPriority = createPlanFromInventorySecondPriority(
                 processIns, mAllParent, secondPriorityProcesses,
@@ -943,11 +945,22 @@ class CreatePlanService(
             }
             if (inventoryProcess.isEmpty() && inventoriesByChildrenProcess.isEmpty()) continue
 
-            var currentInventory = BigDecimal(if (iProcess.unit == ProcessUnit.SHEET) {
-                inventoryProcess.sumOf { x -> x.sheetQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.sheetQuantity ?: 0 }
+            val sheetInventory = BigDecimal(inventoryProcess.sumOf { x -> x.sheetQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.sheetQuantity ?: 0 })
+            val blockInventory = BigDecimal(inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 })
+
+            var currentInventory = if (iProcess.unit == ProcessUnit.SHEET) {
+                if (sheetInventory == BigDecimal(0)) {
+                    blockInventory / BigDecimal(productInfo.shBlock!!)
+                } else {
+                    sheetInventory
+                }
             } else {
-                inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 }
-            })
+                if (blockInventory == BigDecimal(0)) {
+                    sheetInventory * BigDecimal(productInfo.shBlock!!)
+                } else {
+                    blockInventory
+                }
+            }
 
             val processCalculateFromInventories = mutableListOf(Triple(iProcess.processCode, currentInventory, iProcess.layerCode!!.toInt()))
             var currentProcessUnit = iProcess.unit
@@ -1119,11 +1132,13 @@ class CreatePlanService(
         var orderAllocations = orderInfo
         val completionRateIns = completionRateInfo.firstOrNull { x -> x.processCode == ProcessCode.INS }?.rate ?: return Pair(orderInfo, listOf())
         val processGroupBy = processes.groupBy { x -> x.layerCode }
-        val layerProcessAbnormal = processGroupBy.filter { x ->
+        val dt = processGroupBy.filter { x ->
             x.value.count { m -> m.processConvertCode!!.startsWith(ProcessConvertCode.M) && m.processInventoryCode.isNullOrEmpty() } > 1
-        }.values.first().sortedBy { it.processSequence }
+        }.values
 
-        if (layerProcessAbnormal.isNotEmpty()) {
+        if (dt.isNotEmpty()) {
+            val layerProcessAbnormal = dt.first().sortedBy { it.processSequence }
+
             val layeringProcess = layerProcessAbnormal.filter { x ->
                 x.processConvertCode!!.startsWith(ProcessConvertCode.M) && x.processInventoryCode.isNullOrEmpty()
             }.map { x -> Pair(x.processSequence!!, x.processConvertCode) }.sortedBy { it.first }
@@ -1144,9 +1159,9 @@ class CreatePlanService(
                 processCalculateFromInventories.addAll(data)
 
                 val layering = lstProcess.last().processConvertCode!!
-                val preLayeringProcessCode = lstProcess.first { x ->
-                    x.processInventoryCode.isNullOrEmpty() && x.processSequence == iLayeringProcess.first - 1
-                }.processCode
+                val preLayeringProcessCode = lstProcess.filter { x ->
+                    x.processInventoryCode.isNullOrEmpty() && x.processSequence!! <= iLayeringProcess.first - 1
+                }.sortedByDescending { it.processSequence }.first().processCode
                 val preLayering = data.first { x -> x.first == preLayeringProcessCode }
                 preLayeringProcess.add(Triple(layering, preLayering.first, preLayering.second))
             }
@@ -1230,9 +1245,9 @@ class CreatePlanService(
             ).toMutableList()
 
             var layeringProcess = firstLayering.last()
-            var preLayeringProcessCode = firstLayering.first { x ->
-                x.processInventoryCode.isNullOrEmpty() && x.processSequence == layeringProcess.processSequence!! - 1
-            }.processCode
+            var preLayeringProcessCode = firstLayering.filter { x ->
+                x.processInventoryCode.isNullOrEmpty() && x.processSequence!! <= layeringProcess.processSequence!! - 1
+            }.sortedByDescending { it.processSequence }.first().processCode
             var preLayeringProcess = processCalculateFromInventories.first { x -> x.first == preLayeringProcessCode }
 
             var count = 2
@@ -1252,9 +1267,9 @@ class CreatePlanService(
                 processCalculateFromInventories.addAll(data)
 
                 layeringProcess = nextLayering.last()
-                preLayeringProcessCode = nextLayering.first { x ->
-                    x.processInventoryCode.isNullOrEmpty() && x.processSequence == layeringProcess.processSequence!! - 1
-                }.processCode
+                preLayeringProcessCode = nextLayering.filter { x ->
+                    x.processInventoryCode.isNullOrEmpty() && x.processSequence!! <= layeringProcess.processSequence!! - 1
+                }.sortedByDescending { it.processSequence }.first().processCode
                 preLayeringProcess = data.first { x -> x.first == preLayeringProcessCode }
                 layerCode = nextLayering.first().layerCode
 

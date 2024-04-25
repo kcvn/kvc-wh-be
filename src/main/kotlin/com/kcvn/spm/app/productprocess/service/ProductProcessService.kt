@@ -28,6 +28,7 @@ import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -233,7 +234,9 @@ class ProductProcessService(
     }
 
     fun exportExcel(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BaseResponse<FileContentModel> {
-        val products = productProcessRep.findByKeywordPaginated(search, hasProcessConvertCode, pageable)
+        val newPageSize = 100000
+        val newPageable = PageRequest.of(pageable.pageNumber, newPageSize, pageable.sort)
+        val products = productProcessRep.findByKeywordPaginated(search, hasProcessConvertCode, newPageable)
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportProductProcessTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }

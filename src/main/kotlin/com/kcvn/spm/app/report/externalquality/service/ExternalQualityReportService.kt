@@ -145,7 +145,7 @@ class ExternalQualityReportService(
                 }else if(exportType == ExportType.SIPBACK){
                     exportType = ExportType.SHIPBACK
                 }
-                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT) {
+                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT && exportType.isNotEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.format.exportType"))
                 }
@@ -170,13 +170,18 @@ class ExternalQualityReportService(
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.spec"))
                 }
-                if(spec.length > 10){
+                if(spec.length == 15){
                     val productNameShortCut = spec.substring(1, 8)
-                    val productExist = productMaster.find { x-> x.name?.contains(productNameShortCut) == true && x.exportType?.contains(exportType) ==true}
+                    val line1 = spec.substring(12, 13)
+                    val frame1 = spec.substring(13, 15)
+                    val productExist = productMaster.find { x-> x.name?.contains(productNameShortCut) == true && x.exportType?.contains(exportType) ==true && x.frame_1==frame1 && x.layerCount== line1.toInt()}
                     if(productExist == null){
                         isValidCol = false
                         messageResults.add(CommonUtils.getMessage("validate.spec.productNotExist"))
                     }
+                }else{
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.wrongFormat.spec"))
                 }
 
                 val orderedQuantityCheck = ExcelHelper.getCellValue(row, 7)
@@ -337,7 +342,7 @@ class ExternalQualityReportService(
                 }else if(exportType == ExportType.SIPBACK){
                     exportType = ExportType.SHIPBACK
                 }
-                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT) {
+                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT && exportType.isNotEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.format.exportType"))
                 }
@@ -361,7 +366,7 @@ class ExternalQualityReportService(
                     messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.productName.notExist"))
                 }
 
-                if(productMaster.none { product -> product.name == productName && product.exportType == exportType }){
+                if(productMaster.none { product -> product.name == productName && product.exportType?.contains(exportType) == true }){
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.spec.productNotExist"))
                 }
@@ -524,7 +529,8 @@ class ExternalQualityReportService(
                         setCellValueCustom(workbook,dataRow, 6, style, productReport.snapMold, isAlignCenter = true)
                         setCellValueCustom(workbook,dataRow, 7, style, productReport.layerCount.toString(), isAlignCenter = true)
                         setCellValueCustom(workbook,dataRow, 8, style, productReport.tapeCommon, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 9, style, productReport.completionRate.toString(), isAlignCenter = true)
+                        val completionRate = if (productReport.completionRate?.toString().isNullOrEmpty()) "" else "${productReport.completionRate}%"
+                        setCellValueCustom(workbook, dataRow, 9, style, completionRate, isAlignCenter = true)
                     }
                     rowProductIndex++
                 }

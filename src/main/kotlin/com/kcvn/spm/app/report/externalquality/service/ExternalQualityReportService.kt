@@ -36,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -152,11 +153,25 @@ class ExternalQualityReportService(
 
                 val supplierCd= ExcelHelper.getCellValue(row, 2)
 
-                val purchaseOrder = ExcelHelper.getCellValue(row, 3)
-                if(purchaseOrder.isEmpty()) {
+                val purchaseOrderCheck = ExcelHelper.getCellValue(row, 3)
+                if(purchaseOrderCheck.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.purchaseOrder"))
                 }
+                val purchaseOrder = if (purchaseOrderCheck.isEmpty()) "" else {
+                    if (purchaseOrderCheck.contains("E")) {
+                        BigDecimal(purchaseOrderCheck).toBigInteger().toString()
+                    } else {
+                        if (purchaseOrderCheck.matches("\\d+".toRegex())) {
+                            purchaseOrderCheck.toBigInteger().toInt().toString()
+                        } else {
+                            isValidCol = false
+                            messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.purchaseOrder.invalidNumberFormat"))
+                            ""
+                        }
+                    }
+                }
+
                 val itemCd = ExcelHelper.getCellValue(row, 4)
                 if(itemCd.isEmpty()) {
                     isValidCol = false
@@ -174,7 +189,7 @@ class ExternalQualityReportService(
                     val productNameShortCut = spec.substring(1, 8)
                     val line1 = spec.substring(12, 13)
                     val frame1 = spec.substring(13, 15)
-                    val productExist = productMaster.find { x-> x.name?.contains(productNameShortCut) == true && x.exportType?.contains(exportType) ==true && x.frame_1==frame1 && x.layerCount== line1.toInt()}
+                    val productExist = productMaster.find { x-> x.name?.contains(productNameShortCut) == true && x.exportType?.contains(exportType) ==true && x.frame_1==frame1 && x.layerCount!! >= line1.toInt()}
                     if(productExist == null){
                         isValidCol = false
                         messageResults.add(CommonUtils.getMessage("validate.spec.productNotExist"))
@@ -248,7 +263,7 @@ class ExternalQualityReportService(
                 } else {
                     null
                 }
-                if (purchaseOrder.isEmpty() && itemCd.isEmpty() && spec.isEmpty() && orderedQuantityCheck.isEmpty() && responseDateCheck.isEmpty() && estimatedMonthCheck.isEmpty() && deliveredQuantityCheck.isEmpty() && opDlvDtCheck.isEmpty() && transmit.isEmpty() && estimatedDateCheck.isEmpty() && qtyUm.isEmpty() && opuPFc.isEmpty() && opuP.isEmpty()) {
+                if (purchaseOrderCheck.isEmpty() && itemCd.isEmpty() && spec.isEmpty() && orderedQuantityCheck.isEmpty() && responseDateCheck.isEmpty() && estimatedMonthCheck.isEmpty() && deliveredQuantityCheck.isEmpty() && opDlvDtCheck.isEmpty() && transmit.isEmpty() && estimatedDateCheck.isEmpty() && qtyUm.isEmpty() && opuPFc.isEmpty() && opuP.isEmpty()) {
                     continue
                 }
 
@@ -458,7 +473,7 @@ class ExternalQualityReportService(
                 val cell = dataRow.getCell(colIndex)
                 if(cell !=null){
                     val style = cell.cellStyle
-                        val value = ExcelHelper.getCellValueCustom(dataRow, colIndex)
+                        val value = ExcelHelper.getCellValueCustomImportTape(dataRow, colIndex)
                         ExcelHelper.setCellValue(row, colIndex, style, value)
                 }
             }
@@ -493,7 +508,7 @@ class ExternalQualityReportService(
         // create subColumns 14 columns from 1
         if(dataExport.subColumns.isNotEmpty()){
             for (col in dataExport.subColumns) {
-                ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, style, col.value, false)
+                ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, style, col.value, false, isBold = true)
                 headerCol++
             }
             headerCol= 14
@@ -501,7 +516,7 @@ class ExternalQualityReportService(
         //create columns
         if(dataExport.columns.isNotEmpty()){
             for (col in dataExport.columns) {
-                ExcelHelper.setCellValueWithCalendar(workbook, secondRow, headerCol, style, col.value, false)
+                ExcelHelper.setCellValueWithCalendar(workbook, secondRow, headerCol, style, col.value, false, isBold = true)
                 headerCol++
             }
         }
@@ -539,7 +554,7 @@ class ExternalQualityReportService(
             for (productReport in dataExport.data!!) {
                 for (shippingData in productReport.shippingData) {
                     val dataRow = sheet.getRow(rowShippingIndex) ?: sheet.createRow(rowShippingIndex)
-                    ExcelHelper.setCellValueCustom(workbook,dataRow, 11, style, shippingData.value, isAlignCenter = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 11, style, shippingData.value)
                     rowShippingIndex++
                 }
             }
@@ -568,11 +583,11 @@ class ExternalQualityReportService(
             for (productReport in dataExport.data!!) {
                 for (reportData in productReport.details) {
                     val dataRow = sheet.getRow(rowReportIndex) ?: sheet.createRow(rowReportIndex)
-                    ExcelHelper.setCellValueCustom(workbook,dataRow, 12, style, reportData.title)
-                    ExcelHelper.setCellValueCustom(workbook,dataRow, 13, style, reportData.inventory?.toString() ?: "")
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 12, style, reportData.title, isAlignLeft = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 13, style, reportData.inventory?.toString() ?: "",isNumberFormat = true)
                     headerCol=14
                     for(col in reportData.quantityByCalendars){
-                        ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, false,isReportDetails = true)
+                        ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, false,isReportDetails = true,isNumberFormat = true)
                         headerCol++
                     }
 
@@ -732,11 +747,12 @@ class ExternalQualityReportService(
         detailData.add(detailOrderQuantity)
 
         //ACCUMULATED_ORDER_QUANTITY
-        val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.sumWorkResultQuantity)
+        val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.sumInventoryQuantity)
         val accumulatedOrderQuantityCalendars = calculateAccumulation(orderQuantityCalendars)
         accumulatedOrderQuantity.quantityByCalendars = accumulatedOrderQuantityCalendars
-        accumulatedOrderQuantity.inventory =   externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
+        externalQualityReportModel.sumInventoryQuantity = externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
 
+        accumulatedOrderQuantity.inventory =   externalQualityReportModel.sumInventoryQuantity
         detailData.add(accumulatedOrderQuantity)
 
         //PRODUCTION_RESULT
@@ -745,7 +761,7 @@ class ExternalQualityReportService(
         columns.forEach{ x ->
         val productWorkResult = listWorkResult?.filter { workResult -> x.key.equals(workResult.summaryResultDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) })
                                                         && workResult.itemName == externalQualityReportModel.productName }
-        val sumItemQuantity = productWorkResult?.map { it.unfinishedQuantity }?.sumOf { it ?: 0 } ?: 0
+        val sumItemQuantity = productWorkResult?.map { it.goodTapeQuantity }?.sumOf { it ?: 0 } ?: 0
         productionResultCalendars.add(KeyValueResponse(x.key, sumItemQuantity.toString())) }
 
         productionResult.quantityByCalendars = productionResultCalendars
@@ -764,7 +780,7 @@ class ExternalQualityReportService(
 
         //DIFFERENCE_2
         val difference2 = ExternalQualityDetailModel("DIFFERENCE_2", ExternalReportDetailType.DIFFERENCE_2)
-        difference2.quantityByCalendars = calculateAccumulationWithInventory(orderQuantityCalendars,externalQualityReportModel.sumWorkResultQuantity)
+        difference2.quantityByCalendars = calculateAccumulationWithInventory(orderQuantityCalendars,externalQualityReportModel.sumInventoryQuantity)
         detailData.add(difference2)
 
         // LOGIC TAPE
@@ -796,7 +812,7 @@ class ExternalQualityReportService(
 
         externalQualityReportModel.goodQualityTapeInventorySet = goodQualityTapeInventorySet
         externalQualityReportModel.goodQualityTapeInventoryBlock = goodQualityTapeInventoryBlock
-        externalQualityReportModel.sumWorkResultQuantity =
+        externalQualityReportModel.sumInventoryQuantity =
             externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
 
         //PLANNED_TAPE_SET

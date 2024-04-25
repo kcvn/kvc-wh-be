@@ -469,7 +469,7 @@ class CompletionRateService(
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 2))
             throw BusinessException(validateExcelInvalidFormat)
 
-        val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
+        val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0)) }
         val productExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productNames)
         var count = 0
         var total = sheet.lastRowNum - rowIndex
@@ -484,7 +484,8 @@ class CompletionRateService(
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             val rateInputString = ExcelHelper.getCellValue(row, 1)
             val rateInput = rateInputString.toDoubleOrNull()
-            val name = ExcelHelper.getCellValue(row, 0)
+            val nameInput = ExcelHelper.getCellValue(row, 0)
+            val name = StringHelper.removeDecimalSuffix(nameInput)
             if (rateInput == null && rateInputString.isEmpty() && name.isEmpty()) {
                 total--
                 continue
@@ -494,11 +495,13 @@ class CompletionRateService(
                     LayerCompletionRateError(
                         name,
                         rateInput,
-                        CommonUtils.getMessage("product.is.exist")
+                        CommonUtils.getMessage("process.is.exist")
                     )
                 )
                 continue
             }
+            productNamesSet.add(name)
+
             val key = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 0))
             val processExistMinEffectiveDate = productExists
                 ?.filter { it.key == key }
@@ -689,11 +692,13 @@ class CompletionRateService(
                     LayerCompletionRateError(
                         name,
                         rateInput,
-                        CommonUtils.getMessage("product.is.exist")
+                        CommonUtils.getMessage("processProduct.is.exist")
                     )
                 )
                 continue
             }
+            productNamesSet.add(name)
+
             val key = ExcelHelper.getCellValue(row, 0)
             val errorMessages = mutableListOf<String>()
             val productExist = productExists?.find { x -> x.key == key }

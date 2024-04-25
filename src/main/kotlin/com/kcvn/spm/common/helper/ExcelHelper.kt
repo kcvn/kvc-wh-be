@@ -55,6 +55,27 @@ class ExcelHelper {
                 else -> ""
             }
         }
+
+        fun getCellValueCustomImportTape(row: Row, columnIndex: Int): String {
+            val cell = row.getCell(columnIndex)
+            return when (cell.cellType) {
+                CellType.STRING -> cell.stringCellValue
+                CellType.NUMERIC -> {
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        val date = cell.dateCellValue
+                        val newDateFormat = SimpleDateFormat("yyyy/MM/dd")
+                        newDateFormat.format(date)
+                    } else {
+                        DecimalFormat("#").format(cell.numericCellValue)
+                    }
+                }
+                CellType.BOOLEAN -> cell.booleanCellValue.toString()
+                CellType.FORMULA -> cell.cellFormula
+                else -> ""
+            }
+        }
+
+
         fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: String?) {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate
@@ -65,7 +86,7 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle = styleTemplate
         }
 
-        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false) {
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false,isNumberFormat: Boolean = false,isBold: Boolean = false) {
             row.createCell(colIndex).setCellValue(value)
             val cellStyle = workbook.createCellStyle()
             cellStyle.cloneStyleFrom(style)
@@ -79,9 +100,18 @@ class ExcelHelper {
                 cellStyle.borderTop = BorderStyle.THIN
                 cellStyle.borderBottom = BorderStyle.THIN
             }
+
             if (isHoliday) {
                 cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            if (isBold){
+                val fontTemplate = workbook.getFontAt(style.fontIndex)
+                val font = workbook.createFont()
+                font.fontName = fontTemplate.fontName
+                font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+                font.bold = true
+                cellStyle.setFont(font)
             }
             if(!color.isNullOrEmpty()){
                 if(color == Color.YELLOW){
@@ -94,6 +124,16 @@ class ExcelHelper {
                     cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
                 }
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            if(isNumberFormat){
+                if (value != null) {
+                    if(value.isNotEmpty()) {
+                        val dataFormat = workbook.createDataFormat()
+                        style.dataFormat = dataFormat.getFormat("#,##0")
+                        val numberValue = value.toDouble()
+                        row.createCell(colIndex).setCellValue(numberValue)
+                    }
+                }
             }
             row.getCell(colIndex).cellStyle = cellStyle
         }
@@ -111,7 +151,8 @@ class ExcelHelper {
             isBold: Boolean = false,
             isAlignCenter: Boolean = false,
             indexColor: Short? = null,
-            isNumberFormat: Boolean = false
+            isNumberFormat: Boolean = false,
+            isAlignLeft: Boolean = false
             ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
@@ -122,6 +163,7 @@ class ExcelHelper {
             if (isBorderTop) style.borderTop = BorderStyle.THIN else style.borderTop = BorderStyle.NONE
             if (isBorderBottom) style.borderBottom = BorderStyle.THIN else style.borderBottom = BorderStyle.NONE
             if (isAlignCenter) style.alignment = HorizontalAlignment.CENTER
+            if (isAlignLeft) style.alignment = HorizontalAlignment.LEFT
             if (indexColor != null) {
                 style.fillForegroundColor = indexColor
                 style.fillPattern = FillPatternType.SOLID_FOREGROUND
@@ -135,10 +177,15 @@ class ExcelHelper {
                 style.setFont(font)
             }
             if(isNumberFormat){
-                val dataFormat = workbook.createDataFormat()
-                style.dataFormat = dataFormat.getFormat("#,##0")
-                val numberValue = value?.toDouble() ?: 0.0
-                row.createCell(colIndex).setCellValue(numberValue)
+                if (value != null) {
+                    if(value.isNotEmpty()){
+                        val dataFormat = workbook.createDataFormat()
+                        style.dataFormat = dataFormat.getFormat("#,##0")
+                        val numberValue = value.toDouble()
+                        row.createCell(colIndex).setCellValue(numberValue)
+                    }
+                }
+
             }
             row.getCell(colIndex).cellStyle = style
         }

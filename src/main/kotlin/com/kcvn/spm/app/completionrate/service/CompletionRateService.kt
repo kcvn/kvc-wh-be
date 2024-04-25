@@ -143,6 +143,8 @@ class CompletionRateService(
         val errorFont = templateWorkbook.createFont()
         errorStyle.alignment = HorizontalAlignment.LEFT
         errorFont.color = IndexedColors.RED.index
+        errorFont.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+        errorFont.fontHeightInPoints = 12
         errorStyle.setFont(errorFont)
 
         layerCompletionRateErrorList.forEach { error ->

@@ -108,6 +108,7 @@ class ExternalQualityReportService(
         }
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
+            val productMaster = productRepository.getProductList()
             val dateFormats = listOf(DateTimeFormat.M_dd_yyyy, DateTimeFormat.yyyy_MM_dd, DateTimeFormat.dd_MM_yyyy)
 
             val tapeEnRouteList = mutableListOf<TapeEnRoute>()
@@ -144,7 +145,7 @@ class ExternalQualityReportService(
                 }else if(exportType == ExportType.SIPBACK){
                     exportType = ExportType.SHIPBACK
                 }
-                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT) {
+                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT && exportType.isNotEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.format.exportType"))
                 }
@@ -168,6 +169,19 @@ class ExternalQualityReportService(
                 if(spec.isEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.spec"))
+                }
+                if(spec.length == 15){
+                    val productNameShortCut = spec.substring(1, 8)
+                    val line1 = spec.substring(12, 13)
+                    val frame1 = spec.substring(13, 15)
+                    val productExist = productMaster.find { x-> x.name?.contains(productNameShortCut) == true && x.exportType?.contains(exportType) ==true && x.frame_1==frame1 && x.layerCount== line1.toInt()}
+                    if(productExist == null){
+                        isValidCol = false
+                        messageResults.add(CommonUtils.getMessage("validate.spec.productNotExist"))
+                    }
+                }else{
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.importTapeRoute.wrongFormat.spec"))
                 }
 
                 val orderedQuantityCheck = ExcelHelper.getCellValue(row, 7)
@@ -234,7 +248,7 @@ class ExternalQualityReportService(
                 } else {
                     null
                 }
-                if (purchaseOrder.isEmpty() || itemCd.isEmpty() || spec.isEmpty() || orderedQuantityCheck.isEmpty() || responseDateCheck.isEmpty()) {
+                if (purchaseOrder.isEmpty() && itemCd.isEmpty() && spec.isEmpty() && orderedQuantityCheck.isEmpty() && responseDateCheck.isEmpty() && estimatedMonthCheck.isEmpty() && deliveredQuantityCheck.isEmpty() && opDlvDtCheck.isEmpty() && transmit.isEmpty() && estimatedDateCheck.isEmpty() && qtyUm.isEmpty() && opuPFc.isEmpty() && opuP.isEmpty()) {
                     continue
                 }
 
@@ -313,7 +327,7 @@ class ExternalQualityReportService(
             val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
             if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 6))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
-            val productMaster = productRepository.getListNameProduct()
+            val productMaster = productRepository.getProductList()
 
             var count = 0
             var total = 0
@@ -328,7 +342,7 @@ class ExternalQualityReportService(
                 }else if(exportType == ExportType.SIPBACK){
                     exportType = ExportType.SHIPBACK
                 }
-                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT) {
+                if (exportType != ExportType.SHIPBACK && exportType != ExportType.DIRECT && exportType.isNotEmpty()) {
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.format.exportType"))
                 }
@@ -346,11 +360,16 @@ class ExternalQualityReportService(
                     messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.productName"))
                 }
 
-                if(!productMaster.contains(productName)){
+
+                if(productMaster.none { product -> product.name == productName }){
                     isValidCol = false
                     messageResults.add(CommonUtils.getMessage("validate.importTapeInventory.productName.notExist"))
                 }
 
+                if(productMaster.none { product -> product.name == productName && product.exportType?.contains(exportType) == true }){
+                    isValidCol = false
+                    messageResults.add(CommonUtils.getMessage("validate.spec.productNotExist"))
+                }
                 val tapeInWareHouseCheck = ExcelHelper.getCellValue(row, 3)
                 var tapeInWareHouse: Int? = null
                  if (!NumberHelper.isNumeric(tapeInWareHouseCheck) && tapeInWareHouseCheck.isNotEmpty()) {
@@ -380,7 +399,7 @@ class ExternalQualityReportService(
                     if(tapeNGCheck.isNotEmpty())
                     tapeNG = StringHelper.removeDecimalSuffix(tapeNGCheck).toInt()
                 }
-                if (exportType.isEmpty()  || productName.isEmpty()) {
+                if (exportType.isEmpty()  && productName.isEmpty() && productNameShortCut.isEmpty() && tapeInWareHouseCheck.isEmpty() && tapeInDepartmentCheck.isEmpty() && tapeNGCheck.isEmpty()){
                     continue
                 }
                 total++
@@ -510,7 +529,8 @@ class ExternalQualityReportService(
                         setCellValueCustom(workbook,dataRow, 6, style, productReport.snapMold, isAlignCenter = true)
                         setCellValueCustom(workbook,dataRow, 7, style, productReport.layerCount.toString(), isAlignCenter = true)
                         setCellValueCustom(workbook,dataRow, 8, style, productReport.tapeCommon, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 9, style, productReport.completionRate.toString(), isAlignCenter = true)
+                        val completionRate = if (productReport.completionRate?.toString().isNullOrEmpty()) "" else "${productReport.completionRate}%"
+                        setCellValueCustom(workbook, dataRow, 9, style, completionRate, isAlignCenter = true)
                     }
                     rowProductIndex++
                 }
@@ -672,7 +692,7 @@ class ExternalQualityReportService(
             if(isShortCutName){
                 item.productShortcutName?.let { productNames.add(it) }
             }else if(isSpec){
-                item.productShortcutName?.let { productNames.add("$it L1") }
+                item.productShortcutName?.let { productNames.add("V$it"+"00 L1") }
             }
             else{
                 item.productName?.let { productNames.add(it) }
@@ -758,8 +778,8 @@ class ExternalQualityReportService(
         var inventoryTape = 0
         var tapeExpired =0
         if(tapeInventory.isNotEmpty()){
-            tapeExpired = tapeInventory.filter { it.tapeInWarehouse != null }.sumOf { it.tapeInWarehouse!! } + tapeInventory.filter { it.tapeInDepartment != null }.sumOf { it.tapeInDepartment!! }
-            inventoryTape = tapeInventory.filter { it.tapeNg != null }.sumOf { it.tapeNg!! }
+            inventoryTape = tapeInventory.filter { it.tapeInWarehouse != null }.sumOf { it.tapeInWarehouse!! } + tapeInventory.filter { it.tapeInDepartment != null }.sumOf { it.tapeInDepartment!! }
+            tapeExpired = tapeInventory.filter { it.tapeNg != null }.sumOf { it.tapeNg!! }
         }
         val goodQualityTapeInventorySet = inventoryTape - tapeExpired
         val goodQualityTapeInventoryBlock = goodQualityTapeInventorySet * externalQualityReportModel.blockSh!!
@@ -928,16 +948,18 @@ class ExternalQualityReportService(
             shippingData.add(KeyValueResponse("exchange_rate_differences", exchangeRateDifferences))
             addKeyValueEmpty(shippingData,1)
             shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
-            shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity1.toString()))
-            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
             shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity1.toString()))
-            addKeyValueEmpty(shippingData,2)
+
+            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
+            shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity1.toString()))
+
+        addKeyValueEmpty(shippingData,2)
 
             if(externalQualityReportModel.exportType?.contains(",") == true){
             shippingData.add(KeyValueResponse("tape_inventory_title",inventoryTitle))
-            shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity2.toString()))
-            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
             shippingData.add(KeyValueResponse("tape_inventory_title_number",externalQualityReportModel.tapeInventoryQuantity2.toString()))
+            shippingData.add(KeyValueResponse("expired_tape",expiredTitle))
+            shippingData.add(KeyValueResponse("expired_tape_number",externalQualityReportModel.tapeExpireQuantity2.toString()))
             addKeyValueEmpty(shippingData,2)
             }
 

@@ -2,7 +2,6 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.model.tables.pojos.PlanProcess
-import com.kcvn.spm.model.tables.pojos.PlanProcessTemp
 import com.kcvn.spm.model.tables.references.PLAN_PROCESS
 import com.kcvn.spm.model.tables.references.PLAN_PROCESS_TEMP
 import org.jooq.DSLContext
@@ -11,25 +10,50 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
-class PlanProcessRepository(private val context: DSLContext): SortingRepository() {
-    fun getListPlanProcess(planProductId: String): List<PlanProcess> {
-        val sortFields = getSortFields(null, PLAN_PROCESS.PLAN_PRODUCT_ID).distinct().toMutableList()
+class PlanProcessRepository(private val context: DSLContext) : SortingRepository() {
+    fun getListPlanProcess(planProductId: String, isDraft: Boolean = false): List<PlanProcess> {
+        var sortFields = getSortFields(null, PLAN_PROCESS.PLAN_PRODUCT_ID).distinct().toMutableList()
         sortFields.add(0, DSL.cast(PLAN_PROCESS.LAYER_CODE, java.math.BigDecimal::class.java).asc())
         sortFields.add(1, PLAN_PROCESS.PROCESS_SEQUENCE.asc())
 
-        return context.selectFrom(PLAN_PROCESS)
+        val data = context.selectFrom(PLAN_PROCESS)
             .where(PLAN_PROCESS.PLAN_PRODUCT_ID.eq(planProductId).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .orderBy(sortFields).fetchInto(PlanProcess::class.java)
+
+        if (isDraft) {
+            sortFields = getSortFields(null, PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID).distinct().toMutableList()
+            sortFields.add(0, DSL.cast(PLAN_PROCESS_TEMP.LAYER_CODE, java.math.BigDecimal::class.java).asc())
+            sortFields.add(1, PLAN_PROCESS_TEMP.PROCESS_SEQUENCE.asc())
+            data.addAll(
+                context.selectFrom(PLAN_PROCESS_TEMP)
+                    .where(PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID.eq(planProductId).and(PLAN_PROCESS_TEMP.IS_DELETED.eq(false)))
+                    .orderBy(sortFields).fetchInto(PlanProcess::class.java)
+            )
+        }
+        return data
     }
 
-    fun getListPlanProcess(planProductIds: List<String>): List<PlanProcess> {
-        val sortFields = getSortFields(null, PLAN_PROCESS.PLAN_PRODUCT_ID).distinct().toMutableList()
+    fun getListPlanProcess(planProductIds: List<String>, isDraft: Boolean = false): List<PlanProcess> {
+        var sortFields = getSortFields(null, PLAN_PROCESS.PLAN_PRODUCT_ID).distinct().toMutableList()
         sortFields.add(0, PLAN_PROCESS.PLAN_PRODUCT_ID.asc())
         sortFields.add(1, DSL.cast(PLAN_PROCESS.LAYER_CODE, java.math.BigDecimal::class.java).asc())
         sortFields.add(2, PLAN_PROCESS.PROCESS_SEQUENCE.asc())
-        return context.selectFrom(PLAN_PROCESS)
+        val data = context.selectFrom(PLAN_PROCESS)
             .where(PLAN_PROCESS.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .orderBy(sortFields).fetchInto(PlanProcess::class.java)
+
+        if (isDraft) {
+            sortFields = getSortFields(null, PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID).distinct().toMutableList()
+            sortFields.add(0, PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID.asc())
+            sortFields.add(1, DSL.cast(PLAN_PROCESS_TEMP.LAYER_CODE, java.math.BigDecimal::class.java).asc())
+            sortFields.add(2, PLAN_PROCESS_TEMP.PROCESS_SEQUENCE.asc())
+            data.addAll(
+                context.selectFrom(PLAN_PROCESS_TEMP)
+                    .where(PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS_TEMP.IS_DELETED.eq(false)))
+                    .orderBy(sortFields).fetchInto(PlanProcess::class.java)
+            )
+        }
+        return data
     }
 
     fun getPlanProcessTemp(): List<PlanProcess> {

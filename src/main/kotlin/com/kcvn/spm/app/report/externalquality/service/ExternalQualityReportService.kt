@@ -114,21 +114,21 @@ class ExternalQualityReportService(
 
             val tapeEnRouteList = mutableListOf<TapeEnRoute>()
             val sheet = workbook.getSheetAt(0)
-            val rowIndex = 1
+            val rowIndex = 2
 
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-            val headerRow = sheet.getRow(0)
+            val headerRow = sheet.getRow(1)
                 ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
             val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeEnRouteTemplate.xlsx"
             val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 1, 16))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
             var count = 0
             var total = 0
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-                val style = row.getCell(0)?.cellStyle ?: break
+                val style = row.getCell(1)?.cellStyle ?: break
                 val messageResults = mutableListOf<String>()
                 var isValidCol = true
 
@@ -659,7 +659,7 @@ class ExternalQualityReportService(
         //get list Tape Inventory
         val tapeInventory = tapeInventoryRepository.getTapeForReport(listShortCutName,inventoryClosingDate)
         //get list Tape En route
-        val tapeEnRoute = tapeEnRouteRepository.getTapeEnRouteForReport(listSpec,startDate,endDate)
+        val tapeEnRoute = tapeEnRouteRepository.getTapeEnRouteForReport(listSpec,startDate.minusDays((daysToSubtract+1)),endDate)
 
         // get list name product
         val productNames = getListNameProduct(mappingPaging)

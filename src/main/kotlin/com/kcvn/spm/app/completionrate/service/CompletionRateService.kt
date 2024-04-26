@@ -7,6 +7,7 @@ import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessPro
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
 import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.typeOfCompletionRateCm
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -88,13 +89,13 @@ class CompletionRateService(
             throw BusinessException(validateExcelInvalidFormat)
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         var minDate: OffsetDateTime? = null
-        if (typeOfCompletionRate == 0) {
+        if (typeOfCompletionRate == typeOfCompletionRateCm.PRODUCT) {
             val productExists = completionRateProductRepository.getByProduct(productKeys)
             if (!productExists.isNullOrEmpty()) {
                 minDate = productExists.filter { it.effectiveDate != null }
                     .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
             }
-        } else if (typeOfCompletionRate == 1) {
+        } else if (typeOfCompletionRate == typeOfCompletionRateCm.PROCESS) {
             val processExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productKeys)
             if (!processExists.isNullOrEmpty()) {
                 minDate = processExists.filter { it.effectiveDate != null }

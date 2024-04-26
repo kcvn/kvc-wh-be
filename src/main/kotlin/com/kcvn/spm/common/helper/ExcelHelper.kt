@@ -86,7 +86,7 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle = styleTemplate
         }
 
-        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false,isNumberFormat: Boolean = false,isBold: Boolean = false) {
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false,isNumberFormat: Boolean = false,isBold: Boolean = false,isNotBold: Boolean = false) {
             row.createCell(colIndex).setCellValue(value)
             val cellStyle = workbook.createCellStyle()
             cellStyle.cloneStyleFrom(style)
@@ -111,6 +111,14 @@ class ExcelHelper {
                 font.fontName = fontTemplate.fontName
                 font.fontHeightInPoints = fontTemplate.fontHeightInPoints
                 font.bold = true
+                cellStyle.setFont(font)
+            }
+            if(isNotBold){
+                val fontTemplate = workbook.getFontAt(style.fontIndex)
+                val font = workbook.createFont()
+                font.fontName = fontTemplate.fontName
+                font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+                font.bold = false
                 cellStyle.setFont(font)
             }
             if(!color.isNullOrEmpty()){
@@ -152,7 +160,8 @@ class ExcelHelper {
             isAlignCenter: Boolean = false,
             indexColor: Short? = null,
             isNumberFormat: Boolean = false,
-            isAlignLeft: Boolean = false
+            isAlignLeft: Boolean = false,
+            isNotBold: Boolean = false
             ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
@@ -174,6 +183,14 @@ class ExcelHelper {
                 font.fontName = fontTemplate.fontName
                 font.fontHeightInPoints = fontTemplate.fontHeightInPoints
                 font.bold = true
+                style.setFont(font)
+            }
+            if (isNotBold){
+                val fontTemplate = workbook.getFontAt(styleTemplate.fontIndex)
+                val font = workbook.createFont()
+                font.fontName = fontTemplate.fontName
+                font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+                font.bold = false
                 style.setFont(font)
             }
             if(isNumberFormat){

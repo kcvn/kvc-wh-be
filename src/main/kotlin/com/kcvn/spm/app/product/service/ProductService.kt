@@ -17,6 +17,7 @@ import com.kcvn.spm.common.constants.ProcessStatisticCode
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.helper.JsonConvert
+import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.CellStyleModel
@@ -106,7 +107,7 @@ class ProductService(
                 ExcelHelper.setCellValue(dataRow, 0, style, item.name)
                 ExcelHelper.setCellValue(dataRow, 1, style, item.name?.substring((if (item.name!!.length < 7) 0 else item.name!!.length - 7), item.name!!.length))
                 ExcelHelper.setCellValue(dataRow, 2, style, item.exportType)
-                ExcelHelper.setCellValue(dataRow, 3, style, item.size)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.size?.let { StringHelper.removeDecimalSuffix(it) })
                 ExcelHelper.setCellValue(dataRow, 4, style, item.frame_1)
                 ExcelHelper.setCellValue(dataRow, 5, style, item.frame_2)
                 ExcelHelper.setCellValue(dataRow, 6, style, item.mold)
@@ -117,7 +118,7 @@ class ProductService(
                 ExcelHelper.setCellValue(dataRow, 11, style, item.layerCount?.toString() ?: "")
                 ExcelHelper.setCellValue(dataRow, 12, style, item.ringJig)
                 ExcelHelper.setCellValue(dataRow, 13, style, item.process?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 14, style, item.completionRate?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 14, style, if (item.completionRate == null) "" else "${item.completionRate}%" )
                 ExcelHelper.setCellValue(dataRow, 15, style, item.snapMold)
                 ExcelHelper.setCellValue(dataRow, 16, style, item.tapeCommon)
                 ExcelHelper.setCellValue(dataRow, 17, style, item.tapeType)
@@ -212,7 +213,7 @@ class ProductService(
                             val product = Product(
                                 name = ExcelHelper.getCellValue(row, 0),
                                 exportType = ExcelHelper.getCellValue(row, 1),
-                                size = ExcelHelper.getCellValue(row, 2),
+                                size = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 2)),
                                 frame_1 = ExcelHelper.getCellValue(row, 3),
                                 frame_2 = ExcelHelper.getCellValue(row, 4),
                                 mold = ExcelHelper.getCellValue(row, 5),
@@ -240,7 +241,7 @@ class ProductService(
                             productRep.add(product)
                         } else {
                             productExist.exportType = ExcelHelper.getCellValue(row, 1)
-                            productExist.size = ExcelHelper.getCellValue(row, 2)
+                            productExist.size = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 2))
                             productExist.frame_1 = ExcelHelper.getCellValue(row, 3)
                             productExist.frame_2 = ExcelHelper.getCellValue(row, 4)
                             productExist.mold = ExcelHelper.getCellValue(row, 5)
@@ -294,7 +295,7 @@ class ProductService(
                 val prod = ImportProductErrorModel(
                     name = ExcelHelper.getCellValue(x, 0),
                     exportType = ExcelHelper.getCellValue(x, 1),
-                    size = ExcelHelper.getCellValue(x, 2),
+                    size = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(x, 2)),
                     frame_1 = ExcelHelper.getCellValue(x, 3),
                     frame_2 = ExcelHelper.getCellValue(x, 4),
                     mold = ExcelHelper.getCellValue(x, 5),

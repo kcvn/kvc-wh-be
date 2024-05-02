@@ -130,7 +130,10 @@ class PlanService(
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 
         var planProcessIds = parentPlanProcesses.mapNotNull { x -> x.id }
-        val planDetails = planDetailRep.getPlanDetail(planProcessIds, request.startDate!!, request.endDate!!, request.draftWorkPlan ?: false)
+        val planDetails = planDetailRep.getPlanDetail(
+            planProcessIds, request.startDate!!, request.endDate!!,
+            request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false
+        )
 
         planProcessIds = planDetails.mapNotNull { x -> x.planProcessId }
         parentPlanProcesses = parentPlanProcesses.filter { x -> planProcessIds.any { m -> m == x.id } }
@@ -181,8 +184,8 @@ class PlanService(
                     }.sortedBy { m -> m.key }
 
                 val planData = mutableListOf<PlanDataByProcessModel>()
-                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
-                planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail, sort = 1))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData, sort = 3))
 
                 productPlan.planData = planData
                 productPlan
@@ -221,7 +224,8 @@ class PlanService(
                                 m.key,
                                 m.value.sumOf { it.value?.toInt() ?: 0 }.toString(),
                             )
-                        }
+                        },
+                        sort = x.value.first().sort
                     )
                 }
             )
@@ -229,14 +233,16 @@ class PlanService(
                 PlanDataByProcessModel(
                     title = PlanTitle.PLAN_ACCUMULATION,
                     titleKey = PlanTitle.PLAN_ACCUMULATION_KEY,
-                    quantityByCalendars = calculateAccumulation(planData.first { it.titleKey == PlanTitle.PLAN_KEY }.quantityByCalendars!!)
+                    quantityByCalendars = calculateAccumulation(planData.first { it.titleKey == PlanTitle.PLAN_KEY }.quantityByCalendars!!),
+                    sort = 2
                 )
             )
             planData.add(
                 PlanDataByProcessModel(
                     title = PlanTitle.ACTUAL_ACCUMULATION,
                     titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY,
-                    quantityByCalendars = calculateAccumulation(planData.first { it.titleKey == PlanTitle.ACTUAL_KEY }.quantityByCalendars!!)
+                    quantityByCalendars = calculateAccumulation(planData.first { it.titleKey == PlanTitle.ACTUAL_KEY }.quantityByCalendars!!),
+                    sort = 4
                 )
             )
             planData.add(
@@ -247,10 +253,11 @@ class PlanService(
                         planData.first { it.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY }.quantityByCalendars!!,
                         planData.first { it.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY }.quantityByCalendars!!,
                         response.columns!!
-                    )
+                    ),
+                    sort = 5
                 )
             )
-            rs.planData = planData
+            rs.planData = planData.sortedBy { it.sort }
             rs
         }
         return response
@@ -334,8 +341,8 @@ class PlanService(
                     }.sortedBy { m -> m.key }
 
                 val planData = mutableListOf<PlanDataByProcessModel>()
-                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
-                planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail, sort = 1))
+                planData.add(PlanDataByProcessModel(title = PlanTitle.ACTUAL, titleKey = PlanTitle.ACTUAL_KEY, quantityByCalendars = workResultData, sort = 3))
 
                 productPlan.planData = planData
                 productPlan
@@ -381,7 +388,8 @@ class PlanService(
                                         m.key,
                                         m.value.sumOf { it.value?.toInt() ?: 0 }.toString(),
                                     )
-                                }
+                                },
+                                sort = x.value.first().sort
                             )
                         }
                     )
@@ -389,14 +397,16 @@ class PlanService(
                         PlanDataByProcessModel(
                             title = PlanTitle.PLAN_ACCUMULATION,
                             titleKey = PlanTitle.PLAN_ACCUMULATION_KEY,
-                            quantityByCalendars = calculateAccumulation(planData.first { it.titleKey == PlanTitle.PLAN_KEY }.quantityByCalendars!!)
+                            quantityByCalendars = calculateAccumulation(planData.first { it.titleKey == PlanTitle.PLAN_KEY }.quantityByCalendars!!),
+                            sort = 2
                         )
                     )
                     planData.add(
                         PlanDataByProcessModel(
                             title = PlanTitle.ACTUAL_ACCUMULATION,
                             titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY,
-                            quantityByCalendars = calculateAccumulation(planData.first { it.titleKey == PlanTitle.ACTUAL_KEY }.quantityByCalendars!!)
+                            quantityByCalendars = calculateAccumulation(planData.first { it.titleKey == PlanTitle.ACTUAL_KEY }.quantityByCalendars!!),
+                            sort = 4
                         )
                     )
                     planData.add(
@@ -407,10 +417,11 @@ class PlanService(
                                 planData.first { it.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY }.quantityByCalendars!!,
                                 planData.first { it.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY }.quantityByCalendars!!,
                                 columns
-                            )
+                            ),
+                            sort = 5
                         )
                     )
-                    rs.planData = planData
+                    rs.planData = planData.sortedBy { it.sort }
                     rs
                 }
             )

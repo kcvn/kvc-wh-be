@@ -92,7 +92,12 @@ class ExcelConstant {
         const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
     }
 }
+class GrpProcessCode {
+    companion object {
+        const val XERANH = "21400"
 
+    }
+}
 class DateTimeFormat {
     companion object {
         const val dd_MM_yyyy = "dd/MM/yyyy"

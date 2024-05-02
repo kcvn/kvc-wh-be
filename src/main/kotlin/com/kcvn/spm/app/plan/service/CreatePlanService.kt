@@ -45,9 +45,6 @@ import com.kcvn.spm.repository.HolidaysCalenderRepository
 import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.PlanCalendarConfigRepository
-import com.kcvn.spm.repository.PlanDetailRepository
-import com.kcvn.spm.repository.PlanProcessRepository
-import com.kcvn.spm.repository.PlanProductRepository
 import com.kcvn.spm.repository.PlanRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
@@ -77,9 +74,6 @@ class CreatePlanService(
     private val equipmentProductivityRep: EquipmentProductivityRepository,
     private val systemLockRep: SystemLockRepository,
     private val planRep: PlanRepository,
-    private val planProductRep: PlanProductRepository,
-    private val planProcessRep: PlanProcessRepository,
-    private val planDetailRep: PlanDetailRepository,
     private val planCalendarConfigRep: PlanCalendarConfigRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val workResultRep: WorkResultRepository
@@ -223,10 +217,17 @@ class CreatePlanService(
                     }
                     if (orderInfoFilter.isEmpty()) throw BusinessException("Không có dữ liệu xuất hàng kể từ ngày chốt tồn kho")
 
-                    val planProductData = calculatePlanProductWithInventory(
-                        orderInfoFilter, productInfo, productProcesses,
-                        completionRateInfo, equipmentInfo, inventories, holidays
-                    )
+                    val planProductData = if (inventories.isEmpty()) {
+                        calculatePlanProductNoInventory(
+                            orderInfoFilter, productInfo, productProcesses,
+                            completionRateInfo, equipmentInfo, holidays
+                        )
+                    } else {
+                        calculatePlanProductWithInventory(
+                            orderInfoFilter, productInfo, productProcesses,
+                            completionRateInfo, equipmentInfo, inventories, holidays
+                        )
+                    }
                     val planDataTemp = planRep.getDataForRePlan(month, year)
 
                     if (request.replan == true) {
@@ -295,6 +296,26 @@ class CreatePlanService(
         equipmentInfo: List<EquipmentProductivity>,
         holidays: List<OffsetDateTime>
     ) {
+        val planProductMappings = calculatePlanProductNoInventory(
+            orderInfo, productInfo, productProcesses,
+            completionRateInfo, equipmentInfo, holidays
+        )
+
+        val data = planProductMappings.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { it.planDate }
+        val startDate = data.first().planDate!!
+        val endDate = orderInfo.sortedByDescending { x -> x.orderDate }.first().orderDate!!
+        val hasInventory = data.any { it.hasInventory == true }
+        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate, hasInventory), planProductMappings)
+    }
+
+    private fun calculatePlanProductNoInventory(
+        orderInfo: List<OrderInfo>,
+        productInfo: List<Product>,
+        productProcesses: List<ProductProcessModel>,
+        completionRateInfo: List<CompletionRateProcessProduct>,
+        equipmentInfo: List<EquipmentProductivity>,
+        holidays: List<OffsetDateTime>
+    ): MutableList<PlanProductCreateModel> {
         val productGroupByDates = sortProduct(orderInfo, productInfo, listOf(), productProcesses)
         val planProducts = mutableListOf<PlanProductCreateModel>()
 
@@ -336,7 +357,7 @@ class CreatePlanService(
                 var currentLayerCode = processSource.layerCode?.toIntOrNull() ?: 0
                 var count = 1
                 while (count <= (product.layerCount ?: 0)) {
-                    val planCalculator = calculatePlan(
+                    val planCalculator = calculatePlanProcess(
                         iOrder.orderDate!!, processSource!!, completionRateSource!!, planDetailSource, completionRates,
                         parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                         childrenProcesses, product, equipmentInfo, equipmentUsedInfoByDate, holidays
@@ -371,7 +392,7 @@ class CreatePlanService(
                     }
                     if (processOfNextLayer != null) {
                         currentLayerCode = processOfNextLayer.layerCode?.toIntOrNull() ?: 0
-                        val planCalculator = calculatePlan(
+                        val planCalculator = calculatePlanProcess(
                             iOrder.orderDate!!, processSource, completionRateSource, planDetailSource, completionRates,
                             parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                             childrenProcesses, product, equipmentInfo, equipmentUsedInfoByDate, holidays
@@ -389,15 +410,9 @@ class CreatePlanService(
         }
 
         val planProductMappings = mappingPlanProductModel(planProducts)
-
-        val data = planProductMappings.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { it.planDate }
-        val startDate = data.first().planDate!!
-        val endDate = orderInfo.sortedByDescending { x -> x.orderDate }.first().orderDate!!
-        val hasInventory = data.any { it.hasInventory == true }
-        planRep.createPlanTemp(generatePlanModel(request, planCalendarConfig, startDate, endDate, hasInventory), planProductMappings)
+        return planProductMappings
     }
-
-    private fun calculatePlan(
+    private fun calculatePlanProcess(
         orderDate: OffsetDateTime,
         processSource: ProductProcessModel,
         completionRateSource: CompletionRateProcessProduct,
@@ -654,7 +669,7 @@ class CreatePlanService(
 
                 val parentProcesses = planProcesses.filter { x -> x.planProductId == planProduct.id && x.parentId.isNullOrEmpty() }
                 val childrenProcesses = planProcesses.filter { x -> x.planProductId == planProduct.id && !x.parentId.isNullOrEmpty() }
-                var details = planDetails.filter { x -> x.planProductId == planProduct.id }
+                val details = planDetails.filter { x -> x.planProductId == planProduct.id }
 
                 for (iProcess in parentProcesses) {
                     if (item.planProcesses.any { it.processCode == iProcess.processCode && it.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull() }) {
@@ -768,6 +783,14 @@ class CreatePlanService(
 
             val completionRates = completionRateInfo.filter { x -> x.productNameShortcut == iProductName.substring(iProductName.length - 7, iProductName.length) }
 
+            val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
+            val planProcessINS = generatePlanProcessModel(processIns, completionRateIns!!.rate)
+            for (iOrder in orderInfo) {
+                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!)
+                planProcessINS.planDetails.add(planDetailIns)
+            }
+            planProductCreateModel.planProcesses.add(planProcessINS)
+
             val highestPriorityProcesses = parentProcesses.filter { x ->
                 x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull()
                     && x.processSequence!! >= mAllParent.processSequence!! && x.processConvertCode != ProcessConvertCode.INS
@@ -836,14 +859,6 @@ class CreatePlanService(
                 completionRates, product, holidays
             )
             planProductCreateModel.planProcesses.addAll(planAfterAllocate)
-
-            val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
-            val planProcessINS = generatePlanProcessModel(processIns, completionRateIns!!.rate)
-            for (iOrder in orderInfo) {
-                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!)
-                planProcessINS.planDetails.add(planDetailIns)
-            }
-            planProductCreateModel.planProcesses.add(planProcessINS)
 
             planProducts.add(planProductCreateModel)
         }
@@ -1471,7 +1486,7 @@ class CreatePlanService(
             var currentLayerCode = processSource.layerCode?.toIntOrNull() ?: 0
             var count = 1
             while (count <= (productInfo.layerCount ?: 0)) {
-                val planCalculator = calculatePlan(
+                val planCalculator = calculatePlanProcess(
                     iOrder.orderDate!!, processSource, completionRateSource!!, planDetailSource, completionRateInfo,
                     parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                     childrenProcesses, productInfo, listOf(), mutableListOf(), holidays
@@ -1506,7 +1521,7 @@ class CreatePlanService(
                 }
                 if (processOfNextLayer != null) {
                     currentLayerCode = processOfNextLayer.layerCode?.toIntOrNull() ?: 0
-                    val planCalculator = calculatePlan(
+                    val planCalculator = calculatePlanProcess(
                         iOrder.orderDate!!, processSource, completionRateSource, planDetailSource, completionRateInfo,
                         parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                         childrenProcesses, productInfo, listOf(), mutableListOf(), holidays

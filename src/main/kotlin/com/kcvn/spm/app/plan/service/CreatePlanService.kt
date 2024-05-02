@@ -112,7 +112,7 @@ class CreatePlanService(
         val startDate = planCalendarConfig.startDate!!
         val endDate = planCalendarConfig.endDate!!
 
-        if (request.inventoryDate != null && (request.inventoryDate!! < startDate || request.inventoryDate!! > endDate))
+        if (request.inventoryDate != null && (request.inventoryDate!!.isBefore(startDate) || request.inventoryDate!!.isAfter(endDate)))
             throw BusinessException("Ngày chốt tồn kho đang nằm ngoài khoảng thời gian của tháng sản xuất")
 
         val orderInfo = orderInfoRep.getOrderInfoByTimeRange(startDate, endDate, request.productNames)

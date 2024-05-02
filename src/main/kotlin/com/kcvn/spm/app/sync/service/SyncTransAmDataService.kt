@@ -177,7 +177,7 @@ class SyncTransAmDataService(
                     if(productItem != null){
                         lstInsertItem.totalTapeQuantity  = lstInsertItem.totalSheetQuantity?.times(productItem.shBlock!!)
                         lstInsertItem.goodTapeQuantity   = productItem.shBlock?.let {
-                            lstInsertItem.totalTapeQuantity?.times(
+                            lstInsertItem.goodSheetQuantity?.times(
                                 it
                             )
                         }

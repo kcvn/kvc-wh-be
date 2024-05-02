@@ -3,6 +3,7 @@ package com.kcvn.spm.app.sync.service
 import com.kcvn.spm.app.sync.payload.response.SyncProcessMasterResponse
 import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureResponse
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
+import com.kcvn.spm.common.constants.GrpProcessCode
 import com.kcvn.spm.common.constants.SyncType
 import com.kcvn.spm.common.constants.TransAmTable
 import com.kcvn.spm.common.helper.StringHelper
@@ -162,6 +163,10 @@ class SyncTransAmDataService(
             val exist = workResultDatas.find { x -> x.objectId == item.OBJECT_ID }
             val data = createModelWorkResult(item)
             if (exist != null) {
+                if(exist.processGrp == GrpProcessCode.XERANH){
+                    exist.totalTapeQuantity = exist.totalSheetQuantity
+                    exist.goodTapeQuantity = exist.totalSheetQuantity
+                }
                 lstDelete.add(exist)
             }
             lstInsert.add(data)

@@ -96,7 +96,13 @@ class CreatePlanService(
             return BaseResponse(true)
         }
         val inventory = inventoryProductRep.findDateInventoryProduct(request.inventoryDate!!)
-        return BaseResponse(inventory != null)
+        if (inventory != null) return BaseResponse(true)
+        return BaseResponse(
+            false,
+            "Không có thông tin tồn kho tại ngày " +
+                "${DateTimeHelper.toString(DateTimeHelper.toTimeZone7(request.inventoryDate!!)!!, DateTimeFormat.dd_MM_yyyy)}.\n" +
+                "Bạn có muốn tiếp tục tạo kế hoạch sản xuất không ?"
+        )
     }
 
     //region VALIDATE
@@ -215,6 +221,8 @@ class CreatePlanService(
                     val orderInfoFilter = orderInfo.filter { x ->
                         x.orderDate!!.isEqual(request.inventoryDate) || x.orderDate!!.isAfter(request.inventoryDate)
                     }
+                    if (orderInfoFilter.isEmpty()) throw BusinessException("Không có dữ liệu xuất hàng kể từ ngày chốt tồn kho")
+
                     val planProductData = calculatePlanProductWithInventory(
                         orderInfoFilter, productInfo, productProcesses,
                         completionRateInfo, equipmentInfo, inventories, holidays
@@ -777,8 +785,6 @@ class CreatePlanService(
                 continue
             }
 
-
-
             val secondPriorityProcesses = listOf(
                 parentProcesses.filter { x ->
                     x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull()
@@ -830,6 +836,14 @@ class CreatePlanService(
                 completionRates, product, holidays
             )
             planProductCreateModel.planProcesses.addAll(planAfterAllocate)
+
+            val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
+            val planProcessINS = generatePlanProcessModel(processIns, completionRateIns!!.rate)
+            for (iOrder in orderInfo) {
+                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!)
+                planProcessINS.planDetails.add(planDetailIns)
+            }
+            planProductCreateModel.planProcesses.add(planProcessINS)
 
             planProducts.add(planProductCreateModel)
         }

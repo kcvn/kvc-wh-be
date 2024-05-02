@@ -15,20 +15,7 @@ import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
 import com.kcvn.spm.app.plan.payload.response.PlanSummaryResponse
 import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
-import com.kcvn.spm.common.constants.Color
-import com.kcvn.spm.common.constants.DateTimeFormat
-import com.kcvn.spm.common.constants.EquipmentType
-import com.kcvn.spm.common.constants.ExcelConstant
-import com.kcvn.spm.common.constants.Frame1
-import com.kcvn.spm.common.constants.KeyAppSetting
-import com.kcvn.spm.common.constants.MasterDataType
-import com.kcvn.spm.common.constants.Mold
-import com.kcvn.spm.common.constants.PlanStyleKey
-import com.kcvn.spm.common.constants.PlanTitle
-import com.kcvn.spm.common.constants.ProcessConvertCode
-import com.kcvn.spm.common.constants.ProcessPlan
-import com.kcvn.spm.common.constants.ProcessStatisticCode
-import com.kcvn.spm.common.constants.ProcessUnit
+import com.kcvn.spm.common.constants.*
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -870,11 +857,15 @@ class PlanService(
                                     )
                         }
 
-                        val equipmentMachineModel = filteredEquipmentMachine.ifEmpty {
+                        var equipmentMachineModel = filteredEquipmentMachine.ifEmpty {
                             equipmentMachine.filter {
                                 groupProcessCode?.contains(it.grpProcess) == true &&
                                     it.frame_1 == planSummaryModel.frame1
                             }
+                        }
+
+                        if(planSummaryModel.processConvertCode == ProcessPlan.PROCESS_DUC_LO_CVC){
+                            equipmentMachineModel = equipmentMachine.filter { x-> x.grpProcess.equals(ProcessCode.T_TH) && x.frame_1 == planSummaryModel.frame1 }
                         }
                         val processDetailModel = ProcessDetailModel(
                             name = processSummaryDetailModel.type,

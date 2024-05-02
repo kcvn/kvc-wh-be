@@ -114,21 +114,21 @@ class ExternalQualityReportService(
 
             val tapeEnRouteList = mutableListOf<TapeEnRoute>()
             val sheet = workbook.getSheetAt(0)
-            val rowIndex = 1
+            val rowIndex = 2
 
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-            val headerRow = sheet.getRow(0)
+            val headerRow = sheet.getRow(1)
                 ?: throw BusinessException(CommonUtils.getMessage("validate.excel.headerInFirstRow"))
             val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportTapeEnRouteTemplate.xlsx"
             val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 1, 16))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
             var count = 0
             var total = 0
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-                val style = row.getCell(0)?.cellStyle ?: break
+                val style = row.getCell(1)?.cellStyle ?: break
                 val messageResults = mutableListOf<String>()
                 var isValidCol = true
 
@@ -535,17 +535,17 @@ class ExternalQualityReportService(
                 for (i in 0 until numberRowData) {
                     val dataRow = sheet.getRow(rowProductIndex) ?: sheet.createRow(rowProductIndex)
                     ExcelHelper.run {
-                        setCellValueCustom(workbook,dataRow, 0, style, productReport.productShortcutName, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 1, style, productReport.productName, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 2, style, productReport.mold, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 3, style, productReport.pcsSh.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 4, style, productReport.blockSh.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 5, style, productReport.productLine, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 6, style, productReport.snapMold, isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 7, style, productReport.layerCount.toString(), isAlignCenter = true)
-                        setCellValueCustom(workbook,dataRow, 8, style, productReport.tapeCommon, isAlignCenter = true)
+                        setCellValueCustom(workbook,dataRow, 0, style, productReport.productShortcutName, isAlignCenter = true,isNotBold=true)
+                        setCellValueCustom(workbook,dataRow, 1, style, productReport.productName, isAlignCenter = true,isNotBold=true)
+                        setCellValueCustom(workbook,dataRow, 2, style, productReport.mold, isAlignCenter = true,isNotBold=true)
+                        setCellValueCustom(workbook,dataRow, 3, style, productReport.pcsSh.toString(), isAlignCenter = true,isNotBold=true)
+                        setCellValueCustom(workbook,dataRow, 4, style, productReport.blockSh.toString(), isAlignCenter = true,isNotBold=true)
+                        setCellValueCustom(workbook,dataRow, 5, style, productReport.productLine, isAlignCenter = true,isNotBold=true)
+                        setCellValueCustom(workbook,dataRow, 6, style, productReport.snapMold, isAlignCenter = true,isNotBold=true)
+                        setCellValueCustom(workbook,dataRow, 7, style, productReport.layerCount.toString(), isAlignCenter = true,isNotBold=true)
+                        setCellValueCustom(workbook,dataRow, 8, style, productReport.tapeCommon, isAlignCenter = true,isNotBold=true)
                         val completionRate = if (productReport.completionRate?.toString().isNullOrEmpty()) "" else "${productReport.completionRate}%"
-                        setCellValueCustom(workbook, dataRow, 9, style, completionRate, isAlignCenter = true)
+                        setCellValueCustom(workbook, dataRow, 9, style, completionRate, isAlignCenter = true,isNotBold=true)
                     }
                     rowProductIndex++
                 }
@@ -554,7 +554,7 @@ class ExternalQualityReportService(
             for (productReport in dataExport.data!!) {
                 for (shippingData in productReport.shippingData) {
                     val dataRow = sheet.getRow(rowShippingIndex) ?: sheet.createRow(rowShippingIndex)
-                    ExcelHelper.setCellValueCustom(workbook,dataRow, 11, style, shippingData.value)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 11, style, shippingData.value,isNotBold=true)
                     rowShippingIndex++
                 }
             }
@@ -562,18 +562,18 @@ class ExternalQualityReportService(
             for (productReport in dataExport.data!!) {
                 for (i in 0 until 6) {
                     val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
-                    ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, "", isAlignCenter = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, "", isAlignCenter = true,isNotBold=true)
                 }
                if(productReport.exportType1 !=null){
                    for (i in 0 until 6) {
                        val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
-                       ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.exportType1, isAlignCenter = true)
+                       ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.exportType1, isAlignCenter = true,isNotBold=true)
                    }
                }
                 if(productReport.exportType2 !=null){
                     for (i in 0 until 6) {
                         val dataRow = sheet.getRow(rowShippingIndex++) ?: sheet.createRow(rowShippingIndex++)
-                        ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.exportType2, isAlignCenter = true)
+                        ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, productReport.exportType2, isAlignCenter = true,isNotBold=true)
                     }
                 }
 
@@ -583,11 +583,11 @@ class ExternalQualityReportService(
             for (productReport in dataExport.data!!) {
                 for (reportData in productReport.details) {
                     val dataRow = sheet.getRow(rowReportIndex) ?: sheet.createRow(rowReportIndex)
-                    ExcelHelper.setCellValueCustom(workbook,dataRow, 12, style, reportData.title, isAlignLeft = true)
-                    ExcelHelper.setCellValueCustom(workbook,dataRow, 13, style, reportData.inventory?.toString() ?: "",isNumberFormat = true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 12, style, reportData.title, isAlignLeft = true,isNotBold=true)
+                    ExcelHelper.setCellValueCustom(workbook,dataRow, 13, style, reportData.inventory?.toString() ?: "",isNumberFormat = true,isNotBold=true)
                     headerCol=14
                     for(col in reportData.quantityByCalendars){
-                        ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, false,isReportDetails = true,isNumberFormat = true)
+                        ExcelHelper.setCellValueWithCalendar(workbook, dataRow, headerCol, style, col.value, false,isReportDetails = true,isNumberFormat = true,isNotBold=true)
                         headerCol++
                     }
 
@@ -659,7 +659,7 @@ class ExternalQualityReportService(
         //get list Tape Inventory
         val tapeInventory = tapeInventoryRepository.getTapeForReport(listShortCutName,inventoryClosingDate)
         //get list Tape En route
-        val tapeEnRoute = tapeEnRouteRepository.getTapeEnRouteForReport(listSpec,startDate,endDate)
+        val tapeEnRoute = tapeEnRouteRepository.getTapeEnRouteForReport(listSpec,startDate.minusDays((daysToSubtract+1)),endDate)
 
         // get list name product
         val productNames = getListNameProduct(mappingPaging)

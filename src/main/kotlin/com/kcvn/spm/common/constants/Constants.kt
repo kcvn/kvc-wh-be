@@ -180,6 +180,15 @@ class EquipmentType {
 
     }
 }
+class typeOfCompletionRateCm{
+    companion object {
+        const val PRODUCT = 0
+        const val PROCESS = 1
+
+
+
+    }
+}
 
 class ProcessStatisticCode {
     companion object {

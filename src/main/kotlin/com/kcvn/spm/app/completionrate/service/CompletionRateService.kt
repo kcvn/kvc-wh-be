@@ -7,6 +7,7 @@ import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessPro
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
 import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.typeOfCompletionRateCm
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -72,6 +73,7 @@ class CompletionRateService(
 
 
     fun checkImportExcel(file: MultipartFile, effectiveDate: OffsetDateTime, typeOfCompletionRate: Int): BaseResponse<CheckImportResponse> {
+        val convertEffectiveDate = DateTimeHelper.toTimeZone7(effectiveDate)
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -88,30 +90,53 @@ class CompletionRateService(
             throw BusinessException(validateExcelInvalidFormat)
         val productKeys = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
         var minDate: OffsetDateTime? = null
-        if (typeOfCompletionRate == 0) {
+        var isExistWithSameDate = false
+
+        if (typeOfCompletionRate == typeOfCompletionRateCm.PRODUCT) {
             val productExists = completionRateProductRepository.getByProduct(productKeys)
             if (!productExists.isNullOrEmpty()) {
-                minDate = productExists.filter { it.effectiveDate != null }
-                    .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
+                val existingEntry = productExists.find { it.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
+                if (existingEntry != null) {
+                    isExistWithSameDate = true
+                } else {
+                    minDate = productExists.filter { it.effectiveDate != null }
+                        .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
+                }
             }
-        } else if (typeOfCompletionRate == 1) {
+        } else if (typeOfCompletionRate == typeOfCompletionRateCm.PROCESS) {
             val processExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productKeys)
             if (!processExists.isNullOrEmpty()) {
-                minDate = processExists.filter { it.effectiveDate != null }
-                    .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
+                val existingEntry = processExists.find { it.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
+                if (existingEntry != null) {
+                    isExistWithSameDate = true
+                } else {
+                    minDate = processExists.filter { it.effectiveDate != null }
+                        .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
+                }
             }
         } else {
             val processProductExist = completionRateProcessProductRepository.getListProcessProductByKey(productKeys)
             if (!processProductExist.isNullOrEmpty()) {
-                minDate = processProductExist.filter { it.effectiveDate != null }
-                    .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
+                val existingEntry = processProductExist.find { it.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
+                if (existingEntry != null) {
+                    isExistWithSameDate = true
+                } else {
+                    minDate = processProductExist.filter { it.effectiveDate != null }
+                        .minByOrNull { it.effectiveDate!! }?.effectiveDate!!
+                }
             }
         }
-        if (minDate != null) {
-            if (minDate < currentDate && effectiveDate < currentDate && minDate > effectiveDate) {
-                val formattedDate = DateTimeHelper.convertOffSetDateTimeUtc7ToString(minDate)
 
-                return BaseResponse(CheckImportResponse(true,CommonUtils.getMessage("message.completion.error", arrayOf(formattedDate.toString()))), "")
+        if(isExistWithSameDate){
+            return BaseResponse(CheckImportResponse(true,CommonUtils.getMessage("message.completion.duplicateError", arrayOf(convertEffectiveDate?.toLocalDate().toString()))), "")
+        }
+        if (minDate != null) {
+            if (convertEffectiveDate != null) {
+                if (minDate < currentDate && convertEffectiveDate < currentDate && minDate > convertEffectiveDate) {
+                    val formattedDate = DateTimeHelper.convertOffSetDateTimeUtc7ToString(minDate)
+
+                    return BaseResponse(CheckImportResponse(true,CommonUtils.getMessage("message.completion.error", arrayOf(formattedDate.toString()))), "")
+                }
             }
         }
         return BaseResponse(CheckImportResponse(false,""), "")

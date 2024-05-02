@@ -783,6 +783,14 @@ class CreatePlanService(
 
             val completionRates = completionRateInfo.filter { x -> x.productNameShortcut == iProductName.substring(iProductName.length - 7, iProductName.length) }
 
+            val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
+            val planProcessINS = generatePlanProcessModel(processIns, completionRateIns!!.rate)
+            for (iOrder in orderInfo) {
+                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!)
+                planProcessINS.planDetails.add(planDetailIns)
+            }
+            planProductCreateModel.planProcesses.add(planProcessINS)
+
             val highestPriorityProcesses = parentProcesses.filter { x ->
                 x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull()
                     && x.processSequence!! >= mAllParent.processSequence!! && x.processConvertCode != ProcessConvertCode.INS
@@ -851,14 +859,6 @@ class CreatePlanService(
                 completionRates, product, holidays
             )
             planProductCreateModel.planProcesses.addAll(planAfterAllocate)
-
-            val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
-            val planProcessINS = generatePlanProcessModel(processIns, completionRateIns!!.rate)
-            for (iOrder in orderInfo) {
-                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!)
-                planProcessINS.planDetails.add(planDetailIns)
-            }
-            planProductCreateModel.planProcesses.add(planProcessINS)
 
             planProducts.add(planProductCreateModel)
         }

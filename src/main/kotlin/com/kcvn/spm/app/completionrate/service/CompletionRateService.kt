@@ -95,7 +95,7 @@ class CompletionRateService(
         if (typeOfCompletionRate == typeOfCompletionRateCm.PRODUCT) {
             val productExists = completionRateProductRepository.getByProduct(productKeys)
             if (!productExists.isNullOrEmpty()) {
-                val existingEntry = productExists.find { it.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
+                val existingEntry = productExists.find { DateTimeHelper.toTimeZone7(it.effectiveDate)?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
                 if (existingEntry != null) {
                     isExistWithSameDate = true
                 } else {
@@ -106,7 +106,7 @@ class CompletionRateService(
         } else if (typeOfCompletionRate == typeOfCompletionRateCm.PROCESS) {
             val processExists = completionRateProcessRepository.getListCompletionRateProcessByKey(productKeys)
             if (!processExists.isNullOrEmpty()) {
-                val existingEntry = processExists.find { it.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
+                val existingEntry = processExists.find { DateTimeHelper.toTimeZone7(it.effectiveDate)?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
                 if (existingEntry != null) {
                     isExistWithSameDate = true
                 } else {
@@ -117,7 +117,7 @@ class CompletionRateService(
         } else {
             val processProductExist = completionRateProcessProductRepository.getListProcessProductByKey(productKeys)
             if (!processProductExist.isNullOrEmpty()) {
-                val existingEntry = processProductExist.find { it.effectiveDate?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
+                val existingEntry = processProductExist.find { DateTimeHelper.toTimeZone7(it.effectiveDate)?.toLocalDate() == convertEffectiveDate?.toLocalDate() }
                 if (existingEntry != null) {
                     isExistWithSameDate = true
                 } else {

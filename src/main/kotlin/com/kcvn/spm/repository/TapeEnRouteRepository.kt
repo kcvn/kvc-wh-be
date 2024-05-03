@@ -1,6 +1,8 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.model.tables.pojos.CouponCodeDropdown
 import com.kcvn.spm.model.tables.pojos.TapeEnRoute
+import com.kcvn.spm.model.tables.references.COUPON_CODE_DROPDOWN
 import com.kcvn.spm.model.tables.references.TAPE_EN_ROUTE
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -52,8 +54,25 @@ class TapeEnRouteRepository(private val context: DSLContext)  {
     }
 
 
+    fun getCouponCodeList(): List<CouponCodeDropdown> {
+        return context.selectFrom(COUPON_CODE_DROPDOWN)
+            .where(COUPON_CODE_DROPDOWN.IS_DELETED.eq(false))
+            .fetchInto(CouponCodeDropdown::class.java)
+    }
 
+    fun addCouponCode(request: CouponCodeDropdown) {
+        val labelExists = context.fetchExists(
+            DSL.selectOne()
+                .from(COUPON_CODE_DROPDOWN)
+                .where(COUPON_CODE_DROPDOWN.LABEL.eq(request.label))
+        )
+        if (!labelExists) {
+            val record = context.newRecord(COUPON_CODE_DROPDOWN, request)
+            context.insertInto(COUPON_CODE_DROPDOWN).set(record).execute()
+        }
+    }
     fun addTapeEnRoute(tapeEnRoute: TapeEnRoute): TapeEnRoute? {
+
         var result: TapeEnRoute? = null
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)

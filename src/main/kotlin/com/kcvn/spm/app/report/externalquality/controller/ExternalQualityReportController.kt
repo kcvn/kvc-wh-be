@@ -6,6 +6,7 @@ import com.kcvn.spm.app.report.externalquality.payload.response.ExternalQualityR
 import com.kcvn.spm.app.report.externalquality.service.ExternalQualityReportService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -49,6 +50,12 @@ class ExternalQualityReportController (private val externalQualityReportService:
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_REPORT_EXPORT_ITEM.value) || hasRole('ADMIN')")
     fun importExcelTapeInventory(stocktakingDay: OffsetDateTime, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = externalQualityReportService.importTapeInventory(file, stocktakingDay)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+    @GetMapping("/tape-en-route/coupon-codes")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_REPORT_EXPORT_ITEM.value) || hasRole('ADMIN')")
+    fun getCouponCodes(): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = externalQualityReportService.getCouponCodes()
         return ResponseEntity(data, HttpStatus.OK)
     }
 

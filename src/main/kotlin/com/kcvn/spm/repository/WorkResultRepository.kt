@@ -4,6 +4,7 @@ import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
 import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
 import com.kcvn.spm.common.constants.ProcessCode
+import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.WorkResult
@@ -257,15 +258,15 @@ class WorkResultRepository(
     }
 
     fun getForPlan(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String>): List<WorkResult> {
-        return context.selectFrom(WORK_RESULT)
+        val query = context.selectFrom(WORK_RESULT)
             .where(
-                WORK_RESULT.SUMMARY_RESULT_DATE.ge(startDate)
-                    .and(WORK_RESULT.SUMMARY_RESULT_DATE.le(endDate))
+                WORK_RESULT.SUMMARY_RESULT_DATE.ge(DateTimeHelper.toTimeZone7(startDate))
+                    .and(WORK_RESULT.SUMMARY_RESULT_DATE.le(DateTimeHelper.toTimeZone7(endDate)))
                     .and(WORK_RESULT.ITEM_NAME.`in`(productNames))
                     .and(WORK_RESULT.IS_DELETED.eq(false))
             )
             .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))
-            .fetchInto(WorkResult::class.java)
+        return query.fetchInto(WorkResult::class.java)
     }
 
     fun getForReport(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String?>?): List<WorkResult> {

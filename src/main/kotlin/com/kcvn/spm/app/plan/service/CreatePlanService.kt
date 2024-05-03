@@ -892,14 +892,15 @@ class CreatePlanService(
             quantity = item.quantity,
             isLatest = item.isLatest,
             isChangeQuantity = item.isChangeQuantity
-        ) }
+        ) }.sortedBy { it.orderDate }
         for (order in orderClones) {
             if (order.quantity!! > quantity) {
                 order.quantity = order.quantity!! - quantity
                 quantity = 0
             } else {
-                order.quantity = 0
                 quantity -= order.quantity!!
+                order.quantity = 0
+
             }
             if (order.quantity!! > 0) orderInfoAllocation.add(order)
         }
@@ -940,7 +941,7 @@ class CreatePlanService(
                 }
                 if (order.quantity!! > 0) orderInfoAllocation.add(order)
                 if (quantityUsed > 0) {
-                    val rate = (BigDecimal(quantityUsed) * BigDecimal(100)) / BigDecimal(inventoryIns)
+                    val rate = NumberHelper.toDecimal(quantityUsed * 100) / NumberHelper.toDecimal(inventoryIns)
                     allocationRates.add(AllocationRateByDateModel(order.orderDate!!, quantityUsed, rate))
                 }
             } else {
@@ -955,7 +956,7 @@ class CreatePlanService(
                 }
                 if (order.quantity!! > 0) orderInfoAllocation.add(order)
                 if (quantityUsed > 0) {
-                    val rate = (BigDecimal(quantityUsed) * BigDecimal(100)) / BigDecimal(inventoryIns)
+                    val rate = NumberHelper.toDecimal(quantityUsed * 100) / NumberHelper.toDecimal(inventoryIns)
                     allocationRates.add(AllocationRateByDateModel(order.orderDate!!, quantityUsed, rate))
                 }
             }

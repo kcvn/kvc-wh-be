@@ -57,10 +57,11 @@ class PlanRepository(private val context: DSLContext) {
                 PLAN_TEMP.END_DATE,
                 PLAN_TEMP.IS_ACTIVE,
                 PLAN_TEMP.VERSION,
+                PLAN_TEMP.HAS_INVENTORY,
                 PLAN_TEMP.CREATED_BY
             ).values(
                 plan.planCode, plan.description, plan.month, plan.year,
-                plan.startDate, plan.endDate, plan.isActive, plan.version, createdBy
+                plan.startDate, plan.endDate, plan.isActive, plan.version, plan.hasInventory, createdBy
             ).returningResult(PLAN_TEMP).fetchInto(PlanTemp::class.java).firstOrNull()
 
             if (planRecord != null) {
@@ -167,7 +168,8 @@ class PlanRepository(private val context: DSLContext) {
                             PLAN_DETAIL_TEMP.HAS_INVENTORY,
                             PLAN_DETAIL_TEMP.CREATED_BY
                         ).values(
-                            x.planId, x.planProductId, x.id, m.title, m.planDate, m.sheetQuantity, m.blockQuantity, m.orderDate, m.hasInventory, createdBy
+                            x.planId, x.planProductId, x.id, m.title, m.planDate, m.sheetQuantity, m.blockQuantity,
+                            m.orderDate, m.hasInventory ?: false, createdBy
                         )
                     }
                     query
@@ -200,10 +202,11 @@ class PlanRepository(private val context: DSLContext) {
                 PLAN.END_DATE,
                 PLAN.IS_ACTIVE,
                 PLAN.VERSION,
+                PLAN.HAS_INVENTORY,
                 PLAN.CREATED_BY
             ).values(
                 plan.id, plan.planCode, plan.description, plan.month, plan.year,
-                plan.startDate, plan.endDate, plan.isActive, plan.version, createdBy
+                plan.startDate, plan.endDate, plan.isActive, plan.version, plan.hasInventory, createdBy
             ).execute()
 
             val queryPlanProduct = planProducts.map { item ->
@@ -261,9 +264,12 @@ class PlanRepository(private val context: DSLContext) {
                     PLAN_DETAIL.PLAN_DATE,
                     PLAN_DETAIL.SHEET_QUANTITY,
                     PLAN_DETAIL.BLOCK_QUANTITY,
+                    PLAN_DETAIL.ORDER_DATE,
+                    PLAN_DETAIL.HAS_INVENTORY,
                     PLAN_DETAIL.CREATED_BY
                 ).values(
-                    item.id, item.planId, item.planProductId, item.planProcessId, item.title, item.planDate, item.sheetQuantity, item.blockQuantity, createdBy
+                    item.id, item.planId, item.planProductId, item.planProcessId, item.title, item.planDate,
+                    item.sheetQuantity, item.blockQuantity, item.orderDate, item.hasInventory ?: false, createdBy
                 )
             }
             transactionalContext.batch(queryPlanDetail).execute()

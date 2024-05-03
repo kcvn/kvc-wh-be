@@ -244,6 +244,7 @@ class ProcessCode {
     companion object {
         const val INS = "217020"
         const val TKCSP = "214220"
+        const val T_TH = "20500"
     }
 }
 
@@ -279,7 +280,7 @@ class ProcessPlan {
         const val PROCESS_DUC_LO = "Đục lỗ"
         const val PROCESS_DUC_LO_M = "T/H"
         const val AVERAGE_PLAN = "KH trung bình"
-
+        const val PROCESS_DUC_LO_CVC = "T/TH"
 
     }
 }

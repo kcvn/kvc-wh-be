@@ -15,10 +15,7 @@ import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.pojos.SyncHistory
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.model.tables.references.APP_SETTING
-import com.kcvn.spm.repository.ProcessMasterRepository
-import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import com.kcvn.spm.repository.SyncHistoryRepository
-import com.kcvn.spm.repository.WorkResultRepository
+import com.kcvn.spm.repository.*
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -38,7 +35,8 @@ class SyncTransAmDataService(
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val processMasterRep: ProcessMasterRepository,
     private val workResultRep: WorkResultRepository,
-    private val context: DSLContext
+    private val context: DSLContext,
+    private val productRep: ProductRepository
 ) {
     private val transAmDSLContext: DSLContext = DSLContextExtension.createDSLContext(
         propertiesConfig.tranAmDbUrl,
@@ -158,20 +156,36 @@ class SyncTransAmDataService(
 
         val lstInsert = mutableListOf<WorkResult>()
         val lstDelete = mutableListOf<WorkResult>()
-
+        val lstProduct = mutableListOf<String>()
         for (item in workResult) {
             val exist = workResultDatas.find { x -> x.objectId == item.OBJECT_ID }
             val data = createModelWorkResult(item)
+            if(data.processGrp == GrpProcessCode.XERANH){
+                data.itemName?.let { lstProduct.add(it) }
+            }
             if (exist != null) {
-                if(exist.processGrp == GrpProcessCode.XERANH){
-                    exist.totalTapeQuantity = exist.totalSheetQuantity
-                    exist.goodTapeQuantity = exist.totalSheetQuantity
-                }
+
                 lstDelete.add(exist)
             }
             lstInsert.add(data)
         }
+        if(lstProduct.isNotEmpty()){
+            val product = productRep.getByName(lstProduct)
+            for(lstInsertItem in lstInsert){
+                if(lstInsertItem.processGrp == GrpProcessCode.XERANH){
+                    val productItem = product.find { x -> x.name == lstInsertItem.itemName }
+                    if(productItem != null){
+                        lstInsertItem.totalTapeQuantity  = lstInsertItem.totalSheetQuantity?.times(productItem.shBlock!!)
+                        lstInsertItem.goodTapeQuantity   = productItem.shBlock?.let {
+                            lstInsertItem.goodSheetQuantity?.times(
+                                it
+                            )
+                        }
 
+                    }
+                }
+            }
+        }
         try {
             workResultRep.removeRange(lstDelete)
             workResultRep.addRange(lstInsert)

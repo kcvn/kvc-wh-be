@@ -76,6 +76,8 @@ enum class EPermission(val value: String) {
     E_REPORT_EXTERNAL_QUALITY("rp_external_quality.e"),
     I_REPORT_EXTERNAL_QUALITY("rp_external_quality.i"),
 
-
+    E_REPORT_COST_MATERIAL("cost_material.e"),
+    V_REPORT_COST_MATERIAL("cost_material.v"),
+    I_REPORT_COST_MATERIAL("cost_material.i")
 
 }

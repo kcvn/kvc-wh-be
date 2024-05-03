@@ -192,19 +192,27 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
     fun getInventoryForCreatePlan(productNames: List<String>, inventoryDate: OffsetDateTime): List<InventoryProductResponse> {
         val data = context.select(
             INVENTORY_PRODUCT.INVENTORY_DATE,
-            INVENTORY_PRODUCT.PRODUCT_QUANTITY,
-            INVENTORY_PRODUCT.SHEET_QUANTITY,
-            INVENTORY_PRODUCT.ORDER_CODE,
-            INVENTORY_PRODUCT.TAPE_LOT_NO,
+            DSL.sum(INVENTORY_PRODUCT.PRODUCT_QUANTITY).`as`("productQuantity"),
+            DSL.sum(INVENTORY_PRODUCT.SHEET_QUANTITY).`as`("sheetQuantity"),
             PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
-            PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
+            PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,
+            PROCESS_MASTER.PROCESS_NAME.`as`("processName")
         ).from(INVENTORY_PRODUCT)
             .join(PROCESS_PROCEDURE_STRUCTURE).on(
                 INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
                     .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+            ).leftJoin(PROCESS_MASTER).on(
+                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                    .and(PROCESS_MASTER.IS_DELETED.eq(false))
             ).where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(inventoryDate).and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
-            .fetchInto(InventoryProductResponse::class.java)
+            .groupBy(
+                INVENTORY_PRODUCT.INVENTORY_DATE,
+                PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE,
+                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
+                PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,
+                PROCESS_MASTER.PROCESS_NAME
+            ).fetchInto(InventoryProductResponse::class.java)
 
         return data
     }

@@ -19,6 +19,7 @@ import com.kcvn.spm.model.tables.references.ORDER_VERSION_DROPDOWN
 import com.kcvn.spm.model.tables.references.PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.SortField
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
@@ -419,8 +420,14 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             condition = condition.and(ORDER_INFO.PRODUCT_NAME.`in`(productNames))
         }
 
+        val sortFields = listOf<SortField<*>>(
+            ORDER_INFO.PRODUCT_NAME.asc(),
+            ORDER_INFO.ORDER_DATE.asc()
+        )
+
         return context.selectFrom(ORDER_INFO)
             .where(condition)
+            .orderBy(sortFields)
             .fetchInto(OrderInfo::class.java)
     }
 

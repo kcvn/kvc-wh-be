@@ -2,7 +2,11 @@ package com.kcvn.spm.common.helper
 
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.payload.CalendarResponse
-import java.time.*
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
@@ -110,8 +114,8 @@ class DateTimeHelper {
                     key = toString(currentDate, DateTimeFormat.yyyyMMdd),
                     value = toString(currentDate.minusDays(daysToSubtract), DateTimeFormat.MM_dd),
                     isHoliday = holidayCalender.any { toTimeZone7(it)?.toLocalDate() == currentDate.toLocalDate() }
-                        || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY
-                        || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
+//                        || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SATURDAY
+//                        || currentDate.toLocalDate().dayOfWeek == DayOfWeek.SUNDAY
                 )
                 calendarResponses.add(response)
                 currentDate = currentDate.plusDays(1)

@@ -10,6 +10,9 @@ class KeyAppSetting {
         //Mold by frame1
         const val MOLD_BY_FRAME1 = "MOLD_BY_FRAME1"
 
+        //Path config
+        const val PATH_HISTORY_PLAN = "PATH_HISTORY_PLAN"
+
         const val CHECK_EXCEPTION_INVENTORY_DATE_WHEN_CREATE_PLAN = "CHECK_EXCEPTION_INVENTORY_DATE_WHEN_CREATE_PLAN"
     }
 }

@@ -153,6 +153,7 @@ class CreatePlanService(
                     if (productProcess.any { x -> x.processConvertCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã chuyển đổi")
                     if (productProcess.any { x -> x.processStatisticCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã thống kê")
                     if (productProcess.any { x -> x.dayOfImplementation == null || x.dayOfImplementation == 0 }) errors.add("Dữ liệu công đoạn chưa đầy đủ Ngày thứ thực hiện")
+                    if (productProcess.any { x -> x.unit.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Đơn vị tính")
                 }
                 val parentProcesses = productProcess.filter { x ->
                     !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
@@ -165,7 +166,7 @@ class CreatePlanService(
                     }
                 }
                 if (processNotCompletionRate.isNotEmpty()) {
-                    val strProcess = processNotCompletionRate.map { x -> x.processCode }.joinToString(separator = ", ")
+                    val strProcess = processNotCompletionRate.map { x -> x.processCode }.distinct().joinToString(separator = ", ")
                     errors.add("Chưa có thông tin tỷ lệ đạt của các công đoạn $strProcess")
                 }
 
@@ -765,65 +766,67 @@ class CreatePlanService(
             }
             planProductCreateModel.planProcesses.add(planProcessINS)
 
-            val highestPriorityProcesses = parentProcesses.filter { x ->
-                x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull()
-                    && x.processSequence!! >= mAllParent.processSequence!! && x.processConvertCode != ProcessConvertCode.INS
-            }.sortedBy { x -> x.processSequence }
-
-            val planHighestPriority = createPlanFromInventoryHighestPriority(
-                processIns, highestPriorityProcesses, childrenProcesses.filter { x -> x.productName == iProductName },
-                orderAllocations, product, inventoryByProducts, completionRates, holidays
-            )
-            planProductCreateModel.planProcesses.addAll(planHighestPriority.second)
-
-            orderAllocations = planHighestPriority.first.filter { (it.quantity ?: 0) > 0 }
-            if (orderAllocations.isEmpty()) {
-                planProducts.add(planProductCreateModel)
-                continue
-            }
-
-            val secondPriorityProcesses = listOf(
-                parentProcesses.filter { x ->
+            if (inventories.isNotEmpty()) {
+                val highestPriorityProcesses = parentProcesses.filter { x ->
                     x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull()
-                        && x.processSequence!! <= mAllParent.processSequence!! - 1
-                }.sortedByDescending { it.processSequence }.first(),
-                parentProcesses.filter { x ->
-                    x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllChildren.layerCode?.toIntOrNull()
-                        && x.processSequence!! <= mAllChildren.processSequence!! - 1
-                }.sortedByDescending { it.processSequence }.first()
-            )
-            val planSecondPriority = createPlanFromInventorySecondPriority(
-                processIns, mAllParent, secondPriorityProcesses,
-                parentProcesses.filter { x -> x.productName == iProductName },
-                childrenProcesses.filter { x -> x.productName == iProductName },
-                orderAllocations, product, inventoryByProducts, completionRates, holidays
-            )
-            planProductCreateModel.planProcesses.addAll(planSecondPriority.second)
+                        && x.processSequence!! >= mAllParent.processSequence!! && x.processConvertCode != ProcessConvertCode.INS
+                }.sortedBy { x -> x.processSequence }
 
-            orderAllocations = planSecondPriority.first.filter { (it.quantity ?: 0) > 0 }
-            if (orderAllocations.isEmpty()) {
-                planProducts.add(planProductCreateModel)
-                continue
-            }
+                val planHighestPriority = createPlanFromInventoryHighestPriority(
+                    processIns, highestPriorityProcesses, childrenProcesses.filter { x -> x.productName == iProductName },
+                    orderAllocations, product, inventoryByProducts, completionRates, holidays
+                )
+                planProductCreateModel.planProcesses.addAll(planHighestPriority.second)
 
-            val lowestPriorityProcesses = parentProcesses.filter { x ->
-                x.productName == iProductName
-                    && (
-                    (x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull() && x.processSequence!! < mAllParent.processSequence!! - 1)
-                        || (x.layerCode?.toIntOrNull() == mAllChildren.layerCode?.toIntOrNull() && x.processSequence!! < mAllChildren.processSequence!! - 1)
-                        || (x.layerCode?.toIntOrNull() != mAllParent.layerCode?.toIntOrNull() && x.layerCode?.toIntOrNull() != mAllChildren.layerCode?.toIntOrNull())
-                    )
-            }
-            val planLowestPriority = createPlanFromInventoryLowestPriority(
-                processIns, lowestPriorityProcesses, processes, orderAllocations,
-                product, inventoryByProducts, completionRates, holidays
-            )
-            planProductCreateModel.planProcesses.addAll(planLowestPriority.second)
+                orderAllocations = planHighestPriority.first.filter { (it.quantity ?: 0) > 0 }
+                if (orderAllocations.isEmpty()) {
+                    planProducts.add(planProductCreateModel)
+                    continue
+                }
 
-            orderAllocations = planLowestPriority.first.filter { (it.quantity ?: 0) > 0 }
-            if (orderAllocations.isEmpty()) {
-                planProducts.add(planProductCreateModel)
-                continue
+                val secondPriorityProcesses = listOf(
+                    parentProcesses.filter { x ->
+                        x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull()
+                            && x.processSequence!! <= mAllParent.processSequence!! - 1
+                    }.sortedByDescending { it.processSequence }.first(),
+                    parentProcesses.filter { x ->
+                        x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllChildren.layerCode?.toIntOrNull()
+                            && x.processSequence!! <= mAllChildren.processSequence!! - 1
+                    }.sortedByDescending { it.processSequence }.first()
+                )
+                val planSecondPriority = createPlanFromInventorySecondPriority(
+                    processIns, mAllParent, secondPriorityProcesses,
+                    parentProcesses.filter { x -> x.productName == iProductName },
+                    childrenProcesses.filter { x -> x.productName == iProductName },
+                    orderAllocations, product, inventoryByProducts, completionRates, holidays
+                )
+                planProductCreateModel.planProcesses.addAll(planSecondPriority.second)
+
+                orderAllocations = planSecondPriority.first.filter { (it.quantity ?: 0) > 0 }
+                if (orderAllocations.isEmpty()) {
+                    planProducts.add(planProductCreateModel)
+                    continue
+                }
+
+                val lowestPriorityProcesses = parentProcesses.filter { x ->
+                    x.productName == iProductName
+                        && (
+                        (x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull() && x.processSequence!! < mAllParent.processSequence!! - 1)
+                            || (x.layerCode?.toIntOrNull() == mAllChildren.layerCode?.toIntOrNull() && x.processSequence!! < mAllChildren.processSequence!! - 1)
+                            || (x.layerCode?.toIntOrNull() != mAllParent.layerCode?.toIntOrNull() && x.layerCode?.toIntOrNull() != mAllChildren.layerCode?.toIntOrNull())
+                        )
+                }
+                val planLowestPriority = createPlanFromInventoryLowestPriority(
+                    processIns, lowestPriorityProcesses, processes, orderAllocations,
+                    product, inventoryByProducts, completionRates, holidays
+                )
+                planProductCreateModel.planProcesses.addAll(planLowestPriority.second)
+
+                orderAllocations = planLowestPriority.first.filter { (it.quantity ?: 0) > 0 }
+                if (orderAllocations.isEmpty()) {
+                    planProducts.add(planProductCreateModel)
+                    continue
+                }
             }
 
             val planAfterAllocate = calculatePlanProcessAfterAllocate(
@@ -1181,6 +1184,8 @@ class CreatePlanService(
                 )
             )
         }
+
+        if (inventoriesByProcess.isEmpty()) return Pair(orderInfo, listOf())
 
         var orderAllocations = orderInfo
         val completionRateIns = completionRateInfo.firstOrNull { x -> x.processCode == ProcessCode.INS }?.rate ?: return Pair(orderInfo, listOf())

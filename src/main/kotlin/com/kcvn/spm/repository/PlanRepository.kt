@@ -315,7 +315,7 @@ class PlanRepository(private val context: DSLContext) {
                 .fetchInto(PlanDetailTemp::class.java)
         } else {
             response.plan = context.selectFrom(PLAN)
-                .where(PLAN.YEAR.eq(year).and(PLAN.MONTH.eq(month)).and(PLAN.IS_DELETED.eq(false)))
+                .where(PLAN.YEAR.eq(year).and(PLAN.MONTH.eq(month)).and(PLAN.IS_DELETED.eq(false)).and(PLAN.IS_ACTIVE.eq(true)))
                 .fetchInto(PlanTemp::class.java)
                 .firstOrNull()
 

@@ -344,3 +344,10 @@ class PlanStyleKey {
         const val PLAN_SUMMARY_DETAIL = "PLAN_SUMMARY_DETAIL"
     }
 }
+
+class YesNoConfig {
+    companion object {
+        const val YES = "Y"
+        const val NO = "N"
+    }
+}

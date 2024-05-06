@@ -9,5 +9,8 @@ class KeyAppSetting {
 
         //Mold by frame1
         const val MOLD_BY_FRAME1 = "MOLD_BY_FRAME1"
+
+        //Path config
+        const val PATH_HISTORY_PLAN = "PATH_HISTORY_PLAN"
     }
 }

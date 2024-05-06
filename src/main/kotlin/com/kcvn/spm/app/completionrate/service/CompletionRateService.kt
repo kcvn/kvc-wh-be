@@ -6,6 +6,7 @@ import com.kcvn.spm.app.completionrate.payload.response.CheckImportResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessResponse
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
+import com.kcvn.spm.app.plan.service.PlanHistoryService
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.typeOfCompletionRateCm
 import com.kcvn.spm.common.exception.BusinessException
@@ -44,7 +45,8 @@ class CompletionRateService(
     private val completionRateProcessRepository: CompletionRateProcessRepository,
     private val processMasterRepository: ProcessMasterRepository,
     private val productRepository: ProductRepository,
-    private val processProcedureStructureRepository: ProcessProcedureStructureRepository
+    private val processProcedureStructureRepository: ProcessProcedureStructureRepository,
+    private val planHistoryService: PlanHistoryService
 ) {
     val checkImportCompletionRateDate = CommonUtils.getMessage("check.importCompletionRateDate")
     val importSuccessMessageKey = "import.success"
@@ -223,7 +225,7 @@ class CompletionRateService(
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
-
+        planHistoryService.addFile(response)
         workbook.close()
 
         return BaseResponse(response)

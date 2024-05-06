@@ -25,10 +25,11 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository) {
 
 
     fun planHistory(request: PlanHistoryRequest): BaseResponse<List<FileContentModel>> {
+
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         val data = mutableListOf<FileContentModel>()
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
-            val directory = pathConfig.value?.let { File(it) }
+            val directory = pathConfig.value?.let { File(System.getProperty("user.dir") +it) }
 
             val excelFiles = directory?.listFiles { file ->
                 file.isFile && (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) && (request.fileName.isEmpty() || file.name.contains(request.fileName))
@@ -58,7 +59,7 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository) {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
             val filePath = "${pathConfig.value}/$fileName"
-            val file = File(filePath)
+            val file = File(System.getProperty("user.dir")+filePath)
 
             if (file.exists()) {
                 val isDeleted = file.delete()
@@ -76,7 +77,7 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository) {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
             val targetDirectoryPath = pathConfig.value
-            val targetFile = File("$targetDirectoryPath/${fileContentModel.fileName}")
+            val targetFile = File(System.getProperty("user.dir")+"$targetDirectoryPath/${fileContentModel.fileName}")
 
             FileOutputStream(targetFile).use { outputStream ->
                 fileContentModel.content?.let { outputStream.write(it) }
@@ -87,7 +88,7 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository) {
     fun downloadFile(fileName: String): BaseResponse<FileContentModel> {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
-            val filePath = Paths.get("${pathConfig.value}/$fileName")
+            val filePath = Paths.get(System.getProperty("user.dir")+"${pathConfig.value}/$fileName")
             val fileBytes = Files.readAllBytes(filePath)
 
             return BaseResponse(FileContentModel(

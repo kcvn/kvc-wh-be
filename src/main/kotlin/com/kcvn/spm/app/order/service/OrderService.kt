@@ -5,6 +5,7 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.Color
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.DateTimeFormat
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.OrderVersion
@@ -22,6 +23,7 @@ import com.kcvn.spm.repository.HolidaysCalenderRepository
 import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.OrderRepository
 import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.SystemLockRepository
 import com.kcvn.spm.repository.WorkResultRepository
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.DateUtil
@@ -50,7 +52,8 @@ class OrderService(
     private val workResultRep: WorkResultRepository,
     private val productRep: ProductRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
-    private val orderInfoRep: OrderInfoRepository
+    private val orderInfoRep: OrderInfoRepository,
+    private val systemLockRep: SystemLockRepository
 ) {
 
     fun getPaginatedOrder(request: OrderSearchRequest, pageable: Pageable, isExport: Boolean = false): PagingOrderResponse {
@@ -192,6 +195,9 @@ class OrderService(
     }
 
     fun importExcelOrder(file: MultipartFile, isIncreaseVersion: Boolean?): BaseResponse<FileContentModel> {
+        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_IMPORT_ORDER))
+            throw BusinessException("Chức năng này đang bị khóa tạm thời. Vui lòng thử lại sau ít phút nữa")
+
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
             val sheet = workbook.getSheetAt(0)

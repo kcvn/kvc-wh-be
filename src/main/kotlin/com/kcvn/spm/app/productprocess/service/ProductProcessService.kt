@@ -22,6 +22,7 @@ import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
+import com.kcvn.spm.repository.SystemLockRepository
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
@@ -46,7 +47,8 @@ class ProductProcessService(
     private val productProcessRep: ProductProcessRepository,
     private val processProcedureRep: ProcessProcedureStructureRepository,
     private val masterDataService: MasterDataService,
-    private val commonCategoryRep: CommonCategoryRepository
+    private val commonCategoryRep: CommonCategoryRepository,
+    private val systemLockRep: SystemLockRepository
 ) {
     fun getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse?> {
         val result = productProcessRep.findByKeywordPaginated(search, hasProcessConvertCode, pageable)
@@ -118,6 +120,9 @@ class ProductProcessService(
     }
 
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest): List<ProductProcess?> {
+        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+            throw BusinessException("Chức năng này đang bị khóa tạm thời. Vui lòng thử lại sau ít phút nữa")
+
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
         //// Lấy ra danh sách công đoạn cuối mỗi lớp và check phải tồn tại mã tồn kho là mã công đoạn ở lớp trước
         val listInventoryProcessGrByLayer = request.listProcess
@@ -294,6 +299,9 @@ class ProductProcessService(
     }
 
     fun importExcelProduct1(file: MultipartFile): BaseResponse<FileContentModel> {
+        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+            throw BusinessException("Chức năng này đang bị khóa tạm thời. Vui lòng thử lại sau ít phút nữa")
+
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1
@@ -842,6 +850,9 @@ class ProductProcessService(
     }
 
     fun importExcelProcessMasterData(file: MultipartFile): BaseResponse<FileContentModel> {
+        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+            throw BusinessException("Chức năng này đang bị khóa tạm thời. Vui lòng thử lại sau ít phút nữa")
+
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
         val rowIndex = 1

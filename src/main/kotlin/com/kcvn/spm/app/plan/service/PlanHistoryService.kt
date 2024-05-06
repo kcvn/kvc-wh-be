@@ -74,23 +74,24 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository) {
 
 
     fun addFile(fileContentModel: FileContentModel) {
-        try{
+        try {
             val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
             if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
                 val targetDirectoryPath = pathConfig.value
-                val targetFilePath = "$targetDirectoryPath/${fileContentModel.fileName}"
+                val targetFilePath = "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}${fileContentModel.fileName}"
                 val targetFile = File(targetFilePath)
 
-                val fileToWrite = if (targetFile.exists()) targetFile else File(System.getProperty("user.dir") + targetFilePath)
+                if (!targetFile.parentFile.exists()) {
+                    targetFile.parentFile.mkdirs()
+                }
 
-                FileOutputStream(fileToWrite).use { outputStream ->
+                FileOutputStream(targetFile).use { outputStream ->
                     fileContentModel.content?.let { outputStream.write(it) }
                 }
             }
         } catch (e: Exception) {
             throw BusinessException(e.message)
         }
-
     }
 
 

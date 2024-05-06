@@ -221,50 +221,46 @@ class CreatePlanService(
                     createPlanNoInventory(request, planCalendarConfig, orderInfo, productInfo, productProcesses, completionRateInfo, equipmentInfo, holidays)
                 } else {
                     val inventories = inventoryProductRep.getInventoryForCreatePlan(productNames, request.inventoryDate!!)
-                    val orderInfoFilter = orderInfo.filter { x ->
-                        x.orderDate!!.isEqual(request.inventoryDate) || x.orderDate!!.isAfter(request.inventoryDate)
-                    }
-                    if (orderInfoFilter.isEmpty()) throw BusinessException("Không có dữ liệu xuất hàng kể từ ngày chốt tồn kho")
-
-                    val planProductData = if (inventories.isEmpty()) {
-                        calculatePlanProductNoInventory(
-                            orderInfoFilter, productInfo, productProcesses,
-                            completionRateInfo, equipmentInfo, holidays
-                        )
+                    if (inventories.isEmpty()) {
+                        createPlanNoInventory(request, planCalendarConfig, orderInfo, productInfo, productProcesses, completionRateInfo, equipmentInfo, holidays)
                     } else {
-                        calculatePlanProductWithInventory(
+                        val orderInfoFilter = orderInfo.filter { x ->
+                            x.orderDate!!.isEqual(request.inventoryDate) || x.orderDate!!.isAfter(request.inventoryDate)
+                        }
+                        if (orderInfoFilter.isEmpty()) throw BusinessException("Không có dữ liệu xuất hàng kể từ ngày chốt tồn kho")
+
+                        val planProductData = calculatePlanProductWithInventory(
                             orderInfoFilter, productInfo, productProcesses,
                             completionRateInfo, equipmentInfo, inventories, holidays
                         )
-                    }
 
-                    val planDetailData = planProductData.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { x -> x.planDate }
-                    if (checkExceptionInventoryDate && planDetailData.any { it.planDate!!.isBefore(request.inventoryDate) })
-                        throw BusinessException("Ngày kế hoạch không được nhỏ hơn ngày chốt tồn kho")
+                        val planDetailData = planProductData.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { x -> x.planDate }
+                        if (checkExceptionInventoryDate && planDetailData.any { it.planDate!!.isBefore(request.inventoryDate) })
+                            throw BusinessException("Ngày kế hoạch không được nhỏ hơn ngày chốt tồn kho")
 
-                    val planStartDate = planDetailData.first().planDate!!
-                    val planEndDate = planDetailData.last().planDate!!
-                    val hasInventory = planDetailData.any { it.hasInventory == true }
+                        val planStartDate = planDetailData.first().planDate!!
+                        val planEndDate = planDetailData.last().planDate!!
+                        val hasInventory = planDetailData.any { it.hasInventory == true }
 
-                    val planDataTemp = planRep.getDataForRePlan(month, year)
+                        val planDataTemp = planRep.getDataForRePlan(month, year)
 
-                    if (request.replan == true) {
-                        createPlanWithInventoryHasRePlan(
-                            request, planCalendarConfig, planProductData, planDataTemp,
-                            planStartDate, planEndDate, hasInventory
-                        )
-                    } else {
-                        createPlanWithInventoryNoRePlan(
-                            request, planCalendarConfig, planProductData, planDataTemp,
-                            planStartDate, planEndDate, hasInventory
-                        )
+                        if (request.replan == true) {
+                            createPlanWithInventoryHasRePlan(
+                                request, planCalendarConfig, planProductData, planDataTemp,
+                                planStartDate, planEndDate, hasInventory
+                            )
+                        } else {
+                            createPlanWithInventoryNoRePlan(
+                                request, planCalendarConfig, planProductData, planDataTemp,
+                                planStartDate, planEndDate, hasInventory
+                            )
+                        }
                     }
                 }
                 return BaseResponse(message = "Tạo kế hoạch thành công")
             }
 
             val fileContent = exportFilePlanValidate(planValidates)
-            //systemLockRep.unlock(typeOfSystemLocks)
             return BaseResponse(fileContent)
 
         } catch (e: Exception) {

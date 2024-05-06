@@ -159,11 +159,12 @@ class CreatePlanService(
                     !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
                         && x.processConvertCode != ProcessConvertCode.INS
                 }
-                val processNotCompletionRate = parentProcesses.filter { x ->
-                    !completionRateInfo.any { m ->
-                        m.productNameShortcut == item.substring(item.length - 7, item.length)
-                            && m.processCode == x.processCode
-                    }
+                val processNotCompletionRate = productProcess.filter { x ->
+                    x.processInventoryCode.isNullOrEmpty()
+                        && !completionRateInfo.any { m ->
+                            m.productNameShortcut == item.substring(item.length - 7, item.length)
+                                && m.processCode == x.processCode
+                        }
                 }
                 if (processNotCompletionRate.isNotEmpty()) {
                     val strProcess = processNotCompletionRate.map { x -> x.processCode }.distinct().joinToString(separator = ", ")

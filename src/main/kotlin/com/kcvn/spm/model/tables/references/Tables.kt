@@ -16,6 +16,7 @@ import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.CouponCodeDropdown
 import com.kcvn.spm.model.tables.EquipmentProductivity
 import com.kcvn.spm.model.tables.ExportConfiguration
 import com.kcvn.spm.model.tables.HolidaysCalendar
@@ -110,6 +111,11 @@ val COMPLETION_RATE_PROCESS_PRODUCT: CompletionRateProcessProduct = CompletionRa
  * The table <code>public.completion_rate_product</code>.
  */
 val COMPLETION_RATE_PRODUCT: CompletionRateProduct = CompletionRateProduct.COMPLETION_RATE_PRODUCT
+
+/**
+ * The table <code>public.coupon_code_dropdown</code>.
+ */
+val COUPON_CODE_DROPDOWN: CouponCodeDropdown = CouponCodeDropdown.COUPON_CODE_DROPDOWN
 
 /**
  * The table <code>public.equipment_productivity</code>.

@@ -19,9 +19,11 @@ import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.CalendarResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.CouponCodeDropdown
 import com.kcvn.spm.model.tables.pojos.TapeEnRoute
 import com.kcvn.spm.model.tables.pojos.TapeInventory
 import com.kcvn.spm.model.tables.pojos.WorkResult
@@ -79,6 +81,15 @@ class ExternalQualityReportService(
         val fileUrl = "ImportTapeEnRouteTemplate.xlsx"
         val fileName = "fileName.importTapeEnRouteTemplate"
         return downloadTemplate(fileUrl, fileName)
+    }
+    fun getCouponCodes(): BaseResponse<List<DropdownResponse>>{
+        var listCouponCodeDropdown = tapeEnRouteRepository.getCouponCodeList()
+        if(listCouponCodeDropdown.isNotEmpty()){
+            listCouponCodeDropdown = listCouponCodeDropdown.sortedBy { it.keyValue }
+            val response = listCouponCodeDropdown.map { x -> DropdownResponse(x.keyValue, x.label) }
+            return BaseResponse(response)
+        }
+       return BaseResponse()
     }
     fun downloadTapeInventoryTemplate(): BaseResponse<FileContentModel>{
         val fileUrl = "ImportTapeInventoryTemplate.xlsx"
@@ -302,13 +313,18 @@ class ExternalQualityReportService(
                 row.getCell(colIndexResult).cellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
             }
             if (count == total) {
+                val couponCodeDropdown = CouponCodeDropdown(
+                    label = couponCode,
+                    keyValue = couponCode
+                )
+                tapeEnRouteRepository.addCouponCode(couponCodeDropdown)
                 for(tapeEnRoute in tapeEnRouteList){
                     tapeEnRouteRepository.addTapeEnRoute(tapeEnRoute)
                 }
                 return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
             }
             val errorRows = sheet.filter { x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess") }
-            val response = exportFileError(errorRows, workbook, sheet, "fileName.importTapeEnRouteTemplate")
+            val response = exportFileError(errorRows, workbook, sheet, "fileName.importTapeEnRouteTemplate", true)
             workbook.close()
             return BaseResponse(
                 response,
@@ -461,24 +477,25 @@ class ExternalQualityReportService(
         }
     }
 
-    private fun exportFileError(dataRows: List<Row>, workbook: Workbook, importSheet: Sheet, fileName: String): FileContentModel {
+    private fun exportFileError(dataRows: List<Row>, workbook: Workbook, importSheet: Sheet, fileName: String, startAtRow2: Boolean = false): FileContentModel {
         val sheet = workbook.createSheet()
         for ((rowNumber, dataRow) in dataRows.withIndex()) {
-            val row = sheet.createRow(rowNumber)
+            val row = sheet.createRow(if (startAtRow2) rowNumber + 1 else rowNumber)
             row.height = dataRow.height
             for (colIndex in 0 until dataRow.lastCellNum) {
-                if (rowNumber == 0) {
+                if (startAtRow2 && rowNumber == 1) {
                     sheet.setColumnWidth(colIndex, importSheet.getColumnWidth(colIndex))
                 }
                 val cell = dataRow.getCell(colIndex)
                 if(cell !=null){
                     val style = cell.cellStyle
-                        val value = ExcelHelper.getCellValueCustomImportTape(dataRow, colIndex)
-                        ExcelHelper.setCellValue(row, colIndex, style, value)
+                    val value = ExcelHelper.getCellValueCustomImportTape(dataRow, colIndex)
+                    ExcelHelper.setCellValue(row, colIndex, style, value)
                 }
             }
         }
         workbook.removeSheetAt(0)
+
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
@@ -486,8 +503,7 @@ class ExternalQualityReportService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage(CommonUtils.getMessage(fileName), arrayOf(
-                LocalDateTime.now().format(
-                    DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )

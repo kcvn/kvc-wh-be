@@ -2111,5 +2111,9 @@ class PlanService(
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")
     }
 
+    fun checkTemp(): BaseResponse<Boolean> {
+        val planTemp = planRep.getPlanTemp()
+        return BaseResponse(planTemp != null)
+    }
     //endregion
 }

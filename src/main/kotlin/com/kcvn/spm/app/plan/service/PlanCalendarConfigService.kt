@@ -79,7 +79,7 @@ class PlanCalendarConfigService(
         val exist = planCalendarConfigRep.getConfigByMonth(month, year)
         if (exist == null) {
             if (planCalendarConfigRep.isOverlap(data))
-                throw BusinessException("Ngày xuất hàng (từ ~đến) phải liên tiếp với ngày xuất hàng của tháng sản xuất trước hoặc sau")
+                throw BusinessException("Ngày xuất hàng (từ ~ đến) phải liên tiếp với ngày xuất hàng của tháng sản xuất trước hoặc sau")
             planCalendarConfigRep.add(data)
         } else {
             planCalendarConfigRep.update(data)

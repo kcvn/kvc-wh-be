@@ -15,7 +15,21 @@ import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
 import com.kcvn.spm.app.plan.payload.response.PlanSummaryResponse
 import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
-import com.kcvn.spm.common.constants.*
+import com.kcvn.spm.common.constants.Color
+import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.EquipmentType
+import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.Frame1
+import com.kcvn.spm.common.constants.KeyAppSetting
+import com.kcvn.spm.common.constants.MasterDataType
+import com.kcvn.spm.common.constants.Mold
+import com.kcvn.spm.common.constants.PlanStyleKey
+import com.kcvn.spm.common.constants.PlanTitle
+import com.kcvn.spm.common.constants.ProcessCode
+import com.kcvn.spm.common.constants.ProcessConvertCode
+import com.kcvn.spm.common.constants.ProcessPlan
+import com.kcvn.spm.common.constants.ProcessStatisticCode
+import com.kcvn.spm.common.constants.ProcessUnit
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -1681,8 +1695,9 @@ class PlanService(
         firstRowWithNegativeNumStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
 
         var rowNumber = 1
-        for (planProduct in planProducts) {
-            val dataExport = dataExports.find { x -> x.id == planProduct.id }
+        val productNames = planProducts.map { it.productName }.distinct()
+        for (productName in productNames) {
+            val dataExport = dataExports.find { x -> x.productName == productName }
             if (dataExport == null || dataExport.productPlanDetails.isNullOrEmpty()) continue
             var isNextProduct = true
             for (planProcess in dataExport.productPlanDetails!!) {

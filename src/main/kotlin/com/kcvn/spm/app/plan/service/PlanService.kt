@@ -88,7 +88,8 @@ class PlanService(
     private val appSettingRep: AppSettingRepository,
     private val commonCategoryRep: CommonCategoryRepository,
     private val equipmentProductivityRep: EquipmentProductivityRepository,
-    private val processMasterRep: ProcessMasterRepository
+    private val processMasterRep: ProcessMasterRepository,
+    private val planHistoryService: PlanHistoryService
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -2107,7 +2108,7 @@ class PlanService(
 
     //region PLAN_TEMP
 
-    fun approve(): BaseResponse<Boolean> {
+    fun approve(request: PlanSearchRequest): BaseResponse<Boolean> {
         val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
 
         val planProductTemps = planProductRep.getPlanProductTemp()
@@ -2119,11 +2120,15 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
-
+        planHistoryService.addFile(exportExcel(request))
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")
     }
 
+    fun checkTemp(): BaseResponse<Boolean> {
+        val planTemp = planRep.getPlanTemp()
+        return BaseResponse(planTemp != null)
+    }
     //endregion
 }

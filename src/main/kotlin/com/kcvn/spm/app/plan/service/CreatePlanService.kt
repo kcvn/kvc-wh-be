@@ -775,14 +775,6 @@ class CreatePlanService(
 
             val completionRates = completionRateInfo.filter { x -> x.productNameShortcut == iProductName.substring(iProductName.length - 7, iProductName.length) }
 
-            val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
-            val planProcessINS = generatePlanProcessModel(processIns, completionRateIns!!.rate)
-            for (iOrder in orders) {
-                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!)
-                planProcessINS.planDetails.add(planDetailIns)
-            }
-            planProductCreateModel.planProcesses.add(planProcessINS)
-
             if (inventories.isNotEmpty()) {
                 val highestPriorityProcesses = parentProcesses.filter { x ->
                     x.productName == iProductName && x.layerCode?.toIntOrNull() == mAllParent.layerCode?.toIntOrNull()
@@ -794,12 +786,7 @@ class CreatePlanService(
                     orderAllocations, product, inventoryByProducts, completionRates, holidays
                 )
                 planProductCreateModel.planProcesses.addAll(planHighestPriority.second)
-
                 orderAllocations = planHighestPriority.first.filter { (it.quantity ?: 0) > 0 }
-                if (orderAllocations.isEmpty()) {
-                    planProducts.add(planProductCreateModel)
-                    continue
-                }
 
                 val secondPriorityProcesses = listOf(
                     parentProcesses.filter { x ->
@@ -818,12 +805,7 @@ class CreatePlanService(
                     orderAllocations, product, inventoryByProducts, completionRates, holidays
                 )
                 planProductCreateModel.planProcesses.addAll(planSecondPriority.second)
-
                 orderAllocations = planSecondPriority.first.filter { (it.quantity ?: 0) > 0 }
-                if (orderAllocations.isEmpty()) {
-                    planProducts.add(planProductCreateModel)
-                    continue
-                }
 
                 val lowestPriorityProcesses = parentProcesses.filter { x ->
                     x.productName == iProductName
@@ -838,13 +820,17 @@ class CreatePlanService(
                     product, inventoryByProducts, completionRates, holidays
                 )
                 planProductCreateModel.planProcesses.addAll(planLowestPriority.second)
-
                 orderAllocations = planLowestPriority.first.filter { (it.quantity ?: 0) > 0 }
-                if (orderAllocations.isEmpty()) {
-                    planProducts.add(planProductCreateModel)
-                    continue
-                }
             }
+
+            val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
+            val planProcessINS = generatePlanProcessModel(processIns, completionRateIns!!.rate)
+            for (iOrder in orders) {
+                val hasInventory = !orderAllocations.any { it.orderDate!!.isEqual(iOrder.orderDate) }
+                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!, hasInventory)
+                planProcessINS.planDetails.add(planDetailIns)
+            }
+            planProductCreateModel.planProcesses.add(planProcessINS)
 
             val planAfterAllocate = calculatePlanProcessAfterAllocate(
                 processIns, orderAllocations,
@@ -975,6 +961,8 @@ class CreatePlanService(
         completionRateInfo: List<CompletionRateProcessProduct>,
         holidays: List<OffsetDateTime>
     ): Pair<List<OrderInfo>, List<PlanProcessCreateModel>> {
+        if (orderInfo.isEmpty()) return Pair(orderInfo, listOf())
+
         val inventoriesByProcess = inventories.filter { x ->
             x.productName == productInfo.name
                 && processes.any { m ->
@@ -1076,6 +1064,8 @@ class CreatePlanService(
         completionRateInfo: List<CompletionRateProcessProduct>,
         holidays: List<OffsetDateTime>
     ): Pair<List<OrderInfo>, List<PlanProcessCreateModel>> {
+        if (orderInfo.isEmpty()) return Pair(orderInfo, listOf())
+
         val inventoriesByProcess = inventories.filter { x ->
             x.productName == productInfo.name
                 && processesCalculator.any { m ->
@@ -1178,6 +1168,8 @@ class CreatePlanService(
         completionRateInfo: List<CompletionRateProcessProduct>,
         holidays: List<OffsetDateTime>
     ): Pair<List<OrderInfo>, List<PlanProcessCreateModel>> {
+        if (orderInfo.isEmpty()) return Pair(orderInfo, listOf())
+
         val inventoriesByProcess = mutableListOf<InventoryProductResponse>()
 
         for (iProcess in processesCalculator) {
@@ -1552,6 +1544,8 @@ class CreatePlanService(
         productInfo: Product,
         holidays: List<OffsetDateTime>
     ): List<PlanProcessCreateModel> {
+        if (orderAllocations.isEmpty()) return listOf()
+
         val processCreateModels = mutableListOf<PlanProcessCreateModel>()
 
         for (iOrder in orderAllocations.sortedBy { x -> x.orderDate }) {
@@ -1952,20 +1946,24 @@ class CreatePlanService(
         return data
     }
 
-    private fun generatePlanDetailINSModel(orderInfo: OrderInfo, unit: String): PlanDetailCreateModel {
+    private fun generatePlanDetailINSModel(orderInfo: OrderInfo, unit: String, hasInventory: Boolean = false): PlanDetailCreateModel {
         return if (unit == ProcessUnit.SHEET) {
             PlanDetailCreateModel(
                 title = PlanTitle.PLAN_KEY,
                 planDate = orderInfo.orderDate,
                 sheetQuantity = orderInfo.quantity ?: 0,
-                blockQuantity = (orderInfo.quantity ?: 0) * (orderInfo.blockSh ?: 0)
+                blockQuantity = (orderInfo.quantity ?: 0) * (orderInfo.blockSh ?: 0),
+                orderDate = orderInfo.orderDate,
+                hasInventory = hasInventory
             )
         } else {
             PlanDetailCreateModel(
                 title = PlanTitle.PLAN_KEY,
                 planDate = orderInfo.orderDate,
                 sheetQuantity = (orderInfo.quantity ?: 0) / (orderInfo.blockSh ?: 0),
-                blockQuantity = orderInfo.quantity ?: 0
+                blockQuantity = orderInfo.quantity ?: 0,
+                orderDate = orderInfo.orderDate,
+                hasInventory = hasInventory
             )
         }
     }
@@ -2008,7 +2006,7 @@ class CreatePlanService(
                             && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
                     }?.second
                     val eqConfig = settingEquipmentConfig(eqUsedConfig, equipmentInfoDefault)
-                    val planDetail = calculateQuantity(planDate, sheetQuantity, blockQuantity, eqConfig, productProcess.unit!!, productInfo.shBlock!!)
+                    val planDetail = calculateQuantity(planDate, sheetQuantity, blockQuantity, eqConfig, productProcess.unit!!, productInfo.shBlock!!, orderDate)
                     data.add(planDetail)
                     planDate = planDate.plusDays(-1)
                     sheetQuantity -= NumberHelper.toDecimal(planDetail.sheetQuantity!!)
@@ -2095,9 +2093,15 @@ class CreatePlanService(
         blockQuantity: BigDecimal,
         equipmentInfo: EquipmentProductivity,
         unit: String,
-        blockSh: Int
+        blockSh: Int,
+        orderDate: OffsetDateTime,
     ): PlanDetailCreateModel {
-        val planDetail = PlanDetailCreateModel(title = PlanTitle.PLAN_KEY, planDate = planDate)
+        val planDetail = PlanDetailCreateModel(
+            title = PlanTitle.PLAN_KEY,
+            planDate = planDate,
+            orderDate = orderDate,
+            hasInventory = false
+        )
         when (unit) {
             ProcessUnit.SHEET -> {
                 if ((equipmentInfo.sltbSheet ?: BigDecimal(0)) <= sheetQuantity) {

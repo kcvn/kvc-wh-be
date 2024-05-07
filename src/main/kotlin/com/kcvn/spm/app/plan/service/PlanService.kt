@@ -15,7 +15,21 @@ import com.kcvn.spm.app.plan.payload.request.PlanSearchRequest
 import com.kcvn.spm.app.plan.payload.response.PagingEquipmentProdResponse
 import com.kcvn.spm.app.plan.payload.response.PlanSummaryResponse
 import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
-import com.kcvn.spm.common.constants.*
+import com.kcvn.spm.common.constants.Color
+import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.EquipmentType
+import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.Frame1
+import com.kcvn.spm.common.constants.KeyAppSetting
+import com.kcvn.spm.common.constants.MasterDataType
+import com.kcvn.spm.common.constants.Mold
+import com.kcvn.spm.common.constants.PlanStyleKey
+import com.kcvn.spm.common.constants.PlanTitle
+import com.kcvn.spm.common.constants.ProcessCode
+import com.kcvn.spm.common.constants.ProcessConvertCode
+import com.kcvn.spm.common.constants.ProcessPlan
+import com.kcvn.spm.common.constants.ProcessStatisticCode
+import com.kcvn.spm.common.constants.ProcessUnit
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -74,7 +88,8 @@ class PlanService(
     private val appSettingRep: AppSettingRepository,
     private val commonCategoryRep: CommonCategoryRepository,
     private val equipmentProductivityRep: EquipmentProductivityRepository,
-    private val processMasterRep: ProcessMasterRepository
+    private val processMasterRep: ProcessMasterRepository,
+    private val planHistoryService: PlanHistoryService
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -1680,8 +1695,9 @@ class PlanService(
         firstRowWithNegativeNumStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
 
         var rowNumber = 1
-        for (planProduct in planProducts) {
-            val dataExport = dataExports.find { x -> x.id == planProduct.id }
+        val productNames = planProducts.map { it.productName }.distinct()
+        for (productName in productNames) {
+            val dataExport = dataExports.find { x -> x.productName == productName }
             if (dataExport == null || dataExport.productPlanDetails.isNullOrEmpty()) continue
             var isNextProduct = true
             for (planProcess in dataExport.productPlanDetails!!) {
@@ -2092,7 +2108,7 @@ class PlanService(
 
     //region PLAN_TEMP
 
-    fun approve(): BaseResponse<Boolean> {
+    fun approve(request: PlanSearchRequest): BaseResponse<Boolean> {
         val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
 
         val planProductTemps = planProductRep.getPlanProductTemp()
@@ -2104,11 +2120,15 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
-
+        planHistoryService.addFile(exportExcel(request))
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")
     }
 
+    fun checkTemp(): BaseResponse<Boolean> {
+        val planTemp = planRep.getPlanTemp()
+        return BaseResponse(planTemp != null)
+    }
     //endregion
 }

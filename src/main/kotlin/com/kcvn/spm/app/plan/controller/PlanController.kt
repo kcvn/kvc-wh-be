@@ -61,4 +61,11 @@ class PlanController(private val planService: PlanService) {
         val data = planService.approve(request)
         return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)
     }
+
+    @PostMapping("/check-temp")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+    fun checkTemp(): ResponseEntity<BaseResponse<Boolean>> {
+        val data = planService.checkTemp()
+        return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)
+    }
 }

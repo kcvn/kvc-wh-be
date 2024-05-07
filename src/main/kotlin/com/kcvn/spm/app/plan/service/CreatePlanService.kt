@@ -825,10 +825,22 @@ class CreatePlanService(
 
             val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
             val planProcessINS = generatePlanProcessModel(processIns, completionRateIns!!.rate)
-            for (iOrder in orders) {
-                val hasInventory = !orderAllocations.any { it.orderDate!!.isEqual(iOrder.orderDate) }
-                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!, hasInventory)
+            for (iOrder in orderAllocations) {
+                val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!, false)
                 planProcessINS.planDetails.add(planDetailIns)
+            }
+            for (iOrder in orders) {
+                val orderAllocate = orderAllocations.find { it.orderDate!!.isEqual(iOrder.orderDate) }
+                if (orderAllocate == null) {
+                    val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!, true)
+                    planProcessINS.planDetails.add(planDetailIns)
+                } else {
+                    if (orderAllocate.quantity!! < iOrder.quantity!!) {
+                        iOrder.quantity = iOrder.quantity!! - orderAllocate.quantity!!
+                        val planDetailIns = generatePlanDetailINSModel(iOrder, processIns.unit!!, true)
+                        planProcessINS.planDetails.add(planDetailIns)
+                    }
+                }
             }
             planProductCreateModel.planProcesses.add(planProcessINS)
 

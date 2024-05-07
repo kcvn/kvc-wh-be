@@ -270,6 +270,7 @@ class PlanService(
         colStartDate: OffsetDateTime,
         colEndDate: OffsetDateTime,
         columns: List<CalendarResponse>,
+        hasInventory: Boolean,
         isDraft: Boolean
     ): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
@@ -280,7 +281,7 @@ class PlanService(
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 
         var planProcessIds = parentPlanProcesses.mapNotNull { x -> x.id }
-        val planDetails = planDetailRep.getPlanDetail(planProcessIds, colStartDate, colEndDate)
+        val planDetails = planDetailRep.getPlanDetail(planProcessIds, colStartDate, colEndDate, hasInventory, isDraft)
 
         planProcessIds = planDetails.mapNotNull { x -> x.planProcessId }
         parentPlanProcesses = parentPlanProcesses.filter { x -> planProcessIds.any { m -> m == x.id } }
@@ -475,7 +476,10 @@ class PlanService(
 
         val planProducts = planProductRep.getListPlanProduct(request)
         if (dataExports.isEmpty()) {
-            dataExports.addAll(getDataExportExcel(planProducts, request.startDate!!, request.endDate!!, response.columns!!, request.draftWorkPlan ?: false))
+            dataExports.addAll(getDataExportExcel(
+                planProducts, request.startDate!!, request.endDate!!, response.columns!!,
+                request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false
+            ))
         }
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
@@ -1030,7 +1034,7 @@ class PlanService(
         response.columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
         val planProducts = planProductRep.getListPlanProduct(request)
-        val dataExports = getDataExportExcelEquipment(planProducts, request.startDate!!, request.endDate!!)
+        val dataExports = getDataExportExcelEquipment(planProducts, request)
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
             !x.processConvertCode.isNullOrEmpty()
                 && (
@@ -1313,7 +1317,7 @@ class PlanService(
 
     }
 
-    private fun getDataExportExcelEquipment(planProducts: List<PlanProduct>, colStartDate: OffsetDateTime, colEndDate: OffsetDateTime): List<PlanExportExcelModel> {
+    private fun getDataExportExcelEquipment(planProducts: List<PlanProduct>, request: PlanSearchRequest): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
 
         val planProcesses = planProcessRep.getListPlanProcess(planProductIds)
@@ -1321,7 +1325,10 @@ class PlanService(
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 
         var planProcessIds = parentPlanProcesses.mapNotNull { x -> x.id }
-        val planDetails = planDetailRep.getPlanDetail(planProcessIds, colStartDate, colEndDate)
+        val planDetails = planDetailRep.getPlanDetail(
+            planProcessIds, request.startDate!!, request.endDate!!,
+            request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false
+        )
 
         planProcessIds = planDetails.mapNotNull { x -> x.planProcessId }
         parentPlanProcesses = parentPlanProcesses.filter { x -> planProcessIds.any { m -> m == x.id } }
@@ -1597,7 +1604,10 @@ class PlanService(
         val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
         val planProducts = planProductRep.getListPlanProduct(request)
-        val dataExports = getDataExportExcel(planProducts, request.startDate!!, request.endDate!!, columns, request.draftWorkPlan ?: false)
+        val dataExports = getDataExportExcel(
+            planProducts, request.startDate!!, request.endDate!!, columns,
+            request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false
+        )
         if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanTemplate.xlsx")
@@ -2120,7 +2130,7 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
-        planHistoryService.addFile(exportExcel(request))
+        //planHistoryService.addFile(exportExcel(request))
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")

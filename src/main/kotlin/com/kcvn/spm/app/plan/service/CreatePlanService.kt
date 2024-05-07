@@ -425,7 +425,9 @@ class CreatePlanService(
                 planProductCreateModel.planProcesses = mappingPlanProcessModel(planProductCreateModel.planProcesses)
                 planProducts.add(planProductCreateModel)
 
-                equipmentUsedInfoByDate = calculateEquipmentUsedInfo(planProductCreateModel.planProcesses, product, equipmentInfo, equipmentUsedInfoByDate)
+                if (applyEquipmentProductivity) {
+                    equipmentUsedInfoByDate = calculateEquipmentUsedInfo(planProductCreateModel.planProcesses, product, equipmentInfo, equipmentUsedInfoByDate)
+                }
             }
         }
 
@@ -758,6 +760,8 @@ class CreatePlanService(
         val mAllParents = parentProcesses.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }
         val mAllChild = childrenProcesses.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }
 
+        var equipmentUsedInfoByDate = mutableListOf<Pair<OffsetDateTime, EquipmentProductivity>>()
+
         for (iProductName in productNames) {
             val processes = productProcesses.filter { x -> x.productName == iProductName }
             val processIns = processes.firstOrNull { x -> x.processConvertCode == ProcessConvertCode.INS } ?: continue
@@ -783,10 +787,14 @@ class CreatePlanService(
 
                 val planHighestPriority = createPlanFromInventoryHighestPriority(
                     processIns, highestPriorityProcesses, childrenProcesses.filter { x -> x.productName == iProductName },
-                    orderAllocations, product, inventoryByProducts, completionRates, holidays
+                    orderAllocations, product, inventoryByProducts, completionRates, holidays, equipmentInfo, equipmentUsedInfoByDate
                 )
                 planProductCreateModel.planProcesses.addAll(planHighestPriority.second)
                 orderAllocations = planHighestPriority.first.filter { (it.quantity ?: 0) > 0 }
+
+                if (applyEquipmentProductivity) {
+                    equipmentUsedInfoByDate = calculateEquipmentUsedInfo(planProductCreateModel.planProcesses, product, equipmentInfo, equipmentUsedInfoByDate)
+                }
 
                 val secondPriorityProcesses = listOf(
                     parentProcesses.filter { x ->
@@ -802,10 +810,15 @@ class CreatePlanService(
                     processIns, mAllParent, secondPriorityProcesses,
                     parentProcesses.filter { x -> x.productName == iProductName },
                     childrenProcesses.filter { x -> x.productName == iProductName },
-                    orderAllocations, product, inventoryByProducts, completionRates, holidays
+                    orderAllocations, product, inventoryByProducts, completionRates, holidays,
+                    equipmentInfo, equipmentUsedInfoByDate
                 )
                 planProductCreateModel.planProcesses.addAll(planSecondPriority.second)
                 orderAllocations = planSecondPriority.first.filter { (it.quantity ?: 0) > 0 }
+
+                if (applyEquipmentProductivity) {
+                    equipmentUsedInfoByDate = calculateEquipmentUsedInfo(planProductCreateModel.planProcesses, product, equipmentInfo, equipmentUsedInfoByDate)
+                }
 
                 val lowestPriorityProcesses = parentProcesses.filter { x ->
                     x.productName == iProductName
@@ -817,10 +830,15 @@ class CreatePlanService(
                 }
                 val planLowestPriority = createPlanFromInventoryLowestPriority(
                     processIns, lowestPriorityProcesses, processes, orderAllocations,
-                    product, inventoryByProducts, completionRates, holidays
+                    product, inventoryByProducts, completionRates, holidays,
+                    equipmentInfo, equipmentUsedInfoByDate
                 )
                 planProductCreateModel.planProcesses.addAll(planLowestPriority.second)
                 orderAllocations = planLowestPriority.first.filter { (it.quantity ?: 0) > 0 }
+
+                if (applyEquipmentProductivity) {
+                    equipmentUsedInfoByDate = calculateEquipmentUsedInfo(planProductCreateModel.planProcesses, product, equipmentInfo, equipmentUsedInfoByDate)
+                }
             }
 
             val completionRateIns = completionRates.firstOrNull { x -> x.processCode == ProcessCode.INS }
@@ -848,11 +866,15 @@ class CreatePlanService(
                 processIns, orderAllocations,
                 parentProcesses.filter { x -> x.productName == iProductName },
                 childrenProcesses.filter { x -> x.productName == iProductName },
-                completionRates, product, holidays
+                completionRates, product, holidays, equipmentInfo, equipmentUsedInfoByDate
             )
             planProductCreateModel.planProcesses.addAll(planAfterAllocate)
 
             planProducts.add(planProductCreateModel)
+
+            if (applyEquipmentProductivity) {
+                equipmentUsedInfoByDate = calculateEquipmentUsedInfo(planProductCreateModel.planProcesses, product, equipmentInfo, equipmentUsedInfoByDate)
+            }
         }
 
         val planProductMappings = mappingPlanProductModel(planProducts)
@@ -971,7 +993,9 @@ class CreatePlanService(
         productInfo: Product,
         inventories: List<InventoryProductResponse>,
         completionRateInfo: List<CompletionRateProcessProduct>,
-        holidays: List<OffsetDateTime>
+        holidays: List<OffsetDateTime>,
+        equipmentInfoDefault: List<EquipmentProductivity>,
+        equipmentUsedInfo: MutableList<Pair<OffsetDateTime, EquipmentProductivity>>
     ): Pair<List<OrderInfo>, List<PlanProcessCreateModel>> {
         if (orderInfo.isEmpty()) return Pair(orderInfo, listOf())
 
@@ -1056,7 +1080,8 @@ class CreatePlanService(
             val lstProcess = processes.filter { x -> item.first.any { m -> m.first == x.processCode } }
             val dataPlanProcessCreateModel = createPlanProcess(
                 processIns, item.second, lstProcess, childrenProcesses,
-                completionRateInfo, productInfo, item.first, holidays
+                completionRateInfo, productInfo, item.first, holidays,
+                equipmentInfoDefault, equipmentUsedInfo
             )
             processCreateModels.addAll(dataPlanProcessCreateModel)
         }
@@ -1074,7 +1099,9 @@ class CreatePlanService(
         productInfo: Product,
         inventories: List<InventoryProductResponse>,
         completionRateInfo: List<CompletionRateProcessProduct>,
-        holidays: List<OffsetDateTime>
+        holidays: List<OffsetDateTime>,
+        equipmentInfoDefault: List<EquipmentProductivity>,
+        equipmentUsedInfo: MutableList<Pair<OffsetDateTime, EquipmentProductivity>>
     ): Pair<List<OrderInfo>, List<PlanProcessCreateModel>> {
         if (orderInfo.isEmpty()) return Pair(orderInfo, listOf())
 
@@ -1164,7 +1191,8 @@ class CreatePlanService(
         processes.addAll(processesCalculator)
         val processCreateModels = createPlanProcess(
             processIns, allocateInventoryIns.first, processes, childrenProcesses,
-            completionRateInfo, productInfo, processCalculateFromInventories, holidays
+            completionRateInfo, productInfo, processCalculateFromInventories, holidays,
+            equipmentInfoDefault, equipmentUsedInfo
         )
 
         return Pair(orderAllocations, processCreateModels)
@@ -1178,7 +1206,9 @@ class CreatePlanService(
         productInfo: Product,
         inventories: List<InventoryProductResponse>,
         completionRateInfo: List<CompletionRateProcessProduct>,
-        holidays: List<OffsetDateTime>
+        holidays: List<OffsetDateTime>,
+        equipmentInfoDefault: List<EquipmentProductivity>,
+        equipmentUsedInfo: MutableList<Pair<OffsetDateTime, EquipmentProductivity>>
     ): Pair<List<OrderInfo>, List<PlanProcessCreateModel>> {
         if (orderInfo.isEmpty()) return Pair(orderInfo, listOf())
 
@@ -1310,7 +1340,7 @@ class CreatePlanService(
                 processIns, allocateInventoryIns.first,
                 processes.filter { x -> x.processInventoryCode.isNullOrEmpty() && x.processConvertCode != ProcessConvertCode.INS },
                 processes.filter { x -> !x.processInventoryCode.isNullOrEmpty() && x.processConvertCode != ProcessConvertCode.INS },
-                completionRateInfo, productInfo, processCalculateFromInventories, holidays
+                completionRateInfo, productInfo, processCalculateFromInventories, holidays, equipmentInfoDefault, equipmentUsedInfo
             )
 
             return Pair(orderAllocations, processCreateModels)
@@ -1368,7 +1398,7 @@ class CreatePlanService(
                 processIns, allocateInventoryIns.first,
                 processes.filter { x -> x.processInventoryCode.isNullOrEmpty() && x.processConvertCode != ProcessConvertCode.INS },
                 processes.filter { x -> !x.processInventoryCode.isNullOrEmpty() && x.processConvertCode != ProcessConvertCode.INS },
-                completionRateInfo, productInfo, processCalculateFromInventories, holidays
+                completionRateInfo, productInfo, processCalculateFromInventories, holidays, equipmentInfoDefault, equipmentUsedInfo
             )
 
             return Pair(orderAllocations, processCreateModels)
@@ -1478,7 +1508,9 @@ class CreatePlanService(
         completionRateInfo: List<CompletionRateProcessProduct>,
         productInfo: Product,
         processCalculateFromInventories: List<Triple<String?, BigDecimal, Int>>,
-        holidays: List<OffsetDateTime>
+        holidays: List<OffsetDateTime>,
+        equipmentInfoDefault: List<EquipmentProductivity>,
+        equipmentUsedInfo: MutableList<Pair<OffsetDateTime, EquipmentProductivity>>
     ): List<PlanProcessCreateModel> {
         val processCreateModels = mutableListOf<PlanProcessCreateModel>()
         var count = 1
@@ -1500,10 +1532,6 @@ class CreatePlanService(
                     x.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull() && x.processCode == iProcess.processCode
                 }?.rate ?: break
                 val planProcess = generatePlanProcessModel(iProcess, completionRate)
-                currentPlanDate = currentPlanDate.plusDays((-diffDay).toLong())
-                while (holidays.any { x -> x.isEqual(currentPlanDate) }) {
-                    currentPlanDate = currentPlanDate.plusDays(-1)
-                }
 
                 var sheetQuantity: BigDecimal
                 var blockQuantity: BigDecimal
@@ -1527,16 +1555,43 @@ class CreatePlanService(
                     sheetQuantity = blockQuantity / BigDecimal(productInfo.shBlock!!)
                 }
 
-                //Chưa tính năng suất máy
-                val planDetail = PlanDetailCreateModel(
-                    title = PlanTitle.PLAN_KEY,
-                    planDate = currentPlanDate,
-                    sheetQuantity = NumberHelper.roundedUp(sheetQuantity),
-                    blockQuantity = NumberHelper.roundedUp(blockQuantity),
-                    orderDate = order.orderDate,
-                    hasInventory = true
-                )
-                planProcess.planDetails = mutableListOf(planDetail)
+                if (applyEquipmentProductivity) {
+                    val eqConfigDefault = equipmentInfoDefault.find { x ->
+                        x.frame_1 == productInfo.frame_1 && x.grpProcess == iProcess.processGroup && x.mold!!.contains(productInfo.mold!!)
+                    } ?: EquipmentProductivity()
+
+                    while (sheetQuantity > BigDecimal(0) || blockQuantity > BigDecimal(0)) {
+                        if (holidays.any { x -> x.isEqual(currentPlanDate) }) {
+                            currentPlanDate = currentPlanDate.plusDays(-1)
+                            continue
+                        }
+                        val eqUsedConfig = equipmentUsedInfo.firstOrNull { x ->
+                            x.first == currentPlanDate && x.second.grpProcess == iProcess.processGroup
+                                && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
+                        }?.second
+                        val eqConfig = settingEquipmentConfig(eqUsedConfig, eqConfigDefault)
+                        val planDetail = calculateQuantity(currentPlanDate, sheetQuantity, blockQuantity, eqConfig, iProcess.unit!!, productInfo.shBlock!!, order.orderDate)
+                        planProcess.planDetails.add(planDetail)
+                        currentPlanDate = currentPlanDate.plusDays(-1)
+                        sheetQuantity -= NumberHelper.toDecimal(planDetail.sheetQuantity!!)
+                        blockQuantity -= NumberHelper.toDecimal(planDetail.blockQuantity!!)
+                    }
+                } else {
+                    currentPlanDate = currentPlanDate.plusDays((-diffDay).toLong())
+                    while (holidays.any { x -> x.isEqual(currentPlanDate) }) {
+                        currentPlanDate = currentPlanDate.plusDays(-1)
+                    }
+                    val planDetail = PlanDetailCreateModel(
+                        title = PlanTitle.PLAN_KEY,
+                        planDate = currentPlanDate,
+                        sheetQuantity = NumberHelper.roundedUp(sheetQuantity),
+                        blockQuantity = NumberHelper.roundedUp(blockQuantity),
+                        orderDate = order.orderDate,
+                        hasInventory = true
+                    )
+                    planProcess.planDetails = mutableListOf(planDetail)
+                }
+
                 planProcess.childrenProcesses = childrenProcesses.filter { x -> x.processInventoryCode == iProcess.processCode }
                     .map { x -> generatePlanChildrenProcessModel(x) }.toMutableList()
                 processCreateModels.add(planProcess)
@@ -1554,7 +1609,9 @@ class CreatePlanService(
         childrenProcesses: List<ProductProcessModel>,
         completionRateInfo: List<CompletionRateProcessProduct>,
         productInfo: Product,
-        holidays: List<OffsetDateTime>
+        holidays: List<OffsetDateTime>,
+        equipmentInfoDefault: List<EquipmentProductivity>,
+        equipmentUsedInfo: MutableList<Pair<OffsetDateTime, EquipmentProductivity>>
     ): List<PlanProcessCreateModel> {
         if (orderAllocations.isEmpty()) return listOf()
 
@@ -1573,7 +1630,7 @@ class CreatePlanService(
                 val planCalculator = calculatePlanProcess(
                     iOrder.orderDate!!, processSource, completionRateSource!!, planDetailSource, completionRateInfo,
                     parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
-                    childrenProcesses, productInfo, listOf(), mutableListOf(), holidays
+                    childrenProcesses, productInfo, equipmentInfoDefault, equipmentUsedInfo, holidays
                 )
                 processCreateModels.addAll(planCalculator.planProcessResults)
 
@@ -1608,7 +1665,7 @@ class CreatePlanService(
                     val planCalculator = calculatePlanProcess(
                         iOrder.orderDate!!, processSource, completionRateSource, planDetailSource, completionRateInfo,
                         parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
-                        childrenProcesses, productInfo, listOf(), mutableListOf(), holidays
+                        childrenProcesses, productInfo, equipmentInfoDefault, equipmentUsedInfo, holidays
                     )
                     processCreateModels.addAll(planCalculator.planProcessResults)
                 }
@@ -1906,7 +1963,9 @@ class CreatePlanService(
             processSequence = process.processSequence,
             processNameJp = process.processNameJp,
             processGroup = process.processGroup,
-            processStatisticCode = process.processStatisticCode
+            processStatisticCode = process.processStatisticCode,
+            planDetails = mutableListOf(),
+            childrenProcesses = mutableListOf()
         )
     }
 

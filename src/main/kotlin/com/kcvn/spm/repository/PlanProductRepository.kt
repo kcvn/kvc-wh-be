@@ -42,7 +42,7 @@ class PlanProductRepository(private val context: DSLContext) {
             condition = condition.and(PLAN.ID.eq(request.planId))
         }
         val query = context.select(
-
+            PLAN_PRODUCT.ID,
             PLAN_PRODUCT.PRODUCT_NAME,
             PLAN_PRODUCT.FRAME_1,
             PLAN_PRODUCT.MOLD,
@@ -53,7 +53,7 @@ class PlanProductRepository(private val context: DSLContext) {
             .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
             .where(condition)
             .groupBy(
-                PLAN_PRODUCT.PRODUCT_NAME,
+                PLAN_PRODUCT.ID,
                 PLAN_PRODUCT.PRODUCT_NAME,
                 PLAN_PRODUCT.FRAME_1,
                 PLAN_PRODUCT.MOLD,

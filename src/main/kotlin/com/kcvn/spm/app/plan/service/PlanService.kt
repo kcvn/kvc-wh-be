@@ -916,7 +916,7 @@ class PlanService(
                                 val averageDetailListModel = getMachineDetail(result.columns, equipmentMachineModel, equipmentProductivityModel, false)
                                 processDetailModel.processDetailList.add(averageDetailListModel)
                                 //machineRate
-                                val machineQuantityDetailListModel = calculateMachineDetail(quantityMachine, processDetailListModel.quantityByCalendars, machineDetailListModel.quantityByCalendars)
+                                val machineQuantityDetailListModel = calculateMachineDetail(quantityMachine, processDetailListModel.quantityByCalendars, averageDetailListModel.quantityByCalendars)
                                 processDetailModel.processDetailList.add(machineQuantityDetailListModel)
 
                             }

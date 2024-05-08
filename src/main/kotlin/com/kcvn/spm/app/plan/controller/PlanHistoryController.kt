@@ -59,10 +59,10 @@ class PlanHistoryController (private val planHistoryService: PlanHistoryService)
     }
 
 
-    @GetMapping("/detail")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
-    fun getPlanDetail(request: PlanHistoryDetailRequest): ResponseEntity<ProductPlanDetailResponse> {
-        val data = planHistoryService.getPlanDetail(request)
-        return ResponseEntity<ProductPlanDetailResponse>(data, HttpStatus.OK)
-    }
+//    @GetMapping("/detail")
+//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+//    fun getPlanDetail(request: PlanHistoryDetailRequest): ResponseEntity<ProductPlanDetailResponse> {
+//        val data = planHistoryService.getPlanDetail(request)
+//        return ResponseEntity<ProductPlanDetailResponse>(data, HttpStatus.OK)
+//    }
 }

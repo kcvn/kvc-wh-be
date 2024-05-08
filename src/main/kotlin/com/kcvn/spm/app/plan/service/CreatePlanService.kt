@@ -170,7 +170,7 @@ class CreatePlanService(
                     x.processInventoryCode.isNullOrEmpty()
                         && !completionRateInfo.any { m ->
                         m.productNameShortcut == item.substring(item.length - 7, item.length)
-                            && m.processCode == x.processCode
+                            && m.processCode == x.processCode && m.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull()
                     }
                 }
                 if (processNotCompletionRate.isNotEmpty()) {

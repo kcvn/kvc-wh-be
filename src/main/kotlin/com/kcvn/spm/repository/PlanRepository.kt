@@ -29,6 +29,21 @@ import java.time.ZoneOffset
 @Repository
 class PlanRepository(private val context: DSLContext) {
 
+    fun getPlanById(id: String): Plan? {
+        return context.selectFrom(PLAN)
+            .where(PLAN.ID.eq(id).and(PLAN.IS_DELETED.eq(false)))
+            .fetchInto(Plan::class.java)
+            .firstOrNull()
+    }
+
+    fun getListPlanByMonth(month: Int, year: Int): List<Plan> {
+        return context.selectFrom(PLAN)
+            .where(PLAN.IS_DELETED.eq(false))
+            .and(PLAN.MONTH.eq(month))
+            .and(PLAN.YEAR.eq(year))
+            .fetchInto(Plan::class.java)
+    }
+
     fun getByMonth(month: Int, year: Int): Plan? {
         return context.selectFrom(PLAN)
             .where(

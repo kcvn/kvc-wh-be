@@ -89,7 +89,7 @@ class PlanService(
     private val commonCategoryRep: CommonCategoryRepository,
     private val equipmentProductivityRep: EquipmentProductivityRepository,
     private val processMasterRep: ProcessMasterRepository,
-    private val planHistoryService: PlanHistoryService
+    //private val planHistoryService: PlanHistoryService
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {

@@ -89,7 +89,7 @@ class PlanService(
     private val commonCategoryRep: CommonCategoryRepository,
     private val equipmentProductivityRep: EquipmentProductivityRepository,
     private val processMasterRep: ProcessMasterRepository,
-    private val planHistoryService: PlanHistoryService
+    //private val planHistoryService: PlanHistoryService
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -916,7 +916,7 @@ class PlanService(
                                 val averageDetailListModel = getMachineDetail(result.columns, equipmentMachineModel, equipmentProductivityModel, false)
                                 processDetailModel.processDetailList.add(averageDetailListModel)
                                 //machineRate
-                                val machineQuantityDetailListModel = calculateMachineDetail(quantityMachine, processDetailListModel.quantityByCalendars, machineDetailListModel.quantityByCalendars)
+                                val machineQuantityDetailListModel = calculateMachineDetail(quantityMachine, processDetailListModel.quantityByCalendars, averageDetailListModel.quantityByCalendars)
                                 processDetailModel.processDetailList.add(machineQuantityDetailListModel)
 
                             }

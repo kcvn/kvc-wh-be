@@ -144,7 +144,11 @@ class OrderVersion {
         val DEFAULT = DropdownResponse(LATEST, "Mới nhất")
     }
 }
-
+class PlanVersion {
+    companion object {
+        const val LATEST = "Mới nhất"
+    }
+}
 class ExternalReportDetailType {
     companion object {
         const val ORDER_QUANTITY = "納予定(BLOCK)"

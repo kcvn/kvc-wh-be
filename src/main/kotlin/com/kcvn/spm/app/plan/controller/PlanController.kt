@@ -57,7 +57,7 @@ class PlanController(private val planService: PlanService) {
 
     @PostMapping("/approve")
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
-    fun approve(request: PlanSearchRequest, fileName: String): ResponseEntity<BaseResponse<Boolean>> {
+    fun approve(request: PlanSearchRequest, fileName: String?): ResponseEntity<BaseResponse<Boolean>> {
         val data = planService.approve(request,fileName)
         return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)
     }

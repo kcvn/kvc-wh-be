@@ -935,10 +935,12 @@ class PlanService(
 
     }
 
-    fun getMachineDetail(columns: List<CalendarResponse>?,
-                         equipmentMachineModel: List<EquipmentProductivity>,
-                         equipmentProductivityModel: EquipmentProductivityModel,
-                         isGetCapMachine: Boolean = true): ProcessDetailListModel {
+    fun getMachineDetail(
+        columns: List<CalendarResponse>?,
+        equipmentMachineModel: List<EquipmentProductivity>,
+        equipmentProductivityModel: EquipmentProductivityModel,
+        isGetCapMachine: Boolean = true
+    ): ProcessDetailListModel {
         var capMachineValue: BigDecimal?
         val machineDetailListModel = ProcessDetailListModel(
             type = if (isGetCapMachine) ProcessPlan.MACHINE else ProcessPlan.AVERAGE_PLAN,
@@ -984,9 +986,11 @@ class PlanService(
         return machineDetailListModel
     }
 
-    fun calculateMachineDetail(quantityMachine: Double?,
-                               processDetails: List<KeyValueResponse>?,
-                               averageProductionDetails: List<KeyValueResponse>?): ProcessDetailListModel {
+    fun calculateMachineDetail(
+        quantityMachine: Double?,
+        processDetails: List<KeyValueResponse>?,
+        averageProductionDetails: List<KeyValueResponse>?
+    ): ProcessDetailListModel {
         val machineNumberDetailListModel = ProcessDetailListModel(
             type = ProcessPlan.QUANTITY_MACHINE,
             typeKey = EquipmentType.MACHINE_RATE,
@@ -1320,7 +1324,7 @@ class PlanService(
     private fun getDataExportExcelEquipment(planProducts: List<PlanProduct>, request: PlanSearchRequest): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
 
-        val planProcesses = planProcessRep.getListPlanProcess(planProductIds)
+        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, request.draftWorkPlan ?: false)
         var parentPlanProcesses = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 
@@ -1374,12 +1378,12 @@ class PlanService(
                 productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
 
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
-                val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.groupBy { it.planDate }.map { m ->
+                val planDetail = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
                     KeyValueResponse(
-                        DateTimeHelper.toString(DateTimeHelper.toTimeZone7(m.key)!!, DateTimeFormat.yyyyMMdd),
-                        if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { it.blockQuantity ?: 0 }.toString() else m.value.sumOf { it.sheetQuantity ?: 0 }.toString()
+                        DateTimeHelper.toString(DateTimeHelper.toTimeZone7(t.planDate)!!, DateTimeFormat.yyyyMMdd),
+                        if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
                     )
-                }.sortedBy { m -> m.key }
+                }
 
 
                 val planData = mutableListOf<PlanDataByProcessModel>()
@@ -2118,7 +2122,7 @@ class PlanService(
 
     //region PLAN_TEMP
 
-    fun approve(request: PlanSearchRequest,fileName: String?): BaseResponse<Boolean> {
+    fun approve(request: PlanSearchRequest,fileName: String): BaseResponse<Boolean> {
         val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
 
         val planProductTemps = planProductRep.getPlanProductTemp()
@@ -2130,13 +2134,7 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
-        try {
-            if (fileName != null) {
-                planHistoryService.addFile(exportExcel(request), fileName)
-            }
-        } catch (e: Exception) {
-            println("Exception occurred while adding file: ${e.message}")
-        }
+        planHistoryService.addFile(exportExcel(request),fileName)
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")

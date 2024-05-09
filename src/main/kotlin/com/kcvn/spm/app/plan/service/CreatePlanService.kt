@@ -468,8 +468,10 @@ class CreatePlanService(
                 product, currentCompletionRate!!, eqConfig, equipmentUsedInfoByDate, holidays
             )
             planProcess.planDetails = currentPlanDetail
-            planProcess.childrenProcesses = childrenProcesses.filter { x -> x.processInventoryCode == iParentProcess.processCode }
-                .map { x -> generatePlanChildrenProcessModel(x) }.toMutableList()
+            planProcess.childrenProcesses = childrenProcesses.filter { x ->
+                x.processInventoryCode == iParentProcess.processCode
+                    && x.inventoryLayerGroup?.toIntOrNull() == iParentProcess.layerCode?.toIntOrNull()
+            }.map { x -> generatePlanChildrenProcessModel(x) }.toMutableList()
 
             planProcesses.add(planProcess)
 
@@ -1592,8 +1594,9 @@ class CreatePlanService(
                     planProcess.planDetails = mutableListOf(planDetail)
                 }
 
-                planProcess.childrenProcesses = childrenProcesses.filter { x -> x.processInventoryCode == iProcess.processCode }
-                    .map { x -> generatePlanChildrenProcessModel(x) }.toMutableList()
+                planProcess.childrenProcesses = childrenProcesses.filter { x ->
+                    x.processInventoryCode == iProcess.processCode && x.inventoryLayerGroup?.toIntOrNull() == iProcess.layerCode?.toIntOrNull()
+                }.map { x -> generatePlanChildrenProcessModel(x) }.toMutableList()
                 processCreateModels.add(planProcess)
                 dayOfImplement = iProcess.dayOfImplementation ?: 0
             }

@@ -1385,6 +1385,7 @@ class PlanService(
                     )
                 }
 
+
                 val planData = mutableListOf<PlanDataByProcessModel>()
                 planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))
 
@@ -2121,7 +2122,7 @@ class PlanService(
 
     //region PLAN_TEMP
 
-    fun approve(request: PlanSearchRequest,fileName: String): BaseResponse<Boolean> {
+    fun approve(request: PlanSearchRequest,fileName: String?): BaseResponse<Boolean> {
         val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
 
         val planProductTemps = planProductRep.getPlanProductTemp()

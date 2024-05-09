@@ -1,13 +1,9 @@
 package com.kcvn.spm.app.plan.service
 
-import com.kcvn.spm.app.plan.payload.model.PlanDataByProcessModel
-import com.kcvn.spm.app.plan.payload.model.ProcessChildrenModel
-import com.kcvn.spm.app.plan.payload.model.ProductPlanDetailModel
+
 import com.kcvn.spm.app.plan.payload.model.ProductPlanModel
 import com.kcvn.spm.app.plan.payload.request.*
-import com.kcvn.spm.app.plan.payload.response.ProductPlanDetailResponse
 import com.kcvn.spm.common.constants.*
-import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.payload.*
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -17,24 +13,24 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
-import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
 class PlanHistoryService(private val appSettingRep: AppSettingRepository,
                          private val planProductRep: PlanProductRepository,
                          private val planRep: PlanRepository,
-                         private val workResultRep: WorkResultRepository,
-                         private val holidaysCalenderRep: HolidaysCalenderRepository,
-                         private val planDetailRep: PlanDetailRepository,
-                         private val planProcessRep: PlanProcessRepository)
+//                         private val workResultRep: WorkResultRepository,
+//                         private val holidaysCalenderRep: HolidaysCalenderRepository,
+//                         private val planDetailRep: PlanDetailRepository,
+//                         private val planProcessRep: PlanProcessRepository
+                        )
 {
 
     fun getPlansByMonth(month: String): BaseResponse<List<DropdownResponse>>{
@@ -73,30 +69,31 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
     fun planHistory(request: PlanHistoryRequest): BaseResponse<List<FileContentModel>> {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         val data = mutableListOf<FileContentModel>()
-        val dateFormat = DateTimeFormatter.ofPattern("ddMMyyyy")
 
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
-            val directory = pathConfig.value?.let { File(System.getProperty("user.dir") + it) }
+            val directory: File?  = try {
+                File(System.getProperty("user.dir") + pathConfig.value)
+            } catch (e: Exception) {
+                pathConfig.value?.let { File(it) }
+            }
 
             val excelFiles = directory?.listFiles { file ->
                 file.isFile && (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) && (request.fileName.isEmpty() || file.name.contains(request.fileName))
             }
 
-            if (excelFiles != null) {
-                for (file in excelFiles) {
-                    val fileNameParts = file.name.split("_")
-                    val fileStartDate = OffsetDateTime.parse(fileNameParts[0], dateFormat)
-                    val fileEndDate = OffsetDateTime.parse(fileNameParts[1], dateFormat)
+            excelFiles?.forEach { file ->
+                val fileNameParts = file.name.split("_")
+                val fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.ddMMyyyy)
+                val fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.ddMMyyyy)
 
-                    if ((request.startDate == null || !fileStartDate.isBefore(request.startDate)) &&
-                        (request.endDate == null || !fileEndDate.isAfter(request.endDate))) {
-                        val fileContentModel = FileContentModel(
-                            fileName = file.name,
-                            content = file.readBytes(),
-                            time = OffsetDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneOffset.UTC)
-                        )
-                        data.add(fileContentModel)
-                    }
+                if ((request.startDate == null || !fileStartDate.isBefore(request.startDate)) &&
+                    (request.endDate == null || !fileEndDate.isAfter(request.endDate))) {
+                    val fileContentModel = FileContentModel(
+                        fileName = file.name,
+                        content = file.readBytes(),
+                        time = OffsetDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneOffset.UTC)
+                    )
+                    data.add(fileContentModel)
                 }
             }
         }
@@ -106,56 +103,84 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
     fun removeFile(fileName: String): BaseResponse<Boolean> {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
-            val filePath = "${pathConfig.value}/$fileName"
-            val file = File(System.getProperty("user.dir")+filePath)
+            val filePath: String? = try {
+                System.getProperty("user.dir") + "${pathConfig.value}/$fileName"
+            } catch (e: Exception) {
+                "${pathConfig.value}/$fileName"
+            }
 
-            if (file.exists()) {
-                val isDeleted = file.delete()
-                if (isDeleted) {
-                    return BaseResponse(true, CommonUtils.getMessage("detete.success"))
+            val file = filePath?.let { File(it) }
+
+            if (file != null) {
+                if (file.exists()) {
+                    val isDeleted = file.delete()
+                    if (isDeleted) {
+                        return BaseResponse(true, CommonUtils.getMessage("delete.success"))
+                    }
                 }
             }
         }
-        throw BusinessException(CommonUtils.getMessage("delete.error"))
+        return BaseResponse(false, CommonUtils.getMessage("delete.error"))
     }
 
 
 
-    fun addFile(fileContentModel: FileContentModel, fileName: String) {
+    fun addFile(fileContentModel: FileContentModel, fileName: String?): BaseResponse<String> {
         try {
             val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
             if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
                 val targetDirectoryPath = pathConfig.value
-                val targetFilePath = "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$fileName"
+                var finalFileName = fileName
+                if (fileName != null) {
+                    if (!fileName.endsWith(".xlsx")) {
+                        finalFileName += ".xlsx"
+                    }
+                }
+                val targetFilePath: String= try {
+                    "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$finalFileName"
+                } catch (e: Exception) {
+                    "$targetDirectoryPath${File.separator}$finalFileName"
+                }
+
                 val targetFile = File(targetFilePath)
 
                 if (!targetFile.parentFile.exists()) {
-                    targetFile.parentFile.mkdirs()
+                        targetFile.parentFile.mkdirs()
                 }
 
                 FileOutputStream(targetFile).use { outputStream ->
-                    fileContentModel.content?.let { outputStream.write(it) }
+                        fileContentModel.content?.let { outputStream.write(it) }
                 }
+
+                return BaseResponse("File added successfully")
             }
         } catch (e: Exception) {
-            throw BusinessException(e.message)
+            return BaseResponse("Error adding file: ${e.message}")
         }
+        return BaseResponse("Error adding file")
     }
 
 
     fun downloadFile(fileName: String): BaseResponse<FileContentModel> {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
-            val filePath = Paths.get(System.getProperty("user.dir")+"${pathConfig.value}/$fileName")
-            val fileBytes = Files.readAllBytes(filePath)
+            val filePath: Path?= try {
+                Paths.get(System.getProperty("user.dir") + "${pathConfig.value}/$fileName")
+            } catch (e: Exception) {
+                Paths.get("${pathConfig.value}/$fileName")
+            }
 
-            return BaseResponse(FileContentModel(
-                fileName = fileName,
-                contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
-                content = fileBytes
-            ))
+            if (filePath != null && Files.exists(filePath)) {
+                val fileBytes = Files.readAllBytes(filePath)
+
+                return BaseResponse(FileContentModel(
+                    fileName = fileName,
+                    contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+                    content = fileBytes
+                ))
+            }
         }
-        throw FileNotFoundException("File not found $fileName")
+        return BaseResponse(null, "File not found $fileName")
     }
 
 }

@@ -126,7 +126,11 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
             val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
             if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
                 val targetDirectoryPath = pathConfig.value
-                val targetFilePath = "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$fileName"
+                var finalFileName = fileName
+                if (!fileName.endsWith(".xlsx")) {
+                    finalFileName += ".xlsx"
+                }
+                val targetFilePath = "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$finalFileName"
                 val targetFile = File(targetFilePath)
 
                 if (!targetFile.parentFile.exists()) {

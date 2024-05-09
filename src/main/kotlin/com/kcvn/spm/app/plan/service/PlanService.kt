@@ -89,7 +89,7 @@ class PlanService(
     private val commonCategoryRep: CommonCategoryRepository,
     private val equipmentProductivityRep: EquipmentProductivityRepository,
     private val processMasterRep: ProcessMasterRepository,
-    //private val planHistoryService: PlanHistoryService
+    private val planHistoryService: PlanHistoryService
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -1320,7 +1320,7 @@ class PlanService(
     private fun getDataExportExcelEquipment(planProducts: List<PlanProduct>, request: PlanSearchRequest): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
 
-        val planProcesses = planProcessRep.getListPlanProcess(planProductIds)
+        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, request.draftWorkPlan ?: false)
         var parentPlanProcesses = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 
@@ -2118,7 +2118,7 @@ class PlanService(
 
     //region PLAN_TEMP
 
-    fun approve(request: PlanSearchRequest): BaseResponse<Boolean> {
+    fun approve(request: PlanSearchRequest,fileName: String): BaseResponse<Boolean> {
         val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
 
         val planProductTemps = planProductRep.getPlanProductTemp()
@@ -2130,7 +2130,7 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
-        //planHistoryService.addFile(exportExcel(request))
+        planHistoryService.addFile(exportExcel(request),fileName)
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")

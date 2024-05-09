@@ -73,7 +73,6 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
     fun planHistory(request: PlanHistoryRequest): BaseResponse<List<FileContentModel>> {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         val data = mutableListOf<FileContentModel>()
-        val dateFormat = DateTimeFormatter.ofPattern("ddMMyyyy")
 
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
             val directory = pathConfig.value?.let { File(System.getProperty("user.dir") + it) }
@@ -85,8 +84,8 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
             if (excelFiles != null) {
                 for (file in excelFiles) {
                     val fileNameParts = file.name.split("_")
-                    val fileStartDate = OffsetDateTime.parse(fileNameParts[0], dateFormat)
-                    val fileEndDate = OffsetDateTime.parse(fileNameParts[1], dateFormat)
+                    val fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.ddMMyyyy)
+                    val fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.ddMMyyyy)
 
                     if ((request.startDate == null || !fileStartDate.isBefore(request.startDate)) &&
                         (request.endDate == null || !fileEndDate.isAfter(request.endDate))) {

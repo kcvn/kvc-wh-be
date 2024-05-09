@@ -1374,12 +1374,12 @@ class PlanService(
                 productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
 
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
-                val planDetail = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
+                val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.groupBy { it.planDate }.map { m ->
                     KeyValueResponse(
-                        DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
-                        if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
+                        DateTimeHelper.toString(DateTimeHelper.toTimeZone7(m.key)!!, DateTimeFormat.yyyyMMdd),
+                        if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { it.blockQuantity ?: 0 }.toString() else m.value.sumOf { it.sheetQuantity ?: 0 }.toString()
                     )
-                }
+                }.sortedBy { m -> m.key }
 
 
                 val planData = mutableListOf<PlanDataByProcessModel>()
@@ -2118,7 +2118,7 @@ class PlanService(
 
     //region PLAN_TEMP
 
-    fun approve(request: PlanSearchRequest,fileName: String): BaseResponse<Boolean> {
+    fun approve(request: PlanSearchRequest,fileName: String?): BaseResponse<Boolean> {
         val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
 
         val planProductTemps = planProductRep.getPlanProductTemp()
@@ -2130,7 +2130,13 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
-        planHistoryService.addFile(exportExcel(request),fileName)
+        try {
+            if (fileName != null) {
+                planHistoryService.addFile(exportExcel(request), fileName)
+            }
+        } catch (e: Exception) {
+            println("Exception occurred while adding file: ${e.message}")
+        }
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")

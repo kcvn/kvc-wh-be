@@ -3,10 +3,13 @@ package com.kcvn.spm.app.sync.service
 import com.kcvn.spm.app.sync.payload.response.SyncProcessMasterResponse
 import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureResponse
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.GrpProcessCode
 import com.kcvn.spm.common.constants.SyncType
 import com.kcvn.spm.common.constants.TransAmTable
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.StringHelper
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
 import com.kcvn.spm.model.tables.pojos.AppSetting
@@ -15,7 +18,12 @@ import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.pojos.SyncHistory
 import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.model.tables.references.APP_SETTING
-import com.kcvn.spm.repository.*
+import com.kcvn.spm.repository.ProcessMasterRepository
+import com.kcvn.spm.repository.ProcessProcedureStructureRepository
+import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.SyncHistoryRepository
+import com.kcvn.spm.repository.SystemLockRepository
+import com.kcvn.spm.repository.WorkResultRepository
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -36,7 +44,8 @@ class SyncTransAmDataService(
     private val processMasterRep: ProcessMasterRepository,
     private val workResultRep: WorkResultRepository,
     private val context: DSLContext,
-    private val productRep: ProductRepository
+    private val productRep: ProductRepository,
+    private val systemLockRep: SystemLockRepository
 ) {
     private val transAmDSLContext: DSLContext = DSLContextExtension.createDSLContext(
         propertiesConfig.tranAmDbUrl,
@@ -46,6 +55,9 @@ class SyncTransAmDataService(
     )
 
     fun syncProcessProcedureStructure() {
+        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
+
         val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_PROCEDURE_STRUCTURE)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
         var condition: Condition = DSL.noCondition()
@@ -87,6 +99,9 @@ class SyncTransAmDataService(
     }
 
     fun syncProcessMaster() {
+        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
+
         val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_MASTER)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
         var condition: Condition = DSL.noCondition()
@@ -127,7 +142,6 @@ class SyncTransAmDataService(
         }
 
     }
-
 
     fun syncWorkResult() {
         val syncHistory = syncHistoryRep.findByType(SyncType.WORK_RESULT)

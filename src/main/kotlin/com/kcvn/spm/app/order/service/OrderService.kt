@@ -196,7 +196,7 @@ class OrderService(
 
     fun importExcelOrder(file: MultipartFile, isIncreaseVersion: Boolean?): BaseResponse<FileContentModel> {
         if (systemLockRep.isLock(Constants.SYSTEM_LOCK_IMPORT_ORDER))
-            throw BusinessException("Chức năng này đang bị khóa tạm thời. Vui lòng thử lại sau ít phút nữa")
+            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
         val workbook = WorkbookFactory.create(file.inputStream)
         try {

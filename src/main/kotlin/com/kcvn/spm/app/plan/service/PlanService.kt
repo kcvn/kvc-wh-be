@@ -1320,7 +1320,7 @@ class PlanService(
     private fun getDataExportExcelEquipment(planProducts: List<PlanProduct>, request: PlanSearchRequest): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
 
-        val planProcesses = planProcessRep.getListPlanProcess(planProductIds)
+        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, request.draftWorkPlan ?: false)
         var parentPlanProcesses = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 

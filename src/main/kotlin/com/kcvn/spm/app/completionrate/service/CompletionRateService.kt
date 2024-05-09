@@ -46,7 +46,6 @@ class CompletionRateService(
     private val processMasterRepository: ProcessMasterRepository,
     private val productRepository: ProductRepository,
     private val processProcedureStructureRepository: ProcessProcedureStructureRepository,
-    private val planHistoryService: PlanHistoryService
 ) {
     val checkImportCompletionRateDate = CommonUtils.getMessage("check.importCompletionRateDate")
     val importSuccessMessageKey = "import.success"
@@ -225,7 +224,7 @@ class CompletionRateService(
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
-        planHistoryService.addFile(response)
+
         workbook.close()
 
         return BaseResponse(response)

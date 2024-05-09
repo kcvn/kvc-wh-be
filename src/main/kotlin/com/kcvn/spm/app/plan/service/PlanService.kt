@@ -935,10 +935,12 @@ class PlanService(
 
     }
 
-    fun getMachineDetail(columns: List<CalendarResponse>?,
-                         equipmentMachineModel: List<EquipmentProductivity>,
-                         equipmentProductivityModel: EquipmentProductivityModel,
-                         isGetCapMachine: Boolean = true): ProcessDetailListModel {
+    fun getMachineDetail(
+        columns: List<CalendarResponse>?,
+        equipmentMachineModel: List<EquipmentProductivity>,
+        equipmentProductivityModel: EquipmentProductivityModel,
+        isGetCapMachine: Boolean = true
+    ): ProcessDetailListModel {
         var capMachineValue: BigDecimal?
         val machineDetailListModel = ProcessDetailListModel(
             type = if (isGetCapMachine) ProcessPlan.MACHINE else ProcessPlan.AVERAGE_PLAN,
@@ -984,9 +986,11 @@ class PlanService(
         return machineDetailListModel
     }
 
-    fun calculateMachineDetail(quantityMachine: Double?,
-                               processDetails: List<KeyValueResponse>?,
-                               averageProductionDetails: List<KeyValueResponse>?): ProcessDetailListModel {
+    fun calculateMachineDetail(
+        quantityMachine: Double?,
+        processDetails: List<KeyValueResponse>?,
+        averageProductionDetails: List<KeyValueResponse>?
+    ): ProcessDetailListModel {
         val machineNumberDetailListModel = ProcessDetailListModel(
             type = ProcessPlan.QUANTITY_MACHINE,
             typeKey = EquipmentType.MACHINE_RATE,
@@ -1376,11 +1380,10 @@ class PlanService(
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
                 val planDetail = planDetailByProcess.filter { t -> t.title == PlanTitle.PLAN_KEY }.map { t ->
                     KeyValueResponse(
-                        DateTimeHelper.toString(t.planDate!!, DateTimeFormat.yyyyMMdd),
+                        DateTimeHelper.toString(DateTimeHelper.toTimeZone7(t.planDate)!!, DateTimeFormat.yyyyMMdd),
                         if (x.unit == ProcessUnit.BLOCK) t.blockQuantity?.toString() else t.sheetQuantity?.toString()
                     )
                 }
-
 
                 val planData = mutableListOf<PlanDataByProcessModel>()
                 planData.add(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = planDetail))

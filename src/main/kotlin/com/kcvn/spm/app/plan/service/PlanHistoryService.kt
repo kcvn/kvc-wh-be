@@ -66,7 +66,8 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
     }
 
 
-    fun planHistory(request: PlanHistoryRequest): BaseResponse<List<FileContentModel>> {
+
+    fun planHistory(request: PlanHistoryRequest, pageable: Pageable): BasePagingResponse<FileContentModel> {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         val data = mutableListOf<FileContentModel>()
 
@@ -83,8 +84,19 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
 
             excelFiles?.forEach { file ->
                 val fileNameParts = file.name.split("_")
-                val fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.yyyyMMdd)
-                val fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.yyyyMMdd)
+                var fileStartDate: OffsetDateTime
+                var fileEndDate: OffsetDateTime
+
+                try {
+                    fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.yyyyMMdd)
+                    fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.yyyyMMdd)
+                } catch (e: Exception) {
+
+                     fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.ddMMyyyy)
+                     fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.ddMMyyyy)
+
+                }
+
 
                 if ((request.startDate == null || !fileStartDate.isBefore(request.startDate)) &&
                     (request.endDate == null || !fileEndDate.isAfter(request.endDate))) {
@@ -97,7 +109,12 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
                 }
             }
         }
-        return BaseResponse(data)
+
+        val start = pageable.pageNumber * pageable.pageSize
+        val end = (start + pageable.pageSize).coerceAtMost(data.size)
+        val pageData = data.subList(start, end)
+
+        return BasePagingResponse(pageData, data.size)
     }
 
     fun removeFile(fileName: String): BaseResponse<Boolean> {

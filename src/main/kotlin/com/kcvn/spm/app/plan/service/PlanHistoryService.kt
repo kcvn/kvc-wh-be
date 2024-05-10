@@ -79,7 +79,7 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
 
             val excelFiles = directory?.listFiles { file ->
                 file.isFile && (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) && (request.fileName.isEmpty() || file.name.contains(request.fileName))
-            }
+            }?.sortedByDescending { it.lastModified() }
 
             excelFiles?.forEach { file ->
                 val fileNameParts = file.name.split("_")
@@ -91,7 +91,7 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
                     val fileContentModel = FileContentModel(
                         fileName = file.name,
                         content = file.readBytes(),
-                        time = OffsetDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneOffset.UTC)
+                        time = DateTimeHelper.toTimeZone7(OffsetDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneOffset.UTC))
                     )
                     data.add(fileContentModel)
                 }

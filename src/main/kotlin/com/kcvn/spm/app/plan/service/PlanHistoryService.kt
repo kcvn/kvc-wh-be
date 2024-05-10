@@ -83,8 +83,8 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
 
             excelFiles?.forEach { file ->
                 val fileNameParts = file.name.split("_")
-                val fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.ddMMyyyy)
-                val fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.ddMMyyyy)
+                val fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.yyyyMMdd)
+                val fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.yyyyMMdd)
 
                 if ((request.startDate == null || !fileStartDate.isBefore(request.startDate)) &&
                     (request.endDate == null || !fileEndDate.isAfter(request.endDate))) {

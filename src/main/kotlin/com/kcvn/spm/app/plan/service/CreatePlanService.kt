@@ -205,7 +205,7 @@ class CreatePlanService(
                                 || process.processConvertCode == ProcessConvertCode.DAN_2L
                                 || process.processCode == ProcessCode.TKCSP
                             ) {
-                                eqConfigs = eqConfigs.filter { x -> x.mold == product.mold }
+                                eqConfigs = eqConfigs.filter { x -> x.mold!!.contains(product.mold!!) }
                                 if (eqConfigs.isEmpty()) {
                                     errors.add("Chưa có cấu hình năng suất máy cho khuôn đục ${product.mold} của nhóm công đoạn ${process.processGroup}")
                                 }
@@ -461,7 +461,7 @@ class CreatePlanService(
         var currentCompletionRate = completionRateSource.rate
         var currentProcessUnit = processSource.unit!!
         var dayOfImplement = processSource.dayOfImplementation ?: 0
-        for (iParentProcess in parentProcesses) {
+        for (iParentProcess in parentProcesses.sortedByDescending { it.processSequence }) {
             val diffDay = dayOfImplement - (iParentProcess.dayOfImplementation ?: 0)
             val completionRate = completionRates.find { x ->
                 x.layerCode?.toIntOrNull() == iParentProcess.layerCode?.toIntOrNull() && x.processCode == iParentProcess.processCode
@@ -480,7 +480,7 @@ class CreatePlanService(
                 orderDate, currentPlanDetail, currentProcessUnit, iParentProcess, diffDay,
                 product, currentCompletionRate!!, eqConfig, equipmentUsedInfoByDate, isPassEqConfig, holidays
             )
-            planProcess.planDetails = currentPlanDetail
+            planProcess.planDetails = cloneDataPlanDetail(currentPlanDetail)
             planProcess.childrenProcesses = childrenProcesses.filter { x ->
                 x.processInventoryCode == iParentProcess.processCode
                     && x.inventoryLayerGroup?.toIntOrNull() == iParentProcess.layerCode?.toIntOrNull()
@@ -2212,6 +2212,19 @@ class CreatePlanService(
             }
         }
         return data.sortedBy { it.planDate }.toMutableList()
+    }
+
+    private fun cloneDataPlanDetail(data: MutableList<PlanDetailCreateModel>): MutableList<PlanDetailCreateModel> {
+        return data.map {
+            PlanDetailCreateModel(
+                title = it.title,
+                planDate = it.planDate,
+                sheetQuantity = it.sheetQuantity,
+                blockQuantity = it.blockQuantity,
+                orderDate = it.orderDate,
+                hasInventory = it.hasInventory
+            )
+        }.toMutableList()
     }
 
     private fun settingEquipmentConfig(equipmentUsedInfo: EquipmentProductivity?, equipmentInfoDefault: EquipmentProductivity): EquipmentProductivity {

@@ -136,20 +136,32 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
                         finalFileName += ".xlsx"
                     }
                 }
-                val targetFilePath: String= try {
+                var targetFilePath: String = try {
                     "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$finalFileName"
                 } catch (e: Exception) {
                     "$targetDirectoryPath${File.separator}$finalFileName"
                 }
 
-                val targetFile = File(targetFilePath)
+                var targetFile = File(targetFilePath)
+                var counter = 1
+                while (targetFile.exists()) {
+                    val nameWithoutExtension = finalFileName?.substringBeforeLast(".xlsx")
+                    val newFileName = "$nameWithoutExtension($counter).xlsx"
+                    targetFilePath = try {
+                        "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$newFileName"
+                    } catch (e: Exception) {
+                        "$targetDirectoryPath${File.separator}$newFileName"
+                    }
+                    targetFile = File(targetFilePath)
+                    counter++
+                }
 
                 if (!targetFile.parentFile.exists()) {
-                        targetFile.parentFile.mkdirs()
+                    targetFile.parentFile.mkdirs()
                 }
 
                 FileOutputStream(targetFile).use { outputStream ->
-                        fileContentModel.content?.let { outputStream.write(it) }
+                    fileContentModel.content?.let { outputStream.write(it) }
                 }
 
                 return BaseResponse("File added successfully")

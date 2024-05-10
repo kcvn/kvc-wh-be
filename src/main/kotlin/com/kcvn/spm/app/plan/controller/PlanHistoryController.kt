@@ -21,9 +21,11 @@ import org.springframework.web.bind.annotation.*
 class PlanHistoryController (private val planHistoryService: PlanHistoryService){
     @GetMapping("")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_HISTORY_WORK_PLAN.value) || hasRole('ADMIN')")
-    fun create(request: PlanHistoryRequest): ResponseEntity<BaseResponse<List<FileContentModel>>> {
-        val data = planHistoryService.planHistory(request)
-        return ResponseEntity<BaseResponse<List<FileContentModel>>>(data, HttpStatus.OK)
+    fun create(request: PlanHistoryRequest,
+               @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+               pageable: Pageable): ResponseEntity<BasePagingResponse<FileContentModel>> {
+        val data = planHistoryService.planHistory(request, pageable)
+        return ResponseEntity<BasePagingResponse<FileContentModel>>(data, HttpStatus.OK)
     }
 
     @DeleteMapping("/{fileName}")

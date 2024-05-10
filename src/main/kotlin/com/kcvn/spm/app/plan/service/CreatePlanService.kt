@@ -127,7 +127,7 @@ class CreatePlanService(
                 "đến ngày ${DateTimeHelper.toString(endDate, DateTimeFormat.dd_MM_yyyy)}"
             )
 
-        systemLockRep.lock(typeOfSystemLocks)
+        //systemLockRep.lock(typeOfSystemLocks)
 
         try {
             val productNames = orderInfo.mapNotNull { it.productName }.sortedBy { it }.distinct()
@@ -161,6 +161,11 @@ class CreatePlanService(
                     if (productProcess.any { x -> x.processStatisticCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã thống kê")
                     if (productProcess.any { x -> x.dayOfImplementation == null || x.dayOfImplementation == 0 }) errors.add("Dữ liệu công đoạn chưa đầy đủ Ngày thứ thực hiện")
                     if (productProcess.any { x -> x.unit.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Đơn vị tính")
+
+                    val strProcessCode = productProcess.filter { it.processGroup.isNullOrEmpty() }.map { it.processCode }.distinct()
+                    if (strProcessCode.isNotEmpty()) {
+                        errors.add("Chưa có dữ liệu Nhóm công đoạn tại các mã công đoạn ${strProcessCode.joinToString(separator = ",")}")
+                    }
                 }
                 val parentProcesses = productProcess.filter { x ->
                     !x.processStatisticCode.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty()
@@ -461,16 +466,20 @@ class CreatePlanService(
             val completionRate = completionRates.find { x ->
                 x.layerCode?.toIntOrNull() == iParentProcess.layerCode?.toIntOrNull() && x.processCode == iParentProcess.processCode
             } ?: break
-            val eqConfig = equipmentInfo.find { x ->
+            var eqConfig = equipmentInfo.find { x ->
                 x.frame_1 == product.frame_1 && x.grpProcess == iParentProcess.processGroup && x.mold!!.contains(product.mold!!)
-            } ?: EquipmentProductivity()
+            }
+            var isPassEqConfig = false
+            if (eqConfig == null) {
+                eqConfig = EquipmentProductivity()
+                isPassEqConfig = true
+            }
 
             val planProcess = generatePlanProcessModel(iParentProcess, completionRate.rate)
             currentPlanDetail = generatePlanDetailModel(
                 orderDate, currentPlanDetail, currentProcessUnit, iParentProcess, diffDay,
-                product, currentCompletionRate!!, eqConfig, equipmentUsedInfoByDate, holidays
+                product, currentCompletionRate!!, eqConfig, equipmentUsedInfoByDate, isPassEqConfig, holidays
             )
-
             planProcess.planDetails = currentPlanDetail
             planProcess.childrenProcesses = childrenProcesses.filter { x ->
                 x.processInventoryCode == iParentProcess.processCode
@@ -2147,6 +2156,7 @@ class CreatePlanService(
         completionRate: BigDecimal,
         equipmentInfoDefault: EquipmentProductivity,
         equipmentUsedInfo: List<Pair<OffsetDateTime, EquipmentProductivity>>,
+        isPassEqConfig: Boolean,
         holidays: List<OffsetDateTime>
     ): MutableList<PlanDetailCreateModel> {
         val data = mutableListOf<PlanDetailCreateModel>()
@@ -2157,14 +2167,14 @@ class CreatePlanService(
             var blockQuantity: BigDecimal
 
             if (currentProcessUnit == ProcessUnit.SHEET) {
-                sheetQuantity = NumberHelper.toDecimal(iCurrPlanDetail.sheetQuantity!! * 100) / completionRate
+                sheetQuantity = BigDecimal((iCurrPlanDetail.sheetQuantity!! * 100)) / completionRate
                 blockQuantity = sheetQuantity * BigDecimal(productInfo.shBlock!!)
             } else {
-                blockQuantity = NumberHelper.toDecimal(iCurrPlanDetail.blockQuantity!! * 100) / completionRate
-                sheetQuantity = blockQuantity / NumberHelper.toDecimal(productInfo.shBlock!!)
+                blockQuantity = BigDecimal((iCurrPlanDetail.blockQuantity!! * 100)) / completionRate
+                sheetQuantity = blockQuantity / BigDecimal(productInfo.shBlock!!)
             }
 
-            if (applyEquipmentProductivity) {
+            if (applyEquipmentProductivity && !isPassEqConfig) {
                 while (sheetQuantity > BigDecimal(0) || blockQuantity > BigDecimal(0)) {
                     if (holidays.any { x -> x.isEqual(planDate) }) {
                         planDate = planDate.plusDays(-1)
@@ -2178,8 +2188,8 @@ class CreatePlanService(
                     val planDetail = calculateQuantity(planDate, sheetQuantity, blockQuantity, eqConfig, productProcess.unit!!, productInfo.shBlock!!, orderDate)
                     data.add(planDetail)
                     planDate = planDate.plusDays(-1)
-                    sheetQuantity -= NumberHelper.toDecimal(planDetail.sheetQuantity!!)
-                    blockQuantity -= NumberHelper.toDecimal(planDetail.blockQuantity!!)
+                    sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
+                    blockQuantity -= BigDecimal(planDetail.blockQuantity!!)
                 }
             } else {
                 while (holidays.any { x -> x.isEqual(planDate) }) {

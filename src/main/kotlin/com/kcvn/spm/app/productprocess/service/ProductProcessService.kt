@@ -300,7 +300,7 @@ class ProductProcessService(
 
     fun importExcelProduct1(file: MultipartFile): BaseResponse<FileContentModel> {
         if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
-            throw BusinessException("Chức năng này đang bị khóa tạm thời. Vui lòng thử lại sau ít phút nữa")
+            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)
@@ -851,7 +851,7 @@ class ProductProcessService(
 
     fun importExcelProcessMasterData(file: MultipartFile): BaseResponse<FileContentModel> {
         if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
-            throw BusinessException("Chức năng này đang bị khóa tạm thời. Vui lòng thử lại sau ít phút nữa")
+            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
         val workbook = WorkbookFactory.create(file.inputStream)
         val sheet = workbook.getSheetAt(0)

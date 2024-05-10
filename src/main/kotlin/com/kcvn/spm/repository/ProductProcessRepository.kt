@@ -294,40 +294,27 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
         context.batch(updateQueries).execute()
     }
 
-    fun getByProductName(productNames: List<String>): List<ProductProcessModel> {
-        var data = context.select(
+    fun getByProductNameForPlan(productNames: List<String>): List<ProductProcessModel> {
+        var query = context.select(
             PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
             PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
-            PROCESS_MASTER.PROCESS_NAME,
-            PROCESS_MASTER.PROCESS_NAME_JP,
-            PROCESS_MASTER.GRP_PROCESS.`as`("processGroup"),
             PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
             PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
             PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
             PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE,
             PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
-            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION,
-            PROCESS_MASTER_DATA.UNIT
+            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION
         ).from(PRODUCT_PROCESS).join(PROCESS_PROCEDURE_STRUCTURE).on(
             PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
                 .and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(productNames))
                 .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-        ).leftJoin(PROCESS_MASTER).on(
-            PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
-                .and(PROCESS_MASTER.IS_DELETED.eq(false))
-        ).leftJoin(PROCESS_MASTER_DATA).on(
-            PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER_DATA.PROCESS_CODE)
-                .and(PROCESS_MASTER_DATA.IS_DELETED.eq(false))
         ).where(PRODUCT_PROCESS.IS_DELETED.eq(false))
             .groupBy(
                 PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE,
                 PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,
                 PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
-                PROCESS_MASTER.PROCESS_NAME,
-                PROCESS_MASTER.PROCESS_NAME_JP,
-                PROCESS_MASTER.GRP_PROCESS,
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
                 PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
                 PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
@@ -335,10 +322,11 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE,
                 PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
                 PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION,
-                PROCESS_MASTER_DATA.UNIT
-            ).fetchInto(ProductProcessModel::class.java)
+            )
 
-        return data
+        val data = query.fetchInto(ProductProcessModel::class.java)
+
+        return data.filter { it.processCode?.toIntOrNull() != 0 }
     }
 }
 

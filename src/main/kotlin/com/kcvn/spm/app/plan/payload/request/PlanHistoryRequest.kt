@@ -4,5 +4,4 @@ import java.time.OffsetDateTime
 
 class PlanHistoryRequest(
     var fileName: String = "",
-    var startDate: OffsetDateTime? = null,
-    var endDate: OffsetDateTime? = null)
+    var year: Int? =null)

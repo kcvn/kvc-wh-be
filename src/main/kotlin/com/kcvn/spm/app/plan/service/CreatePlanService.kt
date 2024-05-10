@@ -48,6 +48,7 @@ import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.PlanCalendarConfigRepository
 import com.kcvn.spm.repository.PlanRepository
+import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
 import com.kcvn.spm.repository.SystemLockRepository
@@ -78,7 +79,8 @@ class CreatePlanService(
     private val planCalendarConfigRep: PlanCalendarConfigRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val workResultRep: WorkResultRepository,
-    private val appSettingRep: AppSettingRepository
+    private val appSettingRep: AppSettingRepository,
+    private val processMasterRep: ProcessMasterRepository
 ) {
 
     private val typeOfSystemLocks = listOf(
@@ -133,7 +135,20 @@ class CreatePlanService(
             val productNames = orderInfo.mapNotNull { it.productName }.sortedBy { it }.distinct()
             val productShortcutNames = productNames.map { it.substring(it.length - 7, it.length) }
             val productInfo = productRep.getByName(productNames)
-            val productProcesses = productProcessRep.getByProductName(productNames)
+            var productProcesses = productProcessRep.getByProductNameForPlan(productNames)
+            val processCodes = productProcesses.mapNotNull { it.processCode }
+            val processMasters = processMasterRep.getByProcessCode(processCodes)
+            val processMasterDatas = processMasterRep.getProcessMasterDataByCode(processCodes)
+
+            for (item in productProcesses) {
+                val iProcessMaster = processMasters.find { it.processCode == item.processCode }
+                val iProcessMasterData = processMasterDatas.find { it.processCode == item.processCode }
+                item.processName = iProcessMaster?.processName
+                item.processNameJp = iProcessMaster?.processNameJp
+                item.processGroup = iProcessMaster?.grpProcess
+                item.unit = iProcessMasterData?.unit
+            }
+
             val completionRateInfo = completionRateProcessProductRep.getByProductName(productShortcutNames)
 
             val processGroupCodes = productProcesses.mapNotNull { x -> x.processGroup }
@@ -1289,9 +1304,9 @@ class CreatePlanService(
                 layerCode = iProcess.layerCode
             )
             if (iProcess.unit == ProcessUnit.SHEET) {
-                inv.sheetQuantity = if (inv.sheetQuantity == 0) (inv.productQuantity!! / productInfo.shBlock!! ) else inv.sheetQuantity
+                inv.sheetQuantity = if (inv.sheetQuantity == 0) (inv.productQuantity!! / productInfo.shBlock!!) else inv.sheetQuantity
             } else {
-                inv.productQuantity = if (inv.productQuantity == 0) (inv.sheetQuantity!! * productInfo.shBlock!! ) else inv.productQuantity
+                inv.productQuantity = if (inv.productQuantity == 0) (inv.sheetQuantity!! * productInfo.shBlock!!) else inv.productQuantity
             }
 
             inventoriesByProcess.add(inv)

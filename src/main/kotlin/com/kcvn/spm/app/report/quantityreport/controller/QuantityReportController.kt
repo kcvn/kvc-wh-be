@@ -32,7 +32,7 @@ class QuantityReportController(
 ) {
     @PostMapping("/calculate-quantity")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CA_REPORT_QUANTITY.value) || hasRole('ADMIN')")
-    fun CalculateQuantity(@RequestBody request: CalculateQuantityRequest): ResponseEntity<BaseResponse<FileContentModel?>> {
+    fun calculateQuantity(@RequestBody request: CalculateQuantityRequest): ResponseEntity<BaseResponse<FileContentModel?>> {
         val data = quantityReportService.calculateQuantity(request)
         if(data.data != null){
             return ResponseEntity(data, HttpStatus.BAD_REQUEST)
@@ -43,7 +43,7 @@ class QuantityReportController(
 
     @GetMapping("/locked-quantity")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).LOCK_REPORT_QUANTITY.value) || hasRole('ADMIN')")
-    fun LockedQuantity(id: String): ResponseEntity<BaseResponse<Boolean>> {
+    fun lockedQuantity(id: String): ResponseEntity<BaseResponse<Boolean>> {
         val result = quantityReportService.lockedQuantity(id)
         return ResponseEntity<BaseResponse<Boolean>>(result, HttpStatus.OK)
     }

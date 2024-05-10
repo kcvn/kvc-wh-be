@@ -46,6 +46,17 @@ class ProcessMasterRepository(
             .fetchInto(ProcessMasterData::class.java)
     }
 
+    fun getByProcessCode(processCodes: List<String>): List<ProcessMaster> {
+        val data = context.selectFrom(PROCESS_MASTER)
+            .where(PROCESS_MASTER.PROCESS_CODE.`in`(processCodes).and(PROCESS_MASTER.IS_DELETED.eq(false)))
+            .fetchInto(ProcessMaster::class.java)
+
+        return data.groupBy { it.processCode }.map { item ->
+            val res = item.value.sortedByDescending { it.updatedDate }.first()
+            res
+        }
+    }
+
     fun addRange(data: List<ProcessMaster>) {
         val dataChunks = data.chunked(100)
         for (chunkItem in dataChunks) {

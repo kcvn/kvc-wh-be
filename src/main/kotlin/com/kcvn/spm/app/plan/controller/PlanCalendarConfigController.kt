@@ -17,14 +17,14 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/plan/calendar-config")
 class PlanCalendarConfigController(private val planCalendarConfigService: PlanCalendarConfigService) {
     @GetMapping("")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INFO_WORK_PLAN.value) || hasRole('ADMIN')")
     fun getConfig(request: PlanCalendarConfigGetRequest): ResponseEntity<BaseResponse<PlanCalendarConfigModel>> {
         val data = planCalendarConfigService.getConfigByMonth(request)
         return ResponseEntity<BaseResponse<PlanCalendarConfigModel>>(data, HttpStatus.OK)
     }
 
     @PostMapping("")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INFO_WORK_PLAN.value) || hasRole('ADMIN')")
     fun create(@RequestBody request: PlanCalendarConfigUpdateRequest): ResponseEntity<BaseResponse<Boolean>> {
         val data = planCalendarConfigService.updateConfig(request)
         return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)

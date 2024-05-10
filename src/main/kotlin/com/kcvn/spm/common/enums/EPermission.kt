@@ -45,12 +45,6 @@ enum class EPermission(val value: String) {
     E_ORDER("order.e"),
     C_WORK_PLAN_ORDER("order.c"),
 
-    //work plan
-    V_WORK_PLAN("work_plan.v"),
-    E_WORK_PLAN("work_plan.e"),
-    AP_WORK_PLAN("work_plan.ap"),
-
-
     //production result
     V_PRODUCTION_RESULT("product_result.v"),
 
@@ -78,6 +72,15 @@ enum class EPermission(val value: String) {
 
     E_REPORT_COST_MATERIAL("cost_material.e"),
     V_REPORT_COST_MATERIAL("cost_material.v"),
-    I_REPORT_COST_MATERIAL("cost_material.i")
+    I_REPORT_COST_MATERIAL("cost_material.i"),
 
+//work plan
+
+    V_INFO_WORK_PLAN("work_plan_info.v"),
+    E_INFO_WORK_PLAN("work_plan_info.e"),
+    AP_INFO_WORK_PLAN("work_plan_info.ap"),
+
+    V_HISTORY_WORK_PLAN("work_plan_history.v"),
+    E_HISTORY_WORK_PLAN("work_plan_history.e"),
+    D_HISTORY_WORK_PLAN("work_plan_history.d"),
 }

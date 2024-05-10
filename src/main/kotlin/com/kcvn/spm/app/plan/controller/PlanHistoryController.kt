@@ -20,21 +20,21 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/plan/history")
 class PlanHistoryController (private val planHistoryService: PlanHistoryService){
     @GetMapping("")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_HISTORY_WORK_PLAN.value) || hasRole('ADMIN')")
     fun create(request: PlanHistoryRequest): ResponseEntity<BaseResponse<List<FileContentModel>>> {
         val data = planHistoryService.planHistory(request)
         return ResponseEntity<BaseResponse<List<FileContentModel>>>(data, HttpStatus.OK)
     }
 
     @DeleteMapping("/{fileName}")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).D_HISTORY_WORK_PLAN.value) || hasRole('ADMIN')")
     fun removeFile(@PathVariable fileName: String): ResponseEntity<Unit> {
         planHistoryService.removeFile(fileName)
         return ResponseEntity(Unit, HttpStatus.OK)
     }
 
     @GetMapping("/download")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_HISTORY_WORK_PLAN.value) || hasRole('ADMIN')")
     fun downloadFile(@RequestParam fileName: String): ResponseEntity<BaseResponse<FileContentModel>>{
         val data = planHistoryService.downloadFile(fileName)
         return ResponseEntity(data, HttpStatus.OK)

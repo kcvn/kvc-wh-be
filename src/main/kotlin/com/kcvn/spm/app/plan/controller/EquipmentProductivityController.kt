@@ -23,7 +23,7 @@ class EquipmentProductivityController(
 ) {
 
     @GetMapping("get-all")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_WORK_PLAN.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INFO_WORK_PLAN.value) || hasRole('ADMIN')")
     fun getList(
         request: PlanSearchRequest
     ): ResponseEntity<PagingEquipmentProdResponse> {

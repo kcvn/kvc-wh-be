@@ -98,8 +98,7 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
                 }
 
 
-                if ((request.startDate == null || !fileStartDate.isBefore(request.startDate)) &&
-                    (request.endDate == null || !fileEndDate.isAfter(request.endDate))) {
+                if ((request.year == null || (fileStartDate.year == request.year && fileEndDate.year == request.year))) {
                     val fileContentModel = FileContentModel(
                         fileName = file.name,
                         content = file.readBytes(),

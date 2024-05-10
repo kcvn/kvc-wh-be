@@ -2122,7 +2122,7 @@ class PlanService(
 
     //region PLAN_TEMP
 
-    fun approve(request: PlanSearchRequest,fileName: String?): BaseResponse<Boolean> {
+    fun approve(request: PlanSearchRequest): BaseResponse<Boolean> {
         val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
 
         val planProductTemps = planProductRep.getPlanProductTemp()
@@ -2134,7 +2134,7 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
-        planHistoryService.addFile(exportExcel(request),fileName)
+        planHistoryService.addFile(exportExcel(request),request.fileName)
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")

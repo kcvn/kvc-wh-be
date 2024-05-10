@@ -127,7 +127,7 @@ class CreatePlanService(
                 "đến ngày ${DateTimeHelper.toString(endDate, DateTimeFormat.dd_MM_yyyy)}"
             )
 
-        //systemLockRep.lock(typeOfSystemLocks)
+        systemLockRep.lock(typeOfSystemLocks)
 
         try {
             val productNames = orderInfo.mapNotNull { it.productName }.sortedBy { it }.distinct()
@@ -1639,11 +1639,16 @@ class CreatePlanService(
                     sheetQuantity = blockQuantity / BigDecimal(productInfo.shBlock!!)
                 }
 
-                if (applyEquipmentProductivity) {
-                    val eqConfigDefault = equipmentInfoDefault.find { x ->
-                        x.frame_1 == productInfo.frame_1 && x.grpProcess == iProcess.processGroup && x.mold!!.contains(productInfo.mold!!)
-                    } ?: EquipmentProductivity()
+                var eqConfigDefault = equipmentInfoDefault.find { x ->
+                    x.frame_1 == productInfo.frame_1 && x.grpProcess == iProcess.processGroup && x.mold!!.contains(productInfo.mold!!)
+                }
+                var isPassEqConfig = false
+                if (eqConfigDefault == null) {
+                    eqConfigDefault = EquipmentProductivity()
+                    isPassEqConfig = true
+                }
 
+                if (applyEquipmentProductivity && !isPassEqConfig) {
                     while (sheetQuantity > BigDecimal(0) || blockQuantity > BigDecimal(0)) {
                         if (holidays.any { x -> x.isEqual(currentPlanDate) }) {
                             currentPlanDate = currentPlanDate.plusDays(-1)

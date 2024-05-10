@@ -15,10 +15,7 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/plan")
@@ -57,8 +54,8 @@ class PlanController(private val planService: PlanService) {
 
     @PostMapping("/approve")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).AP_INFO_WORK_PLAN.value) || hasRole('ADMIN')")
-    fun approve(request: PlanSearchRequest, fileName: String?): ResponseEntity<BaseResponse<Boolean>> {
-        val data = planService.approve(request,fileName)
+    fun approve(@RequestBody request: PlanSearchRequest): ResponseEntity<BaseResponse<Boolean>> {
+        val data = planService.approve(request)
         return ResponseEntity<BaseResponse<Boolean>>(data, HttpStatus.OK)
     }
 

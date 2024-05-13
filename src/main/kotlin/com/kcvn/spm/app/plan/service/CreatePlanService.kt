@@ -468,6 +468,7 @@ class CreatePlanService(
         equipmentInfo: List<EquipmentProductivity>,
         equipmentUsedInfoByDate: MutableList<Pair<OffsetDateTime, EquipmentProductivity>>,
         holidays: List<OffsetDateTime>,
+        hasInventory: Boolean = false,
         inventoriesByProcess: MutableList<InventoryProductResponse> = mutableListOf(),
         isCheckInventory: Boolean = false
     ): PlanCalculatorModel {
@@ -493,7 +494,7 @@ class CreatePlanService(
             val planProcess = generatePlanProcessModel(iParentProcess, completionRate.rate)
             currentPlanDetail = generatePlanDetailModel(
                 orderDate, currentPlanDetail, currentProcessUnit, iParentProcess, diffDay,
-                product, currentCompletionRate!!, eqConfig, equipmentUsedInfoByDate, isPassEqConfig, holidays
+                product, currentCompletionRate!!, eqConfig, equipmentUsedInfoByDate, isPassEqConfig, holidays, hasInventory
             )
             planProcess.planDetails = cloneDataPlanDetail(currentPlanDetail)
             planProcess.childrenProcesses = childrenProcesses.filter { x ->
@@ -1458,7 +1459,7 @@ class CreatePlanService(
                     iOrder.orderDate, processSource, completionRateSource!!, planDetailSource, completionRateInfo,
                     parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                     childrenProcesses, productInfo, equipmentInfoDefault, equipmentUsedInfo, holidays,
-                    inventoriesByProcess, true
+                    true, inventoriesByProcess, true
                 )
                 processCreateModels.addAll(planCalculator.planProcessResults)
 
@@ -1494,7 +1495,7 @@ class CreatePlanService(
                         iOrder.orderDate, processSource, completionRateSource, planDetailSource, completionRateInfo,
                         parentProcesses.filter { it.layerCode?.toIntOrNull() == currentLayerCode },
                         childrenProcesses, productInfo, equipmentInfoDefault, equipmentUsedInfo, holidays,
-                        inventoriesByProcess, true
+                        true, inventoriesByProcess, true
                     )
                     processCreateModels.addAll(planCalculator.planProcessResults)
                 }
@@ -1674,7 +1675,7 @@ class CreatePlanService(
                                 && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
                         }?.second
                         val eqConfig = settingEquipmentConfig(eqUsedConfig, eqConfigDefault)
-                        val planDetail = calculateQuantity(currentPlanDate, sheetQuantity, blockQuantity, eqConfig, iProcess.unit!!, productInfo.shBlock!!, order.orderDate)
+                        val planDetail = calculateQuantity(currentPlanDate, sheetQuantity, blockQuantity, eqConfig, iProcess.unit!!, productInfo.shBlock!!, order.orderDate, true)
                         planProcess.planDetails.add(planDetail)
                         currentPlanDate = currentPlanDate.plusDays(-1)
                         sheetQuantity -= NumberHelper.toDecimal(planDetail.sheetQuantity!!)
@@ -2177,7 +2178,8 @@ class CreatePlanService(
         equipmentInfoDefault: EquipmentProductivity,
         equipmentUsedInfo: List<Pair<OffsetDateTime, EquipmentProductivity>>,
         isPassEqConfig: Boolean,
-        holidays: List<OffsetDateTime>
+        holidays: List<OffsetDateTime>,
+        hasInventory: Boolean
     ): MutableList<PlanDetailCreateModel> {
         val data = mutableListOf<PlanDetailCreateModel>()
 
@@ -2205,7 +2207,7 @@ class CreatePlanService(
                             && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
                     }?.second
                     val eqConfig = settingEquipmentConfig(eqUsedConfig, equipmentInfoDefault)
-                    val planDetail = calculateQuantity(planDate, sheetQuantity, blockQuantity, eqConfig, productProcess.unit!!, productInfo.shBlock!!, orderDate)
+                    val planDetail = calculateQuantity(planDate, sheetQuantity, blockQuantity, eqConfig, productProcess.unit!!, productInfo.shBlock!!, orderDate, hasInventory)
                     data.add(planDetail)
                     planDate = planDate.plusDays(-1)
                     sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
@@ -2221,7 +2223,7 @@ class CreatePlanService(
                     sheetQuantity = NumberHelper.roundedUp(sheetQuantity),
                     blockQuantity = NumberHelper.roundedUp(blockQuantity),
                     orderDate = orderDate,
-                    hasInventory = false
+                    hasInventory = hasInventory
                 )
                 data.add(planDetail)
             }
@@ -2306,12 +2308,13 @@ class CreatePlanService(
         unit: String,
         blockSh: Int,
         orderDate: OffsetDateTime,
+        hasInventory: Boolean
     ): PlanDetailCreateModel {
         val planDetail = PlanDetailCreateModel(
             title = PlanTitle.PLAN_KEY,
             planDate = planDate,
             orderDate = orderDate,
-            hasInventory = false
+            hasInventory = hasInventory
         )
         when (unit) {
             ProcessUnit.SHEET -> {

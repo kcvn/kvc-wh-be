@@ -105,7 +105,8 @@ class PlanProductRepository(private val context: DSLContext) {
 
             val query = context.select().from(queryPlan).union(queryPlanTemp)
             val count = query.count()
-            val data = query.limit(pageable.pageSize).offset(pageable.offset).fetchInto(PlanProduct::class.java)
+            val data = query.orderBy(DSL.field("productName").sort(SortOrder.ASC))
+                .limit(pageable.pageSize).offset(pageable.offset).fetchInto(PlanProduct::class.java)
 
             return Pair(data, count)
         } else {

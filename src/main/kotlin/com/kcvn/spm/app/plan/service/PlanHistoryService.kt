@@ -79,7 +79,9 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
             }
 
             val excelFiles = directory?.listFiles { file ->
-                file.isFile && (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) && (request.fileName.isEmpty() || file.name.contains(request.fileName))
+                file.isFile && (file.name.endsWith(".xls")
+                        || file.name.endsWith(".xlsx")) && (request.fileName.isEmpty()
+                        || file.name.contains(request.fileName, ignoreCase = true))
             }?.sortedByDescending { it.lastModified() }
 
             excelFiles?.forEach { file ->

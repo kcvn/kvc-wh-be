@@ -47,6 +47,7 @@ import com.kcvn.spm.repository.AppSettingRepository
 import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.EquipmentProductivityRepository
 import com.kcvn.spm.repository.HolidaysCalenderRepository
+import com.kcvn.spm.repository.PlanColorConfigRepository
 import com.kcvn.spm.repository.PlanDetailRepository
 import com.kcvn.spm.repository.PlanProcessRepository
 import com.kcvn.spm.repository.PlanProductRepository
@@ -89,7 +90,8 @@ class PlanService(
     private val commonCategoryRep: CommonCategoryRepository,
     private val equipmentProductivityRep: EquipmentProductivityRepository,
     private val processMasterRep: ProcessMasterRepository,
-    private val planHistoryService: PlanHistoryService
+    private val planHistoryService: PlanHistoryService,
+    private val planColorConfigRep: PlanColorConfigRepository
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -142,6 +144,16 @@ class PlanService(
 
         val workResults = workResultRep.getForPlan(request.startDate!!, request.endDate!!, productNames)
 
+        val colorConfigs = planColorConfigRep.getAll()
+        val lstOrderDate = planDetails.mapNotNull { it.orderDate }.sortedBy { it }.distinct()
+        var indexColor = 0
+        val mappingColors = mutableListOf<Pair<OffsetDateTime, String>>()
+        for (item in lstOrderDate) {
+            if (indexColor >= colorConfigs.size - 1) indexColor = 0
+            mappingColors.add(Pair(item, colorConfigs[indexColor].color ?: "#FFFFFF"))
+            indexColor++
+        }
+
         for (iPlanProduct in planProducts) {
             val parentPlanProcess = parentPlanProcesses.filter { it.planProductId == iPlanProduct.id }
             val childrenPlanProcess = childrenPlanProcesses.filter { it.planProductId == iPlanProduct.id }
@@ -172,8 +184,9 @@ class PlanService(
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
                 val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.groupBy { it.planDate }.map { m ->
                     KeyValueResponse(
-                        DateTimeHelper.toString(DateTimeHelper.toTimeZone7(m.key)!!, DateTimeFormat.yyyyMMdd),
-                        if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { it.blockQuantity ?: 0 }.toString() else m.value.sumOf { it.sheetQuantity ?: 0 }.toString()
+                        key = DateTimeHelper.toString(DateTimeHelper.toTimeZone7(m.key)!!, DateTimeFormat.yyyyMMdd),
+                        value = if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { it.blockQuantity ?: 0 }.toString() else m.value.sumOf { it.sheetQuantity ?: 0 }.toString(),
+                        color = if (m.value.size == 1) mappingColors.find { it.first == m.value.first().orderDate }?.second ?: "#FFFFFF" else "#FFFFFF"
                     )
                 }.sortedBy { m -> m.key }
 
@@ -222,9 +235,11 @@ class PlanService(
                         title = x.value.first().title,
                         titleKey = x.key,
                         quantityByCalendars = x.value.mapNotNull { it.quantityByCalendars }.flatten().groupBy { it.key }.map { m ->
+                            val colors = m.value.mapNotNull { it.color }.distinct()
                             KeyValueResponse(
-                                m.key,
-                                m.value.sumOf { it.value?.toInt() ?: 0 }.toString(),
+                                key = m.key,
+                                value = m.value.sumOf { it.value?.toInt() ?: 0 }.toString(),
+                                color = if (colors.size == 1) colors.first() else "#FFFFFF"
                             )
                         },
                         sort = x.value.first().sort

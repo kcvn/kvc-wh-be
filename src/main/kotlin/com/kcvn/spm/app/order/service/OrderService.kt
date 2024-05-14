@@ -404,7 +404,7 @@ class OrderService(
                 if (rowNumber == 0) {
                     sheet.setColumnWidth(colIndex, importSheet.getColumnWidth(colIndex))
                 }
-                val cell = dataRow.getCell(colIndex)
+                val cell = dataRow.getCell(colIndex) ?: dataRow.createCell(colIndex)
                 val style = cell.cellStyle
                 if (cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
                     ExcelHelper.setCellValue(row, colIndex, style, cell.dateCellValue)
@@ -416,7 +416,6 @@ class OrderService(
                     }
                     ExcelHelper.setCellValue(row, colIndex, style, value)
                 }
-
             }
         }
 

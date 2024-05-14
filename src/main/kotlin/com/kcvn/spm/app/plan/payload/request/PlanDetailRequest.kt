@@ -7,5 +7,6 @@ data class PlanDetailRequest (
     var startDate: OffsetDateTime? = null,
     var endDate: OffsetDateTime? = null,
     var inventoryWorkPlan: Boolean? = null,
-    var draftWorkPlan: Boolean? = null
+    var draftWorkPlan: Boolean? = null,
+    var processGroups: String? = null
 )

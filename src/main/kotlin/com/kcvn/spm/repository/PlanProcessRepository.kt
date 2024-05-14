@@ -58,7 +58,7 @@ class PlanProcessRepository(private val context: DSLContext) : SortingRepository
             var conditionTemp = PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS_TEMP.IS_DELETED.eq(false))
             if (!processGroups.isNullOrEmpty()) {
                 val lstProcessGroup = processGroups.split(",").map { x -> x.trim() }
-                conditionTemp = conditionTemp.and(PLAN_PROCESS.PROCESS_GROUP.`in`(lstProcessGroup))
+                conditionTemp = conditionTemp.and(PLAN_PROCESS_TEMP.PROCESS_GROUP.`in`(lstProcessGroup))
             }
 
             data.addAll(

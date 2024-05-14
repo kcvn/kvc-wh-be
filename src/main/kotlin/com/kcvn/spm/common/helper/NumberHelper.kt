@@ -21,6 +21,14 @@ class NumberHelper {
         fun isNumeric(input: String): Boolean {
             return input.toDoubleOrNull() != null
         }
+
+        fun divide(number1: BigDecimal, number2: BigDecimal): BigDecimal {
+            return number1.divide(number2, 2, RoundingMode.HALF_UP)
+        }
+
+        fun divide(number1: Int, number2: Int): BigDecimal {
+            return BigDecimal(number1).divide(BigDecimal(number2), 2, RoundingMode.HALF_UP)
+        }
     }
 
 }

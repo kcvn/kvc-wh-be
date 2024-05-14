@@ -1008,7 +1008,7 @@ class CreatePlanService(
                 }
                 if (order.quantity!! > 0) orderInfoAllocation.add(order)
                 if (quantityUsed > 0) {
-                    val rate = BigDecimal(quantityUsed * 100) / BigDecimal(inventoryIns)
+                    val rate = NumberHelper.divide((quantityUsed * 100), inventoryIns)
                     allocationRates.add(AllocationRateByDateModel(order.orderDate!!, quantityUsed, rate))
                 }
             } else {
@@ -1023,7 +1023,7 @@ class CreatePlanService(
                 }
                 if (order.quantity!! > 0) orderInfoAllocation.add(order)
                 if (quantityUsed > 0) {
-                    val rate = BigDecimal(quantityUsed * 100) / BigDecimal(inventoryIns)
+                    val rate = NumberHelper.divide((quantityUsed * 100), inventoryIns)
                     allocationRates.add(AllocationRateByDateModel(order.orderDate!!, quantityUsed, rate))
                 }
             }
@@ -1078,7 +1078,7 @@ class CreatePlanService(
 
             var currentInventory = if (iProcess.unit == ProcessUnit.SHEET) {
                 if (sheetInventory == BigDecimal(0)) {
-                    blockInventory / BigDecimal(productInfo.shBlock!!)
+                    NumberHelper.divide(blockInventory, BigDecimal(productInfo.shBlock!!))
                 } else {
                     sheetInventory
                 }
@@ -1099,15 +1099,15 @@ class CreatePlanService(
 
                 currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                     if (prc.unit == currentProcessUnit) {
-                        (currentInventory * completionRate) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate), BigDecimal(100))
                     } else {
-                        (currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)), BigDecimal(100))
                     }
                 } else {
                     if (prc.unit == currentProcessUnit) {
-                        (currentInventory * completionRate) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate), BigDecimal(100))
                     } else {
-                        (currentInventory * completionRate) / (BigDecimal(productInfo.shBlock!!) * BigDecimal(100))
+                        NumberHelper.divide((currentInventory * completionRate), (BigDecimal(productInfo.shBlock!!) * BigDecimal(100)))
                     }
                 }
 
@@ -1115,7 +1115,7 @@ class CreatePlanService(
                 currentProcessUnit = prc.unit
             }
 
-            val inventoryIns = NumberHelper.roundedUp((currentInventory * completionRateIns) / BigDecimal(100))
+            val inventoryIns = NumberHelper.roundedUp(NumberHelper.divide((currentInventory * completionRateIns), BigDecimal(100)))
             val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
 
             orderAllocations = allocateInventoryIns.second
@@ -1181,7 +1181,7 @@ class CreatePlanService(
                 blockInventory = sheetInventory * BigDecimal(productInfo.shBlock!!)
             } else {
                 blockInventory = BigDecimal(inventoryProcess.sumOf { x -> x.productQuantity ?: 0 } + inventoriesByChildrenProcess.sumOf { x -> x.productQuantity ?: 0 })
-                sheetInventory = blockInventory / BigDecimal(productInfo.shBlock!!)
+                sheetInventory = NumberHelper.divide(blockInventory, BigDecimal(productInfo.shBlock!!))
             }
 
             if (sheetInventory <= BigDecimal(0) || blockInventory <= BigDecimal(0)) return Pair(orderInfo, listOf())
@@ -1216,15 +1216,15 @@ class CreatePlanService(
 
             currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                 if (iProcess.unit == currentProcessUnit) {
-                    (currentInventory * completionRate) / BigDecimal(100)
+                    NumberHelper.divide((currentInventory * completionRate), BigDecimal(100))
                 } else {
-                    (currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)) / BigDecimal(100)
+                    NumberHelper.divide((currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)), BigDecimal(100))
                 }
             } else {
                 if (iProcess.unit == currentProcessUnit) {
-                    (currentInventory * completionRate) / BigDecimal(100)
+                    NumberHelper.divide((currentInventory * completionRate), BigDecimal(100))
                 } else {
-                    (currentInventory * completionRate) / (BigDecimal(productInfo.shBlock!!) * BigDecimal(100))
+                    NumberHelper.divide((currentInventory * completionRate), (BigDecimal(productInfo.shBlock!!) * BigDecimal(100)))
                 }
             }
 
@@ -1232,7 +1232,7 @@ class CreatePlanService(
             currentProcessUnit = iProcess.unit
         }
 
-        val inventoryIns = NumberHelper.roundedUp((currentInventory * completionRateIns) / BigDecimal(100))
+        val inventoryIns = NumberHelper.roundedUp(NumberHelper.divide((currentInventory * completionRateIns), BigDecimal(100)))
         val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
         orderAllocations = allocateInventoryIns.second
 
@@ -1398,7 +1398,7 @@ class CreatePlanService(
             val currentInventory = processCalculateFromInventories.first { x ->
                 x.first == preLayeringProcessCode && x.third == layerCode!!.toInt()
             }.second
-            val inventoryIns = NumberHelper.roundedUp((currentInventory * completionRateIns) / BigDecimal(100))
+            val inventoryIns = NumberHelper.roundedUp(NumberHelper.divide((currentInventory * completionRateIns), BigDecimal(100)))
             val allocateInventoryIns = allocateInventoryInsFromProcess(orderAllocations, inventoryIns)
 
             orderAllocations = allocateInventoryIns.second
@@ -1513,15 +1513,15 @@ class CreatePlanService(
 
                 currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                     if (iProcess.unit == currentProcessUnit) {
-                        (currentInventory * completionRate) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate), BigDecimal(100))
                     } else {
-                        (currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)), BigDecimal(100))
                     }
                 } else {
                     if (iProcess.unit == currentProcessUnit) {
-                        (currentInventory * completionRate) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate), BigDecimal(100))
                     } else {
-                        (currentInventory * completionRate) / (BigDecimal(productInfo.shBlock!!) * BigDecimal(100))
+                        NumberHelper.divide((currentInventory * completionRate), (BigDecimal(productInfo.shBlock!!) * BigDecimal(100)))
                     }
                 }
 
@@ -1558,15 +1558,15 @@ class CreatePlanService(
 
                 currentInventory = if (currentProcessUnit == ProcessUnit.SHEET) {
                     if (iProcess.unit == currentProcessUnit) {
-                        (currentInventory * completionRate) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate), BigDecimal(100))
                     } else {
-                        (currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate * BigDecimal(productInfo.shBlock!!)), BigDecimal(100))
                     }
                 } else {
                     if (iProcess.unit == currentProcessUnit) {
-                        (currentInventory * completionRate) / BigDecimal(100)
+                        NumberHelper.divide((currentInventory * completionRate), BigDecimal(100))
                     } else {
-                        (currentInventory * completionRate) / (BigDecimal(productInfo.shBlock!!) * BigDecimal(100))
+                        NumberHelper.divide((currentInventory * completionRate), (BigDecimal(productInfo.shBlock!!) * BigDecimal(100)))
                     }
                 }
 
@@ -1624,7 +1624,7 @@ class CreatePlanService(
                             it.processCode == iProcess.processCode && it.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull()
                         }.map { it.planDetails }.flatten().sumOf { it.sheetQuantity ?: 0 })
                     } else {
-                        (processCalculateFromInventory.second * order.rate) / BigDecimal(100)
+                        NumberHelper.divide((processCalculateFromInventory.second * order.rate), BigDecimal(100))
                     }
                     blockQuantity = sheetQuantity * BigDecimal(productInfo.shBlock!!)
                 } else {
@@ -1633,9 +1633,9 @@ class CreatePlanService(
                             it.processCode == iProcess.processCode && it.layerCode?.toIntOrNull() == iProcess.layerCode?.toIntOrNull()
                         }.map { it.planDetails }.flatten().sumOf { it.blockQuantity ?: 0 })
                     } else {
-                        (processCalculateFromInventory.second * order.rate) / BigDecimal(100)
+                        NumberHelper.divide((processCalculateFromInventory.second * order.rate), BigDecimal(100))
                     }
-                    sheetQuantity = blockQuantity / BigDecimal(productInfo.shBlock!!)
+                    sheetQuantity = NumberHelper.divide(blockQuantity, BigDecimal(productInfo.shBlock!!))
                 }
 
                 var eqConfigDefault = equipmentInfoDefault.find { x ->
@@ -2181,11 +2181,11 @@ class CreatePlanService(
             var blockQuantity: BigDecimal
 
             if (currentProcessUnit == ProcessUnit.SHEET) {
-                sheetQuantity = BigDecimal((iCurrPlanDetail.sheetQuantity!! * 100)) / completionRate
+                sheetQuantity = NumberHelper.divide(BigDecimal((iCurrPlanDetail.sheetQuantity!! * 100)), completionRate)
                 blockQuantity = sheetQuantity * BigDecimal(productInfo.shBlock!!)
             } else {
-                blockQuantity = BigDecimal((iCurrPlanDetail.blockQuantity!! * 100)) / completionRate
-                sheetQuantity = blockQuantity / BigDecimal(productInfo.shBlock!!)
+                blockQuantity = NumberHelper.divide(BigDecimal((iCurrPlanDetail.blockQuantity!! * 100)), completionRate)
+                sheetQuantity = NumberHelper.divide(blockQuantity, BigDecimal(productInfo.shBlock!!))
             }
 
             if (applyEquipmentProductivity && !isPassEqConfig) {
@@ -2326,7 +2326,7 @@ class CreatePlanService(
             ProcessUnit.BLOCK -> {
                 if ((equipmentInfo.sltbBlock ?: BigDecimal(0)) <= blockQuantity) {
                     planDetail.blockQuantity = NumberHelper.roundedUp(equipmentInfo.sltbBlock ?: BigDecimal(0))
-                    planDetail.sheetQuantity = NumberHelper.roundedUp(BigDecimal(planDetail.blockQuantity ?: 0) / BigDecimal(blockSh))
+                    planDetail.sheetQuantity = NumberHelper.roundedUp(NumberHelper.divide((planDetail.blockQuantity ?: 0), blockSh))
                 } else {
                     planDetail.sheetQuantity = NumberHelper.roundedUp(sheetQuantity)
                     planDetail.blockQuantity = NumberHelper.roundedUp(blockQuantity)

@@ -1365,7 +1365,8 @@ class CreatePlanService(
             var preLayeringProcessCode = firstLayering.filter { x ->
                 x.processInventoryCode.isNullOrEmpty() && x.processSequence!! <= layeringProcess.processSequence!! - 1
             }.sortedByDescending { it.processSequence }.first().processCode
-            var preLayeringProcess = processCalculateFromInventories.first { x -> x.first == preLayeringProcessCode }
+            var preLayeringProcess = processCalculateFromInventories.firstOrNull { x -> x.first == preLayeringProcessCode }
+            if (preLayeringProcess == null) return Pair(orderInfo, listOf())
 
             var count = 2
             var layerCode = firstLayering.first().layerCode
@@ -1391,6 +1392,8 @@ class CreatePlanService(
 
                 count++
             }
+
+            if (count < processGroupBy.size) return Pair(orderInfo, listOf())
 
             val currentInventory = processCalculateFromInventories.first { x ->
                 x.first == preLayeringProcessCode && x.third == layerCode!!.toInt()

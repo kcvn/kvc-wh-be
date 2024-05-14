@@ -129,7 +129,7 @@ class PlanService(
 
         val data = mutableListOf<ProductPlanDetailModel>()
 
-        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, request.draftWorkPlan ?: false)
+        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, request.draftWorkPlan ?: false, request.processGroups)
         var parentPlanProcesses = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 
@@ -286,12 +286,13 @@ class PlanService(
         colEndDate: OffsetDateTime,
         columns: List<CalendarResponse>,
         hasInventory: Boolean,
-        isDraft: Boolean
+        isDraft: Boolean,
+        processGroups: String?
     ): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
         val productNames = planProducts.mapNotNull { x -> x.productName }.distinct()
 
-        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, isDraft)
+        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, isDraft, processGroups)
         var parentPlanProcesses = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 
@@ -493,7 +494,7 @@ class PlanService(
         if (dataExports.isEmpty()) {
             dataExports.addAll(getDataExportExcel(
                 planProducts, request.startDate!!, request.endDate!!, response.columns!!,
-                request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false
+                request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false, request.processGroups
             ))
         }
         val dataExportFlattens = dataExports.asSequence().mapNotNull { x -> x.productPlanDetails }.flatten().filter { x ->
@@ -1339,7 +1340,7 @@ class PlanService(
     private fun getDataExportExcelEquipment(planProducts: List<PlanProduct>, request: PlanSearchRequest): List<PlanExportExcelModel> {
         val planProductIds = planProducts.mapNotNull { x -> x.id }
 
-        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, request.draftWorkPlan ?: false)
+        val planProcesses = planProcessRep.getListPlanProcess(planProductIds, request.draftWorkPlan ?: false, request.processGroups)
         var parentPlanProcesses = planProcesses.filter { x -> x.parentId.isNullOrEmpty() }.sortedBy { x -> x.planProductId }
         val childrenPlanProcesses = planProcesses.filter { x -> x.parentId != null }
 
@@ -1625,7 +1626,7 @@ class PlanService(
         val planProducts = planProductRep.getListPlanProduct(request)
         val dataExports = getDataExportExcel(
             planProducts, request.startDate!!, request.endDate!!, columns,
-            request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false
+            request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false, request.processGroups
         )
         if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
 

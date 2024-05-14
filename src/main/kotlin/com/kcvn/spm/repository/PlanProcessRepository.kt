@@ -33,13 +33,20 @@ class PlanProcessRepository(private val context: DSLContext) : SortingRepository
         return data
     }
 
-    fun getListPlanProcess(planProductIds: List<String>, isDraft: Boolean = false): List<PlanProcess> {
+    fun getListPlanProcess(planProductIds: List<String>, isDraft: Boolean, processGroups: String?): List<PlanProcess> {
         var sortFields = getSortFields(null, PLAN_PROCESS.PLAN_PRODUCT_ID).distinct().toMutableList()
         sortFields.add(0, PLAN_PROCESS.PLAN_PRODUCT_ID.asc())
         sortFields.add(1, DSL.cast(PLAN_PROCESS.LAYER_CODE, java.math.BigDecimal::class.java).asc())
         sortFields.add(2, PLAN_PROCESS.PROCESS_SEQUENCE.asc())
+
+        var condition = PLAN_PROCESS.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS.IS_DELETED.eq(false))
+        if (!processGroups.isNullOrEmpty()) {
+            val lstProcessGroup = processGroups.split(",").map { x -> x.trim() }
+            condition = condition.and(PLAN_PROCESS.PROCESS_GROUP.`in`(lstProcessGroup))
+        }
+
         val data = context.selectFrom(PLAN_PROCESS)
-            .where(PLAN_PROCESS.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS.IS_DELETED.eq(false)))
+            .where(condition)
             .orderBy(sortFields).fetchInto(PlanProcess::class.java)
 
         if (isDraft) {
@@ -47,9 +54,16 @@ class PlanProcessRepository(private val context: DSLContext) : SortingRepository
             sortFields.add(0, PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID.asc())
             sortFields.add(1, DSL.cast(PLAN_PROCESS_TEMP.LAYER_CODE, java.math.BigDecimal::class.java).asc())
             sortFields.add(2, PLAN_PROCESS_TEMP.PROCESS_SEQUENCE.asc())
+
+            var conditionTemp = PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS_TEMP.IS_DELETED.eq(false))
+            if (!processGroups.isNullOrEmpty()) {
+                val lstProcessGroup = processGroups.split(",").map { x -> x.trim() }
+                conditionTemp = conditionTemp.and(PLAN_PROCESS.PROCESS_GROUP.`in`(lstProcessGroup))
+            }
+
             data.addAll(
                 context.selectFrom(PLAN_PROCESS_TEMP)
-                    .where(PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID.`in`(planProductIds).and(PLAN_PROCESS_TEMP.IS_DELETED.eq(false)))
+                    .where(conditionTemp)
                     .orderBy(sortFields).fetchInto(PlanProcess::class.java)
             )
         }

@@ -183,10 +183,11 @@ class PlanService(
 
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
                 val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.groupBy { it.planDate }.map { m ->
+                    val firstValue = m.value.first()
                     KeyValueResponse(
                         key = DateTimeHelper.toString(DateTimeHelper.toTimeZone7(m.key)!!, DateTimeFormat.yyyyMMdd),
                         value = if (x.unit == ProcessUnit.BLOCK) m.value.sumOf { it.blockQuantity ?: 0 }.toString() else m.value.sumOf { it.sheetQuantity ?: 0 }.toString(),
-                        color = if (m.value.size == 1) mappingColors.find { it.first == m.value.first().orderDate }?.second ?: "#FFFFFF" else "#FFFFFF"
+                        color = if (m.value.any { !it.orderDate!!.isEqual(firstValue.orderDate) }) "#FFFFFF" else mappingColors.find { it.first == firstValue.orderDate }?.second ?: "#FFFFFF"
                     )
                 }.sortedBy { m -> m.key }
 

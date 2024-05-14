@@ -1,7 +1,6 @@
 package com.kcvn.spm.common.helper
 
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.math.RoundingMode
 
 class NumberHelper {
@@ -21,14 +20,6 @@ class NumberHelper {
 
         fun isNumeric(input: String): Boolean {
             return input.toDoubleOrNull() != null
-        }
-
-        fun toDecimal(number: Int): BigDecimal {
-            return BigDecimal(number.toBigInteger(), 2)
-        }
-
-        fun toDecimal(number: BigInteger): BigDecimal {
-            return BigDecimal(number, 2)
         }
     }
 

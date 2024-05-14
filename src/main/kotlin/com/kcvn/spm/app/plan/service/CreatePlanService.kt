@@ -1008,7 +1008,7 @@ class CreatePlanService(
                 }
                 if (order.quantity!! > 0) orderInfoAllocation.add(order)
                 if (quantityUsed > 0) {
-                    val rate = NumberHelper.toDecimal(quantityUsed * 100) / NumberHelper.toDecimal(inventoryIns)
+                    val rate = BigDecimal(quantityUsed * 100) / BigDecimal(inventoryIns)
                     allocationRates.add(AllocationRateByDateModel(order.orderDate!!, quantityUsed, rate))
                 }
             } else {
@@ -1023,7 +1023,7 @@ class CreatePlanService(
                 }
                 if (order.quantity!! > 0) orderInfoAllocation.add(order)
                 if (quantityUsed > 0) {
-                    val rate = NumberHelper.toDecimal(quantityUsed * 100) / NumberHelper.toDecimal(inventoryIns)
+                    val rate = BigDecimal(quantityUsed * 100) / BigDecimal(inventoryIns)
                     allocationRates.add(AllocationRateByDateModel(order.orderDate!!, quantityUsed, rate))
                 }
             }
@@ -1667,8 +1667,9 @@ class CreatePlanService(
                         equipmentUsedInfo.add(Pair(currentPlanDate, generateModelEquipmentUsedConfig(planDetail, eqConfig)))
 
                         currentPlanDate = currentPlanDate.plusDays(-1)
-                        sheetQuantity -= NumberHelper.toDecimal(planDetail.sheetQuantity!!)
-                        blockQuantity -= NumberHelper.toDecimal(planDetail.blockQuantity!!)
+
+                        sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
+                        blockQuantity -= BigDecimal(planDetail.blockQuantity!!)
                     }
                 } else {
                     currentPlanDate = currentPlanDate.plusDays((-diffDay).toLong())
@@ -2325,7 +2326,7 @@ class CreatePlanService(
             ProcessUnit.BLOCK -> {
                 if ((equipmentInfo.sltbBlock ?: BigDecimal(0)) <= blockQuantity) {
                     planDetail.blockQuantity = NumberHelper.roundedUp(equipmentInfo.sltbBlock ?: BigDecimal(0))
-                    planDetail.sheetQuantity = NumberHelper.roundedUp(NumberHelper.toDecimal(planDetail.blockQuantity ?: 0) / NumberHelper.toDecimal(blockSh))
+                    planDetail.sheetQuantity = NumberHelper.roundedUp(BigDecimal(planDetail.blockQuantity ?: 0) / BigDecimal(blockSh))
                 } else {
                     planDetail.sheetQuantity = NumberHelper.roundedUp(sheetQuantity)
                     planDetail.blockQuantity = NumberHelper.roundedUp(blockQuantity)

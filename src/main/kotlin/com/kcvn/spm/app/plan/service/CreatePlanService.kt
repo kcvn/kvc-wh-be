@@ -1667,8 +1667,9 @@ class CreatePlanService(
                         equipmentUsedInfo.add(Pair(currentPlanDate, generateModelEquipmentUsedConfig(planDetail, eqConfig)))
 
                         currentPlanDate = currentPlanDate.plusDays(-1)
-                        sheetQuantity -= NumberHelper.toDecimal(planDetail.sheetQuantity!!)
-                        blockQuantity -= NumberHelper.toDecimal(planDetail.blockQuantity!!)
+
+                        sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
+                        blockQuantity -= BigDecimal(planDetail.blockQuantity!!)
                     }
                 } else {
                     currentPlanDate = currentPlanDate.plusDays((-diffDay).toLong())

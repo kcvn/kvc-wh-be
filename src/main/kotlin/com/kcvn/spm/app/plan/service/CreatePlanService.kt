@@ -2349,7 +2349,7 @@ class CreatePlanService(
         var group = processGroup
         if (processConvertCode == ProcessConvertCode.TH) group = "20500"
         val eqUsedConfig = equipmentUsedInfo.filter { x ->
-            x.first == planDate && x.second.grpProcess == group
+            x.first.isEqual(planDate) && x.second.grpProcess == group
                 && x.second.frame_1 == frame_1 && x.second.mold?.contains(mold) == true
         }.map { it.second }
         return eqUsedConfig

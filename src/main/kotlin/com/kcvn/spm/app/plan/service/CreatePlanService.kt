@@ -206,15 +206,15 @@ class CreatePlanService(
                     for (grp in processGroups) {
                         val eqConfigs = equipmentByProducts.filter { x -> x.grpProcess == grp }
                         if (eqConfigs.isEmpty()) {
-                            if (grp == "21800") continue
-                            if (grp == "21500" && (product!!.frame_1 == Frame1.SWR || product.frame_1 == Frame1.ML)) continue
+                            if (grp == "21800") continue //Tháo khung
+                            if (grp == "21500" && (product!!.frame_1 == Frame1.SWR || product.frame_1 == Frame1.ML)) continue //Tháo khung CSP
                             errors.add("Chưa có cấu hình năng suất máy cho nhóm công đoạn $grp")
                         }
                     }
                     for (process in parentProcesses) {
                         var eqConfigs = equipmentByProducts.filter { x -> x.grpProcess == process.processGroup }
                         if (eqConfigs.isNotEmpty()) {
-                            if (product!!.frame_1 != Frame1.MU) continue
+                            if (product!!.frame_1 != Frame1.MU) break
                             if (
                                 processStatisticCodeChecks.contains(process.processStatisticCode)
                                 || process.processConvertCode == ProcessConvertCode.DAN_2L
@@ -225,7 +225,6 @@ class CreatePlanService(
                                     errors.add("Chưa có cấu hình năng suất máy cho khuôn đục ${product.mold} của nhóm công đoạn ${process.processGroup}")
                                 }
                             }
-
                         }
                     }
                 }
@@ -478,9 +477,10 @@ class CreatePlanService(
             val completionRate = completionRates.find { x ->
                 x.layerCode?.toIntOrNull() == iParentProcess.layerCode?.toIntOrNull() && x.processCode == iParentProcess.processCode
             } ?: break
-            var eqConfig = equipmentInfo.find { x ->
-                x.frame_1 == product.frame_1 && x.grpProcess == iParentProcess.processGroup && x.mold!!.contains(product.mold!!)
-            }
+//            var eqConfig = equipmentInfo.find { x ->
+//                x.frame_1 == product.frame_1 && x.grpProcess == iParentProcess.processGroup && x.mold!!.contains(product.mold!!)
+//            }
+            var eqConfig = findEquipmentInfo(equipmentInfo, product.frame_1, product.mold!!, iParentProcess.processGroup, iParentProcess.processConvertCode!!)
             var isPassEqConfig = false
             if (eqConfig == null) {
                 eqConfig = EquipmentProductivity()
@@ -1638,9 +1638,10 @@ class CreatePlanService(
                     sheetQuantity = NumberHelper.divide(blockQuantity, BigDecimal(productInfo.shBlock!!))
                 }
 
-                var eqConfigDefault = equipmentInfoDefault.find { x ->
-                    x.frame_1 == productInfo.frame_1 && x.grpProcess == iProcess.processGroup && x.mold!!.contains(productInfo.mold!!)
-                }
+//                var eqConfigDefault = equipmentInfoDefault.find { x ->
+//                    x.frame_1 == productInfo.frame_1 && x.grpProcess == iProcess.processGroup && x.mold!!.contains(productInfo.mold!!)
+//                }
+                var eqConfigDefault = findEquipmentInfo(equipmentInfoDefault, productInfo.frame_1, productInfo.mold!!, iProcess.processGroup, iProcess.processConvertCode!!)
                 var isPassEqConfig = false
                 if (eqConfigDefault == null) {
                     eqConfigDefault = EquipmentProductivity()
@@ -1654,17 +1655,21 @@ class CreatePlanService(
                             continue
                         }
 
-                        val eqUsedConfig = equipmentUsedInfo.filter { x ->
-                            x.first == currentPlanDate && x.second.grpProcess == iProcess.processGroup
-                                && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
-                        }.map { it.second }
+//                        val eqUsedConfig = equipmentUsedInfo.filter { x ->
+//                            x.first == currentPlanDate && x.second.grpProcess == iProcess.processGroup
+//                                && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
+//                        }.map { it.second }
+                        val eqUsedConfig = filterEquipmentUsedInfo(
+                            equipmentUsedInfo, currentPlanDate, productInfo.frame_1, productInfo.mold!!,
+                            iProcess.processGroup, iProcess.processConvertCode!!
+                        )
                         val sheetQuantityUsed = eqUsedConfig.sumOf { it.sltbSheet ?: BigDecimal(0) }
                         val blockQuantityUsed = eqUsedConfig.sumOf { it.sltbBlock ?: BigDecimal(0) }
-                        val eqConfig = settingEquipmentConfig(sheetQuantityUsed, blockQuantityUsed, eqConfigDefault)
+                        val eqConfig = settingEquipmentConfig(sheetQuantityUsed, blockQuantityUsed, eqConfigDefault, iProcess.processConvertCode)
 
                         val planDetail = calculateQuantity(currentPlanDate, sheetQuantity, blockQuantity, eqConfig, iProcess.unit!!, productInfo.shBlock!!, order.orderDate, true)
                         planProcess.planDetails.add(planDetail)
-                        equipmentUsedInfo.add(Pair(currentPlanDate, generateModelEquipmentUsedConfig(planDetail, eqConfig)))
+                        equipmentUsedInfo.add(Pair(currentPlanDate, generateModelEquipmentUsedConfig(planDetail, eqConfig, iProcess.processConvertCode)))
 
                         currentPlanDate = currentPlanDate.plusDays(-1)
 
@@ -1902,6 +1907,7 @@ class CreatePlanService(
     //endregion
 
     //region GENERATE_MODEL
+
     private fun genPlanValidModel(productName: String, errors: List<String>, date: OffsetDateTime? = null): PlanValidateModel {
         return PlanValidateModel(
             productName = productName,
@@ -2194,16 +2200,23 @@ class CreatePlanService(
                         planDate = planDate.plusDays(-1)
                         continue
                     }
-                    val eqUsedConfig = equipmentUsedInfo.filter { x ->
-                        x.first == planDate && x.second.grpProcess == productProcess.processGroup
-                            && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
-                    }.map { it.second }
+//                    val eqUsedConfig = equipmentUsedInfo.filter { x ->
+//                        x.first == planDate && x.second.grpProcess == productProcess.processGroup
+//                            && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
+//                    }.map { it.second }
+                    val eqUsedConfig = filterEquipmentUsedInfo(
+                        equipmentUsedInfo, planDate, productInfo.frame_1, productInfo.mold!!,
+                        productProcess.processGroup, productProcess.processConvertCode!!
+                    )
                     val sheetQuantityUsed = eqUsedConfig.sumOf { it.sltbSheet ?: BigDecimal(0) }
                     val blockQuantityUsed = eqUsedConfig.sumOf { it.sltbBlock ?: BigDecimal(0) }
-                    val eqConfig = settingEquipmentConfig(sheetQuantityUsed, blockQuantityUsed, equipmentInfoDefault)
-                    val planDetail = calculateQuantity(planDate, sheetQuantity, blockQuantity, eqConfig, productProcess.unit!!, productInfo.shBlock!!, orderDate, hasInventory)
+                    val eqConfig = settingEquipmentConfig(sheetQuantityUsed, blockQuantityUsed, equipmentInfoDefault, productProcess.processConvertCode)
+                    val planDetail = calculateQuantity(
+                        planDate, sheetQuantity, blockQuantity, eqConfig,
+                        productProcess.unit!!, productInfo.shBlock!!, orderDate, hasInventory
+                    )
                     data.add(planDetail)
-                    equipmentUsedInfo.add(Pair(planDate, generateModelEquipmentUsedConfig(planDetail, eqConfig)))
+                    equipmentUsedInfo.add(Pair(planDate, generateModelEquipmentUsedConfig(planDetail, eqConfig, productProcess.processConvertCode)))
 
                     planDate = planDate.plusDays(-1)
                     sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
@@ -2240,7 +2253,11 @@ class CreatePlanService(
         }.toMutableList()
     }
 
-    private fun generateModelEquipmentUsedConfig(planDetail: PlanDetailCreateModel, equipmentInfoDefault: EquipmentProductivity): EquipmentProductivity {
+    private fun generateModelEquipmentUsedConfig(
+        planDetail: PlanDetailCreateModel,
+        equipmentInfoDefault: EquipmentProductivity,
+        processConvertCode: String?
+    ): EquipmentProductivity {
         val data = EquipmentProductivity(
             id = equipmentInfoDefault.id,
             processName = equipmentInfoDefault.processName,
@@ -2265,10 +2282,16 @@ class CreatePlanService(
             quantityMachine = equipmentInfoDefault.quantityMachine,
             processCode = equipmentInfoDefault.processCode
         )
+        if (processConvertCode == ProcessConvertCode.TH) data.grpProcess = "20500"
         return data
     }
 
-    private fun settingEquipmentConfig(sheetQuantityUsed: BigDecimal, blockQuantityUsed: BigDecimal, equipmentInfoDefault: EquipmentProductivity): EquipmentProductivity {
+    private fun settingEquipmentConfig(
+        sheetQuantityUsed: BigDecimal,
+        blockQuantityUsed: BigDecimal,
+        equipmentInfoDefault: EquipmentProductivity,
+        processConvertCode: String?
+    ): EquipmentProductivity {
         val data = EquipmentProductivity(
             id = equipmentInfoDefault.id,
             processName = equipmentInfoDefault.processName,
@@ -2293,7 +2316,43 @@ class CreatePlanService(
             quantityMachine = equipmentInfoDefault.quantityMachine,
             processCode = equipmentInfoDefault.processCode
         )
+        if (processConvertCode == ProcessConvertCode.TH) data.grpProcess = "20500"
         return data
+    }
+
+    private fun findEquipmentInfo(
+        equipmentInfo: List<EquipmentProductivity>,
+        frame_1: String?,
+        mold: String,
+        processGroup: String?,
+        processConvertCode: String
+    ): EquipmentProductivity? {
+        if (processGroup == "21800") return null //Tháo khung
+        if (processGroup == "21500" && (frame_1 == Frame1.SWR || frame_1 == Frame1.ML)) return null //Tháo khung CSP
+
+        var group = processGroup
+        if (processConvertCode == ProcessConvertCode.TH) group = "20500"
+        val eqConfig = equipmentInfo.find { x ->
+            x.frame_1 == frame_1 && x.grpProcess == group && x.mold!!.contains(mold)
+        }
+        return eqConfig
+    }
+
+    private fun filterEquipmentUsedInfo(
+        equipmentUsedInfo: MutableList<Pair<OffsetDateTime, EquipmentProductivity>>,
+        planDate: OffsetDateTime,
+        frame_1: String?,
+        mold: String,
+        processGroup: String?,
+        processConvertCode: String
+    ): List<EquipmentProductivity> {
+        var group = processGroup
+        if (processConvertCode == ProcessConvertCode.TH) group = "20500"
+        val eqUsedConfig = equipmentUsedInfo.filter { x ->
+            x.first == planDate && x.second.grpProcess == group
+                && x.second.frame_1 == frame_1 && x.second.mold?.contains(mold) == true
+        }.map { it.second }
+        return eqUsedConfig
     }
 
     private fun calculateQuantity(

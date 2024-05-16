@@ -15,7 +15,6 @@ COPY src ./src
 RUN echo "$CONFIG_FILE" > './src/main/resources/application.properties'
 RUN cat ./src/main/resources/application.properties
 
-RUN ./mvnw -Dflyway.configFiles=./src/main/resources/application.properties flyway:migrate
 RUN --mount=type=cache,target=/root/.m2,rw ./mvnw -B package
 
 FROM eclipse-temurin:17-jre-focal

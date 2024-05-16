@@ -477,9 +477,6 @@ class CreatePlanService(
             val completionRate = completionRates.find { x ->
                 x.layerCode?.toIntOrNull() == iParentProcess.layerCode?.toIntOrNull() && x.processCode == iParentProcess.processCode
             } ?: break
-//            var eqConfig = equipmentInfo.find { x ->
-//                x.frame_1 == product.frame_1 && x.grpProcess == iParentProcess.processGroup && x.mold!!.contains(product.mold!!)
-//            }
             var eqConfig = findEquipmentInfo(equipmentInfo, product.frame_1, product.mold!!, iParentProcess.processGroup, iParentProcess.processConvertCode!!)
             var isPassEqConfig = false
             if (eqConfig == null) {
@@ -1638,9 +1635,6 @@ class CreatePlanService(
                     sheetQuantity = NumberHelper.divide(blockQuantity, BigDecimal(productInfo.shBlock!!))
                 }
 
-//                var eqConfigDefault = equipmentInfoDefault.find { x ->
-//                    x.frame_1 == productInfo.frame_1 && x.grpProcess == iProcess.processGroup && x.mold!!.contains(productInfo.mold!!)
-//                }
                 var eqConfigDefault = findEquipmentInfo(equipmentInfoDefault, productInfo.frame_1, productInfo.mold!!, iProcess.processGroup, iProcess.processConvertCode!!)
                 var isPassEqConfig = false
                 if (eqConfigDefault == null) {
@@ -1649,22 +1643,30 @@ class CreatePlanService(
                 }
 
                 if (applyEquipmentProductivity && !isPassEqConfig) {
-                    while (sheetQuantity > BigDecimal(0) || blockQuantity > BigDecimal(0)) {
+                    while (
+                        (sheetQuantity > BigDecimal(0) && iProcess.unit == ProcessUnit.SHEET)
+                        || (blockQuantity > BigDecimal(0) && iProcess.unit == ProcessUnit.BLOCK)
+                    ) {
                         if (holidays.any { x -> x.isEqual(currentPlanDate) }) {
                             currentPlanDate = currentPlanDate.plusDays(-1)
                             continue
                         }
 
-//                        val eqUsedConfig = equipmentUsedInfo.filter { x ->
-//                            x.first == currentPlanDate && x.second.grpProcess == iProcess.processGroup
-//                                && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
-//                        }.map { it.second }
                         val eqUsedConfig = filterEquipmentUsedInfo(
                             equipmentUsedInfo, currentPlanDate, productInfo.frame_1, productInfo.mold!!,
                             iProcess.processGroup, iProcess.processConvertCode!!
                         )
                         val sheetQuantityUsed = eqUsedConfig.sumOf { it.sltbSheet ?: BigDecimal(0) }
                         val blockQuantityUsed = eqUsedConfig.sumOf { it.sltbBlock ?: BigDecimal(0) }
+
+                        if (
+                            (sheetQuantityUsed >= eqConfigDefault.sltbSheet && iProcess.unit == ProcessUnit.SHEET)
+                            || (blockQuantityUsed >= eqConfigDefault.sltbBlock && iProcess.unit == ProcessUnit.BLOCK)
+                        ) {
+                            currentPlanDate = currentPlanDate.plusDays(-1)
+                            continue
+                        }
+
                         val eqConfig = settingEquipmentConfig(sheetQuantityUsed, blockQuantityUsed, eqConfigDefault, iProcess.processConvertCode)
 
                         val planDetail = calculateQuantity(currentPlanDate, sheetQuantity, blockQuantity, eqConfig, iProcess.unit!!, productInfo.shBlock!!, order.orderDate, true)
@@ -1673,8 +1675,14 @@ class CreatePlanService(
 
                         currentPlanDate = currentPlanDate.plusDays(-1)
 
-                        sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
-                        blockQuantity -= BigDecimal(planDetail.blockQuantity!!)
+                        if (iProcess.unit == ProcessUnit.SHEET) {
+                            sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
+                            blockQuantity = sheetQuantity * BigDecimal(productInfo.shBlock!!)
+                        } else {
+                            blockQuantity -= BigDecimal(planDetail.blockQuantity!!)
+                            sheetQuantity = NumberHelper.divide(blockQuantity, BigDecimal(productInfo.shBlock!!))
+                        }
+
                     }
                 } else {
                     currentPlanDate = currentPlanDate.plusDays((-diffDay).toLong())
@@ -2195,21 +2203,29 @@ class CreatePlanService(
             }
 
             if (applyEquipmentProductivity && !isPassEqConfig) {
-                while (sheetQuantity > BigDecimal(0) || blockQuantity > BigDecimal(0)) {
+                while (
+                    (sheetQuantity > BigDecimal(0) && productProcess.unit == ProcessUnit.SHEET)
+                    || (blockQuantity > BigDecimal(0) && productProcess.unit == ProcessUnit.BLOCK)
+                ) {
                     if (holidays.any { x -> x.isEqual(planDate) }) {
                         planDate = planDate.plusDays(-1)
                         continue
                     }
-//                    val eqUsedConfig = equipmentUsedInfo.filter { x ->
-//                        x.first == planDate && x.second.grpProcess == productProcess.processGroup
-//                            && x.second.frame_1 == productInfo.frame_1 && x.second.mold?.contains(productInfo.mold!!) == true
-//                    }.map { it.second }
                     val eqUsedConfig = filterEquipmentUsedInfo(
                         equipmentUsedInfo, planDate, productInfo.frame_1, productInfo.mold!!,
                         productProcess.processGroup, productProcess.processConvertCode!!
                     )
                     val sheetQuantityUsed = eqUsedConfig.sumOf { it.sltbSheet ?: BigDecimal(0) }
                     val blockQuantityUsed = eqUsedConfig.sumOf { it.sltbBlock ?: BigDecimal(0) }
+
+                    if (
+                        (sheetQuantityUsed >= equipmentInfoDefault.sltbSheet && productProcess.unit == ProcessUnit.SHEET)
+                        || (blockQuantityUsed >= equipmentInfoDefault.sltbBlock && productProcess.unit == ProcessUnit.BLOCK)
+                    ) {
+                        planDate = planDate.plusDays(-1)
+                        continue
+                    }
+
                     val eqConfig = settingEquipmentConfig(sheetQuantityUsed, blockQuantityUsed, equipmentInfoDefault, productProcess.processConvertCode)
                     val planDetail = calculateQuantity(
                         planDate, sheetQuantity, blockQuantity, eqConfig,
@@ -2219,8 +2235,14 @@ class CreatePlanService(
                     equipmentUsedInfo.add(Pair(planDate, generateModelEquipmentUsedConfig(planDetail, eqConfig, productProcess.processConvertCode)))
 
                     planDate = planDate.plusDays(-1)
-                    sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
-                    blockQuantity -= BigDecimal(planDetail.blockQuantity!!)
+
+                    if (productProcess.unit == ProcessUnit.SHEET) {
+                        sheetQuantity -= BigDecimal(planDetail.sheetQuantity!!)
+                        blockQuantity = sheetQuantity * BigDecimal(productInfo.shBlock!!)
+                    } else {
+                        blockQuantity -= BigDecimal(planDetail.blockQuantity!!)
+                        sheetQuantity = NumberHelper.divide(blockQuantity, BigDecimal(productInfo.shBlock!!))
+                    }
                 }
             } else {
                 while (holidays.any { x -> x.isEqual(planDate) }) {

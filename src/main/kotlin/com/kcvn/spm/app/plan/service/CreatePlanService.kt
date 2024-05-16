@@ -2112,12 +2112,14 @@ class CreatePlanService(
                 processStatisticCode = process.processStatisticCode,
                 childrenProcesses = process.childrenProcesses.distinct().toMutableList(),
                 planDetails = item.value.asSequence().map { m -> m.planDetails }.flatten().groupBy { m -> m.planDate }.map { m ->
+                    val firstValue = m.value.first()
+                    val lstOrderDate = m.value.map { it.orderDate }.distinct()
                     PlanDetailCreateModel(
-                        title = m.value.first().title,
+                        title = firstValue.title,
                         planDate = m.key,
                         sheetQuantity = m.value.sumOf { t -> t.sheetQuantity ?: 0 },
                         blockQuantity = m.value.sumOf { t -> t.blockQuantity ?: 0 },
-                        orderDate = if (m.value.size == 1) m.value.first().orderDate else null,
+                        orderDate = if (lstOrderDate.size == 1) firstValue.orderDate else null,
                         hasInventory = false
                     )
                 }.toMutableList()

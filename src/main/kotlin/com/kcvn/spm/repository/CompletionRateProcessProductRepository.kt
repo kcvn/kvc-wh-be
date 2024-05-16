@@ -2,10 +2,12 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
 import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProcessProductResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProcessProduct
-import com.kcvn.spm.model.tables.references.*
+import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS_PRODUCT
+import com.kcvn.spm.model.tables.references.PROCESS_MASTER
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -19,22 +21,27 @@ import java.time.ZoneOffset
 class CompletionRateProcessProductRepository(private val context: DSLContext) : SortingRepository() {
 
     fun update(data: CompletionRateProcessProduct): CompletionRateProcessProduct? {
-        return context
-            .update(COMPLETION_RATE_PROCESS_PRODUCT)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT, data.productNameShortcut)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.RATE, data.rate)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE, data.layerCode)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE, data.expirationDate)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
-            .set(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE, data.processCode)
-            .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(data.id))
-            .returningResult(COMPLETION_RATE_PROCESS_PRODUCT)
-            .fetchInto(CompletionRateProcessProduct::class.java).firstOrNull()
+        var result: CompletionRateProcessProduct? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext
+                .update(COMPLETION_RATE_PROCESS_PRODUCT)
+                .set(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT, data.productNameShortcut)
+                .set(COMPLETION_RATE_PROCESS_PRODUCT.RATE, data.rate)
+                .set(COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE, data.layerCode)
+                .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE, data.expirationDate)
+                .set(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
+                .set(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE, data.processCode)
+                .where(COMPLETION_RATE_PROCESS_PRODUCT.ID.eq(data.id))
+                .returningResult(COMPLETION_RATE_PROCESS_PRODUCT)
+                .fetchInto(CompletionRateProcessProduct::class.java).firstOrNull()
+        }
+        return result
     }
 
-    fun getListProductByKey(productKeys: List<String>): List<CompletionRateProcessProduct> {
+    fun getListProcessProductByKey(productKeys: List<String>): List<CompletionRateProcessProduct>? {
         return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
             .where(
                 COMPLETION_RATE_PROCESS_PRODUCT.KEY.`in`(productKeys)
@@ -51,18 +58,33 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
-            if (search.productNameShortCut != null) {
+            if (!search.productNameShortCut.isNullOrEmpty()) {
                 val lowerProductNameShortCutSearch = DSL.lower(search.productNameShortCut)
-                condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT).contains(lowerProductNameShortCutSearch))
+                condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT).containsIgnoreCase(lowerProductNameShortCutSearch))
             }
 
-            if (search.processCode != null) {
-                val lowerProcessCodeSearch = DSL.lower(search.processCode)
-                condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).contains(lowerProcessCodeSearch))
+            if (!search.processCode.isNullOrEmpty()) {
+                val lowerProcessCodeSearch = search.processCode
+                condition = condition.and(
+                    DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).containsIgnoreCase(lowerProcessCodeSearch)
+                        .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME).containsIgnoreCase(lowerProcessCodeSearch))
+                        .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME_JP).containsIgnoreCase(lowerProcessCodeSearch))
+                )
             }
+
+
         }
 
-        val maxEffectiveDatesMap = mutableMapOf<String, OffsetDateTime?>()
+        val crppSubquery = context.select(
+            COMPLETION_RATE_PROCESS_PRODUCT.KEY,
+            COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE,
+            DSL.max(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE).`as`("max_date")
+        )
+            .from(COMPLETION_RATE_PROCESS_PRODUCT)
+            .groupBy(
+                COMPLETION_RATE_PROCESS_PRODUCT.KEY,
+                COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE
+            )
 
         val completionRateProcessesQuery = context.select(
             COMPLETION_RATE_PROCESS_PRODUCT.ID,
@@ -78,6 +100,10 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .from(
                 COMPLETION_RATE_PROCESS_PRODUCT
                     .join(PROCESS_MASTER).on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+                    .join(crppSubquery)
+                    .on(COMPLETION_RATE_PROCESS_PRODUCT.KEY.eq(crppSubquery.field(COMPLETION_RATE_PROCESS_PRODUCT.KEY))
+                        .and(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(crppSubquery.field(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE)))
+                        .and(COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE.eq(crppSubquery.field("max_date", OffsetDateTime::class.java))))
                     .where(PROCESS_MASTER.IS_DELETED.eq(false))
             )
             .where(condition.and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false)))
@@ -86,21 +112,16 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .offset(pageable?.offset ?: 0)
             .fetchInto(CompletionRateProcessProductResponse::class.java)
 
-        completionRateProcessesQuery.forEach { product ->
-            val currentMaxEffectiveDate = maxEffectiveDatesMap[product.key]
-            if (currentMaxEffectiveDate == null || (product.effectiveDate != null && product.effectiveDate > currentMaxEffectiveDate)) {
-                maxEffectiveDatesMap[product.key!!] = product.effectiveDate
-            }
-        }
-
-        val filteredList = completionRateProcessesQuery.filter { product ->
-            val maxEffectiveDate = maxEffectiveDatesMap[product.key]
-            product.effectiveDate != null && product.effectiveDate == maxEffectiveDate
-        }
-
-        val total = context.fetchCount(COMPLETION_RATE_PROCESS_PRODUCT, condition)
-
-        return Pair(filteredList, total)
+        val total = context.selectDistinct(COMPLETION_RATE_PROCESS_PRODUCT.KEY)
+            .from(
+                COMPLETION_RATE_PROCESS_PRODUCT
+                    .join(PROCESS_MASTER)
+                    .on(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
+                    .where(condition)
+            )
+            .fetch()
+            .size
+        return Pair(completionRateProcessesQuery, total)
     }
 
 
@@ -112,50 +133,53 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             "layerCode" -> COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE
             "process_code" -> COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE
             // Add more cases for other fields as needed
-            else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
+            else -> throw IllegalArgumentException(CommonUtils.getMessage("sort.error.columnNotFound"))
         }
     }
 
 
-
-    fun add(data: CompletionRateProcessProduct) : CompletionRateProcessProduct? {
-        return try {
-            context
-                .insertInto(
-                    COMPLETION_RATE_PROCESS_PRODUCT,
-                    COMPLETION_RATE_PROCESS_PRODUCT.KEY,
-                    COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT,
-                    COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE,
-                    COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE,
-                    COMPLETION_RATE_PROCESS_PRODUCT.RATE,
-                    COMPLETION_RATE_PROCESS_PRODUCT.CREATED_DATE,
-                    COMPLETION_RATE_PROCESS_PRODUCT.CREATED_BY,
-                    COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED,
-                    COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE,
-                    COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE,
-                    COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE
-                )
-                .values(
-
-                    data.key,
-                    data.productNameShortcut,
-                    data.processCode,
-                    data.layerCode,
-                    data.rate,
-                    data.createdDate ?: OffsetDateTime.now(),
-                    data.createdBy ?: "SYSTEM",
-                    data.isDeleted ?: false,
-                    data.updatedDate ?: OffsetDateTime.now(),
-                    data.expirationDate ?: null,
-                    data.effectiveDate
-                )
-                .returningResult(COMPLETION_RATE_PROCESS_PRODUCT)
-                .fetchOne()
-                ?.into(CompletionRateProcessProduct::class.java)
-        } catch (e: Exception) {
-            // Handle the exception as needed
-            null
+    fun add(data: CompletionRateProcessProduct): CompletionRateProcessProduct? {
+        var result: CompletionRateProcessProduct? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = try {
+                transactionalContext
+                    .insertInto(
+                        COMPLETION_RATE_PROCESS_PRODUCT,
+                        COMPLETION_RATE_PROCESS_PRODUCT.KEY,
+                        COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT,
+                        COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE,
+                        COMPLETION_RATE_PROCESS_PRODUCT.LAYER_CODE,
+                        COMPLETION_RATE_PROCESS_PRODUCT.RATE,
+                        COMPLETION_RATE_PROCESS_PRODUCT.CREATED_DATE,
+                        COMPLETION_RATE_PROCESS_PRODUCT.CREATED_BY,
+                        COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED,
+                        COMPLETION_RATE_PROCESS_PRODUCT.UPDATED_DATE,
+                        COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE,
+                        COMPLETION_RATE_PROCESS_PRODUCT.EFFECTIVE_DATE
+                    )
+                    .values(
+                        data.key,
+                        data.productNameShortcut,
+                        data.processCode,
+                        data.layerCode,
+                        data.rate,
+                        data.createdDate ?: OffsetDateTime.now(),
+                        data.createdBy ?: CommonUtils.loggedInUser(),
+                        data.isDeleted ?: false,
+                        data.updatedDate ?: OffsetDateTime.now(),
+                        data.expirationDate,
+                        data.effectiveDate
+                    )
+                    .returningResult(COMPLETION_RATE_PROCESS_PRODUCT)
+                    .fetchOne()
+                    ?.into(CompletionRateProcessProduct::class.java)
+            } catch (e: Exception) {
+                // Handle the exception as needed
+                null
+            }
         }
+        return result
     }
 
     fun delete(id: String) {
@@ -166,7 +190,7 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
     }
 
 
-    fun getCompletionRateProcessProductWithMaxEffectivedateByName(name: String): CompletionRateProcessProduct? {
+    fun getCompletionRateProcessProductWithMaxEffectiveDateByName(name: String): CompletionRateProcessProduct? {
 
         val record = context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
             .where(
@@ -178,6 +202,16 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
             .fetchOne()
         return record?.into(CompletionRateProcessProduct::class.java)
 
+    }
+
+    fun getByProductName(productNames: List<String>): List<CompletionRateProcessProduct> {
+        val condition = COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT.`in`(productNames)
+            .and(COMPLETION_RATE_PROCESS_PRODUCT.EXPIRATION_DATE.isNull())
+            .and(COMPLETION_RATE_PROCESS_PRODUCT.IS_DELETED.eq(false))
+
+        return context.selectFrom(COMPLETION_RATE_PROCESS_PRODUCT)
+            .where(condition)
+            .fetchInto(CompletionRateProcessProduct::class.java)
     }
 
 }

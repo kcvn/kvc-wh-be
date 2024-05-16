@@ -11,19 +11,44 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
-import com.kcvn.spm.model.tables.CalculateQuantity
+import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
 import com.kcvn.spm.model.tables.CompletionRateProduct
+import com.kcvn.spm.model.tables.CouponCodeDropdown
+import com.kcvn.spm.model.tables.EquipmentProductivity
+import com.kcvn.spm.model.tables.ExportConfiguration
+import com.kcvn.spm.model.tables.HolidaysCalendar
+import com.kcvn.spm.model.tables.InformationCalculateQuantity
+import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
+import com.kcvn.spm.model.tables.OrderInfo
+import com.kcvn.spm.model.tables.OrderVersionDropdown
+import com.kcvn.spm.model.tables.Plan
+import com.kcvn.spm.model.tables.PlanCalendarConfig
+import com.kcvn.spm.model.tables.PlanColorConfig
+import com.kcvn.spm.model.tables.PlanDetail
+import com.kcvn.spm.model.tables.PlanDetailTemp
+import com.kcvn.spm.model.tables.PlanProcess
+import com.kcvn.spm.model.tables.PlanProcessTemp
+import com.kcvn.spm.model.tables.PlanProduct
+import com.kcvn.spm.model.tables.PlanProductTemp
+import com.kcvn.spm.model.tables.PlanTemp
+import com.kcvn.spm.model.tables.ProcessGroup
 import com.kcvn.spm.model.tables.ProcessMaster
+import com.kcvn.spm.model.tables.ProcessMasterData
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.SyncHistory
+import com.kcvn.spm.model.tables.SystemLock
+import com.kcvn.spm.model.tables.TapeEnRoute
+import com.kcvn.spm.model.tables.TapeInfo
+import com.kcvn.spm.model.tables.TapeInventory
+import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WorkResult
 
 
@@ -64,9 +89,9 @@ val AUTH_USER_CLAIM: AuthUserClaim = AuthUserClaim.AUTH_USER_CLAIM
 val AUTH_USER_ROLE: AuthUserRole = AuthUserRole.AUTH_USER_ROLE
 
 /**
- * The table <code>public.calculate_quantity</code>.
+ * The table <code>public.calculate_quantity_result</code>.
  */
-val CALCULATE_QUANTITY: CalculateQuantity = CalculateQuantity.CALCULATE_QUANTITY
+val CALCULATE_QUANTITY_RESULT: CalculateQuantityResult = CalculateQuantityResult.CALCULATE_QUANTITY_RESULT
 
 /**
  * The table <code>public.common_category</code>.
@@ -89,6 +114,36 @@ val COMPLETION_RATE_PROCESS_PRODUCT: CompletionRateProcessProduct = CompletionRa
 val COMPLETION_RATE_PRODUCT: CompletionRateProduct = CompletionRateProduct.COMPLETION_RATE_PRODUCT
 
 /**
+ * The table <code>public.coupon_code_dropdown</code>.
+ */
+val COUPON_CODE_DROPDOWN: CouponCodeDropdown = CouponCodeDropdown.COUPON_CODE_DROPDOWN
+
+/**
+ * The table <code>public.equipment_productivity</code>.
+ */
+val EQUIPMENT_PRODUCTIVITY: EquipmentProductivity = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY
+
+/**
+ * The table <code>public.export_configuration</code>.
+ */
+val EXPORT_CONFIGURATION: ExportConfiguration = ExportConfiguration.EXPORT_CONFIGURATION
+
+/**
+ * The table <code>public.holidays_calendar</code>.
+ */
+val HOLIDAYS_CALENDAR: HolidaysCalendar = HolidaysCalendar.HOLIDAYS_CALENDAR
+
+/**
+ * The table <code>public.information_calculate_quantity</code>.
+ */
+val INFORMATION_CALCULATE_QUANTITY: InformationCalculateQuantity = InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY
+
+/**
+ * The table <code>public.information_calculate_quantity_detail</code>.
+ */
+val INFORMATION_CALCULATE_QUANTITY_DETAIL: InformationCalculateQuantityDetail = InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL
+
+/**
  * The table <code>public.inventory_product</code>.
  */
 val INVENTORY_PRODUCT: InventoryProduct = InventoryProduct.INVENTORY_PRODUCT
@@ -104,9 +159,79 @@ val ORDER: Order = Order.ORDER
 val ORDER_DETAIL: OrderDetail = OrderDetail.ORDER_DETAIL
 
 /**
+ * The table <code>public.order_info</code>.
+ */
+val ORDER_INFO: OrderInfo = OrderInfo.ORDER_INFO
+
+/**
+ * The table <code>public.order_version_dropdown</code>.
+ */
+val ORDER_VERSION_DROPDOWN: OrderVersionDropdown = OrderVersionDropdown.ORDER_VERSION_DROPDOWN
+
+/**
+ * The table <code>public.plan</code>.
+ */
+val PLAN: Plan = Plan.PLAN
+
+/**
+ * The table <code>public.plan_calendar_config</code>.
+ */
+val PLAN_CALENDAR_CONFIG: PlanCalendarConfig = PlanCalendarConfig.PLAN_CALENDAR_CONFIG
+
+/**
+ * The table <code>public.plan_color_config</code>.
+ */
+val PLAN_COLOR_CONFIG: PlanColorConfig = PlanColorConfig.PLAN_COLOR_CONFIG
+
+/**
+ * The table <code>public.plan_detail</code>.
+ */
+val PLAN_DETAIL: PlanDetail = PlanDetail.PLAN_DETAIL
+
+/**
+ * The table <code>public.plan_detail_temp</code>.
+ */
+val PLAN_DETAIL_TEMP: PlanDetailTemp = PlanDetailTemp.PLAN_DETAIL_TEMP
+
+/**
+ * The table <code>public.plan_process</code>.
+ */
+val PLAN_PROCESS: PlanProcess = PlanProcess.PLAN_PROCESS
+
+/**
+ * The table <code>public.plan_process_temp</code>.
+ */
+val PLAN_PROCESS_TEMP: PlanProcessTemp = PlanProcessTemp.PLAN_PROCESS_TEMP
+
+/**
+ * The table <code>public.plan_product</code>.
+ */
+val PLAN_PRODUCT: PlanProduct = PlanProduct.PLAN_PRODUCT
+
+/**
+ * The table <code>public.plan_product_temp</code>.
+ */
+val PLAN_PRODUCT_TEMP: PlanProductTemp = PlanProductTemp.PLAN_PRODUCT_TEMP
+
+/**
+ * The table <code>public.plan_temp</code>.
+ */
+val PLAN_TEMP: PlanTemp = PlanTemp.PLAN_TEMP
+
+/**
+ * The table <code>public.process_group</code>.
+ */
+val PROCESS_GROUP: ProcessGroup = ProcessGroup.PROCESS_GROUP
+
+/**
  * The table <code>public.process_master</code>.
  */
 val PROCESS_MASTER: ProcessMaster = ProcessMaster.PROCESS_MASTER
+
+/**
+ * The table <code>public.process_master_data</code>.
+ */
+val PROCESS_MASTER_DATA: ProcessMasterData = ProcessMasterData.PROCESS_MASTER_DATA
 
 /**
  * The table <code>public.process_procedure_structure</code>.
@@ -127,6 +252,31 @@ val PRODUCT_PROCESS: ProductProcess = ProductProcess.PRODUCT_PROCESS
  * The table <code>public.sync_history</code>.
  */
 val SYNC_HISTORY: SyncHistory = SyncHistory.SYNC_HISTORY
+
+/**
+ * The table <code>public.system_lock</code>.
+ */
+val SYSTEM_LOCK: SystemLock = SystemLock.SYSTEM_LOCK
+
+/**
+ * The table <code>public.tape_en_route</code>.
+ */
+val TAPE_EN_ROUTE: TapeEnRoute = TapeEnRoute.TAPE_EN_ROUTE
+
+/**
+ * The table <code>public.tape_info</code>.
+ */
+val TAPE_INFO: TapeInfo = TapeInfo.TAPE_INFO
+
+/**
+ * The table <code>public.tape_inventory</code>.
+ */
+val TAPE_INVENTORY: TapeInventory = TapeInventory.TAPE_INVENTORY
+
+/**
+ * The table <code>public.update_tape</code>.
+ */
+val UPDATE_TAPE: UpdateTape = UpdateTape.UPDATE_TAPE
 
 /**
  * The table <code>public.work_result</code>.

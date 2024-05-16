@@ -1,11 +1,14 @@
 package com.kcvn.spm.repository
-import com.kcvn.spm.app.completionrate.payload.response.CompletionRateProductResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CompletionRateProduct
+import com.kcvn.spm.model.tables.pojos.OrderInfo
+import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PROCESS
 import com.kcvn.spm.model.tables.references.COMPLETION_RATE_PRODUCT
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Null
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
@@ -15,10 +18,41 @@ import java.time.ZoneOffset
 
 @Repository
 class CompletionRateProductRepository(private val context: DSLContext) : SortingRepository() {
-    fun getByProduct(productNames: List<String>): List<CompletionRateProduct> {
+    fun getForReport(productNames: List<String>?, applicationDate: OffsetDateTime?): List<CompletionRateProduct>? {
+        var condition: Condition = DSL.noCondition()
+        condition = condition.and(
+            COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)
+        )
+        if(applicationDate!=null){
+            condition = condition.and(
+                COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.le(applicationDate)
+                    .and(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.ge(applicationDate))
+            ).or(
+                COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.le(applicationDate)
+                    .and(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.isNull)
+            )
+        }
+        
+        return context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(condition.and(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames))
+            )
+            .fetchInto(CompletionRateProduct::class.java)
+    }
+
+    fun getByProduct(productNames: List<String>?): List<CompletionRateProduct>? {
         return context.selectFrom(COMPLETION_RATE_PRODUCT)
             .where(
                 COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames)
+                    .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false))
+            )
+            .fetchInto(CompletionRateProduct::class.java)
+    }
+
+    fun getEffectiveByProduct(productNames: List<String>): List<CompletionRateProduct>? {
+        return context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(
+                COMPLETION_RATE_PRODUCT.PRODUCT_NAME.`in`(productNames)
+                    .and(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE.isNull)
                     .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false))
             )
             .fetchInto(CompletionRateProduct::class.java)
@@ -35,30 +69,37 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             condition = condition.and(DSL.lower(COMPLETION_RATE_PRODUCT.PRODUCT_NAME).contains(lowerSearch))
         }
 
-        val completionRateProcessesQuery = context.selectFrom(COMPLETION_RATE_PRODUCT)
+        val crpSubquery = context.select(
+            COMPLETION_RATE_PRODUCT.PRODUCT_NAME,
+            DSL.max(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE).`as`("max_date")
+        )
+            .from(COMPLETION_RATE_PRODUCT)
+            .where(condition.and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
+            .groupBy(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)
+
+        val completionRateProcessesQuery = context.select(
+            COMPLETION_RATE_PRODUCT.ID,
+            COMPLETION_RATE_PRODUCT.PRODUCT_NAME,
+            COMPLETION_RATE_PRODUCT.RATE,
+            COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE
+        )
+            .from(COMPLETION_RATE_PRODUCT)
+            .join(crpSubquery)
+            .on(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.eq(crpSubquery.field(COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
+                .and(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.eq(crpSubquery.field("max_date", OffsetDateTime::class.java))))
             .where(condition.and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable?.sort, COMPLETION_RATE_PRODUCT.PRODUCT_NAME))
-            .limit(pageable?.pageSize)
-            .offset(pageable?.offset)
+            .limit(pageable?.pageSize ?: 10)
+            .offset(pageable?.offset ?: 0)
             .fetchInto(CompletionRateProduct::class.java)
 
-        val maxEffectiveDatesMap = mutableMapOf<String, OffsetDateTime>()
+        val total = context.selectDistinct(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)
+            .from(COMPLETION_RATE_PRODUCT)
+            .where(condition)
+            .fetch()
+            .size
 
-        completionRateProcessesQuery.forEach { product ->
-            val currentMaxEffectiveDate = maxEffectiveDatesMap[product.productName]
-            if (currentMaxEffectiveDate == null || product.effectiveDate!! > currentMaxEffectiveDate) {
-                maxEffectiveDatesMap[product.productName!!] = product.effectiveDate!!
-            }
-        }
-
-        val filteredList = completionRateProcessesQuery.filter { product ->
-            val maxEffectiveDate = maxEffectiveDatesMap[product.productName]
-            product.effectiveDate == maxEffectiveDate
-        }
-
-        val total = context.fetchCount(COMPLETION_RATE_PRODUCT, condition)
-
-        return Pair(filteredList, total)
+        return Pair(completionRateProcessesQuery, total)
     }
 
 
@@ -68,20 +109,26 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
             "productname" -> COMPLETION_RATE_PRODUCT.PRODUCT_NAME
             "rate" -> COMPLETION_RATE_PRODUCT.RATE
             // Add more cases for other fields as needed
-            else -> throw IllegalArgumentException("Could not find table field: $sortFieldName")
+            else -> throw IllegalArgumentException(CommonUtils.getMessage("sort.error.columnNotFound"))
         }
     }
 
     fun delete(id: String) {
-        context.update(COMPLETION_RATE_PRODUCT)
-            .set(COMPLETION_RATE_PRODUCT.IS_DELETED, true)
-            .where(COMPLETION_RATE_PRODUCT.ID.eq(id))
-            .execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            transactionalContext.update(COMPLETION_RATE_PRODUCT)
+                .set(COMPLETION_RATE_PRODUCT.IS_DELETED, true)
+                .where(COMPLETION_RATE_PRODUCT.ID.eq(id))
+                .execute()
+        }
     }
 
 
     fun add(data: CompletionRateProduct): CompletionRateProduct? {
-        return context
+        var result: CompletionRateProduct? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext
                 .insertInto(
                     COMPLETION_RATE_PRODUCT,
                     COMPLETION_RATE_PRODUCT.PRODUCT_NAME,
@@ -97,7 +144,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                     data.productName,
                     data.rate,
                     data.createdDate ?: OffsetDateTime.now(),
-                    data.createdBy ?: "SYSTEM",
+                    data.createdBy ?: CommonUtils.loggedInUser(),
                     data.isDeleted ?: false,
                     data.updatedDate ?: OffsetDateTime.now(),
                     data.effectiveDate,
@@ -106,25 +153,32 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                 .returningResult(COMPLETION_RATE_PRODUCT)
                 .fetchOne()
                 ?.into(CompletionRateProduct::class.java)
+        }
+        return result
     }
 
 
 
     fun update(data: CompletionRateProduct): CompletionRateProduct? {
-        return context
-            .update(COMPLETION_RATE_PRODUCT)
-            .set(COMPLETION_RATE_PRODUCT.PRODUCT_NAME, data.productName)
-            .set(COMPLETION_RATE_PRODUCT.RATE, data.rate)
-            .set(COMPLETION_RATE_PRODUCT.CREATED_DATE, data.createdDate)
-            .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
-            .set(COMPLETION_RATE_PRODUCT.IS_DELETED, data.isDeleted)
-            .set(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
-            .set(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE, data.expirationDate)
-            .where(COMPLETION_RATE_PRODUCT.ID.eq(data.id)) // Assuming ID is the primary key
-            .returningResult(COMPLETION_RATE_PRODUCT)
-            .fetchOne()
-            ?.into(CompletionRateProduct::class.java)
+        var result: CompletionRateProduct? = null
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            result = transactionalContext
+                .update(COMPLETION_RATE_PRODUCT)
+                .set(COMPLETION_RATE_PRODUCT.PRODUCT_NAME, data.productName)
+                .set(COMPLETION_RATE_PRODUCT.RATE, data.rate)
+                .set(COMPLETION_RATE_PRODUCT.CREATED_DATE, data.createdDate)
+                .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(COMPLETION_RATE_PRODUCT.IS_DELETED, data.isDeleted)
+                .set(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)
+                .set(COMPLETION_RATE_PRODUCT.EXPIRATION_DATE, data.expirationDate)
+                .where(COMPLETION_RATE_PRODUCT.ID.eq(data.id)) // Assuming ID is the primary key
+                .returningResult(COMPLETION_RATE_PRODUCT)
+                .fetchOne()
+                ?.into(CompletionRateProduct::class.java)
+        }
+        return result
     }
 
     fun getCompletionRateProductWithMaxEffectivedateByName(name: String): CompletionRateProduct? {
@@ -141,4 +195,32 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
 
     }
 
+    fun getCompletionRateMinProduct() : List<CompletionRateProduct?> {
+        val queryProductCreateMin = context
+            .select(DSL.min(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE))
+            .from(COMPLETION_RATE_PRODUCT)
+        return  context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.eq(queryProductCreateMin)
+                .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(CompletionRateProduct::class.java)
+    }
+
+    fun getProductDetail(productName: String?) : List<CompletionRateProduct?> {
+        return  context.selectFrom(COMPLETION_RATE_PRODUCT)
+            .where(COMPLETION_RATE_PRODUCT.PRODUCT_NAME.eq(productName)
+                .and(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(CompletionRateProduct::class.java)
+    }
+
+    fun getNonExistentProductsInDB(productNames: List<OrderInfo?>, startDate: OffsetDateTime?): List<OrderInfo?> {
+        // Lấy danh sách tên sản phẩm từ cơ sở dữ liệu
+        val dbProductNames = context.select(COMPLETION_RATE_PRODUCT.PRODUCT_NAME)
+            .from(COMPLETION_RATE_PRODUCT)
+            .where(COMPLETION_RATE_PRODUCT.IS_DELETED.eq(false)
+                .and(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE.le(startDate)))
+            .fetchInto(String::class.java)
+
+        // Trả về danh sách tên sản phẩm có trong productNames nhưng không có trong cơ sở dữ liệu
+        return productNames.filterNotNull().filter { it.productName !in dbProductNames }
+    }
 }

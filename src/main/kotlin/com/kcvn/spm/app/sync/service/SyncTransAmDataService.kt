@@ -4,14 +4,25 @@ import com.kcvn.spm.app.sync.payload.response.SyncProcessMasterResponse
 import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureResponse
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
 import com.kcvn.spm.common.constants.Constants
+import com.kcvn.spm.common.constants.GrpProcessCode
+import com.kcvn.spm.common.constants.SyncType
 import com.kcvn.spm.common.constants.TransAmTable
+import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.helper.StringHelper
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
-import com.kcvn.spm.model.tables.pojos.*
+import com.kcvn.spm.model.tables.pojos.AppSetting
+import com.kcvn.spm.model.tables.pojos.ProcessMaster
+import com.kcvn.spm.model.tables.pojos.ProcessProcedureStructure
+import com.kcvn.spm.model.tables.pojos.SyncHistory
+import com.kcvn.spm.model.tables.pojos.WorkResult
 import com.kcvn.spm.model.tables.references.APP_SETTING
 import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
+import com.kcvn.spm.repository.ProductRepository
 import com.kcvn.spm.repository.SyncHistoryRepository
+import com.kcvn.spm.repository.SystemLockRepository
 import com.kcvn.spm.repository.WorkResultRepository
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -32,7 +43,9 @@ class SyncTransAmDataService(
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val processMasterRep: ProcessMasterRepository,
     private val workResultRep: WorkResultRepository,
-    private val context: DSLContext
+    private val context: DSLContext,
+    private val productRep: ProductRepository,
+    private val systemLockRep: SystemLockRepository
 ) {
     private val transAmDSLContext: DSLContext = DSLContextExtension.createDSLContext(
         propertiesConfig.tranAmDbUrl,
@@ -42,7 +55,10 @@ class SyncTransAmDataService(
     )
 
     fun syncProcessProcedureStructure() {
-        val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_PROCEDURE_STRUCTURE)
+        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
+
+        val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_PROCEDURE_STRUCTURE)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
@@ -57,29 +73,36 @@ class SyncTransAmDataService(
 
         val processFlowDatas = processProcedureStructureRep.findByObjectId(objectIds)
 
+        val lstInsert = mutableListOf<ProcessProcedureStructure>()
+        val lstDelete = mutableListOf<ProcessProcedureStructure>()
+
         for (item in processFlows) {
             val exist = processFlowDatas.find { x -> x.objectId == item.OBJECT_ID }
-            try {
-                val dataProcess = createModelProcessProcedureStructure(item)
-                if (exist != null) {
-                    processProcedureStructureRep.delete(exist.id!!)
-                }
-                processProcedureStructureRep.add(dataProcess)
+            val dataProcess = createModelProcessProcedureStructure(item)
+            if (exist != null) {
+                lstDelete.add(exist)
             }
-            catch (e: Exception) {
-                e.printStackTrace()
-            }
+            lstInsert.add(dataProcess)
         }
 
-        insertSyncHistory(
-            TransAmTable.PROCESS_PROCEDURE_STRUCTURE,
-            Constants.PROCESS_PROCEDURE_STRUCTURE,
-            Constants.PROCESS_PROCEDURE_STRUCTURE
-        )
+        try {
+            processProcedureStructureRep.removeRange(lstDelete)
+            processProcedureStructureRep.addRange(lstInsert)
+            insertSyncHistory(
+                TransAmTable.PROCESS_PROCEDURE_STRUCTURE,
+                SyncType.PROCESS_PROCEDURE_STRUCTURE,
+                SyncType.PROCESS_PROCEDURE_STRUCTURE
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun syncProcessMaster() {
-        val syncHistory = syncHistoryRep.findByType(Constants.PROCESS_MASTER)
+        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
+
+        val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_MASTER)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
@@ -94,36 +117,40 @@ class SyncTransAmDataService(
 
         val processMasterDatas = processMasterRep.findByObjectId(objectIds)
 
+        val lstInsert = mutableListOf<ProcessMaster>()
+        val lstDelete = mutableListOf<ProcessMaster>()
+
         for (item in processMaster) {
             val exist = processMasterDatas.find { x -> x.objectId == item.OBJECT_ID }
-            try {
-                val data = createModelProcessMaster(item)
-                if (exist != null) {
-                    processMasterRep.delete(exist.id!!)
-                }
-                processMasterRep.add(data)
+            val data = createModelProcessMaster(item)
+            if (exist != null) {
+                lstDelete.add(exist)
             }
-            catch (e: Exception) {
-                e.printStackTrace()
-            }
+            lstInsert.add(data)
         }
 
-        insertSyncHistory(
-            TransAmTable.PROCESS_MASTER,
-            Constants.PROCESS_MASTER,
-            Constants.PROCESS_MASTER
-        )
+        try {
+            processMasterRep.removeRange(lstDelete)
+            processMasterRep.addRange(lstInsert)
+            insertSyncHistory(
+                TransAmTable.PROCESS_MASTER,
+                SyncType.PROCESS_MASTER,
+                SyncType.PROCESS_MASTER
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
     }
 
-
     fun syncWorkResult() {
-        val syncHistory = syncHistoryRep.findByType(Constants.WORK_RESULT)
+        val syncHistory = syncHistoryRep.findByType(SyncType.WORK_RESULT)
         val table: Table<*> = DSL.table(DSL.name(TransAmTable.WORK_RESULT))
         var condition: Condition = DSL.noCondition()
-        if (syncHistory!= null) {
+        if (syncHistory != null) {
             condition = condition.and(
                 DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
-                  .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
             )
         }
         // Define your datetime range
@@ -140,25 +167,50 @@ class SyncTransAmDataService(
 
         val objectIds = workResult.mapNotNull { x -> x.OBJECT_ID }
         val workResultDatas = workResultRep.findByObjectId(objectIds)
+
+        val lstInsert = mutableListOf<WorkResult>()
+        val lstDelete = mutableListOf<WorkResult>()
+        val lstProduct = mutableListOf<String>()
         for (item in workResult) {
             val exist = workResultDatas.find { x -> x.objectId == item.OBJECT_ID }
-            try {
-                val data = createModelWorkResult(item)
-                if (exist!= null) {
-                    workResultRep.delete(exist.id!!)
-                }
-                workResultRep.add(data)
+            val data = createModelWorkResult(item)
+            if(data.processGrp == GrpProcessCode.XERANH){
+                data.itemName?.let { lstProduct.add(it) }
             }
-            catch (e: Exception) {
-                e.printStackTrace()
+            if (exist != null) {
+
+                lstDelete.add(exist)
+            }
+            lstInsert.add(data)
+        }
+        if(lstProduct.isNotEmpty()){
+            val product = productRep.getByName(lstProduct)
+            for(lstInsertItem in lstInsert){
+                if(lstInsertItem.processGrp == GrpProcessCode.XERANH){
+                    val productItem = product.find { x -> x.name == lstInsertItem.itemName }
+                    if(productItem != null){
+                        lstInsertItem.totalTapeQuantity  = lstInsertItem.totalSheetQuantity?.times(productItem.shBlock!!)
+                        lstInsertItem.goodTapeQuantity   = productItem.shBlock?.let {
+                            lstInsertItem.goodSheetQuantity?.times(
+                                it
+                            )
+                        }
+
+                    }
+                }
             }
         }
-
-        insertSyncHistory(
-            TransAmTable.WORK_RESULT,
-            Constants.WORK_RESULT,
-            Constants.WORK_RESULT
-        )
+        try {
+            workResultRep.removeRange(lstDelete)
+            workResultRep.addRange(lstInsert)
+            insertSyncHistory(
+                TransAmTable.WORK_RESULT,
+                SyncType.WORK_RESULT,
+                SyncType.WORK_RESULT
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun createModelWorkResult(request: SyncWorkResultResponse): WorkResult {
@@ -174,7 +226,7 @@ class SyncTransAmDataService(
             customerCode = request.KYAKUSAKI_CD,
             itemCode = request.HINMOKU_CD,
             itemName = request.KC_HINMEI,
-            layerCode = request.SO_NO,
+            layerCode = StringHelper.intToStringD2(request.SO_NO),
             processCode = request.KOTEI_CD,
             processGrp = request.KOTEI_GRP,
             processName = request.KOTEI_MEI,
@@ -267,13 +319,13 @@ class SyncTransAmDataService(
     }
 
     private fun createModelProcessProcedureStructure(request: SyncProcessProcedureStructureResponse): ProcessProcedureStructure {
-        return ProcessProcedureStructure (
+        return ProcessProcedureStructure(
             objectId = request.OBJECT_ID,
             companyCode = request.KAISHA_CD,
             grpDepartments = request.BUMON_GRP,
             remediationDirectiveNumber = request.SHOCHISHIJI_NO,
             productCode = request.KOTEI_TEJUN_CD,
-            layerCode = request.SO_NO,
+            layerCode = StringHelper.intToStringD2(request.SO_NO),
             processCode = request.KOTEI_CD,
             processSequence = request.KOTEI_NO,
             processSequenceRev = request.KOTEI_TEJUN_REV,
@@ -309,7 +361,7 @@ class SyncTransAmDataService(
         )
     }
 
-    private fun createModelProcessMaster(request: SyncProcessMasterResponse) : ProcessMaster {
+    private fun createModelProcessMaster(request: SyncProcessMasterResponse): ProcessMaster {
         return ProcessMaster(
             objectId = request.OBJECT_ID,
             companyCode = request.KAISHA_CD,
@@ -363,6 +415,7 @@ class SyncTransAmDataService(
             isDeleted = false,
         )
     }
+
     private fun insertSyncHistory(source: String, destination: String, type: String) {
         val history = SyncHistory(
             source = source,

@@ -1,18 +1,28 @@
 package com.kcvn.spm.common.helper
 
-import org.apache.poi.ss.usermodel.CellType
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.Sheet
+import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.util.CommonUtils
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
+import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.util.*
+import com.kcvn.spm.common.constants.*
+import com.kcvn.spm.common.constants.Color
+import java.text.DecimalFormat
 
 class ExcelHelper {
     companion object {
-        fun getCellValue(row: Row, colIdx: Int): String {
+        fun getCellValue(row: Row, colIdx: Int, format: String? = null): String {
             try {
                 val cell = row.getCell(colIdx)
+                if (!format.isNullOrEmpty() && cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                    val dateFormat = SimpleDateFormat(format)
+                    val date = cell.dateCellValue
+                    return dateFormat.format(date)
+                }
                 return when (cell.cellType) {
                     CellType.STRING -> cell.stringCellValue
                     CellType.NUMERIC -> cell.numericCellValue.toString()
@@ -24,8 +34,180 @@ class ExcelHelper {
                 return ""
             }
         }
+        fun getCellValueCustom(row: Row, columnIndex: Int): String {
+            val cell = row.getCell(columnIndex)
+            return when (cell.cellType) {
+                CellType.STRING -> cell.stringCellValue
+                CellType.NUMERIC -> if (DateUtil.isCellDateFormatted(cell)) {
+                    val date = cell.dateCellValue
+                    val newDateFormat = SimpleDateFormat("yyyy/MM/dd")
+                    newDateFormat.format(date)
+                } else {
+                    val numericValue = cell.numericCellValue
+                    if (numericValue % 1 == 0.0) {
+                        numericValue.toInt().toString()
+                    } else {
+                        numericValue.toString()
+                    }
+                }
+                CellType.BOOLEAN -> cell.booleanCellValue.toString()
+                CellType.FORMULA -> cell.cellFormula
+                else -> ""
+            }
+        }
 
-        fun columnIsMatchingTemplate(templateUrl: String, headerRowImport: Row, indexHeaderRow: Int, rangeCheckCol: Int?) : Boolean {
+        fun getCellValueCustomImportTape(row: Row, columnIndex: Int): String {
+            val cell = row.getCell(columnIndex)
+            return when (cell.cellType) {
+                CellType.STRING -> cell.stringCellValue
+                CellType.NUMERIC -> {
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        val date = cell.dateCellValue
+                        val newDateFormat = SimpleDateFormat("yyyy/MM/dd")
+                        newDateFormat.format(date)
+                    } else {
+                        DecimalFormat("#").format(cell.numericCellValue)
+                    }
+                }
+                CellType.BOOLEAN -> cell.booleanCellValue.toString()
+                CellType.FORMULA -> cell.cellFormula
+                else -> ""
+            }
+        }
+
+
+        fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: String?) {
+            row.createCell(colIndex).setCellValue(value)
+            row.getCell(colIndex).cellStyle = styleTemplate
+        }
+
+        fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: Date?) {
+            row.createCell(colIndex).setCellValue(value)
+            row.getCell(colIndex).cellStyle = styleTemplate
+        }
+
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false,isNumberFormat: Boolean = false,isBold: Boolean = false,isNotBold: Boolean = false) {
+            row.createCell(colIndex).setCellValue(value)
+            val cellStyle = workbook.createCellStyle()
+            cellStyle.cloneStyleFrom(style)
+            cellStyle.alignment = HorizontalAlignment.CENTER
+            cellStyle.borderTop = style.borderTop
+            cellStyle.borderLeft = BorderStyle.THIN
+            cellStyle.borderRight = BorderStyle.THIN
+            cellStyle.borderBottom = style.borderBottom
+
+            if(isReportDetails){
+                cellStyle.borderTop = BorderStyle.THIN
+                cellStyle.borderBottom = BorderStyle.THIN
+            }
+
+            if (isHoliday) {
+                cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+                cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            if (isBold){
+                val fontTemplate = workbook.getFontAt(style.fontIndex)
+                val font = workbook.createFont()
+                font.fontName = fontTemplate.fontName
+                font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+                font.bold = true
+                cellStyle.setFont(font)
+            }
+            if(isNotBold){
+                val fontTemplate = workbook.getFontAt(style.fontIndex)
+                val font = workbook.createFont()
+                font.fontName = fontTemplate.fontName
+                font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+                font.bold = false
+                cellStyle.setFont(font)
+            }
+            if(!color.isNullOrEmpty()){
+                if(color == Color.YELLOW){
+                    cellStyle.fillForegroundColor = IndexedColors.LIGHT_YELLOW.index
+                }
+                else if(color == Color.ORANGE){
+                    cellStyle.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
+                }
+                else if(color == Color.PINK){
+                    cellStyle.fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+                }
+                cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            if(isNumberFormat){
+                if (value != null) {
+                    if(value.isNotEmpty()) {
+                        val dataFormat = workbook.createDataFormat()
+                        style.dataFormat = dataFormat.getFormat("#,##0")
+                        val numberValue = value.toDouble()
+                        row.createCell(colIndex).setCellValue(numberValue)
+                    }
+                }
+            }
+            row.getCell(colIndex).cellStyle = cellStyle
+        }
+
+        fun setCellValueCustom(
+            workbook: Workbook,
+            row: Row,
+            colIndex: Int,
+            styleTemplate: CellStyle,
+            value: String?,
+            isBorderLeft: Boolean = true,
+            isBorderRight: Boolean = true,
+            isBorderTop: Boolean = true,
+            isBorderBottom: Boolean = true,
+            isBold: Boolean = false,
+            isAlignCenter: Boolean = false,
+            indexColor: Short? = null,
+            isNumberFormat: Boolean = false,
+            isAlignLeft: Boolean = false,
+            isNotBold: Boolean = false
+            ) {
+            val style = workbook.createCellStyle()
+            style.cloneStyleFrom(styleTemplate)
+            row.createCell(colIndex).setCellValue(value)
+
+            if (isBorderLeft) style.borderLeft = BorderStyle.THIN else style.borderLeft = BorderStyle.NONE
+            if (isBorderRight) style.borderRight = BorderStyle.THIN else style.borderRight = BorderStyle.NONE
+            if (isBorderTop) style.borderTop = BorderStyle.THIN else style.borderTop = BorderStyle.NONE
+            if (isBorderBottom) style.borderBottom = BorderStyle.THIN else style.borderBottom = BorderStyle.NONE
+            if (isAlignCenter) style.alignment = HorizontalAlignment.CENTER
+            if (isAlignLeft) style.alignment = HorizontalAlignment.LEFT
+            if (indexColor != null) {
+                style.fillForegroundColor = indexColor
+                style.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            if (isBold) {
+                val fontTemplate = workbook.getFontAt(styleTemplate.fontIndex)
+                val font = workbook.createFont()
+                font.fontName = fontTemplate.fontName
+                font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+                font.bold = true
+                style.setFont(font)
+            }
+            if (isNotBold){
+                val fontTemplate = workbook.getFontAt(styleTemplate.fontIndex)
+                val font = workbook.createFont()
+                font.fontName = fontTemplate.fontName
+                font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+                font.bold = false
+                style.setFont(font)
+            }
+            if(isNumberFormat){
+                if (value != null) {
+                    if(value.isNotEmpty()){
+                        val dataFormat = workbook.createDataFormat()
+                        style.dataFormat = dataFormat.getFormat("#,##0")
+                        val numberValue = value.toDouble()
+                        row.createCell(colIndex).setCellValue(numberValue)
+                    }
+                }
+
+            }
+            row.getCell(colIndex).cellStyle = style
+        }
+
+        fun columnIsMatchingTemplate(templateUrl: String, headerRowImport: Row, indexHeaderRow: Int, rangeCheckCol: Int?): Boolean {
             val workbookTemplate = FileInputStream(templateUrl).use { x -> XSSFWorkbook(x) }
             val headerRowTemplate = workbookTemplate.getSheetAt(0).getRow(indexHeaderRow)
 
@@ -43,7 +225,7 @@ class ExcelHelper {
             return true
         }
 
-        fun fileIsEmpty(sheet: Sheet, rowIndex: Int) : Boolean {
+        fun fileIsEmpty(sheet: Sheet, rowIndex: Int): Boolean {
             val countRowCheck = if (sheet.lastRowNum < 5) sheet.lastRowNum else 5
             var isEmpty = true
             for (iRow in rowIndex until countRowCheck + 1) {
@@ -60,8 +242,28 @@ class ExcelHelper {
             return isEmpty
         }
 
-        fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int, formats: Array<String>) : Boolean {
-            for (i in startCol until endCol+1) {
+        fun setCellHeaderStyle(workbook: Workbook): CellStyle {
+            val style: CellStyle = workbook.createCellStyle()
+            style.alignment = HorizontalAlignment.CENTER
+            style.verticalAlignment = VerticalAlignment.CENTER
+            style.borderTop = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderBottom = BorderStyle.THIN
+            style.fillPattern = FillPatternType.NO_FILL
+            val font: Font = workbook.createFont()
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+            font.bold = true
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
+            return style
+        }
+        fun checkCalendarColumn(headerRowImport: Row, startCol: Int, endCol: Int, formats: Array<String>): Boolean {
+            for (i in startCol until endCol + 1) {
+                val cell = headerRowImport.getCell(i)
+                if (cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                    continue
+                }
                 val cellValue = getCellValue(headerRowImport, i)
                 if (cellValue.isEmpty()) return false
                 var isDate = false
@@ -78,6 +280,57 @@ class ExcelHelper {
                 if (!isDate) return false
             }
             return true
+        }
+
+        fun getCellStyleResultCol(workbook: Workbook, styleTemplate: CellStyle, hasFontColor: Boolean = true): CellStyle {
+            val cellStyle = workbook.createCellStyle()
+            cellStyle.cloneStyleFrom(styleTemplate)
+            val fontTemplate = workbook.getFontAt(styleTemplate.fontIndex)
+            val font = workbook.createFont()
+            font.fontName = fontTemplate.fontName
+            font.fontHeightInPoints = fontTemplate.fontHeightInPoints
+            if (hasFontColor) {
+                font.color = IndexedColors.RED.index
+                cellStyle.setFont(font)
+            }
+            cellStyle.verticalAlignment = VerticalAlignment.CENTER
+            cellStyle.alignment = HorizontalAlignment.LEFT
+            cellStyle.wrapText = true
+            return cellStyle
+        }
+
+        fun getCellStyleCommon(workbook: Workbook): CellStyle {
+            val style: CellStyle = workbook.createCellStyle()
+            style.borderBottom = BorderStyle.THIN
+            style.borderTop = BorderStyle.THIN
+            style.borderRight = BorderStyle.THIN
+            style.borderLeft = BorderStyle.THIN
+            style.wrapText = true
+            style.verticalAlignment = VerticalAlignment.CENTER
+
+            val font: Font = workbook.createFont()
+            font.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+            font.fontHeightInPoints = 12.toShort()
+            style.setFont(font)
+
+            return style
+        }
+
+        fun createColResult(headerRow: Row, sheet: Sheet): Int {
+            val colEmpty = headerRow.firstOrNull { x -> getCellValue(headerRow, x.columnIndex) == "" }
+            val colResult = headerRow.firstOrNull { x -> getCellValue(headerRow, x.columnIndex) == CommonUtils.getMessage("excel.colResultName") }
+            val colIndexResult = colResult?.columnIndex ?: (colEmpty?.columnIndex ?: (headerRow.lastCellNum + 0))
+
+            if (colResult == null) {
+                headerRow.createCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            } else {
+                headerRow.getCell(colIndexResult).setCellValue(CommonUtils.getMessage("excel.colResultName"))
+            }
+            val headerStyle = headerRow.getCell(0).cellStyle
+            headerRow.getCell(colIndexResult).cellStyle.cloneStyleFrom(headerStyle)
+            sheet.setColumnWidth(colIndexResult, 15000)
+
+            return colIndexResult
         }
     }
 }

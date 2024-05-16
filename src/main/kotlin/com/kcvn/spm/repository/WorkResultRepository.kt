@@ -3,6 +3,8 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.workresult.payload.request.WorkResultSearchRequest
 import com.kcvn.spm.app.workresult.payload.response.ProcessGroupResponse
 import com.kcvn.spm.app.workresult.payload.response.ProcessResponse
+import com.kcvn.spm.common.constants.ProcessCode
+import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.WorkResult
@@ -15,10 +17,12 @@ import org.jooq.SortOrder
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.length
+import org.jooq.impl.DSL.lower
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
+import java.util.*
 
 @Repository
 class WorkResultRepository(
@@ -28,10 +32,10 @@ class WorkResultRepository(
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.order.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
+                condition = condition.and(lower(WORK_RESULT.ORDER_CODE).contains(request.order!!.lowercase(Locale.getDefault())))
 
             if (!request.itemName.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
+                condition = condition.and(lower(WORK_RESULT.ITEM_NAME).contains(request.itemName!!.lowercase(Locale.getDefault())))
 
             if (!request.listProcessGroup.isNullOrEmpty()) {
                 val processGroupCodes = request.listProcessGroup!!.split(",")
@@ -52,10 +56,10 @@ class WorkResultRepository(
             }
 
             if (!request.tapeLot.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.TAPE_LOT_NO.contains(request.tapeLot))
+                condition = condition.and(lower(WORK_RESULT.TAPE_LOT_NO).contains(request.tapeLot!!.lowercase(Locale.getDefault())))
 
             if (!request.code.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.CODE.contains(request.code))
+                condition = condition.and(lower( WORK_RESULT.CODE).contains(request.code!!.lowercase(Locale.getDefault())))
 
             if (request.fromDate != null && request.toDate != null)
                 condition = condition.and(WORK_RESULT.SUMMARY_RESULT_DATE.between(request.fromDate, request.toDate))
@@ -181,10 +185,10 @@ class WorkResultRepository(
         var condition: Condition = DSL.noCondition()
         if (request != null) {
             if (!request.order.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.ORDER_CODE.contains(request.order))
+                condition = condition.and(lower(WORK_RESULT.ORDER_CODE).contains(request.order!!.lowercase(Locale.getDefault())))
 
             if (!request.itemName.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.ITEM_NAME.contains(request.itemName))
+                condition = condition.and(lower(WORK_RESULT.ITEM_NAME).contains(request.itemName!!.lowercase(Locale.getDefault())))
 
             if (!request.listProcessGroup.isNullOrEmpty()) {
                 val processGroupCodes = request.listProcessGroup!!.split(",")
@@ -205,10 +209,10 @@ class WorkResultRepository(
             }
 
             if (!request.tapeLot.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.TAPE_LOT_NO.contains(request.tapeLot))
+                condition = condition.and(lower(WORK_RESULT.TAPE_LOT_NO).contains(request.tapeLot!!.lowercase(Locale.getDefault())))
 
             if (!request.code.isNullOrEmpty())
-                condition = condition.and(WORK_RESULT.CODE.contains(request.code))
+                condition = condition.and(lower( WORK_RESULT.CODE).contains(request.code!!.lowercase(Locale.getDefault())))
 
             if (request.fromDate != null && request.toDate != null)
                 condition = condition.and(WORK_RESULT.SUMMARY_RESULT_DATE.between(request.fromDate, request.toDate))
@@ -222,18 +226,24 @@ class WorkResultRepository(
 
     fun findByObjectId(objectIds: List<Int>): List<WorkResult> {
         return context.selectFrom(WORK_RESULT)
-            .where(WORK_RESULT.ID.`in`(objectIds))
+            .where(WORK_RESULT.OBJECT_ID.`in`(objectIds))
             .fetchInto(WorkResult::class.java)
     }
 
 
     fun add(model: WorkResult) {
-        val record = context.newRecord(WORK_RESULT, model)
-        context.insertInto(WORK_RESULT).set(record).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(WORK_RESULT, model)
+            transactionalContext.insertInto(WORK_RESULT).set(record).execute()
+        }
     }
 
     fun delete(id: String) {
-        context.deleteFrom(WORK_RESULT).where(WORK_RESULT.ID.eq(id)).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            transactionalContext.deleteFrom(WORK_RESULT).where(WORK_RESULT.ID.eq(id)).execute()
+        }
     }
 
     fun getMaxByDate(startDate: OffsetDateTime, endDate: OffsetDateTime): WorkResult? {
@@ -246,4 +256,57 @@ class WorkResultRepository(
             .fetchInto(WorkResult::class.java)
             .firstOrNull()
     }
+
+    fun getForPlan(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String>): List<WorkResult> {
+        val query = context.selectFrom(WORK_RESULT)
+            .where(
+                WORK_RESULT.SUMMARY_RESULT_DATE.ge(DateTimeHelper.toTimeZone7(startDate))
+                    .and(WORK_RESULT.SUMMARY_RESULT_DATE.le(DateTimeHelper.toTimeZone7(endDate)))
+                    .and(WORK_RESULT.ITEM_NAME.`in`(productNames))
+                    .and(WORK_RESULT.IS_DELETED.eq(false))
+            )
+            .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))
+        return query.fetchInto(WorkResult::class.java)
+    }
+
+    fun getForReport(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String?>?): List<WorkResult> {
+        return context.selectFrom(WORK_RESULT)
+            .where(
+                WORK_RESULT.SUMMARY_RESULT_DATE.ge(startDate)
+                    .and(WORK_RESULT.SUMMARY_RESULT_DATE.le(endDate))
+                    .and(WORK_RESULT.ITEM_NAME.`in`(productNames))
+                    .and(WORK_RESULT.PROCESS_CODE.eq(ProcessCode.INS))
+                    .and(WORK_RESULT.IS_DELETED.eq(false))
+            )
+            .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))
+            .fetchInto(WorkResult::class.java)
+    }
+
+    fun addRange(data: List<WorkResult>) {
+        val dataChunks = data.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+                val records = chunkItem.map { x -> transactionalContext.newRecord(WORK_RESULT, x) }
+                val query = records.map { x -> transactionalContext.insertInto(WORK_RESULT).set(x) }
+                transactionalContext.batch(query).execute()
+            }
+        }
+    }
+
+    fun removeRange(data: List<WorkResult>) {
+        val dataChunks = data.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+                val query = chunkItem.map { x ->
+                    transactionalContext
+                        .deleteFrom(WORK_RESULT)
+                        .where(WORK_RESULT.ID.eq(x.id))
+                }
+                transactionalContext.batch(query).execute()
+            }
+        }
+    }
+
 }

@@ -2,7 +2,9 @@ package com.kcvn.spm.app.completionrate.controller
 
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateProcessProductRequest
 import com.kcvn.spm.app.completionrate.payload.request.CompletionRateSearchRequest
+import com.kcvn.spm.app.completionrate.payload.response.CheckImportResponse
 import com.kcvn.spm.app.completionrate.service.CompletionRateService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -23,7 +25,6 @@ class CompletionRateController(
     private val completionRateService: CompletionRateService
 ) {
 
-
     @GetMapping("/download-template-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
@@ -31,15 +32,25 @@ class CompletionRateController(
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    //Product Function
+    @PostMapping(value = ["/check-import"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
+    fun checkImportExcel(
+        @RequestPart("file") file: MultipartFile,
+        @RequestParam("effectiveDate") effectiveDate: OffsetDateTime,
+        @RequestParam("typeCompletionRate") typeOfCompletionRate: Int
+    ): ResponseEntity<BaseResponse<CheckImportResponse>> {
+        val result = completionRateService.checkImportExcel(file, effectiveDate, typeOfCompletionRate)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
 
+    //Product Function
 
 
     @GetMapping("/product/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProductExcel(
-            request: CompletionRateSearchRequest?,
-            @PageableDefault(size = 100000, page = 0)
+        request: CompletionRateSearchRequest?,
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["productname"], direction = Sort.Direction.ASC)
         )
@@ -56,11 +67,11 @@ class CompletionRateController(
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProducts(
         @RequestParam(required = false) search: String?,
-        @PageableDefault(size = 100000, page = 0)
-            @SortDefault.SortDefaults(
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
             SortDefault(sort = ["productname"], direction = Sort.Direction.ASC)
-            )
-            pageable: Pageable
+        )
+        pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result = completionRateService.getPaginatedCompletionRateProduct(search, pageable)
         return ResponseEntity(result, HttpStatus.OK)
@@ -68,9 +79,11 @@ class CompletionRateController(
 
     @PostMapping(value = ["/product/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
-    fun importExcel(@RequestPart("file") file: MultipartFile,
-                    @RequestParam("effectivedate") effectiveDate: OffsetDateTime,): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = completionRateService.importExcelCompletionRateProduct(file,effectiveDate)
+    fun importExcel(
+        @RequestPart("file") file: MultipartFile,
+        @RequestParam("effectivedate") effectiveDate: OffsetDateTime
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = completionRateService.importExcelCompletionRateProduct(file, effectiveDate)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
@@ -79,12 +92,12 @@ class CompletionRateController(
     @GetMapping("/process-product/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProcessProductExcel(
-            request: CompletionRateProcessProductRequest?,
-            @PageableDefault(size = 100000, page = 0)
+        request: CompletionRateProcessProductRequest?,
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["product_name_shortcut"], direction = Sort.Direction.ASC),
             SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["process_code"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["process_code"], direction = Sort.Direction.ASC)
         )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
@@ -99,8 +112,13 @@ class CompletionRateController(
     @GetMapping("/process-product/all")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun getAllCompletionRateProcessProducts(
-            search: CompletionRateProcessProductRequest?,
-            @PageableDefault(size = 10, page = 0) pageable: Pageable
+        search: CompletionRateProcessProductRequest?,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["product_name_shortcut"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["process_code"], direction = Sort.Direction.ASC)
+        ) pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result =
             completionRateService.getPaginatedCompletionRateProcessesProduct(search, pageable)
@@ -110,10 +128,11 @@ class CompletionRateController(
 
     @PostMapping(value = ["/process-product/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
-    fun importExcelCompletionProcessProduct(@RequestPart("file") file: MultipartFile,
-                    @RequestParam("effectivedate") effectiveDate: OffsetDateTime,
-                    ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = completionRateService.importExcelProcessProduct(file,effectiveDate)
+    fun importExcelCompletionProcessProduct(
+        @RequestPart("file") file: MultipartFile,
+        @RequestParam("effectivedate") effectiveDate: OffsetDateTime
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = completionRateService.importExcelProcessProduct(file, effectiveDate)
         return ResponseEntity(data, HttpStatus.OK)
     }
     //Process Function
@@ -121,23 +140,23 @@ class CompletionRateController(
 
     @PostMapping(value = ["/process/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_COMPLETION_RATE.value) || hasRole('ADMIN')")
-    fun importExcelCompletionProcess(@RequestPart("file") file: MultipartFile,
-        @RequestParam("effectivedate") effectiveDate: OffsetDateTime,
-        ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = completionRateService.importExcelCompletionRateProcess(file,effectiveDate)
+    fun importExcelCompletionProcess(
+        @RequestPart("file") file: MultipartFile,
+        @RequestParam("effectivedate") effectiveDate: OffsetDateTime
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = completionRateService.importExcelCompletionRateProcess(file, effectiveDate)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/process/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProcessExcel(
-            request: CompletionRateSearchRequest?,
-            @PageableDefault(size = 1000000, page = 0)
+        request: CompletionRateSearchRequest?,
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["processCode"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
-
-            )
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC)
+        )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = completionRateService.exportCompletionRateProcessExcel(
@@ -153,16 +172,13 @@ class CompletionRateController(
         @RequestParam(required = false) search: String?,
         @SortDefault.SortDefaults(
             SortDefault(sort = ["processCode"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC),
-
-            )
+            SortDefault(sort = ["layerCode"], direction = Sort.Direction.ASC)
+        )
         pageable: Pageable
     ): ResponseEntity<PaginatedResponse> {
         val result = completionRateService.getPaginatedCompletionRateProcesses(search, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
-
-
 
 }
 

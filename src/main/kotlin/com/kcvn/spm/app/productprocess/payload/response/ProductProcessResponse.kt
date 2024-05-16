@@ -1,5 +1,8 @@
 package com.kcvn.spm.app.productprocess.payload.response
 
+import com.kcvn.spm.common.payload.DropdownResponse
+import com.kcvn.spm.common.payload.model.CellStyleModel
+
 data class ProductProcessResponse (
     var processId: String? = null,
     var productName: String? = null,
@@ -14,6 +17,11 @@ data class ProductProcessResponse (
     var productId: String? = null,
     var processProcedureStructureId: String? = null,
     var layerCodeInt: Int? = null,
-    var processSequence: String? = null
+    var processSequence: Int? = null,
+    var listDropDownConvertCode : List<DropdownResponse>? = null,
+    var listDropDownStatisticCode: List<DropdownResponse>? = null,
+    var inventoryLayerGroup: String? = null,
+    var dayOfImplementation: String? = null,
+    var cellStyles: List<CellStyleModel> = mutableListOf()
 )
 

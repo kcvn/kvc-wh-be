@@ -24,7 +24,7 @@ build_kcvn_dev_api:
   only:
     refs:
       - develop
-      
+
 #### BUILD KCVN API #####
 build_kcvn_stg_api:
   stage: build
@@ -51,7 +51,34 @@ build_kcvn_stg_api:
   only:
     refs:
       - staging
-      
+
+#### BUILD KCVN API #####
+build_kcvn_prod_api:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.1-debug
+    entrypoint: [""]
+  environment:
+    name: production
+  variables:
+    MODULE_NAME: kcvn-api
+    CI_IMAGE_NAME: $CI_REGISTRY_IMAGE/$MODULE_NAME:$CI_COMMIT_REF_SLUG
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - echo "${CONFIG_FILE}"
+    - /kaniko/executor --snapshot-mode=time --image-fs-extract-retry=3
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${DOCKERFILE_PATH}/Dockerfile"
+      --build-arg "CONFIG_FILE=$CONFIG_FILE"
+      --destination "${CI_IMAGE_NAME}"
+      --destination "${CI_IMAGE_NAME}-${CI_COMMIT_SHORT_SHA}"
+  tags:
+    - docker
+  only:
+    refs:
+      - master
+
 ### DEPLOY KCVN API #####
 deploy_kcvn_dev_api:
   stage: deploy

@@ -5,7 +5,9 @@ import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.app.order.service.OrderService
+import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -14,7 +16,11 @@ import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestPart
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 
 @RestController
@@ -22,16 +28,14 @@ import org.springframework.web.multipart.MultipartFile
 class OrderController(
     private val orderService: OrderService
 ) {
-
-
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_ORDER.value) || hasRole('ADMIN')")
     fun getList(
-        request: OrderSearchRequest?,
-        @PageableDefault(size = 10, page = 0)
+        request: OrderSearchRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["productname"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["version"], direction = Sort.Direction.DESC)
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["Version"], direction = Sort.Direction.DESC)
         )
         pageable: Pageable
     ): ResponseEntity<PagingOrderResponse> {
@@ -41,8 +45,8 @@ class OrderController(
 
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_ORDER.value) || hasRole('ADMIN')")
-    fun importExcel(orderCode: String?, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = orderService.importExcelOrder(file, orderCode)
+    fun importExcel(increaseVersion: Boolean?, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = orderService.importExcelOrder(file, increaseVersion)
         return ResponseEntity(data, HttpStatus.OK)
     }
 
@@ -54,13 +58,13 @@ class OrderController(
     }
 
     @GetMapping("/export-excel")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportExcel(
-        request: OrderSearchRequest?,
-        @PageableDefault(size = 1000000, page = 0)
+        request: OrderSearchRequest,
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["productname"], direction = Sort.Direction.ASC),
-            SortDefault(sort = ["version"], direction = Sort.Direction.DESC)
+            SortDefault(sort = ["productName"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["Version"], direction = Sort.Direction.DESC)
         )
         pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
@@ -75,8 +79,13 @@ class OrderController(
         return ResponseEntity(data, HttpStatus.OK)
     }
 
+    @GetMapping("/version-dropdown")
+    fun getVersionDropDown(): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = orderService.getOrderVersionDropdown()
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
     @GetMapping("/check-work-result")
-    //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_PRODUCT.value) || hasRole('ADMIN')")
     fun checkWorkResult(orderCode: String): ResponseEntity<BaseResponse<CheckWorkResultModel>> {
         val data = orderService.checkWorkResult(orderCode)
         return ResponseEntity(data, HttpStatus.OK)

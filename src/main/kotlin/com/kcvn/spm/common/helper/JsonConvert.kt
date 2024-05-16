@@ -1,5 +1,6 @@
 package com.kcvn.spm.common.helper
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 
@@ -11,8 +12,8 @@ class JsonConvert {
             return objectMapper.writeValueAsString(obj)
         }
 
-        inline fun <reified T> deserialize(json: String): T {
-            return objectMapper.readValue(json, T::class.java)
+        inline fun <reified T> deserialize(json: String, type: TypeReference<T>): T {
+            return objectMapper.readValue(json, type)
         }
     }
 }

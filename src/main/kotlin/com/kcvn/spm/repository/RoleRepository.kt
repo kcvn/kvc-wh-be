@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.enums.EPermission
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -29,7 +30,7 @@ class RoleRepository(private val context: DSLContext) : SortingRepository() {
     fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<AuthRole>, Int> {
         var condition: Condition = DSL.noCondition()
         if (keyword != null) {
-            condition = condition.and(AUTH_ROLE.NAME.contains(keyword).or(AUTH_ROLE.DESCRIPTION.contains(keyword)))
+            condition = condition.and(AUTH_ROLE.NAME.containsIgnoreCase(keyword).or(AUTH_ROLE.DESCRIPTION.containsIgnoreCase(keyword)))
         }
         val roles = context.selectFrom(AUTH_ROLE).where(condition)
             .and(AUTH_ROLE.IS_DELETED.eq(false))
@@ -49,7 +50,7 @@ class RoleRepository(private val context: DSLContext) : SortingRepository() {
 
     fun save(role: AuthRole): String? =
         context.insertInto(AUTH_ROLE, AUTH_ROLE.NAME, AUTH_ROLE.DESCRIPTION, AUTH_ROLE.CREATED_BY)
-            .values(role.name, role.description, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .values(role.name, role.description, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .returningResult(AUTH_ROLE.ID)
             .fetchOne()?.value1()
 
@@ -57,14 +58,14 @@ class RoleRepository(private val context: DSLContext) : SortingRepository() {
         context.update(AUTH_ROLE)
             .set(AUTH_ROLE.NAME, role.name)
             .set(AUTH_ROLE.DESCRIPTION, role.description)
-            .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .where(AUTH_ROLE.ID.eq(role.id))
             .returningResult(AUTH_ROLE)
             .fetchInto(AuthRole::class.java).firstOrNull()
 
     fun deleteById(roleId: String) = context.update(AUTH_ROLE)
         .set(AUTH_ROLE.IS_DELETED, true)
-        .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+        .set(AUTH_ROLE.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
         .where(AUTH_ROLE.ID.eq(roleId)).execute()
 
     fun findByUserId(userId: String): List<AuthRole> {
@@ -85,7 +86,7 @@ class RoleRepository(private val context: DSLContext) : SortingRepository() {
                 AUTH_USER_ROLE.ROLE_ID,
                 AUTH_USER_ROLE.CREATED_BY
             )
-                .values(userId, role, CommonUtils.loggedInUser() ?: "SYSTEM")
+                .values(userId, role, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .execute()
         }
     }
@@ -111,7 +112,7 @@ class RoleRepository(private val context: DSLContext) : SortingRepository() {
                 AUTH_ROLE_CLAIM.CLAIM_VALUE,
                 AUTH_ROLE_CLAIM.CREATED_BY
             )
-                .values(roleId, PERMISSION_TYPE, permission, CommonUtils.loggedInUser() ?: "SYSTEM")
+                .values(roleId, PERMISSION_TYPE, permission, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .execute()
         }
     }
@@ -134,7 +135,7 @@ class RoleRepository(private val context: DSLContext) : SortingRepository() {
                 AUTH_ROLE.CREATED_DATE
             }
             else -> {
-                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
+                val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
                 throw InvalidDataAccessApiUsageException(errorMessage)
             }
         }

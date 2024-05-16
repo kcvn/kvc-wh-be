@@ -5,7 +5,7 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
-import com.kcvn.spm.model.indexes.IDX_UNIQUE_COMPLETION_RATE_PROCESS_PRODUCT
+import com.kcvn.spm.model.indexes.COMPLETION_RATE_PROCESS_PRODUCT_KEY_IDX
 import com.kcvn.spm.model.keys.COMPLETION_RATE_PROCESS_PRODUCT_PKEY
 import com.kcvn.spm.model.tables.records.CompletionRateProcessProductRecord
 
@@ -166,7 +166,7 @@ open class CompletionRateProcessProduct(
 
     constructor(child: Table<out Record>, key: ForeignKey<out Record, CompletionRateProcessProductRecord>): this(Internal.createPathAlias(child, key), child, key, COMPLETION_RATE_PROCESS_PRODUCT, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getIndexes(): List<Index> = listOf(IDX_UNIQUE_COMPLETION_RATE_PROCESS_PRODUCT)
+    override fun getIndexes(): List<Index> = listOf(COMPLETION_RATE_PROCESS_PRODUCT_KEY_IDX)
     override fun getPrimaryKey(): UniqueKey<CompletionRateProcessProductRecord> = COMPLETION_RATE_PROCESS_PRODUCT_PKEY
     override fun `as`(alias: String): CompletionRateProcessProduct = CompletionRateProcessProduct(DSL.name(alias), this)
     override fun `as`(alias: Name): CompletionRateProcessProduct = CompletionRateProcessProduct(alias, this)

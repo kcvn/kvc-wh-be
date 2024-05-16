@@ -1,0 +1,12 @@
+ALTER TABLE public.tape_en_route RENAME COLUMN item_code TO item_cd;
+ALTER TABLE public.tape_en_route ADD order_placement_month int NULL;
+ALTER TABLE public.tape_en_route ADD supplier_cd varchar(20) NULL;
+ALTER TABLE public.tape_en_route ALTER COLUMN description DROP NOT NULL;
+ALTER TABLE public.tape_en_route ALTER COLUMN ordered_quantity DROP NOT NULL;
+ALTER TABLE public.tape_en_route ADD qty_um varchar(20) NULL;
+ALTER TABLE public.tape_en_route ADD opu_p_fc varchar(20) NULL;
+ALTER TABLE public.tape_en_route ADD opu_p varchar(20) NULL;
+ALTER TABLE public.tape_en_route ADD op_dlv_dt TIMESTAMP WITH TIME ZONE NULL;
+ALTER TABLE public.tape_en_route ALTER COLUMN transmit DROP NOT NULL;
+ALTER TABLE public.tape_en_route ADD estimated_date TIMESTAMP WITH TIME ZONE NULL;
+ALTER TABLE public.tape_en_route ADD estimated_month int NULL;

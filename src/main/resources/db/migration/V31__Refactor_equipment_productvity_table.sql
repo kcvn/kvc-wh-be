@@ -1,0 +1,9 @@
+ALTER TABLE public.equipment_productivity ALTER COLUMN operating_rate TYPE numeric(10, 2) USING operating_rate::numeric(10, 2);
+ALTER TABLE public.equipment_productivity ALTER COLUMN count TYPE numeric(10, 2) USING count::numeric(10, 2);
+ALTER TABLE public.equipment_productivity ALTER COLUMN task TYPE numeric(10, 2) USING task::numeric(10, 2);
+ALTER TABLE public.equipment_productivity ALTER COLUMN sheet_hour_100 TYPE numeric(10, 2) USING sheet_hour_100::numeric(10, 2);
+ALTER TABLE public.equipment_productivity ALTER COLUMN block_sh TYPE numeric(10, 2) USING block_sh::numeric(10, 2);
+ALTER TABLE public.equipment_productivity ALTER COLUMN sheet_hour TYPE numeric(10, 2) USING sheet_hour::numeric(10, 2);
+ALTER TABLE public.equipment_productivity ALTER COLUMN sheet_day TYPE numeric(10, 2) USING sheet_day::numeric(10, 2);
+ALTER TABLE public.equipment_productivity ALTER COLUMN set_day TYPE numeric(10, 2) USING set_day::numeric(10, 2);
+ALTER TABLE public.equipment_productivity ALTER COLUMN block_day TYPE numeric(10, 2) USING block_day::numeric(10, 2);

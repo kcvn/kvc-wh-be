@@ -2,12 +2,15 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
-import com.kcvn.spm.app.productprocess.payload.response.ProductProcessResponse
+import com.kcvn.spm.common.constants.ProcessCode
 import com.kcvn.spm.common.repository.SortingRepository
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
-import com.kcvn.spm.model.tables.pojos.ProductProcess
-import com.kcvn.spm.model.tables.pojos.WorkResult
-import com.kcvn.spm.model.tables.references.*
+import com.kcvn.spm.model.tables.references.INVENTORY_PRODUCT
+import com.kcvn.spm.model.tables.references.PROCESS_MASTER
+import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
+import com.kcvn.spm.model.tables.references.PRODUCT
+import org.apache.commons.lang3.StringUtils.substring
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -15,44 +18,104 @@ import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
+
 
 @Repository
 class InventoryProductRepository(private val context: DSLContext) : SortingRepository()
 {
+    fun getInventoryProductByProductName(products:List<String> , date:OffsetDateTime?): List<InventoryProductResponse>{
+        var condition: Condition = DSL.noCondition()
+
+        if (date != null) {
+            condition =condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.cast(LocalDate::class.java).eq(date.toLocalDate()))
+        }
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(products))
+        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(ProcessCode.INS))
+
+        val data = context.select(
+            INVENTORY_PRODUCT.INVENTORY_DATE.`as`("inventoryDate"),
+            PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
+            INVENTORY_PRODUCT.PRODUCT_QUANTITY.`as`("productQuantity"),
+            INVENTORY_PRODUCT.SHEET_QUANTITY.`as`("sheetQuantity"),
+        )
+            .from(INVENTORY_PRODUCT
+                .join(PROCESS_PROCEDURE_STRUCTURE)
+                .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+                .leftJoin(PROCESS_MASTER)
+                .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                    .and(PROCESS_MASTER.IS_DELETED.eq(false)))
+                .leftJoin(PRODUCT)
+                .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                    .and(PRODUCT.IS_DELETED.eq(false))))
+            .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
+            .fetchInto(InventoryProductResponse::class.java)
+
+        return data
+    }
+
     fun findDateInventoryProduct (date: OffsetDateTime) : InventoryProduct?{
         return context.selectFrom(INVENTORY_PRODUCT)
-            .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date))
+            .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)
+                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
             .fetchAnyInto(InventoryProduct::class.java)
     }
 
-    fun findInventoryProduct(id: String?) : InventoryProduct? {
+    fun findInventoryProduct(id: String?, date: OffsetDateTime, code: String) : InventoryProduct? {
         return  context.selectFrom(INVENTORY_PRODUCT)
-            .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(id))
+            .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(id)
+                .and(INVENTORY_PRODUCT.CODE.eq(code))
+                .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
+                .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)))
             .fetchAnyInto(InventoryProduct::class.java)
     }
 
     fun insertInventoryProduct(request: InventoryProduct)  {
-        val record = context.newRecord(INVENTORY_PRODUCT, request)
-        context.insertInto(INVENTORY_PRODUCT).set(record).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
+            transactionalContext.insertInto(INVENTORY_PRODUCT).set(record).execute()
+        }
     }
 
     fun updateInventoryProduct(request: InventoryProduct)  {
-        val record = context.newRecord(INVENTORY_PRODUCT, request)
-        context.update(INVENTORY_PRODUCT).set(record)
-            .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
-                .eq(record.processProcedureStructureId)).execute()
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
+            record.updatedDate = Instant.now().atOffset(ZoneOffset.UTC)
+            transactionalContext.update(INVENTORY_PRODUCT).set(record)
+                .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
+                    .eq(record.processProcedureStructureId)
+                    .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
+                    .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
+                    .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
+        }
     }
 
-    fun finByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
+    fun deleteInventoryProduct(request: InventoryProduct){
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
+            transactionalContext.delete(INVENTORY_PRODUCT)
+                .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
+                .execute()
+        }
+    }
+
+    fun findByKeywordPaginated(request: InventoryProductRequest?, pageable: Pageable): Pair<List<InventoryProductResponse?>, Int?>{
         var condition: Condition = DSL.noCondition()
 
         if(request != null){
             if(!request.orderCode.isNullOrEmpty()){
-                condition = condition.and(INVENTORY_PRODUCT.ORDER_CODE.contains(request.orderCode))
+                condition = condition.and(DSL.lower(INVENTORY_PRODUCT.ORDER_CODE).contains(DSL.lower(request.orderCode)))
             }
             if(!request.productName.isNullOrEmpty()){
-                condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.contains(request.productName))
+                val productNameStep12 = substring(request.productName,1,12)
+                condition = condition.and(DSL.lower(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).contains(DSL.lower(productNameStep12)))
             }
             if(!request.listProcessGroup.isNullOrEmpty()){
                 val processGroupCodes = request.listProcessGroup!!.split(",")
@@ -71,10 +134,10 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 condition = condition.and(condition2)
             }
             if(!request.tapeLot.isNullOrEmpty()){
-                condition = condition.and(INVENTORY_PRODUCT.TAPE_LOT_NO.contains(request.tapeLot))
+                condition = condition.and(DSL.lower(INVENTORY_PRODUCT.TAPE_LOT_NO).contains(DSL.lower(request.tapeLot)))
             }
             if(!request.code.isNullOrEmpty()){
-                condition = condition.and((INVENTORY_PRODUCT.CODE.contains(request.code)))
+                condition = condition.and((DSL.lower(INVENTORY_PRODUCT.CODE).contains(DSL.lower(request.code))))
             }
             if(request.fromDate != null && request.toDate != null){
                 condition = condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.between(request.fromDate, request.toDate))
@@ -96,11 +159,14 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         )
             .from(INVENTORY_PRODUCT
             .join(PROCESS_PROCEDURE_STRUCTURE)
-            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID))
-            .join(PROCESS_MASTER)
-            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
-            .join(PRODUCT)
-            .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)))
+            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+            .leftJoin(PROCESS_MASTER)
+            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                .and(PROCESS_MASTER.IS_DELETED.eq(false)))
+            .leftJoin(PRODUCT)
+            .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                .and(PRODUCT.IS_DELETED.eq(false))))
             .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
             .orderBy(getSortFields(pageable.sort, INVENTORY_PRODUCT.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
@@ -110,12 +176,45 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .selectCount()
             .from(INVENTORY_PRODUCT
             .join(PROCESS_PROCEDURE_STRUCTURE)
-            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID))
-            .join(PROCESS_MASTER)
-            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)))
+            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+            .leftJoin(PROCESS_MASTER)
+            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                .and(PROCESS_MASTER.IS_DELETED.eq(false)))
+            .leftJoin(PRODUCT)
+            .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                .and(PRODUCT.IS_DELETED.eq(false))))
             .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
         val total = context.fetchOne(totalData)?.value1()
         return  Pair(data, total)
+    }
+
+    fun getInventoryForCreatePlan(productNames: List<String>, inventoryDate: OffsetDateTime): List<InventoryProductResponse> {
+        val data = context.select(
+            INVENTORY_PRODUCT.INVENTORY_DATE,
+            DSL.sum(INVENTORY_PRODUCT.PRODUCT_QUANTITY).`as`("productQuantity"),
+            DSL.sum(INVENTORY_PRODUCT.SHEET_QUANTITY).`as`("sheetQuantity"),
+            PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
+            PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
+            PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,
+            PROCESS_MASTER.PROCESS_NAME.`as`("processName")
+        ).from(INVENTORY_PRODUCT)
+            .join(PROCESS_PROCEDURE_STRUCTURE).on(
+                INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+            ).leftJoin(PROCESS_MASTER).on(
+                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                    .and(PROCESS_MASTER.IS_DELETED.eq(false))
+            ).where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(inventoryDate).and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
+            .groupBy(
+                INVENTORY_PRODUCT.INVENTORY_DATE,
+                PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE,
+                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
+                PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,
+                PROCESS_MASTER.PROCESS_NAME
+            ).fetchInto(InventoryProductResponse::class.java)
+
+        return data
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
@@ -144,17 +243,17 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             "pcsSh" -> {
                 PRODUCT.PCS_SH
             }
-            "oderCode" -> {
+            "orderCode" -> {
                 INVENTORY_PRODUCT.ORDER_CODE
             }
-            "tapeLotno" -> {
+            "tapeLotNo" -> {
                 INVENTORY_PRODUCT.TAPE_LOT_NO
             }
             "code" -> {
                 INVENTORY_PRODUCT.CODE
             }
             else -> {
-                val errorMessage = java.lang.String.format("Could not find table field: $sortFieldName")
+                val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
                 throw InvalidDataAccessApiUsageException(errorMessage)
             }
         }

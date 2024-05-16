@@ -900,8 +900,11 @@ class PlanService(
                             }
                         }
 
-                        if(planSummaryModel.processConvertCode == ProcessPlan.PROCESS_DUC_LO_CVC){
-                            equipmentMachineModel = equipmentMachine.filter { x-> x.grpProcess.equals(ProcessCode.T_TH) && x.frame_1 == planSummaryModel.frame1 }
+                        if (planSummaryModel.processConvertCode == ProcessPlan.PROCESS_DUC_LO_CVC) {
+                            equipmentMachineModel = equipmentMachine.filter { x ->
+                                x.grpProcess.equals(ProcessCode.T_TH) && x.frame_1 == planSummaryModel.frame1
+                                    && x.mold?.contains(processSummaryDetailModel.type ?: "") == true
+                            }
                         }
                         val processDetailModel = ProcessDetailModel(
                             name = processSummaryDetailModel.type,
@@ -2151,7 +2154,7 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
-        planHistoryService.addFile(exportExcel(request),request.fileName)
+        planHistoryService.addFile(exportExcel(request), request.fileName)
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
         return BaseResponse(true, "Phê duyệt kế hoạch thành công")

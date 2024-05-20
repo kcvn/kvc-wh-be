@@ -24,8 +24,8 @@ class PlanProductRepository(private val context: DSLContext) {
     fun getListPlanHistory(request: PlanHistorySearchRequest, pageable: Pageable): Pair<List<PlanProduct>, Int> {
         var condition = DSL.noCondition()
         condition = condition.and(PLAN_PRODUCT.IS_DELETED.eq(false))
-        if (!request.productName.isNullOrEmpty()) {
-            condition = condition.and(PLAN_PRODUCT.PRODUCT_NAME.containsIgnoreCase(request.productName?.lowercase()))
+        if (!request.productName?.trim().isNullOrEmpty()) {
+            condition = condition.and(PLAN_PRODUCT.PRODUCT_NAME.containsIgnoreCase(request.productName?.trim()?.lowercase()))
         }
         if (!request.frame_1.isNullOrEmpty()) {
             condition = condition.and(PLAN_PRODUCT.FRAME_1.eq(request.frame_1))
@@ -204,13 +204,6 @@ class PlanProductRepository(private val context: DSLContext) {
         }
     }
 
-    fun getById(id: String): PlanProduct? {
-        return context.selectFrom(PLAN_PRODUCT)
-            .where(PLAN_PRODUCT.ID.eq(id).and(PLAN_PRODUCT.IS_DELETED.eq(false)))
-            .fetchInto(PlanProduct::class.java)
-            .firstOrNull()
-    }
-
     fun getForPlan(request: PlanDetailRequest): List<PlanProduct> {
         val condition = getForPlanCondition(request)
         if (request.draftWorkPlan == true) {
@@ -284,8 +277,8 @@ class PlanProductRepository(private val context: DSLContext) {
 
     private fun searchCondition(request: PlanSearchRequest): Condition {
         var condition = DSL.noCondition()
-        if (!request.productName.isNullOrEmpty()) {
-            condition = condition.and(PLAN_PRODUCT.PRODUCT_NAME.containsIgnoreCase(request.productName?.lowercase()))
+        if (!request.productName?.trim().isNullOrEmpty()) {
+            condition = condition.and(PLAN_PRODUCT.PRODUCT_NAME.containsIgnoreCase(request.productName?.trim()?.lowercase()))
         }
         if (!request.frame_1.isNullOrEmpty()) {
             condition = condition.and(PLAN_PRODUCT.FRAME_1.eq(request.frame_1))
@@ -314,8 +307,8 @@ class PlanProductRepository(private val context: DSLContext) {
 
     private fun searchConditionTemp(request: PlanSearchRequest): Condition {
         var condition = DSL.noCondition()
-        if (!request.productName.isNullOrEmpty()) {
-            condition = condition.and(PLAN_PRODUCT_TEMP.PRODUCT_NAME.containsIgnoreCase(request.productName?.lowercase()))
+        if (!request.productName?.trim().isNullOrEmpty()) {
+            condition = condition.and(PLAN_PRODUCT_TEMP.PRODUCT_NAME.containsIgnoreCase(request.productName?.trim()?.lowercase()))
         }
         if (!request.frame_1.isNullOrEmpty()) {
             condition = condition.and(PLAN_PRODUCT_TEMP.FRAME_1.eq(request.frame_1))
@@ -345,7 +338,7 @@ class PlanProductRepository(private val context: DSLContext) {
     private fun getForPlanCondition(request: PlanDetailRequest): Condition {
         var condition = PLAN_PRODUCT.IS_DELETED.eq(false)
             .and(PLAN.IS_ACTIVE.eq(true))
-            .and(PLAN_PRODUCT.PRODUCT_NAME.eq(request.productName))
+            .and(PLAN_PRODUCT.PRODUCT_NAME.eq(request.productName.trim()))
 
         if (request.startDate != null && request.endDate != null) {
             condition = condition.and(
@@ -363,7 +356,7 @@ class PlanProductRepository(private val context: DSLContext) {
     private fun getForPlanConditionTemp(request: PlanDetailRequest): Condition {
         var condition = PLAN_PRODUCT_TEMP.IS_DELETED.eq(false)
             .and(PLAN_TEMP.IS_ACTIVE.eq(true))
-            .and(PLAN_PRODUCT_TEMP.PRODUCT_NAME.eq(request.productName))
+            .and(PLAN_PRODUCT_TEMP.PRODUCT_NAME.eq(request.productName.trim()))
 
         if (request.startDate != null && request.endDate != null) {
             condition = condition.and(

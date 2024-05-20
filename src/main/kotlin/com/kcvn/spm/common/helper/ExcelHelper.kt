@@ -1,17 +1,27 @@
 package com.kcvn.spm.common.helper
 
+import com.kcvn.spm.common.constants.Color
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.util.CommonUtils
-import org.apache.poi.ss.usermodel.*
+import org.apache.poi.ss.usermodel.BorderStyle
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.DateUtil
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.Font
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.VerticalAlignment
+import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.*
-import com.kcvn.spm.common.constants.*
-import com.kcvn.spm.common.constants.Color
-import java.text.DecimalFormat
 
 class ExcelHelper {
     companion object {
@@ -23,42 +33,22 @@ class ExcelHelper {
                     val date = cell.dateCellValue
                     return dateFormat.format(date)
                 }
-                return when (cell.cellType) {
+                val value = when (cell.cellType) {
                     CellType.STRING -> cell.stringCellValue
                     CellType.NUMERIC -> cell.numericCellValue.toString()
                     CellType.BOOLEAN -> if (cell.booleanCellValue) "1" else "0"
                     else -> ""
                 }
+                return value.trim()
             } catch (e: Exception) {
                 e.printStackTrace()
                 return ""
             }
         }
-        fun getCellValueCustom(row: Row, columnIndex: Int): String {
-            val cell = row.getCell(columnIndex)
-            return when (cell.cellType) {
-                CellType.STRING -> cell.stringCellValue
-                CellType.NUMERIC -> if (DateUtil.isCellDateFormatted(cell)) {
-                    val date = cell.dateCellValue
-                    val newDateFormat = SimpleDateFormat("yyyy/MM/dd")
-                    newDateFormat.format(date)
-                } else {
-                    val numericValue = cell.numericCellValue
-                    if (numericValue % 1 == 0.0) {
-                        numericValue.toInt().toString()
-                    } else {
-                        numericValue.toString()
-                    }
-                }
-                CellType.BOOLEAN -> cell.booleanCellValue.toString()
-                CellType.FORMULA -> cell.cellFormula
-                else -> ""
-            }
-        }
 
         fun getCellValueCustomImportTape(row: Row, columnIndex: Int): String {
             val cell = row.getCell(columnIndex)
-            return when (cell.cellType) {
+            val value = when (cell.cellType) {
                 CellType.STRING -> cell.stringCellValue
                 CellType.NUMERIC -> {
                     if (DateUtil.isCellDateFormatted(cell)) {
@@ -73,6 +63,7 @@ class ExcelHelper {
                 CellType.FORMULA -> cell.cellFormula
                 else -> ""
             }
+            return value.trim()
         }
 
 

@@ -3,16 +3,12 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
 import com.kcvn.spm.app.report.quantityreport.payload.response.InformationCalculateQuantityResponse
 import com.kcvn.spm.common.repository.SortingRepository
-import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
-import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.references.CALCULATE_QUANTITY_RESULT
 import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
@@ -27,8 +23,8 @@ class QuantityReportRepository(
     ): Pair<List<InformationCalculateQuantityResponse>, Int> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
-            if (!request.productName.isNullOrEmpty()) {
-                condition = condition.and(DSL.lower(INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME).contains(DSL.lower(request.productName)))
+            if (!request.productName?.trim().isNullOrEmpty()) {
+                condition = condition.and(DSL.lower(INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME).contains(DSL.lower(request.productName?.trim())))
             }
             if (request.startDate != null) {
                 condition = condition.and(INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.ge(request.startDate))

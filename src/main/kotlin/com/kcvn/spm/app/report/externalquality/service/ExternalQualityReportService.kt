@@ -673,7 +673,7 @@ class ExternalQualityReportService(
         val orderSearchRequest = OrderSearchRequest()
         orderSearchRequest.endDate = request.endDate
         orderSearchRequest.startDate = request.startDate
-        orderSearchRequest.productName = request.productName
+        orderSearchRequest.productName = request.productName?.trim()
         orderSearchRequest.version = OrderVersion.LATEST
 
         val pageableOrder: Pageable = PageRequest.of(PagingDefault.PAGE, PagingDefault.EXPORT_SIZE)

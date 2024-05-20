@@ -664,15 +664,15 @@ class ProductProcessService(
                     messageErr.idProcessStructure = checkProcessStructure.id
                 }
 
-                if (itemInventoryLayerGrPre != null && !item.dayOfImplementation.isNullOrEmpty() && itemInventoryLayerGrPre.layerCode == item.layerCode) {
-                    val dayItemInventoryLayerGrPre = itemInventoryLayerGrPre.dayOfImplementation?.toIntOrNull() ?: 0
-                    val dayItemInventoryLayerGr = item.dayOfImplementation?.toIntOrNull() ?: 0
-                    if (dayItemInventoryLayerGr - dayItemInventoryLayerGrPre > 1 || dayItemInventoryLayerGr - dayItemInventoryLayerGrPre < 0) {
-                        messageErr.messageErrs?.add(CommonUtils.getMessage(
-                            "validate.excel.checkSubtractionDayOfImplementation"))
-                        checkList = false
-                    }
-                }
+//                if (itemInventoryLayerGrPre != null && !item.dayOfImplementation.isNullOrEmpty() && itemInventoryLayerGrPre.layerCode == item.layerCode) {
+//                    val dayItemInventoryLayerGrPre = itemInventoryLayerGrPre.dayOfImplementation?.toIntOrNull() ?: 0
+//                    val dayItemInventoryLayerGr = item.dayOfImplementation?.toIntOrNull() ?: 0
+//                    if (dayItemInventoryLayerGr - dayItemInventoryLayerGrPre > 1 || dayItemInventoryLayerGr - dayItemInventoryLayerGrPre < 0) {
+//                        messageErr.messageErrs?.add(CommonUtils.getMessage(
+//                            "validate.excel.checkSubtractionDayOfImplementation"))
+//                        checkList = false
+//                    }
+//                }
 
                 if (!item.processInventoryCode.isNullOrEmpty() && item.inventoryLayerGroup.isNullOrEmpty()) {
                     messageErr.messageErrs?.add(CommonUtils.getMessage(
@@ -873,9 +873,6 @@ class ProductProcessService(
         val total = sheet.lastRowNum
 
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-
-
-
             val requestData = ProcessMasterData()
             val cellProcessCode = row.getCell(0)
             val processCode = if (cellProcessCode.cellType == CellType.NUMERIC && cellProcessCode.numericCellValue % 1 == 0.0)
@@ -900,23 +897,13 @@ class ProductProcessService(
 
             commonCategoryRep.add(requestData)
 
-
-            // val result = messageResults.joinToString(separator = "; ")
-
-//            if (row.getCell(colIndexResult) == null) {
-//                row.createCell(colIndexResult)
-//            }
-            // row.getCell(colIndexResult ).setCellValue(result)
             count++
         }
-
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
 
         val excelBytes = byteArrayOutputStream.toByteArray()
-
-
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("export.excel.result.import", arrayOf(

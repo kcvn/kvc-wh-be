@@ -1,10 +1,12 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.report.materials.payload.request.GetReportMaterialsRequest
+import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TapeInfo
-import com.kcvn.spm.model.tables.references.*
+import com.kcvn.spm.model.tables.references.PROCESS_MASTER
+import com.kcvn.spm.model.tables.references.TAPE_INFO
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -70,7 +72,7 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
         insertValuesStep.execute()
     }
 
-    fun getAllReportMaterials(request: GetReportMaterialsRequest, pageable: Pageable) : Pair<List<TapeInfo?>, Int?>{
+    fun getAllReportMaterials(request: GetReportMaterialsRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<TapeInfo?>, Int?>{
         var condition: Condition = DSL.noCondition()
         if(!request.productName.isNullOrEmpty()){
             condition = condition.and(DSL.lower(TAPE_INFO.PRODUCT_NAME).contains(DSL.lower(request.productName)))
@@ -82,31 +84,36 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
             condition = condition.and(TAPE_INFO.TYPE_TAPE.eq(request.typeTape))
         }
         if(request.startDate != null){
-            val startMonth = request.startDate?.monthValue
-            val startYear = request.startDate?.year
-            condition = condition.and(TAPE_INFO.MONTH_REPORT.ge(startMonth))
-                .and(TAPE_INFO.YEAR_REPORT.ge(startYear))
+            val startDate = DateTimeHelper.toTimeZone7(request.startDate)!!
+            condition = condition.and(TAPE_INFO.MONTH_REPORT.ge(startDate.monthValue))
+                .and(TAPE_INFO.YEAR_REPORT.ge(startDate.year))
         }
         if(request.endDate != null){
-            val endMonth = request.endDate?.monthValue
-            val endYear = request.endDate?.year
-            condition = condition.and(TAPE_INFO.MONTH_REPORT.le(endMonth))
-                .and(TAPE_INFO.YEAR_REPORT.le(endYear))
+            val endDate = DateTimeHelper.toTimeZone7(request.endDate)!!
+            condition = condition.and(TAPE_INFO.MONTH_REPORT.le(endDate.monthValue))
+                .and(TAPE_INFO.YEAR_REPORT.le(endDate.year))
         }
-        val query = context.selectFrom(TAPE_INFO)
-            .where(condition
-                .and(TAPE_INFO.IS_DELETED.eq(false)))
-            .orderBy(getSortFields(pageable.sort, TAPE_INFO.CREATED_DATE))
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .fetchInto(TapeInfo::class.java)
+        if (!isExport) {
+            val query = context.selectFrom(TAPE_INFO)
+                .where(condition
+                    .and(TAPE_INFO.IS_DELETED.eq(false)))
 
-        val queryTotal = context.selectCount()
-            .from(TAPE_INFO)
-            .where(condition
-                .and(TAPE_INFO.IS_DELETED.eq(false)))
-        val totalCount = context.fetchOne(queryTotal)?.value1()
-        return Pair(query, totalCount)
+            val count = query.count()
+            val data = query.orderBy(getSortFields(pageable.sort, TAPE_INFO.CREATED_DATE))
+                .limit(pageable.pageSize)
+                .offset(pageable.offset)
+                .fetchInto(TapeInfo::class.java)
+
+            return Pair(data, count)
+        } else {
+            val data = context.selectFrom(TAPE_INFO)
+                .where(condition
+                    .and(TAPE_INFO.IS_DELETED.eq(false)))
+                .orderBy(getSortFields(pageable.sort, TAPE_INFO.CREATED_DATE))
+                .fetchInto(TapeInfo::class.java)
+
+            return Pair(data, data.count())
+        }
     }
 
     fun checkImportTape (month: Int, year: Int) : TapeInfo? {

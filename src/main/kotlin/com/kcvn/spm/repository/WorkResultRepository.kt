@@ -31,11 +31,11 @@ class WorkResultRepository(
     fun getPagingListWorkResult(request: WorkResultSearchRequest?, pageable: Pageable): Pair<List<WorkResult>, Int> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
-            if (!request.order.isNullOrEmpty())
-                condition = condition.and(lower(WORK_RESULT.ORDER_CODE).contains(request.order!!.lowercase(Locale.getDefault())))
+            if (!request.order?.trim().isNullOrEmpty())
+                condition = condition.and(lower(WORK_RESULT.ORDER_CODE).contains(request.order!!.trim().lowercase(Locale.getDefault())))
 
-            if (!request.itemName.isNullOrEmpty())
-                condition = condition.and(lower(WORK_RESULT.ITEM_NAME).contains(request.itemName!!.lowercase(Locale.getDefault())))
+            if (!request.itemName?.trim().isNullOrEmpty())
+                condition = condition.and(lower(WORK_RESULT.ITEM_NAME).contains(request.itemName!!.trim().lowercase(Locale.getDefault())))
 
             if (!request.listProcessGroup.isNullOrEmpty()) {
                 val processGroupCodes = request.listProcessGroup!!.split(",")
@@ -55,11 +55,11 @@ class WorkResultRepository(
                 condition = condition.and(condition2)
             }
 
-            if (!request.tapeLot.isNullOrEmpty())
-                condition = condition.and(lower(WORK_RESULT.TAPE_LOT_NO).contains(request.tapeLot!!.lowercase(Locale.getDefault())))
+            if (!request.tapeLot?.trim().isNullOrEmpty())
+                condition = condition.and(lower(WORK_RESULT.TAPE_LOT_NO).contains(request.tapeLot!!.trim().lowercase(Locale.getDefault())))
 
-            if (!request.code.isNullOrEmpty())
-                condition = condition.and(lower( WORK_RESULT.CODE).contains(request.code!!.lowercase(Locale.getDefault())))
+            if (!request.code?.trim().isNullOrEmpty())
+                condition = condition.and(lower( WORK_RESULT.CODE).contains(request.code!!.trim().lowercase(Locale.getDefault())))
 
             if (request.fromDate != null && request.toDate != null)
                 condition = condition.and(WORK_RESULT.SUMMARY_RESULT_DATE.between(request.fromDate, request.toDate))

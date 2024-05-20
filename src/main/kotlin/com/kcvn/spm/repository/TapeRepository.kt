@@ -74,8 +74,8 @@ class TapeRepository (private val context: DSLContext) : SortingRepository()
 
     fun getAllReportMaterials(request: GetReportMaterialsRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<TapeInfo?>, Int?>{
         var condition: Condition = DSL.noCondition()
-        if(!request.productName.isNullOrEmpty()){
-            condition = condition.and(DSL.lower(TAPE_INFO.PRODUCT_NAME).contains(DSL.lower(request.productName)))
+        if(!request.productName?.trim().isNullOrEmpty()){
+            condition = condition.and(DSL.lower(TAPE_INFO.PRODUCT_NAME).contains(DSL.lower(request.productName?.trim())))
         }
         if(!request.tapeShared.isNullOrEmpty()){
             condition = condition.and(TAPE_INFO.TAPE_SHARED.eq(request.tapeShared))

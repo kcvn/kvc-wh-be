@@ -1,9 +1,9 @@
 package com.kcvn.spm.app.report.materials.service
 
-import com.kcvn.spm.app.report.materials.payload.response.CheckImportTapeResponse
 import com.kcvn.spm.app.masterdata.service.MasterDataService
 import com.kcvn.spm.app.report.materials.payload.request.GetReportMaterialsRequest
 import com.kcvn.spm.app.report.materials.payload.request.ImportTapeRequest
+import com.kcvn.spm.app.report.materials.payload.response.CheckImportTapeResponse
 import com.kcvn.spm.app.report.materials.payload.response.ImportTapeErrResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -18,7 +18,11 @@ import com.kcvn.spm.model.tables.pojos.TapeInfo
 import com.kcvn.spm.repository.CompletionRateProductRepository
 import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.TapeRepository
-import org.apache.poi.ss.usermodel.*
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -498,7 +502,7 @@ class MaterialsService(
     }
 
     fun exportExcel(request: GetReportMaterialsRequest, pageable: Pageable) : BaseResponse<FileContentModel>{
-        val query = tapeInfoRep.getAllReportMaterials(request, pageable)
+        val query = tapeInfoRep.getAllReportMaterials(request, pageable, true)
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportTapeTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)

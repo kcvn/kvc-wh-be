@@ -20,6 +20,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProcessMasterData
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.CommonCategoryRepository
+import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.SystemLockRepository
@@ -48,16 +49,20 @@ class ProductProcessService(
     private val processProcedureRep: ProcessProcedureStructureRepository,
     private val masterDataService: MasterDataService,
     private val commonCategoryRep: CommonCategoryRepository,
-    private val systemLockRep: SystemLockRepository
+    private val systemLockRep: SystemLockRepository,
+    private val processMasterRep: ProcessMasterRepository
 ) {
     fun getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse?> {
         val result = productProcessRep.findByKeywordPaginated(search, hasProcessConvertCode, pageable)
+        val processCodes = result.first.mapNotNull { it?.processCode }
+        val processMasters = processMasterRep.getByProcessCode(processCodes)
         val response = BasePagingResponse<ProductProcessResponse?>()
         response.data = result.first.map { productProcess ->
+            val processMaster = processMasters.find { it.processCode == productProcess?.processCode }
             ProductProcessResponse(
                 processId = productProcess?.processId,
-                processName = productProcess?.processName,
-                processNameJp = productProcess?.processNameJp,
+                processName = processMaster?.processName,
+                processNameJp = processMaster?.processNameJp,
                 processConvertCode = productProcess?.processConvertCode,
                 processStatisticCode = productProcess?.processStatisticCode,
                 processInventoryCode = productProcess?.processInventoryCode,
@@ -121,7 +126,7 @@ class ProductProcessService(
 
     fun updateProductProcessDetail(request: UpdateProductProcessDetailRequest): List<ProductProcess?> {
         if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
-            throw BusinessException("Chức năng này đang bị khóa tạm thời. Vui lòng thử lại sau ít phút nữa")
+            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
         val dataResult: MutableList<ProductProcess?> = mutableListOf()
         //// Lấy ra danh sách công đoạn cuối mỗi lớp và check phải tồn tại mã tồn kho là mã công đoạn ở lớp trước
@@ -178,14 +183,14 @@ class ProductProcessService(
         for (item in request.listProcess!!) {
             if (item.isEdit == true) {
                 // Check ngày thứ thực hiện nếu khác null
-                if (requestPre?.layerCode == item.layerCode) {
-                    val dayOfImplementation = item.dayOfImplementation ?: 0
-                    val dayOfImplementationPreInt = requestPre!!.dayOfImplementation ?: 0
-                    if (dayOfImplementation - dayOfImplementationPreInt > 1
-                        || dayOfImplementation - dayOfImplementationPreInt < 0) {
-                        throw BusinessException(CommonUtils.getMessage("validate.convertCode.checkSubtractionDayOfImplementation"))
-                    }
-                }
+//                if (requestPre?.layerCode == item.layerCode) {
+//                    val dayOfImplementation = item.dayOfImplementation ?: 0
+//                    val dayOfImplementationPreInt = requestPre!!.dayOfImplementation ?: 0
+//                    if (dayOfImplementation - dayOfImplementationPreInt > 1
+//                        || dayOfImplementation - dayOfImplementationPreInt < 0) {
+//                        throw BusinessException(CommonUtils.getMessage("validate.convertCode.checkSubtractionDayOfImplementation"))
+//                    }
+//                }
 
                 if (item.processId != null) {
                     val productProcess = productProcessRep.getByProductProcessDetailById(item.processId)
@@ -633,9 +638,6 @@ class ProductProcessService(
                         "validate.excel.notExist",
                         arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
                 }
-
-
-
 
                 if (!item.inventoryLayerGroup.isNullOrEmpty() && !item.processInventoryCode.isNullOrEmpty()) {
                     val checkInventoryLayerGr = listItem.value.firstOrNull {

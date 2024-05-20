@@ -11,7 +11,14 @@ import com.kcvn.spm.app.report.externalquality.payload.model.ExternalQualityRepo
 import com.kcvn.spm.app.report.externalquality.payload.model.KeyValueCustom
 import com.kcvn.spm.app.report.externalquality.payload.request.ExternalQualityReportSearchRequest
 import com.kcvn.spm.app.report.externalquality.payload.response.ExternalQualityReportResponse
-import com.kcvn.spm.common.constants.*
+import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.ExportType
+import com.kcvn.spm.common.constants.ExternalReportDetailType
+import com.kcvn.spm.common.constants.ExternalReportShippingType
+import com.kcvn.spm.common.constants.OrderVersion
+import com.kcvn.spm.common.constants.PagingDefault
+import com.kcvn.spm.common.constants.TapeReportConfig
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -27,8 +34,19 @@ import com.kcvn.spm.model.tables.pojos.CouponCodeDropdown
 import com.kcvn.spm.model.tables.pojos.TapeEnRoute
 import com.kcvn.spm.model.tables.pojos.TapeInventory
 import com.kcvn.spm.model.tables.pojos.WorkResult
-import com.kcvn.spm.repository.*
-import org.apache.poi.ss.usermodel.*
+import com.kcvn.spm.repository.AppSettingRepository
+import com.kcvn.spm.repository.CompletionRateProductRepository
+import com.kcvn.spm.repository.HolidaysCalenderRepository
+import com.kcvn.spm.repository.InventoryProductRepository
+import com.kcvn.spm.repository.OrderInfoRepository
+import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.TapeEnRouteRepository
+import com.kcvn.spm.repository.TapeInventoryRepository
+import com.kcvn.spm.repository.WorkResultRepository
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -680,7 +698,7 @@ class ExternalQualityReportService(
         // get list name product
         val productNames = getListNameProduct(mappingPaging)
         // get list Inventory
-        val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames,endDate)
+        val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames, request.endDate!!.plusDays(-1))
         //create list data exist
         val listDataExist :MutableList<ExternalQualityDetailExistModel> = mutableListOf()
         //add Details Data here

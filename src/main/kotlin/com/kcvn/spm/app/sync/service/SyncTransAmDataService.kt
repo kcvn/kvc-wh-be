@@ -59,7 +59,7 @@ class SyncTransAmDataService(
             throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
         val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_PROCEDURE_STRUCTURE)
-        val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
+        val table: Table<*> = DSL.table(DSL.name(TransAmTable.SCHEMA_KVC, TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
             condition = condition.and(
@@ -103,7 +103,7 @@ class SyncTransAmDataService(
             throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
         val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_MASTER)
-        val table: Table<*> = DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
+        val table: Table<*> = DSL.table(DSL.name(TransAmTable.SCHEMA_KVC, TransAmTable.PROCESS_MASTER))
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
             condition = condition.and(
@@ -145,7 +145,7 @@ class SyncTransAmDataService(
 
     fun syncWorkResult() {
         val syncHistory = syncHistoryRep.findByType(SyncType.WORK_RESULT)
-        val table: Table<*> = DSL.table(DSL.name(TransAmTable.WORK_RESULT))
+        val table: Table<*> = DSL.table(DSL.name(TransAmTable.SCHEMA_KVC, TransAmTable.WORK_RESULT))
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
             condition = condition.and(

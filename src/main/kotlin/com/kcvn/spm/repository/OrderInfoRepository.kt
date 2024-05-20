@@ -32,8 +32,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
 
     fun getListOrderForReport(request: ExternalQualityReportSearchRequest, pageable: Pageable): Pair<List<ExternalQualityReportModel>, Int> {
         var condition: Condition = DSL.noCondition()
-        if (!request.productName.isNullOrEmpty()) {
-            condition = condition.and(ORDER_INFO.PRODUCT_NAME.containsIgnoreCase(request.productName))
+        if (!request.productName?.trim().isNullOrEmpty()) {
+            condition = condition.and(ORDER_INFO.PRODUCT_NAME.containsIgnoreCase(request.productName?.trim()))
         }
         if (!request.mold.isNullOrEmpty()) {
             condition = condition.and(PRODUCT.MOLD.eq(request.mold))
@@ -87,8 +87,8 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
 
     fun getPagingListOrder(request: OrderSearchRequest, pageable: Pageable, isExport: Boolean = false): Pair<List<OrderDetailModel>, Int> {
         var condition: Condition = DSL.noCondition()
-        if (!request.productName.isNullOrEmpty()) {
-            condition = condition.and(ORDER_INFO.PRODUCT_NAME.containsIgnoreCase(request.productName))
+        if (!request.productName?.trim().isNullOrEmpty()) {
+            condition = condition.and(ORDER_INFO.PRODUCT_NAME.containsIgnoreCase(request.productName?.trim()))
         }
         if (!request.frame_1.isNullOrEmpty()) {
             condition = condition.and(ORDER_INFO.FRAME_1.eq(request.frame_1))

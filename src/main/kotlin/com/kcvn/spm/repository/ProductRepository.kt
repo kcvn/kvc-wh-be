@@ -24,8 +24,8 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
     fun getPagingList(request: ProductSearchRequest?, pageable: Pageable): Pair<List<Product>, Int> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
-            if (!request.search.isNullOrEmpty()) condition =
-                condition.and(PRODUCT.NAME.containsIgnoreCase(request.search?.lowercase()))
+            if (!request.search?.trim().isNullOrEmpty()) condition =
+                condition.and(PRODUCT.NAME.containsIgnoreCase(request.search?.trim()?.lowercase()))
 
             if (!request.frame_1.isNullOrEmpty()) condition = condition.and(PRODUCT.FRAME_1.eq(request.frame_1))
 
@@ -55,7 +55,7 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: ProductSearchRequest?, pageable: Pageable): List<Product> {
         var condition: Condition = DSL.noCondition()
         if (request != null) {
-            if (!request.search.isNullOrEmpty()) condition = condition.and(PRODUCT.NAME.contains(request.search))
+            if (!request.search?.trim().isNullOrEmpty()) condition = condition.and(PRODUCT.NAME.contains(request.search?.trim()))
 
             if (!request.frame_1.isNullOrEmpty()) condition = condition.and(PRODUCT.FRAME_1.eq(request.frame_1))
 

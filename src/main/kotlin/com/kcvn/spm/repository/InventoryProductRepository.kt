@@ -110,11 +110,11 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         var condition: Condition = DSL.noCondition()
 
         if(request != null){
-            if(!request.orderCode.isNullOrEmpty()){
-                condition = condition.and(DSL.lower(INVENTORY_PRODUCT.ORDER_CODE).contains(DSL.lower(request.orderCode)))
+            if(!request.orderCode?.trim().isNullOrEmpty()){
+                condition = condition.and(DSL.lower(INVENTORY_PRODUCT.ORDER_CODE).contains(DSL.lower(request.orderCode?.trim())))
             }
-            if(!request.productName.isNullOrEmpty()){
-                val productNameStep12 = substring(request.productName,1,12)
+            if(!request.productName?.trim().isNullOrEmpty()){
+                val productNameStep12 = substring(request.productName?.trim(),1,12)
                 condition = condition.and(DSL.lower(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).contains(DSL.lower(productNameStep12)))
             }
             if(!request.listProcessGroup.isNullOrEmpty()){
@@ -133,11 +133,11 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
                 }
                 condition = condition.and(condition2)
             }
-            if(!request.tapeLot.isNullOrEmpty()){
-                condition = condition.and(DSL.lower(INVENTORY_PRODUCT.TAPE_LOT_NO).contains(DSL.lower(request.tapeLot)))
+            if(!request.tapeLot?.trim().isNullOrEmpty()){
+                condition = condition.and(DSL.lower(INVENTORY_PRODUCT.TAPE_LOT_NO).contains(DSL.lower(request.tapeLot?.trim())))
             }
-            if(!request.code.isNullOrEmpty()){
-                condition = condition.and((DSL.lower(INVENTORY_PRODUCT.CODE).contains(DSL.lower(request.code))))
+            if(!request.code?.trim().isNullOrEmpty()){
+                condition = condition.and((DSL.lower(INVENTORY_PRODUCT.CODE).contains(DSL.lower(request.code?.trim()))))
             }
             if(request.fromDate != null && request.toDate != null){
                 condition = condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.between(request.fromDate, request.toDate))

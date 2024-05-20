@@ -49,13 +49,14 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 PRODUCT_PROCESS.ID.`as`("processId"),
                 PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.`as`("layerCode"),
                 PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.`as`("processCode"),
-                PROCESS_MASTER.PROCESS_NAME_JP.`as`("processNameJp"),
-                PROCESS_MASTER.PROCESS_NAME.`as`("processName"),
+//                PROCESS_MASTER.PROCESS_NAME_JP.`as`("processNameJp"),
+//                PROCESS_MASTER.PROCESS_NAME.`as`("processName"),
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE.`as`("processConvertCode"),
                 PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
                 PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
                 PRODUCT.ID.`as`("productId"),
                 PROCESS_PROCEDURE_STRUCTURE.ID.`as`("processProcedureStructureId"),
+                PROCESS_PROCEDURE_STRUCTURE.PROCESS_SEQUENCE.`as`("processSequence"),
                 PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION,
                 PRODUCT_PROCESS.INVENTORY_LAYER_GROUP
             )
@@ -65,8 +66,8 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 .and(PRODUCT_PROCESS.IS_DELETED.eq(false))) // Điều kiện kết nối bảng PRODUCT_PROCESS
             .leftJoin(PRODUCT)
             .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).and(PRODUCT.IS_DELETED.eq(false)))
-            .leftJoin(PROCESS_MASTER)
-            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE).and(PROCESS_MASTER.IS_DELETED.eq(false)))
+//            .leftJoin(PROCESS_MASTER)
+//            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE).and(PROCESS_MASTER.IS_DELETED.eq(false)))
             .where(condition.and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))) // Điều kiện cho bảng PROCESS_PROCEDURE_STRUCTURE
             .orderBy(sortFields)
             .limit(pageable.pageSize)

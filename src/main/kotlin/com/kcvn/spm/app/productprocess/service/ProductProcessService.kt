@@ -20,6 +20,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ProcessMasterData
 import com.kcvn.spm.model.tables.pojos.ProductProcess
 import com.kcvn.spm.repository.CommonCategoryRepository
+import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.SystemLockRepository
@@ -48,16 +49,20 @@ class ProductProcessService(
     private val processProcedureRep: ProcessProcedureStructureRepository,
     private val masterDataService: MasterDataService,
     private val commonCategoryRep: CommonCategoryRepository,
-    private val systemLockRep: SystemLockRepository
+    private val systemLockRep: SystemLockRepository,
+    private val processMasterRep: ProcessMasterRepository
 ) {
     fun getPaginatedProductProcess(search: String?, hasProcessConvertCode: Boolean, pageable: Pageable): BasePagingResponse<ProductProcessResponse?> {
         val result = productProcessRep.findByKeywordPaginated(search, hasProcessConvertCode, pageable)
+        val processCodes = result.first.mapNotNull { it?.processCode }
+        val processMasters = processMasterRep.getByProcessCode(processCodes)
         val response = BasePagingResponse<ProductProcessResponse?>()
         response.data = result.first.map { productProcess ->
+            val processMaster = processMasters.find { it.processCode == productProcess?.processCode }
             ProductProcessResponse(
                 processId = productProcess?.processId,
-                processName = productProcess?.processName,
-                processNameJp = productProcess?.processNameJp,
+                processName = processMaster?.processName,
+                processNameJp = processMaster?.processNameJp,
                 processConvertCode = productProcess?.processConvertCode,
                 processStatisticCode = productProcess?.processStatisticCode,
                 processInventoryCode = productProcess?.processInventoryCode,

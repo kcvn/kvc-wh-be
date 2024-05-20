@@ -59,12 +59,12 @@ class CompletionRateProcessProductRepository(private val context: DSLContext) : 
 
         if (search != null) {
             if (!search.productNameShortCut.isNullOrEmpty()) {
-                val lowerProductNameShortCutSearch = DSL.lower(search.productNameShortCut)
+                val lowerProductNameShortCutSearch = DSL.lower(search.productNameShortCut!!.trim())
                 condition = condition.and(DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PRODUCT_NAME_SHORTCUT).containsIgnoreCase(lowerProductNameShortCutSearch))
             }
 
             if (!search.processCode.isNullOrEmpty()) {
-                val lowerProcessCodeSearch = search.processCode
+                val lowerProcessCodeSearch = search.processCode!!.trim()
                 condition = condition.and(
                     DSL.lower(COMPLETION_RATE_PROCESS_PRODUCT.PROCESS_CODE).containsIgnoreCase(lowerProcessCodeSearch)
                         .or(DSL.lower(PROCESS_MASTER.PROCESS_NAME).containsIgnoreCase(lowerProcessCodeSearch))

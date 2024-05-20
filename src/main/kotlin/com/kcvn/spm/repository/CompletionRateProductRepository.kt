@@ -65,7 +65,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
         var condition: Condition = DSL.noCondition()
 
         if (search != null) {
-            val lowerSearch = DSL.lower(search)
+            val lowerSearch = DSL.lower(search.trim())
             condition = condition.and(DSL.lower(COMPLETION_RATE_PRODUCT.PRODUCT_NAME).contains(lowerSearch))
         }
 

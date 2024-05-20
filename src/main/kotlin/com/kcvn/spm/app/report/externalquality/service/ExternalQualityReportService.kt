@@ -698,7 +698,7 @@ class ExternalQualityReportService(
         // get list name product
         val productNames = getListNameProduct(mappingPaging)
         // get list Inventory
-        val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames, request.endDate)
+        val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames, request.endDate!!.plusDays(-1))
         //create list data exist
         val listDataExist :MutableList<ExternalQualityDetailExistModel> = mutableListOf()
         //add Details Data here

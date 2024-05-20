@@ -434,7 +434,7 @@ class MaterialsService(
             val excelBytes = exportExcelErr(listOderInfoValidate, headerRow, workbook, sheet)
 
             val response = FileContentModel(
-                fileName = CommonUtils.getMessage("export.excel.result.import", arrayOf(
+                fileName = CommonUtils.getMessage("fileName.resultImportTape", arrayOf(
                     LocalDateTime.now().format(
                     DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
                 contentType = ExcelConstant.EXCEL_CONTENT_TYPE,

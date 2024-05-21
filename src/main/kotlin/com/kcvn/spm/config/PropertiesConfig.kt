@@ -18,4 +18,10 @@ class PropertiesConfig {
     @Value("\${trans_am_db.password}")
     lateinit var tranAmDbPassword: String
 
+    @Value("\${trans_am_db.schema}")
+    lateinit var tranAmDbSchema: String
+
+    @Value("\${trans_am_db.hasSchema}")
+    lateinit var tranAmDbHasSchema: String
+
 }

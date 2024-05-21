@@ -247,6 +247,8 @@ class ProductProcessService(
         val newPageSize = 100000
         val newPageable = PageRequest.of(pageable.pageNumber, newPageSize, pageable.sort)
         val products = productProcessRep.findByKeywordPaginated(search, hasProcessConvertCode, newPageable)
+        val processCodes = products.first.mapNotNull { it?.processCode }
+        val processMasters = processMasterRep.getByProcessCode(processCodes)
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportProductProcessTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
@@ -256,12 +258,14 @@ class ProductProcessService(
             val style = ExcelHelper.getCellStyleCommon(workbook)
             var rowNumber = 2
             for (item in products.first) {
+                val processMaster = processMasters.find { it.processCode == item?.processCode }
+
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 ExcelHelper.setCellValue(dataRow, 0, style, item?.productName)
                 ExcelHelper.setCellValue(dataRow, 1, style, item?.layerCode)
                 ExcelHelper.setCellValue(dataRow, 2, style, item?.processCode)
-                ExcelHelper.setCellValue(dataRow, 3, style, item?.processName)
-                ExcelHelper.setCellValue(dataRow, 4, style, item?.processNameJp)
+                ExcelHelper.setCellValue(dataRow, 3, style, processMaster?.processName)
+                ExcelHelper.setCellValue(dataRow, 4, style, processMaster?.processNameJp)
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.processConvertCode)
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.processStatisticCode)
                 ExcelHelper.setCellValue(dataRow, 7, style, item?.processInventoryCode)

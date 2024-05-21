@@ -156,6 +156,16 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             INVENTORY_PRODUCT.ORDER_CODE.`as`("orderCode"),
             INVENTORY_PRODUCT.TAPE_LOT_NO.`as`("tapeLotNo"),
             INVENTORY_PRODUCT.CODE.`as`("code"),
+            INVENTORY_PRODUCT.TEAM.`as`("team"),
+            INVENTORY_PRODUCT.PROCESSING_DIRECTIVE.`as`("processingDirective"),
+            INVENTORY_PRODUCT.PIECES_PER_SHEET.`as`("piecesPerSheet"),
+            INVENTORY_PRODUCT.PRODUCTION_AREA_NAME.`as`("productionAreaName"),
+            INVENTORY_PRODUCT.PROCESS_COUNT.`as`("processCount"),
+            INVENTORY_PRODUCT.SEIDEN_REP_NUMBER.`as`("seidenRepNumber"),
+            INVENTORY_PRODUCT.PROCESS_NAME_JP.`as`("processNameJp"),
+            INVENTORY_PRODUCT.EMPLOYEE_CODE.`as`("employeeCode")
+
+
         )
             .from(INVENTORY_PRODUCT
             .join(PROCESS_PROCEDURE_STRUCTURE)
@@ -251,6 +261,31 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             }
             "code" -> {
                 INVENTORY_PRODUCT.CODE
+            }
+            "team" ->{
+                INVENTORY_PRODUCT.TEAM
+            }
+            "processingDirective" ->{
+                INVENTORY_PRODUCT.PROCESSING_DIRECTIVE
+            }
+            "piecesPerSheet" ->{
+                INVENTORY_PRODUCT.PIECES_PER_SHEET
+            }
+            "productionAreaName" ->{
+                INVENTORY_PRODUCT.PRODUCTION_AREA_NAME
+            }
+            "processCount" ->{
+                INVENTORY_PRODUCT.PROCESS_COUNT
+            }
+            "seidenRepNumber" -> {
+                INVENTORY_PRODUCT.SEIDEN_REP_NUMBER
+            }
+            "processNameJp" -> {
+                PROCESS_MASTER.PROCESS_NAME_JP
+            }
+            "employeeCode" ->{
+                INVENTORY_PRODUCT.EMPLOYEE_CODE
+
             }
             else -> {
                 val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")

@@ -495,6 +495,13 @@ class InventoryProductService(
                 code = inventoryProduct?.code,
                 pcsSh = inventoryProduct?.pcsSh,
                 layerCode = inventoryProduct?.layerCode,
+                team = inventoryProduct?.team,
+                processNameJp = inventoryProduct?.processNameJp,
+                processingDirective = inventoryProduct?.processingDirective,
+                piecesPerSheet = inventoryProduct?.piecesPerSheet,
+                productionAreaName = inventoryProduct?.productionAreaName,
+                processCount = inventoryProduct?.processCount,
+                seidenRepNumber = inventoryProduct?.seidenRepNumber
             )
         }
         response.totalRecords = result.second ?: 0
@@ -517,16 +524,24 @@ class InventoryProductService(
                     val formattedDate = convertOffSetDateTimeUtc7ToString(item.inventoryDate!!)
                     ExcelHelper.setCellValue(dataRow, 0, style, formattedDate)
                 }
-                ExcelHelper.setCellValue(dataRow, 1, style, item?.productName)
-                ExcelHelper.setCellValue(dataRow, 2, style, item?.processName)
+                ExcelHelper.setCellValue(dataRow, 1, style, item?.employeeCode)
+                ExcelHelper.setCellValue(dataRow, 2, style, item?.team)
                 ExcelHelper.setCellValue(dataRow, 3, style, item?.processCode)
-                ExcelHelper.setCellValue(dataRow, 4, style, item?.layerCode)
-                ExcelHelper.setCellValue(dataRow, 5, style, item?.pcsSh)
-                ExcelHelper.setCellValue(dataRow, 6, style, item?.productQuantity.toString())
-                ExcelHelper.setCellValue(dataRow, 7, style, item?.sheetQuantity.toString())
-                ExcelHelper.setCellValue(dataRow, 8, style, item?.orderCode)
-                ExcelHelper.setCellValue(dataRow, 9, style, item?.tapeLotNo)
-                ExcelHelper.setCellValue(dataRow, 10, style, item?.code)
+                ExcelHelper.setCellValue(dataRow, 4, style, item?.processName)
+                ExcelHelper.setCellValue(dataRow, 5, style, item?.processNameJp)
+                ExcelHelper.setCellValue(dataRow, 6, style, item?.code)
+                ExcelHelper.setCellValue(dataRow, 7, style, item?.layerCode)
+                ExcelHelper.setCellValue(dataRow, 8, style, item?.tapeLotNo)
+                ExcelHelper.setCellValue(dataRow, 9, style, item?.processingDirective?.toString() ?: "")
+
+                ExcelHelper.setCellValue(dataRow, 10, style, item?.productName)
+                ExcelHelper.setCellValue(dataRow, 11, style, item?.piecesPerSheet?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 12, style, item?.orderCode)
+                ExcelHelper.setCellValue(dataRow, 13, style, item?.productionAreaName)
+                ExcelHelper.setCellValue(dataRow, 14, style, item?.processCount?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 15, style, item?.productQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 16, style, item?.sheetQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 17, style, item?.seidenRepNumber?.toString() ?: "")
             }
         }
 

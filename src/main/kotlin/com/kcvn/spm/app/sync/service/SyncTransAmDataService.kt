@@ -7,6 +7,7 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.GrpProcessCode
 import com.kcvn.spm.common.constants.SyncType
 import com.kcvn.spm.common.constants.TransAmTable
+import com.kcvn.spm.common.constants.YesNoConfig
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.util.CommonUtils
@@ -54,12 +55,19 @@ class SyncTransAmDataService(
         SQLDialect.DEFAULT
     )
 
+    private val schema = propertiesConfig.tranAmDbSchema
+    private val hasSchema = propertiesConfig.tranAmDbHasSchema == YesNoConfig.YES
+
     fun syncProcessProcedureStructure() {
         if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
             throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
         val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_PROCEDURE_STRUCTURE)
-        val table: Table<*> = DSL.table(DSL.name(TransAmTable.SCHEMA_KVC, TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
+        val table: Table<*> = if (hasSchema) {
+            DSL.table(DSL.name(schema, TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
+        } else {
+            DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
+        }
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
             condition = condition.and(
@@ -103,7 +111,11 @@ class SyncTransAmDataService(
             throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
         val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_MASTER)
-        val table: Table<*> = DSL.table(DSL.name(TransAmTable.SCHEMA_KVC, TransAmTable.PROCESS_MASTER))
+        val table: Table<*> = if (hasSchema) {
+            DSL.table(DSL.name(schema, TransAmTable.PROCESS_MASTER))
+        } else {
+            DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
+        }
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
             condition = condition.and(
@@ -145,7 +157,11 @@ class SyncTransAmDataService(
 
     fun syncWorkResult() {
         val syncHistory = syncHistoryRep.findByType(SyncType.WORK_RESULT)
-        val table: Table<*> = DSL.table(DSL.name(TransAmTable.SCHEMA_KVC, TransAmTable.WORK_RESULT))
+        val table: Table<*> = if (hasSchema) {
+            DSL.table(DSL.name(schema, TransAmTable.WORK_RESULT))
+        } else {
+            DSL.table(DSL.name(TransAmTable.WORK_RESULT))
+        }
         var condition: Condition = DSL.noCondition()
         if (syncHistory != null) {
             condition = condition.and(

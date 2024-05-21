@@ -20,8 +20,10 @@ RUN --mount=type=cache,target=/root/.m2,rw ./mvnw -B package
 FROM eclipse-temurin:17-jre-focal
 WORKDIR /app
 
+ENV JAVA_OPTS="-Xms1g -Xmx3g"
+
 COPY --from=build app/target/spm-0.0.1-SNAPSHOT.jar ./app.jar
 COPY --from=build app/target/classes/assets ./target/classes/assets
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

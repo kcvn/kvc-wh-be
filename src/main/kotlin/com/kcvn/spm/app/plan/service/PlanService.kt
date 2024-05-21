@@ -1360,10 +1360,59 @@ class PlanService(
                     dataSummary.removeAll(dataThaoKhungCsp)
                     dataSummary.add(thaoKhungCsp)
                 }
+
+                val dataSnaps = dataSummary.filter { x -> x.frame1 == frame1 && x.processConvertCode == ProcessConvertCode.SNAP }
+                if (dataSnaps.isNotEmpty()) {
+                    var moldByFrame1s = (appSettingRep.findByKey("${KeyAppSetting.MOLD_BY_FRAME1}_${frame1}")?.value?.split(",")
+                        ?: Mold.DATA_BY_FRAME1(frame1)).filter { x -> request.mold.isNullOrEmpty() || x == request.mold }
+                    val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.SNAP }
+                    val listMoldRequest: MutableList<String> = mutableListOf()
+                    if (!request.mold.isNullOrEmpty()) {
+                        listMoldRequest.add(request.mold!!)
+                        moldByFrame1s = listMoldRequest
+                    }
+                    val snap = PlanSummaryModel(
+                        processName = process?.description,
+                        processNameJp = process?.descriptionJp,
+                        processConvertCode = ProcessStatisticCode.SNAP,
+                        processSequence = process?.sortOrder?.toInt(),
+                        details = mutableListOf(),
+                        frame1 = dataSnaps.first().frame1,
+                        processCode = dataSnaps.first().processCode,
+                        unit = dataSnaps.first().unit
+                    )
+                    if (moldByFrame1s.isNotEmpty()) {
+                        for (mold in moldByFrame1s) {
+                            var dataSnap = dataExportFlattens.filter { x ->
+                                x.mold == mold && x.processConvertCode == ProcessConvertCode.SNAP
+                            }.groupBy { x -> x.mold }.mapNotNull { x ->
+                                PlanSummaryDetailModel(
+                                    type = if (frame1 != Frame1.MU) "" else x.key,
+                                    planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
+                                        .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                                            val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
+                                            data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                                                .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                                            data
+                                        }
+                                )
+                            }.firstOrNull()
+                            if (dataSnap == null) {
+                                dataSnap = PlanSummaryDetailModel(
+                                    type = if (frame1 != Frame1.MU) "" else mold,
+                                    planSummaryData = mutableListOf(PlanDataByProcessModel(title = PlanTitle.PLAN, titleKey = PlanTitle.PLAN_KEY, quantityByCalendars = listOf()))
+                                )
+                            }
+                            snap.details!!.add(dataSnap)
+                        }
+                    }
+
+                    dataSummary.removeAll(dataSnaps)
+                    dataSummary.add(snap)
+                }
             } else {
                 val dataThaoKhung = dataSummary.filter { x -> x.frame1 == frame1 && (x.processConvertCode == ProcessConvertCode.TK) }
                 dataSummary.removeAll(dataThaoKhung)
-
             }
         }
 

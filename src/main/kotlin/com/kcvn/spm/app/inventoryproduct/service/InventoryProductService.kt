@@ -98,72 +98,18 @@ class InventoryProductService(
             if (checkIsEmptyRow(row)) {
                 continue
             }
-            val style = row.getCell(0).cellStyle
+            val cell = row.getCell(0)
+            val style = cell?.cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
-            if (ExcelHelper.getCellValue(row, 2).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 2))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 3).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 3))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 5))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 6).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 6))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 7).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 7))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 9).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 9))
-                    )
-                )
-            }
-            if (ExcelHelper.getCellValue(row, 11).isEmpty()) {
-                check = false
-                messageResults.add(
-                    CommonUtils.getMessage(
-                        "validate.excel.empty",
-                        arrayOf(ExcelHelper.getCellValue(headerRow, 11))
-                    )
-                )
-            }
+            check = check && validateCellValue(row, headerRow, 2, messageResults)
+            check = check && validateCellValue(row, headerRow, 3, messageResults)
+            check = check && validateCellValue(row, headerRow, 5, messageResults)
+            check = check && validateCellValue(row, headerRow, 6, messageResults)
+            check = check && validateCellValue(row, headerRow, 7, messageResults)
+            check = check && validateCellValue(row, headerRow, 9, messageResults)
+            check = check && validateCellValue(row, headerRow, 11, messageResults)
+
             if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && row.getCell(2).toString().length > 8) {
                 check = false
                 messageResults.add(
@@ -320,7 +266,7 @@ class InventoryProductService(
                 row.createCell(colIndexResult)
             }
             row.getCell(colIndexResult).setCellValue(result)
-            row.getCell(colIndexResult).cellStyle = ExcelHelper.getCellStyleResultCol(workbook, style)
+            row.getCell(colIndexResult).cellStyle = style?.let { ExcelHelper.getCellStyleResultCol(workbook, it) }
         }
 
         if (count == total) {
@@ -372,7 +318,18 @@ class InventoryProductService(
             if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
         )
     }
-
+    fun validateCellValue(row: Row, headerRow: Row, columnIndex: Int, messageResults: MutableList<String>): Boolean {
+        if (ExcelHelper.getCellValue(row, columnIndex).isEmpty()) {
+            messageResults.add(
+                CommonUtils.getMessage(
+                    "validate.excel.empty",
+                    arrayOf(ExcelHelper.getCellValue(headerRow, columnIndex))
+                )
+            )
+            return false
+        }
+        return true
+    }
 
     fun checkIsEmptyRow( row: Row): Boolean {
         for (i in 0 until row.lastCellNum) {
@@ -501,7 +458,8 @@ class InventoryProductService(
                 piecesPerSheet = inventoryProduct?.piecesPerSheet,
                 productionAreaName = inventoryProduct?.productionAreaName,
                 processCount = inventoryProduct?.processCount,
-                seidenRepNumber = inventoryProduct?.seidenRepNumber
+                seidenRepNumber = inventoryProduct?.seidenRepNumber,
+                employeeCode = inventoryProduct?.employeeCode
             )
         }
         response.totalRecords = result.second ?: 0

@@ -23,6 +23,7 @@ import com.kcvn.spm.common.constants.Frame1
 import com.kcvn.spm.common.constants.KeyAppSetting
 import com.kcvn.spm.common.constants.MasterDataType
 import com.kcvn.spm.common.constants.Mold
+import com.kcvn.spm.common.constants.PlanActiveTab
 import com.kcvn.spm.common.constants.PlanStyleKey
 import com.kcvn.spm.common.constants.PlanTitle
 import com.kcvn.spm.common.constants.ProcessCode
@@ -739,7 +740,7 @@ class PlanService(
         val dataInLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.HP_ALL || x.processConvertCode == ProcessConvertCode.HP }
         if (dataInLo.isNotEmpty()) {
             val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_LO }
-            val inLo = generateModelPlanSummaryData1("",process, "${ProcessConvertCode.HP_ALL}/${ProcessConvertCode.HP}", response.columns, dataInLo)
+            val inLo = generateModelPlanSummaryData1("", process, "${ProcessConvertCode.HP_ALL}/${ProcessConvertCode.HP}", response.columns, dataInLo)
             dataSummary.removeAll(dataInLo)
             dataSummary.add(inLo)
         }
@@ -1707,6 +1708,18 @@ class PlanService(
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
+        return when (request.activeTab) {
+            PlanActiveTab.PLAN -> exportPlanInfo(request, columns)
+            PlanActiveTab.SUM -> exportPlanSummary(request, columns)
+            PlanActiveTab.SUM_ML -> exportPlanSummary(request, columns)
+            PlanActiveTab.SUM_MU -> exportPlanSummary(request, columns)
+            PlanActiveTab.SUM_SWR -> exportPlanSummary(request, columns)
+            PlanActiveTab.EQUIPMENT -> exportEquipment(request, columns)
+            else -> FileContentModel()
+        }
+    }
+
+    private fun exportPlanInfo(request: PlanSearchRequest, columns: List<CalendarResponse>): FileContentModel {
         val planProducts = planProductRep.getListPlanProduct(request)
         val dataExports = getDataExportExcel(
             planProducts, request.startDate!!, request.endDate!!, columns,
@@ -1718,10 +1731,37 @@ class PlanService(
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
 
         generateDataSheetPlan(workbook, columns, planProducts, dataExports)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportPlan", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+        return response
+    }
+
+    private fun exportPlanSummary(request: PlanSearchRequest, columns: List<CalendarResponse>): FileContentModel {
+        val planProducts = planProductRep.getListPlanProduct(request)
+        val dataExports = getDataExportExcel(
+            planProducts, request.startDate!!, request.endDate!!, columns,
+            request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false, request.processGroups
+        )
+        if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanSummaryTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+
         val headerStyle = workbook.getSheetAt(0).getRow(0).getCell(0).cellStyle
 
         val dataSummary = mutableListOf<Pair<String, List<PlanSummaryModel>?>>()
-        val requestFrame1 = request.frame_1
+
         if (request.frame_1.isNullOrEmpty()) {
             val frame1s = commonCategoryRep.getByType(listOf(MasterDataType.KHUNG_1))
             for (frame in frame1s) {
@@ -1739,7 +1779,27 @@ class PlanService(
         }
         generateDataSheetSummary(workbook, columns, dataSummary, headerStyle)
 
-        request.frame_1 = requestFrame1
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportPlanSummary", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+        return response
+    }
+
+    private fun exportEquipment(request: PlanSearchRequest, columns: List<CalendarResponse>): FileContentModel {
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportEquipmentConfigTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+
+        val headerStyle = workbook.getSheetAt(0).getRow(0).getCell(0).cellStyle
+
         val dataEquipment = getEquipmentProductivityPlan(request)
         generateDataSheetEquipment(workbook, columns, dataEquipment?.data, headerStyle)
 
@@ -1749,7 +1809,7 @@ class PlanService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportPlan", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            fileName = CommonUtils.getMessage("fileName.exportEquipmentConfig", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
@@ -1936,7 +1996,7 @@ class PlanService(
         dataSummary: List<Pair<String, List<PlanSummaryModel>?>>,
         headerStyle: CellStyle
     ) {
-        val sheet = workbook.createSheet("Tổng hợp")
+        val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
         headerRow.height = 800
 
@@ -2101,7 +2161,7 @@ class PlanService(
         headerStyle: CellStyle
     ) {
         if (dataEquipment != null) {
-            val sheet = workbook.createSheet("Năng suất máy")
+            val sheet = workbook.getSheetAt(0)
             val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
             headerRow.height = 800
 
@@ -2223,7 +2283,7 @@ class PlanService(
     //region PLAN_TEMP
 
     fun approve(request: PlanSearchRequest): BaseResponse<Boolean> {
-        val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
+        val planTemp = planRep.getPlanTemp() ?: throw BusinessException(CommonUtils.getMessage("validate.plan.notPlanApprove"))
 
         val planProductTemps = planProductRep.getPlanProductTemp()
         val planProcessTemps = planProcessRep.getPlanProcessTemp()
@@ -2237,7 +2297,7 @@ class PlanService(
         planHistoryService.addFile(exportExcel(request), request.fileName)
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
-        return BaseResponse(true, "Phê duyệt kế hoạch thành công")
+        return BaseResponse(true, CommonUtils.getMessage("action.succeeded"))
     }
 
     fun checkTemp(): BaseResponse<Boolean> {

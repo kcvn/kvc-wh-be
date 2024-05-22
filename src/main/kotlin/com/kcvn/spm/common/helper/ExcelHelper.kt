@@ -152,7 +152,8 @@ class ExcelHelper {
             indexColor: Short? = null,
             isNumberFormat: Boolean = false,
             isAlignLeft: Boolean = false,
-            isNotBold: Boolean = false
+            isNotBold: Boolean = false,
+            isAlignRight: Boolean = false
             ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
@@ -164,6 +165,7 @@ class ExcelHelper {
             if (isBorderBottom) style.borderBottom = BorderStyle.THIN else style.borderBottom = BorderStyle.NONE
             if (isAlignCenter) style.alignment = HorizontalAlignment.CENTER
             if (isAlignLeft) style.alignment = HorizontalAlignment.LEFT
+            if (isAlignRight) style.alignment = HorizontalAlignment.RIGHT
             if (indexColor != null) {
                 style.fillForegroundColor = indexColor
                 style.fillPattern = FillPatternType.SOLID_FOREGROUND

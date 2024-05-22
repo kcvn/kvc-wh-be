@@ -14,4 +14,13 @@ data class InventoryProductResponse (
     var layerCode: String? = null,
     var code: String? = null,
     var pcsSh: String? = null,
+    var processNameJp: String? = null,
+    var team: String? = null,
+    var processingDirective: Int? = null,
+    var piecesPerSheet : Int? = null,
+    var productionAreaName: String? = null,
+    var processCount: Int? = null,
+    var seidenRepNumber:Int? = null,
+    var employeeCode: String? = null,
+
 )

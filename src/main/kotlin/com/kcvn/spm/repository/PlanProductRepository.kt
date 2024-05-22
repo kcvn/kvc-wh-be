@@ -88,7 +88,7 @@ class PlanProductRepository(private val context: DSLContext) {
             ).from(PLAN_PRODUCT)
                 .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
                 .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
-                .where(condition.and(PLAN.MONTH.notEqual(planTemp?.month ?: 0)).and(PLAN.YEAR.notEqual(planTemp?.year ?: 0)))
+                .where(condition.and(DSL.concat(PLAN.YEAR, PLAN.MONTH).notEqual("${planTemp?.year}${planTemp?.month}")))
                 .orderBy(PLAN_PRODUCT.PRODUCT_NAME.sort(SortOrder.ASC))
 
             val queryPlanTemp = context.select(
@@ -155,7 +155,7 @@ class PlanProductRepository(private val context: DSLContext) {
             ).from(PLAN_PRODUCT)
                 .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
                 .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
-                .where(condition.and(PLAN.MONTH.notEqual(planTemp?.month ?: 0)).and(PLAN.YEAR.notEqual(planTemp?.year ?: 0)))
+                .where(condition.and(DSL.concat(PLAN.YEAR, PLAN.MONTH).notEqual("${planTemp?.year}${planTemp?.month}")))
                 .orderBy(PLAN_PRODUCT.PRODUCT_NAME.sort(SortOrder.ASC))
 
             val queryPlanTemp = context.select(
@@ -220,7 +220,7 @@ class PlanProductRepository(private val context: DSLContext) {
             ).from(PLAN_PRODUCT)
                 .join(PLAN).on(PLAN_PRODUCT.PLAN_ID.eq(PLAN.ID).and(PLAN.IS_DELETED.eq(false)))
                 .join(PLAN_PROCESS).on(PLAN_PRODUCT.ID.eq(PLAN_PROCESS.PLAN_PRODUCT_ID).and(PLAN_PROCESS.IS_DELETED.eq(false)))
-                .where(condition.and(PLAN.MONTH.notEqual(planTemp?.month ?: 0)).and(PLAN.YEAR.notEqual(planTemp?.year ?: 0)))
+                .where(condition.and(DSL.concat(PLAN.YEAR, PLAN.MONTH).notEqual("${planTemp?.year}${planTemp?.month}")))
                 .orderBy(PLAN_PRODUCT.PRODUCT_NAME.sort(SortOrder.ASC))
 
             val queryPlanTemp = context.select(

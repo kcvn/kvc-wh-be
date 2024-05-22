@@ -263,6 +263,11 @@ class PlanTitle {
             KeyValueResponse("DIFFERENCE", "差")
         )
 
+        val DATA_EXPORT_SUMMARY = listOf<KeyValueResponse>(
+            KeyValueResponse("PLAN", "予定"),
+            KeyValueResponse("ACTUAL", "実績")
+        )
+
         const val PLAN = "予定"
         const val PLAN_ACCUMULATION = "累計"
         const val ACTUAL = "実績"
@@ -347,6 +352,17 @@ class PlanStyleKey {
         const val PLAN_SUMMARY_END_ROW = "PLAN_SUMMARY_END_ROW"
         const val PLAN_SUMMARY_MIDDLE_ROW = "PLAN_SUMMARY_MIDDLE_ROW"
         const val PLAN_SUMMARY_DETAIL = "PLAN_SUMMARY_DETAIL"
+    }
+}
+
+class PlanActiveTab {
+    companion object {
+        const val PLAN = "PLAN"
+        const val SUM = "SUM"
+        const val SUM_MU = "SUM_MU"
+        const val SUM_ML = "SUM_ML"
+        const val SUM_SWR = "SUM_SWR"
+        const val EQUIPMENT = "EQUIPMENT"
     }
 }
 

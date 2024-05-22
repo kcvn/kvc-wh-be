@@ -263,6 +263,11 @@ class PlanTitle {
             KeyValueResponse("DIFFERENCE", "差")
         )
 
+        val DATA_EXPORT_SUMMARY = listOf<KeyValueResponse>(
+            KeyValueResponse("PLAN", "予定"),
+            KeyValueResponse("ACTUAL", "実績")
+        )
+
         const val PLAN = "予定"
         const val PLAN_ACCUMULATION = "累計"
         const val ACTUAL = "実績"

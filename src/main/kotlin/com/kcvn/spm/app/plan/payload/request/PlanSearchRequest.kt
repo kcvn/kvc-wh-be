@@ -12,4 +12,5 @@ class PlanSearchRequest {
     var inventoryWorkPlan: Boolean? = null
     var draftWorkPlan: Boolean? = null
     var fileName: String? = null
+    var activeTab: String? = null
 }

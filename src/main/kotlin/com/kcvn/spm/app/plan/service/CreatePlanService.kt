@@ -100,9 +100,10 @@ class CreatePlanService(
         if (inventory != null) return BaseResponse(true)
         return BaseResponse(
             false,
-            "Không có thông tin tồn kho tại ngày " +
-                "${DateTimeHelper.toString(DateTimeHelper.toTimeZone7(request.inventoryDate!!)!!, DateTimeFormat.dd_MM_yyyy)}.\n" +
-                "Bạn có muốn tiếp tục tạo kế hoạch sản xuất không ?"
+            CommonUtils.getMessage(
+                "validate.plan.notInventory",
+                arrayOf(DateTimeHelper.toString(DateTimeHelper.toTimeZone7(request.inventoryDate!!)!!, DateTimeFormat.dd_MM_yyyy))
+            )
         )
     }
 
@@ -114,20 +115,20 @@ class CreatePlanService(
         val month = request.planMonth.split("/")[0].toInt()
         val year = request.planMonth.split("/")[1].toInt()
         val planCalendarConfig = planCalendarConfigRep.getConfigByMonth(month, year)
-            ?: throw BusinessException("Chưa đăng ký tháng sản xuất")
+            ?: throw BusinessException(CommonUtils.getMessage("validate.plan.notPlanCalendarConfig"))
 
         val startDate = planCalendarConfig.startDate!!
         val endDate = planCalendarConfig.endDate!!
 
         if (request.inventoryDate != null && (request.inventoryDate!!.isBefore(startDate) || request.inventoryDate!!.isAfter(endDate)))
-            throw BusinessException("Ngày chốt tồn kho đang nằm ngoài khoảng thời gian của tháng sản xuất")
+            throw BusinessException(CommonUtils.getMessage("validate.plan.inventoryDateInvalid"))
 
         val orderInfo = orderInfoRep.getOrderInfoByTimeRange(startDate, endDate, request.productNames)
         if (orderInfo.isEmpty())
-            throw BusinessException("Không có dữ liệu xuất hàng " +
-                "từ ngày ${DateTimeHelper.toString(startDate, DateTimeFormat.dd_MM_yyyy)} " +
-                "đến ngày ${DateTimeHelper.toString(endDate, DateTimeFormat.dd_MM_yyyy)}"
-            )
+            throw BusinessException(CommonUtils.getMessage(
+                "validate.plan.notOrderInfo",
+                arrayOf(DateTimeHelper.toString(startDate, DateTimeFormat.dd_MM_yyyy), DateTimeHelper.toString(endDate, DateTimeFormat.dd_MM_yyyy))
+            ))
 
         systemLockRep.lock(typeOfSystemLocks)
 
@@ -163,23 +164,23 @@ class CreatePlanService(
             for (item in productNames) {
                 val errors = mutableListOf<String>()
                 val product = productInfo.firstOrNull { x -> x.name == item }
-                if (product == null) errors.add("Không tồn tại thông tin sản phẩm")
+                if (product == null) errors.add(CommonUtils.getMessage("validate.plan.productNotExist"))
 
                 val productProcess = productProcesses.filter { x -> x.productName == item && x.processCode?.toIntOrNull() != 0 }.map { model ->
                     if (model.processConvertCode == ProcessConvertCode.TH) model.processGroup = "20500"
                     model
                 }
                 if (productProcess.isEmpty()) {
-                    errors.add("Chưa có thông tin công đoạn")
+                    errors.add(CommonUtils.getMessage("validate.plan.processNotExist"))
                 } else {
-                    if (productProcess.any { x -> x.processConvertCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã chuyển đổi")
-                    if (productProcess.any { x -> x.processStatisticCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Mã thống kê")
-                    if (productProcess.any { x -> x.dayOfImplementation == null || x.dayOfImplementation == 0 }) errors.add("Dữ liệu công đoạn chưa đầy đủ Ngày thứ thực hiện")
-                    if (productProcess.any { x -> x.unit.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty() }) errors.add("Dữ liệu công đoạn chưa đầy đủ Đơn vị tính")
+                    if (productProcess.any { x -> x.processConvertCode.isNullOrEmpty() }) errors.add(CommonUtils.getMessage("validate.plan.notEnoughProcessConvertCode"))
+                    if (productProcess.any { x -> x.processStatisticCode.isNullOrEmpty() }) errors.add(CommonUtils.getMessage("validate.plan.notEnoughProcessStatisticCode"))
+                    if (productProcess.any { x -> x.dayOfImplementation == null || x.dayOfImplementation == 0 }) errors.add(CommonUtils.getMessage("validate.plan.notEnoughDayOfImplement"))
+                    if (productProcess.any { x -> x.unit.isNullOrEmpty() && x.processInventoryCode.isNullOrEmpty() }) errors.add(CommonUtils.getMessage("validate.plan.notEnoughUnit"))
 
                     val strProcessCode = productProcess.filter { it.processGroup.isNullOrEmpty() }.map { it.processCode }.distinct()
                     if (strProcessCode.isNotEmpty()) {
-                        errors.add("Chưa có dữ liệu Nhóm công đoạn tại các mã công đoạn ${strProcessCode.joinToString(separator = ",")}")
+                        errors.add(CommonUtils.getMessage("validate.plan.notEnoughProcessGroup", arrayOf(strProcessCode.joinToString(separator = ","))))
                     }
                 }
                 val parentProcesses = productProcess.filter { x ->
@@ -195,12 +196,12 @@ class CreatePlanService(
                 }
                 if (processNotCompletionRate.isNotEmpty()) {
                     val strProcess = processNotCompletionRate.map { x -> x.processCode }.distinct().joinToString(separator = ", ")
-                    errors.add("Chưa có thông tin tỷ lệ đạt của các công đoạn $strProcess")
+                    errors.add(CommonUtils.getMessage("validate.plan.notEnoughCompletionRate", arrayOf(strProcess)))
                 }
 
                 val equipmentByProducts = equipmentInfo.filter { x -> x.frame_1 == product!!.frame_1 }
                 if (equipmentByProducts.isEmpty()) {
-                    errors.add("Chưa có cấu hình năng suất máy cho line ${product!!.frame_1}")
+                    errors.add(CommonUtils.getMessage("validate.plan.lineIsNotEquipmentConfig", arrayOf(product!!.frame_1!!)))
                 } else {
                     val processGroups = parentProcesses.filter { it.processConvertCode != ProcessConvertCode.INS }.mapNotNull { x -> x.processGroup }.distinct()
                     for (grp in processGroups) {
@@ -208,7 +209,7 @@ class CreatePlanService(
                         if (eqConfigs.isEmpty()) {
                             if (grp == "21800") continue //Tháo khung
                             if (grp == "21500" && (product!!.frame_1 == Frame1.SWR || product.frame_1 == Frame1.ML)) continue //Tháo khung CSP
-                            errors.add("Chưa có cấu hình năng suất máy cho nhóm công đoạn $grp")
+                            errors.add(CommonUtils.getMessage("validate.plan.processGroupIsNotEquipmentConfig", arrayOf(grp)))
                         }
                     }
                     for (process in parentProcesses) {
@@ -222,7 +223,7 @@ class CreatePlanService(
                             ) {
                                 eqConfigs = eqConfigs.filter { x -> x.mold!!.contains(product.mold!!) }
                                 if (eqConfigs.isEmpty()) {
-                                    errors.add("Chưa có cấu hình năng suất máy cho khuôn đục ${product.mold} của nhóm công đoạn ${process.processGroup}")
+                                    errors.add(CommonUtils.getMessage("validate.plan.moldIsNotEquipmentConfig", arrayOf(product.mold!!, process.processGroup!!)))
                                 }
                             }
                         }
@@ -246,7 +247,7 @@ class CreatePlanService(
                         val orderInfoFilter = orderInfo.filter { x ->
                             x.orderDate!!.isEqual(request.inventoryDate) || x.orderDate!!.isAfter(request.inventoryDate)
                         }
-                        if (orderInfoFilter.isEmpty()) throw BusinessException("Không có dữ liệu xuất hàng kể từ ngày chốt tồn kho")
+                        if (orderInfoFilter.isEmpty()) throw BusinessException(CommonUtils.getMessage("validate.plan.notOrderFromInventoryDate"))
 
                         val planProductData = calculatePlanProductWithInventory(
                             orderInfoFilter, productInfo, productProcesses,
@@ -255,7 +256,7 @@ class CreatePlanService(
 
                         val planDetailData = planProductData.map { x -> x.planProcesses.map { m -> m.planDetails }.flatten() }.flatten().sortedBy { x -> x.planDate }
                         if (checkExceptionInventoryDate && planDetailData.any { it.planDate!!.isBefore(request.inventoryDate) })
-                            throw BusinessException("Ngày kế hoạch không được nhỏ hơn ngày chốt tồn kho")
+                            throw BusinessException(CommonUtils.getMessage("validate.plan.planDateIsLessInventoryDate"))
 
                         val planStartDate = planDetailData.first().planDate!!
                         val planEndDate = planDetailData.last().planDate!!
@@ -276,7 +277,7 @@ class CreatePlanService(
                         }
                     }
                 }
-                return BaseResponse(message = "Tạo kế hoạch thành công")
+                return BaseResponse(message = CommonUtils.getMessage("action.succeeded"))
             }
 
             val fileContent = exportFilePlanValidate(planValidates)
@@ -1933,7 +1934,7 @@ class CreatePlanService(
     ): PlanTemp {
         return PlanTemp(
             planCode = "F${DateTimeHelper.toString(planStartDate, DateTimeFormat.yyyyMMdd)}T${DateTimeHelper.toString(planEndDate, DateTimeFormat.yyyyMMdd)}",
-            description = request.description ?: "Kế hoạch sản xuất tháng ${planCalendarConfig.month}/${planCalendarConfig.year}",
+            description = request.description,
             month = planCalendarConfig.month,
             year = planCalendarConfig.year,
             startDate = planStartDate,

@@ -359,9 +359,9 @@ class PlanActiveTab {
     companion object {
         const val PLAN = "PLAN"
         const val SUM = "SUM"
-        const val SUM_MU = "SUM_MU"
-        const val SUM_ML = "SUM_ML"
-        const val SUM_SWR = "SUM_SWR"
+        const val SUM_MU = "MU"
+        const val SUM_ML = "ML"
+        const val SUM_SWR = "SWR"
         const val EQUIPMENT = "EQUIPMENT"
     }
 }

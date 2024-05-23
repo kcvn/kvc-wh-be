@@ -154,7 +154,7 @@ class ExcelHelper {
             isAlignLeft: Boolean = false,
             isNotBold: Boolean = false,
             isAlignRight: Boolean = false
-            ) {
+        ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
             row.createCell(colIndex).setCellValue(value)

@@ -82,59 +82,78 @@ class WorkResultRepository(
             "summaryresultdate" -> {
                 WORK_RESULT.SUMMARY_RESULT_DATE
             }
-
             "itemname" -> {
                 WORK_RESULT.ITEM_NAME
             }
-
             "processname" -> {
                 WORK_RESULT.PROCESS_NAME
             }
-
             "processcode" -> {
                 WORK_RESULT.PROCESS_CODE
             }
-
             "layercode" -> {
                 WORK_RESULT.LAYER_CODE
             }
-
             "totaltapequantity" -> {
                 WORK_RESULT.TOTAL_TAPE_QUANTITY
             }
-
             "totalsheetquantity" -> {
                 WORK_RESULT.TOTAL_SHEET_QUANTITY
             }
-
             "goodtapequantity" -> {
                 WORK_RESULT.GOOD_TAPE_QUANTITY
             }
-
             "goodsheetquantity" -> {
                 WORK_RESULT.GOOD_SHEET_QUANTITY
             }
-
             "ordercode" -> {
                 WORK_RESULT.ORDER_CODE
             }
-
             "tapelotno" -> {
                 WORK_RESULT.TAPE_LOT_NO
             }
-
             "code" -> {
                 WORK_RESULT.CODE
             }
-
             "workimplementby" -> {
                 WORK_RESULT.WORK_IMPLEMENT_BY
             }
-
             "equipmentname" -> {
                 WORK_RESULT.EQUIPMENT_NAME
             }
-
+            "actualresultdepartment" -> {
+                WORK_RESULT.ACTUAL_RESULT_DEPARTMENT
+            }
+            "team" -> {
+                WORK_RESULT.TEAM
+            }
+            "processnamejp" -> {
+                PROCESS_MASTER.PROCESS_NAME_JP
+            }
+            "workstarttime" -> {
+                WORK_RESULT.WORK_START_TIME
+            }
+            "workendtime" -> {
+                WORK_RESULT.WORK_END_TIME
+            }
+            "customercode" -> {
+                WORK_RESULT.CUSTOMER_CODE
+            }
+            "remediationdirectivenumber" -> {
+                WORK_RESULT.REMEDIATION_DIRECTIVE_NUMBER
+            }
+            "total" -> {
+                WORK_RESULT.TOTAL
+            }
+            "gooditemquantity" -> {
+                WORK_RESULT.GOOD_ITEM_QUANTITY
+            }
+            "departmentcode" -> {
+                WORK_RESULT.DEPARTMENT_CODE
+            }
+            "description" -> {
+                WORK_RESULT.DESCRIPTION
+            }
             else -> {
                 val errorMessage = CommonUtils.getMessage("sort.error.columnNotFound")
                 throw InvalidDataAccessApiUsageException(errorMessage)

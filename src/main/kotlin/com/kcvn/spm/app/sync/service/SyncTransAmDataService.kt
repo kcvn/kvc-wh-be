@@ -77,15 +77,19 @@ class SyncTransAmDataService(
         }
         val processFlows = this.transAmDSLContext.select().from(table).where(condition)
             .fetchInto(SyncProcessProcedureStructureResponse::class.java)
-        val objectIds = processFlows.mapNotNull { x -> x.OBJECT_ID }
+            .filter { it.KOTEI_CD.toIntOrNull() != 0 }
+        val keys = processFlows.mapNotNull { x -> "${x.KOTEI_TEJUN_CD}_${x.KOTEI_CD}_${StringHelper.intToStringD2(x.SO_NO)}"}
 
-        val processFlowDatas = processProcedureStructureRep.findByObjectId(objectIds)
+        val processFlowDatas = processProcedureStructureRep.findByKey(keys)
 
         val lstInsert = mutableListOf<ProcessProcedureStructure>()
         val lstDelete = mutableListOf<ProcessProcedureStructure>()
 
         for (item in processFlows) {
-            val exist = processFlowDatas.find { x -> x.objectId == item.OBJECT_ID }
+            val exist = processFlowDatas.find { x ->
+                x.productCode == item.KOTEI_TEJUN_CD && x.processCode == item.KOTEI_CD
+                    && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
+            }
             val dataProcess = createModelProcessProcedureStructure(item)
             if (exist != null) {
                 lstDelete.add(exist)
@@ -125,15 +129,15 @@ class SyncTransAmDataService(
         }
         val processMaster = this.transAmDSLContext.select().from(table).where(condition)
             .fetchInto(SyncProcessMasterResponse::class.java)
-        val objectIds = processMaster.mapNotNull { x -> x.OBJECT_ID }
+        val processCodes = processMaster.mapNotNull { x -> x.KOTEI_CD }
 
-        val processMasterDatas = processMasterRep.findByObjectId(objectIds)
+        val processMasterDatas = processMasterRep.getByProcessCode(processCodes)
 
         val lstInsert = mutableListOf<ProcessMaster>()
         val lstDelete = mutableListOf<ProcessMaster>()
 
         for (item in processMaster) {
-            val exist = processMasterDatas.find { x -> x.objectId == item.OBJECT_ID }
+            val exist = processMasterDatas.find { x -> x.processCode == item.KOTEI_CD }
             val data = createModelProcessMaster(item)
             if (exist != null) {
                 lstDelete.add(exist)

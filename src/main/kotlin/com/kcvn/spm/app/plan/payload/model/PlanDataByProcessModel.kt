@@ -6,5 +6,6 @@ data class PlanDataByProcessModel(
     var title: String? = null,
     var titleKey: String? = null,
     var quantityByCalendars: List<KeyValueResponse>? = listOf(),
-    var sort: Int? = null
+    var sort: Int? = null,
+    var total: String? = null
 )

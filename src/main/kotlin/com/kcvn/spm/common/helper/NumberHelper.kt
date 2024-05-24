@@ -2,6 +2,8 @@ package com.kcvn.spm.common.helper
 
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.NumberFormat
+import java.util.*
 
 class NumberHelper {
     companion object {
@@ -28,6 +30,12 @@ class NumberHelper {
 
         fun divide(number1: Int, number2: Int): BigDecimal {
             return BigDecimal(number1).divide(BigDecimal(number2), 2, RoundingMode.HALF_UP)
+        }
+
+        fun formatNumber(number: Int?): String {
+            if (number == null) return ""
+            val numberFormat = NumberFormat.getNumberInstance(Locale.US)
+            return numberFormat.format(number)
         }
     }
 

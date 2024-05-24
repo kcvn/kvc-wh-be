@@ -25,6 +25,11 @@ import java.util.*
 
 class ExcelHelper {
     companion object {
+        fun createRow(sheet: Sheet, rowIndex: Int, rowHeight: Short = 500): Row {
+            val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+            dataRow.height = rowHeight
+            return dataRow
+        }
         fun getCellValue(row: Row, colIdx: Int, format: String? = null): String {
             try {
                 val cell = row.getCell(colIdx)

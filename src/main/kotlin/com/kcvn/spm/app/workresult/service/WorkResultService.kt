@@ -51,11 +51,14 @@ class WorkResultService(
     }
 
     private fun mappingWorkResultResponse(workResults: List<WorkResult>): BasePagingResponse<WorkResultResponse> {
+
         val response = PagingWorkResultResponse()
         val processCodes = workResults.mapNotNull { x -> x.processCode }.distinct()
         val processMasterData = processMasterRep.getProcessMasterDataByCode(processCodes)
+        val processMasterList = processMasterRep.getByProcessCode(processCodes)
         response.data = workResults.map { x ->
             val processMaster = processMasterData.find { m -> m.processCode == x.processCode }
+            val process = processMasterList.find { m -> m.processCode == x.processCode }
             var result = 0.0
             if (processMaster != null) {
                 when (processMaster.unit) {
@@ -69,21 +72,32 @@ class WorkResultService(
 
             WorkResultResponse(
                 id = x.id,
-                summaryResultDate = x.summaryResultDate,
-                itemName = x.itemName,
-                processName = x.processName,
+                actualResultDepartment = x.actualResultDepartment,
+                team = x.team,
                 processCode = x.processCode,
+                processName = x.processName,
+                processNameJp = process?.processNameJp,
+                summaryResultDate = x.summaryResultDate,
+                workStartTime = x.workStartTime,
+                workEndTime = x.workEndTime,
+                orderCode = x.orderCode,
+                itemName = x.itemName,
+                customerCode = x.customerCode,
+                remediationDirectiveNumber = x.remediationDirectiveNumber,
+                tapeLotNo = x.tapeLotNo,
+                code = x.code,
                 layerCode = x.layerCode,
+                total = x.total,
                 totalTapeQuantity = x.totalTapeQuantity,
                 totalSheetQuantity = x.totalSheetQuantity,
+                goodItemQuantity = x.goodItemQuantity,
                 goodTapeQuantity = x.goodTapeQuantity,
                 goodSheetQuantity = x.goodSheetQuantity,
                 performance = performance,
-                orderCode = x.orderCode,
-                tapeLotNo = x.tapeLotNo,
-                code = x.code,
+                departmentCode = x.departmentCode,
                 workImplementBy = x.workImplementBy,
-                equipmentName = x.equipmentName
+                equipmentName = x.equipmentName,
+                description = x.description
             )
         }
 
@@ -143,21 +157,35 @@ class WorkResultService(
                     performance = ""
                 }
 
-                ExcelHelper.setCellValue(dataRow, 0, style, item.summaryResultDate?.format(formatter).toString())
-                ExcelHelper.setCellValue(dataRow, 1, style, item.itemName)
-                ExcelHelper.setCellValue(dataRow, 2, style, item.processName)
-                ExcelHelper.setCellValue(dataRow, 3, style, item.processCode)
-                ExcelHelper.setCellValue(dataRow, 4, style, item.layerCode)
-                ExcelHelper.setCellValue(dataRow, 5, style, item.totalTapeQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 6, style, item.totalSheetQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 7, style, item.goodTapeQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 8, style, item.goodSheetQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 9, style, performance)
-                ExcelHelper.setCellValue(dataRow, 10, style, item.orderCode)
-                ExcelHelper.setCellValue(dataRow, 11, style, item.tapeLotNo)
-                ExcelHelper.setCellValue(dataRow, 12, style, item.code)
-                ExcelHelper.setCellValue(dataRow, 13, style, item.workImplementBy)
-                ExcelHelper.setCellValue(dataRow, 14, style, item.equipmentName)
+                ExcelHelper.setCellValue(dataRow, 0, style, item.actualResultDepartment)
+                ExcelHelper.setCellValue(dataRow, 1, style, item.team)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.processCode)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.processName)
+                ExcelHelper.setCellValue(dataRow, 4, style, item.processNameJp) // cai nay khong biet lay tu dau
+                ExcelHelper.setCellValue(dataRow, 5, style, item.summaryResultDate?.format(formatter).toString())
+                ExcelHelper.setCellValue(dataRow, 6, style, item.workStartTime?.format(formatter).toString())
+                ExcelHelper.setCellValue(dataRow, 7, style, item.workEndTime?.format(formatter).toString())
+                ExcelHelper.setCellValue(dataRow, 8, style, item.orderCode)
+                ExcelHelper.setCellValue(dataRow, 9, style, item.itemName)
+                ExcelHelper.setCellValue(dataRow, 10, style, item.customerCode)
+                ExcelHelper.setCellValue(dataRow, 11, style, item.remediationDirectiveNumber)
+                ExcelHelper.setCellValue(dataRow, 12, style, item.tapeLotNo)
+                ExcelHelper.setCellValue(dataRow, 13, style, "") // chiu 14
+                ExcelHelper.setCellValue(dataRow, 14, style, item.code)
+                ExcelHelper.setCellValue(dataRow, 15, style, item.layerCode)
+                ExcelHelper.setCellValue(dataRow, 16, style, item.total?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 17, style, item.totalTapeQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 18, style, item.totalSheetQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 19, style, item.goodItemQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 20, style, item.goodTapeQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 21, style, item.goodSheetQuantity?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 22, style, performance)
+                ExcelHelper.setCellValue(dataRow, 23, style, "") // chiu 24
+                ExcelHelper.setCellValue(dataRow, 24, style, item.departmentCode)
+                ExcelHelper.setCellValue(dataRow, 25, style, item.workImplementBy)
+                ExcelHelper.setCellValue(dataRow, 26, style, item.equipmentName)
+                ExcelHelper.setCellValue(dataRow, 27, style, item.description)
+
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

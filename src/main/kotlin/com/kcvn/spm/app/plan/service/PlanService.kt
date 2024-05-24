@@ -1933,7 +1933,7 @@ class PlanService(
     ) {
         val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0)
-        var headerCol = 13
+        var headerCol = 14
         val headerStyle = headerRow.getCell(0).cellStyle
         for (col in columns) {
             ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
@@ -2128,7 +2128,16 @@ class PlanService(
                     else styleCommon
                     ExcelHelper.setCellValue(dataRow, 12, titleStyle, "${planProcess.processConvertCode} ${item.title}")
 
-                    var colIndex = 13
+                    val totalStyle = if (isNextProduct) planStartRowStyle
+                    else {
+                        if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                        else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                        else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                        else numberStyleCommon
+                    }
+                    ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                    var colIndex = 14
                     for (col in columns) {
                         val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                         val st = if (col.isHoliday) {
@@ -2185,8 +2194,9 @@ class PlanService(
                             ExcelHelper.setCellValue(dataRow, 4, style, dataExport.frame_1)
                             ExcelHelper.setCellValue(dataRow, 5, style, dataExport.mold)
                             ExcelHelper.setCellValue(dataRow, 12, styleCommon, "")
+                            ExcelHelper.setCellValue(dataRow, 13, styleCommon, "")
 
-                            var colIndex = 13
+                            var colIndex = 14
                             for (col in columns) {
                                 ExcelHelper.setCellValue(dataRow, colIndex, (if (col.isHoliday) holidayStyle else styleCommon), "")
                                 colIndex++
@@ -2233,8 +2243,9 @@ class PlanService(
         ExcelHelper.setCellValue(summaryHeaderRow, 10, headerStyle, "Công đoạn")
         ExcelHelper.setCellValue(summaryHeaderRow, 11, headerStyle, "")
         ExcelHelper.setCellValue(summaryHeaderRow, 12, headerStyle, "日程")
+        ExcelHelper.setCellValue(summaryHeaderRow, 13, headerStyle, "Tổng")
 
-        var summaryHeaderCol = 13
+        var summaryHeaderCol = 14
         for (col in columns) {
             ExcelHelper.setCellValueWithCalendar(workbook, summaryHeaderRow, summaryHeaderCol, headerStyle, col.value, col.isHoliday)
             summaryHeaderCol++
@@ -2281,7 +2292,13 @@ class PlanService(
 
                             ExcelHelper.setCellValue(dataRow, 12, titleStyle, item.title)
 
-                            var colIndex = 13
+                            val totalStyle = if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                            else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                            else numberStyleCommon
+                            ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                            var colIndex = 14
                             for (col in columns) {
                                 val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                                 val st = if (col.isHoliday) {
@@ -2303,7 +2320,7 @@ class PlanService(
                                         else numberStyleCommon
                                     }
                                 }
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, value)
+                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toInt()))
                                 colIndex++
                             }
                             rowIndex++
@@ -2347,7 +2364,13 @@ class PlanService(
 
                             ExcelHelper.setCellValue(dataRow, 12, titleStyle, item.title)
 
-                            var colIndex = 13
+                            val totalStyle = if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                            else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                            else numberStyleCommon
+                            ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                            var colIndex = 14
                             for (col in columns) {
                                 val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                                 val st = if (col.isHoliday) {
@@ -2369,7 +2392,7 @@ class PlanService(
                                         else numberStyleCommon
                                     }
                                 }
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, value)
+                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toInt()))
                                 colIndex++
                             }
                             rowIndex++
@@ -2405,7 +2428,10 @@ class PlanService(
         ExcelHelper.setCellValue(headerRow, 3, headerStyle, "日程")
         sheet.setColumnWidth(3, 2000)
 
-        var headerCol = 4
+        ExcelHelper.setCellValue(headerRow, 4, headerStyle, "Tổng")
+        sheet.setColumnWidth(4, 3000)
+
+        var headerCol = 5
         for (col in columns) {
             ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
             headerCol++
@@ -2503,7 +2529,13 @@ class PlanService(
 
                             ExcelHelper.setCellValue(dataRow, 3, titleStyle, item.title)
 
-                            var colIndex = 4
+                            val totalStyle = if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                            else numberStyleCommon
+
+                            ExcelHelper.setCellValue(dataRow, 4, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                            var colIndex = 5
                             for (col in columns) {
                                 val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                                 val st = if (col.isHoliday) {
@@ -2552,7 +2584,13 @@ class PlanService(
 
                             ExcelHelper.setCellValue(dataRow, 3, titleStyle, item.title)
 
-                            var colIndex = 4
+                            val totalStyle = if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                            else numberStyleCommon
+
+                            ExcelHelper.setCellValue(dataRow, 4, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                            var colIndex = 5
                             for (col in columns) {
                                 val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                                 val st = if (col.isHoliday) {

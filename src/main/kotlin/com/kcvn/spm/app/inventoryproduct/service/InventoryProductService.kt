@@ -19,11 +19,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
 import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import org.apache.poi.ss.usermodel.CellType
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.Sheet
-import org.apache.poi.ss.usermodel.Workbook
-import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -102,13 +98,15 @@ class InventoryProductService(
             val style = cell?.cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
-            check = check && validateCellValue(row, headerRow, 2, messageResults)
-            check = check && validateCellValue(row, headerRow, 3, messageResults)
-            check = check && validateCellValue(row, headerRow, 5, messageResults)
-            check = check && validateCellValue(row, headerRow, 6, messageResults)
-            check = check && validateCellValue(row, headerRow, 7, messageResults)
-            check = check && validateCellValue(row, headerRow, 9, messageResults)
-            check = check && validateCellValue(row, headerRow, 11, messageResults)
+            val checkProcessCode = validateCellValue(row, headerRow, 2, messageResults)
+            val checkProcessName = validateCellValue(row, headerRow, 3, messageResults)
+            val checkManageNumber = validateCellValue(row, headerRow, 5, messageResults)
+            val checkLayerCode = validateCellValue(row, headerRow, 6, messageResults)
+            val checkTapeLotNo = validateCellValue(row, headerRow, 7, messageResults)
+            val checkPiePerSheet = validateCellValue(row, headerRow, 9, messageResults)
+            val checkProductAreaName = validateCellValue(row, headerRow, 11, messageResults)
+
+            check = checkProcessCode && checkProcessName && checkManageNumber && checkLayerCode && checkTapeLotNo && checkPiePerSheet && checkProductAreaName
 
             if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && row.getCell(2).toString().length > 8) {
                 check = false
@@ -279,7 +277,6 @@ class InventoryProductService(
             && x.rowNum >= rowIndex
         }.map { x ->
             ImportInventoryErrorModel(
-                //new field
                 employeeCode = ExcelHelper.getCellValue(x, 0),
                 team = ExcelHelper.getCellValue(x, 1),
                 processNameJp = ExcelHelper.getCellValue(x, 4),
@@ -288,9 +285,6 @@ class InventoryProductService(
                 productionAreaName = ExcelHelper.getCellValue(x, 12),
                 processCount = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(x, 13)).toIntOrNull(),
                 seidenRepNumber = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(x, 16)).toIntOrNull(),
-
-                //end
-
                 processCode = ExcelHelper.getCellValue(x, 2),
                 processName = ExcelHelper.getCellValue(x, 3),
                 code = if (ExcelHelper.getCellValue(x, 5).toBigDecimalOrNull() != null) {
@@ -341,10 +335,12 @@ class InventoryProductService(
 
     }
 
+
     private fun exportErrorFile(inventories: List<ImportInventoryErrorModel>, titleRow: Row, workbook: Workbook, importSheet: Sheet): FileContentModel {
         val sheet = workbook.createSheet()
         val headerRow: Row = sheet.getRow(0) ?: sheet.createRow(0)
         headerRow.height = titleRow.height
+        val errorCellStyle = ExcelHelper.createErrorCellStyle(workbook, titleRow.getCell(0).cellStyle)
 
         for (i in 0 until titleRow.lastCellNum) {
             val headerStyle = titleRow.getCell(i).cellStyle
@@ -416,7 +412,7 @@ class InventoryProductService(
                 ExcelHelper.setCellValue(dataRow, 15, style.cellStyle, item.sheetQuantity?.toString())
             }
 
-            ExcelHelper.setCellValue(dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }!!.cellStyle, item.messageError)
+            ExcelHelper.setCellValue(dataRow, colIndexResult, errorCellStyle, item.messageError)
             rowNumber++
         }
 

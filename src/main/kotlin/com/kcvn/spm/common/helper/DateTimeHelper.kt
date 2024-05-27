@@ -83,7 +83,11 @@ class DateTimeHelper {
 
         fun toString(date: OffsetDateTime, format: String): String {
             return date.format(DateTimeFormatter.ofPattern(format))
+        }
 
+        fun toString(date: OffsetDateTime?, format: String): String {
+            if (date == null) return ""
+            return date.format(DateTimeFormatter.ofPattern(format))
         }
 
         fun toString(date: LocalDateTime, format: String): String {

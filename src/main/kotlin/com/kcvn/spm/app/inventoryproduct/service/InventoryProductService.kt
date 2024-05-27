@@ -98,13 +98,15 @@ class InventoryProductService(
             val style = cell?.cellStyle
             val messageResults = mutableListOf<String>()
             var check = true
-            check = check && validateCellValue(row, headerRow, 2, messageResults)
-            check = check && validateCellValue(row, headerRow, 3, messageResults)
-            check = check && validateCellValue(row, headerRow, 5, messageResults)
-            check = check && validateCellValue(row, headerRow, 6, messageResults)
-            check = check && validateCellValue(row, headerRow, 7, messageResults)
-            check = check && validateCellValue(row, headerRow, 9, messageResults)
-            check = check && validateCellValue(row, headerRow, 11, messageResults)
+            val checkProcessCode = validateCellValue(row, headerRow, 2, messageResults)
+            val checkProcessName = validateCellValue(row, headerRow, 3, messageResults)
+            val checkManageNumber = validateCellValue(row, headerRow, 5, messageResults)
+            val checkLayerCode = validateCellValue(row, headerRow, 6, messageResults)
+            val checkTapeLotNo = validateCellValue(row, headerRow, 7, messageResults)
+            val checkPiePerSheet = validateCellValue(row, headerRow, 9, messageResults)
+            val checkProductAreaName = validateCellValue(row, headerRow, 11, messageResults)
+
+            check = checkProcessCode && checkProcessName && checkManageNumber && checkLayerCode && checkTapeLotNo && checkPiePerSheet && checkProductAreaName
 
             if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && row.getCell(2).toString().length > 8) {
                 check = false

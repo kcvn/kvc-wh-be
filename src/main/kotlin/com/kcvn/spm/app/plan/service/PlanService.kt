@@ -23,6 +23,7 @@ import com.kcvn.spm.common.constants.Frame1
 import com.kcvn.spm.common.constants.KeyAppSetting
 import com.kcvn.spm.common.constants.MasterDataType
 import com.kcvn.spm.common.constants.Mold
+import com.kcvn.spm.common.constants.PlanActiveTab
 import com.kcvn.spm.common.constants.PlanStyleKey
 import com.kcvn.spm.common.constants.PlanTitle
 import com.kcvn.spm.common.constants.ProcessCode
@@ -56,6 +57,7 @@ import com.kcvn.spm.repository.PlanRepository
 import com.kcvn.spm.repository.ProcessGroupRepository
 import com.kcvn.spm.repository.ProcessMasterRepository
 import com.kcvn.spm.repository.WorkResultRepository
+import org.apache.poi.ss.usermodel.BorderStyle
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.HorizontalAlignment
@@ -244,7 +246,8 @@ class PlanService(
                                 color = if (colors.size == 1) colors.first() else "#FFFFFF"
                             )
                         },
-                        sort = x.value.first().sort
+                        sort = x.value.first().sort,
+                        total = x.value.mapNotNull { it.quantityByCalendars }.flatten().sumOf { it.value?.toInt() ?: 0 }.toString()
                     )
                 }
             )
@@ -411,7 +414,8 @@ class PlanService(
                                         m.value.sumOf { it.value?.toInt() ?: 0 }.toString(),
                                     )
                                 },
-                                sort = x.value.first().sort
+                                sort = x.value.first().sort,
+                                total = x.value.mapNotNull { it.quantityByCalendars }.flatten().sumOf { it.value?.toInt() ?: 0 }.toString()
                             )
                         }
                     )
@@ -487,7 +491,8 @@ class PlanService(
         process: ProcessGroup?,
         processConvertCode: String,
         columns: List<CalendarResponse>?,
-        values: List<ProductPlanDetailModel>
+        values: List<ProductPlanDetailModel>,
+        isExport: Boolean = false
     ): PlanSummaryModel {
         val summary = PlanSummaryModel(
             processName = process?.description,
@@ -501,117 +506,10 @@ class PlanService(
                 val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first, sort = m.value.first().sort)
                 data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
                     .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                data.total = data.quantityByCalendars?.sumOf { it.value?.toInt() ?: 0 }.toString()
                 data
             }.toMutableList()
-
-        planSummaryData.add(
-            PlanDataByProcessModel(
-                title = PlanTitle.PLAN_ACCUMULATION,
-                titleKey = PlanTitle.PLAN_ACCUMULATION_KEY,
-                quantityByCalendars = calculateAccumulation(planSummaryData.first { it.titleKey == PlanTitle.PLAN_KEY }.quantityByCalendars!!),
-                sort = 2
-            )
-        )
-        planSummaryData.add(
-            PlanDataByProcessModel(
-                title = PlanTitle.ACTUAL_ACCUMULATION,
-                titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY,
-                quantityByCalendars = calculateAccumulation(planSummaryData.first { it.titleKey == PlanTitle.ACTUAL_KEY }.quantityByCalendars!!),
-                sort = 4
-            )
-        )
-        planSummaryData.add(
-            PlanDataByProcessModel(
-                title = PlanTitle.DIFFERENCE,
-                titleKey = PlanTitle.DIFFERENCE_KEY,
-                quantityByCalendars = calculateDifference(
-                    planSummaryData.first { it.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY }.quantityByCalendars!!,
-                    planSummaryData.first { it.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY }.quantityByCalendars!!,
-                    columns!!
-                ),
-                sort = 5
-            )
-        )
-        summary.details = mutableListOf(PlanSummaryDetailModel(
-            type = type,
-            planSummaryData = planSummaryData.sortedBy { it.sort }
-        ))
-        return summary
-    }
-
-    private fun generateModelPlanSummaryData1(
-        type: String,
-        process: ProcessGroup?,
-        processConvertCode: String,
-        columns: List<CalendarResponse>?,
-        values: List<PlanSummaryModel>
-    ): PlanSummaryModel {
-        val summary = PlanSummaryModel(
-            processName = process?.description,
-            processNameJp = process?.descriptionJp,
-            processConvertCode = processConvertCode,
-            processSequence = process?.sortOrder?.toInt(),
-        )
-        val planSummaryData = values.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
-            .filter { it.titleKey == PlanTitle.PLAN_KEY || it.titleKey == PlanTitle.ACTUAL_KEY }
-            .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
-                val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first, sort = x.value.first().sort)
-                data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
-                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
-                data
-            }.toMutableList()
-
-        planSummaryData.add(
-            PlanDataByProcessModel(
-                title = PlanTitle.PLAN_ACCUMULATION,
-                titleKey = PlanTitle.PLAN_ACCUMULATION_KEY,
-                quantityByCalendars = calculateAccumulation(planSummaryData.first { it.titleKey == PlanTitle.PLAN_KEY }.quantityByCalendars!!),
-                sort = 2
-            )
-        )
-        planSummaryData.add(
-            PlanDataByProcessModel(
-                title = PlanTitle.ACTUAL_ACCUMULATION,
-                titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY,
-                quantityByCalendars = calculateAccumulation(planSummaryData.first { it.titleKey == PlanTitle.ACTUAL_KEY }.quantityByCalendars!!),
-                sort = 4
-            )
-        )
-        planSummaryData.add(
-            PlanDataByProcessModel(
-                title = PlanTitle.DIFFERENCE,
-                titleKey = PlanTitle.DIFFERENCE_KEY,
-                quantityByCalendars = calculateDifference(
-                    planSummaryData.first { it.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY }.quantityByCalendars!!,
-                    planSummaryData.first { it.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY }.quantityByCalendars!!,
-                    columns!!
-                ),
-                sort = 5
-            )
-        )
-        summary.details = mutableListOf(PlanSummaryDetailModel(
-            type = type,
-            planSummaryData = planSummaryData.sortedBy { it.sort }
-        ))
-        return summary
-    }
-
-    private fun generateModelSummaryDetail(
-        type: String,
-        columns: List<CalendarResponse>?,
-        dataGroupBy: Map<String?, List<ProductPlanDetailModel>>,
-        allowReturnNull: Boolean = false
-    ): PlanSummaryDetailModel? {
-        var data = dataGroupBy.mapNotNull { x ->
-            val planSummaryData = x.value.asSequence().mapNotNull { m -> m.planData }.flatten()
-                .filter { it.titleKey == PlanTitle.PLAN_KEY || it.titleKey == PlanTitle.ACTUAL_KEY }
-                .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
-                    val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first, sort = m.value.first().sort)
-                    data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
-                        .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
-                    data
-                }.toMutableList()
-
+        if (!isExport) {
             planSummaryData.add(
                 PlanDataByProcessModel(
                     title = PlanTitle.PLAN_ACCUMULATION,
@@ -640,6 +538,123 @@ class PlanService(
                     sort = 5
                 )
             )
+        }
+        summary.details = mutableListOf(PlanSummaryDetailModel(
+            type = type,
+            planSummaryData = planSummaryData.sortedBy { it.sort }
+        ))
+        return summary
+    }
+
+    private fun generateModelPlanSummaryData1(
+        type: String,
+        process: ProcessGroup?,
+        processConvertCode: String,
+        columns: List<CalendarResponse>?,
+        values: List<PlanSummaryModel>,
+        isExport: Boolean = false
+    ): PlanSummaryModel {
+        val summary = PlanSummaryModel(
+            processName = process?.description,
+            processNameJp = process?.descriptionJp,
+            processConvertCode = processConvertCode,
+            processSequence = process?.sortOrder?.toInt(),
+        )
+        val planSummaryData = values.asSequence().mapNotNull { x -> x.details }.flatten().mapNotNull { x -> x.planSummaryData }.flatten()
+            .filter { it.titleKey == PlanTitle.PLAN_KEY || it.titleKey == PlanTitle.ACTUAL_KEY }
+            .groupBy { x -> Pair(x.titleKey, x.title) }.map { x ->
+                val data = PlanDataByProcessModel(title = x.key.second, titleKey = x.key.first, sort = x.value.first().sort)
+                data.quantityByCalendars = x.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                    .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                data.total = data.quantityByCalendars?.sumOf { it.value?.toInt() ?: 0 }.toString()
+                data
+            }.toMutableList()
+
+        if (!isExport) {
+            planSummaryData.add(
+                PlanDataByProcessModel(
+                    title = PlanTitle.PLAN_ACCUMULATION,
+                    titleKey = PlanTitle.PLAN_ACCUMULATION_KEY,
+                    quantityByCalendars = calculateAccumulation(planSummaryData.first { it.titleKey == PlanTitle.PLAN_KEY }.quantityByCalendars!!),
+                    sort = 2
+                )
+            )
+            planSummaryData.add(
+                PlanDataByProcessModel(
+                    title = PlanTitle.ACTUAL_ACCUMULATION,
+                    titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY,
+                    quantityByCalendars = calculateAccumulation(planSummaryData.first { it.titleKey == PlanTitle.ACTUAL_KEY }.quantityByCalendars!!),
+                    sort = 4
+                )
+            )
+            planSummaryData.add(
+                PlanDataByProcessModel(
+                    title = PlanTitle.DIFFERENCE,
+                    titleKey = PlanTitle.DIFFERENCE_KEY,
+                    quantityByCalendars = calculateDifference(
+                        planSummaryData.first { it.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY }.quantityByCalendars!!,
+                        planSummaryData.first { it.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY }.quantityByCalendars!!,
+                        columns!!
+                    ),
+                    sort = 5
+                )
+            )
+        }
+        summary.details = mutableListOf(PlanSummaryDetailModel(
+            type = type,
+            planSummaryData = planSummaryData.sortedBy { it.sort }
+        ))
+        return summary
+    }
+
+    private fun generateModelSummaryDetail(
+        type: String,
+        columns: List<CalendarResponse>?,
+        dataGroupBy: Map<String?, List<ProductPlanDetailModel>>,
+        allowReturnNull: Boolean = false,
+        isExport: Boolean = false
+    ): PlanSummaryDetailModel? {
+        var data = dataGroupBy.mapNotNull { x ->
+            val planSummaryData = x.value.asSequence().mapNotNull { m -> m.planData }.flatten()
+                .filter { it.titleKey == PlanTitle.PLAN_KEY || it.titleKey == PlanTitle.ACTUAL_KEY }
+                .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
+                    val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first, sort = m.value.first().sort)
+                    data.quantityByCalendars = m.value.mapNotNull { t -> t.quantityByCalendars }.flatten()
+                        .groupBy { t -> t.key }.map { t -> KeyValueResponse(t.key, t.value.sumOf { p -> (p.value?.toInt() ?: 0) }.toString()) }
+                    data.total = data.quantityByCalendars?.sumOf { it.value?.toInt() ?: 0 }.toString()
+                    data
+                }.toMutableList()
+
+            if (!isExport) {
+                planSummaryData.add(
+                    PlanDataByProcessModel(
+                        title = PlanTitle.PLAN_ACCUMULATION,
+                        titleKey = PlanTitle.PLAN_ACCUMULATION_KEY,
+                        quantityByCalendars = calculateAccumulation(planSummaryData.first { it.titleKey == PlanTitle.PLAN_KEY }.quantityByCalendars!!),
+                        sort = 2
+                    )
+                )
+                planSummaryData.add(
+                    PlanDataByProcessModel(
+                        title = PlanTitle.ACTUAL_ACCUMULATION,
+                        titleKey = PlanTitle.ACTUAL_ACCUMULATION_KEY,
+                        quantityByCalendars = calculateAccumulation(planSummaryData.first { it.titleKey == PlanTitle.ACTUAL_KEY }.quantityByCalendars!!),
+                        sort = 4
+                    )
+                )
+                planSummaryData.add(
+                    PlanDataByProcessModel(
+                        title = PlanTitle.DIFFERENCE,
+                        titleKey = PlanTitle.DIFFERENCE_KEY,
+                        quantityByCalendars = calculateDifference(
+                            planSummaryData.first { it.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY }.quantityByCalendars!!,
+                            planSummaryData.first { it.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY }.quantityByCalendars!!,
+                            columns!!
+                        ),
+                        sort = 5
+                    )
+                )
+            }
 
             PlanSummaryDetailModel(
                 type = type,
@@ -649,13 +664,17 @@ class PlanService(
         if (data == null && !allowReturnNull) {
             data = PlanSummaryDetailModel(
                 type = type,
-                planSummaryData = PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
+                planSummaryData = if (isExport) {
+                    PlanTitle.DATA_EXPORT_SUMMARY.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
+                } else {
+                    PlanTitle.DATA.map { x -> PlanDataByProcessModel(title = x.value, titleKey = x.key, quantityByCalendars = listOf()) }
+                }
             )
         }
         return data
     }
 
-    fun getPlanSummary(request: PlanSearchRequest, dataExports: MutableList<PlanExportExcelModel> = mutableListOf()): PlanSummaryResponse {
+    fun getPlanSummary(request: PlanSearchRequest, dataExports: MutableList<PlanExportExcelModel> = mutableListOf(), isExport: Boolean = false): PlanSummaryResponse {
         val response = PlanSummaryResponse()
         if (request.startDate == null || request.endDate == null) throw BusinessException(CommonUtils.getMessage("plan.invalidTime"))
 
@@ -685,7 +704,7 @@ class PlanService(
 
         val dataSummary = dataExportFlattens.groupBy { x -> x.processConvertCode }.map { x ->
             val process = processGroups.find { m -> m.processStatisticCode == x.key }
-            val summary = generateModelPlanSummaryData("", process, x.key!!, response.columns, x.value)
+            val summary = generateModelPlanSummaryData("", process, x.key!!, response.columns, x.value, isExport)
             summary
         }.sortedBy { x -> x.processSequence }.toMutableList()
 
@@ -696,17 +715,20 @@ class PlanService(
             val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.T }
             val ducLo = generateModelPlanSummaryData1(
                 if (moldByFrame1s.size > 1) CommonUtils.getMessage("excel.rowTotal") else moldByFrame1s.first(),
-                process, ProcessStatisticCode.T, response.columns, dataDucLo
+                process, "${ProcessConvertCode.T}/${ProcessConvertCode.TH}", response.columns, dataDucLo, isExport
             )
 
             if (moldByFrame1s.size > 1) {
                 for (mold in moldByFrame1s) {
                     val dataMold = generateModelSummaryDetail(
-                        mold, response.columns,
-                        dataExportFlattens.filter { x ->
+                        type = mold,
+                        columns = response.columns,
+                        dataGroupBy = dataExportFlattens.filter { x ->
                             x.mold == mold
                                 && (x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH)
-                        }.groupBy { x -> x.mold }
+                        }.groupBy { x -> x.mold },
+                        allowReturnNull = false,
+                        isExport = isExport
                     )
                     ducLo.details!!.add(dataMold!!)
                 }
@@ -720,14 +742,17 @@ class PlanService(
         if (dataInMach.isNotEmpty()) {
             val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_MACH }
             val inMach = generateModelPlanSummaryData1(
-                CommonUtils.getMessage("excel.rowTotal"),
-                process, "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}", response.columns, dataInMach
+                CommonUtils.getMessage("excel.rowTotal"), process,
+                "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}", response.columns, dataInMach, isExport
             )
 
             for (code in listOf(ProcessConvertCode.TAN, ProcessConvertCode.ZEN)) {
                 val dataTanZen = generateModelSummaryDetail(
-                    code, response.columns,
-                    dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode }
+                    type = code,
+                    columns = response.columns,
+                    dataGroupBy = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode },
+                    allowReturnNull = false,
+                    isExport = isExport
                 )
                 inMach.details!!.add(dataTanZen!!)
             }
@@ -739,7 +764,7 @@ class PlanService(
         val dataInLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.HP_ALL || x.processConvertCode == ProcessConvertCode.HP }
         if (dataInLo.isNotEmpty()) {
             val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_LO }
-            val inLo = generateModelPlanSummaryData1("",process, "${ProcessConvertCode.HP_ALL}/${ProcessConvertCode.HP}", response.columns, dataInLo)
+            val inLo = generateModelPlanSummaryData1("", process, "${ProcessConvertCode.HP_ALL}/${ProcessConvertCode.HP}", response.columns, dataInLo, isExport)
             dataSummary.removeAll(dataInLo)
             dataSummary.add(inLo)
         }
@@ -749,47 +774,57 @@ class PlanService(
             val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.GHEP_LOP_SUM }
             val ghepLop = generateModelPlanSummaryData1(
                 CommonUtils.getMessage("excel.rowTotal"), process,
-                "${ProcessConvertCode.M_ALL}/M2*3,M3*4,...", response.columns, dataGhepLop
+                "${ProcessConvertCode.M_ALL}/M2*3,M3*4,...", response.columns, dataGhepLop, isExport
             )
 
             val mAll = generateModelSummaryDetail(
-                ProcessConvertCode.M_ALL, response.columns,
-                dataExportFlattens.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }.groupBy { x -> x.processConvertCode }
+                type = ProcessConvertCode.M_ALL,
+                columns = response.columns,
+                dataGroupBy = dataExportFlattens.filter { x -> x.processConvertCode == ProcessConvertCode.M_ALL }.groupBy { x -> x.processConvertCode },
+                allowReturnNull = false,
+                isExport = isExport
             )
             ghepLop.details!!.add(mAll!!)
 
             val mTan = generateModelSummaryDetail(
-                "M2*3, M3*4...", response.columns,
-                dataExportFlattens.filter { x ->
+                type = "M2*3, M3*4...",
+                columns = response.columns,
+                dataGroupBy = dataExportFlattens.filter { x ->
                     !x.processConvertCode.isNullOrEmpty()
                         && x.processConvertCode != ProcessConvertCode.M_ALL
                         && x.processConvertCode!!.startsWith(ProcessConvertCode.M)
                 }.map { x ->
                     x.processConvertCode = ProcessConvertCode.M_ANY
                     x
-                }.groupBy { x -> x.processConvertCode }
+                }.groupBy { x -> x.processConvertCode },
+                allowReturnNull = false,
+                isExport = isExport
             )
             ghepLop.details!!.add(mTan!!)
 
             val mGAN = generateModelSummaryDetail(
-                "Ghép lớp gia áp nhiệt", response.columns,
-                dataExportFlattens.filter { x ->
+                type = "Ghép lớp gia áp nhiệt",
+                columns = response.columns,
+                dataGroupBy = dataExportFlattens.filter { x ->
                     x.processStatisticCode == ProcessStatisticCode.GHEPLOP_GIAAPNHIET
                 }.groupBy { x -> x.processConvertCode },
-                true
+                allowReturnNull = true,
+                isExport = isExport
             )
             if (mGAN != null) {
                 ghepLop.details!!.add(mGAN)
             }
 
             val mGLT = generateModelSummaryDetail(
-                "Ghép lớp thường", response.columns,
-                dataExportFlattens.filter { x ->
+                type = "Ghép lớp thường",
+                columns = response.columns,
+                dataGroupBy = dataExportFlattens.filter { x ->
                     !x.processConvertCode.isNullOrEmpty()
                         && x.processStatisticCode != ProcessStatisticCode.GHEPLOP_GIAAPNHIET
                         && x.processConvertCode!!.startsWith(ProcessConvertCode.M)
                 }.groupBy { x -> x.processConvertCode },
-                true
+                allowReturnNull = true,
+                isExport = isExport
             )
             if (mGLT != null) {
                 ghepLop.details!!.add(mGLT)
@@ -811,81 +846,147 @@ class PlanService(
         rowNumber: Int,
         style: CellStyle,
         data: PlanSummaryModel,
-        styleCollections: MutableList<CellStyleModel>
+        styleCollections: MutableList<CellStyleModel>,
+        activeTab: String = PlanActiveTab.SUM
     ): Int {
         var rowIndex = rowNumber
-        var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-
+        var dataRow = ExcelHelper.createRow(sheet, rowIndex)
+        val increaseRowIndex = if (activeTab == PlanActiveTab.SUM) 0 else 9
+        val value = if (activeTab == PlanActiveTab.SUM) "${data.processName} [${data.processConvertCode}]" else data.processName
         ExcelHelper.setCellValueCustom(
-            workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = data.processName,
+            workbook = workbook, row = dataRow, colIndex = 1 + increaseRowIndex, styleTemplate = style, value = value,
             isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
             isBold = false, isAlignCenter = false
         )
-        styleCollections.add(CellStyleModel(1, dataRow.getCell(1).cellStyle, PlanStyleKey.PLAN_SUMMARY_FIRST_ROW))
+        styleCollections.add(CellStyleModel(1 + increaseRowIndex, dataRow.getCell(1 + increaseRowIndex).cellStyle, PlanStyleKey.PLAN_SUMMARY_FIRST_ROW))
 
-        rowIndex++
-        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(
-            workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = data.processNameJp,
-            isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
-            isBold = false, isAlignCenter = false
-        )
-        styleCollections.add(CellStyleModel(1, dataRow.getCell(1).cellStyle, PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW))
-
-        rowIndex++
-        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(
-            workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = data.processConvertCode,
-            isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
-            isBold = false, isAlignCenter = false
-        )
-
-        rowIndex++
-        for (i in 3 until (data.details!!.size * 5)) {
-            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        if (activeTab == PlanActiveTab.SUM) {
+            rowIndex++
+            dataRow = ExcelHelper.createRow(sheet, rowIndex)
             ExcelHelper.setCellValueCustom(
-                workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = "",
-                isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = (i == ((data.details!!.size * 5) - 1)),
+                workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = data.processNameJp,
+                isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
                 isBold = false, isAlignCenter = false
             )
-            if (i == ((data.details!!.size * 5) - 1)) {
+            styleCollections.add(CellStyleModel(1, dataRow.getCell(1).cellStyle, PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW))
+
+            if (data.details!!.size == 1) {
+                ExcelHelper.setCellValueCustom(
+                    workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = data.processNameJp,
+                    isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = true,
+                    isBold = false, isAlignCenter = false
+                )
                 styleCollections.add(CellStyleModel(1, dataRow.getCell(1).cellStyle, PlanStyleKey.PLAN_SUMMARY_END_ROW))
             }
+
             rowIndex++
+            for (i in 2 until (data.details!!.size * 2)) {
+                dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                ExcelHelper.setCellValueCustom(
+                    workbook = workbook, row = dataRow, colIndex = 1, styleTemplate = style, value = "",
+                    isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = (i == ((data.details!!.size * 2) - 1)),
+                    isBold = false, isAlignCenter = false
+                )
+                if (i == ((data.details!!.size * 2) - 1)) {
+                    styleCollections.add(CellStyleModel(1, dataRow.getCell(1).cellStyle, PlanStyleKey.PLAN_SUMMARY_END_ROW))
+                }
+                rowIndex++
+            }
+            return rowIndex
+        } else {
+            rowIndex++
+            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+            ExcelHelper.setCellValueCustom(
+                workbook = workbook, row = dataRow, colIndex = 10, styleTemplate = style, value = data.processNameJp,
+                isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
+                isBold = false, isAlignCenter = false
+            )
+            styleCollections.add(CellStyleModel(10, dataRow.getCell(10).cellStyle, PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW))
+
+            rowIndex++
+            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+            ExcelHelper.setCellValueCustom(
+                workbook = workbook, row = dataRow, colIndex = 10, styleTemplate = style, value = data.processConvertCode,
+                isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false,
+                isBold = false, isAlignCenter = false
+            )
+
+            rowIndex++
+            for (i in 3 until (data.details!!.size * 5)) {
+                dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                ExcelHelper.setCellValueCustom(
+                    workbook = workbook, row = dataRow, colIndex = 10, styleTemplate = style, value = "",
+                    isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = (i == ((data.details!!.size * 5) - 1)),
+                    isBold = false, isAlignCenter = false
+                )
+                if (i == ((data.details!!.size * 5) - 1)) {
+                    styleCollections.add(CellStyleModel(10, dataRow.getCell(10).cellStyle, PlanStyleKey.PLAN_SUMMARY_END_ROW))
+                }
+                rowIndex++
+            }
+            return rowIndex
         }
-        return rowIndex
     }
 
     private fun generateExcelColProcessInPlanSummary(
         sheet: Sheet,
         rowNumber: Int,
         data: PlanSummaryModel,
-        styleCollections: MutableList<CellStyleModel>
+        styleCollections: MutableList<CellStyleModel>,
+        activeTab: String = PlanActiveTab.SUM
     ): Int {
         var rowIndex = rowNumber
-        var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, data.processName)
+        var dataRow = ExcelHelper.createRow(sheet, rowIndex)
+        val increaseRowIndex = if (activeTab == PlanActiveTab.SUM) 0 else 9
+        val value = if (activeTab == PlanActiveTab.SUM) "${data.processName} [${data.processConvertCode}]" else data.processName
+        ExcelHelper.setCellValue(dataRow, 1 + increaseRowIndex, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, value)
 
-        rowIndex++
-        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processNameJp)
+        if (activeTab == PlanActiveTab.SUM) {
+            rowIndex++
+            dataRow = ExcelHelper.createRow(sheet, rowIndex)
 
-        rowIndex++
-        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processConvertCode)
-
-        rowIndex++
-        for (i in 3 until (data.details!!.size * 5)) {
-            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-            val st = if (i == ((data.details!!.size * 5) - 1)) {
+            val style = if (data.details!!.size == 1) {
                 styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
             } else {
                 styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
             }
-            ExcelHelper.setCellValue(dataRow, 1, st, "")
+
+            ExcelHelper.setCellValue(dataRow, 1, style, data.processNameJp)
+
             rowIndex++
+            for (i in 2 until (data.details!!.size * 2)) {
+                dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                val st = if (i == ((data.details!!.size * 2) - 1)) {
+                    styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                } else {
+                    styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+                }
+                ExcelHelper.setCellValue(dataRow, 1, st, "")
+                rowIndex++
+            }
+            return rowIndex
+        } else {
+            rowIndex++
+            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+            ExcelHelper.setCellValue(dataRow, 10, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processNameJp)
+
+            rowIndex++
+            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+            ExcelHelper.setCellValue(dataRow, 10, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processConvertCode)
+
+            rowIndex++
+            for (i in 3 until (data.details!!.size * 5)) {
+                dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                val st = if (i == ((data.details!!.size * 5) - 1)) {
+                    styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                } else {
+                    styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+                }
+                ExcelHelper.setCellValue(dataRow, 10, st, "")
+                rowIndex++
+            }
+            return rowIndex
         }
-        return rowIndex
     }
 
     //endregion
@@ -1627,24 +1728,24 @@ class PlanService(
         styleCollections: MutableList<CellStyleModel>
     ): Int {
         var rowIndex = rowNumber
-        var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        var dataRow = ExcelHelper.createRow(sheet, rowIndex)
         ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, data.processName, isBold = false, isAlignCenter = true, isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false)
         styleCollections.add(CellStyleModel(1, dataRow.getCell(1).cellStyle, PlanStyleKey.PLAN_SUMMARY_FIRST_ROW))
 
         rowIndex++
-        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        dataRow = ExcelHelper.createRow(sheet, rowIndex)
         ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, data.processNameJp, isBold = false, isAlignCenter = true, isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
         styleCollections.add(CellStyleModel(1, dataRow.getCell(1).cellStyle, PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW))
 
         rowIndex++
-        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        dataRow = ExcelHelper.createRow(sheet, rowIndex)
         ExcelHelper.setCellValueCustom(workbook, dataRow, 1, style, data.processConvertCode, isBold = false, isAlignCenter = true, isBorderLeft = true, isBorderRight = true, isBorderTop = false, isBorderBottom = false)
 
         rowIndex++
         var processDetailSize = (data.processDetail?.size ?: 1)
         if (processDetailSize == 0) processDetailSize = 1
         for (i in 3 until (processDetailSize * 4)) {
-            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+            dataRow = ExcelHelper.createRow(sheet, rowIndex)
 
             if (i == (processDetailSize * 4) - 1) {
                 ExcelHelper.setCellValueCustom(
@@ -1670,22 +1771,22 @@ class PlanService(
         styleCollections: MutableList<CellStyleModel>
     ): Int {
         var rowIndex = rowNumber
-        var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        var dataRow = ExcelHelper.createRow(sheet, rowIndex)
         ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, data.processName)
 
         rowIndex++
-        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        dataRow = ExcelHelper.createRow(sheet, rowIndex)
         ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processNameJp)
 
         rowIndex++
-        dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+        dataRow = ExcelHelper.createRow(sheet, rowIndex)
         ExcelHelper.setCellValue(dataRow, 1, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, data.processConvertCode)
 
         rowIndex++
         var processDetailSize = (data.processDetail?.size ?: 1)
         if (processDetailSize == 0) processDetailSize = 1
         for (i in 3 until (processDetailSize * 4)) {
-            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+            dataRow = ExcelHelper.createRow(sheet, rowIndex)
             val st = if (i == (processDetailSize * 4) - 1) {
                 styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
             } else {
@@ -1707,6 +1808,27 @@ class PlanService(
         val holidayCalenders = holidaysCalenderRep.getHolidaysCalender()
         val columns = DateTimeHelper.toCalendarColumn(DateTimeHelper.toTimeZone7(request.startDate)!!, DateTimeHelper.toTimeZone7(request.endDate)!!, holidayCalenders)
 
+        return when (request.activeTab) {
+            PlanActiveTab.PLAN -> exportPlanInfo(request, columns)
+            PlanActiveTab.SUM -> exportPlanSummary(request, columns)
+            PlanActiveTab.SUM_ML -> {
+                request.frame_1 = Frame1.ML
+                exportPlanSummary(request, columns)
+            }
+            PlanActiveTab.SUM_MU -> {
+                request.frame_1 = Frame1.MU
+                exportPlanSummary(request, columns)
+            }
+            PlanActiveTab.SUM_SWR -> {
+                request.frame_1 = Frame1.SWR
+                exportPlanSummary(request, columns)
+            }
+            PlanActiveTab.EQUIPMENT -> exportEquipment(request, columns)
+            else -> FileContentModel()
+        }
+    }
+
+    private fun exportPlanInfo(request: PlanSearchRequest, columns: List<CalendarResponse>): FileContentModel {
         val planProducts = planProductRep.getListPlanProduct(request)
         val dataExports = getDataExportExcel(
             planProducts, request.startDate!!, request.endDate!!, columns,
@@ -1717,31 +1839,7 @@ class PlanService(
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
 
-        generateDataSheetPlan(workbook, columns, planProducts, dataExports)
-        val headerStyle = workbook.getSheetAt(0).getRow(0).getCell(0).cellStyle
-
-        val dataSummary = mutableListOf<Pair<String, List<PlanSummaryModel>?>>()
-        val requestFrame1 = request.frame_1
-        if (request.frame_1.isNullOrEmpty()) {
-            val frame1s = commonCategoryRep.getByType(listOf(MasterDataType.KHUNG_1))
-            for (frame in frame1s) {
-                request.frame_1 = frame.value
-                val summaryByFrame = getPlanSummary(request, dataExports.filter { x -> x.frame_1 == frame.value }.toMutableList())
-                if (!summaryByFrame.data.isNullOrEmpty()) {
-                    dataSummary.add(Pair(frame.value ?: "", summaryByFrame.data))
-                }
-            }
-            val planSummary = getPlanSummary(request, dataExports.toMutableList())
-            dataSummary.add(Pair("TOTAL", planSummary.data))
-        } else {
-            val planSummary = getPlanSummary(request, dataExports.toMutableList())
-            dataSummary.add(Pair(request.frame_1!!, planSummary.data))
-        }
-        generateDataSheetSummary(workbook, columns, dataSummary, headerStyle)
-
-        request.frame_1 = requestFrame1
-        val dataEquipment = getEquipmentProductivityPlan(request)
-        generateDataSheetEquipment(workbook, columns, dataEquipment?.data, headerStyle)
+        generateDataSheetPlan(workbook, columns, planProducts, dataExports, request)
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
@@ -1758,55 +1856,230 @@ class PlanService(
         return response
     }
 
+    private fun exportPlanSummary(request: PlanSearchRequest, columns: List<CalendarResponse>): FileContentModel {
+        val planProducts = planProductRep.getListPlanProduct(request)
+        val dataExports = getDataExportExcel(
+            planProducts, request.startDate!!, request.endDate!!, columns,
+            request.inventoryWorkPlan ?: false, request.draftWorkPlan ?: false, request.processGroups, true
+        )
+        if (dataExports.isEmpty()) throw BusinessException(CommonUtils.getMessage("excel.export.noData"))
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportPlanSummaryTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+
+        val headerStyle = workbook.getSheetAt(0).getRow(0).getCell(0).cellStyle
+
+        val dataSummary = mutableListOf<Pair<String, List<PlanSummaryModel>?>>()
+
+        if (request.frame_1.isNullOrEmpty()) {
+            val frame1s = commonCategoryRep.getByType(listOf(MasterDataType.KHUNG_1))
+            for (frame in frame1s) {
+                request.frame_1 = frame.value
+                val summaryByFrame = getPlanSummary(request, dataExports.filter { x -> x.frame_1 == frame.value }.toMutableList(), true)
+                if (!summaryByFrame.data.isNullOrEmpty()) {
+                    dataSummary.add(Pair(frame.value ?: "", summaryByFrame.data))
+                }
+            }
+            request.frame_1 = null
+            val planSummary = getPlanSummary(request, dataExports.toMutableList(), true)
+            dataSummary.add(Pair("TOTAL", planSummary.data))
+        } else {
+            val planSummary = getPlanSummary(request, dataExports.toMutableList(), true)
+            dataSummary.add(Pair(request.frame_1!!, planSummary.data))
+        }
+        generateDataSheetSummary(workbook, columns, dataSummary, headerStyle, request.frame_1)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage(
+                "fileName.exportPlanSummary",
+                arrayOf(
+                    if (request.frame_1.isNullOrEmpty()) "" else "_${request.frame_1}",
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+                )
+            ),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+        return response
+    }
+
+    private fun exportEquipment(request: PlanSearchRequest, columns: List<CalendarResponse>): FileContentModel {
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportEquipmentConfigTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+
+        val headerStyle = workbook.getSheetAt(0).getRow(0).getCell(0).cellStyle
+
+        val dataEquipment = getEquipmentProductivityPlan(request)
+        generateDataSheetEquipment(workbook, columns, dataEquipment?.data, headerStyle)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("fileName.exportEquipmentConfig", arrayOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")))),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+        return response
+    }
+
     private fun generateDataSheetPlan(
         workbook: Workbook,
         columns: List<CalendarResponse>,
         planProducts: List<PlanProduct>,
-        dataExports: List<PlanExportExcelModel>
+        dataExports: List<PlanExportExcelModel>,
+        request: PlanSearchRequest
     ) {
         val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0)
-        var headerCol = 15
+        var headerCol = 14
         val headerStyle = headerRow.getCell(0).cellStyle
         for (col in columns) {
-            ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, false)
+            ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
             headerCol++
         }
 
+        // setting style
         val styleCommon = ExcelHelper.getCellStyleCommon(workbook)
         styleCommon.alignment = HorizontalAlignment.CENTER
+        val fontTemplate = workbook.getFontAt(styleCommon.fontIndex)
+
+        val startRowStyle = workbook.createCellStyle()
+        startRowStyle.cloneStyleFrom(styleCommon)
+        startRowStyle.fillForegroundColor = IndexedColors.PALE_BLUE.index
+        startRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        startRowStyle.borderBottom = BorderStyle.NONE
 
         val firstRowStyle = workbook.createCellStyle()
         firstRowStyle.cloneStyleFrom(styleCommon)
-        firstRowStyle.fillForegroundColor = IndexedColors.PALE_BLUE.index
-        firstRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        firstRowStyle.borderBottom = BorderStyle.NONE
+
+        val middleRowStyle = workbook.createCellStyle()
+        middleRowStyle.cloneStyleFrom(styleCommon)
+        middleRowStyle.borderTop = BorderStyle.NONE
+        middleRowStyle.borderBottom = BorderStyle.NONE
+
+        val endRowStyle = workbook.createCellStyle()
+        endRowStyle.cloneStyleFrom(styleCommon)
+        endRowStyle.borderTop = BorderStyle.NONE
+
+        val planStartRowStyle = workbook.createCellStyle()
+        planStartRowStyle.cloneStyleFrom(styleCommon)
+        planStartRowStyle.fillForegroundColor = IndexedColors.PALE_BLUE.index
+        planStartRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        planStartRowStyle.borderBottom = BorderStyle.DOTTED
+        planStartRowStyle.alignment = HorizontalAlignment.RIGHT
+
+        val planRowStyle = workbook.createCellStyle()
+        planRowStyle.cloneStyleFrom(styleCommon)
+        planRowStyle.borderBottom = BorderStyle.DOTTED
+        planRowStyle.alignment = HorizontalAlignment.RIGHT
+
+        val titlePlanStartRowStyle = workbook.createCellStyle()
+        titlePlanStartRowStyle.cloneStyleFrom(styleCommon)
+        titlePlanStartRowStyle.fillForegroundColor = IndexedColors.PALE_BLUE.index
+        titlePlanStartRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        titlePlanStartRowStyle.borderBottom = BorderStyle.DOTTED
+
+        val titlePlanStyle = workbook.createCellStyle()
+        titlePlanStyle.cloneStyleFrom(styleCommon)
+        titlePlanStyle.borderBottom = BorderStyle.DOTTED
+
+        val redFont = workbook.createFont()
+        redFont.fontName = fontTemplate.fontName
+        redFont.fontHeightInPoints = fontTemplate.fontHeightInPoints
+        redFont.color = IndexedColors.RED.index
+
+        val actualRowStyle = workbook.createCellStyle()
+        actualRowStyle.cloneStyleFrom(styleCommon)
+        actualRowStyle.borderBottom = BorderStyle.DOTTED
+        actualRowStyle.alignment = HorizontalAlignment.RIGHT
+        actualRowStyle.setFont(redFont)
+
+        val titleActualStyle = workbook.createCellStyle()
+        titleActualStyle.cloneStyleFrom(styleCommon)
+        titleActualStyle.borderBottom = BorderStyle.DOTTED
+        titleActualStyle.setFont(redFont)
+
+        val blueFont = workbook.createFont()
+        blueFont.fontName = fontTemplate.fontName
+        blueFont.fontHeightInPoints = fontTemplate.fontHeightInPoints
+        blueFont.color = IndexedColors.BLUE.index
+
+        val accumulationRowStyle = workbook.createCellStyle()
+        accumulationRowStyle.cloneStyleFrom(styleCommon)
+        accumulationRowStyle.borderTop = BorderStyle.DOTTED
+        accumulationRowStyle.alignment = HorizontalAlignment.RIGHT
+        accumulationRowStyle.setFont(blueFont)
+
+        val titleAccumulationStyle = workbook.createCellStyle()
+        titleAccumulationStyle.cloneStyleFrom(styleCommon)
+        titleAccumulationStyle.borderTop = BorderStyle.DOTTED
+        titleAccumulationStyle.setFont(blueFont)
 
         val holidayStyle = workbook.createCellStyle()
         holidayStyle.cloneStyleFrom(styleCommon)
         holidayStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
         holidayStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        holidayStyle.alignment = HorizontalAlignment.RIGHT
 
-        val fontTemplate = workbook.getFontAt(styleCommon.fontIndex)
-        val font = workbook.createFont()
-        font.fontName = fontTemplate.fontName
-        font.fontHeightInPoints = fontTemplate.fontHeightInPoints
-        font.color = IndexedColors.RED.index
+        val holidayStartRowStyle = workbook.createCellStyle()
+        holidayStartRowStyle.cloneStyleFrom(styleCommon)
+        holidayStartRowStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+        holidayStartRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        holidayStartRowStyle.alignment = HorizontalAlignment.RIGHT
+        holidayStartRowStyle.borderBottom = BorderStyle.DOTTED
+
+        val holidayActualRowStyle = workbook.createCellStyle()
+        holidayActualRowStyle.cloneStyleFrom(styleCommon)
+        holidayActualRowStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+        holidayActualRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        holidayActualRowStyle.alignment = HorizontalAlignment.RIGHT
+        holidayActualRowStyle.borderBottom = BorderStyle.DOTTED
+        holidayActualRowStyle.setFont(redFont)
+
+        val holidayAccumulationRowStyle = workbook.createCellStyle()
+        holidayAccumulationRowStyle.cloneStyleFrom(styleCommon)
+        holidayAccumulationRowStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+        holidayAccumulationRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        holidayAccumulationRowStyle.alignment = HorizontalAlignment.RIGHT
+        holidayAccumulationRowStyle.borderTop = BorderStyle.DOTTED
+        holidayAccumulationRowStyle.setFont(blueFont)
 
         val negativeNumStyle = workbook.createCellStyle()
         negativeNumStyle.cloneStyleFrom(styleCommon)
-        negativeNumStyle.setFont(font)
+        negativeNumStyle.alignment = HorizontalAlignment.RIGHT
+        negativeNumStyle.setFont(redFont)
 
         val holidayWithNegativeNumStyle = workbook.createCellStyle()
         holidayWithNegativeNumStyle.cloneStyleFrom(styleCommon)
-        holidayWithNegativeNumStyle.setFont(font)
+        holidayWithNegativeNumStyle.setFont(redFont)
         holidayWithNegativeNumStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
         holidayWithNegativeNumStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        holidayWithNegativeNumStyle.alignment = HorizontalAlignment.RIGHT
 
         val firstRowWithNegativeNumStyle = workbook.createCellStyle()
         firstRowWithNegativeNumStyle.cloneStyleFrom(styleCommon)
-        firstRowWithNegativeNumStyle.setFont(font)
+        firstRowWithNegativeNumStyle.setFont(redFont)
         firstRowWithNegativeNumStyle.fillForegroundColor = IndexedColors.PALE_BLUE.index
         firstRowWithNegativeNumStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        firstRowWithNegativeNumStyle.alignment = HorizontalAlignment.RIGHT
+
+        val numberStyleCommon = workbook.createCellStyle()
+        numberStyleCommon.cloneStyleFrom(styleCommon)
+        numberStyleCommon.alignment = HorizontalAlignment.RIGHT
+
+        //
 
         var rowNumber = 1
         val productNames = planProducts.map { it.productName }.distinct()
@@ -1816,8 +2089,8 @@ class PlanService(
             var isNextProduct = true
             for (planProcess in dataExport.productPlanDetails!!) {
                 var rowProcessIndex = rowNumber
-                val styleProcess = if (isNextProduct) firstRowStyle else styleCommon
-                var dataRow = sheet.getRow(rowProcessIndex) ?: sheet.createRow(rowProcessIndex)
+                val styleProcess = if (isNextProduct) startRowStyle else firstRowStyle
+                var dataRow = ExcelHelper.createRow(sheet, rowProcessIndex)
 
                 ExcelHelper.setCellValue(dataRow, 6, styleProcess, planProcess.layerCode)
                 ExcelHelper.setCellValue(dataRow, 7, styleProcess, planProcess.processGroup)
@@ -1825,31 +2098,30 @@ class PlanService(
                 ExcelHelper.setCellValue(dataRow, 9, styleProcess, planProcess.processName)
                 ExcelHelper.setCellValue(dataRow, 10, styleProcess, "")
                 ExcelHelper.setCellValue(dataRow, 11, styleProcess, if (planProcess.completionRate != null) "${planProcess.completionRate?.toString()} %" else "")
-                ExcelHelper.setCellValue(dataRow, 12, styleProcess, planProcess.inventory?.toString())
-                ExcelHelper.setCellValue(dataRow, 13, styleProcess, planProcess.sumInventory?.toString())
 
                 rowProcessIndex++
                 if (!planProcess.processChildren.isNullOrEmpty()) {
                     for (children in planProcess.processChildren!!) {
-                        dataRow = sheet.getRow(rowProcessIndex) ?: sheet.createRow(rowProcessIndex)
+                        dataRow = ExcelHelper.createRow(sheet, rowProcessIndex)
 
-                        ExcelHelper.setCellValue(dataRow, 6, styleCommon, planProcess.layerCode)
-                        ExcelHelper.setCellValue(dataRow, 7, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 8, styleCommon, children.processCode)
-                        ExcelHelper.setCellValue(dataRow, 9, styleCommon, children.processName)
-                        ExcelHelper.setCellValue(dataRow, 10, styleCommon, children.layerCode)
-                        ExcelHelper.setCellValue(dataRow, 11, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 12, styleCommon, children.inventory?.toString())
-                        ExcelHelper.setCellValue(dataRow, 13, styleCommon, "")
-
+                        ExcelHelper.setCellValue(dataRow, 6, middleRowStyle, planProcess.layerCode)
+                        ExcelHelper.setCellValue(dataRow, 7, middleRowStyle, "")
+                        ExcelHelper.setCellValue(dataRow, 8, middleRowStyle, children.processCode)
+                        ExcelHelper.setCellValue(dataRow, 9, middleRowStyle, children.processName)
+                        ExcelHelper.setCellValue(dataRow, 10, middleRowStyle, children.layerCode)
+                        ExcelHelper.setCellValue(dataRow, 11, middleRowStyle, "")
                         rowProcessIndex++
                     }
                 }
 
                 var rowDataIndex = rowNumber
-                for (item in planProcess.planData!!) {
-                    val style = if (isNextProduct) firstRowStyle else styleCommon
-                    dataRow = sheet.getRow(rowDataIndex) ?: sheet.createRow(rowDataIndex)
+                for ((iItem, item) in planProcess.planData!!.withIndex()) {
+                    val style = if (isNextProduct) startRowStyle
+                    else if (iItem == 0) firstRowStyle
+                    else if (iItem == planProcess.planData!!.size - 1) endRowStyle
+                    else middleRowStyle
+
+                    dataRow = ExcelHelper.createRow(sheet, rowDataIndex)
 
                     ExcelHelper.setCellValue(dataRow, 0, style, dataExport.productName?.substring(dataExport.productName!!.length - 7, dataExport.productName!!.length))
                     ExcelHelper.setCellValue(dataRow, 1, style, dataExport.productName)
@@ -1858,33 +2130,48 @@ class PlanService(
                     ExcelHelper.setCellValue(dataRow, 4, style, dataExport.frame_1)
                     ExcelHelper.setCellValue(dataRow, 5, style, dataExport.mold)
 
-                    ExcelHelper.setCellValue(dataRow, 14, style, "${planProcess.processConvertCode} ${item.title}")
+                    val titleStyle = if (isNextProduct) titlePlanStartRowStyle
+                    else if (item.titleKey == PlanTitle.PLAN_KEY) titlePlanStyle
+                    else if (item.titleKey == PlanTitle.ACTUAL_KEY) titleActualStyle
+                    else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) titleAccumulationStyle
+                    else styleCommon
+                    ExcelHelper.setCellValue(dataRow, 12, titleStyle, "${planProcess.processConvertCode} ${item.title}")
 
-                    var colIndex = 15
+                    val totalStyle = if (isNextProduct) planStartRowStyle
+                    else {
+                        if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                        else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                        else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                        else numberStyleCommon
+                    }
+                    ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                    var colIndex = 14
                     for (col in columns) {
                         val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                         val st = if (col.isHoliday) {
                             if ((value?.toIntOrNull() ?: 0) < 0) {
                                 holidayWithNegativeNumStyle
                             } else {
-                                holidayStyle
+                                if (item.titleKey == PlanTitle.PLAN_KEY) holidayStartRowStyle
+                                else if (item.titleKey == PlanTitle.ACTUAL_KEY) holidayActualRowStyle
+                                else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) holidayAccumulationRowStyle
+                                else holidayStyle
                             }
                         } else {
-                            if (isNextProduct) {
-                                if ((value?.toIntOrNull() ?: 0) < 0) {
-                                    firstRowWithNegativeNumStyle
-                                } else {
-                                    firstRowStyle
-                                }
-                            } else {
+                            if (isNextProduct) planStartRowStyle
+                            else {
                                 if ((value?.toIntOrNull() ?: 0) < 0) {
                                     negativeNumStyle
                                 } else {
-                                    style
+                                    if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                                    else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                                    else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                                    else numberStyleCommon
                                 }
                             }
                         }
-                        ExcelHelper.setCellValue(dataRow, colIndex, st, value)
+                        ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toIntOrNull()))
                         colIndex++
                     }
 
@@ -1893,31 +2180,32 @@ class PlanService(
                 }
                 if (rowDataIndex > rowProcessIndex) {
                     for (i in rowProcessIndex until rowDataIndex) {
-                        dataRow = sheet.getRow(i) ?: sheet.createRow(i)
-                        ExcelHelper.setCellValue(dataRow, 6, styleCommon, planProcess.layerCode)
-                        ExcelHelper.setCellValue(dataRow, 7, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 8, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 9, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 10, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 11, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 12, styleCommon, "")
-                        ExcelHelper.setCellValue(dataRow, 13, styleCommon, "")
+                        val style = if (i == rowDataIndex - 1) endRowStyle else middleRowStyle
+                        dataRow = ExcelHelper.createRow(sheet, i)
+                        ExcelHelper.setCellValue(dataRow, 6, style, planProcess.layerCode)
+                        ExcelHelper.setCellValue(dataRow, 7, style, "")
+                        ExcelHelper.setCellValue(dataRow, 8, style, "")
+                        ExcelHelper.setCellValue(dataRow, 9, style, "")
+                        ExcelHelper.setCellValue(dataRow, 10, style, "")
+                        ExcelHelper.setCellValue(dataRow, 11, style, "")
                     }
                     rowNumber = rowDataIndex
                 } else {
                     if (rowDataIndex == rowProcessIndex) rowNumber = rowDataIndex
                     else {
                         for (i in rowDataIndex until rowProcessIndex) {
-                            dataRow = sheet.getRow(i) ?: sheet.createRow(i)
-                            ExcelHelper.setCellValue(dataRow, 0, styleCommon, dataExport.productName?.substring(dataExport.productName!!.length - 7, dataExport.productName!!.length))
-                            ExcelHelper.setCellValue(dataRow, 1, styleCommon, dataExport.productName)
-                            ExcelHelper.setCellValue(dataRow, 2, styleCommon, dataExport.pcsSh?.toString())
-                            ExcelHelper.setCellValue(dataRow, 3, styleCommon, dataExport.blockSh?.toString())
-                            ExcelHelper.setCellValue(dataRow, 4, styleCommon, dataExport.frame_1)
-                            ExcelHelper.setCellValue(dataRow, 5, styleCommon, dataExport.mold)
-                            ExcelHelper.setCellValue(dataRow, 14, styleCommon, "")
+                            val style = if (i == rowProcessIndex - 1) endRowStyle else middleRowStyle
+                            dataRow = ExcelHelper.createRow(sheet, i)
+                            ExcelHelper.setCellValue(dataRow, 0, style, dataExport.productName?.substring(dataExport.productName!!.length - 7, dataExport.productName!!.length))
+                            ExcelHelper.setCellValue(dataRow, 1, style, dataExport.productName)
+                            ExcelHelper.setCellValue(dataRow, 2, style, dataExport.pcsSh?.toString())
+                            ExcelHelper.setCellValue(dataRow, 3, style, dataExport.blockSh?.toString())
+                            ExcelHelper.setCellValue(dataRow, 4, style, dataExport.frame_1)
+                            ExcelHelper.setCellValue(dataRow, 5, style, dataExport.mold)
+                            ExcelHelper.setCellValue(dataRow, 12, styleCommon, "")
+                            ExcelHelper.setCellValue(dataRow, 13, styleCommon, "")
 
-                            var colIndex = 15
+                            var colIndex = 14
                             for (col in columns) {
                                 ExcelHelper.setCellValue(dataRow, colIndex, (if (col.isHoliday) holidayStyle else styleCommon), "")
                                 colIndex++
@@ -1928,23 +2216,224 @@ class PlanService(
                 }
             }
         }
+
+        val dataSummary = mutableListOf<Pair<String, List<PlanSummaryModel>?>>()
+        val dataExportMapping = dataExports.map { item ->
+            item.productPlanDetails = item.productPlanDetails?.map { x ->
+                x.planData = x.planData?.filter { it.titleKey == PlanTitle.PLAN_KEY || it.titleKey == PlanTitle.ACTUAL_KEY }
+                x
+            }
+            item
+        }
+        if (request.frame_1.isNullOrEmpty()) {
+            val frame1s = commonCategoryRep.getByType(listOf(MasterDataType.KHUNG_1))
+            for (frame in frame1s) {
+                request.frame_1 = frame.value
+                val summaryByFrame = getPlanSummary(
+                    request,
+                    dataExportMapping.filter { x -> x.frame_1 == frame.value }.toMutableList()
+                )
+                if (!summaryByFrame.data.isNullOrEmpty()) {
+                    dataSummary.add(Pair(frame.value ?: "", summaryByFrame.data))
+                }
+            }
+            request.frame_1 = null
+            val planSummary = getPlanSummary(request, dataExportMapping.toMutableList())
+            dataSummary.add(Pair("TOTAL", planSummary.data))
+        } else {
+            val planSummary = getPlanSummary(request, dataExportMapping.toMutableList())
+            dataSummary.add(Pair(request.frame_1!!, planSummary.data))
+        }
+
+        rowNumber += 5
+        val summaryHeaderRow = ExcelHelper.createRow(sheet, rowNumber, 800)
+
+        ExcelHelper.setCellValue(summaryHeaderRow, 9, headerStyle, "Line")
+        ExcelHelper.setCellValue(summaryHeaderRow, 10, headerStyle, "Công đoạn")
+        ExcelHelper.setCellValue(summaryHeaderRow, 11, headerStyle, "")
+        ExcelHelper.setCellValue(summaryHeaderRow, 12, headerStyle, "日程")
+        ExcelHelper.setCellValue(summaryHeaderRow, 13, headerStyle, "Tổng")
+
+        var summaryHeaderCol = 14
+        for (col in columns) {
+            ExcelHelper.setCellValueWithCalendar(workbook, summaryHeaderRow, summaryHeaderCol, headerStyle, col.value, col.isHoliday)
+            summaryHeaderCol++
+        }
+        rowNumber++
+
+        val styleCollections = mutableListOf<CellStyleModel>()
+        for (summary in dataSummary) {
+            for ((index, data) in summary.second!!.withIndex()) {
+                if (index == 0) {
+                    generateExcelColProcessInPlanSummary(workbook, sheet, rowNumber, styleCommon, data, styleCollections, PlanActiveTab.PLAN)
+
+                    var rowIndex = rowNumber
+                    for (detail in data.details!!) {
+                        var dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                        ExcelHelper.setCellValue(dataRow, 11, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, detail.type)
+                        rowIndex++
+
+                        for (i in 1 until 5) {
+                            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                            val st = if (i == 4) {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                            } else {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+                            }
+                            ExcelHelper.setCellValue(dataRow, 11, st, "")
+                            rowIndex++
+                        }
+
+                        rowIndex = rowNumber
+                        for ((i, item) in detail.planSummaryData!!.withIndex()) {
+                            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+
+                            val frame1ColStyle = if (i == 0) styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle
+                            else if (i == detail.planSummaryData!!.size - 1) styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                            else styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+
+                            ExcelHelper.setCellValue(dataRow, 9, frame1ColStyle, summary.first)
+
+                            val titleStyle = if (item.titleKey == PlanTitle.PLAN_KEY) titlePlanStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) titleActualStyle
+                            else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) titleAccumulationStyle
+                            else styleCommon
+
+                            ExcelHelper.setCellValue(dataRow, 12, titleStyle, item.title)
+
+                            val totalStyle = if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                            else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                            else numberStyleCommon
+                            ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                            var colIndex = 14
+                            for (col in columns) {
+                                val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
+                                val st = if (col.isHoliday) {
+                                    if ((value?.toIntOrNull() ?: 0) < 0) {
+                                        holidayWithNegativeNumStyle
+                                    } else {
+                                        if (item.titleKey == PlanTitle.PLAN_KEY) holidayStartRowStyle
+                                        else if (item.titleKey == PlanTitle.ACTUAL_KEY) holidayActualRowStyle
+                                        else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) holidayAccumulationRowStyle
+                                        else holidayStyle
+                                    }
+                                } else {
+                                    if ((value?.toIntOrNull() ?: 0) < 0) {
+                                        negativeNumStyle
+                                    } else {
+                                        if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                                        else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                                        else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                                        else numberStyleCommon
+                                    }
+                                }
+                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toInt()))
+                                colIndex++
+                            }
+                            rowIndex++
+                        }
+                        rowNumber = rowIndex
+                    }
+                } else {
+                    generateExcelColProcessInPlanSummary(sheet, rowNumber, data, styleCollections, PlanActiveTab.PLAN)
+
+                    var rowIndex = rowNumber
+                    for (detail in data.details!!) {
+                        var dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                        ExcelHelper.setCellValue(dataRow, 11, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, detail.type)
+                        rowIndex++
+
+                        for (i in 1 until 5) {
+                            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                            val st = if (i == 4) {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                            } else {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+                            }
+                            ExcelHelper.setCellValue(dataRow, 11, st, "")
+                            rowIndex++
+                        }
+
+                        rowIndex = rowNumber
+                        for ((i, item) in detail.planSummaryData!!.withIndex()) {
+                            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+
+                            val frame1ColStyle = if (i == 0) styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle
+                            else if (i == detail.planSummaryData!!.size - 1) styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                            else styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+
+                            ExcelHelper.setCellValue(dataRow, 9, frame1ColStyle, summary.first)
+
+                            val titleStyle = if (item.titleKey == PlanTitle.PLAN_KEY) titlePlanStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) titleActualStyle
+                            else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) titleAccumulationStyle
+                            else styleCommon
+
+                            ExcelHelper.setCellValue(dataRow, 12, titleStyle, item.title)
+
+                            val totalStyle = if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                            else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                            else numberStyleCommon
+                            ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                            var colIndex = 14
+                            for (col in columns) {
+                                val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
+                                val st = if (col.isHoliday) {
+                                    if ((value?.toIntOrNull() ?: 0) < 0) {
+                                        holidayWithNegativeNumStyle
+                                    } else {
+                                        if (item.titleKey == PlanTitle.PLAN_KEY) holidayStartRowStyle
+                                        else if (item.titleKey == PlanTitle.ACTUAL_KEY) holidayActualRowStyle
+                                        else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) holidayAccumulationRowStyle
+                                        else holidayStyle
+                                    }
+                                } else {
+                                    if ((value?.toIntOrNull() ?: 0) < 0) {
+                                        negativeNumStyle
+                                    } else {
+                                        if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                                        else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                                        else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
+                                        else numberStyleCommon
+                                    }
+                                }
+                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toInt()))
+                                colIndex++
+                            }
+                            rowIndex++
+                        }
+                        rowNumber = rowIndex
+                    }
+                }
+            }
+            val endRow = sheet.createRow(rowNumber)
+            ExcelHelper.setCellValue(endRow, 9, styleCommon, "")
+            rowNumber++
+        }
     }
 
     private fun generateDataSheetSummary(
         workbook: Workbook,
         columns: List<CalendarResponse>,
         dataSummary: List<Pair<String, List<PlanSummaryModel>?>>,
-        headerStyle: CellStyle
+        headerStyle: CellStyle,
+        frame_1: String?
     ) {
-        val sheet = workbook.createSheet("Tổng hợp")
-        val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
-        headerRow.height = 800
+        val sheet = workbook.getSheetAt(0)
+        val sheetName = if (frame_1.isNullOrEmpty()) sheet.sheetName else "${sheet.sheetName} - $frame_1"
+        workbook.setSheetName(workbook.getSheetIndex(sheet), sheetName)
+
+        val headerRow = ExcelHelper.createRow(sheet, 0, 800)
 
         ExcelHelper.setCellValue(headerRow, 0, headerStyle, "Line")
         sheet.setColumnWidth(0, 2500)
 
         ExcelHelper.setCellValue(headerRow, 1, headerStyle, "Công đoạn")
-        sheet.setColumnWidth(1, 6000)
+        sheet.setColumnWidth(1, 7000)
 
         ExcelHelper.setCellValue(headerRow, 2, headerStyle, "")
         sheet.setColumnWidth(2, 5000)
@@ -1952,7 +2441,10 @@ class PlanService(
         ExcelHelper.setCellValue(headerRow, 3, headerStyle, "日程")
         sheet.setColumnWidth(3, 2000)
 
-        var headerCol = 4
+        ExcelHelper.setCellValue(headerRow, 4, headerStyle, "Tổng")
+        sheet.setColumnWidth(4, 3000)
+
+        var headerCol = 5
         for (col in columns) {
             ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
             headerCol++
@@ -1961,76 +2453,114 @@ class PlanService(
         sheet.createFreezePane(0, 1)
 
         val styleCollections = mutableListOf<CellStyleModel>()
-        val style = ExcelHelper.getCellStyleCommon(workbook)
-        style.alignment = HorizontalAlignment.CENTER
+        //setting style
+        val styleCommon = ExcelHelper.getCellStyleCommon(workbook)
+        styleCommon.alignment = HorizontalAlignment.CENTER
+        val fontTemplate = workbook.getFontAt(styleCommon.fontIndex)
+
+        val planRowStyle = workbook.createCellStyle()
+        planRowStyle.cloneStyleFrom(styleCommon)
+        planRowStyle.borderBottom = BorderStyle.DOTTED
+        planRowStyle.alignment = HorizontalAlignment.RIGHT
+
+        val titlePlanStyle = workbook.createCellStyle()
+        titlePlanStyle.cloneStyleFrom(styleCommon)
+        titlePlanStyle.borderBottom = BorderStyle.DOTTED
+
+        val redFont = workbook.createFont()
+        redFont.fontName = fontTemplate.fontName
+        redFont.fontHeightInPoints = fontTemplate.fontHeightInPoints
+        redFont.color = IndexedColors.RED.index
+
+        val actualRowStyle = workbook.createCellStyle()
+        actualRowStyle.cloneStyleFrom(styleCommon)
+        actualRowStyle.borderTop = BorderStyle.DOTTED
+        actualRowStyle.alignment = HorizontalAlignment.RIGHT
+        actualRowStyle.setFont(redFont)
+
+        val titleActualStyle = workbook.createCellStyle()
+        titleActualStyle.cloneStyleFrom(styleCommon)
+        titleActualStyle.borderTop = BorderStyle.DOTTED
+        titleActualStyle.setFont(redFont)
 
         val holidayStyle = workbook.createCellStyle()
-        holidayStyle.cloneStyleFrom(style)
+        holidayStyle.cloneStyleFrom(styleCommon)
         holidayStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
         holidayStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        holidayStyle.alignment = HorizontalAlignment.RIGHT
 
-        val fontTemplate = workbook.getFontAt(style.fontIndex)
-        val font = workbook.createFont()
-        font.fontName = fontTemplate.fontName
-        font.fontHeightInPoints = fontTemplate.fontHeightInPoints
-        font.color = IndexedColors.RED.index
+        val holidayStartRowStyle = workbook.createCellStyle()
+        holidayStartRowStyle.cloneStyleFrom(styleCommon)
+        holidayStartRowStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+        holidayStartRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        holidayStartRowStyle.alignment = HorizontalAlignment.RIGHT
+        holidayStartRowStyle.borderBottom = BorderStyle.DOTTED
 
-        val negativeNumStyle = workbook.createCellStyle()
-        negativeNumStyle.cloneStyleFrom(style)
-        negativeNumStyle.setFont(font)
+        val holidayActualRowStyle = workbook.createCellStyle()
+        holidayActualRowStyle.cloneStyleFrom(styleCommon)
+        holidayActualRowStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+        holidayActualRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        holidayActualRowStyle.alignment = HorizontalAlignment.RIGHT
+        holidayActualRowStyle.borderTop = BorderStyle.DOTTED
+        holidayActualRowStyle.setFont(redFont)
 
-        val holidayWithNegativeNumStyle = workbook.createCellStyle()
-        holidayWithNegativeNumStyle.cloneStyleFrom(style)
-        holidayWithNegativeNumStyle.setFont(font)
-        holidayWithNegativeNumStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
-        holidayWithNegativeNumStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+        val numberStyleCommon = workbook.createCellStyle()
+        numberStyleCommon.cloneStyleFrom(styleCommon)
+        numberStyleCommon.alignment = HorizontalAlignment.RIGHT
+        //
 
         var rowNumber = 1
         for (summary in dataSummary) {
             for ((index, data) in summary.second!!.withIndex()) {
                 if (index == 0) {
-                    generateExcelColProcessInPlanSummary(workbook, sheet, rowNumber, style, data, styleCollections)
+                    generateExcelColProcessInPlanSummary(workbook, sheet, rowNumber, styleCommon, data, styleCollections)
 
                     var rowIndex = rowNumber
-                    for (detail in data.details!!) {
-                        var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                    for ((iDetail, detail) in data.details!!.withIndex()) {
+                        var dataRow = ExcelHelper.createRow(sheet, rowIndex)
                         ExcelHelper.setCellValue(dataRow, 2, styleCollections.find { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }?.cellStyle!!, detail.type)
                         rowIndex++
 
-                        for (i in 1 until 5) {
-                            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                            val st = if (i == 4) {
-                                styleCollections.find { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }?.cellStyle
-                            } else {
-                                styleCollections.find { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }?.cellStyle
-                            }
-                            ExcelHelper.setCellValue(dataRow, 2, st!!, "")
-                            rowIndex++
-                        }
+                        dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                        ExcelHelper.setCellValue(dataRow, 2, styleCollections.find { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }?.cellStyle!!, "")
 
                         rowIndex = rowNumber
-                        for (item in detail.planSummaryData!!) {
-                            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                            ExcelHelper.setCellValue(dataRow, 0, style, summary.first)
-                            ExcelHelper.setCellValue(dataRow, 3, style, item.title)
+                        for ((i, item) in detail.planSummaryData!!.withIndex()) {
+                            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                            val colLineStyle = if (i == 0 && iDetail == 0) {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle
+                            } else if (i == detail.planSummaryData!!.size - 1 && iDetail == data.details!!.size - 1) {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                            } else {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+                            }
+                            ExcelHelper.setCellValue(dataRow, 0, colLineStyle, summary.first)
 
-                            var colIndex = 4
+                            val titleStyle = if (item.titleKey == PlanTitle.PLAN_KEY) titlePlanStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) titleActualStyle
+                            else styleCommon
+
+                            ExcelHelper.setCellValue(dataRow, 3, titleStyle, item.title)
+
+                            val totalStyle = if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                            else numberStyleCommon
+
+                            ExcelHelper.setCellValue(dataRow, 4, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                            var colIndex = 5
                             for (col in columns) {
                                 val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                                 val st = if (col.isHoliday) {
-                                    if ((value?.toIntOrNull() ?: 0) < 0) {
-                                        holidayWithNegativeNumStyle
-                                    } else {
-                                        holidayStyle
-                                    }
+                                    if (item.titleKey == PlanTitle.PLAN_KEY) holidayStartRowStyle
+                                    else if (item.titleKey == PlanTitle.ACTUAL_KEY) holidayActualRowStyle
+                                    else holidayStyle
                                 } else {
-                                    if ((value?.toIntOrNull() ?: 0) < 0) {
-                                        negativeNumStyle
-                                    } else {
-                                        style
-                                    }
+                                    if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                                    else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                                    else numberStyleCommon
                                 }
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, value)
+                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toIntOrNull()))
                                 colIndex++
                             }
                             rowIndex++
@@ -2041,45 +2571,51 @@ class PlanService(
                     generateExcelColProcessInPlanSummary(sheet, rowNumber, data, styleCollections)
 
                     var rowIndex = rowNumber
-                    for (detail in data.details!!) {
-                        var dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+                    for ((iDetail, detail) in data.details!!.withIndex()) {
+                        var dataRow = ExcelHelper.createRow(sheet, rowIndex)
                         ExcelHelper.setCellValue(dataRow, 2, styleCollections.find { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }?.cellStyle!!, detail.type)
                         rowIndex++
 
-                        for (i in 1 until 5) {
-                            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                            val st = if (i == 4) {
-                                styleCollections.find { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }?.cellStyle
-                            } else {
-                                styleCollections.find { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }?.cellStyle
-                            }
-                            ExcelHelper.setCellValue(dataRow, 2, st!!, "")
-                            rowIndex++
-                        }
+                        dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                        ExcelHelper.setCellValue(dataRow, 2, styleCollections.find { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }?.cellStyle!!, "")
 
                         rowIndex = rowNumber
-                        for (item in detail.planSummaryData!!) {
-                            dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-                            ExcelHelper.setCellValue(dataRow, 0, style, summary.first)
-                            ExcelHelper.setCellValue(dataRow, 3, style, item.title)
+                        for ((i, item) in detail.planSummaryData!!.withIndex()) {
+                            dataRow = ExcelHelper.createRow(sheet, rowIndex)
+                            val colLineStyle = if (i == 0 && iDetail == 0) {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle
+                            } else if (i == detail.planSummaryData!!.size - 1 && iDetail == data.details!!.size - 1) {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                            } else {
+                                styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+                            }
+                            ExcelHelper.setCellValue(dataRow, 0, colLineStyle, summary.first)
 
-                            var colIndex = 4
+                            val titleStyle = if (item.titleKey == PlanTitle.PLAN_KEY) titlePlanStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) titleActualStyle
+                            else styleCommon
+
+                            ExcelHelper.setCellValue(dataRow, 3, titleStyle, item.title)
+
+                            val totalStyle = if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                            else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                            else numberStyleCommon
+
+                            ExcelHelper.setCellValue(dataRow, 4, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+
+                            var colIndex = 5
                             for (col in columns) {
                                 val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                                 val st = if (col.isHoliday) {
-                                    if ((value?.toIntOrNull() ?: 0) < 0) {
-                                        holidayWithNegativeNumStyle
-                                    } else {
-                                        holidayStyle
-                                    }
+                                    if (item.titleKey == PlanTitle.PLAN_KEY) holidayStartRowStyle
+                                    else if (item.titleKey == PlanTitle.ACTUAL_KEY) holidayActualRowStyle
+                                    else holidayStyle
                                 } else {
-                                    if ((value?.toIntOrNull() ?: 0) < 0) {
-                                        negativeNumStyle
-                                    } else {
-                                        style
-                                    }
+                                    if (item.titleKey == PlanTitle.PLAN_KEY) planRowStyle
+                                    else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
+                                    else numberStyleCommon
                                 }
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, value)
+                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toIntOrNull()))
                                 colIndex++
                             }
                             rowIndex++
@@ -2089,7 +2625,7 @@ class PlanService(
                 }
             }
             val endRow = sheet.createRow(rowNumber)
-            ExcelHelper.setCellValue(endRow, 0, style, "")
+            ExcelHelper.setCellValue(endRow, 0, styleCommon, "")
             rowNumber++
         }
     }
@@ -2101,9 +2637,8 @@ class PlanService(
         headerStyle: CellStyle
     ) {
         if (dataEquipment != null) {
-            val sheet = workbook.createSheet("Năng suất máy")
-            val headerRow = sheet.getRow(0) ?: sheet.createRow(0)
-            headerRow.height = 800
+            val sheet = workbook.getSheetAt(0)
+            val headerRow = ExcelHelper.createRow(sheet, 0, 800)
 
             ExcelHelper.setCellValue(headerRow, 0, headerStyle, "Line")
             sheet.setColumnWidth(0, 2500)
@@ -2129,20 +2664,73 @@ class PlanService(
             val styleCollections = mutableListOf<CellStyleModel>()
             val style = ExcelHelper.getCellStyleCommon(workbook)
 
-            val holidayStyle = workbook.createCellStyle()
-            holidayStyle.cloneStyleFrom(style)
-            holidayStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
-            holidayStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            val titleFirstRowStyle = workbook.createCellStyle()
+            titleFirstRowStyle.cloneStyleFrom(style)
+            titleFirstRowStyle.borderBottom = BorderStyle.DOTTED
+            titleFirstRowStyle.alignment = HorizontalAlignment.LEFT
+
+            val titleMiddleRowStyle = workbook.createCellStyle()
+            titleMiddleRowStyle.cloneStyleFrom(style)
+            titleMiddleRowStyle.borderBottom = BorderStyle.DOTTED
+            titleMiddleRowStyle.borderTop = BorderStyle.DOTTED
+            titleMiddleRowStyle.alignment = HorizontalAlignment.LEFT
+
+            val titleEndRowStyle = workbook.createCellStyle()
+            titleEndRowStyle.cloneStyleFrom(style)
+            titleEndRowStyle.borderTop = BorderStyle.DOTTED
+            titleEndRowStyle.alignment = HorizontalAlignment.LEFT
+
+            val detailFirstRowStyle = workbook.createCellStyle()
+            detailFirstRowStyle.cloneStyleFrom(style)
+            detailFirstRowStyle.borderBottom = BorderStyle.DOTTED
+            detailFirstRowStyle.alignment = HorizontalAlignment.RIGHT
+
+            val detailMiddleRowStyle = workbook.createCellStyle()
+            detailMiddleRowStyle.cloneStyleFrom(style)
+            detailMiddleRowStyle.borderBottom = BorderStyle.DOTTED
+            detailMiddleRowStyle.borderTop = BorderStyle.DOTTED
+            detailMiddleRowStyle.alignment = HorizontalAlignment.RIGHT
+
+            val detailEndRowStyle = workbook.createCellStyle()
+            detailEndRowStyle.cloneStyleFrom(style)
+            detailEndRowStyle.borderTop = BorderStyle.DOTTED
+            detailEndRowStyle.alignment = HorizontalAlignment.RIGHT
+
+            val holidayFirstRowStyle = workbook.createCellStyle()
+            holidayFirstRowStyle.cloneStyleFrom(style)
+            holidayFirstRowStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+            holidayFirstRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            holidayFirstRowStyle.borderBottom = BorderStyle.DOTTED
+            holidayFirstRowStyle.alignment = HorizontalAlignment.RIGHT
+
+            val holidayMiddleRowStyle = workbook.createCellStyle()
+            holidayMiddleRowStyle.cloneStyleFrom(style)
+            holidayMiddleRowStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+            holidayMiddleRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            holidayMiddleRowStyle.borderBottom = BorderStyle.DOTTED
+            holidayMiddleRowStyle.borderTop = BorderStyle.DOTTED
+            holidayMiddleRowStyle.alignment = HorizontalAlignment.RIGHT
+
+            val holidayEndRowStyle = workbook.createCellStyle()
+            holidayEndRowStyle.cloneStyleFrom(style)
+            holidayEndRowStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+            holidayEndRowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            holidayEndRowStyle.borderTop = BorderStyle.DOTTED
+            holidayEndRowStyle.alignment = HorizontalAlignment.RIGHT
 
             val orangeStyle = workbook.createCellStyle()
             orangeStyle.cloneStyleFrom(style)
             orangeStyle.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
             orangeStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            orangeStyle.borderTop = BorderStyle.DOTTED
+            orangeStyle.alignment = HorizontalAlignment.RIGHT
 
             val yellowStyle = workbook.createCellStyle()
             yellowStyle.cloneStyleFrom(style)
             yellowStyle.fillForegroundColor = IndexedColors.LIGHT_YELLOW.index
             yellowStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
+            yellowStyle.borderTop = BorderStyle.DOTTED
+            yellowStyle.alignment = HorizontalAlignment.RIGHT
 
             var rowNumber = 1
             var index = 0
@@ -2155,31 +2743,41 @@ class PlanService(
                         generateExcelRowProcessEquipment(sheet, rowNumber, planProcess, styleCollections)
                     }
                     var rowTitleIndex = rowNumber
-                    for (item in planProcess.processDetail!!) {
-                        var dataRow = sheet.getRow(rowTitleIndex) ?: sheet.createRow(rowTitleIndex)
+                    for ((iItem, item) in planProcess.processDetail!!.withIndex()) {
+                        var dataRow = ExcelHelper.createRow(sheet, rowTitleIndex)
                         ExcelHelper.setCellValue(dataRow, 2, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, item.name)
                         ExcelHelper.setCellValue(dataRow, 3, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, (item.totalProcess ?: 0).toString())
 
                         rowTitleIndex++
-                        dataRow = sheet.getRow(rowTitleIndex) ?: sheet.createRow(rowTitleIndex)
+                        dataRow = ExcelHelper.createRow(sheet, rowTitleIndex)
                         ExcelHelper.setCellValue(dataRow, 2, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, "")
                         ExcelHelper.setCellValue(dataRow, 3, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, "")
 
                         rowTitleIndex++
-                        dataRow = sheet.getRow(rowTitleIndex) ?: sheet.createRow(rowTitleIndex)
+                        dataRow = ExcelHelper.createRow(sheet, rowTitleIndex)
                         ExcelHelper.setCellValue(dataRow, 2, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, "")
                         ExcelHelper.setCellValue(dataRow, 3, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle, "")
 
                         rowTitleIndex++
-                        dataRow = sheet.getRow(rowTitleIndex) ?: sheet.createRow(rowTitleIndex)
+                        dataRow = ExcelHelper.createRow(sheet, rowTitleIndex)
                         ExcelHelper.setCellValue(dataRow, 2, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle, "")
                         ExcelHelper.setCellValue(dataRow, 3, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle, "")
 
                         var rowDataIndex = rowNumber
-                        for (data in item.processDetailList) {
-                            dataRow = sheet.getRow(rowDataIndex) ?: sheet.createRow(rowDataIndex)
-                            ExcelHelper.setCellValue(dataRow, 0, style, frame1Value)
-                            ExcelHelper.setCellValue(dataRow, 4, style, data.type)
+                        for ((iData, data) in item.processDetailList.withIndex()) {
+                            dataRow = ExcelHelper.createRow(sheet, rowDataIndex)
+
+                            val frame1ColStyle = if (iItem == 0 && iData == 0) styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle
+                            else if (iItem == planProcess.processDetail!!.size - 1 && iData == item.processDetailList.size - 1) styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_END_ROW }.cellStyle
+                            else styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_MIDDLE_ROW }.cellStyle
+
+                            ExcelHelper.setCellValue(dataRow, 0, frame1ColStyle, frame1Value)
+
+                            val titleStyle = if (iData == 0) titleFirstRowStyle
+                            else if (iData == item.processDetailList.size - 1) titleEndRowStyle
+                            else titleMiddleRowStyle
+
+                            ExcelHelper.setCellValue(dataRow, 4, titleStyle, data.type)
 
                             if (data.type == ProcessPlan.QUANTITY_MACHINE) {
                                 dataRow.height = 700
@@ -2189,13 +2787,23 @@ class PlanService(
                             for (col in columns) {
                                 val quantityByCalendar = data.quantityByCalendars.find { x -> x.key == col.key }
                                 val st = if (data.type == ProcessPlan.QUANTITY_MACHINE) {
+                                    quantityByCalendar?.value += '%'
                                     when (quantityByCalendar?.sort) {
                                         Color.YELLOW.toBigDecimalOrNull() -> yellowStyle
                                         Color.ORANGE.toBigDecimalOrNull() -> orangeStyle
-                                        else -> if (col.isHoliday) holidayStyle else style
+                                        else -> if (col.isHoliday) holidayEndRowStyle else detailEndRowStyle
                                     }
                                 } else {
-                                    if (col.isHoliday) holidayStyle else style
+                                    quantityByCalendar?.value = NumberHelper.formatNumber(quantityByCalendar?.value?.toIntOrNull())
+                                    if (col.isHoliday) {
+                                        if (iData == 0) holidayFirstRowStyle
+                                        else if (iData == item.processDetailList.size - 1) holidayEndRowStyle
+                                        else holidayMiddleRowStyle
+                                    } else {
+                                        if (iData == 0) detailFirstRowStyle
+                                        else if (iData == item.processDetailList.size - 1) detailEndRowStyle
+                                        else detailMiddleRowStyle
+                                    }
                                 }
 
                                 ExcelHelper.setCellValue(dataRow, colIndex, st, quantityByCalendar?.value)
@@ -2223,7 +2831,7 @@ class PlanService(
     //region PLAN_TEMP
 
     fun approve(request: PlanSearchRequest): BaseResponse<Boolean> {
-        val planTemp = planRep.getPlanTemp() ?: throw BusinessException("Chưa có kế hoạch nào cần phê duyệt")
+        val planTemp = planRep.getPlanTemp() ?: throw BusinessException(CommonUtils.getMessage("validate.plan.notPlanApprove"))
 
         val planProductTemps = planProductRep.getPlanProductTemp()
         val planProcessTemps = planProcessRep.getPlanProcessTemp()
@@ -2237,7 +2845,7 @@ class PlanService(
         planHistoryService.addFile(exportExcel(request), request.fileName)
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 
-        return BaseResponse(true, "Phê duyệt kế hoạch thành công")
+        return BaseResponse(true, CommonUtils.getMessage("action.succeeded"))
     }
 
     fun checkTemp(): BaseResponse<Boolean> {

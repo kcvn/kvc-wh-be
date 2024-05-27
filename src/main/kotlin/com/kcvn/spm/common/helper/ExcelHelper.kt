@@ -25,6 +25,11 @@ import java.util.*
 
 class ExcelHelper {
     companion object {
+        fun createRow(sheet: Sheet, rowIndex: Int, rowHeight: Short = 500): Row {
+            val dataRow = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
+            dataRow.height = rowHeight
+            return dataRow
+        }
         fun getCellValue(row: Row, colIdx: Int, format: String? = null): String {
             try {
                 val cell = row.getCell(colIdx)
@@ -71,7 +76,20 @@ class ExcelHelper {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate
         }
+        fun createErrorCellStyle(workbook: Workbook, styleTemplate: CellStyle): CellStyle {
+            val errorCellStyle = workbook.createCellStyle()
+            errorCellStyle.cloneStyleFrom(styleTemplate)
 
+            val errorFont = workbook.createFont()
+            errorFont.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+            errorFont.fontHeightInPoints = 12
+            errorFont.bold = false
+            errorFont.color = IndexedColors.RED.index
+
+            errorCellStyle.setFont(errorFont)
+
+            return errorCellStyle
+        }
         fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: Date?) {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate
@@ -152,8 +170,9 @@ class ExcelHelper {
             indexColor: Short? = null,
             isNumberFormat: Boolean = false,
             isAlignLeft: Boolean = false,
-            isNotBold: Boolean = false
-            ) {
+            isNotBold: Boolean = false,
+            isAlignRight: Boolean = false
+        ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
             row.createCell(colIndex).setCellValue(value)
@@ -164,6 +183,7 @@ class ExcelHelper {
             if (isBorderBottom) style.borderBottom = BorderStyle.THIN else style.borderBottom = BorderStyle.NONE
             if (isAlignCenter) style.alignment = HorizontalAlignment.CENTER
             if (isAlignLeft) style.alignment = HorizontalAlignment.LEFT
+            if (isAlignRight) style.alignment = HorizontalAlignment.RIGHT
             if (indexColor != null) {
                 style.fillForegroundColor = indexColor
                 style.fillPattern = FillPatternType.SOLID_FOREGROUND

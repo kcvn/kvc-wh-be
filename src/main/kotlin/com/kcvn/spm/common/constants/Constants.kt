@@ -10,6 +10,10 @@ class Constants {
         const val SYSTEM_LOCK_IMPORT_ORDER = "IMPORT_ORDER"
         const val SYSTEM_LOCK_CREATE_PLAN = "CREATE_PLAN"
         const val SYSTEM_LOCK_PRODUCT_PROCESS = "PRODUCT_PROCESS"
+
+        const val EN = "en"
+        const val VI = "vi"
+        const val JA = "ja"
     }
 }
 
@@ -109,8 +113,6 @@ class DateTimeFormat {
         const val M_dd_yyyy = "M/dd/yyyy"
         const val yyyy_MM_dd = "yyyy/MM/dd"
         const val ddMMyyyy = "ddMMyyyy"
-
-
     }
 }
 
@@ -263,6 +265,11 @@ class PlanTitle {
             KeyValueResponse("DIFFERENCE", "差")
         )
 
+        val DATA_EXPORT_SUMMARY = listOf<KeyValueResponse>(
+            KeyValueResponse("PLAN", "予定"),
+            KeyValueResponse("ACTUAL", "実績")
+        )
+
         const val PLAN = "予定"
         const val PLAN_ACCUMULATION = "累計"
         const val ACTUAL = "実績"
@@ -347,6 +354,17 @@ class PlanStyleKey {
         const val PLAN_SUMMARY_END_ROW = "PLAN_SUMMARY_END_ROW"
         const val PLAN_SUMMARY_MIDDLE_ROW = "PLAN_SUMMARY_MIDDLE_ROW"
         const val PLAN_SUMMARY_DETAIL = "PLAN_SUMMARY_DETAIL"
+    }
+}
+
+class PlanActiveTab {
+    companion object {
+        const val PLAN = "PLAN"
+        const val SUM = "SUM"
+        const val SUM_MU = "MU"
+        const val SUM_ML = "ML"
+        const val SUM_SWR = "SWR"
+        const val EQUIPMENT = "EQUIPMENT"
     }
 }
 

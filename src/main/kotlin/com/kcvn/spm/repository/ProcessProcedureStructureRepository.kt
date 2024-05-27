@@ -17,6 +17,17 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
             .fetchInto(ProcessProcedureStructure::class.java)
     }
 
+    fun findByKey(keys: List<String>): List<ProcessProcedureStructure> {
+        return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE)
+            .where(
+                DSL.concat(
+                    PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE,
+                    PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
+                    PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
+                ).`in`(keys)
+            ).fetchInto(ProcessProcedureStructure::class.java)
+    }
+
     fun getListProcessCode(): List<String> {
         return context.select(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE)
             .from(PROCESS_PROCEDURE_STRUCTURE)

@@ -10,6 +10,7 @@ import com.kcvn.spm.app.product.payload.model.ProductModel
 import com.kcvn.spm.app.product.payload.request.ProductSearchRequest
 import com.kcvn.spm.app.product.payload.response.PagingProductResponse
 import com.kcvn.spm.app.product.payload.response.ProductDetailResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.Frame1
 import com.kcvn.spm.common.constants.Mold
@@ -29,6 +30,7 @@ import com.kcvn.spm.repository.ProcessGroupRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
+import jakarta.servlet.http.HttpServletRequest
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
@@ -38,6 +40,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.servlet.support.RequestContextUtils
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -55,12 +58,13 @@ class ProductService(
     private val processGroupRep: ProcessGroupRepository
 ) {
 
-    fun getListProduct(request: ProductSearchRequest?, pageable: Pageable): PagingProductResponse {
+    fun getListProduct(request: ProductSearchRequest?, pageable: Pageable, httpRequest: HttpServletRequest): PagingProductResponse {
+        val currentLang = RequestContextUtils.getLocale(httpRequest).language
         val products = productRep.getPagingList(request, pageable)
         var response = PagingProductResponse()
 
         if (products.first.isNotEmpty()) {
-            response = mappingProductResponse(products.first)
+            response = mappingProductResponse(products.first, currentLang)
             response.totalRecords = products.second
         }
 
@@ -74,7 +78,6 @@ class ProductService(
     fun exportExcel(request: ProductSearchRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
         val products = productRep.getList(request, pageable)
         val productMapping = mappingProductResponse(products)
-
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportProductTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
@@ -402,13 +405,16 @@ class ProductService(
         return response
     }
 
-    private fun mappingProductResponse(products: List<Product>): PagingProductResponse {
+    private fun mappingProductResponse(products: List<Product>, currentLang: String? = "vi"): PagingProductResponse {
         val productNames = products.mapNotNull { x -> x.name }
         val completionRates = completionRateProductRep.getEffectiveByProduct(productNames)
         val productProcedureStructures = processProcedureStructureRep.getByProductName(productNames)
         val procedureStructureIds = productProcedureStructures.mapNotNull { x -> x.id }
         val productProcesses = productProcessRep.getByProcessProcedureStructure(procedureStructureIds)
-        val processGroups = processGroupRep.getForProduct()
+        val processGroups = processGroupRep.getForProduct().map { item ->
+            if (currentLang == Constants.JA) item.description = item.descriptionJp
+            item
+        }
         val productProcessGroups = productProcesses.filter { x ->
             !x.processStatisticCode.isNullOrEmpty() && x.processStatisticCode != ProcessStatisticCode.KO
         }.map { x ->

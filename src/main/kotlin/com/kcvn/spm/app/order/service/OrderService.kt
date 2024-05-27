@@ -12,6 +12,7 @@ import com.kcvn.spm.common.constants.OrderVersion
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
@@ -131,7 +132,7 @@ class OrderService(
                 val row: Row = sheet.createRow(rowNumberFill++)
                 ExcelHelper.setCellValue(row, 0, style, item.productShortcutName)
                 ExcelHelper.setCellValue(row, 1, style, item.productName)
-                ExcelHelper.setCellValue(row, 2, style, item.quantity?.toString())
+                ExcelHelper.setCellValue(row, 2, style, NumberHelper.formatNumber(item.quantity))
                 ExcelHelper.setCellValue(row, 3, style, item.frame_1)
                 ExcelHelper.setCellValue(row, 4, style, item.layerCount?.toString())
                 ExcelHelper.setCellValue(row, 5, style, item.pcsSh?.toString())
@@ -144,7 +145,8 @@ class OrderService(
                     for (col in listOrderResponse.columns) {
                         val orderDetail = item.quantityByCalendars?.find { it.key == col.key }
                         val color = if (orderDetail?.isHasDifferent == true) Color.PINK else null
-                        ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, style, orderDetail?.value, col.isHoliday, color= color)
+                        val value = NumberHelper.formatNumber(orderDetail?.value?.toIntOrNull())
+                        ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, style, value, col.isHoliday, color= color)
                         colIndex++
                     }
                 }

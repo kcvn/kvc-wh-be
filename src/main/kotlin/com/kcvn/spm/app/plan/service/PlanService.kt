@@ -715,7 +715,7 @@ class PlanService(
             val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.T }
             val ducLo = generateModelPlanSummaryData1(
                 if (moldByFrame1s.size > 1) CommonUtils.getMessage("excel.rowTotal") else moldByFrame1s.first(),
-                process, ProcessStatisticCode.T, response.columns, dataDucLo, isExport
+                process, "${ProcessConvertCode.T}/${ProcessConvertCode.TH}", response.columns, dataDucLo, isExport
             )
 
             if (moldByFrame1s.size > 1) {
@@ -852,7 +852,7 @@ class PlanService(
         var rowIndex = rowNumber
         var dataRow = ExcelHelper.createRow(sheet, rowIndex)
         val increaseRowIndex = if (activeTab == PlanActiveTab.SUM) 0 else 9
-        val value = if (activeTab == PlanActiveTab.SUM) "${data.processName} - [${data.processConvertCode}]" else data.processName
+        val value = if (activeTab == PlanActiveTab.SUM) "${data.processName} [${data.processConvertCode}]" else data.processName
         ExcelHelper.setCellValueCustom(
             workbook = workbook, row = dataRow, colIndex = 1 + increaseRowIndex, styleTemplate = style, value = value,
             isBorderLeft = true, isBorderRight = true, isBorderTop = true, isBorderBottom = false,
@@ -938,7 +938,7 @@ class PlanService(
         var rowIndex = rowNumber
         var dataRow = ExcelHelper.createRow(sheet, rowIndex)
         val increaseRowIndex = if (activeTab == PlanActiveTab.SUM) 0 else 9
-        val value = if (activeTab == PlanActiveTab.SUM) "${data.processName} - [${data.processConvertCode}]" else data.processName
+        val value = if (activeTab == PlanActiveTab.SUM) "${data.processName} [${data.processConvertCode}]" else data.processName
         ExcelHelper.setCellValue(dataRow, 1 + increaseRowIndex, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, value)
 
         if (activeTab == PlanActiveTab.SUM) {
@@ -1811,9 +1811,18 @@ class PlanService(
         return when (request.activeTab) {
             PlanActiveTab.PLAN -> exportPlanInfo(request, columns)
             PlanActiveTab.SUM -> exportPlanSummary(request, columns)
-            PlanActiveTab.SUM_ML -> exportPlanSummary(request, columns)
-            PlanActiveTab.SUM_MU -> exportPlanSummary(request, columns)
-            PlanActiveTab.SUM_SWR -> exportPlanSummary(request, columns)
+            PlanActiveTab.SUM_ML -> {
+                request.frame_1 = Frame1.ML
+                exportPlanSummary(request, columns)
+            }
+            PlanActiveTab.SUM_MU -> {
+                request.frame_1 = Frame1.MU
+                exportPlanSummary(request, columns)
+            }
+            PlanActiveTab.SUM_SWR -> {
+                request.frame_1 = Frame1.SWR
+                exportPlanSummary(request, columns)
+            }
             PlanActiveTab.EQUIPMENT -> exportEquipment(request, columns)
             else -> FileContentModel()
         }
@@ -1878,7 +1887,7 @@ class PlanService(
             val planSummary = getPlanSummary(request, dataExports.toMutableList(), true)
             dataSummary.add(Pair(request.frame_1!!, planSummary.data))
         }
-        generateDataSheetSummary(workbook, columns, dataSummary, headerStyle)
+        generateDataSheetSummary(workbook, columns, dataSummary, headerStyle, request.frame_1)
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
@@ -2411,9 +2420,13 @@ class PlanService(
         workbook: Workbook,
         columns: List<CalendarResponse>,
         dataSummary: List<Pair<String, List<PlanSummaryModel>?>>,
-        headerStyle: CellStyle
+        headerStyle: CellStyle,
+        frame_1: String?
     ) {
         val sheet = workbook.getSheetAt(0)
+        val sheetName = if (frame_1.isNullOrEmpty()) sheet.sheetName else "${sheet.sheetName} - $frame_1"
+        workbook.setSheetName(workbook.getSheetIndex(sheet), sheetName)
+
         val headerRow = ExcelHelper.createRow(sheet, 0, 800)
 
         ExcelHelper.setCellValue(headerRow, 0, headerStyle, "Line")

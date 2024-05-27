@@ -10,6 +10,10 @@ class Constants {
         const val SYSTEM_LOCK_IMPORT_ORDER = "IMPORT_ORDER"
         const val SYSTEM_LOCK_CREATE_PLAN = "CREATE_PLAN"
         const val SYSTEM_LOCK_PRODUCT_PROCESS = "PRODUCT_PROCESS"
+
+        const val EN = "en"
+        const val VI = "vi"
+        const val JA = "ja"
     }
 }
 

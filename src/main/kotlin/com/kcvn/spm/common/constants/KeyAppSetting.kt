@@ -7,6 +7,8 @@ class KeyAppSetting {
         const val SCHEDULER_PROCESS_MASTER = "SCHEDULER_PROCESS_MASTER"
         const val WORK_RESULT = "WORK_RESULT"
 
+        const val DATE_SYNC_DATA_FROM_TRANS_AM = "DATE_SYNC_DATA_FROM_TRANS_AM"
+
         //Mold by frame1
         const val MOLD_BY_FRAME1 = "MOLD_BY_FRAME1"
 

@@ -6,6 +6,7 @@ import com.kcvn.spm.app.workresult.payload.response.WorkResultResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.ProcessUnit
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
@@ -147,21 +148,14 @@ class WorkResultService(
 
             var rowNumber = 2
             for (item in workResultMapping.data!!) {
-                val dataRow: Row = sheet.createRow(rowNumber++)
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
-                val result = (item.goodSheetQuantity?.toDouble())?.div(item.totalSheetQuantity!!)
-                val percentage = result?.times(100)
-                var performance = "%.2f%%".format(percentage)
-                if (result == null || item.goodSheetQuantity == 0 || item.totalSheetQuantity == 0) {
-                    performance = ""
-                }
+                val dataRow: Row = ExcelHelper.createRow(sheet, rowNumber)
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
                 ExcelHelper.setCellValue(dataRow, 0, style, item.actualResultDepartment)
                 ExcelHelper.setCellValue(dataRow, 1, style, item.team)
                 ExcelHelper.setCellValue(dataRow, 2, style, item.processCode)
                 ExcelHelper.setCellValue(dataRow, 3, style, item.processName)
-                ExcelHelper.setCellValue(dataRow, 4, style, item.processNameJp) // cai nay khong biet lay tu dau
+                ExcelHelper.setCellValue(dataRow, 4, style, item.processNameJp)
                 ExcelHelper.setCellValue(dataRow, 5, style, item.summaryResultDate?.format(formatter).toString())
                 ExcelHelper.setCellValue(dataRow, 6, style, item.workStartTime?.format(formatter).toString())
                 ExcelHelper.setCellValue(dataRow, 7, style, item.workEndTime?.format(formatter).toString())
@@ -170,22 +164,22 @@ class WorkResultService(
                 ExcelHelper.setCellValue(dataRow, 10, style, item.customerCode)
                 ExcelHelper.setCellValue(dataRow, 11, style, item.remediationDirectiveNumber)
                 ExcelHelper.setCellValue(dataRow, 12, style, item.tapeLotNo)
-                ExcelHelper.setCellValue(dataRow, 13, style, "") // chiu 14
+                ExcelHelper.setCellValue(dataRow, 13, style, "")
                 ExcelHelper.setCellValue(dataRow, 14, style, item.code)
                 ExcelHelper.setCellValue(dataRow, 15, style, item.layerCode)
-                ExcelHelper.setCellValue(dataRow, 16, style, item.total?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 17, style, item.totalTapeQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 18, style, item.totalSheetQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 19, style, item.goodItemQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 20, style, item.goodTapeQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 21, style, item.goodSheetQuantity?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 22, style, performance)
-                ExcelHelper.setCellValue(dataRow, 23, style, "") // chiu 24
+                ExcelHelper.setCellValue(dataRow, 16, style, NumberHelper.formatNumber(item.total))
+                ExcelHelper.setCellValue(dataRow, 17, style, NumberHelper.formatNumber(item.totalTapeQuantity))
+                ExcelHelper.setCellValue(dataRow, 18, style, NumberHelper.formatNumber(item.totalSheetQuantity))
+                ExcelHelper.setCellValue(dataRow, 19, style, NumberHelper.formatNumber(item.goodItemQuantity))
+                ExcelHelper.setCellValue(dataRow, 20, style, NumberHelper.formatNumber(item.goodTapeQuantity))
+                ExcelHelper.setCellValue(dataRow, 21, style, NumberHelper.formatNumber(item.goodSheetQuantity))
+                ExcelHelper.setCellValue(dataRow, 22, style, item.performance)
+                ExcelHelper.setCellValue(dataRow, 23, style, "")
                 ExcelHelper.setCellValue(dataRow, 24, style, item.departmentCode)
                 ExcelHelper.setCellValue(dataRow, 25, style, item.workImplementBy)
                 ExcelHelper.setCellValue(dataRow, 26, style, item.equipmentName)
                 ExcelHelper.setCellValue(dataRow, 27, style, item.description)
-
+                rowNumber++
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

@@ -5,6 +5,7 @@ import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureRespo
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.GrpProcessCode
+import com.kcvn.spm.common.constants.KeyAppSetting
 import com.kcvn.spm.common.constants.SyncType
 import com.kcvn.spm.common.constants.TransAmTable
 import com.kcvn.spm.common.constants.YesNoConfig
@@ -59,45 +60,45 @@ class SyncTransAmDataService(
     private val hasSchema = propertiesConfig.tranAmDbHasSchema == YesNoConfig.YES
 
     fun syncProcessProcedureStructure() {
-        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
-            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
-
-        val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_PROCEDURE_STRUCTURE)
-        val table: Table<*> = if (hasSchema) {
-            DSL.table(DSL.name(schema, TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
-        } else {
-            DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
-        }
-        var condition: Condition = DSL.noCondition()
-        if (syncHistory != null) {
-            condition = condition.and(
-                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
-                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
-            )
-        }
-        val processFlows = this.transAmDSLContext.select().from(table).where(condition)
-            .fetchInto(SyncProcessProcedureStructureResponse::class.java)
-            .filter { it.KOTEI_CD.toIntOrNull() != 0 }
-        val keys = processFlows.mapNotNull { x -> "${x.KOTEI_TEJUN_CD}_${x.KOTEI_CD}_${StringHelper.intToStringD2(x.SO_NO)}"}
-
-        val processFlowDatas = processProcedureStructureRep.findByKey(keys)
-
-        val lstInsert = mutableListOf<ProcessProcedureStructure>()
-        val lstDelete = mutableListOf<ProcessProcedureStructure>()
-
-        for (item in processFlows) {
-            val exist = processFlowDatas.find { x ->
-                x.productCode == item.KOTEI_TEJUN_CD && x.processCode == item.KOTEI_CD
-                    && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
-            }
-            val dataProcess = createModelProcessProcedureStructure(item)
-            if (exist != null) {
-                lstDelete.add(exist)
-            }
-            lstInsert.add(dataProcess)
-        }
-
         try {
+            if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+                throw BusinessException(CommonUtils.getMessage("action.systemLock"))
+
+            val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_PROCEDURE_STRUCTURE)
+            val table: Table<*> = if (hasSchema) {
+                DSL.table(DSL.name(schema, TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
+            } else {
+                DSL.table(DSL.name(TransAmTable.PROCESS_PROCEDURE_STRUCTURE))
+            }
+            var condition: Condition = DSL.noCondition()
+            if (syncHistory != null) {
+                condition = condition.and(
+                    DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+                        .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+                )
+            }
+            val processFlows = this.transAmDSLContext.select().from(table).where(condition)
+                .fetchInto(SyncProcessProcedureStructureResponse::class.java)
+                .filter { it.KOTEI_CD.toIntOrNull() != 0 }
+            val keys = processFlows.mapNotNull { x -> "${x.KOTEI_TEJUN_CD}_${x.KOTEI_CD}_${StringHelper.intToStringD2(x.SO_NO)}" }
+
+            val processFlowDatas = processProcedureStructureRep.findByKey(keys)
+
+            val lstInsert = mutableListOf<ProcessProcedureStructure>()
+            val lstDelete = mutableListOf<ProcessProcedureStructure>()
+
+            for (item in processFlows) {
+                val exist = processFlowDatas.find { x ->
+                    x.productCode == item.KOTEI_TEJUN_CD && x.processCode == item.KOTEI_CD
+                        && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
+                }
+                val dataProcess = createModelProcessProcedureStructure(item)
+                if (exist != null) {
+                    lstDelete.add(exist)
+                }
+                lstInsert.add(dataProcess)
+            }
+
             processProcedureStructureRep.removeRange(lstDelete)
             processProcedureStructureRep.addRange(lstInsert)
             insertSyncHistory(
@@ -111,41 +112,41 @@ class SyncTransAmDataService(
     }
 
     fun syncProcessMaster() {
-        if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
-            throw BusinessException(CommonUtils.getMessage("action.systemLock"))
-
-        val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_MASTER)
-        val table: Table<*> = if (hasSchema) {
-            DSL.table(DSL.name(schema, TransAmTable.PROCESS_MASTER))
-        } else {
-            DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
-        }
-        var condition: Condition = DSL.noCondition()
-        if (syncHistory != null) {
-            condition = condition.and(
-                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
-                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
-            )
-        }
-        val processMaster = this.transAmDSLContext.select().from(table).where(condition)
-            .fetchInto(SyncProcessMasterResponse::class.java)
-        val processCodes = processMaster.mapNotNull { x -> x.KOTEI_CD }
-
-        val processMasterDatas = processMasterRep.getByProcessCode(processCodes)
-
-        val lstInsert = mutableListOf<ProcessMaster>()
-        val lstDelete = mutableListOf<ProcessMaster>()
-
-        for (item in processMaster) {
-            val exist = processMasterDatas.find { x -> x.processCode == item.KOTEI_CD }
-            val data = createModelProcessMaster(item)
-            if (exist != null) {
-                lstDelete.add(exist)
-            }
-            lstInsert.add(data)
-        }
-
         try {
+            if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
+                throw BusinessException(CommonUtils.getMessage("action.systemLock"))
+
+            val syncHistory = syncHistoryRep.findByType(SyncType.PROCESS_MASTER)
+            val table: Table<*> = if (hasSchema) {
+                DSL.table(DSL.name(schema, TransAmTable.PROCESS_MASTER))
+            } else {
+                DSL.table(DSL.name(TransAmTable.PROCESS_MASTER))
+            }
+            var condition: Condition = DSL.noCondition()
+            if (syncHistory != null) {
+                condition = condition.and(
+                    DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+                        .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+                )
+            }
+            val processMaster = this.transAmDSLContext.select().from(table).where(condition)
+                .fetchInto(SyncProcessMasterResponse::class.java)
+            val processCodes = processMaster.mapNotNull { x -> x.KOTEI_CD }
+
+            val processMasterDatas = processMasterRep.getByProcessCode(processCodes)
+
+            val lstInsert = mutableListOf<ProcessMaster>()
+            val lstDelete = mutableListOf<ProcessMaster>()
+
+            for (item in processMaster) {
+                val exist = processMasterDatas.find { x -> x.processCode == item.KOTEI_CD }
+                val data = createModelProcessMaster(item)
+                if (exist != null) {
+                    lstDelete.add(exist)
+                }
+                lstInsert.add(data)
+            }
+
             processMasterRep.removeRange(lstDelete)
             processMasterRep.addRange(lstInsert)
             insertSyncHistory(
@@ -160,67 +161,68 @@ class SyncTransAmDataService(
     }
 
     fun syncWorkResult() {
-        val syncHistory = syncHistoryRep.findByType(SyncType.WORK_RESULT)
-        val table: Table<*> = if (hasSchema) {
-            DSL.table(DSL.name(schema, TransAmTable.WORK_RESULT))
-        } else {
-            DSL.table(DSL.name(TransAmTable.WORK_RESULT))
-        }
-        var condition: Condition = DSL.noCondition()
-        if (syncHistory != null) {
-            condition = condition.and(
-                DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
-                    .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
-            )
-        }
-        // Define your datetime range
-        val key = "DATE_SYNC_DATA_FROM_TRANS_AM"
-        val setting = context.selectFrom(APP_SETTING).where(APP_SETTING.KEY.eq(key)).fetchAnyInto(AppSetting::class.java)
-        val value = setting?.value
-        val date = LocalDate.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val startDate = date.atStartOfDay()
-
-        condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))
-
-        val workResult = this.transAmDSLContext.select().from(table).where(condition)
-            .fetchInto(SyncWorkResultResponse::class.java)
-
-        val objectIds = workResult.mapNotNull { x -> x.OBJECT_ID }
-        val workResultDatas = workResultRep.findByObjectId(objectIds)
-
-        val lstInsert = mutableListOf<WorkResult>()
-        val lstDelete = mutableListOf<WorkResult>()
-        val lstProduct = mutableListOf<String>()
-        for (item in workResult) {
-            val exist = workResultDatas.find { x -> x.objectId == item.OBJECT_ID }
-            val data = createModelWorkResult(item)
-            if(data.processGrp == GrpProcessCode.XERANH){
-                data.itemName?.let { lstProduct.add(it) }
+        try {
+            val syncHistory = syncHistoryRep.findByType(SyncType.WORK_RESULT)
+            val table: Table<*> = if (hasSchema) {
+                DSL.table(DSL.name(schema, TransAmTable.WORK_RESULT))
+            } else {
+                DSL.table(DSL.name(TransAmTable.WORK_RESULT))
             }
-            if (exist != null) {
-
-                lstDelete.add(exist)
+            var condition: Condition = DSL.noCondition()
+            if (syncHistory != null) {
+                condition = condition.and(
+                    DSL.field(TransAmTable.TOROKU_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+                        .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
+                )
             }
-            lstInsert.add(data)
-        }
-        if(lstProduct.isNotEmpty()){
-            val product = productRep.getByName(lstProduct)
-            for(lstInsertItem in lstInsert){
-                if(lstInsertItem.processGrp == GrpProcessCode.XERANH){
-                    val productItem = product.find { x -> x.name == lstInsertItem.itemName }
-                    if(productItem != null){
-                        lstInsertItem.totalTapeQuantity  = lstInsertItem.totalSheetQuantity?.times(productItem.shBlock!!)
-                        lstInsertItem.goodTapeQuantity   = productItem.shBlock?.let {
-                            lstInsertItem.goodSheetQuantity?.times(
-                                it
-                            )
+            // Define your datetime range
+            val key = KeyAppSetting.DATE_SYNC_DATA_FROM_TRANS_AM
+            val setting = context.selectFrom(APP_SETTING).where(APP_SETTING.KEY.eq(key)).fetchAnyInto(AppSetting::class.java)
+            val value = setting?.value
+            val date = LocalDate.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            val startDate = date.atStartOfDay()
+
+            condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))
+
+            val workResult = this.transAmDSLContext.select().from(table).where(condition)
+                .fetchInto(SyncWorkResultResponse::class.java)
+
+            val objectIds = workResult.mapNotNull { x -> x.OBJECT_ID }
+            val workResultDatas = workResultRep.findByObjectId(objectIds)
+
+            val lstInsert = mutableListOf<WorkResult>()
+            val lstDelete = mutableListOf<WorkResult>()
+            val lstProduct = mutableListOf<String>()
+            for (item in workResult) {
+                val exist = workResultDatas.find { x -> x.objectId == item.OBJECT_ID }
+                val data = createModelWorkResult(item)
+                if (data.processGrp == GrpProcessCode.XERANH) {
+                    data.itemName?.let { lstProduct.add(it) }
+                }
+                if (exist != null) {
+
+                    lstDelete.add(exist)
+                }
+                lstInsert.add(data)
+            }
+            if (lstProduct.isNotEmpty()) {
+                val product = productRep.getByName(lstProduct)
+                for (lstInsertItem in lstInsert) {
+                    if (lstInsertItem.processGrp == GrpProcessCode.XERANH) {
+                        val productItem = product.find { x -> x.name == lstInsertItem.itemName }
+                        if (productItem != null) {
+                            lstInsertItem.totalTapeQuantity = lstInsertItem.totalSheetQuantity?.times(productItem.shBlock!!)
+                            lstInsertItem.goodTapeQuantity = productItem.shBlock?.let {
+                                lstInsertItem.goodSheetQuantity?.times(
+                                    it
+                                )
+                            }
+
                         }
-
                     }
                 }
             }
-        }
-        try {
+
             workResultRep.removeRange(lstDelete)
             workResultRep.addRange(lstInsert)
             insertSyncHistory(

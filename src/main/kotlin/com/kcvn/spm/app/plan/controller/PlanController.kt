@@ -15,7 +15,11 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/plan")
@@ -48,7 +52,7 @@ class PlanController(private val planService: PlanService) {
     @GetMapping("/summary")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INFO_WORK_PLAN.value) || hasRole('ADMIN')")
     fun getListSummary(request: PlanSearchRequest): ResponseEntity<PlanSummaryResponse> {
-        val data = planService.getPlanSummary(request)
+        val data = planService.getPlanSummary(request = request, isExport = true)
         return ResponseEntity<PlanSummaryResponse>(data, HttpStatus.OK)
     }
 

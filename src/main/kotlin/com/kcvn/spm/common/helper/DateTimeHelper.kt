@@ -85,7 +85,7 @@ class DateTimeHelper {
             return date.format(DateTimeFormatter.ofPattern(format))
         }
 
-        fun toString(date: OffsetDateTime?, format: String): String {
+        fun toStringOrNull(date: OffsetDateTime?, format: String): String {
             if (date == null) return ""
             return date.format(DateTimeFormatter.ofPattern(format))
         }

@@ -9,6 +9,8 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.app.productprocess.service.ProductProcessService
 import com.kcvn.spm.common.constants.PagingDefault
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -31,9 +33,10 @@ class ProductController(
         request: ProductSearchRequest?,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(SortDefault(sort = ["name"], direction = Sort.Direction.ASC))
-        pageable: Pageable
+        pageable: Pageable,
+        httpRequest: HttpServletRequest
     ): ResponseEntity<PagingProductResponse> {
-        val data = productService.getListProduct(request, pageable)
+        val data = productService.getListProduct(request, pageable, httpRequest)
         return ResponseEntity<PagingProductResponse>(data, HttpStatus.OK)
     }
 

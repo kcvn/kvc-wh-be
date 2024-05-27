@@ -71,7 +71,20 @@ class ExcelHelper {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate
         }
+        fun createErrorCellStyle(workbook: Workbook, styleTemplate: CellStyle): CellStyle {
+            val errorCellStyle = workbook.createCellStyle()
+            errorCellStyle.cloneStyleFrom(styleTemplate)
 
+            val errorFont = workbook.createFont()
+            errorFont.fontName = ExcelConstant.FONT_TIMES_NEW_ROMAN
+            errorFont.fontHeightInPoints = 12
+            errorFont.bold = false
+            errorFont.color = IndexedColors.RED.index
+
+            errorCellStyle.setFont(errorFont)
+
+            return errorCellStyle
+        }
         fun setCellValue(row: Row, colIndex: Int, styleTemplate: CellStyle, value: Date?) {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate

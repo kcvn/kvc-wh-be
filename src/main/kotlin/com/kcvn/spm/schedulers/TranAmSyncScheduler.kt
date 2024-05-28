@@ -67,15 +67,21 @@ class TranAmSyncScheduler(
     @Scheduled(fixedDelay = 5, timeUnit = TimeUnit.MINUTES)
     fun runSyncWorkResult(){
         println("Start Job SyncWorkResult at ${DateTimeHelper.toString(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss")}")
-        val timeRunning = appSettingRep.findByKey(KeyAppSetting.WORK_RESULT)
+        val startTimeConfig = appSettingRep.findByKey(KeyAppSetting.SCHEDULER_WORK_RESULT_START)
+        val endTimeConfig = appSettingRep.findByKey(KeyAppSetting.SCHEDULER_WORK_RESULT_END)
 
-        if (timeRunning == null || timeRunning.value.isNullOrEmpty()) return
+        if (startTimeConfig == null || startTimeConfig.value.isNullOrEmpty() || endTimeConfig == null || endTimeConfig.value.isNullOrEmpty()) return
 
-        val hour = timeRunning.value!!.split(":")[0].toInt()
-        val minute = timeRunning.value!!.split(":")[1].toInt()
-        val dt = OffsetDateTime.now(ZoneOffset.UTC).plusHours(7)
+        val dtNow = LocalDateTime.now()
 
-        if (dt.hour == hour && dt.minute >= minute && (dt.minute - minute) < 5) {
+        val startHour = startTimeConfig.value!!.split(":")[0].toInt()
+        val startMinute = startTimeConfig.value!!.split(":")[1].toInt()
+        val endHour = endTimeConfig.value!!.split(":")[0].toInt()
+        val endMinute = endTimeConfig.value!!.split(":")[1].toInt()
+        val startTime = LocalDateTime.of(dtNow.year, dtNow.monthValue, dtNow.dayOfMonth, startHour, startMinute, 0)
+        val endTime = LocalDateTime.of(dtNow.year, dtNow.monthValue, dtNow.dayOfMonth, endHour, endMinute, 0)
+
+        if (dtNow.isAfter(startTime) && dtNow.isBefore(endTime)) {
             try {
                 syncTranAmService.syncWorkResult()
                 println("Complete Sync Data at ${DateTimeHelper.toString(LocalDateTime.now(), "yyyy-MM-dd HH:mm:ss")}")

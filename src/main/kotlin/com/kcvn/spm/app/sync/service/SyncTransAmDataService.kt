@@ -29,11 +29,13 @@ import com.kcvn.spm.repository.WorkResultRepository
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
+import org.jooq.SortOrder
 import org.jooq.Table
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 
@@ -183,25 +185,35 @@ class SyncTransAmDataService(
             val date = LocalDate.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             val startDate = date.atStartOfDay()
 
+            val limitRecord = context.selectFrom(APP_SETTING).where(APP_SETTING.KEY.eq(KeyAppSetting.WORK_RESULT_LIMIT_RECORD))
+                .fetchAnyInto(AppSetting::class.java)?.value?.toIntOrNull() ?: 750000
+
             condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))
 
             val workResult = this.transAmDSLContext.select().from(table).where(condition)
+                .orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC))
+                .limit(limitRecord)
                 .fetchInto(SyncWorkResultResponse::class.java)
 
-            val objectIds = workResult.mapNotNull { x -> x.OBJECT_ID }
-            val workResultDatas = workResultRep.findByObjectId(objectIds)
+            val syncDate = workResult.sortedByDescending { it.KOSHIN_DATE }.firstOrNull()?.KOSHIN_DATE
+
+            val objectIds = workResult.mapNotNull { x -> "${x.KC_HINMEI}${x.KOTEI_CD}${StringHelper.intToStringD2(x.SO_NO)}${x.KANRI_NO}" }
+            val summaryDate = workResult.mapNotNull { x -> x.JISSEKI_KEIJO_DATE }
+            val workResultDatas = workResultRep.findByObjectId(objectIds).filter { x -> summaryDate.any { it.isEqual(x.summaryResultDate) } }
 
             val lstInsert = mutableListOf<WorkResult>()
             val lstDelete = mutableListOf<WorkResult>()
             val lstProduct = mutableListOf<String>()
             for (item in workResult) {
-                val exist = workResultDatas.find { x -> x.objectId == item.OBJECT_ID }
+                val exist = workResultDatas.find { x ->
+                    x.itemName == item.KC_HINMEI && x.processCode == item.KOTEI_CD && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
+                        && x.code == item.KANRI_NO && x.summaryResultDate?.isEqual(item.JISSEKI_KEIJO_DATE) == true
+                }
                 val data = createModelWorkResult(item)
                 if (data.processGrp == GrpProcessCode.XERANH) {
                     data.itemName?.let { lstProduct.add(it) }
                 }
                 if (exist != null) {
-
                     lstDelete.add(exist)
                 }
                 lstInsert.add(data)
@@ -229,7 +241,8 @@ class SyncTransAmDataService(
             insertSyncHistory(
                 TransAmTable.WORK_RESULT,
                 SyncType.WORK_RESULT,
-                SyncType.WORK_RESULT
+                SyncType.WORK_RESULT,
+                syncDate
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -439,13 +452,13 @@ class SyncTransAmDataService(
         )
     }
 
-    private fun insertSyncHistory(source: String, destination: String, type: String) {
+    private fun insertSyncHistory(source: String, destination: String, type: String, createDate: OffsetDateTime? = null) {
         val history = SyncHistory(
             source = source,
             destination = destination,
             type = type
         )
 
-        syncHistoryRep.add(history)
+        syncHistoryRep.add(history, createDate)
     }
 }

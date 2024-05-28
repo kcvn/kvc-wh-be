@@ -243,10 +243,16 @@ class WorkResultRepository(
             .fetchInto(WorkResult::class.java)
     }
 
-    fun findByObjectId(objectIds: List<Int>): List<WorkResult> {
+    fun findByObjectId(objectIds: List<String>): List<WorkResult> {
         return context.selectFrom(WORK_RESULT)
-            .where(WORK_RESULT.OBJECT_ID.`in`(objectIds))
-            .fetchInto(WorkResult::class.java)
+            .where(
+                DSL.concat(
+                    WORK_RESULT.ITEM_NAME,
+                    WORK_RESULT.PROCESS_CODE,
+                    WORK_RESULT.LAYER_CODE,
+                    WORK_RESULT.CODE
+                ).`in`(objectIds)
+            ).fetchInto(WorkResult::class.java)
     }
 
 

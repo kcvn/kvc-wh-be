@@ -7,6 +7,7 @@ import com.kcvn.spm.model.tables.references.SYNC_HISTORY
 import org.jooq.DSLContext
 import org.jooq.SortOrder
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
 
 @Repository
 class SyncHistoryRepository(private val context: DSLContext) {
@@ -17,18 +18,28 @@ class SyncHistoryRepository(private val context: DSLContext) {
             .firstOrNull()
     }
 
-    fun add(data: SyncHistory): SyncHistory? {
+    fun add(data: SyncHistory, createDate: OffsetDateTime? = null): SyncHistory? {
         val createBy = try {
             CommonUtils.loggedInUser() ?: Constants.SYSTEM
         } catch (e: Exception) {
             Constants.SYSTEM
         }
-        return context.insertInto(
-            SYNC_HISTORY,
-            SYNC_HISTORY.SOURCE, SYNC_HISTORY.DESTINATION, SYNC_HISTORY.TYPE, SYNC_HISTORY.CREATED_BY
-        ).values(
-            data.source, data.destination, data.type, createBy
-        ).returningResult(SYNC_HISTORY).fetchInto(SyncHistory::class.java).firstOrNull()
+        if (createDate == null) {
+            return context.insertInto(
+                SYNC_HISTORY,
+                SYNC_HISTORY.SOURCE, SYNC_HISTORY.DESTINATION, SYNC_HISTORY.TYPE, SYNC_HISTORY.CREATED_BY
+            ).values(
+                data.source, data.destination, data.type, createBy
+            ).returningResult(SYNC_HISTORY).fetchInto(SyncHistory::class.java).firstOrNull()
+        } else {
+            return context.insertInto(
+                SYNC_HISTORY,
+                SYNC_HISTORY.SOURCE, SYNC_HISTORY.DESTINATION,
+                SYNC_HISTORY.TYPE, SYNC_HISTORY.CREATED_DATE, SYNC_HISTORY.CREATED_BY
+            ).values(
+                data.source, data.destination, data.type, createDate, createBy
+            ).returningResult(SYNC_HISTORY).fetchInto(SyncHistory::class.java).firstOrNull()
+        }
     }
 
 }

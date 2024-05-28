@@ -79,8 +79,8 @@ class SyncTransAmDataService(
             }
             val processFlows = this.transAmDSLContext.select().from(table).where(condition)
                 .fetchInto(SyncProcessProcedureStructureResponse::class.java)
-                .filter { it.KOTEI_CD.toIntOrNull() != 0 }
-            val keys = processFlows.mapNotNull { x -> "${x.KOTEI_TEJUN_CD}_${x.KOTEI_CD}_${StringHelper.intToStringD2(x.SO_NO)}" }
+                .filter { it.KOTEI_CD.toIntOrNull() != 0 && it.KOTEI_TEJUN_CD.length == 12 }
+            val keys = processFlows.mapNotNull { x -> "${x.KOTEI_TEJUN_CD}${x.KOTEI_CD}${StringHelper.intToStringD2(x.SO_NO)}" }
 
             val processFlowDatas = processProcedureStructureRep.findByKey(keys)
 
@@ -88,16 +88,17 @@ class SyncTransAmDataService(
             val lstDelete = mutableListOf<ProcessProcedureStructure>()
 
             for (item in processFlows) {
-                val exist = processFlowDatas.find { x ->
+                val exist = processFlowDatas.filter { x ->
                     x.productCode == item.KOTEI_TEJUN_CD && x.processCode == item.KOTEI_CD
                         && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
                 }
                 val dataProcess = createModelProcessProcedureStructure(item)
-                if (exist != null) {
-                    lstDelete.add(exist)
+                if (exist.isNotEmpty()) {
+                    lstDelete.addAll(exist)
                 }
                 lstInsert.add(dataProcess)
             }
+            lstDelete.addAll(processFlowDatas.filter { it.processCode?.toIntOrNull() == 0 })
 
             processProcedureStructureRep.removeRange(lstDelete)
             processProcedureStructureRep.addRange(lstInsert)
@@ -139,10 +140,10 @@ class SyncTransAmDataService(
             val lstDelete = mutableListOf<ProcessMaster>()
 
             for (item in processMaster) {
-                val exist = processMasterDatas.find { x -> x.processCode == item.KOTEI_CD }
+                val exist = processMasterDatas.filter { x -> x.processCode == item.KOTEI_CD }
                 val data = createModelProcessMaster(item)
-                if (exist != null) {
-                    lstDelete.add(exist)
+                if (exist.isNotEmpty()) {
+                    lstDelete.addAll(exist)
                 }
                 lstInsert.add(data)
             }

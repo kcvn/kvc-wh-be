@@ -18,6 +18,7 @@ import com.kcvn.spm.common.constants.ProcessStatisticCode
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.helper.JsonConvert
+import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
@@ -31,6 +32,7 @@ import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import com.kcvn.spm.repository.ProductProcessRepository
 import com.kcvn.spm.repository.ProductRepository
 import jakarta.servlet.http.HttpServletRequest
+import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
@@ -84,6 +86,12 @@ class ProductService(
 
         if (!productMapping.data.isNullOrEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            style.alignment = HorizontalAlignment.CENTER
+
+            val numberStyle = workbook.createCellStyle()
+            numberStyle.cloneStyleFrom(style)
+            numberStyle.alignment = HorizontalAlignment.RIGHT
+
             var headerCol = 18
             val layers = productMapping.data!!.asSequence().mapNotNull { x ->
                 if (x.productLayerDetail.isNullOrEmpty()) null
@@ -110,17 +118,19 @@ class ProductService(
 
             var rowNumber = 2
             for (item in productMapping.data!!) {
-                val dataRow: Row = sheet.createRow(rowNumber++)
+                val dataRow: Row = ExcelHelper.createRow(sheet, rowNumber)
+                val size = item.size?.let { StringHelper.removeDecimalSuffix(it) }
+                val sizeFormat = if (size?.toIntOrNull() == null) size else NumberHelper.formatNumber(size.toIntOrNull())
                 ExcelHelper.setCellValue(dataRow, 0, style, item.name)
                 ExcelHelper.setCellValue(dataRow, 1, style, item.name?.substring((if (item.name!!.length < 7) 0 else item.name!!.length - 7), item.name!!.length))
                 ExcelHelper.setCellValue(dataRow, 2, style, item.exportType)
-                ExcelHelper.setCellValue(dataRow, 3, style, item.size?.let { StringHelper.removeDecimalSuffix(it) })
+                ExcelHelper.setCellValue(dataRow, 3, numberStyle, sizeFormat)
                 ExcelHelper.setCellValue(dataRow, 4, style, item.frame_1)
                 ExcelHelper.setCellValue(dataRow, 5, style, item.frame_2)
                 ExcelHelper.setCellValue(dataRow, 6, style, item.mold)
                 ExcelHelper.setCellValue(dataRow, 7, style, item.productLine)
                 ExcelHelper.setCellValue(dataRow, 8, style, item.srNosr)
-                ExcelHelper.setCellValue(dataRow, 9, style, item.pcsSh?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 9, numberStyle, NumberHelper.formatNumber(item.pcsSh))
                 ExcelHelper.setCellValue(dataRow, 10, style, item.shBlock?.toString() ?: "")
                 ExcelHelper.setCellValue(dataRow, 11, style, item.layerCount?.toString() ?: "")
                 ExcelHelper.setCellValue(dataRow, 12, style, item.ringJig)
@@ -148,6 +158,7 @@ class ProductService(
                         colIndex++
                     }
                 }
+                rowNumber++
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

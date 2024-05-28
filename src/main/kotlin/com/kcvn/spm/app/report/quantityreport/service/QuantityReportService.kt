@@ -1,6 +1,10 @@
 package com.kcvn.spm.app.report.quantityreport.service
 import com.kcvn.spm.app.product.payload.model.ProcessGroupModel
-import com.kcvn.spm.app.report.quantityreport.payload.model.*
+import com.kcvn.spm.app.report.quantityreport.payload.model.ErrorOrderDetail
+import com.kcvn.spm.app.report.quantityreport.payload.model.ProductNameAndLstProcess
+import com.kcvn.spm.app.report.quantityreport.payload.model.ProductOrderDateKeyModel
+import com.kcvn.spm.app.report.quantityreport.payload.model.ProductProcessKeyModel
+import com.kcvn.spm.app.report.quantityreport.payload.model.QuantityReportModel
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityOfProcessRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.CalculateQuantityRequest
 import com.kcvn.spm.app.report.quantityreport.payload.request.QuantityReportRequest
@@ -14,14 +18,32 @@ import com.kcvn.spm.common.constants.ProcessStatisticCode
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.*
-import com.kcvn.spm.repository.*
-import org.apache.poi.ss.usermodel.*
+import com.kcvn.spm.model.tables.pojos.CalculateQuantityResult
+import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantity
+import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
+import com.kcvn.spm.model.tables.pojos.OrderInfo
+import com.kcvn.spm.repository.CalculateQuantityReportRepository
+import com.kcvn.spm.repository.CompletionRateProductRepository
+import com.kcvn.spm.repository.OrderInfoRepository
+import com.kcvn.spm.repository.ProcessGroupRepository
+import com.kcvn.spm.repository.ProcessProcedureStructureRepository
+import com.kcvn.spm.repository.ProductProcessRepository
+import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.QuantityReportRepository
+import org.apache.poi.ss.usermodel.BorderStyle
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.VerticalAlignment
+import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -487,16 +509,20 @@ class QuantityReportService(
         data: QuantityReportModel,
         columns: List<KeyValueResponse>
     ): Int {
+        val numberStyle = workbook.createCellStyle()
+        numberStyle.cloneStyleFrom(style)
+        numberStyle.alignment = HorizontalAlignment.RIGHT
+
         var rowIndex = rowNumber
 
         val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 0, style, data.productName,isBold = true,isAlignCenter = true)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 1, style, "${data.monthNumber.toString()}/${data.yearNumber.toString()}",isBold = true,isAlignCenter = true)
-        ExcelHelper.setCellValueCustom(workbook, rowPlan, 2, style, data.orderDateFromTo,isBold = true,isAlignCenter = true)
+        ExcelHelper.setCellValue(rowPlan, 0, style, data.productName)
+        ExcelHelper.setCellValue(rowPlan, 1, style, "${data.monthNumber.toString()}/${data.yearNumber.toString()}")
+        ExcelHelper.setCellValue(rowPlan, 2, style, data.orderDateFromTo)
         var colIndex = 3
         for (col in columns) {
             val value = data.lstProcess.find { x -> x.key == col.key }?.value
-            ExcelHelper.setCellValueCustom(workbook, rowPlan, colIndex, style, value,isAlignCenter = true, isNumberFormat = true)
+            ExcelHelper.setCellValue(rowPlan, colIndex, numberStyle, NumberHelper.formatNumber(value?.toIntOrNull()))
             colIndex++
         }
         rowIndex++
@@ -522,6 +548,7 @@ class QuantityReportService(
             }
             var rowNumber = 1
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            style.alignment = HorizontalAlignment.CENTER
 
             for(report in dataExport.data!!){
                 if (columns != null) {

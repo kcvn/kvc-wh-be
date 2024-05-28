@@ -9,6 +9,7 @@ import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.CellStyleModel
@@ -19,6 +20,7 @@ import com.kcvn.spm.repository.CompletionRateProductRepository
 import com.kcvn.spm.repository.OrderInfoRepository
 import com.kcvn.spm.repository.TapeRepository
 import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
@@ -63,8 +65,7 @@ class MaterialsService(
         return BaseResponse(response)
     }
 
-    fun  importExcelTape (request: ImportTapeRequest,
-                         file: MultipartFile): BaseResponse<FileContentModel> {
+    fun  importExcelTape (request: ImportTapeRequest, file: MultipartFile): BaseResponse<FileContentModel> {
         // Validate ngày yêu cầu đơn hàng với tháng báo cáo
 
         val monthStartDate = request.startDate?.plusHours(7)?.monthValue ?: 0
@@ -445,7 +446,6 @@ class MaterialsService(
         }
     }
 
-
     fun exportExcelErr(requestErr: MutableList<ImportTapeErrResponse>, titleRow: Row, workbook: Workbook, importSheet: Sheet): ByteArray? {
 
         val sheet = workbook.createSheet()
@@ -509,6 +509,12 @@ class MaterialsService(
 
         if (query.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            style.alignment = HorizontalAlignment.CENTER
+
+            val numberStyle = workbook.createCellStyle()
+            numberStyle.cloneStyleFrom(style)
+            numberStyle.alignment = HorizontalAlignment.RIGHT
+
             var rowNumber = 1
             for (item in query.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
@@ -519,9 +525,9 @@ class MaterialsService(
                 ExcelHelper.setCellValue(dataRow, 4, style, item?.exportType)
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.tapeShared)
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.typeTape)
-                ExcelHelper.setCellValue(dataRow, 7, style, item?.quantityTape.toString())
-                ExcelHelper.setCellValue(dataRow, 8, style,String.format("%,.4f",item?.unitPrice))
-                ExcelHelper.setCellValue(dataRow, 9, style, String.format("%,.2f",item?.intoMoney))
+                ExcelHelper.setCellValue(dataRow, 7, numberStyle, NumberHelper.formatNumber(item?.quantityTape))
+                ExcelHelper.setCellValue(dataRow, 8, numberStyle,String.format("%,.4f",item?.unitPrice))
+                ExcelHelper.setCellValue(dataRow, 9, numberStyle, String.format("%,.2f",item?.intoMoney))
             }
         }
 

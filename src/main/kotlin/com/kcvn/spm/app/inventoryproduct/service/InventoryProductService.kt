@@ -512,7 +512,7 @@ class InventoryProductService(
                 ExcelHelper.setCellValue(dataRow, 11, numberStyle, NumberHelper.formatNumber(item?.piecesPerSheet))
                 ExcelHelper.setCellValue(dataRow, 12, style, item?.orderCode)
                 ExcelHelper.setCellValue(dataRow, 13, style, item?.productionAreaName)
-                ExcelHelper.setCellValue(dataRow, 14, style, item?.processCount?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 14, numberStyle, NumberHelper.formatNumber(item?.processCount))
                 ExcelHelper.setCellValue(dataRow, 15, numberStyle, NumberHelper.formatNumber(item?.productQuantity))
                 ExcelHelper.setCellValue(dataRow, 16, numberStyle, NumberHelper.formatNumber(item?.sheetQuantity))
                 ExcelHelper.setCellValue(dataRow, 17, style, item?.seidenRepNumber?.toString() ?: "")

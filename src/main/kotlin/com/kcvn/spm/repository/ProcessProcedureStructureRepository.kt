@@ -25,7 +25,8 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
                     PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
                     PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE
                 ).`in`(keys)
-            ).fetchInto(ProcessProcedureStructure::class.java)
+            ).or(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq("000000"))
+            .fetchInto(ProcessProcedureStructure::class.java)
     }
 
     fun getListProcessCode(): List<String> {

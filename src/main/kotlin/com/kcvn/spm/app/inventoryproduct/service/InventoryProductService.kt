@@ -10,6 +10,7 @@ import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -19,7 +20,12 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
 import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
-import org.apache.poi.ss.usermodel.*
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -99,14 +105,23 @@ class InventoryProductService(
             val messageResults = mutableListOf<String>()
             var check = true
             val checkProcessCode = validateCellValue(row, headerRow, 2, messageResults)
-            val checkProcessName = validateCellValue(row, headerRow, 3, messageResults)
             val checkManageNumber = validateCellValue(row, headerRow, 5, messageResults)
             val checkLayerCode = validateCellValue(row, headerRow, 6, messageResults)
             val checkTapeLotNo = validateCellValue(row, headerRow, 7, messageResults)
             val checkPiePerSheet = validateCellValue(row, headerRow, 9, messageResults)
             val checkProductAreaName = validateCellValue(row, headerRow, 11, messageResults)
 
-            check = checkProcessCode && checkProcessName && checkManageNumber && checkLayerCode && checkTapeLotNo && checkPiePerSheet && checkProductAreaName
+            check = checkProcessCode && checkManageNumber && checkLayerCode && checkTapeLotNo && checkPiePerSheet && checkProductAreaName
+
+            if (ExcelHelper.getCellValue(row, 14).isEmpty() && ExcelHelper.getCellValue(row, 15).isEmpty()) {
+                messageResults.add(
+                    CommonUtils.getMessage(
+                        "validate.excel.empty2Col",
+                        arrayOf(ExcelHelper.getCellValue(headerRow, 14), ExcelHelper.getCellValue(headerRow, 15))
+                    )
+                )
+                check = false
+            }
 
             if (ExcelHelper.getCellValue(row, 2).isNotEmpty() && row.getCell(2).toString().length > 8) {
                 check = false
@@ -471,30 +486,37 @@ class InventoryProductService(
 
         if (inventoryProduct.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            style.alignment = HorizontalAlignment.CENTER
+
+            val numberStyle = workbook.createCellStyle()
+            numberStyle.cloneStyleFrom(style)
+            numberStyle.alignment = HorizontalAlignment.RIGHT
+
             var rowNumber = 1
             for (item in inventoryProduct.first) {
-                val dataRow: Row = sheet.createRow(rowNumber++)
+                val dataRow: Row = ExcelHelper.createRow(sheet, rowNumber)
                 if (item?.inventoryDate != null) {
                     val formattedDate = convertOffSetDateTimeUtc7ToString(item.inventoryDate!!)
-                    ExcelHelper.setCellValueCustom(workbook,dataRow, 0, style, formattedDate, isAlignCenter = true)
+                    ExcelHelper.setCellValue(dataRow, 0, style, formattedDate)
                 }
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 1, style, item?.employeeCode, isAlignCenter = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 2, style, item?.team)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 3, style, item?.processCode, isAlignCenter = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 4, style, item?.processName)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 5, style, item?.processNameJp)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 6, style, item?.code, isAlignCenter = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 7, style, item?.layerCode,isAlignRight = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 8, style, item?.tapeLotNo)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 9, style, item?.processingDirective?.toString() ?: "",isAlignRight = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 10, style, item?.productName)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 11, style, item?.piecesPerSheet?.toString() ?: "",isAlignRight = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 12, style, item?.orderCode, isAlignCenter = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 13, style, item?.productionAreaName)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 14, style, item?.processCount?.toString() ?: "",isAlignRight = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 15, style, item?.productQuantity?.toString() ?: "",isAlignRight = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 16, style, item?.sheetQuantity?.toString() ?: "",isAlignRight = true)
-                ExcelHelper.setCellValueCustom(workbook,dataRow, 17, style, item?.seidenRepNumber?.toString() ?: "",isAlignRight = true)
+                ExcelHelper.setCellValue(dataRow, 1, style, item?.employeeCode)
+                ExcelHelper.setCellValue(dataRow, 2, style, item?.team)
+                ExcelHelper.setCellValue(dataRow, 3, style, item?.processCode)
+                ExcelHelper.setCellValue(dataRow, 4, style, item?.processName)
+                ExcelHelper.setCellValue(dataRow, 5, style, item?.processNameJp)
+                ExcelHelper.setCellValue(dataRow, 6, style, item?.code)
+                ExcelHelper.setCellValue(dataRow, 7, style, item?.layerCode)
+                ExcelHelper.setCellValue(dataRow, 8, style, item?.tapeLotNo)
+                ExcelHelper.setCellValue(dataRow, 9, style, item?.processingDirective?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 10, style, item?.productName)
+                ExcelHelper.setCellValue(dataRow, 11, numberStyle, NumberHelper.formatNumber(item?.piecesPerSheet))
+                ExcelHelper.setCellValue(dataRow, 12, style, item?.orderCode)
+                ExcelHelper.setCellValue(dataRow, 13, style, item?.productionAreaName)
+                ExcelHelper.setCellValue(dataRow, 14, numberStyle, NumberHelper.formatNumber(item?.processCount))
+                ExcelHelper.setCellValue(dataRow, 15, numberStyle, NumberHelper.formatNumber(item?.productQuantity))
+                ExcelHelper.setCellValue(dataRow, 16, numberStyle, NumberHelper.formatNumber(item?.sheetQuantity))
+                ExcelHelper.setCellValue(dataRow, 17, style, item?.seidenRepNumber?.toString() ?: "")
+                rowNumber++
             }
         }
 

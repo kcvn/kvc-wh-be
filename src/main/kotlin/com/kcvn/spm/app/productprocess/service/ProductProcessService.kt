@@ -347,10 +347,9 @@ class ProductProcessService(
             val cellLayerCode = row.getCell(2)
             val layerCode = if (cellLayerCode != null && cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
                 StringHelper.intToStringD2(row.getCell(2).numericCellValue.toInt())
-            }else if(cellLayerCode != null && cellLayerCode.cellType == CellType.STRING && cellLayerCode.stringCellValue.isNotBlank()){
+            } else if (cellLayerCode != null && cellLayerCode.cellType == CellType.STRING && cellLayerCode.stringCellValue.isNotBlank()) {
                 ExcelHelper.getCellValue(row, 2)
-            }
-            else {
+            } else {
                 ""
             }
             process.productName = ExcelHelper.getCellValue(row, 0)
@@ -419,8 +418,8 @@ class ProductProcessService(
             var checkDayNull = true
             var checkDayOne = true
             // Đếm xem có đủ công đoạn trong db không
-            val countProcess = listDataDb.count { it.productCode == listItem.key  && it.layerCode?.any { char -> char != '0' } ?: false}
-            val countProcessByExcel = listItem.value.count { it.processCode?.any { char -> char != '0' } ?: false }
+            val countProcess = listDataDb.count { it.productCode == listItem.key && it.layerCode?.toIntOrNull() != 0 }
+            val countProcessByExcel = listItem.value.count { it.processCode?.toIntOrNull() != 0 && it.layerCode?.toIntOrNull() != 0 }
             if (countProcess != countProcessByExcel) {
                 checkList = false
                 checkCountProcess = false
@@ -723,7 +722,7 @@ class ProductProcessService(
                 if (checkLastProcess != null) {
                     val layerItemInt = item.inventoryLayerGroup?.toIntOrNull() ?: 0
                     val processPre = listItem.value.firstOrNull {
-                        it.layerCode!!.toInt()  != (layerItemInt)
+                        it.layerCode!!.toInt() != (layerItemInt)
                             && it.productName == item.productName
                             && it.processCode == item.processInventoryCode
                     }
@@ -788,10 +787,10 @@ class ProductProcessService(
 
             count++
         }
-        if(listAdd.isNotEmpty()){
+        if (listAdd.isNotEmpty()) {
             productProcessRep.bulkInsertData(listAdd)
         }
-        if(listUpdate.isNotEmpty()){
+        if (listUpdate.isNotEmpty()) {
             productProcessRep.bulkUpdateData(listUpdate)
         }
         val excelBytes = exportExcelErr(resultDataErr, headerRow, workbook, sheet)
@@ -803,7 +802,7 @@ class ProductProcessService(
             content = excelBytes
         )
         workbook.close()
-        return if ( count == 0) {
+        return if (count == 0) {
             BaseResponse(response, message = CommonUtils.getMessage("import.insertNoData"))
         } else {
             BaseResponse(

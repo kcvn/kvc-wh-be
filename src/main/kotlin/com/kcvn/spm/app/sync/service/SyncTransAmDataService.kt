@@ -190,10 +190,27 @@ class SyncTransAmDataService(
 
             condition = condition.and(DSL.field(TransAmTable.TOROKU_DATE).greaterOrEqual(startDate))
 
-            val workResult = this.transAmDSLContext.select().from(table).where(condition)
-                .orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC))
-                .limit(limitRecord)
-                .fetchInto(SyncWorkResultResponse::class.java)
+//            val query = this.transAmDSLContext.select().from(
+//                this.transAmDSLContext.select().from(table).where(condition)
+//                    .orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC))
+//            ).where(DSL.rowNumber().over().le(limitRecord))
+
+            val allField = if (hasSchema) {
+                "$schema.${TransAmTable.WORK_RESULT}.*"
+            } else {
+                "${TransAmTable.WORK_RESULT}.*"
+            }
+
+            val subQuery = this.transAmDSLContext.select(
+                DSL.field(allField),
+                DSL.rowNumber().over().orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC)).`as`("row_num")
+            ).from(table).where(condition).orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC)).asTable("tmp")
+
+            val query = this.transAmDSLContext.select(
+                DSL.field("\"tmp\".*")
+            ).from(subQuery).where(DSL.field("\"tmp\".\"row_num\"").le(limitRecord))
+
+            val workResult = query.fetchInto(SyncWorkResultResponse::class.java)
 
             val syncDate = workResult.sortedByDescending { it.KOSHIN_DATE }.firstOrNull()?.KOSHIN_DATE
 

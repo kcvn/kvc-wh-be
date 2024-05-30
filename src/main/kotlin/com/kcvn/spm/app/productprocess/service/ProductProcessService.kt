@@ -325,8 +325,6 @@ class ProductProcessService(
         if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 7))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
-        val total = sheet.lastRowNum
-
         val masterData = masterDataService.getMasterDataSelection()
         //val colIndexResult = ExcelHelper.createColResult(headerRow, sheet)
         // Tạo lít dataErr để sau trả lại excel lỗi
@@ -762,6 +760,7 @@ class ProductProcessService(
         val listProductProcess = productProcessRep.getAll()
         val listAdd: MutableList<ProductProcess> = mutableListOf()
         val listUpdate: MutableList<ProductProcess> = mutableListOf()
+        val total = resultData.size
         for (item in resultData) {
             val requestImport = ProductProcess(
                 processProcedureStructureId = item.idProcessStructure,
@@ -793,6 +792,14 @@ class ProductProcessService(
         if (listUpdate.isNotEmpty()) {
             productProcessRep.bulkUpdateData(listUpdate)
         }
+
+        if (count == total) {
+            return BaseResponse(
+                null,
+                CommonUtils.getMessage("import.success", arrayOf(count, total))
+            )
+        }
+
         val excelBytes = exportExcelErr(resultDataErr, headerRow, workbook, sheet)
 
         val response = FileContentModel(

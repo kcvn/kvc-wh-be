@@ -90,17 +90,18 @@ class SyncTransAmDataService(
             val lstDelete = mutableListOf<ProcessProcedureStructure>()
 
             for (item in processFlows) {
-                val exist = processFlowDatas.filter { x ->
-                    x.productCode == item.KOTEI_TEJUN_CD && x.processCode == item.KOTEI_CD
-                        && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
-                }
+//                val exist = processFlowDatas.filter { x ->
+//                    x.productCode == item.KOTEI_TEJUN_CD && x.processCode == item.KOTEI_CD
+//                        && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
+//                }
                 val dataProcess = createModelProcessProcedureStructure(item)
-                if (exist.isNotEmpty()) {
-                    lstDelete.addAll(exist)
-                }
+//                if (exist.isNotEmpty()) {
+//                    lstDelete.addAll(exist)
+//                }
                 lstInsert.add(dataProcess)
             }
-            lstDelete.addAll(processFlowDatas.filter { it.processCode?.toIntOrNull() == 0 })
+            val productNames = processFlows.mapNotNull { it.KOTEI_TEJUN_CD }
+            lstDelete.addAll(processFlowDatas.filter { productNames.contains(it.productCode) })
 
             processProcedureStructureRep.removeRange(lstDelete)
             processProcedureStructureRep.addRange(lstInsert)

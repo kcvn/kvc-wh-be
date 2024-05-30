@@ -20,7 +20,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class PlanProductRepository(private val context: DSLContext) {
-
     fun getListPlanHistory(request: PlanHistorySearchRequest, pageable: Pageable): Pair<List<PlanProduct>, Int> {
         var condition = DSL.noCondition()
         condition = condition.and(PLAN_PRODUCT.IS_DELETED.eq(false))
@@ -70,8 +69,6 @@ class PlanProductRepository(private val context: DSLContext) {
 
         return Pair(data, count)
     }
-
-
 
     fun getListPlanProduct(request: PlanSearchRequest, pageable: Pageable): Pair<List<PlanProduct>, Int> {
         val condition = searchCondition(request)

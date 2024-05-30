@@ -9,13 +9,13 @@ import com.kcvn.spm.model.tables.pojos.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.references.CALCULATE_QUANTITY_RESULT
 import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY
 import com.kcvn.spm.model.tables.references.INFORMATION_CALCULATE_QUANTITY_DETAIL
-import com.kcvn.spm.model.tables.references.PRODUCT
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -39,8 +39,8 @@ class CalculateQuantityReportRepository(
             .set(CALCULATE_QUANTITY_RESULT.CALCULATE_DATE, data?.calculateDate)
             .set(CALCULATE_QUANTITY_RESULT.LOCKED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
             .set(CALCULATE_QUANTITY_RESULT.LOCKED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-            .set(PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
-            .set(PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .set(CALCULATE_QUANTITY_RESULT.UPDATED_BY, CommonUtils.loggedInUser() ?: "SYSTEM")
+            .set(CALCULATE_QUANTITY_RESULT.UPDATED_DATE, Instant.now().atOffset(ZoneOffset.UTC))
             .where(CALCULATE_QUANTITY_RESULT.ID.eq(data?.id).and(CALCULATE_QUANTITY_RESULT.IS_DELETED.eq(false)))
             .returningResult(CALCULATE_QUANTITY_RESULT)
             .fetchInto(CalculateQuantityResult::class.java).firstOrNull()

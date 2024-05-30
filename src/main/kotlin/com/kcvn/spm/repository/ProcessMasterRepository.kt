@@ -19,12 +19,6 @@ class ProcessMasterRepository(
             .fetchInto(String::class.java)
     }
 
-    fun findByObjectId(objectIds: List<Long>): List<ProcessMaster> {
-        return context.selectFrom(PROCESS_MASTER)
-            .where(PROCESS_MASTER.OBJECT_ID.`in`(objectIds)).and(PROCESS_MASTER.IS_DELETED.eq(false))
-            .fetchInto(ProcessMaster::class.java)
-    }
-
     fun add(model: ProcessMaster) {
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)

@@ -62,16 +62,6 @@ class QuantityReportRepository(
             }
         }
 
-//        val sortFields = getSortFields(pageable.sort, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT).distinct().toMutableList()
-//        val sortProductName = pageable.sort.find { x -> x.property == "productName" }
-//        if (sortProductName != null){
-//                sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.MONTH_REPORT.desc())
-//        }
-//        val sortMonthReport = pageable.sort.find { x -> x.property == "monthReport" }
-//        if (sortMonthReport!=null){
-//            sortFields.add(1, INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME.asc())
-//        }
-
         val data = context.select(
             INFORMATION_CALCULATE_QUANTITY.PRODUCT_NAME,
             INFORMATION_CALCULATE_QUANTITY.MONTH_NUMBER,

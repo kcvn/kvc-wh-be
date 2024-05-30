@@ -28,7 +28,6 @@ import java.time.ZoneOffset
 
 @Repository
 class PlanRepository(private val context: DSLContext) {
-
     fun getListPlanByMonth(month: Int, year: Int): List<Plan> {
         return context.selectFrom(PLAN)
             .where(PLAN.IS_DELETED.eq(false))

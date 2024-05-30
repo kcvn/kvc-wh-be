@@ -7,6 +7,8 @@ import com.kcvn.spm.model.tables.references.PRODUCT
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Repository
 class ProcessProcedureStructureRepository(private val context: DSLContext) {
@@ -106,8 +108,9 @@ class ProcessProcedureStructureRepository(private val context: DSLContext) {
             context.transaction { configuration ->
                 val transactionalContext = DSL.using(configuration)
                 val query = chunkItem.map { x ->
-                    transactionalContext
-                        .deleteFrom(PROCESS_PROCEDURE_STRUCTURE)
+                    transactionalContext.update(PROCESS_PROCEDURE_STRUCTURE)
+                        .set(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED, true)
+                        .set(PROCESS_PROCEDURE_STRUCTURE.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                         .where(PROCESS_PROCEDURE_STRUCTURE.ID.eq(x.id))
                 }
                 transactionalContext.batch(query).execute()

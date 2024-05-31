@@ -82,25 +82,17 @@ class SyncTransAmDataService(
             val processFlows = this.transAmDSLContext.select().from(table).where(condition)
                 .fetchInto(SyncProcessProcedureStructureResponse::class.java)
                 .filter { it.KOTEI_CD.toIntOrNull() != 0 && it.KOTEI_TEJUN_CD.length == 12 }
-            val keys = processFlows.mapNotNull { x -> "${x.KOTEI_TEJUN_CD}${x.KOTEI_CD}${StringHelper.intToStringD2(x.SO_NO)}" }
 
-            val processFlowDatas = processProcedureStructureRep.findByKey(keys)
+            val productNames = processFlows.mapNotNull { x -> x.KOTEI_TEJUN_CD }
+            val processFlowDatas = processProcedureStructureRep.getByProductName(productNames)
 
             val lstInsert = mutableListOf<ProcessProcedureStructure>()
             val lstDelete = mutableListOf<ProcessProcedureStructure>()
 
             for (item in processFlows) {
-//                val exist = processFlowDatas.filter { x ->
-//                    x.productCode == item.KOTEI_TEJUN_CD && x.processCode == item.KOTEI_CD
-//                        && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
-//                }
                 val dataProcess = createModelProcessProcedureStructure(item)
-//                if (exist.isNotEmpty()) {
-//                    lstDelete.addAll(exist)
-//                }
                 lstInsert.add(dataProcess)
             }
-            val productNames = processFlows.mapNotNull { it.KOTEI_TEJUN_CD }
             lstDelete.addAll(processFlowDatas.filter { productNames.contains(it.productCode) })
 
             processProcedureStructureRep.removeRange(lstDelete)

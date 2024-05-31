@@ -13,12 +13,6 @@ import java.time.ZoneOffset
 @Repository
 class ProcessProcedureStructureRepository(private val context: DSLContext) {
 
-    fun findByObjectId(objectIds: List<Int>): List<ProcessProcedureStructure> {
-        return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE)
-            .where(PROCESS_PROCEDURE_STRUCTURE.OBJECT_ID.`in`(objectIds))
-            .fetchInto(ProcessProcedureStructure::class.java)
-    }
-
     fun findByKey(keys: List<String>): List<ProcessProcedureStructure> {
         return context.selectFrom(PROCESS_PROCEDURE_STRUCTURE)
             .where(

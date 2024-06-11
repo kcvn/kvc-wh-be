@@ -169,7 +169,7 @@ class WorkResultRepository(
             .join(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE))
             .where(length(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).eq(12))
-            .orderBy(PROCESS_MASTER.PROCESS_NAME.asc())
+            .orderBy(PROCESS_MASTER.GRP_PROCESS.sort(SortOrder.ASC))
             .fetchInto(ProcessGroupResponse::class.java)
 
         val x = listProcessGroup.distinctBy { x -> x.grpProcess }
@@ -190,7 +190,7 @@ class WorkResultRepository(
                         length(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).eq(12)
                             .and(PROCESS_MASTER.GRP_PROCESS.eq(code))
                     )
-                    .orderBy(PROCESS_MASTER.PROCESS_NAME)
+                    .orderBy(PROCESS_MASTER.PROCESS_CODE.sort(SortOrder.ASC))
                     .fetchInto(ProcessResponse::class.java)
                 val result = listProcess.distinctBy { x -> x.processCode }
                 response.addAll(result)

@@ -13,6 +13,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -168,7 +169,7 @@ class CompletionRateProductRepository(private val context: DSLContext) : Sorting
                 .set(COMPLETION_RATE_PRODUCT.PRODUCT_NAME, data.productName)
                 .set(COMPLETION_RATE_PRODUCT.RATE, data.rate)
                 .set(COMPLETION_RATE_PRODUCT.CREATED_DATE, data.createdDate)
-                .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(COMPLETION_RATE_PRODUCT.UPDATED_DATE, Instant.now().atOffset(ZoneOffset.UTC))
                 .set(COMPLETION_RATE_PRODUCT.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(COMPLETION_RATE_PRODUCT.IS_DELETED, data.isDeleted)
                 .set(COMPLETION_RATE_PRODUCT.EFFECTIVE_DATE, data.effectiveDate)

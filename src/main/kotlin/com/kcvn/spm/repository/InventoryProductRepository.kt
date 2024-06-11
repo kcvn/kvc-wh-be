@@ -44,8 +44,8 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         )
             .from(INVENTORY_PRODUCT
                 .join(PROCESS_PROCEDURE_STRUCTURE)
-                .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
-                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+                .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID))
+//                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
                 .leftJoin(PROCESS_MASTER)
                 .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                     .and(PROCESS_MASTER.IS_DELETED.eq(false)))
@@ -169,8 +169,8 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         )
             .from(INVENTORY_PRODUCT
             .join(PROCESS_PROCEDURE_STRUCTURE)
-            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
-                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID))
+//                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
             .leftJoin(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                 .and(PROCESS_MASTER.IS_DELETED.eq(false)))

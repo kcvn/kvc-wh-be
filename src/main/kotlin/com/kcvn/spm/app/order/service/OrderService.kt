@@ -1,8 +1,6 @@
 package com.kcvn.spm.app.order.service
 
-import com.kcvn.spm.app.order.payload.model.CheckWorkResultModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
-import com.kcvn.spm.app.order.payload.response.OrderCodeResponse
 import com.kcvn.spm.app.order.payload.response.PagingOrderResponse
 import com.kcvn.spm.common.constants.Color
 import com.kcvn.spm.common.constants.Constants
@@ -22,10 +20,8 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.OrderInfo
 import com.kcvn.spm.repository.HolidaysCalenderRepository
 import com.kcvn.spm.repository.OrderInfoRepository
-import com.kcvn.spm.repository.OrderRepository
 import com.kcvn.spm.repository.ProductRepository
 import com.kcvn.spm.repository.SystemLockRepository
-import com.kcvn.spm.repository.WorkResultRepository
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.DateUtil
 import org.apache.poi.ss.usermodel.HorizontalAlignment
@@ -43,15 +39,11 @@ import java.io.File
 import java.io.FileInputStream
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
 class OrderService(
-    private val orderRep: OrderRepository,
-    private val workResultRep: WorkResultRepository,
     private val productRep: ProductRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val orderInfoRep: OrderInfoRepository,
@@ -175,34 +167,6 @@ class OrderService(
         return BaseResponse(response)
     }
 
-    fun getOrderCode(year: String?): List<OrderCodeResponse> {
-        var startDate = OffsetDateTime.of(DateTimeHelper.getFirstDayOfQuarterInYear(LocalDateTime.now()), ZoneOffset.UTC)
-        var endDate: OffsetDateTime? = null
-        if (!year.isNullOrEmpty()) {
-            startDate = OffsetDateTime.of(year.toInt(), 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
-            endDate = OffsetDateTime.of(year.toInt(), 12, 31, 23, 59, 59, 0, ZoneOffset.UTC)
-        }
-        val orders = orderRep.getOrderCode(startDate, endDate)
-
-        val versionMap = mutableMapOf<String, MutableList<String>>()
-        for (order in orders) {
-            val orderCode = order.orderCode
-            val version = order.version
-            if (orderCode != null) {
-                versionMap.computeIfAbsent(orderCode) { mutableListOf() }.add(version.toString())
-            }
-        }
-
-        val orderCodeResponses = mutableListOf<OrderCodeResponse>()
-        for ((orderCode, versions) in versionMap) {
-            var dropdownResponses = versions.map { DropdownResponse(it, "v${it}.0") }.sortedByDescending { x -> x.value }
-            if (year.isNullOrEmpty()) dropdownResponses = listOf(dropdownResponses.first())
-            orderCodeResponses.add(OrderCodeResponse(orderCode, orderCode, dropdownResponses))
-        }
-
-        return orderCodeResponses
-    }
-
     fun importExcelOrder(file: MultipartFile, isIncreaseVersion: Boolean?): BaseResponse<FileContentModel> {
         if (systemLockRep.isLock(Constants.SYSTEM_LOCK_IMPORT_ORDER))
             throw BusinessException(CommonUtils.getMessage("action.systemLock"))
@@ -228,7 +192,7 @@ class OrderService(
             if (!ExcelHelper.checkCalendarColumn(headerRow, 1, colIndexResult - 1, formatDates))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.column.invalidCalendar"))
 
-            if (!checkContinuousDate(headerRow, 1, colIndexResult - 1))
+            if (!checkContinuousDate(headerRow, colIndexResult - 1))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.date.notContinuous"))
 
             val year = LocalDateTime.now().year
@@ -369,24 +333,8 @@ class OrderService(
         return BaseResponse(response)
     }
 
-    fun checkWorkResult(orderCode: String): BaseResponse<CheckWorkResultModel> {
-        val orderExist = orderRep.getByOrderCode(orderCode)
-            ?: throw BusinessException(CommonUtils.getMessage("validate.orderNotExist"))
-
-        var hasWorkResult = false
-        val workResult = workResultRep.getMaxByDate(orderExist.startDate!!, orderExist.endDate!!)
-        if (workResult?.summaryResultDate != null) {
-            hasWorkResult = true
-        }
-        val formatter = DateTimeFormatter.ofPattern(DateTimeFormat.dd_MM_yyyy)
-        return BaseResponse(CheckWorkResultModel(
-            hasWorkResult,
-            if (hasWorkResult) CommonUtils.getMessage("import.order.messageCheckWorkResult", arrayOf(workResult?.summaryResultDate!!.format(formatter))) else null
-        ))
-    }
-
-    private fun checkContinuousDate(headerRow: Row, startCol: Int, endCol: Int): Boolean {
-        val days = headerRow.filter { x -> x.columnIndex in startCol..endCol }
+    private fun checkContinuousDate(headerRow: Row, endCol: Int): Boolean {
+        val days = headerRow.filter { x -> x.columnIndex in 1..endCol }
             .mapNotNull { x ->
                 LocalDateTime.of(
                     LocalDateTime.now().year,

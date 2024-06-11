@@ -21,6 +21,8 @@ import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
+import java.time.Instant
+import java.time.ZoneOffset
 
 @Repository
 class ProductProcessRepository(private val context: DSLContext) : SortingRepository() {
@@ -49,8 +51,6 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 PRODUCT_PROCESS.ID.`as`("processId"),
                 PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE.`as`("layerCode"),
                 PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.`as`("processCode"),
-//                PROCESS_MASTER.PROCESS_NAME_JP.`as`("processNameJp"),
-//                PROCESS_MASTER.PROCESS_NAME.`as`("processName"),
                 PRODUCT_PROCESS.PROCESS_CONVERT_CODE.`as`("processConvertCode"),
                 PRODUCT_PROCESS.PROCESS_STATISTIC_CODE.`as`("processStatisticCode"),
                 PRODUCT_PROCESS.PROCESS_INVENTORY_CODE.`as`("processInventoryCode"),
@@ -66,8 +66,6 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 .and(PRODUCT_PROCESS.IS_DELETED.eq(false))) // Điều kiện kết nối bảng PRODUCT_PROCESS
             .leftJoin(PRODUCT)
             .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE).and(PRODUCT.IS_DELETED.eq(false)))
-//            .leftJoin(PROCESS_MASTER)
-//            .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE).and(PROCESS_MASTER.IS_DELETED.eq(false)))
             .where(condition.and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))) // Điều kiện cho bảng PROCESS_PROCEDURE_STRUCTURE
             .orderBy(sortFields)
             .limit(pageable.pageSize)
@@ -148,6 +146,7 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
                 .set(PRODUCT_PROCESS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP, request.inventoryLayerGroup)
                 .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, request.dayOfImplementation)
+                .set(PRODUCT_PROCESS.UPDATED_DATE, Instant.now().atOffset(ZoneOffset.UTC))
                 .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(request.processProcedureStructureId).and(PRODUCT_PROCESS.IS_DELETED.eq(false)))
                 .returningResult(PRODUCT_PROCESS)
                 .fetchAnyInto(ProductProcess::class.java)
@@ -246,53 +245,60 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
     }
 
     fun bulkInsertData(request: List<ProductProcess?>) {
-        val records = request.map { x ->
-            DSL.row(
-                x?.processConvertCode,
-                x?.processStatisticCode,
-                x?.processInventoryCode,
-                x?.createdDate,
-                x?.createdBy,
-                x?.processProcedureStructureId,
-                x?.inventoryLayerGroup,
-                x?.dayOfImplementation
-            )
-        }.toTypedArray()
-
-        val insertValuesStep = context.insertInto(
-            PRODUCT_PROCESS,
-            PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
-            PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
-            PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
-            PRODUCT_PROCESS.CREATED_DATE,
-            PRODUCT_PROCESS.CREATED_BY,
-            PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
-            PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
-            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION
-        )
-
-        for (record in records) {
-            insertValuesStep.values(record)
+        val dataChunks = request.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+                val query = chunkItem.mapNotNull {
+                    transactionalContext.insertInto(
+                        PRODUCT_PROCESS,
+                        PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
+                        PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
+                        PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
+                        PRODUCT_PROCESS.CREATED_DATE,
+                        PRODUCT_PROCESS.CREATED_BY,
+                        PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
+                        PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
+                        PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION
+                    ).values(
+                        it?.processConvertCode,
+                        it?.processStatisticCode,
+                        it?.processInventoryCode,
+                        it?.createdDate,
+                        it?.createdBy,
+                        it?.processProcedureStructureId,
+                        it?.inventoryLayerGroup,
+                        it?.dayOfImplementation
+                    )
+                }
+                transactionalContext.batch(query).execute()
+            }
         }
-
-        insertValuesStep.execute()
     }
 
     fun bulkUpdateData(request: List<ProductProcess>) {
-        val updateQueries = request.map { x ->
-            context.update(PRODUCT_PROCESS)
-                .set(PRODUCT_PROCESS.PROCESS_NAME, x.processName)
-                .set(PRODUCT_PROCESS.PROCESS_NAME_JP, x.processNameJp)
-                .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, x.processConvertCode)
-                .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, x.processStatisticCode)
-                .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, x.processInventoryCode)
-                .set(PRODUCT_PROCESS.UPDATED_DATE, x.updatedDate)
-                .set(PRODUCT_PROCESS.UPDATED_BY, x.updatedBy)
-                .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP, x.inventoryLayerGroup)
-                .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, x.dayOfImplementation)
-                .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(x.processProcedureStructureId))
+        val dataChunks = request.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+
+                val query = request.map { x ->
+                    transactionalContext.update(PRODUCT_PROCESS)
+                        .set(PRODUCT_PROCESS.PROCESS_NAME, x.processName)
+                        .set(PRODUCT_PROCESS.PROCESS_NAME_JP, x.processNameJp)
+                        .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, x.processConvertCode)
+                        .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, x.processStatisticCode)
+                        .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, x.processInventoryCode)
+                        .set(PRODUCT_PROCESS.UPDATED_DATE, Instant.now().atOffset(ZoneOffset.UTC))
+                        .set(PRODUCT_PROCESS.UPDATED_BY, x.updatedBy)
+                        .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP, x.inventoryLayerGroup)
+                        .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, x.dayOfImplementation)
+                        .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(x.processProcedureStructureId))
+                }
+                transactionalContext.batch(query).execute()
+            }
         }
-        context.batch(updateQueries).execute()
+
     }
 
     fun getByProductNameForPlan(productNames: List<String>): List<ProductProcessModel> {

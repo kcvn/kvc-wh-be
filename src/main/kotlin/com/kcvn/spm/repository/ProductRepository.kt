@@ -241,10 +241,4 @@ class ProductRepository(private val context: DSLContext) : SortingRepository() {
             .fetchInto(ProductDetailResponse::class.java)
         return data
     }
-
-    fun getByIds(productIDs: List<String?>): List<Product> {
-        return context.selectFrom(PRODUCT)
-            .where(PRODUCT.ID.`in`(productIDs).and(PRODUCT.IS_DELETED.eq(false)))
-            .fetchInto(Product::class.java)
-    }
 }

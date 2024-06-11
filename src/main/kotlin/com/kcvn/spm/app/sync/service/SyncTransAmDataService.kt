@@ -81,26 +81,19 @@ class SyncTransAmDataService(
             }
             val processFlows = this.transAmDSLContext.select().from(table).where(condition)
                 .fetchInto(SyncProcessProcedureStructureResponse::class.java)
-                .filter { it.KOTEI_CD.toIntOrNull() != 0 && it.KOTEI_TEJUN_CD.length == 12 }
-            val keys = processFlows.mapNotNull { x -> "${x.KOTEI_TEJUN_CD}${x.KOTEI_CD}${StringHelper.intToStringD2(x.SO_NO)}" }
+                .filter { it.KOTEI_TEJUN_CD.length == 12 && it.KOTEI_CD.startsWith("2") }
 
-            val processFlowDatas = processProcedureStructureRep.findByKey(keys)
+            val productNames = processFlows.mapNotNull { x -> x.KOTEI_TEJUN_CD }
+            val processFlowDatas = processProcedureStructureRep.getByProductName(productNames)
 
             val lstInsert = mutableListOf<ProcessProcedureStructure>()
             val lstDelete = mutableListOf<ProcessProcedureStructure>()
 
             for (item in processFlows) {
-                val exist = processFlowDatas.filter { x ->
-                    x.productCode == item.KOTEI_TEJUN_CD && x.processCode == item.KOTEI_CD
-                        && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
-                }
                 val dataProcess = createModelProcessProcedureStructure(item)
-                if (exist.isNotEmpty()) {
-                    lstDelete.addAll(exist)
-                }
                 lstInsert.add(dataProcess)
             }
-            lstDelete.addAll(processFlowDatas.filter { it.processCode?.toIntOrNull() == 0 })
+            lstDelete.addAll(processFlowDatas.filter { productNames.contains(it.productCode) })
 
             processProcedureStructureRep.removeRange(lstDelete)
             processProcedureStructureRep.addRange(lstInsert)
@@ -134,6 +127,7 @@ class SyncTransAmDataService(
             }
             val processMaster = this.transAmDSLContext.select().from(table).where(condition)
                 .fetchInto(SyncProcessMasterResponse::class.java)
+                .filter { it.KOTEI_CD.startsWith("2") }
             val processCodes = processMaster.mapNotNull { x -> x.KOTEI_CD }
 
             val processMasterDatas = processMasterRep.getByProcessCode(processCodes)
@@ -174,7 +168,7 @@ class SyncTransAmDataService(
             var condition: Condition = DSL.noCondition()
             if (syncHistory != null) {
                 condition = condition.and(
-                    DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime())
+                    DSL.field(TransAmTable.KOSHIN_DATE).ge(syncHistory.createdDate?.toLocalDateTime())
                 )
             }
             // Define your datetime range
@@ -187,27 +181,13 @@ class SyncTransAmDataService(
             val limitRecord = context.selectFrom(APP_SETTING).where(APP_SETTING.KEY.eq(KeyAppSetting.WORK_RESULT_LIMIT_RECORD))
                 .fetchAnyInto(AppSetting::class.java)?.value?.toIntOrNull() ?: 750000
 
-            condition = condition.and(DSL.field(TransAmTable.KOSHIN_DATE).greaterOrEqual(startDate))
+            condition = condition.and(DSL.field(TransAmTable.KOSHIN_DATE).ge(startDate))
 
             val query = this.transAmDSLContext.select().from(table).where(condition)
                 .orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC))
 
-//            val allField = if (hasSchema) {
-//                "$schema.${TransAmTable.WORK_RESULT}.*"
-//            } else {
-//                "${TransAmTable.WORK_RESULT}.*"
-//            }
-//
-//            val subQuery = this.transAmDSLContext.select(
-//                DSL.field(allField),
-//                DSL.rowNumber().over().orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC)).`as`("row_num")
-//            ).from(table).where(condition).orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC)).asTable("tmp")
-//
-//            val query = this.transAmDSLContext.select(
-//                DSL.field("\"tmp\".*")
-//            ).from(subQuery).where(DSL.field("\"tmp\".\"row_num\"").le(limitRecord))
-
             val workResult = query.fetchInto(SyncWorkResultResponse::class.java)
+                .filter { it.KOTEI_CD.startsWith("2") }
                 .sortedBy { it.KOSHIN_DATE }.take(limitRecord)
 
             val syncDate = workResult.sortedByDescending { it.KOSHIN_DATE }.firstOrNull()?.KOSHIN_DATE

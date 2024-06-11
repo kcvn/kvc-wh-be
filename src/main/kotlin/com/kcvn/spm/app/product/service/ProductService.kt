@@ -92,7 +92,7 @@ class ProductService(
             numberStyle.cloneStyleFrom(style)
             numberStyle.alignment = HorizontalAlignment.RIGHT
 
-            var headerCol = 18
+            var headerCol = 17
             val layers = productMapping.data!!.asSequence().mapNotNull { x ->
                 if (x.productLayerDetail.isNullOrEmpty()) null
                 else {
@@ -121,8 +121,8 @@ class ProductService(
                 val dataRow: Row = ExcelHelper.createRow(sheet, rowNumber)
                 val size = item.size?.let { StringHelper.removeDecimalSuffix(it) }
                 val sizeFormat = if (size?.toIntOrNull() == null) size else NumberHelper.formatNumber(size.toIntOrNull())
-                ExcelHelper.setCellValue(dataRow, 0, style, item.name)
-                ExcelHelper.setCellValue(dataRow, 1, style, item.name?.substring((if (item.name!!.length < 7) 0 else item.name!!.length - 7), item.name!!.length))
+                ExcelHelper.setCellValue(dataRow, 0, style, item.name?.substring((if (item.name!!.length < 7) 0 else item.name!!.length - 7), item.name!!.length))
+                ExcelHelper.setCellValue(dataRow, 1, style, item.name)
                 ExcelHelper.setCellValue(dataRow, 2, style, item.exportType)
                 ExcelHelper.setCellValue(dataRow, 3, numberStyle, sizeFormat)
                 ExcelHelper.setCellValue(dataRow, 4, style, item.frame_1)
@@ -138,9 +138,9 @@ class ProductService(
                 ExcelHelper.setCellValue(dataRow, 14, style, if (item.completionRate == null) "" else "${item.completionRate}%" )
                 ExcelHelper.setCellValue(dataRow, 15, style, item.snapMold)
                 ExcelHelper.setCellValue(dataRow, 16, style, item.tapeCommon)
-                ExcelHelper.setCellValue(dataRow, 17, style, item.tapeType)
+//                ExcelHelper.setCellValue(dataRow, 17, style, item.tapeType)
 
-                var colIndex = 18
+                var colIndex = 17
                 if (!item.productLayerDetail.isNullOrEmpty()) {
                     val type = object : TypeReference<List<LayerImportProductModel>>() {}
                     val layerValues = JsonConvert.deserialize<List<LayerImportProductModel>>(item.productLayerDetail!!, type).sortedBy { x -> x.layerCode }
@@ -207,7 +207,7 @@ class ProductService(
 
             val headerRow = sheet.getRow(0)
 
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 16))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 15))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
             val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
@@ -243,14 +243,14 @@ class ProductService(
                                 ringJig = ExcelHelper.getCellValue(row, 11).trim(),
                                 process = ExcelHelper.getCellValue(row, 12).toBigDecimalOrNull()?.toInt(),
                                 snapMold = ExcelHelper.getCellValue(row, 13),
-                                tapeCommon = ExcelHelper.getCellValue(row, 14).trim(),
-                                tapeType = ExcelHelper.getCellValue(row, 15).trim(),
+                                tapeCommon = ExcelHelper.getCellValue(row, 14).trim()
+//                                tapeType = ExcelHelper.getCellValue(row, 15).trim(),
                             )
 
                             val layers = mutableListOf<LayerImportProductModel>()
-                            for (i in 16 until colIndexResult) {
+                            for (i in 15 until colIndexResult) {
                                 if (ExcelHelper.getCellValue(row, i).isEmpty()) continue
-                                val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toBigDecimalOrNull()?.toInt())
+                                val layer = LayerImportProductModel((i - 14).toString(), ExcelHelper.getCellValue(row, i).toBigDecimalOrNull()?.toInt())
                                 layers.add(layer)
                             }
 
@@ -272,12 +272,12 @@ class ProductService(
                             productExist.process = ExcelHelper.getCellValue(row, 12).toBigDecimalOrNull()?.toInt()
                             productExist.snapMold = ExcelHelper.getCellValue(row, 13)
                             productExist.tapeCommon = ExcelHelper.getCellValue(row, 14).trim()
-                            productExist.tapeType = ExcelHelper.getCellValue(row, 15).trim()
+//                            productExist.tapeType = ExcelHelper.getCellValue(row, 15).trim()
 
                             val layers = mutableListOf<LayerImportProductModel>()
-                            for (i in 16 until colIndexResult) {
+                            for (i in 15 until colIndexResult) {
                                 if (ExcelHelper.getCellValue(row, i).isEmpty()) continue
-                                val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(row, i).toBigDecimalOrNull()?.toInt())
+                                val layer = LayerImportProductModel((i - 14).toString(), ExcelHelper.getCellValue(row, i).toBigDecimalOrNull()?.toInt())
                                 layers.add(layer)
                             }
 
@@ -326,13 +326,13 @@ class ProductService(
                     process = ExcelHelper.getCellValue(x, 12).toBigDecimalOrNull()?.toInt(),
                     snapMold = ExcelHelper.getCellValue(x, 13),
                     tapeCommon = ExcelHelper.getCellValue(x, 14),
-                    tapeType = ExcelHelper.getCellValue(x, 15),
+//                    tapeType = ExcelHelper.getCellValue(x, 15),
                     cellStyles = x.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
                 )
                 val layers = mutableListOf<LayerImportProductModel>()
-                for (i in 16 until colIndexResult) {
+                for (i in 15 until colIndexResult) {
                     if (ExcelHelper.getCellValue(x, i).isEmpty()) continue
-                    val layer = LayerImportProductModel((i - 15).toString(), ExcelHelper.getCellValue(x, i).toBigDecimalOrNull()?.toInt())
+                    val layer = LayerImportProductModel((i - 14).toString(), ExcelHelper.getCellValue(x, i).toBigDecimalOrNull()?.toInt())
                     layers.add(layer)
                 }
                 prod.productLayerDetail = JsonConvert.serialize(layers)
@@ -359,6 +359,9 @@ class ProductService(
         val headerRow: Row = sheet.getRow(0) ?: sheet.createRow(0)
         headerRow.height = titleRow.height
 
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        style.alignment = HorizontalAlignment.CENTER
+
         for (i in 0 until titleRow.lastCellNum) {
             val headerStyle = titleRow.getCell(i).cellStyle
             val headerCellValue = ExcelHelper.getCellValue(titleRow, i)
@@ -372,31 +375,31 @@ class ProductService(
         for (item in products) {
             val dataRow: Row = sheet.createRow(rowNumber)
             dataRow.height = rowHeight
-            ExcelHelper.setCellValue(dataRow, 0, item.cellStyles.find { x -> x.index == 0 }!!.cellStyle, item.name)
-            ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }!!.cellStyle, item.exportType)
-            ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }!!.cellStyle, item.size)
-            ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }!!.cellStyle, item.frame_1)
-            ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }!!.cellStyle, item.frame_2)
-            ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }!!.cellStyle, item.mold)
-            ExcelHelper.setCellValue(dataRow, 6, item.cellStyles.find { x -> x.index == 6 }!!.cellStyle, item.productLine)
-            ExcelHelper.setCellValue(dataRow, 7, item.cellStyles.find { x -> x.index == 7 }!!.cellStyle, item.srNosr)
-            ExcelHelper.setCellValue(dataRow, 8, item.cellStyles.find { x -> x.index == 8 }!!.cellStyle, item.pcsSh?.toString() ?: "")
-            ExcelHelper.setCellValue(dataRow, 9, item.cellStyles.find { x -> x.index == 9 }!!.cellStyle, item.shBlock?.toString() ?: "")
-            ExcelHelper.setCellValue(dataRow, 10, item.cellStyles.find { x -> x.index == 10 }!!.cellStyle, item.layerCount?.toString() ?: "")
-            ExcelHelper.setCellValue(dataRow, 11, item.cellStyles.find { x -> x.index == 11 }!!.cellStyle, item.ringJig)
-            ExcelHelper.setCellValue(dataRow, 12, item.cellStyles.find { x -> x.index == 12 }!!.cellStyle, item.process?.toString() ?: "")
-            ExcelHelper.setCellValue(dataRow, 13, item.cellStyles.find { x -> x.index == 13 }!!.cellStyle, item.snapMold)
-            ExcelHelper.setCellValue(dataRow, 14, item.cellStyles.find { x -> x.index == 14 }!!.cellStyle, item.tapeCommon)
-            ExcelHelper.setCellValue(dataRow, 15, item.cellStyles.find { x -> x.index == 15 }!!.cellStyle, item.tapeType)
+            ExcelHelper.setCellValue(dataRow, 0, item.cellStyles.find { x -> x.index == 0 }?.cellStyle ?: style, item.name)
+            ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }?.cellStyle ?: style, item.exportType)
+            ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }?.cellStyle ?: style, item.size)
+            ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }?.cellStyle ?: style, item.frame_1)
+            ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: style, item.frame_2)
+            ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }?.cellStyle ?: style, item.mold)
+            ExcelHelper.setCellValue(dataRow, 6, item.cellStyles.find { x -> x.index == 6 }?.cellStyle ?: style, item.productLine)
+            ExcelHelper.setCellValue(dataRow, 7, item.cellStyles.find { x -> x.index == 7 }?.cellStyle ?: style, item.srNosr)
+            ExcelHelper.setCellValue(dataRow, 8, item.cellStyles.find { x -> x.index == 8 }?.cellStyle ?: style, item.pcsSh?.toString() ?: "")
+            ExcelHelper.setCellValue(dataRow, 9, item.cellStyles.find { x -> x.index == 9 }?.cellStyle ?: style, item.shBlock?.toString() ?: "")
+            ExcelHelper.setCellValue(dataRow, 10, item.cellStyles.find { x -> x.index == 10 }?.cellStyle ?: style, item.layerCount?.toString() ?: "")
+            ExcelHelper.setCellValue(dataRow, 11, item.cellStyles.find { x -> x.index == 11 }?.cellStyle ?: style, item.ringJig)
+            ExcelHelper.setCellValue(dataRow, 12, item.cellStyles.find { x -> x.index == 12 }?.cellStyle ?: style, item.process?.toString() ?: "")
+            ExcelHelper.setCellValue(dataRow, 13, item.cellStyles.find { x -> x.index == 13 }?.cellStyle ?: style, item.snapMold)
+            ExcelHelper.setCellValue(dataRow, 14, item.cellStyles.find { x -> x.index == 14 }?.cellStyle ?: style, item.tapeCommon)
+//            ExcelHelper.setCellValue(dataRow, 15, item.cellStyles.find { x -> x.index == 15 }!!.cellStyle, item.tapeType)
 
             val type = object : TypeReference<List<LayerImportProductModel>>() {}
             val layerValues = JsonConvert.deserialize<List<LayerImportProductModel>>(item.productLayerDetail ?: "[]", type).sortedBy { x -> x.layerCode }
-            for (colIndex in 16 until colIndexResult) {
-                val cellValue = layerValues.find { x -> x.layerCode?.toIntOrNull() == (colIndex - 15) }
-                ExcelHelper.setCellValue(dataRow, colIndex, item.cellStyles.find { x -> x.index == colIndex }!!.cellStyle, cellValue?.value?.toString())
+            for (colIndex in 15 until colIndexResult) {
+                val cellValue = layerValues.find { x -> x.layerCode?.toIntOrNull() == (colIndex - 14) }
+                ExcelHelper.setCellValue(dataRow, colIndex, item.cellStyles.find { x -> x.index == colIndex }?.cellStyle ?: style, cellValue?.value?.toString())
             }
 
-            ExcelHelper.setCellValue(dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }!!.cellStyle, item.messageError)
+            ExcelHelper.setCellValue(dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }?.cellStyle ?: style, item.messageError)
             rowNumber++
         }
 
@@ -453,7 +456,7 @@ class ProductService(
                 ringJig = x.ringJig,
                 snapMold = x.snapMold,
                 tapeCommon = x.tapeCommon,
-                tapeType = x.tapeType,
+//                tapeType = x.tapeType,
                 completionRate = completionRates?.find { m -> m.productName == x.name }?.rate?.toDouble(),
                 productLayerDetail = x.productLayerDetail
             )
@@ -566,13 +569,13 @@ class ProductService(
         if (ExcelHelper.getCellValue(row, 14).isNotEmpty() && !masterData.tapeCommonSelections.any { x -> x.label!!.trim().lowercase() == ExcelHelper.getCellValue(row, 14).trim().lowercase() }) {
             messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 14))))
         }
-        if (ExcelHelper.getCellValue(row, 15).isEmpty()) {
-            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
-        } else {
-            if (!masterData.tapeTypeSelections.any { x -> x.label!!.trim().lowercase() == ExcelHelper.getCellValue(row, 15).trim().lowercase() }) {
-                messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
-            }
-        }
+//        if (ExcelHelper.getCellValue(row, 15).isEmpty()) {
+//            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
+//        } else {
+//            if (!masterData.tapeTypeSelections.any { x -> x.label!!.trim().lowercase() == ExcelHelper.getCellValue(row, 15).trim().lowercase() }) {
+//                messageResults.add(CommonUtils.getMessage("validate.excel.notExist", arrayOf(ExcelHelper.getCellValue(headerRow, 15))))
+//            }
+//        }
         val frame1 = ExcelHelper.getCellValue(row, 3)
         val mold = ExcelHelper.getCellValue(row, 5)
         if (frame1.isNotEmpty() && mold.isNotEmpty()) {

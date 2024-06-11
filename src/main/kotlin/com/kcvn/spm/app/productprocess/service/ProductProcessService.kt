@@ -307,7 +307,7 @@ class ProductProcessService(
         return BaseResponse(response)
     }
 
-    fun importExcelProduct1(file: MultipartFile): BaseResponse<FileContentModel> {
+    fun importExcelProduct(file: MultipartFile): BaseResponse<FileContentModel> {
         if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
             throw BusinessException(CommonUtils.getMessage("action.systemLock"))
 
@@ -391,7 +391,7 @@ class ProductProcessService(
 
             dataDefault.add(process)
         }
-
+        val total = dataDefault.size
         // list product name lỗi
         val listKeyErr: MutableList<String?> = mutableListOf()
         // gr theo key product name
@@ -760,7 +760,7 @@ class ProductProcessService(
         val listProductProcess = productProcessRep.getAll()
         val listAdd: MutableList<ProductProcess> = mutableListOf()
         val listUpdate: MutableList<ProductProcess> = mutableListOf()
-        val total = resultData.size
+
         for (item in resultData) {
             val requestImport = ProductProcess(
                 processProcedureStructureId = item.idProcessStructure,

@@ -245,53 +245,60 @@ class ProductProcessRepository(private val context: DSLContext) : SortingReposit
     }
 
     fun bulkInsertData(request: List<ProductProcess?>) {
-        val records = request.map { x ->
-            DSL.row(
-                x?.processConvertCode,
-                x?.processStatisticCode,
-                x?.processInventoryCode,
-                x?.createdDate,
-                x?.createdBy,
-                x?.processProcedureStructureId,
-                x?.inventoryLayerGroup,
-                x?.dayOfImplementation
-            )
-        }.toTypedArray()
-
-        val insertValuesStep = context.insertInto(
-            PRODUCT_PROCESS,
-            PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
-            PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
-            PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
-            PRODUCT_PROCESS.CREATED_DATE,
-            PRODUCT_PROCESS.CREATED_BY,
-            PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
-            PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
-            PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION
-        )
-
-        for (record in records) {
-            insertValuesStep.values(record)
+        val dataChunks = request.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+                val query = chunkItem.mapNotNull {
+                    transactionalContext.insertInto(
+                        PRODUCT_PROCESS,
+                        PRODUCT_PROCESS.PROCESS_CONVERT_CODE,
+                        PRODUCT_PROCESS.PROCESS_STATISTIC_CODE,
+                        PRODUCT_PROCESS.PROCESS_INVENTORY_CODE,
+                        PRODUCT_PROCESS.CREATED_DATE,
+                        PRODUCT_PROCESS.CREATED_BY,
+                        PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID,
+                        PRODUCT_PROCESS.INVENTORY_LAYER_GROUP,
+                        PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION
+                    ).values(
+                        it?.processConvertCode,
+                        it?.processStatisticCode,
+                        it?.processInventoryCode,
+                        it?.createdDate,
+                        it?.createdBy,
+                        it?.processProcedureStructureId,
+                        it?.inventoryLayerGroup,
+                        it?.dayOfImplementation
+                    )
+                }
+                transactionalContext.batch(query).execute()
+            }
         }
-
-        insertValuesStep.execute()
     }
 
     fun bulkUpdateData(request: List<ProductProcess>) {
-        val updateQueries = request.map { x ->
-            context.update(PRODUCT_PROCESS)
-                .set(PRODUCT_PROCESS.PROCESS_NAME, x.processName)
-                .set(PRODUCT_PROCESS.PROCESS_NAME_JP, x.processNameJp)
-                .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, x.processConvertCode)
-                .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, x.processStatisticCode)
-                .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, x.processInventoryCode)
-                .set(PRODUCT_PROCESS.UPDATED_DATE, Instant.now().atOffset(ZoneOffset.UTC))
-                .set(PRODUCT_PROCESS.UPDATED_BY, x.updatedBy)
-                .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP, x.inventoryLayerGroup)
-                .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, x.dayOfImplementation)
-                .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(x.processProcedureStructureId))
+        val dataChunks = request.chunked(100)
+        for (chunkItem in dataChunks) {
+            context.transaction { configuration ->
+                val transactionalContext = DSL.using(configuration)
+
+                val query = request.map { x ->
+                    transactionalContext.update(PRODUCT_PROCESS)
+                        .set(PRODUCT_PROCESS.PROCESS_NAME, x.processName)
+                        .set(PRODUCT_PROCESS.PROCESS_NAME_JP, x.processNameJp)
+                        .set(PRODUCT_PROCESS.PROCESS_CONVERT_CODE, x.processConvertCode)
+                        .set(PRODUCT_PROCESS.PROCESS_STATISTIC_CODE, x.processStatisticCode)
+                        .set(PRODUCT_PROCESS.PROCESS_INVENTORY_CODE, x.processInventoryCode)
+                        .set(PRODUCT_PROCESS.UPDATED_DATE, Instant.now().atOffset(ZoneOffset.UTC))
+                        .set(PRODUCT_PROCESS.UPDATED_BY, x.updatedBy)
+                        .set(PRODUCT_PROCESS.INVENTORY_LAYER_GROUP, x.inventoryLayerGroup)
+                        .set(PRODUCT_PROCESS.DAY_OF_IMPLEMENTATION, x.dayOfImplementation)
+                        .where(PRODUCT_PROCESS.PROCESS_PROCEDURE_STRUCTURE_ID.eq(x.processProcedureStructureId))
+                }
+                transactionalContext.batch(query).execute()
+            }
         }
-        context.batch(updateQueries).execute()
+
     }
 
     fun getByProductNameForPlan(productNames: List<String>): List<ProductProcessModel> {

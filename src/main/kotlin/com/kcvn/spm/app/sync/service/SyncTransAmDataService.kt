@@ -81,7 +81,7 @@ class SyncTransAmDataService(
             }
             val processFlows = this.transAmDSLContext.select().from(table).where(condition)
                 .fetchInto(SyncProcessProcedureStructureResponse::class.java)
-                .filter { it.KOTEI_CD.toIntOrNull() != 0 && it.KOTEI_TEJUN_CD.length == 12 }
+                .filter { it.KOTEI_TEJUN_CD.length == 12 && it.KOTEI_CD.startsWith("2") }
 
             val productNames = processFlows.mapNotNull { x -> x.KOTEI_TEJUN_CD }
             val processFlowDatas = processProcedureStructureRep.getByProductName(productNames)
@@ -127,6 +127,7 @@ class SyncTransAmDataService(
             }
             val processMaster = this.transAmDSLContext.select().from(table).where(condition)
                 .fetchInto(SyncProcessMasterResponse::class.java)
+                .filter { it.KOTEI_CD.startsWith("2") }
             val processCodes = processMaster.mapNotNull { x -> x.KOTEI_CD }
 
             val processMasterDatas = processMasterRep.getByProcessCode(processCodes)
@@ -201,6 +202,7 @@ class SyncTransAmDataService(
 //            ).from(subQuery).where(DSL.field("\"tmp\".\"row_num\"").le(limitRecord))
 
             val workResult = query.fetchInto(SyncWorkResultResponse::class.java)
+                .filter { it.KOTEI_CD.startsWith("2") }
                 .sortedBy { it.KOSHIN_DATE }.take(limitRecord)
 
             val syncDate = workResult.sortedByDescending { it.KOSHIN_DATE }.firstOrNull()?.KOSHIN_DATE

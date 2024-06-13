@@ -12,7 +12,6 @@ import com.kcvn.spm.common.constants.YesNoConfig
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.common.util.DSLContextExtension
 import com.kcvn.spm.config.PropertiesConfig
 import com.kcvn.spm.model.tables.pojos.AppSetting
 import com.kcvn.spm.model.tables.pojos.ProcessMaster
@@ -34,6 +33,7 @@ import org.jooq.Table
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.sql.DriverManager
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -42,7 +42,7 @@ import java.time.format.DateTimeFormatter
 @Service
 @Transactional
 class SyncTransAmDataService(
-    propertiesConfig: PropertiesConfig,
+    private val propertiesConfig: PropertiesConfig,
     private val syncHistoryRep: SyncHistoryRepository,
     private val processProcedureStructureRep: ProcessProcedureStructureRepository,
     private val processMasterRep: ProcessMasterRepository,
@@ -51,17 +51,13 @@ class SyncTransAmDataService(
     private val productRep: ProductRepository,
     private val systemLockRep: SystemLockRepository
 ) {
-    private val transAmDSLContext: DSLContext = DSLContextExtension.createDSLContext(
-        propertiesConfig.tranAmDbUrl,
-        propertiesConfig.tranAmDbUser,
-        propertiesConfig.tranAmDbPassword,
-        SQLDialect.DEFAULT
-    )
-
     private val schema = propertiesConfig.tranAmDbSchema
     private val hasSchema = propertiesConfig.tranAmDbHasSchema == YesNoConfig.YES
 
     fun syncProcessProcedureStructure() {
+        val connection = DriverManager.getConnection(propertiesConfig.tranAmDbUrl, propertiesConfig.tranAmDbUser, propertiesConfig.tranAmDbPassword)
+        val transAmDSLContext = DSL.using(connection, SQLDialect.DEFAULT)
+
         try {
             if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
                 throw BusinessException(CommonUtils.getMessage("action.systemLock"))
@@ -79,12 +75,12 @@ class SyncTransAmDataService(
                         .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
                 )
             }
-            val processFlows = this.transAmDSLContext.select().from(table).where(condition)
+            val processFlows = transAmDSLContext.select().from(table).where(condition)
                 .fetchInto(SyncProcessProcedureStructureResponse::class.java)
                 .filter { it.KOTEI_TEJUN_CD.length == 12 && it.KOTEI_CD.startsWith("2") }
 
             val productNames = processFlows.mapNotNull { x -> x.KOTEI_TEJUN_CD }
-            val processFlowDatas = processProcedureStructureRep.getByProductName(productNames)
+            val processFlowsData = processProcedureStructureRep.getByProductName(productNames)
 
             val lstInsert = mutableListOf<ProcessProcedureStructure>()
             val lstDelete = mutableListOf<ProcessProcedureStructure>()
@@ -93,7 +89,7 @@ class SyncTransAmDataService(
                 val dataProcess = createModelProcessProcedureStructure(item)
                 lstInsert.add(dataProcess)
             }
-            lstDelete.addAll(processFlowDatas.filter { productNames.contains(it.productCode) })
+            lstDelete.addAll(processFlowsData.filter { productNames.contains(it.productCode) })
 
             processProcedureStructureRep.removeRange(lstDelete)
             processProcedureStructureRep.addRange(lstInsert)
@@ -103,11 +99,16 @@ class SyncTransAmDataService(
                 SyncType.PROCESS_PROCEDURE_STRUCTURE
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            throw e
+        } finally {
+            connection.close()
         }
     }
 
     fun syncProcessMaster() {
+        val connection = DriverManager.getConnection(propertiesConfig.tranAmDbUrl, propertiesConfig.tranAmDbUser, propertiesConfig.tranAmDbPassword)
+        val transAmDSLContext = DSL.using(connection, SQLDialect.DEFAULT)
+
         try {
             if (systemLockRep.isLock(Constants.SYSTEM_LOCK_PRODUCT_PROCESS))
                 throw BusinessException(CommonUtils.getMessage("action.systemLock"))
@@ -125,18 +126,18 @@ class SyncTransAmDataService(
                         .or(DSL.field(TransAmTable.KOSHIN_DATE).gt(syncHistory.createdDate?.toLocalDateTime()))
                 )
             }
-            val processMaster = this.transAmDSLContext.select().from(table).where(condition)
+            val processMaster = transAmDSLContext.select().from(table).where(condition)
                 .fetchInto(SyncProcessMasterResponse::class.java)
                 .filter { it.KOTEI_CD.startsWith("2") }
             val processCodes = processMaster.mapNotNull { x -> x.KOTEI_CD }
 
-            val processMasterDatas = processMasterRep.getByProcessCode(processCodes)
+            val processMastersData = processMasterRep.getByProcessCode(processCodes)
 
             val lstInsert = mutableListOf<ProcessMaster>()
             val lstDelete = mutableListOf<ProcessMaster>()
 
             for (item in processMaster) {
-                val exist = processMasterDatas.filter { x -> x.processCode == item.KOTEI_CD }
+                val exist = processMastersData.filter { x -> x.processCode == item.KOTEI_CD }
                 val data = createModelProcessMaster(item)
                 if (exist.isNotEmpty()) {
                     lstDelete.addAll(exist)
@@ -152,12 +153,16 @@ class SyncTransAmDataService(
                 SyncType.PROCESS_MASTER
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            throw e
+        } finally {
+            connection.close()
         }
-
     }
 
     fun syncWorkResult() {
+        val connection = DriverManager.getConnection(propertiesConfig.tranAmDbUrl, propertiesConfig.tranAmDbUser, propertiesConfig.tranAmDbPassword)
+        val transAmDSLContext = DSL.using(connection, SQLDialect.DEFAULT)
+
         try {
             val syncHistory = syncHistoryRep.findByType(SyncType.WORK_RESULT)
             val table: Table<*> = if (hasSchema) {
@@ -183,7 +188,7 @@ class SyncTransAmDataService(
 
             condition = condition.and(DSL.field(TransAmTable.KOSHIN_DATE).ge(startDate))
 
-            val query = this.transAmDSLContext.select().from(table).where(condition)
+            val query = transAmDSLContext.select().from(table).where(condition)
                 .orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC))
 
             val workResult = query.fetchInto(SyncWorkResultResponse::class.java)
@@ -194,13 +199,13 @@ class SyncTransAmDataService(
 
             val objectIds = workResult.mapNotNull { x -> "${x.KC_HINMEI}${x.KOTEI_CD}${StringHelper.intToStringD2(x.SO_NO)}${x.KANRI_NO}" }
             val summaryDate = workResult.mapNotNull { x -> x.JISSEKI_KEIJO_DATE }
-            val workResultDatas = workResultRep.findByObjectId(objectIds).filter { x -> summaryDate.any { it.isEqual(x.summaryResultDate) } }
+            val workResultsData = workResultRep.findByObjectId(objectIds).filter { x -> summaryDate.any { it.isEqual(x.summaryResultDate) } }
 
             val lstInsert = mutableListOf<WorkResult>()
             val lstDelete = mutableListOf<WorkResult>()
             val lstProduct = mutableListOf<String>()
             for (item in workResult) {
-                val exist = workResultDatas.find { x ->
+                val exist = workResultsData.find { x ->
                     x.itemName == item.KC_HINMEI && x.processCode == item.KOTEI_CD && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
                         && x.code == item.KANRI_NO && x.summaryResultDate?.isEqual(item.JISSEKI_KEIJO_DATE) == true
                 }
@@ -240,7 +245,9 @@ class SyncTransAmDataService(
                 syncDate
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            throw e
+        } finally {
+            connection.close()
         }
     }
 

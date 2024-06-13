@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.sync.service
 
+import com.kcvn.spm.app.sync.payload.model.SyncWorkResultGroupModel
 import com.kcvn.spm.app.sync.payload.response.SyncProcessMasterResponse
 import com.kcvn.spm.app.sync.payload.response.SyncProcessProcedureStructureResponse
 import com.kcvn.spm.app.sync.payload.response.SyncWorkResultResponse
@@ -192,29 +193,29 @@ class SyncTransAmDataService(
                 .orderBy(DSL.field(TransAmTable.KOSHIN_DATE).sort(SortOrder.ASC))
 
             val workResult = query.fetchInto(SyncWorkResultResponse::class.java)
+                .asSequence()
                 .filter { it.KOTEI_CD.startsWith("2") }
                 .sortedBy { it.KOSHIN_DATE }.take(limitRecord)
+                .groupBy { SyncWorkResultGroupModel(
+                    KC_HINMEI = it.KC_HINMEI,
+                    KOTEI_CD = it.KOTEI_CD,
+                    SO_NO = it.SO_NO,
+                    KANRI_NO = it.KANRI_NO,
+                    JISSEKI_KEIJO_DATE = it.JISSEKI_KEIJO_DATE
+                ) }.mapNotNull { it.value.first() }
 
             val syncDate = workResult.sortedByDescending { it.KOSHIN_DATE }.firstOrNull()?.KOSHIN_DATE
 
-            val objectIds = workResult.mapNotNull { x -> "${x.KC_HINMEI}${x.KOTEI_CD}${StringHelper.intToStringD2(x.SO_NO)}${x.KANRI_NO}" }
+            val objectIds = workResult.map { x -> "${x.KC_HINMEI}${x.KOTEI_CD}${StringHelper.intToStringD2(x.SO_NO)}${x.KANRI_NO}" }
             val summaryDate = workResult.mapNotNull { x -> x.JISSEKI_KEIJO_DATE }
             val workResultsData = workResultRep.findByObjectId(objectIds).filter { x -> summaryDate.any { it.isEqual(x.summaryResultDate) } }
 
             val lstInsert = mutableListOf<WorkResult>()
-            val lstDelete = mutableListOf<WorkResult>()
             val lstProduct = mutableListOf<String>()
             for (item in workResult) {
-                val exist = workResultsData.find { x ->
-                    x.itemName == item.KC_HINMEI && x.processCode == item.KOTEI_CD && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
-                        && x.code == item.KANRI_NO && x.summaryResultDate?.isEqual(item.JISSEKI_KEIJO_DATE) == true
-                }
                 val data = createModelWorkResult(item)
                 if (data.processGrp == GrpProcessCode.XERANH) {
                     data.itemName?.let { lstProduct.add(it) }
-                }
-                if (exist != null) {
-                    lstDelete.add(exist)
                 }
                 lstInsert.add(data)
             }
@@ -230,13 +231,12 @@ class SyncTransAmDataService(
                                     it
                                 )
                             }
-
                         }
                     }
                 }
             }
 
-            workResultRep.removeRange(lstDelete)
+            workResultRep.removeRange(workResultsData)
             workResultRep.addRange(lstInsert)
             insertSyncHistory(
                 TransAmTable.WORK_RESULT,

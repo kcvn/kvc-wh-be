@@ -271,17 +271,6 @@ class WorkResultRepository(
         }
     }
 
-    fun getMaxByDate(startDate: OffsetDateTime, endDate: OffsetDateTime): WorkResult? {
-        return context.selectFrom(WORK_RESULT)
-            .where(
-                WORK_RESULT.SUMMARY_RESULT_DATE.ge(startDate).and(WORK_RESULT.SUMMARY_RESULT_DATE.le(endDate))
-                    .and(WORK_RESULT.IS_DELETED.eq(false))
-            )
-            .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.DESC))
-            .fetchInto(WorkResult::class.java)
-            .firstOrNull()
-    }
-
     fun getForPlan(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String>): List<WorkResult> {
         val query = context.selectFrom(WORK_RESULT)
             .where(
@@ -291,7 +280,7 @@ class WorkResultRepository(
                     .and(WORK_RESULT.IS_DELETED.eq(false))
             )
             .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))
-        return query.fetchInto(WorkResult::class.java)
+        return query.fetchInto(WorkResult::class.java).distinct()
     }
 
     fun getForReport(startDate: OffsetDateTime, endDate: OffsetDateTime, productNames: List<String?>?): List<WorkResult> {
@@ -305,6 +294,7 @@ class WorkResultRepository(
             )
             .orderBy(WORK_RESULT.SUMMARY_RESULT_DATE.sort(SortOrder.ASC))
             .fetchInto(WorkResult::class.java)
+            .distinct()
     }
 
     fun addRange(data: List<WorkResult>) {

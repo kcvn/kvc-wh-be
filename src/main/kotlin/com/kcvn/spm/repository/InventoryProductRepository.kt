@@ -23,7 +23,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-
 @Repository
 class InventoryProductRepository(private val context: DSLContext) : SortingRepository()
 {

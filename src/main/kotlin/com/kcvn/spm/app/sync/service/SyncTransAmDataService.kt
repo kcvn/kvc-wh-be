@@ -202,19 +202,11 @@ class SyncTransAmDataService(
             val workResultsData = workResultRep.findByObjectId(objectIds).filter { x -> summaryDate.any { it.isEqual(x.summaryResultDate) } }
 
             val lstInsert = mutableListOf<WorkResult>()
-            val lstDelete = mutableListOf<WorkResult>()
             val lstProduct = mutableListOf<String>()
             for (item in workResult) {
-                val exist = workResultsData.find { x ->
-                    x.itemName == item.KC_HINMEI && x.processCode == item.KOTEI_CD && x.layerCode == StringHelper.intToStringD2(item.SO_NO)
-                        && x.code == item.KANRI_NO && x.summaryResultDate?.isEqual(item.JISSEKI_KEIJO_DATE) == true
-                }
                 val data = createModelWorkResult(item)
                 if (data.processGrp == GrpProcessCode.XERANH) {
                     data.itemName?.let { lstProduct.add(it) }
-                }
-                if (exist != null) {
-                    lstDelete.add(exist)
                 }
                 lstInsert.add(data)
             }
@@ -236,7 +228,7 @@ class SyncTransAmDataService(
                 }
             }
 
-            workResultRep.removeRange(lstDelete)
+            workResultRep.removeRange(workResultsData)
             workResultRep.addRange(lstInsert)
             insertSyncHistory(
                 TransAmTable.WORK_RESULT,

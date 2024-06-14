@@ -191,7 +191,7 @@ class ProductService(
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
-
+        workbook.close()
         return BaseResponse(response)
     }
 
@@ -302,7 +302,6 @@ class ProductService(
             }
 
             if (count == total) {
-                workbook.close()
                 return BaseResponse(null, CommonUtils.getMessage("import.success", arrayOf(count, total)))
             }
 
@@ -342,7 +341,6 @@ class ProductService(
 
             val response = exportErrorFile(resultRows, headerRow, workbook, sheet)
 
-            workbook.close()
             return BaseResponse(
                 response,
                 if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
@@ -406,7 +404,6 @@ class ProductService(
         workbook.removeSheetAt(0)
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
-
 
         val excelBytes = byteArrayOutputStream.toByteArray()
 

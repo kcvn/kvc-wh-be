@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
@@ -142,5 +143,14 @@ class InventorySemiProductService(
         return BaseResponse(response)
     }
 
+    fun checkInventory(date: OffsetDateTime) : BaseResponse<Boolean> {
+        val isNoInventory = inventorySemiProductRep.isNoInventoryByDate(date)
+        val formattedDate = DateTimeHelper.convertOffSetDateTimeUtc7ToString(date)
+
+        return BaseResponse(
+            isNoInventory,
+            if (isNoInventory) null else CommonUtils.getMessage("check.inventoryDateProduct", arrayOf(formattedDate.toString()))
+        )
+    }
 }
 

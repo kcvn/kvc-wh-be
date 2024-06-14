@@ -49,7 +49,7 @@ class InventorySemiProductRepository(private val context: DSLContext) : SortingR
 
     }
 
-    fun hasInventoryByDate(date: OffsetDateTime): Boolean {
+    fun isNoInventoryByDate(date: OffsetDateTime): Boolean {
         val data = context.selectFrom(INVENTORY_SEMI_PRODUCT)
             .where(INVENTORY_SEMI_PRODUCT.INVENTORY_DATE.eq(date)).and(INVENTORY_SEMI_PRODUCT.IS_DELETED.eq(false))
             .fetchAnyInto(InventorySemiProduct::class.java)

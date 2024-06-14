@@ -162,8 +162,6 @@ class InventorySemiProductService(
     }
 
     fun importInventory(date: OffsetDateTime, file: MultipartFile): BaseResponse<FileContentModel> {
-        inventorySemiProductRep.deleteByDate(date)
-
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventorySemiProductTemplate.xlsx"
         val workbook = WorkbookFactory.create(file.inputStream)
 
@@ -188,10 +186,15 @@ class InventorySemiProductService(
 
             val dataInserts = mutableListOf<Pair<String, String>>()
 
+            inventorySemiProductRep.deleteByDate(date)
+
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
                 val style = row.getCell(0).cellStyle
                 val productName = ExcelHelper.getCellValue(row, 0)
-                val tapeLotNo = ExcelHelper.getCellValue(row, 1)
+                var tapeLotNo = ExcelHelper.getCellValue(row, 1)
+                if (tapeLotNo.toBigDecimalOrNull() != null) {
+                    tapeLotNo = tapeLotNo.toBigDecimal().toBigInteger().toString()
+                }
                 val messageResults = validateImportInventory(row, headerRow)
                 if (dataInserts.any { it.first == productName && it.second == tapeLotNo })
                     messageResults.add(CommonUtils.getMessage("validate.excel.duplicate"))
@@ -206,11 +209,11 @@ class InventorySemiProductService(
                             inventoryDate = date,
                             productName = productName,
                             tapeLotNo = tapeLotNo,
-                            setQuantity = ExcelHelper.getCellValue(row, 2).toIntOrNull() ?: 0,
-                            blockQuantity = ExcelHelper.getCellValue(row, 3).toIntOrNull() ?: 0,
-                            sumBlockQuantity = ExcelHelper.getCellValue(row, 4).toIntOrNull() ?: 0,
-                            ngBlockQuantity = ExcelHelper.getCellValue(row, 5).toIntOrNull() ?: 0,
-                            successBlockQuantity = ExcelHelper.getCellValue(row, 6).toIntOrNull() ?: 0
+                            setQuantity = ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toInt() ?: 0,
+                            blockQuantity = ExcelHelper.getCellValue(row, 3).toBigDecimalOrNull()?.toInt() ?: 0,
+                            sumBlockQuantity = ExcelHelper.getCellValue(row, 4).toBigDecimalOrNull()?.toInt() ?: 0,
+                            ngBlockQuantity = ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull()?.toInt() ?: 0,
+                            successBlockQuantity = ExcelHelper.getCellValue(row, 6).toBigDecimalOrNull()?.toInt() ?: 0
                         )
 
                         inventorySemiProductRep.add(inventory)
@@ -239,14 +242,18 @@ class InventorySemiProductService(
                 x -> ExcelHelper.getCellValue(x, colIndexResult) != CommonUtils.getMessage("validate.excel.importSuccess")
                 && x.rowNum >= rowIndex
             }.map {
+                var tapeLotNo = ExcelHelper.getCellValue(it, 1)
+                if (tapeLotNo.toBigDecimalOrNull() != null) {
+                    tapeLotNo = tapeLotNo.toBigDecimal().toBigInteger().toString()
+                }
                 ImportInventorySemiProductErrorModel(
                     productName = ExcelHelper.getCellValue(it, 0),
-                    tapeLotNo = ExcelHelper.getCellValue(it, 1),
-                    setQuantity = ExcelHelper.getCellValue(it, 2).toIntOrNull(),
-                    blockQuantity = ExcelHelper.getCellValue(it, 3).toIntOrNull(),
-                    sumBlockQuantity = ExcelHelper.getCellValue(it, 4).toIntOrNull(),
-                    ngBlockQuantity = ExcelHelper.getCellValue(it, 5).toIntOrNull(),
-                    successBlockQuantity = ExcelHelper.getCellValue(it, 6).toIntOrNull(),
+                    tapeLotNo = tapeLotNo,
+                    setQuantity = ExcelHelper.getCellValue(it, 2).toBigDecimalOrNull()?.toInt(),
+                    blockQuantity = ExcelHelper.getCellValue(it, 3).toBigDecimalOrNull()?.toInt(),
+                    sumBlockQuantity = ExcelHelper.getCellValue(it, 4).toBigDecimalOrNull()?.toInt(),
+                    ngBlockQuantity = ExcelHelper.getCellValue(it, 5).toBigDecimalOrNull()?.toInt(),
+                    successBlockQuantity = ExcelHelper.getCellValue(it, 6).toBigDecimalOrNull()?.toInt(),
                     messageError = ExcelHelper.getCellValue(it, colIndexResult),
                     cellStyles = it.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
                 )

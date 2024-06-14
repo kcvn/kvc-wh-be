@@ -44,8 +44,8 @@ class InventorySemiProductController(
     @PostMapping(value = ["/import-excel"], consumes = ["multipart/form-data"])
     //@PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun importExcel(date: OffsetDateTime, @RequestPart("file") file: MultipartFile): ResponseEntity<BaseResponse<FileContentModel>> {
-        //val data = inventoryProductService.importExelInventoryProduct(date, file)
-        return ResponseEntity(BaseResponse(), HttpStatus.OK)
+        val data = inventorySemiProductService.importInventory(date, file)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping

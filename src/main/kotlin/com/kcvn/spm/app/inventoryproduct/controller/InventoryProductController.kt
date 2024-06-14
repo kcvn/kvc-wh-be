@@ -31,8 +31,7 @@ class InventoryProductController(
     private val inventoryProductService: InventoryProductService
 ) {
     @GetMapping("/check-inventory-date")
-    fun checkInventoryDate(date: OffsetDateTime
-    ): ResponseEntity<BaseResponse<CheckInventoryDateResponse>> {
+    fun checkInventoryDate(date: OffsetDateTime): ResponseEntity<BaseResponse<CheckInventoryDateResponse>> {
         val data = inventoryProductService.checkInventoryDate(date)
 
         val formattedDate = convertOffSetDateTimeUtc7ToString(date)

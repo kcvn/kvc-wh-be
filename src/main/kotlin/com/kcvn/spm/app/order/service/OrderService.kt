@@ -329,7 +329,7 @@ class OrderService(
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = excelBytes
         )
-
+        workbook.close()
         return BaseResponse(response)
     }
 

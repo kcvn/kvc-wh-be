@@ -22,5 +22,6 @@ data class InventoryProductResponse (
     var processCount: Int? = null,
     var seidenRepNumber:Int? = null,
     var employeeCode: String? = null,
-
+    var successQuantity: Int? = null,
+    var ins_30DayQuantity: Int? = null
 )

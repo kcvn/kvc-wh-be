@@ -9,16 +9,12 @@ import com.kcvn.spm.model.keys.INVENTORY_PRODUCT_PKEY
 import com.kcvn.spm.model.tables.records.InventoryProductRecord
 
 import java.time.OffsetDateTime
-import java.util.function.Function
 
 import org.jooq.Field
 import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row22
 import org.jooq.Schema
-import org.jooq.SelectField
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
@@ -76,12 +72,6 @@ open class InventoryProduct(
      * The column <code>public.inventory_product.inventory_date</code>.
      */
     val INVENTORY_DATE: TableField<InventoryProductRecord, OffsetDateTime?> = createField(DSL.name("inventory_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "")
-
-    /**
-     * The column
-     * <code>public.inventory_product.process_procedure_structure_id</code>.
-     */
-    val PROCESS_PROCEDURE_STRUCTURE_ID: TableField<InventoryProductRecord, String?> = createField(DSL.name("process_procedure_structure_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     /**
      * The column <code>public.inventory_product.product_quantity</code>.
@@ -173,6 +163,31 @@ open class InventoryProduct(
      */
     val SEIDEN_REP_NUMBER: TableField<InventoryProductRecord, Int?> = createField(DSL.name("seiden_rep_number"), SQLDataType.INTEGER, this, "")
 
+    /**
+     * The column <code>public.inventory_product.success_quantity</code>.
+     */
+    val SUCCESS_QUANTITY: TableField<InventoryProductRecord, Int?> = createField(DSL.name("success_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.inventory_product.ins_30_day_quantity</code>.
+     */
+    val INS_30_DAY_QUANTITY: TableField<InventoryProductRecord, Int?> = createField(DSL.name("ins_30_day_quantity"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.inventory_product.product_name</code>.
+     */
+    val PRODUCT_NAME: TableField<InventoryProductRecord, String?> = createField(DSL.name("product_name"), SQLDataType.VARCHAR(12), this, "")
+
+    /**
+     * The column <code>public.inventory_product.process_code</code>.
+     */
+    val PROCESS_CODE: TableField<InventoryProductRecord, String?> = createField(DSL.name("process_code"), SQLDataType.VARCHAR(6), this, "")
+
+    /**
+     * The column <code>public.inventory_product.layer_code</code>.
+     */
+    val LAYER_CODE: TableField<InventoryProductRecord, String?> = createField(DSL.name("layer_code"), SQLDataType.VARCHAR(2), this, "")
+
     private constructor(alias: Name, aliased: Table<InventoryProductRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<InventoryProductRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -212,20 +227,4 @@ open class InventoryProduct(
      * Rename this table
      */
     override fun rename(name: Table<*>): InventoryProduct = InventoryProduct(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row22 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row22<String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, String?, String?, String?, Int?, Int?, String?, Int?, Int?> = super.fieldsRow() as Row22<String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, String?, String?, String?, Int?, Int?, String?, Int?, Int?>
-
-    /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
-     */
-    fun <U> mapping(from: (String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, String?, String?, String?, Int?, Int?, String?, Int?, Int?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
-
-    /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
-     */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, OffsetDateTime?, String?, Int?, Int?, String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?, String?, String?, String?, Int?, Int?, String?, Int?, Int?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

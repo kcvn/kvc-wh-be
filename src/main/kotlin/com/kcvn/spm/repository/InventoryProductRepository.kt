@@ -43,8 +43,11 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
         )
             .from(INVENTORY_PRODUCT
                 .join(PROCESS_PROCEDURE_STRUCTURE)
-                .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID))
-//                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+                .on(INVENTORY_PRODUCT.PRODUCT_NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                    .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE))
+                    .and(INVENTORY_PRODUCT.LAYER_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE))
+                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+                )
                 .leftJoin(PROCESS_MASTER)
                 .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                     .and(PROCESS_MASTER.IS_DELETED.eq(false)))
@@ -64,9 +67,11 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .fetchAnyInto(InventoryProduct::class.java)
     }
 
-    fun findInventoryProduct(id: String?, date: OffsetDateTime, code: String) : InventoryProduct? {
+    fun findInventoryProduct(productName: String?, processCode: String?, layerCode: String?, date: OffsetDateTime, code: String) : InventoryProduct? {
         return  context.selectFrom(INVENTORY_PRODUCT)
-            .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(id)
+            .where(INVENTORY_PRODUCT.PRODUCT_NAME.eq(productName)
+                .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(processCode))
+                .and(INVENTORY_PRODUCT.LAYER_CODE.eq(layerCode))
                 .and(INVENTORY_PRODUCT.CODE.eq(code))
                 .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
                 .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)))
@@ -87,8 +92,9 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             val record = transactionalContext.newRecord(INVENTORY_PRODUCT, request)
             record.updatedDate = Instant.now().atOffset(ZoneOffset.UTC)
             transactionalContext.update(INVENTORY_PRODUCT).set(record)
-                .where(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID
-                    .eq(record.processProcedureStructureId)
+                .where(INVENTORY_PRODUCT.PRODUCT_NAME.eq(record.productName)
+                    .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(record.processCode))
+                    .and(INVENTORY_PRODUCT.LAYER_CODE.eq(record.layerCode))
                     .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(record.inventoryDate))
                     .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
                     .and(INVENTORY_PRODUCT.CODE.eq(record.code))).execute()
@@ -162,14 +168,16 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             INVENTORY_PRODUCT.PROCESS_COUNT.`as`("processCount"),
             INVENTORY_PRODUCT.SEIDEN_REP_NUMBER.`as`("seidenRepNumber"),
             INVENTORY_PRODUCT.PROCESS_NAME_JP.`as`("processNameJp"),
-            INVENTORY_PRODUCT.EMPLOYEE_CODE.`as`("employeeCode")
-
-
+            INVENTORY_PRODUCT.EMPLOYEE_CODE.`as`("employeeCode"),
+            INVENTORY_PRODUCT.SUCCESS_QUANTITY.`as`("successQuantity"),
+            INVENTORY_PRODUCT.INS_30_DAY_QUANTITY.`as`("ins_30DayQuantity")
         )
             .from(INVENTORY_PRODUCT
             .join(PROCESS_PROCEDURE_STRUCTURE)
-            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID))
-//                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+            .on(INVENTORY_PRODUCT.PRODUCT_NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE))
+                .and(INVENTORY_PRODUCT.LAYER_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE))
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
             .leftJoin(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                 .and(PROCESS_MASTER.IS_DELETED.eq(false)))
@@ -185,8 +193,11 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .selectCount()
             .from(INVENTORY_PRODUCT
             .join(PROCESS_PROCEDURE_STRUCTURE)
-            .on(INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
-                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false)))
+            .on(INVENTORY_PRODUCT.PRODUCT_NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE))
+                .and(INVENTORY_PRODUCT.LAYER_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE))
+                .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
+            )
             .leftJoin(PROCESS_MASTER)
             .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                 .and(PROCESS_MASTER.IS_DELETED.eq(false)))
@@ -209,7 +220,9 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             PROCESS_MASTER.PROCESS_NAME.`as`("processName")
         ).from(INVENTORY_PRODUCT)
             .join(PROCESS_PROCEDURE_STRUCTURE).on(
-                INVENTORY_PRODUCT.PROCESS_PROCEDURE_STRUCTURE_ID.eq(PROCESS_PROCEDURE_STRUCTURE.ID)
+                INVENTORY_PRODUCT.PRODUCT_NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
+                    .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE))
+                    .and(INVENTORY_PRODUCT.LAYER_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE))
                     .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
             ).leftJoin(PROCESS_MASTER).on(
                 PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)

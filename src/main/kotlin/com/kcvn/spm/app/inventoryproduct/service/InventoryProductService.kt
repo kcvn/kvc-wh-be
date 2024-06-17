@@ -90,7 +90,7 @@ class InventoryProductService(
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportInventoryProductTemplate.xlsx"
         if (ExcelHelper.fileIsEmpty(sheet, rowIndex)) throw BusinessException(CommonUtils.getMessage("import.file.empty"))
 
-        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 17))
+        if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 19))
             throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
         val requestDelete = InventoryProduct()
@@ -243,7 +243,10 @@ class InventoryProductService(
                             seidenRepNumber = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 16)).toIntOrNull(),
                             processName =  ExcelHelper.getCellValue(row, 3),
                             //end
-                            processProcedureStructureId = filterCheckProcessProcedure.id,
+                            //processProcedureStructureId = filterCheckProcessProcedure.id,
+                            productName = filter.productName,
+                            processCode = filter.processCode,
+                            layerCode = StringHelper.intToStringD2(filter.layerCode),
                             inventoryDate = date,
                             code = if (ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull() != null) {
                                 ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull()?.toLong().toString()
@@ -253,9 +256,17 @@ class InventoryProductService(
                             tapeLotNo = ExcelHelper.getCellValue(row, 7),
                             orderCode = ExcelHelper.getCellValue(row, 11),
                             productQuantity = ExcelHelper.getCellValue(row, 14).toBigDecimalOrNull()?.toInt(),
-                            sheetQuantity = ExcelHelper.getCellValue(row, 15).toBigDecimalOrNull()?.toInt()
+                            sheetQuantity = ExcelHelper.getCellValue(row, 15).toBigDecimalOrNull()?.toInt(),
+                            successQuantity = ExcelHelper.getCellValue(row, 17).toBigDecimalOrNull()?.toInt(),
+                            ins_30DayQuantity = ExcelHelper.getCellValue(row, 18).toBigDecimalOrNull()?.toInt()
                         )
-                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date, requestImport.code ?: "")
+                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(
+                            filterCheckProcessProcedure.productCode,
+                            filterCheckProcessProcedure.processCode,
+                            filterCheckProcessProcedure.layerCode,
+                            date,
+                            requestImport.code ?: ""
+                        )
 
                         if (checkInventoryProduct == null) {
                             requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
@@ -313,6 +324,8 @@ class InventoryProductService(
                 orderCode = ExcelHelper.getCellValue(x, 11),
                 productQuantity = ExcelHelper.getCellValue(x, 14).toBigDecimalOrNull()?.toInt(),
                 sheetQuantity = ExcelHelper.getCellValue(x, 15).toBigDecimalOrNull()?.toInt(),
+                successQuantity = ExcelHelper.getCellValue(x, 17).toBigDecimalOrNull()?.toInt(),
+                ins_30DayQuantity = ExcelHelper.getCellValue(x, 18).toBigDecimalOrNull()?.toInt(),
                 messageError = ExcelHelper.getCellValue(x, colIndexResult),
                 cellStyles = x.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
             )
@@ -426,6 +439,12 @@ class InventoryProductService(
             item.cellStyles.find { x -> x.index == 15 }?.let { style ->
                 ExcelHelper.setCellValue(dataRow, 15, style.cellStyle, item.sheetQuantity?.toString())
             }
+            item.cellStyles.find { x -> x.index == 17 }?.let { style ->
+                    ExcelHelper.setCellValue(dataRow, 17, style.cellStyle, item.successQuantity?.toString())
+            }
+            item.cellStyles.find { x -> x.index == 18 }?.let { style ->
+                ExcelHelper.setCellValue(dataRow, 18, style.cellStyle, item.ins_30DayQuantity?.toString())
+            }
 
             ExcelHelper.setCellValue(dataRow, colIndexResult, errorCellStyle, item.messageError)
             rowNumber++
@@ -470,7 +489,9 @@ class InventoryProductService(
                 productionAreaName = inventoryProduct?.productionAreaName,
                 processCount = inventoryProduct?.processCount,
                 seidenRepNumber = inventoryProduct?.seidenRepNumber,
-                employeeCode = inventoryProduct?.employeeCode
+                employeeCode = inventoryProduct?.employeeCode,
+                successQuantity = inventoryProduct?.successQuantity,
+                ins_30DayQuantity = inventoryProduct?.ins_30DayQuantity
             )
         }
         response.totalRecords = result.second ?: 0
@@ -516,6 +537,8 @@ class InventoryProductService(
                 ExcelHelper.setCellValue(dataRow, 15, numberStyle, NumberHelper.formatNumber(item?.productQuantity))
                 ExcelHelper.setCellValue(dataRow, 16, numberStyle, NumberHelper.formatNumber(item?.sheetQuantity))
                 ExcelHelper.setCellValue(dataRow, 17, style, item?.seidenRepNumber?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 18, numberStyle, NumberHelper.formatNumber(item?.successQuantity))
+                ExcelHelper.setCellValue(dataRow, 19, numberStyle, NumberHelper.formatNumber(item?.ins_30DayQuantity))
                 rowNumber++
             }
         }

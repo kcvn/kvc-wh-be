@@ -2,7 +2,6 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
-import com.kcvn.spm.common.constants.ProcessCode
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
@@ -19,47 +18,12 @@ import org.springframework.dao.InvalidDataAccessApiUsageException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.Instant
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
 class InventoryProductRepository(private val context: DSLContext) : SortingRepository()
 {
-    fun getInventoryProductByProductName(products:List<String> , date:OffsetDateTime?): List<InventoryProductResponse>{
-        var condition: Condition = DSL.noCondition()
-
-        if (date != null) {
-            condition =condition.and(INVENTORY_PRODUCT.INVENTORY_DATE.cast(LocalDate::class.java).eq(date.toLocalDate()))
-        }
-        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`in`(products))
-        condition = condition.and(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(ProcessCode.INS))
-
-        val data = context.select(
-            INVENTORY_PRODUCT.INVENTORY_DATE.`as`("inventoryDate"),
-            PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
-            INVENTORY_PRODUCT.PRODUCT_QUANTITY.`as`("productQuantity"),
-            INVENTORY_PRODUCT.SHEET_QUANTITY.`as`("sheetQuantity"),
-        )
-            .from(INVENTORY_PRODUCT
-                .join(PROCESS_PROCEDURE_STRUCTURE)
-                .on(INVENTORY_PRODUCT.PRODUCT_NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
-                    .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE))
-                    .and(INVENTORY_PRODUCT.LAYER_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE))
-                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-                )
-                .leftJoin(PROCESS_MASTER)
-                .on(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
-                    .and(PROCESS_MASTER.IS_DELETED.eq(false)))
-                .leftJoin(PRODUCT)
-                .on(PRODUCT.NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
-                    .and(PRODUCT.IS_DELETED.eq(false))))
-            .where(condition.and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
-            .fetchInto(InventoryProductResponse::class.java)
-
-        return data
-    }
-
     fun findDateInventoryProduct (date: OffsetDateTime) : InventoryProduct?{
         return context.selectFrom(INVENTORY_PRODUCT)
             .where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(date)
@@ -214,6 +178,7 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             INVENTORY_PRODUCT.INVENTORY_DATE,
             DSL.sum(INVENTORY_PRODUCT.PRODUCT_QUANTITY).`as`("productQuantity"),
             DSL.sum(INVENTORY_PRODUCT.SHEET_QUANTITY).`as`("sheetQuantity"),
+            DSL.sum(INVENTORY_PRODUCT.SUCCESS_QUANTITY).`as`("successQuantity"),
             PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
             PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
             PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,

@@ -831,7 +831,7 @@ class CreatePlanService(
             val mAllChildren = mAllChild.firstOrNull { it.productName == iProductName } ?: continue
             val orders = orderInfo.filter { x -> x.productName == iProductName }
             val inventoryByProducts = inventories.filter { x -> x.productName == iProductName }
-            var orderAllocations = allocateInventoryIns(orders, inventoryByProducts, processIns).filter { (it.quantity ?: 0) > 0 }
+            var orderAllocations = allocateInventoryIns(orders, inventoryByProducts).filter { (it.quantity ?: 0) > 0 }
             if (orderAllocations.isEmpty()) continue
 
             val product = productInfo.firstOrNull { x -> x.name == iProductName }
@@ -928,14 +928,14 @@ class CreatePlanService(
         return planProductMappings
     }
 
-    private fun allocateInventoryIns(orderInfo: List<OrderInfo>, inventories: List<InventoryProductResponse>, processIns: ProductProcessModel): List<OrderInfo> {
+    private fun allocateInventoryIns(orderInfo: List<OrderInfo>, inventories: List<InventoryProductResponse>): List<OrderInfo> {
         val inventoryIns = inventories.firstOrNull { x -> x.processCode == ProcessCode.INS }
         val orderInfoAllocation = mutableListOf<OrderInfo>()
         if (inventoryIns == null) {
             orderInfoAllocation.addAll(orderInfo)
             return orderInfoAllocation
         }
-        var quantity = if (processIns.unit == ProcessUnit.SHEET) inventoryIns.sheetQuantity ?: 0 else inventoryIns.productQuantity ?: 0
+        var quantity = inventoryIns.successQuantity ?: 0
         if (quantity <= 0) {
             orderInfoAllocation.addAll(orderInfo)
             return orderInfoAllocation

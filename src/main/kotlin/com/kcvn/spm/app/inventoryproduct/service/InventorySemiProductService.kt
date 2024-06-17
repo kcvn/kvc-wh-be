@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -174,7 +175,7 @@ class InventorySemiProductService(
 
             val headerRow = sheet.getRow(0)
 
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 7))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
 
             var count = 0
@@ -183,8 +184,7 @@ class InventorySemiProductService(
 
             val productNames = sheet.filter { x -> x.rowNum >= rowIndex }.mapNotNull { row -> ExcelHelper.getCellValue(row, 0) }
             val products = productRep.getByName(productNames)
-
-            val dataInserts = mutableListOf<Pair<String, String>>()
+            val completionRates = completionRateProductRep.getByDate(productNames, date)
 
             inventorySemiProductRep.deleteByDate(date)
 
@@ -196,8 +196,6 @@ class InventorySemiProductService(
                     tapeLotNo = tapeLotNo.toBigDecimal().toBigInteger().toString()
                 }
                 val messageResults = validateImportInventory(row, headerRow)
-                if (dataInserts.any { it.first == productName && it.second == tapeLotNo })
-                    messageResults.add(CommonUtils.getMessage("validate.excel.duplicate"))
 
                 val product = products.find { x -> x.name == productName }
                 if (product == null) messageResults.add(CommonUtils.getMessage("product.not.exist"))
@@ -211,16 +209,25 @@ class InventorySemiProductService(
                             tapeLotNo = tapeLotNo,
                             setQuantity = ExcelHelper.getCellValue(row, 2).toBigDecimalOrNull()?.toInt() ?: 0,
                             blockQuantity = ExcelHelper.getCellValue(row, 3).toBigDecimalOrNull()?.toInt() ?: 0,
-                            sumBlockQuantity = ExcelHelper.getCellValue(row, 4).toBigDecimalOrNull()?.toInt() ?: 0,
-                            ngBlockQuantity = ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull()?.toInt() ?: 0,
-                            successBlockQuantity = ExcelHelper.getCellValue(row, 6).toBigDecimalOrNull()?.toInt() ?: 0
+                            ngBlockQuantity = ExcelHelper.getCellValue(row, 4).toBigDecimalOrNull()?.toInt() ?: 0,
                         )
+                        val completionRate = completionRates.find { it.productName == productName }
+                        if (completionRate?.rate == null) {
+                            messageResults.add(CommonUtils.getMessage("validate.importTape.completionRateProduct1"))
+                            continue
+                        }
 
+                        inventory.sumBlockQuantity = NumberHelper.roundedUp(
+                            NumberHelper.divide(
+                                (BigDecimal(inventory.setQuantity ?: 0) * BigDecimal(product?.shBlock ?: 0) * completionRate.rate!!),
+                                BigDecimal(100)
+                            ) + BigDecimal(inventory.blockQuantity ?: 0)
+                        )
+                        inventory.successBlockQuantity = (inventory.sumBlockQuantity ?: 0) - (inventory.ngBlockQuantity ?: 0)
                         inventorySemiProductRep.add(inventory)
 
                         messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
                         count++
-                        dataInserts.add(Pair(productName, tapeLotNo))
                     } catch (e: Exception) {
                         messageResults.add(CommonUtils.getMessage("validate.excel.updateDataError"))
                     }
@@ -251,9 +258,7 @@ class InventorySemiProductService(
                     tapeLotNo = tapeLotNo,
                     setQuantity = ExcelHelper.getCellValue(it, 2).toBigDecimalOrNull()?.toInt(),
                     blockQuantity = ExcelHelper.getCellValue(it, 3).toBigDecimalOrNull()?.toInt(),
-                    sumBlockQuantity = ExcelHelper.getCellValue(it, 4).toBigDecimalOrNull()?.toInt(),
-                    ngBlockQuantity = ExcelHelper.getCellValue(it, 5).toBigDecimalOrNull()?.toInt(),
-                    successBlockQuantity = ExcelHelper.getCellValue(it, 6).toBigDecimalOrNull()?.toInt(),
+                    ngBlockQuantity = ExcelHelper.getCellValue(it, 4).toBigDecimalOrNull()?.toInt(),
                     messageError = ExcelHelper.getCellValue(it, colIndexResult),
                     cellStyles = it.map { m -> CellStyleModel(m.columnIndex, m.cellStyle) }
                 )
@@ -303,9 +308,7 @@ class InventorySemiProductService(
             ExcelHelper.setCellValue(dataRow, 1, item.cellStyles.find { x -> x.index == 1 }?.cellStyle ?: style, item.tapeLotNo)
             ExcelHelper.setCellValue(dataRow, 2, item.cellStyles.find { x -> x.index == 2 }?.cellStyle ?: style, item.setQuantity?.toString())
             ExcelHelper.setCellValue(dataRow, 3, item.cellStyles.find { x -> x.index == 3 }?.cellStyle ?: style, item.blockQuantity?.toString())
-            ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: style, item.sumBlockQuantity?.toString())
-            ExcelHelper.setCellValue(dataRow, 5, item.cellStyles.find { x -> x.index == 5 }?.cellStyle ?: style, item.ngBlockQuantity?.toString())
-            ExcelHelper.setCellValue(dataRow, 6, item.cellStyles.find { x -> x.index == 6 }?.cellStyle ?: style, item.successBlockQuantity?.toString())
+            ExcelHelper.setCellValue(dataRow, 4, item.cellStyles.find { x -> x.index == 4 }?.cellStyle ?: style, item.ngBlockQuantity?.toString())
             ExcelHelper.setCellValue(dataRow, colIndexResult, item.cellStyles.find { x -> x.index == colIndexResult }?.cellStyle ?: style, item.messageError)
             rowNumber++
         }
@@ -352,25 +355,8 @@ class InventorySemiProductService(
                 messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, 3))))
         }
 
-        if (ExcelHelper.getCellValue(row, 4).isEmpty()) {
-            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
-        } else {
-            if (ExcelHelper.getCellValue(row, 4).toBigDecimalOrNull() == null)
-                messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
-        }
-
-        if (ExcelHelper.getCellValue(row, 5).isEmpty()) {
-            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
-        } else {
-            if (ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull() == null)
-                messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, 5))))
-        }
-
-        if (ExcelHelper.getCellValue(row, 6).isEmpty()) {
-            messageResults.add(CommonUtils.getMessage("validate.excel.empty", arrayOf(ExcelHelper.getCellValue(headerRow, 6))))
-        } else {
-            if (ExcelHelper.getCellValue(row, 6).toBigDecimalOrNull() == null)
-                messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, 6))))
+        if (ExcelHelper.getCellValue(row, 4).isNotEmpty() && ExcelHelper.getCellValue(row, 4).toBigDecimalOrNull() == null) {
+            messageResults.add(CommonUtils.getMessage("validate.excel.isNumber", arrayOf(ExcelHelper.getCellValue(headerRow, 4))))
         }
 
         return messageResults

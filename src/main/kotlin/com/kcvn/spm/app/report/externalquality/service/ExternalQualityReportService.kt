@@ -1,7 +1,6 @@
 package com.kcvn.spm.app.report.externalquality.service
 
 import com.kcvn.spm.app.completionrate.payload.response.CheckImportResponse
-import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
 import com.kcvn.spm.app.order.payload.model.OrderDetailModel
 import com.kcvn.spm.app.order.payload.request.OrderSearchRequest
 import com.kcvn.spm.app.order.service.OrderService
@@ -30,19 +29,8 @@ import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.CouponCodeDropdown
-import com.kcvn.spm.model.tables.pojos.TapeEnRoute
-import com.kcvn.spm.model.tables.pojos.TapeInventory
-import com.kcvn.spm.model.tables.pojos.WorkResult
-import com.kcvn.spm.repository.AppSettingRepository
-import com.kcvn.spm.repository.CompletionRateProductRepository
-import com.kcvn.spm.repository.HolidaysCalenderRepository
-import com.kcvn.spm.repository.InventoryProductRepository
-import com.kcvn.spm.repository.OrderInfoRepository
-import com.kcvn.spm.repository.ProductRepository
-import com.kcvn.spm.repository.TapeEnRouteRepository
-import com.kcvn.spm.repository.TapeInventoryRepository
-import com.kcvn.spm.repository.WorkResultRepository
+import com.kcvn.spm.model.tables.pojos.*
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
@@ -68,14 +56,14 @@ import java.time.format.DateTimeFormatter
 class ExternalQualityReportService(
     private val orderSer: OrderService,
     private val workResultRep: WorkResultRepository,
-    private val inventoryProductRep: InventoryProductRepository,
     private val completionRateProductRep: CompletionRateProductRepository,
     private val holidaysCalenderRep: HolidaysCalenderRepository,
     private val orderInfoRepository: OrderInfoRepository,
     private val tapeEnRouteRepository:TapeEnRouteRepository,
     private val tapeInventoryRepository: TapeInventoryRepository,
     private val appSettingRep: AppSettingRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val inventorySemiProductRep: InventorySemiProductRepository
 ) {
     //region IMPORT
 
@@ -707,12 +695,12 @@ class ExternalQualityReportService(
         // get list name product
         val productNames = getListNameProduct(mappingPaging)
         // get list Inventory
-        val inventoryDetails = inventoryProductRep.getInventoryProductByProductName(productNames, request.endDate!!.plusDays(-1))
+        val listInventorySemiProduct = inventorySemiProductRep.getInventorySemiProductByProductName(productNames, request.endDate)
         //create list data exist
         val listDataExist :MutableList<ExternalQualityDetailExistModel> = mutableListOf()
         //add Details Data here
         for(mappingItem in mappingPaging){
-            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,tapeInventory,inventoryDetails, subColumns,listDataExist,tapeEnRoute,daysToSubtract)
+            addDetailsExternalQualityReport(mappingItem,listProductOrder,response.columns,listWorkResult,tapeInventory, subColumns,listDataExist,tapeEnRoute,daysToSubtract,listInventorySemiProduct)
         }
         val valueReportDate= request.endDate?.let { DateTimeHelper.toString(it, DateTimeFormat.yyyyMMdd) }
         //add Shipping Data here
@@ -726,9 +714,10 @@ class ExternalQualityReportService(
         return response
     }
 
-    fun getInventoryProduct(productName: String, inventoryProducts:  List<InventoryProductResponse>): Int{
+
+    fun getInventorySemiProduct(productName: String, inventoryProducts:  List<InventorySemiProduct>): Int{
         val data = inventoryProducts.filter { x-> x.productName == productName }
-        return data.sumOf { x -> x.productQuantity!! }
+        return data.sumOf { x -> x.successBlockQuantity!! }
     }
 
     fun parseExportTypes(exportType: String?): List<String> {
@@ -764,11 +753,11 @@ class ExternalQualityReportService(
                                         columns:  List<CalendarResponse>,
                                         listWorkResult: List<WorkResult>?,
                                         listTapeInventory:List<TapeInventory>,
-                                        inventoryProducts:  List<InventoryProductResponse>,
                                         subColumns: List<CalendarResponse>,
                                         listDataExist: MutableList<ExternalQualityDetailExistModel> = mutableListOf(),
                                         listTapeEnRoute: List<TapeEnRoute>,
-                                        daysToSubtract: Long){
+                                        daysToSubtract: Long,
+                                        listInventorySemiProduct: List<InventorySemiProduct> = listOf()){
 
         val detailData : MutableList<ExternalQualityDetailModel> = mutableListOf()
 
@@ -793,7 +782,7 @@ class ExternalQualityReportService(
         val accumulatedOrderQuantity = ExternalQualityDetailModel("ACCUMULATED_ORDER_QUANTITY", ExternalReportDetailType.ACCUMULATED_ORDER_QUANTITY,externalQualityReportModel.sumInventoryQuantity)
         val accumulatedOrderQuantityCalendars = calculateAccumulation(orderQuantityCalendars)
         accumulatedOrderQuantity.quantityByCalendars = accumulatedOrderQuantityCalendars
-        externalQualityReportModel.sumInventoryQuantity = externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
+        externalQualityReportModel.sumInventoryQuantity = externalQualityReportModel.productName?.let { getInventorySemiProduct(it,listInventorySemiProduct) }
 
         accumulatedOrderQuantity.inventory =   externalQualityReportModel.sumInventoryQuantity
         detailData.add(accumulatedOrderQuantity)
@@ -856,7 +845,7 @@ class ExternalQualityReportService(
         externalQualityReportModel.goodQualityTapeInventorySet = goodQualityTapeInventorySet
         externalQualityReportModel.goodQualityTapeInventoryBlock = goodQualityTapeInventoryBlock
         externalQualityReportModel.sumInventoryQuantity =
-            externalQualityReportModel.productName?.let { getInventoryProduct(it,inventoryProducts) }
+            externalQualityReportModel.productName?.let { getInventorySemiProduct(it,listInventorySemiProduct) }
 
         //PLANNED_TAPE_SET
         val plannedTapeSet = ExternalQualityDetailModel("PLANNED_TAPE_SET", ExternalReportDetailType.PLANNED_TAPE_SET, externalQualityReportModel.goodQualityTapeInventorySet)

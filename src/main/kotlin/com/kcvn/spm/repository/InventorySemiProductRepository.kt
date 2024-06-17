@@ -5,12 +5,15 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventorySemiProduct
+import com.kcvn.spm.model.tables.references.INVENTORY_PRODUCT
 import com.kcvn.spm.model.tables.references.INVENTORY_SEMI_PRODUCT
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @Repository
@@ -52,6 +55,18 @@ class InventorySemiProductRepository(private val context: DSLContext) : SortingR
 
     }
 
+    fun getInventorySemiProductByProductName(products:List<String> , date:OffsetDateTime?) :List<InventorySemiProduct> {
+        var condition: Condition = DSL.noCondition()
+        if (date != null) {
+            condition = condition.and(INVENTORY_SEMI_PRODUCT.INVENTORY_DATE.cast(LocalDate::class.java).eq(date.toLocalDate()))
+        }
+        condition = condition.and(INVENTORY_SEMI_PRODUCT.IS_DELETED.eq(false))
+            .and(INVENTORY_SEMI_PRODUCT.PRODUCT_NAME.`in`(products))
+
+        return context.selectFrom(INVENTORY_SEMI_PRODUCT)
+            .where(condition)
+            .fetchInto(InventorySemiProduct::class.java)
+    }
     fun isNoInventoryByDate(date: OffsetDateTime): Boolean {
         val data = context.selectFrom(INVENTORY_SEMI_PRODUCT)
             .where(INVENTORY_SEMI_PRODUCT.INVENTORY_DATE.eq(date)).and(INVENTORY_SEMI_PRODUCT.IS_DELETED.eq(false))

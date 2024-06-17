@@ -22,6 +22,7 @@ import com.kcvn.spm.model.tables.ExportConfiguration
 import com.kcvn.spm.model.tables.HolidaysCalendar
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
+import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Order
@@ -69,6 +70,7 @@ import com.kcvn.spm.model.tables.records.ExportConfigurationRecord
 import com.kcvn.spm.model.tables.records.HolidaysCalendarRecord
 import com.kcvn.spm.model.tables.records.InformationCalculateQuantityDetailRecord
 import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
+import com.kcvn.spm.model.tables.records.InventoryIns_30dayRecord
 import com.kcvn.spm.model.tables.records.InventoryProductRecord
 import com.kcvn.spm.model.tables.records.InventorySemiProductRecord
 import com.kcvn.spm.model.tables.records.OrderDetailRecord
@@ -128,6 +130,7 @@ val EXPORT_CONFIG_PKEY: UniqueKey<ExportConfigurationRecord> = Internal.createUn
 val HOLIDAYS_CALENDAR_PKEY: UniqueKey<HolidaysCalendarRecord> = Internal.createUniqueKey(HolidaysCalendar.HOLIDAYS_CALENDAR, DSL.name("holidays_calendar_pkey"), arrayOf(HolidaysCalendar.HOLIDAYS_CALENDAR.ID), true)
 val INFORMATION_CALCULATE_QUANTITY_PKEY: UniqueKey<InformationCalculateQuantityRecord> = Internal.createUniqueKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantity_pkey"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)
 val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityDetailRecord> = Internal.createUniqueKey(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL, DSL.name("information_calculate_quantity_pk"), arrayOf(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL.ID), true)
+val INVENTORY_INS_30DAY_PKEY: UniqueKey<InventoryIns_30dayRecord> = Internal.createUniqueKey(InventoryIns_30day.INVENTORY_INS_30DAY, DSL.name("inventory_ins_30day_pkey"), arrayOf(InventoryIns_30day.INVENTORY_INS_30DAY.ID), true)
 val INVENTORY_PRODUCT_PKEY: UniqueKey<InventoryProductRecord> = Internal.createUniqueKey(InventoryProduct.INVENTORY_PRODUCT, DSL.name("inventory_product_pkey"), arrayOf(InventoryProduct.INVENTORY_PRODUCT.ID), true)
 val INVENTORY_SEMI_PRODUCT_PKEY: UniqueKey<InventorySemiProductRecord> = Internal.createUniqueKey(InventorySemiProduct.INVENTORY_SEMI_PRODUCT, DSL.name("inventory_semi_product_pkey"), arrayOf(InventorySemiProduct.INVENTORY_SEMI_PRODUCT.ID), true)
 val ORDER_PKEY: UniqueKey<OrderRecord> = Internal.createUniqueKey(Order.ORDER, DSL.name("order_pkey"), arrayOf(Order.ORDER.ID), true)

@@ -22,6 +22,7 @@ import com.kcvn.spm.model.tables.ExportConfiguration
 import com.kcvn.spm.model.tables.HolidaysCalendar
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
+import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Order
@@ -143,6 +144,11 @@ val INFORMATION_CALCULATE_QUANTITY: InformationCalculateQuantity = InformationCa
  * The table <code>public.information_calculate_quantity_detail</code>.
  */
 val INFORMATION_CALCULATE_QUANTITY_DETAIL: InformationCalculateQuantityDetail = InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL
+
+/**
+ * The table <code>public.inventory_ins_30day</code>.
+ */
+val INVENTORY_INS_30DAY: InventoryIns_30day = InventoryIns_30day.INVENTORY_INS_30DAY
 
 /**
  * The table <code>public.inventory_product</code>.

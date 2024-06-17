@@ -90,6 +90,8 @@ class WebSecurityConfig(
                     .requestMatchers("/api/order/**").authenticated()
                     .requestMatchers("/api/plan/**").authenticated()
                     .requestMatchers("/api/inventory-product/**").authenticated()
+                    .requestMatchers("/api/inventory-semi-product/**").authenticated()
+                    .requestMatchers("/api/inventory-ins-30day/**").authenticated()
                     .requestMatchers("/api/report/**").authenticated()
                     .anyRequest().permitAll()
             }

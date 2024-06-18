@@ -710,8 +710,10 @@ class PlanService(
 
         val dataDucLo = dataSummary.filter { x -> x.processConvertCode == ProcessConvertCode.T || x.processConvertCode == ProcessConvertCode.TH }
         if (dataDucLo.isNotEmpty()) {
-            val moldByFrame1s = (appSettingRep.findByKey("${KeyAppSetting.MOLD_BY_FRAME1}_${request.frame_1}")?.value?.split(",")
+            var moldByFrame1s  = (appSettingRep.findByKey("${KeyAppSetting.MOLD_BY_FRAME1}_${request.frame_1}")?.value?.split(",")
                 ?: Mold.DATA_BY_FRAME1(request.frame_1)).filter { x -> request.mold.isNullOrEmpty() || x == request.mold }
+            moldByFrame1s = moldByFrame1s.filter { it != Mold.SUR }
+
             val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.T }
             val ducLo = generateModelPlanSummaryData1(
                 if (moldByFrame1s.size > 1) CommonUtils.getMessage("excel.rowTotal") else moldByFrame1s.first(),
@@ -719,7 +721,7 @@ class PlanService(
             )
 
             if (moldByFrame1s.size > 1) {
-                for (mold in moldByFrame1s) {
+                for ((index, mold) in moldByFrame1s.withIndex()) {
                     val dataMold = generateModelSummaryDetail(
                         type = mold,
                         columns = response.columns,
@@ -730,7 +732,7 @@ class PlanService(
                         allowReturnNull = false,
                         isExport = isExport
                     )
-                    ducLo.details!!.add(dataMold!!)
+                    ducLo.details!!.add(index, dataMold!!)
                 }
             }
 
@@ -783,7 +785,7 @@ class PlanService(
                 allowReturnNull = false,
                 isExport = isExport
             )
-            ghepLop.details!!.add(mAll!!)
+            ghepLop.details!!.add(0, mAll!!)
 
             val mTan = generateModelSummaryDetail(
                 type = "M2*3, M3*4...",
@@ -799,7 +801,7 @@ class PlanService(
                 allowReturnNull = false,
                 isExport = isExport
             )
-            ghepLop.details!!.add(mTan!!)
+            ghepLop.details!!.add(1, mTan!!)
 
             val mGLT = generateModelSummaryDetail(
                 type = "Ghép lớp thường",
@@ -813,7 +815,7 @@ class PlanService(
                 isExport = isExport
             )
             if (mGLT != null) {
-                ghepLop.details!!.add(mGLT)
+                ghepLop.details!!.add(2, mGLT)
             }
 
             val mGAN = generateModelSummaryDetail(
@@ -826,7 +828,7 @@ class PlanService(
                 isExport = isExport
             )
             if (mGAN != null) {
-                ghepLop.details!!.add(mGAN)
+                ghepLop.details!!.add(3, mGAN)
             }
 
             dataSummary.removeAll(dataGhepLop)
@@ -2841,6 +2843,7 @@ class PlanService(
             planTemp.version = (planExist.version ?: 0) + 1
             planRep.inActive(planExist.id!!)
         }
+        request.activeTab = PlanActiveTab.PLAN
         planHistoryService.addFile(exportExcel(request), request.fileName)
         planRep.createPlan(planTemp, planProductTemps, planProcessTemps, planDetailTemps)
 

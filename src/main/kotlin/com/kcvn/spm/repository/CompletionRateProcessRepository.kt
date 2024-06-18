@@ -100,22 +100,14 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
         }
     }
 
-    fun getAllProducts(): List<CompletionRateProcess> {
+    fun getByProcessCode(processCodes: List<String>): List<CompletionRateProcess> {
         return context.selectFrom(COMPLETION_RATE_PROCESS)
+            .where(COMPLETION_RATE_PROCESS.IS_DELETED.eq(false))
+            .and(COMPLETION_RATE_PROCESS.PROCESS_CODE.`in`(processCodes))
+            .and(COMPLETION_RATE_PROCESS.EXPIRATION_DATE.isNull)
             .fetchInto(CompletionRateProcess::class.java)
     }
 
-    fun findByObjectId(objectId: String): CompletionRateProcess? {
-        return context.selectFrom(COMPLETION_RATE_PROCESS).where(COMPLETION_RATE_PROCESS.ID.eq(objectId))
-            .fetchInto(CompletionRateProcess::class.java)
-            .firstOrNull()
-    }
-
-    fun findByObjectId(objectIds: List<String>): List<CompletionRateProcess> {
-        return context.selectFrom(COMPLETION_RATE_PROCESS)
-            .where(COMPLETION_RATE_PROCESS.ID.`in`(objectIds))
-            .fetchInto(CompletionRateProcess::class.java)
-    }
 
     fun add(data: CompletionRateProcess): CompletionRateProcess? {
         var result: CompletionRateProcess? = null
@@ -159,7 +151,6 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
         return result
     }
 
-
     fun delete(id: String) {
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
@@ -169,7 +160,6 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
                 .execute()
         }
     }
-
 
     fun update(data: CompletionRateProcess): CompletionRateProcess? {
         var result: CompletionRateProcess? = null
@@ -195,8 +185,7 @@ class CompletionRateProcessRepository(private val context: DSLContext) : Sorting
         return result
     }
 
-
-    fun getCompletionRateProcessWithMaxEffectivedateByName(name: String): CompletionRateProcess? {
+    fun getCompletionRateProcessWithMaxEffectiveDateByName(name: String): CompletionRateProcess? {
 
         val record = context.selectFrom(COMPLETION_RATE_PROCESS)
             .where(

@@ -627,7 +627,7 @@ class CompletionRateService(
                                 }
                             } else {
                                 val completionRateUpdate =
-                                    completionRateProcessRepository.getCompletionRateProcessWithMaxEffectivedateByName(key)
+                                    completionRateProcessRepository.getCompletionRateProcessWithMaxEffectiveDateByName(key)
 
                                 if (completionRateUpdate != null) {
                                     if (convertEffectiveDate.toLocalDate() <= completionRateUpdate.effectiveDate?.toLocalDate()) {

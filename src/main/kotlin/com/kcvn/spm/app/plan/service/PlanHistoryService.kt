@@ -126,9 +126,9 @@ class PlanHistoryService(
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
             val filePath: String? = try {
-                System.getProperty("user.dir") + "${pathConfig.value}/$fileName"
+                System.getProperty("user.dir") + "${pathConfig.value}$fileName"
             } catch (e: Exception) {
-                "${pathConfig.value}/$fileName"
+                "${pathConfig.value}$fileName"
             }
 
             val file = filePath?.let { File(it) }
@@ -158,9 +158,9 @@ class PlanHistoryService(
                     }
                 }
                 var targetFilePath: String = try {
-                    "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$finalFileName"
+                    "${System.getProperty("user.dir")}$targetDirectoryPath$finalFileName"
                 } catch (e: Exception) {
-                    "$targetDirectoryPath${File.separator}$finalFileName"
+                    "$targetDirectoryPath$finalFileName"
                 }
 
                 var targetFile = File(targetFilePath)
@@ -169,9 +169,9 @@ class PlanHistoryService(
                     val nameWithoutExtension = finalFileName?.substringBeforeLast(".xlsx")
                     val newFileName = "$nameWithoutExtension($counter).xlsx"
                     targetFilePath = try {
-                        "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$newFileName"
+                        "${System.getProperty("user.dir")}$targetDirectoryPath$newFileName"
                     } catch (e: Exception) {
-                        "$targetDirectoryPath${File.separator}$newFileName"
+                        "$targetDirectoryPath$newFileName"
                     }
                     targetFile = File(targetFilePath)
                     counter++
@@ -198,9 +198,9 @@ class PlanHistoryService(
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
             val filePath = try {
-                System.getProperty("user.dir") + "${pathConfig.value}/$fileName"
+                System.getProperty("user.dir") + "${pathConfig.value}$fileName"
             } catch (e: Exception) {
-                "${pathConfig.value}/$fileName"
+                "${pathConfig.value}$fileName"
             }
 
             if (Files.exists(Paths.get(filePath))) {

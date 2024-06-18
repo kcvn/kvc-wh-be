@@ -742,20 +742,19 @@ class PlanService(
         if (dataInMach.isNotEmpty()) {
             val process = processGroups.find { x -> x.processStatisticCode == ProcessStatisticCode.IN_MACH }
             val inMach = generateModelPlanSummaryData1(
-                CommonUtils.getMessage("excel.rowTotal"), process,
-                "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}", response.columns, dataInMach, isExport
+                "", process, "${ProcessConvertCode.TAN}/${ProcessConvertCode.ZEN}", response.columns, dataInMach, isExport
             )
 
-            for (code in listOf(ProcessConvertCode.TAN, ProcessConvertCode.ZEN)) {
-                val dataTanZen = generateModelSummaryDetail(
-                    type = code,
-                    columns = response.columns,
-                    dataGroupBy = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode },
-                    allowReturnNull = false,
-                    isExport = isExport
-                )
-                inMach.details!!.add(dataTanZen!!)
-            }
+//            for (code in listOf(ProcessConvertCode.TAN, ProcessConvertCode.ZEN)) {
+//                val dataTanZen = generateModelSummaryDetail(
+//                    type = code,
+//                    columns = response.columns,
+//                    dataGroupBy = dataExportFlattens.filter { x -> x.processConvertCode == code }.groupBy { x -> x.processConvertCode },
+//                    allowReturnNull = false,
+//                    isExport = isExport
+//                )
+//                inMach.details!!.add(dataTanZen!!)
+//            }
 
             dataSummary.removeAll(dataInMach)
             dataSummary.add(inMach)
@@ -802,19 +801,6 @@ class PlanService(
             )
             ghepLop.details!!.add(mTan!!)
 
-            val mGAN = generateModelSummaryDetail(
-                type = "Ghép lớp gia áp nhiệt",
-                columns = response.columns,
-                dataGroupBy = dataExportFlattens.filter { x ->
-                    x.processStatisticCode == ProcessStatisticCode.GHEPLOP_GIAAPNHIET
-                }.groupBy { x -> x.processConvertCode },
-                allowReturnNull = true,
-                isExport = isExport
-            )
-            if (mGAN != null) {
-                ghepLop.details!!.add(mGAN)
-            }
-
             val mGLT = generateModelSummaryDetail(
                 type = "Ghép lớp thường",
                 columns = response.columns,
@@ -828,6 +814,19 @@ class PlanService(
             )
             if (mGLT != null) {
                 ghepLop.details!!.add(mGLT)
+            }
+
+            val mGAN = generateModelSummaryDetail(
+                type = "Ghép lớp gia nhiệt",
+                columns = response.columns,
+                dataGroupBy = dataExportFlattens.filter { x ->
+                    x.processStatisticCode == ProcessStatisticCode.GHEPLOP_GIAAPNHIET
+                }.groupBy { x -> x.processConvertCode },
+                allowReturnNull = true,
+                isExport = isExport
+            )
+            if (mGAN != null) {
+                ghepLop.details!!.add(mGAN)
             }
 
             dataSummary.removeAll(dataGhepLop)
@@ -1380,7 +1379,7 @@ class PlanService(
                         x.processStatisticCode == ProcessStatisticCode.GHEPLOP_GIAAPNHIET
                     }.groupBy { x -> x.processConvertCode }.mapNotNull { x ->
                         PlanSummaryDetailModel(
-                            type = "Ghép lớp gia áp nhiệt",
+                            type = "Ghép lớp gia nhiệt",
                             planSummaryData = x.value.mapNotNull { m -> m.planData }.flatten()
                                 .groupBy { m -> Pair(m.titleKey, m.title) }.map { m ->
                                     val data = PlanDataByProcessModel(title = m.key.second, titleKey = m.key.first)
@@ -2746,7 +2745,7 @@ class PlanService(
                     for ((iItem, item) in planProcess.processDetail!!.withIndex()) {
                         var dataRow = ExcelHelper.createRow(sheet, rowTitleIndex)
                         ExcelHelper.setCellValue(dataRow, 2, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, item.name)
-                        ExcelHelper.setCellValue(dataRow, 3, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, (item.totalProcess ?: 0).toString())
+                        ExcelHelper.setCellValue(dataRow, 3, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, NumberHelper.formatNumber(item.totalProcess ?: 0))
 
                         rowTitleIndex++
                         dataRow = ExcelHelper.createRow(sheet, rowTitleIndex)

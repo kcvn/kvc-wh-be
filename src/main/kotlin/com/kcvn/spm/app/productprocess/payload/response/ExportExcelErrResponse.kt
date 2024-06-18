@@ -13,5 +13,6 @@ data class ExportExcelErrResponse (
     var dayOfImplementation: String? = null,
     var idProcessStructure: String? = null,
     var messageErrs: MutableList<String?>? = null,
-    var cellStyles: List<CellStyleModel> = mutableListOf()
+    var cellStyles: List<CellStyleModel> = mutableListOf(),
+    var processName: String? = null,
 )

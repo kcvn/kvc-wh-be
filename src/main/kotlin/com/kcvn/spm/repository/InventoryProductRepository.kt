@@ -5,6 +5,7 @@ import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductRespon
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
+import com.kcvn.spm.model.tables.references.INVENTORY_INS_30DAY
 import com.kcvn.spm.model.tables.references.INVENTORY_PRODUCT
 import com.kcvn.spm.model.tables.references.PROCESS_MASTER
 import com.kcvn.spm.model.tables.references.PROCESS_PROCEDURE_STRUCTURE
@@ -178,26 +179,28 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             INVENTORY_PRODUCT.INVENTORY_DATE,
             DSL.sum(INVENTORY_PRODUCT.PRODUCT_QUANTITY).`as`("productQuantity"),
             DSL.sum(INVENTORY_PRODUCT.SHEET_QUANTITY).`as`("sheetQuantity"),
-            DSL.sum(INVENTORY_PRODUCT.SUCCESS_QUANTITY).`as`("successQuantity"),
-            PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE.`as`("productName"),
-            PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
-            PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,
+            DSL.sum(INVENTORY_INS_30DAY.PRODUCT_QUANTITY).`as`("successQuantity"),
+            INVENTORY_PRODUCT.PRODUCT_NAME.`as`("productName"),
+            INVENTORY_PRODUCT.PROCESS_CODE,
+            INVENTORY_PRODUCT.LAYER_CODE,
             PROCESS_MASTER.PROCESS_NAME.`as`("processName")
         ).from(INVENTORY_PRODUCT)
-            .join(PROCESS_PROCEDURE_STRUCTURE).on(
-                INVENTORY_PRODUCT.PRODUCT_NAME.eq(PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE)
-                    .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE))
-                    .and(INVENTORY_PRODUCT.LAYER_CODE.eq(PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE))
-                    .and(PROCESS_PROCEDURE_STRUCTURE.IS_DELETED.eq(false))
-            ).leftJoin(PROCESS_MASTER).on(
-                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+            .leftJoin(PROCESS_MASTER).on(
+                INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                     .and(PROCESS_MASTER.IS_DELETED.eq(false))
+            ).leftJoin(INVENTORY_INS_30DAY).on(
+                INVENTORY_PRODUCT.PROCESS_CODE.eq(INVENTORY_INS_30DAY.PROCESS_CODE)
+                    .and(INVENTORY_PRODUCT.PRODUCT_NAME.eq(INVENTORY_INS_30DAY.PRODUCT_NAME))
+                    .and(INVENTORY_PRODUCT.LAYER_CODE.eq(INVENTORY_INS_30DAY.LAYER_CODE))
+                    .and(INVENTORY_PRODUCT.CODE.eq(INVENTORY_INS_30DAY.CODE))
+                    .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(INVENTORY_INS_30DAY.INVENTORY_DATE))
+                    .and(INVENTORY_INS_30DAY.IS_DELETED.eq(false))
             ).where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(inventoryDate).and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
             .groupBy(
                 INVENTORY_PRODUCT.INVENTORY_DATE,
-                PROCESS_PROCEDURE_STRUCTURE.PRODUCT_CODE,
-                PROCESS_PROCEDURE_STRUCTURE.PROCESS_CODE,
-                PROCESS_PROCEDURE_STRUCTURE.LAYER_CODE,
+                INVENTORY_PRODUCT.PRODUCT_NAME,
+                INVENTORY_PRODUCT.PROCESS_CODE,
+                INVENTORY_PRODUCT.LAYER_CODE,
                 PROCESS_MASTER.PROCESS_NAME
             ).fetchInto(InventoryProductResponse::class.java)
 

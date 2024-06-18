@@ -217,12 +217,17 @@ class InventorySemiProductService(
                             continue
                         }
 
-                        inventory.sumBlockQuantity = NumberHelper.roundedUp(
-                            NumberHelper.divide(
-                                (BigDecimal(inventory.setQuantity ?: 0) * BigDecimal(product?.shBlock ?: 0) * completionRate.rate!!),
-                                BigDecimal(100)
-                            ) + BigDecimal(inventory.blockQuantity ?: 0)
-                        )
+                        inventory.sumBlockQuantity = if ((inventory.setQuantity ?: 0) != 0) {
+                            NumberHelper.roundedUp(
+                                NumberHelper.divide(
+                                    (BigDecimal(inventory.setQuantity ?: 0) * BigDecimal(product?.shBlock ?: 0) * completionRate.rate!!),
+                                    BigDecimal(100)
+                                ) + BigDecimal(inventory.blockQuantity ?: 0)
+                            )
+                        } else {
+                            inventory.blockQuantity ?: 0
+                        }
+
                         inventory.successBlockQuantity = (inventory.sumBlockQuantity ?: 0) - (inventory.ngBlockQuantity ?: 0)
                         inventorySemiProductRep.add(inventory)
 

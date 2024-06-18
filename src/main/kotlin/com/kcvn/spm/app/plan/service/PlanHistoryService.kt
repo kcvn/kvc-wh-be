@@ -2,48 +2,53 @@ package com.kcvn.spm.app.plan.service
 
 
 import com.kcvn.spm.app.plan.payload.model.ProductPlanModel
-import com.kcvn.spm.app.plan.payload.request.*
-import com.kcvn.spm.common.constants.*
+import com.kcvn.spm.app.plan.payload.request.PlanHistoryRequest
+import com.kcvn.spm.app.plan.payload.request.PlanHistorySearchRequest
+import com.kcvn.spm.common.constants.DateTimeFormat
+import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.KeyAppSetting
+import com.kcvn.spm.common.constants.PlanVersion
 import com.kcvn.spm.common.helper.DateTimeHelper
-import com.kcvn.spm.common.payload.*
+import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.repository.*
+import com.kcvn.spm.repository.AppSettingRepository
+import com.kcvn.spm.repository.PlanProductRepository
+import com.kcvn.spm.repository.PlanRepository
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 
 @Service
 @Transactional
-class PlanHistoryService(private val appSettingRep: AppSettingRepository,
-                         private val planProductRep: PlanProductRepository,
-                         private val planRep: PlanRepository,
-//                         private val workResultRep: WorkResultRepository,
-//                         private val holidaysCalenderRep: HolidaysCalenderRepository,
-//                         private val planDetailRep: PlanDetailRepository,
-//                         private val planProcessRep: PlanProcessRepository
-                        )
-{
+class PlanHistoryService(
+    private val appSettingRep: AppSettingRepository,
+    private val planProductRep: PlanProductRepository,
+    private val planRep: PlanRepository
+) {
 
-    fun getPlansByMonth(month: String): BaseResponse<List<DropdownResponse>>{
+    fun getPlansByMonth(month: String): BaseResponse<List<DropdownResponse>> {
         val parts = month.split("/")
         val monthPart = parts[0].toInt()
         val yearPart = parts[1].toInt()
         val plans = planRep.getListPlanByMonth(monthPart, yearPart)
         val response = mutableListOf<DropdownResponse>()
-        for(plan in plans){
-            if(plan.isActive == false){
-                response.add(DropdownResponse(value = plan.id, label = "V"+plan.version.toString()))
-            }
-            else{
+        for (plan in plans) {
+            if (plan.isActive == false) {
+                response.add(DropdownResponse(value = plan.id, label = "V" + plan.version.toString()))
+            } else {
                 response.add(DropdownResponse(value = plan.id, label = PlanVersion.LATEST))
             }
         }
@@ -66,13 +71,12 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
     }
 
 
-
     fun planHistory(request: PlanHistoryRequest, pageable: Pageable): BasePagingResponse<FileContentModel> {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         val data = mutableListOf<FileContentModel>()
 
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
-            val directory: File?  = try {
+            val directory: File? = try {
                 File(System.getProperty("user.dir") + pathConfig.value)
             } catch (e: Exception) {
                 pathConfig.value?.let { File(it) }
@@ -80,8 +84,8 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
 
             val excelFiles = directory?.listFiles { file ->
                 file.isFile && (file.name.endsWith(".xls")
-                        || file.name.endsWith(".xlsx")) && (request.fileName.isEmpty()
-                        || file.name.contains(request.fileName, ignoreCase = true))
+                    || file.name.endsWith(".xlsx")) && (request.fileName.isEmpty()
+                    || file.name.contains(request.fileName, ignoreCase = true))
             }?.sortedByDescending { it.lastModified() }
 
             excelFiles?.forEach { file ->
@@ -94,8 +98,8 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
                     fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.yyyyMMdd)
                 } catch (e: Exception) {
 
-                     fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.ddMMyyyy)
-                     fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.ddMMyyyy)
+                    fileStartDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[0], DateTimeFormat.ddMMyyyy)
+                    fileEndDate = DateTimeHelper.convertStringToOffSetDateTime(fileNameParts[1], DateTimeFormat.ddMMyyyy)
 
                 }
 
@@ -122,9 +126,9 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
             val filePath: String? = try {
-                System.getProperty("user.dir") + "${pathConfig.value}/$fileName"
+                System.getProperty("user.dir") + "${pathConfig.value}$fileName"
             } catch (e: Exception) {
-                "${pathConfig.value}/$fileName"
+                "${pathConfig.value}$fileName"
             }
 
             val file = filePath?.let { File(it) }
@@ -142,7 +146,6 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
     }
 
 
-
     fun addFile(fileContentModel: FileContentModel, fileName: String?): BaseResponse<String> {
         try {
             val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
@@ -155,9 +158,9 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
                     }
                 }
                 var targetFilePath: String = try {
-                    "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$finalFileName"
+                    "${System.getProperty("user.dir")}$targetDirectoryPath$finalFileName"
                 } catch (e: Exception) {
-                    "$targetDirectoryPath${File.separator}$finalFileName"
+                    "$targetDirectoryPath$finalFileName"
                 }
 
                 var targetFile = File(targetFilePath)
@@ -166,9 +169,9 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
                     val nameWithoutExtension = finalFileName?.substringBeforeLast(".xlsx")
                     val newFileName = "$nameWithoutExtension($counter).xlsx"
                     targetFilePath = try {
-                        "${System.getProperty("user.dir")}${File.separator}$targetDirectoryPath${File.separator}$newFileName"
+                        "${System.getProperty("user.dir")}$targetDirectoryPath$newFileName"
                     } catch (e: Exception) {
-                        "$targetDirectoryPath${File.separator}$newFileName"
+                        "$targetDirectoryPath$newFileName"
                     }
                     targetFile = File(targetFilePath)
                     counter++
@@ -194,15 +197,20 @@ class PlanHistoryService(private val appSettingRep: AppSettingRepository,
     fun downloadFile(fileName: String): BaseResponse<FileContentModel> {
         val pathConfig = appSettingRep.findByKey(KeyAppSetting.PATH_HISTORY_PLAN)
         if (pathConfig != null && !pathConfig.value.isNullOrEmpty()) {
-            val filePath: Path?= try {
-                Paths.get(System.getProperty("user.dir") + "${pathConfig.value}/$fileName")
+            val filePath = try {
+                System.getProperty("user.dir") + "${pathConfig.value}$fileName"
             } catch (e: Exception) {
-                Paths.get("${pathConfig.value}/$fileName")
+                "${pathConfig.value}$fileName"
             }
 
-            if (filePath != null && Files.exists(filePath)) {
-                val fileBytes = Files.readAllBytes(filePath)
+            if (Files.exists(Paths.get(filePath))) {
+                println(filePath)
+                val workbook = FileInputStream(filePath).use { XSSFWorkbook(it) }
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                workbook.write(byteArrayOutputStream)
 
+                val fileBytes = byteArrayOutputStream.toByteArray()
+                workbook.close()
                 return BaseResponse(FileContentModel(
                     fileName = fileName,
                     contentType = ExcelConstant.EXCEL_CONTENT_TYPE,

@@ -22,6 +22,7 @@ import com.kcvn.spm.model.tables.ExportConfiguration
 import com.kcvn.spm.model.tables.HolidaysCalendar
 import com.kcvn.spm.model.tables.InformationCalculateQuantity
 import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
+import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Order
@@ -161,6 +162,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.information_calculate_quantity_detail</code>.
      */
     val INFORMATION_CALCULATE_QUANTITY_DETAIL: InformationCalculateQuantityDetail get() = InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL
+
+    /**
+     * The table <code>public.inventory_ins_30day</code>.
+     */
+    val INVENTORY_INS_30DAY: InventoryIns_30day get() = InventoryIns_30day.INVENTORY_INS_30DAY
 
     /**
      * The table <code>public.inventory_product</code>.
@@ -328,6 +334,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         HolidaysCalendar.HOLIDAYS_CALENDAR,
         InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY,
         InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL,
+        InventoryIns_30day.INVENTORY_INS_30DAY,
         InventoryProduct.INVENTORY_PRODUCT,
         InventorySemiProduct.INVENTORY_SEMI_PRODUCT,
         Order.ORDER,

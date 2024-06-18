@@ -18,6 +18,7 @@ import com.kcvn.spm.common.payload.model.CellStyleModel
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
+import com.kcvn.spm.repository.InventoryIns30DayRepository
 import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.ProcessProcedureStructureRepository
 import org.apache.poi.ss.usermodel.CellType
@@ -43,13 +44,13 @@ import java.time.format.DateTimeFormatter
 @Service
 @Transactional
 class InventoryProductService(
-    private val inventoryProductRepository: InventoryProductRepository,
-    private val processProcedureRep: ProcessProcedureStructureRepository
-
+    private val inventoryProductRep: InventoryProductRepository,
+    private val processProcedureRep: ProcessProcedureStructureRepository,
+    private val inventoryIns30DayRep: InventoryIns30DayRepository
 ) {
     fun checkInventoryDate(date: OffsetDateTime): CheckInventoryDateResponse? {
         val data = CheckInventoryDateResponse()
-        val query = inventoryProductRepository.findDateInventoryProduct(date)
+        val query = inventoryProductRep.findDateInventoryProduct(date)
         if (query != null) {
             data.hasInventoryDate = true
             data.inventorydate = query.inventoryDate
@@ -95,7 +96,7 @@ class InventoryProductService(
 
         val requestDelete = InventoryProduct()
         requestDelete.inventoryDate = date
-        inventoryProductRepository.deleteInventoryProduct(requestDelete)
+        inventoryProductRep.deleteInventoryProduct(requestDelete)
         for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
             if (checkIsEmptyRow(row)) {
                 continue
@@ -103,7 +104,7 @@ class InventoryProductService(
             val cell = row.getCell(0)
             val style = cell?.cellStyle
             val messageResults = mutableListOf<String>()
-            var check = true
+            var check: Boolean
             val checkProcessCode = validateCellValue(row, headerRow, 2, messageResults)
             val checkManageNumber = validateCellValue(row, headerRow, 5, messageResults)
             val checkLayerCode = validateCellValue(row, headerRow, 6, messageResults)
@@ -243,7 +244,10 @@ class InventoryProductService(
                             seidenRepNumber = StringHelper.removeDecimalSuffix(ExcelHelper.getCellValue(row, 16)).toIntOrNull(),
                             processName =  ExcelHelper.getCellValue(row, 3),
                             //end
-                            processProcedureStructureId = filterCheckProcessProcedure.id,
+                            //processProcedureStructureId = filterCheckProcessProcedure.id,
+                            productName = filter.productName,
+                            processCode = filter.processCode,
+                            layerCode = StringHelper.intToStringD2(filter.layerCode),
                             inventoryDate = date,
                             code = if (ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull() != null) {
                                 ExcelHelper.getCellValue(row, 5).toBigDecimalOrNull()?.toLong().toString()
@@ -255,16 +259,22 @@ class InventoryProductService(
                             productQuantity = ExcelHelper.getCellValue(row, 14).toBigDecimalOrNull()?.toInt(),
                             sheetQuantity = ExcelHelper.getCellValue(row, 15).toBigDecimalOrNull()?.toInt()
                         )
-                        val checkInventoryProduct = inventoryProductRepository.findInventoryProduct(filterCheckProcessProcedure.id, date, requestImport.code ?: "")
+                        val checkInventoryProduct = inventoryProductRep.findInventoryProduct(
+                            filterCheckProcessProcedure.productCode,
+                            filterCheckProcessProcedure.processCode,
+                            filterCheckProcessProcedure.layerCode,
+                            date,
+                            requestImport.code ?: ""
+                        )
 
                         if (checkInventoryProduct == null) {
                             requestImport.createdDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
                             requestImport.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
-                            inventoryProductRepository.insertInventoryProduct(requestImport)
+                            inventoryProductRep.insertInventoryProduct(requestImport)
                         } else {
                             requestImport.updatedBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                             requestImport.updatedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC)
-                            inventoryProductRepository.updateInventoryProduct(requestImport)
+                            inventoryProductRep.updateInventoryProduct(requestImport)
                         }
                         messageResults.add(CommonUtils.getMessage("validate.excel.importSuccess"))
                         count++
@@ -327,6 +337,7 @@ class InventoryProductService(
             if (count == 0) CommonUtils.getMessage("import.insertNoData") else CommonUtils.getMessage("import.success", arrayOf(count, total))
         )
     }
+
     fun validateCellValue(row: Row, headerRow: Row, columnIndex: Int, messageResults: MutableList<String>): Boolean {
         if (ExcelHelper.getCellValue(row, columnIndex).isEmpty()) {
             messageResults.add(
@@ -349,7 +360,6 @@ class InventoryProductService(
         return true
 
     }
-
 
     private fun exportErrorFile(inventories: List<ImportInventoryErrorModel>, titleRow: Row, workbook: Workbook, importSheet: Sheet): FileContentModel {
         val sheet = workbook.createSheet()
@@ -448,43 +458,22 @@ class InventoryProductService(
     }
 
     fun getListInventoryProduct(request: InventoryProductRequest?, pageable: Pageable): BasePagingResponse<InventoryProductResponse?> {
-        val result = inventoryProductRepository.findByKeywordPaginated(request, pageable)
+        val result = inventoryProductRep.findByKeywordPaginated(request, pageable)
         val response = BasePagingResponse<InventoryProductResponse?>()
-        response.data = result.first.map { inventoryProduct ->
-            InventoryProductResponse(
-                inventoryDate = inventoryProduct?.inventoryDate,
-                productQuantity = inventoryProduct?.productQuantity,
-                sheetQuantity = inventoryProduct?.sheetQuantity,
-                orderCode = inventoryProduct?.orderCode,
-                tapeLotNo = inventoryProduct?.tapeLotNo,
-                processCode = inventoryProduct?.processCode,
-                productName = inventoryProduct?.productName,
-                processName = inventoryProduct?.processName,
-                code = inventoryProduct?.code,
-                pcsSh = inventoryProduct?.pcsSh,
-                layerCode = inventoryProduct?.layerCode,
-                team = inventoryProduct?.team,
-                processNameJp = inventoryProduct?.processNameJp,
-                processingDirective = inventoryProduct?.processingDirective,
-                piecesPerSheet = inventoryProduct?.piecesPerSheet,
-                productionAreaName = inventoryProduct?.productionAreaName,
-                processCount = inventoryProduct?.processCount,
-                seidenRepNumber = inventoryProduct?.seidenRepNumber,
-                employeeCode = inventoryProduct?.employeeCode
-            )
-        }
+        response.data = mappingInventoryResponse(result.first)
         response.totalRecords = result.second ?: 0
         return response
     }
 
     fun exportExcel(request: InventoryProductRequest?, pageable: Pageable): BaseResponse<FileContentModel> {
-        val inventoryProduct = inventoryProductRepository.findByKeywordPaginated(request, pageable)
+        val inventoryProduct = inventoryProductRep.findByKeywordPaginated(request, pageable)
+        val data = mappingInventoryResponse(inventoryProduct.first)
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportInventoryProductTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
-        if (inventoryProduct.first.isNotEmpty()) {
+        if (data.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
             style.alignment = HorizontalAlignment.CENTER
 
@@ -493,29 +482,31 @@ class InventoryProductService(
             numberStyle.alignment = HorizontalAlignment.RIGHT
 
             var rowNumber = 1
-            for (item in inventoryProduct.first) {
+            for (item in data) {
                 val dataRow: Row = ExcelHelper.createRow(sheet, rowNumber)
-                if (item?.inventoryDate != null) {
+                if (item.inventoryDate != null) {
                     val formattedDate = convertOffSetDateTimeUtc7ToString(item.inventoryDate!!)
                     ExcelHelper.setCellValue(dataRow, 0, style, formattedDate)
                 }
-                ExcelHelper.setCellValue(dataRow, 1, style, item?.employeeCode)
-                ExcelHelper.setCellValue(dataRow, 2, style, item?.team)
-                ExcelHelper.setCellValue(dataRow, 3, style, item?.processCode)
-                ExcelHelper.setCellValue(dataRow, 4, style, item?.processName)
-                ExcelHelper.setCellValue(dataRow, 5, style, item?.processNameJp)
-                ExcelHelper.setCellValue(dataRow, 6, style, item?.code)
-                ExcelHelper.setCellValue(dataRow, 7, style, item?.layerCode)
-                ExcelHelper.setCellValue(dataRow, 8, style, item?.tapeLotNo)
-                ExcelHelper.setCellValue(dataRow, 9, style, item?.processingDirective?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 10, style, item?.productName)
-                ExcelHelper.setCellValue(dataRow, 11, numberStyle, NumberHelper.formatNumber(item?.piecesPerSheet))
-                ExcelHelper.setCellValue(dataRow, 12, style, item?.orderCode)
-                ExcelHelper.setCellValue(dataRow, 13, style, item?.productionAreaName)
-                ExcelHelper.setCellValue(dataRow, 14, numberStyle, NumberHelper.formatNumber(item?.processCount))
-                ExcelHelper.setCellValue(dataRow, 15, numberStyle, NumberHelper.formatNumber(item?.productQuantity))
-                ExcelHelper.setCellValue(dataRow, 16, numberStyle, NumberHelper.formatNumber(item?.sheetQuantity))
-                ExcelHelper.setCellValue(dataRow, 17, style, item?.seidenRepNumber?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 1, style, item.employeeCode)
+                ExcelHelper.setCellValue(dataRow, 2, style, item.team)
+                ExcelHelper.setCellValue(dataRow, 3, style, item.processCode)
+                ExcelHelper.setCellValue(dataRow, 4, style, item.processName)
+                ExcelHelper.setCellValue(dataRow, 5, style, item.processNameJp)
+                ExcelHelper.setCellValue(dataRow, 6, style, item.code)
+                ExcelHelper.setCellValue(dataRow, 7, style, item.layerCode)
+                ExcelHelper.setCellValue(dataRow, 8, style, item.tapeLotNo)
+                ExcelHelper.setCellValue(dataRow, 9, style, item.processingDirective?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 10, style, item.productName)
+                ExcelHelper.setCellValue(dataRow, 11, numberStyle, NumberHelper.formatNumber(item.piecesPerSheet))
+                ExcelHelper.setCellValue(dataRow, 12, style, item.orderCode)
+                ExcelHelper.setCellValue(dataRow, 13, style, item.productionAreaName)
+                ExcelHelper.setCellValue(dataRow, 14, numberStyle, NumberHelper.formatNumber(item.processCount))
+                ExcelHelper.setCellValue(dataRow, 15, numberStyle, NumberHelper.formatNumber(item.productQuantity))
+                ExcelHelper.setCellValue(dataRow, 16, numberStyle, NumberHelper.formatNumber(item.sheetQuantity))
+                ExcelHelper.setCellValue(dataRow, 17, style, item.seidenRepNumber?.toString() ?: "")
+                ExcelHelper.setCellValue(dataRow, 18, numberStyle, NumberHelper.formatNumber(item.successQuantity))
+                ExcelHelper.setCellValue(dataRow, 19, numberStyle, NumberHelper.formatNumber(item.ins_30DayQuantity))
                 rowNumber++
             }
         }
@@ -534,6 +525,46 @@ class InventoryProductService(
         workbook.close()
 
         return BaseResponse(response)
+    }
+
+    private fun mappingInventoryResponse(inventories: List<InventoryProductResponse?>): List<InventoryProductResponse> {
+        val productNames = inventories.mapNotNull { it?.productName }.distinct()
+        val processCodes = inventories.mapNotNull { it?.processCode }.distinct()
+        val invDates = inventories.mapNotNull { it?.inventoryDate }.distinct()
+        val layerCodes = inventories.mapNotNull { it?.layerCode }.distinct()
+        val codes = inventories.mapNotNull { it?.code }.distinct()
+        val inventoryIns30Days = inventoryIns30DayRep.getBy(productNames, processCodes, layerCodes, codes, invDates)
+
+        val response = inventories.mapNotNull {
+            val invIns30Days = inventoryIns30Days.filter {
+                x -> x.inventoryDate?.isEqual(it?.inventoryDate) == true && x.productName == it?.productName
+                && x.processCode == it?.processCode && x.layerCode == it?.layerCode && x.code == it?.code
+            }
+            InventoryProductResponse(
+                inventoryDate = it?.inventoryDate,
+                productQuantity = it?.productQuantity,
+                sheetQuantity = it?.sheetQuantity,
+                orderCode = it?.orderCode,
+                tapeLotNo = it?.tapeLotNo,
+                processCode = it?.processCode,
+                productName = it?.productName,
+                processName = it?.processName,
+                code = it?.code,
+                pcsSh = it?.pcsSh,
+                layerCode = it?.layerCode,
+                team = it?.team,
+                processNameJp = it?.processNameJp,
+                processingDirective = it?.processingDirective,
+                piecesPerSheet = it?.piecesPerSheet,
+                productionAreaName = it?.productionAreaName,
+                processCount = it?.processCount,
+                seidenRepNumber = it?.seidenRepNumber,
+                employeeCode = it?.employeeCode,
+                successQuantity = if (invIns30Days.isEmpty() || it?.productQuantity == null) null else (it.productQuantity ?: 0) - invIns30Days.sumOf { x -> x.productQuantity ?: 0 },
+                ins_30DayQuantity = if (invIns30Days.isEmpty()) null else invIns30Days.sumOf { x -> x.productQuantity ?: 0 }
+            )
+        }
+        return response
     }
 }
 

@@ -16,7 +16,6 @@ data class InventoryProduct(
     var id: String? = null,
     var code: String? = null,
     var inventoryDate: OffsetDateTime? = null,
-    var processProcedureStructureId: String? = null,
     var productQuantity: Int? = null,
     var sheetQuantity: Int? = null,
     var orderCode: String? = null,
@@ -36,7 +35,12 @@ data class InventoryProduct(
     var piecesPerSheet: Int? = null,
     var productionAreaName: String? = null,
     var processCount: Int? = null,
-    var seidenRepNumber: Int? = null
+    var seidenRepNumber: Int? = null,
+    var successQuantity: Int? = null,
+    var ins_30DayQuantity: Int? = null,
+    var productName: String? = null,
+    var processCode: String? = null,
+    var layerCode: String? = null
 ): Serializable {
 
 
@@ -65,12 +69,6 @@ data class InventoryProduct(
                 return false
         }
         else if (this.inventoryDate != o.inventoryDate)
-            return false
-        if (this.processProcedureStructureId == null) {
-            if (o.processProcedureStructureId != null)
-                return false
-        }
-        else if (this.processProcedureStructureId != o.processProcedureStructureId)
             return false
         if (this.productQuantity == null) {
             if (o.productQuantity != null)
@@ -180,6 +178,36 @@ data class InventoryProduct(
         }
         else if (this.seidenRepNumber != o.seidenRepNumber)
             return false
+        if (this.successQuantity == null) {
+            if (o.successQuantity != null)
+                return false
+        }
+        else if (this.successQuantity != o.successQuantity)
+            return false
+        if (this.ins_30DayQuantity == null) {
+            if (o.ins_30DayQuantity != null)
+                return false
+        }
+        else if (this.ins_30DayQuantity != o.ins_30DayQuantity)
+            return false
+        if (this.productName == null) {
+            if (o.productName != null)
+                return false
+        }
+        else if (this.productName != o.productName)
+            return false
+        if (this.processCode == null) {
+            if (o.processCode != null)
+                return false
+        }
+        else if (this.processCode != o.processCode)
+            return false
+        if (this.layerCode == null) {
+            if (o.layerCode != null)
+                return false
+        }
+        else if (this.layerCode != o.layerCode)
+            return false
         return true
     }
 
@@ -189,7 +217,6 @@ data class InventoryProduct(
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.code == null) 0 else this.code.hashCode())
         result = prime * result + (if (this.inventoryDate == null) 0 else this.inventoryDate.hashCode())
-        result = prime * result + (if (this.processProcedureStructureId == null) 0 else this.processProcedureStructureId.hashCode())
         result = prime * result + (if (this.productQuantity == null) 0 else this.productQuantity.hashCode())
         result = prime * result + (if (this.sheetQuantity == null) 0 else this.sheetQuantity.hashCode())
         result = prime * result + (if (this.orderCode == null) 0 else this.orderCode.hashCode())
@@ -208,6 +235,11 @@ data class InventoryProduct(
         result = prime * result + (if (this.productionAreaName == null) 0 else this.productionAreaName.hashCode())
         result = prime * result + (if (this.processCount == null) 0 else this.processCount.hashCode())
         result = prime * result + (if (this.seidenRepNumber == null) 0 else this.seidenRepNumber.hashCode())
+        result = prime * result + (if (this.successQuantity == null) 0 else this.successQuantity.hashCode())
+        result = prime * result + (if (this.ins_30DayQuantity == null) 0 else this.ins_30DayQuantity.hashCode())
+        result = prime * result + (if (this.productName == null) 0 else this.productName.hashCode())
+        result = prime * result + (if (this.processCode == null) 0 else this.processCode.hashCode())
+        result = prime * result + (if (this.layerCode == null) 0 else this.layerCode.hashCode())
         return result
     }
 
@@ -217,7 +249,6 @@ data class InventoryProduct(
         sb.append(id)
         sb.append(", ").append(code)
         sb.append(", ").append(inventoryDate)
-        sb.append(", ").append(processProcedureStructureId)
         sb.append(", ").append(productQuantity)
         sb.append(", ").append(sheetQuantity)
         sb.append(", ").append(orderCode)
@@ -236,6 +267,11 @@ data class InventoryProduct(
         sb.append(", ").append(productionAreaName)
         sb.append(", ").append(processCount)
         sb.append(", ").append(seidenRepNumber)
+        sb.append(", ").append(successQuantity)
+        sb.append(", ").append(ins_30DayQuantity)
+        sb.append(", ").append(productName)
+        sb.append(", ").append(processCode)
+        sb.append(", ").append(layerCode)
 
         sb.append(")")
         return sb.toString()

@@ -24,5 +24,6 @@ data class ImportInventoryErrorModel(
     var processCount: Int? = null,
     var seidenRepNumber: Int? = null,
     var productionAreaName: String? = null,
-
+    var successQuantity: Int? = null,
+    var ins_30DayQuantity: Int? = null
 )

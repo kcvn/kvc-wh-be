@@ -137,7 +137,7 @@ class PlanService(
             inventoryProductRep.getInventoryForCreatePlan(productNames, inventoryDate)
         else listOf()
 
-        val inventoriesByStartDate = if (!request.startDate!!.isEqual(inventoryDate))
+        val inventoriesByStartDate = if (inventoryDate == null || !request.startDate!!.isEqual(inventoryDate))
             inventoryProductRep.getInventoryForCreatePlan(productNames, request.startDate!!)
         else listOf()
 

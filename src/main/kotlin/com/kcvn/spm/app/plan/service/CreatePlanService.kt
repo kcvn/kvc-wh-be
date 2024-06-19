@@ -153,8 +153,8 @@ class CreatePlanService(
                 item.unit = iProcessMasterData?.unit
             }
 
-            val completionRateInfo = completionRateProcessProductRep.getByProductName(productShortcutNames)
-            val completionRateProcessInfo = completionRateProcessRep.getByProcessCode(processCodes)
+            val completionRateInfo = mappingCompletionRate(productShortcutNames, productProcesses)
+            val completionRateProcessInfo = mappingCompletionRateProcess(productProcesses, processCodes)
 
             val processGroupCodes = productProcesses.mapNotNull { x -> x.processGroup }
             val equipmentInfo = equipmentProductivityRep.getByProcessGroup(processGroupCodes).map { item ->
@@ -332,6 +332,50 @@ class CreatePlanService(
         workbook.close()
 
         return response
+    }
+
+    private fun mappingCompletionRate(productShortcutNames: List<String>, productProcesses: List<ProductProcessModel>): List<CompletionRateProcessProduct> {
+        val completionRateInfo = completionRateProcessProductRep.getByProductName(productShortcutNames)
+        val snapParents = productProcesses.filter { it.processStatisticCode == ProcessStatisticCode.SNAP && it.processInventoryCode.isNullOrEmpty() }
+        for (item in completionRateInfo) {
+            val snap = snapParents.find {
+                it.productName!!.substring(it.productName!!.length - 7, it.productName!!.length) == item.productNameShortcut
+                    && it.processCode == item.processCode
+                    && it.layerCode?.toIntOrNull() == item.layerCode?.toIntOrNull()
+            }
+            if (snap == null) continue
+
+            val snapChild = productProcesses.filter {
+                it.productName!!.substring(it.productName!!.length - 7, it.productName!!.length) == item.productNameShortcut
+                    && it.processInventoryCode == snap.processCode
+            }.mapNotNull { it.processCode }
+            val rateOfSnapChild = completionRateInfo.filter { snapChild.contains(it.processCode) && it.productNameShortcut == item.productNameShortcut }
+            item.rate = NumberHelper.divide(
+                (item.rate ?: BigDecimal(0)) + rateOfSnapChild.sumOf { it.rate ?: BigDecimal(0) },
+                BigDecimal(rateOfSnapChild.size + 1)
+            )
+        }
+        return completionRateInfo
+    }
+
+    private fun mappingCompletionRateProcess(productProcesses: List<ProductProcessModel>, processCodes: List<String>): List<CompletionRateProcess> {
+        val completionRateProcessInfo = completionRateProcessRep.getByProcessCode(processCodes)
+        val snapParents = productProcesses.filter { it.processStatisticCode == ProcessStatisticCode.SNAP && it.processInventoryCode.isNullOrEmpty() }
+        for (item in completionRateProcessInfo) {
+            val snap = snapParents.find {
+                it.processCode == item.processCode
+                    && it.layerCode?.toIntOrNull() == item.layerCode?.toIntOrNull()
+            }
+            if (snap == null) continue
+
+            val snapChild = productProcesses.filter { it.processInventoryCode == snap.processCode }.mapNotNull { it.processCode }
+            val rateOfSnapChild = completionRateProcessInfo.filter { snapChild.contains(it.processCode) }
+            item.rate = NumberHelper.divide(
+                (item.rate ?: BigDecimal(0)) + rateOfSnapChild.sumOf { it.rate ?: BigDecimal(0) },
+                BigDecimal(rateOfSnapChild.size + 1)
+            )
+        }
+        return completionRateProcessInfo
     }
 
     //endregion
@@ -2011,7 +2055,8 @@ class CreatePlanService(
             endDate = planEndDate,
             version = 0,
             isActive = true,
-            hasInventory = hasInventory
+            hasInventory = hasInventory,
+            inventoryDate = request.inventoryDate
         )
     }
 

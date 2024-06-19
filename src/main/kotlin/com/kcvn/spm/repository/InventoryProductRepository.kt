@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.inventoryproduct.payload.request.InventoryProductRequest
 import com.kcvn.spm.app.inventoryproduct.payload.response.InventoryProductResponse
+import com.kcvn.spm.common.constants.ProcessCode
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.InventoryProduct
@@ -179,7 +180,6 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             INVENTORY_PRODUCT.INVENTORY_DATE,
             DSL.sum(INVENTORY_PRODUCT.PRODUCT_QUANTITY).`as`("productQuantity"),
             DSL.sum(INVENTORY_PRODUCT.SHEET_QUANTITY).`as`("sheetQuantity"),
-            DSL.sum(INVENTORY_INS_30DAY.PRODUCT_QUANTITY).`as`("successQuantity"),
             INVENTORY_PRODUCT.PRODUCT_NAME.`as`("productName"),
             INVENTORY_PRODUCT.PROCESS_CODE,
             INVENTORY_PRODUCT.LAYER_CODE,
@@ -188,21 +188,53 @@ class InventoryProductRepository(private val context: DSLContext) : SortingRepos
             .leftJoin(PROCESS_MASTER).on(
                 INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
                     .and(PROCESS_MASTER.IS_DELETED.eq(false))
-            ).leftJoin(INVENTORY_INS_30DAY).on(
-                INVENTORY_PRODUCT.PROCESS_CODE.eq(INVENTORY_INS_30DAY.PROCESS_CODE)
-                    .and(INVENTORY_PRODUCT.PRODUCT_NAME.eq(INVENTORY_INS_30DAY.PRODUCT_NAME))
-                    .and(INVENTORY_PRODUCT.LAYER_CODE.eq(INVENTORY_INS_30DAY.LAYER_CODE))
-                    .and(INVENTORY_PRODUCT.CODE.eq(INVENTORY_INS_30DAY.CODE))
-                    .and(INVENTORY_PRODUCT.INVENTORY_DATE.eq(INVENTORY_INS_30DAY.INVENTORY_DATE))
-                    .and(INVENTORY_INS_30DAY.IS_DELETED.eq(false))
-            ).where(INVENTORY_PRODUCT.INVENTORY_DATE.eq(inventoryDate).and(INVENTORY_PRODUCT.IS_DELETED.eq(false)))
-            .groupBy(
+            ).where(
+                INVENTORY_PRODUCT.INVENTORY_DATE.eq(inventoryDate)
+                    .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
+                    .and(INVENTORY_PRODUCT.PRODUCT_NAME.`in`(productNames))
+                    .and(INVENTORY_PRODUCT.PROCESS_CODE.notEqual(ProcessCode.INS))
+            ).groupBy(
                 INVENTORY_PRODUCT.INVENTORY_DATE,
                 INVENTORY_PRODUCT.PRODUCT_NAME,
                 INVENTORY_PRODUCT.PROCESS_CODE,
                 INVENTORY_PRODUCT.LAYER_CODE,
                 PROCESS_MASTER.PROCESS_NAME
             ).fetchInto(InventoryProductResponse::class.java)
+
+        val dataIns = context.select(
+            INVENTORY_PRODUCT.INVENTORY_DATE,
+            DSL.sum(INVENTORY_PRODUCT.PRODUCT_QUANTITY).`as`("productQuantity"),
+            DSL.sum(INVENTORY_PRODUCT.SHEET_QUANTITY).`as`("sheetQuantity"),
+            (DSL.sum(INVENTORY_PRODUCT.PRODUCT_QUANTITY) - DSL.sum(INVENTORY_INS_30DAY.PRODUCT_QUANTITY)).`as`("successQuantity"),
+            INVENTORY_PRODUCT.PRODUCT_NAME.`as`("productName"),
+            INVENTORY_PRODUCT.PROCESS_CODE,
+            INVENTORY_PRODUCT.LAYER_CODE,
+            PROCESS_MASTER.PROCESS_NAME.`as`("processName")
+        ).from(INVENTORY_PRODUCT)
+            .innerJoin(INVENTORY_INS_30DAY).on(
+                INVENTORY_PRODUCT.PROCESS_CODE.eq(INVENTORY_INS_30DAY.PROCESS_CODE)
+                    .and(INVENTORY_PRODUCT.PRODUCT_NAME.eq(INVENTORY_INS_30DAY.PRODUCT_NAME))
+                    .and(INVENTORY_PRODUCT.LAYER_CODE.eq(INVENTORY_INS_30DAY.LAYER_CODE))
+                    .and(INVENTORY_PRODUCT.CODE.eq(INVENTORY_INS_30DAY.CODE))
+                    .and(INVENTORY_INS_30DAY.INVENTORY_DATE.eq(inventoryDate))
+                    .and(INVENTORY_INS_30DAY.IS_DELETED.eq(false))
+            ).leftJoin(PROCESS_MASTER).on(
+                INVENTORY_PRODUCT.PROCESS_CODE.eq(PROCESS_MASTER.PROCESS_CODE)
+                    .and(PROCESS_MASTER.IS_DELETED.eq(false))
+            ).where(
+                INVENTORY_PRODUCT.INVENTORY_DATE.eq(inventoryDate)
+                    .and(INVENTORY_PRODUCT.IS_DELETED.eq(false))
+                    .and(INVENTORY_PRODUCT.PRODUCT_NAME.`in`(productNames))
+                    .and(INVENTORY_PRODUCT.PROCESS_CODE.eq(ProcessCode.INS))
+            ).groupBy(
+                INVENTORY_PRODUCT.INVENTORY_DATE,
+                INVENTORY_PRODUCT.PRODUCT_NAME,
+                INVENTORY_PRODUCT.PROCESS_CODE,
+                INVENTORY_PRODUCT.LAYER_CODE,
+                PROCESS_MASTER.PROCESS_NAME
+            ).fetchInto(InventoryProductResponse::class.java)
+
+        data.addAll(dataIns)
 
         return data
     }

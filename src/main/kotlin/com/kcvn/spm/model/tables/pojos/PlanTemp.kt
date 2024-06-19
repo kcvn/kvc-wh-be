@@ -31,7 +31,8 @@ data class PlanTemp(
     var isDeleted: Boolean? = null,
     var month: Int? = null,
     var year: Int? = null,
-    var hasInventory: Boolean? = null
+    var hasInventory: Boolean? = null,
+    var inventoryDate: OffsetDateTime? = null
 ): Serializable {
 
 
@@ -133,6 +134,12 @@ data class PlanTemp(
         }
         else if (this.hasInventory != o.hasInventory)
             return false
+        if (this.inventoryDate == null) {
+            if (o.inventoryDate != null)
+                return false
+        }
+        else if (this.inventoryDate != o.inventoryDate)
+            return false
         return true
     }
 
@@ -154,6 +161,7 @@ data class PlanTemp(
         result = prime * result + (if (this.month == null) 0 else this.month.hashCode())
         result = prime * result + (if (this.year == null) 0 else this.year.hashCode())
         result = prime * result + (if (this.hasInventory == null) 0 else this.hasInventory.hashCode())
+        result = prime * result + (if (this.inventoryDate == null) 0 else this.inventoryDate.hashCode())
         return result
     }
 
@@ -175,6 +183,7 @@ data class PlanTemp(
         sb.append(", ").append(month)
         sb.append(", ").append(year)
         sb.append(", ").append(hasInventory)
+        sb.append(", ").append(inventoryDate)
 
         sb.append(")")
         return sb.toString()

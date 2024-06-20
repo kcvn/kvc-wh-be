@@ -108,7 +108,7 @@ class PlanHistoryService(
                     val fileContentModel = FileContentModel(
                         fileName = file.name,
                         content = file.readBytes(),
-                        time = DateTimeHelper.toTimeZone7(OffsetDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneOffset.UTC))
+                        time = OffsetDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneOffset.UTC)
                     )
                     data.add(fileContentModel)
                 }

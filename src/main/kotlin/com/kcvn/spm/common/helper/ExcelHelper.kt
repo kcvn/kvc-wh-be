@@ -95,7 +95,7 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle = styleTemplate
         }
 
-        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false,isNumberFormat: Boolean = false,isBold: Boolean = false,isNotBold: Boolean = false,isWrapText:Boolean? = true) {
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false,isNumberFormat: Boolean = false,isBold: Boolean = false,isNotBold: Boolean = false) {
             row.createCell(colIndex).setCellValue(value)
             val cellStyle = workbook.createCellStyle()
             cellStyle.cloneStyleFrom(style)
@@ -109,9 +109,7 @@ class ExcelHelper {
                 cellStyle.borderTop = BorderStyle.THIN
                 cellStyle.borderBottom = BorderStyle.THIN
             }
-            if(isWrapText == true){
-                cellStyle.wrapText = true
-            }
+
             if (isHoliday) {
                 cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
@@ -173,14 +171,12 @@ class ExcelHelper {
             isNumberFormat: Boolean = false,
             isAlignLeft: Boolean = false,
             isNotBold: Boolean = false,
-            isAlignRight: Boolean = false,
-
-            isWrapText: Boolean? = true
+            isAlignRight: Boolean = false
         ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
             row.createCell(colIndex).setCellValue(value)
-            if(isWrapText == true) style.wrapText = true
+
             if (isBorderLeft) style.borderLeft = BorderStyle.THIN else style.borderLeft = BorderStyle.NONE
             if (isBorderRight) style.borderRight = BorderStyle.THIN else style.borderRight = BorderStyle.NONE
             if (isBorderTop) style.borderTop = BorderStyle.THIN else style.borderTop = BorderStyle.NONE

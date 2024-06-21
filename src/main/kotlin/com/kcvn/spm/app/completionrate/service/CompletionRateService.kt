@@ -357,28 +357,31 @@ class CompletionRateService(
                             if (currentDate?.toLocalDate()!! > convertEffectiveDate.toLocalDate()) {
                                 val minEffectiveDate = productExistMinEffectiveDate?.effectiveDate
                                 if (minEffectiveDate != null) {
-//                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
-//                                        val completionRateProduct = CompletionRateProduct(
-//                                            productName = name,
-//                                            rate = rate,
-//                                            effectiveDate = effectiveDate,
-//                                            expirationDate = minEffectiveDate.minusDays(1)
-//                                        )
-//                                        completionRateProductRepository.add(completionRateProduct)
-//                                        count++
-//                                    }
-//                                    else{
-//                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
-//                                    }
+                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                                        val completionRateProduct = CompletionRateProduct(
+                                            productName = name,
+                                            rate = rate,
+                                            effectiveDate = effectiveDate,
+                                            expirationDate = minEffectiveDate.minusDays(1)
+                                        )
+                                        completionRateProductRepository.add(completionRateProduct)
+                                        count++
+                                    }
+                                    else{
+                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
+                                    }
+                                }
+                                else{
                                     val completionRateProduct = CompletionRateProduct(
                                         productName = name,
                                         rate = rate,
                                         effectiveDate = effectiveDate,
-                                        expirationDate = minEffectiveDate.minusDays(1)
+                                        expirationDate = null
                                     )
                                     completionRateProductRepository.add(completionRateProduct)
                                     count++
                                 }
+
                             } else {
                                 val completionRateUpdate =
                                     completionRateProductRepository.getCompletionRateProductWithMaxEffectivedateByName(name)
@@ -600,26 +603,28 @@ class CompletionRateService(
                             if (currentDate?.toLocalDate()!! > convertEffectiveDate.toLocalDate()) {
                                 val minEffectiveDate = processExistMinEffectiveDate?.effectiveDate
                                 if (minEffectiveDate != null) {
-//                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
-//                                        val completionRateProduct = CompletionRateProcess(
-//                                            key = key,
-//                                            rate = rate,
-//                                            processCode = key.take(6),
-//                                            layerCode = StringHelper.intToStringD2(key.substring(6, 7)),
-//                                            expirationDate = minEffectiveDate.minusDays(1),
-//                                            effectiveDate = effectiveDate
-//                                        )
-//                                        completionRateProcessRepository.add(completionRateProduct)
-//                                        count++
-//                                    }else{
-//                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
-//                                    }
+                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                                        val completionRateProduct = CompletionRateProcess(
+                                            key = key,
+                                            rate = rate,
+                                            processCode = key.take(6),
+                                            layerCode = StringHelper.intToStringD2(key.substring(6, 7)),
+                                            expirationDate = minEffectiveDate.minusDays(1),
+                                            effectiveDate = effectiveDate
+                                        )
+                                        completionRateProcessRepository.add(completionRateProduct)
+                                        count++
+                                    }else{
+                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
+                                    }
+
+                                } else {
                                     val completionRateProduct = CompletionRateProcess(
                                         key = key,
                                         rate = rate,
                                         processCode = key.take(6),
                                         layerCode = StringHelper.intToStringD2(key.substring(6, 7)),
-                                        expirationDate = minEffectiveDate.minusDays(1),
+                                        expirationDate = null,
                                         effectiveDate = effectiveDate
                                     )
                                     completionRateProcessRepository.add(completionRateProduct)
@@ -805,28 +810,30 @@ class CompletionRateService(
                             if (currentDate?.toLocalDate()!! > convertEffectiveDate.toLocalDate()) {
                                 val minEffectiveDate = processProductExistMinEffectiveDate?.effectiveDate
                                 if (minEffectiveDate != null) {
-//                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
-//                                        val completionRateProcessProduct = CompletionRateProcessProduct(
-//                                            key = key,
-//                                            rate = rate,
-//                                            productNameShortcut = key.substring(6, 13),
-//                                            processCode = key.take(6),
-//                                            layerCode = StringHelper.intToStringD2(key.substring(13, 14)),
-//                                            expirationDate = minEffectiveDate.minusDays(1),
-//                                            effectiveDate = effectiveDate
-//                                        )
-//                                        completionRateProcessProductRepository.add(completionRateProcessProduct)
-//                                        count++
-//                                    }else{
-//                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
-//                                    }
+                                    if (minEffectiveDate.toLocalDate() > convertEffectiveDate.toLocalDate()) {
+                                        val completionRateProcessProduct = CompletionRateProcessProduct(
+                                            key = key,
+                                            rate = rate,
+                                            productNameShortcut = key.substring(6, 13),
+                                            processCode = key.take(6),
+                                            layerCode = StringHelper.intToStringD2(key.substring(13, 14)),
+                                            expirationDate = minEffectiveDate.minusDays(1),
+                                            effectiveDate = effectiveDate
+                                        )
+                                        completionRateProcessProductRepository.add(completionRateProcessProduct)
+                                        count++
+                                    }else{
+                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
+                                    }
+
+                                } else {
                                     val completionRateProcessProduct = CompletionRateProcessProduct(
                                         key = key,
                                         rate = rate,
                                         productNameShortcut = key.substring(6, 13),
                                         processCode = key.take(6),
                                         layerCode = StringHelper.intToStringD2(key.substring(13, 14)),
-                                        expirationDate = minEffectiveDate.minusDays(1),
+                                        expirationDate = null,
                                         effectiveDate = effectiveDate
                                     )
                                     completionRateProcessProductRepository.add(completionRateProcessProduct)

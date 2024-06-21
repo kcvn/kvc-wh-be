@@ -49,6 +49,7 @@ import com.kcvn.spm.repository.AppSettingRepository
 import com.kcvn.spm.repository.CommonCategoryRepository
 import com.kcvn.spm.repository.EquipmentProductivityRepository
 import com.kcvn.spm.repository.HolidaysCalenderRepository
+import com.kcvn.spm.repository.InventoryProductRepository
 import com.kcvn.spm.repository.PlanColorConfigRepository
 import com.kcvn.spm.repository.PlanDetailRepository
 import com.kcvn.spm.repository.PlanProcessRepository
@@ -94,7 +95,8 @@ class PlanService(
     private val equipmentProductivityRep: EquipmentProductivityRepository,
     private val processMasterRep: ProcessMasterRepository,
     private val planHistoryService: PlanHistoryService,
-    private val planColorConfigRep: PlanColorConfigRepository
+    private val planColorConfigRep: PlanColorConfigRepository,
+    private val inventoryProductRep: InventoryProductRepository
 ) {
     //region PLAN
     fun getListPlan(request: PlanSearchRequest, pageable: Pageable): BasePagingResponse<ProductPlanModel> {
@@ -129,6 +131,15 @@ class PlanService(
         if (planProducts.isEmpty()) throw BusinessException(CommonUtils.getMessage("data.notExist"))
         val planProductIds = planProducts.mapNotNull { it.id }
         val productNames = planProducts.mapNotNull { it.productName }.distinct()
+
+        val inventoryDate = planRep.getInventoryDate(request.startDate!!, request.draftWorkPlan ?: false)
+        val inventories = if (inventoryDate != null)
+            inventoryProductRep.getInventoryForCreatePlan(productNames, inventoryDate)
+        else listOf()
+
+        val inventoriesByStartDate = if (inventoryDate == null || !request.startDate!!.isEqual(inventoryDate))
+            inventoryProductRep.getInventoryForCreatePlan(productNames, request.startDate!!)
+        else listOf()
 
         val data = mutableListOf<ProductPlanDetailModel>()
 
@@ -171,18 +182,60 @@ class PlanService(
                     processNameJp = x.processNameJp,
                     completionRate = x.completionRate,
                     processConvertCode = x.processConvertCode,
-                    processSequence = x.processSequence,
-                    inventory = x.inventory
+                    processSequence = x.processSequence
                 )
                 productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
                     ProcessChildrenModel(
                         layerCode = m.layerCode,
                         processCode = m.processCode,
                         processName = m.processName,
-                        inventory = m.inventory
                     )
                 }
-                productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
+                productPlan.sumInventory = if (inventories.isNotEmpty()) {
+                    inventories.filter {
+                        it.processCode == x.processCode && it.productName == iPlanProduct.productName && it.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull()
+                    }.sumOf {
+                        val res = if (x.processCode == ProcessCode.INS) it.successQuantity
+                        else {
+                            if (x.unit == ProcessUnit.SHEET) it.sheetQuantity
+                            else it.productQuantity
+                        }
+                        res ?: 0
+                    } + inventories.filter {
+                        it.productName == iPlanProduct.productName
+                            && productPlan.processChildren?.any { m -> m.layerCode?.toIntOrNull() == it.layerCode?.toIntOrNull() && m.processCode == it.processCode } == true
+                    }.sumOf {
+                        val res = if (x.processCode == ProcessCode.INS) it.successQuantity
+                        else {
+                            if (x.unit == ProcessUnit.SHEET) it.sheetQuantity
+                            else it.productQuantity
+                        }
+                        res ?: 0
+                    }
+                } else null
+
+                productPlan.inventory = if (inventoriesByStartDate.isNotEmpty()) {
+                    inventoriesByStartDate.filter {
+                        it.processCode == x.processCode && it.productName == iPlanProduct.productName && it.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull()
+                    }.sumOf {
+                        val res = if (x.processCode == ProcessCode.INS) it.successQuantity
+                        else {
+                            if (x.unit == ProcessUnit.SHEET) it.sheetQuantity
+                            else it.productQuantity
+                        }
+                        res ?: 0
+                    } + inventoriesByStartDate.filter {
+                        it.productName == iPlanProduct.productName
+                            && productPlan.processChildren?.any { m -> m.layerCode?.toIntOrNull() == it.layerCode?.toIntOrNull() && m.processCode == it.processCode } == true
+                    }.sumOf {
+                        val res = if (x.processCode == ProcessCode.INS) it.successQuantity
+                        else {
+                            if (x.unit == ProcessUnit.SHEET) it.sheetQuantity
+                            else it.productQuantity
+                        }
+                        res ?: 0
+                    }
+                } else null
 
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
                 val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.groupBy { it.planDate }.map { m ->
@@ -310,6 +363,15 @@ class PlanService(
 
         val workResults = workResultRep.getForPlan(colStartDate, colEndDate, productNames)
 
+        val inventoryDate = planRep.getInventoryDate(colStartDate, isDraft)
+        val inventories = if (inventoryDate != null)
+            inventoryProductRep.getInventoryForCreatePlan(productNames, inventoryDate)
+        else listOf()
+
+        val inventoriesByStartDate = if (inventoryDate == null || !colStartDate.isEqual(inventoryDate))
+            inventoryProductRep.getInventoryForCreatePlan(productNames, colStartDate)
+        else listOf()
+
         val data = mutableListOf<PlanExportExcelModel>()
 
         for (planProduct in planProducts) {
@@ -337,17 +399,59 @@ class PlanService(
                     processStatisticCode = x.processStatisticCode,
                     processGroup = x.processGroup,
                     processSequence = x.processSequence,
-                    inventory = x.inventory
                 )
                 productPlan.processChildren = childrenPlanProcess.filter { m -> m.parentId == x.id }.map { m ->
                     ProcessChildrenModel(
                         layerCode = m.layerCode,
                         processCode = m.processCode,
                         processName = m.processName,
-                        inventory = m.inventory
                     )
                 }
-                productPlan.sumInventory = (productPlan.processChildren?.sumOf { m -> m.inventory ?: 0 } ?: 0) + (productPlan.inventory ?: 0)
+                productPlan.sumInventory = if (inventories.isNotEmpty()) {
+                    inventories.filter {
+                        it.processCode == x.processCode && it.productName == planProduct.productName && it.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull()
+                    }.sumOf {
+                        val res = if (x.processCode == ProcessCode.INS) it.successQuantity
+                        else {
+                            if (x.unit == ProcessUnit.SHEET) it.sheetQuantity
+                            else it.productQuantity
+                        }
+                        res ?: 0
+                    } + inventories.filter {
+                        it.productName == planProduct.productName
+                            && productPlan.processChildren?.any { m -> m.layerCode?.toIntOrNull() == it.layerCode?.toIntOrNull() && m.processCode == it.processCode } == true
+                    }.sumOf {
+                        val res = if (x.processCode == ProcessCode.INS) it.successQuantity
+                        else {
+                            if (x.unit == ProcessUnit.SHEET) it.sheetQuantity
+                            else it.productQuantity
+                        }
+                        res ?: 0
+                    }
+                } else null
+
+                productPlan.inventory = if (inventoriesByStartDate.isNotEmpty()) {
+                    inventoriesByStartDate.filter {
+                        it.processCode == x.processCode && it.productName == planProduct.productName && it.layerCode?.toIntOrNull() == x.layerCode?.toIntOrNull()
+                    }.sumOf {
+                        val res = if (x.processCode == ProcessCode.INS) it.successQuantity
+                        else {
+                            if (x.unit == ProcessUnit.SHEET) it.sheetQuantity
+                            else it.productQuantity
+                        }
+                        res ?: 0
+                    } + inventoriesByStartDate.filter {
+                        it.productName == planProduct.productName
+                            && productPlan.processChildren?.any { m -> m.layerCode?.toIntOrNull() == it.layerCode?.toIntOrNull() && m.processCode == it.processCode } == true
+                    }.sumOf {
+                        val res = if (x.processCode == ProcessCode.INS) it.successQuantity
+                        else {
+                            if (x.unit == ProcessUnit.SHEET) it.sheetQuantity
+                            else it.productQuantity
+                        }
+                        res ?: 0
+                    }
+                } else null
 
                 val planDetailByProcess = planDetails.filter { m -> m.planProcessId == x.id }
                 val planDetail = planDetailByProcess.filter { m -> m.title == PlanTitle.PLAN_KEY }.groupBy { it.planDate }.map { m ->
@@ -1943,7 +2047,7 @@ class PlanService(
     ) {
         val sheet = workbook.getSheetAt(0)
         val headerRow = sheet.getRow(0)
-        var headerCol = 14
+        var headerCol = 15
         val headerStyle = headerRow.getCell(0).cellStyle
         for (col in columns) {
             ExcelHelper.setCellValueWithCalendar(workbook, headerRow, headerCol, headerStyle, col.value, col.isHoliday)
@@ -2145,9 +2249,16 @@ class PlanService(
                         else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
                         else numberStyleCommon
                     }
-                    ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+                    //ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+                    if (item.titleKey == PlanTitle.PLAN_KEY) {
+                        ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(planProcess.sumInventory))
+                        ExcelHelper.setCellValue(dataRow, 14, totalStyle, NumberHelper.formatNumber(planProcess.inventory))
+                    } else {
+                        ExcelHelper.setCellValue(dataRow, 13, totalStyle, "")
+                        ExcelHelper.setCellValue(dataRow, 14, totalStyle, "")
+                    }
 
-                    var colIndex = 14
+                    var colIndex = 15
                     for (col in columns) {
                         val value = item.quantityByCalendars?.find { x -> x.key == col.key }?.value
                         val st = if (col.isHoliday) {
@@ -2205,8 +2316,9 @@ class PlanService(
                             ExcelHelper.setCellValue(dataRow, 5, style, dataExport.mold)
                             ExcelHelper.setCellValue(dataRow, 12, styleCommon, "")
                             ExcelHelper.setCellValue(dataRow, 13, styleCommon, "")
+                            ExcelHelper.setCellValue(dataRow, 14, styleCommon, "")
 
-                            var colIndex = 14
+                            var colIndex = 15
                             for (col in columns) {
                                 ExcelHelper.setCellValue(dataRow, colIndex, (if (col.isHoliday) holidayStyle else styleCommon), "")
                                 colIndex++

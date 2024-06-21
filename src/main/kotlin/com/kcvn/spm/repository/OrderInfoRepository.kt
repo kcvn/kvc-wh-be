@@ -289,6 +289,7 @@ class OrderInfoRepository(private val context: DSLContext) : SortingRepository()
             val productNames = orders.map { x -> x.productName }.distinct()
             val orderExists = transactionalContext.selectFrom(ORDER_INFO)
                 .where(ORDER_INFO.PRODUCT_NAME.`in`(productNames)).and(ORDER_INFO.IS_DELETED.eq(false))
+                .and(ORDER_INFO.IS_LATEST.eq(true))
                 .and(ORDER_INFO.ORDER_DATE.ge(startDate)).and(ORDER_INFO.ORDER_DATE.le(endDate))
                 .fetchInto(OrderInfo::class.java)
 

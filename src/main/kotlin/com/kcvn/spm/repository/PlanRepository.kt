@@ -13,6 +13,7 @@ import com.kcvn.spm.model.tables.pojos.PlanProduct
 import com.kcvn.spm.model.tables.pojos.PlanProductTemp
 import com.kcvn.spm.model.tables.pojos.PlanTemp
 import com.kcvn.spm.model.tables.references.PLAN
+import com.kcvn.spm.model.tables.references.PLAN_CALENDAR_CONFIG
 import com.kcvn.spm.model.tables.references.PLAN_DETAIL
 import com.kcvn.spm.model.tables.references.PLAN_DETAIL_TEMP
 import com.kcvn.spm.model.tables.references.PLAN_PROCESS
@@ -24,6 +25,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
@@ -65,10 +67,11 @@ class PlanRepository(private val context: DSLContext) {
                 PLAN_TEMP.IS_ACTIVE,
                 PLAN_TEMP.VERSION,
                 PLAN_TEMP.HAS_INVENTORY,
+                PLAN_TEMP.INVENTORY_DATE,
                 PLAN_TEMP.CREATED_BY
             ).values(
                 plan.planCode, plan.description, plan.month, plan.year,
-                plan.startDate, plan.endDate, plan.isActive, plan.version, plan.hasInventory, createdBy
+                plan.startDate, plan.endDate, plan.isActive, plan.version, plan.hasInventory, plan.inventoryDate, createdBy
             ).returningResult(PLAN_TEMP).fetchInto(PlanTemp::class.java).firstOrNull()
 
             if (planRecord != null) {
@@ -210,10 +213,11 @@ class PlanRepository(private val context: DSLContext) {
                 PLAN.IS_ACTIVE,
                 PLAN.VERSION,
                 PLAN.HAS_INVENTORY,
+                PLAN.INVENTORY_DATE,
                 PLAN.CREATED_BY
             ).values(
                 plan.id, plan.planCode, plan.description, plan.month, plan.year,
-                plan.startDate, plan.endDate, plan.isActive, plan.version, plan.hasInventory, createdBy
+                plan.startDate, plan.endDate, plan.isActive, plan.version, plan.hasInventory, plan.inventoryDate, createdBy
             ).execute()
 
             val queryPlanProduct = planProducts.map { item ->
@@ -339,5 +343,40 @@ class PlanRepository(private val context: DSLContext) {
                 .fetchInto(PlanDetailTemp::class.java)
         }
         return response
+    }
+
+    fun getInventoryDate(startDate: OffsetDateTime, isDraft: Boolean): OffsetDateTime? {
+        var inventoryDate: OffsetDateTime? = null
+        if (isDraft) {
+            inventoryDate = context.select(PLAN_TEMP.INVENTORY_DATE)
+                .from(PLAN_CALENDAR_CONFIG)
+                .join(PLAN_TEMP).on(
+                    PLAN_CALENDAR_CONFIG.YEAR.eq(PLAN_TEMP.YEAR)
+                        .and(PLAN_CALENDAR_CONFIG.MONTH.eq(PLAN_TEMP.MONTH))
+                        .and(PLAN_TEMP.IS_ACTIVE.eq(true)).and(PLAN_TEMP.IS_DELETED.eq(false))
+                )
+                .where(
+                    PLAN_CALENDAR_CONFIG.IS_DELETED.eq(false)
+                        .and(PLAN_CALENDAR_CONFIG.START_DATE.le(startDate))
+                        .and(PLAN_CALENDAR_CONFIG.END_DATE.ge(startDate))
+                ).fetchAnyInto(OffsetDateTime::class.java)
+        }
+
+        if (inventoryDate == null) {
+            inventoryDate = context.select(PLAN.INVENTORY_DATE)
+                .from(PLAN_CALENDAR_CONFIG)
+                .join(PLAN).on(
+                    PLAN_CALENDAR_CONFIG.YEAR.eq(PLAN.YEAR)
+                        .and(PLAN_CALENDAR_CONFIG.MONTH.eq(PLAN.MONTH))
+                        .and(PLAN.IS_ACTIVE.eq(true)).and(PLAN.IS_DELETED.eq(false))
+                )
+                .where(
+                    PLAN_CALENDAR_CONFIG.IS_DELETED.eq(false)
+                        .and(PLAN_CALENDAR_CONFIG.START_DATE.le(startDate))
+                        .and(PLAN_CALENDAR_CONFIG.END_DATE.ge(startDate))
+                ).fetchAnyInto(OffsetDateTime::class.java)
+        }
+
+        return inventoryDate
     }
 }

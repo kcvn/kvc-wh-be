@@ -517,7 +517,9 @@ class QuantityReportService(
 
         val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
         ExcelHelper.setCellValue(rowPlan, 0, style, data.productName)
-        ExcelHelper.setCellValue(rowPlan, 1, style, "${data.monthNumber.toString()}/${data.yearNumber.toString()}")
+        val month = data.monthNumber?.toString() ?: ""
+        val year = data.yearNumber?.toString() ?: ""
+        ExcelHelper.setCellValue(rowPlan, 1, style, if (month.isEmpty() && year.isEmpty()) "" else "$month/$year")
         ExcelHelper.setCellValue(rowPlan, 2, style, data.orderDateFromTo)
         var colIndex = 3
         for (col in columns) {
@@ -540,6 +542,34 @@ class QuantityReportService(
         val headerStyle = ExcelHelper.setCellHeaderStyle(workbook)
         val columns = dataExport.columns
         if (dataExport.data != null){
+            //get product by line
+            val lstDataExport = dataExport.data
+            val productNames = lstDataExport!!.mapNotNull { x -> x.productName }.distinct()
+            val lstProduct = productRep.getByName(productNames)
+            val lstProductLine = lstProduct.map { x -> x.frame_1 }.distinct()
+
+            val productLineResponse = mutableListOf<QuantityReportModel>()
+
+            for (productLine in lstProductLine) {
+                val lstProductByLine = lstProduct.filter { x -> x.frame_1 == productLine }.map { x -> x.name }
+                val lstDataExportByProductLine = lstDataExport.filter { x -> lstProductByLine.contains(x.productName) }
+
+                val allKeyValueResponses = lstDataExportByProductLine.flatMap { it.lstProcess }
+                val summedResponses = allKeyValueResponses.groupBy { it.key }
+                    .map { (key, responses) ->
+                        val sum = responses.sumOf { it.value?.toIntOrNull() ?: 0 }
+                        KeyValueResponse(key, sum.toString())
+                    }.toMutableList()
+
+                val newQuantityReportModel = QuantityReportModel(
+                    productName = productLine,
+                    lstProcess = summedResponses
+                )
+
+                productLineResponse.add(newQuantityReportModel)
+            }
+            //
+
             if (columns != null) {
                 for (col in columns) {
                     setCellHeader(workbook, headerRow, headerCol, headerStyle, col.value)
@@ -551,6 +581,12 @@ class QuantityReportService(
             style.alignment = HorizontalAlignment.CENTER
 
             for(report in dataExport.data!!){
+                if (columns != null) {
+                    rowNumber = generateExcelRowPlan(workbook, sheet, rowNumber, style, report,columns)
+                }
+            }
+            rowNumber++
+            for(report in productLineResponse){
                 if (columns != null) {
                     rowNumber = generateExcelRowPlan(workbook, sheet, rowNumber, style, report,columns)
                 }

@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.VerticalAlignment
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
+import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
@@ -76,6 +77,27 @@ class ExcelHelper {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate
         }
+
+        fun setCellValueInt(row: Row, colIndex: Int, styleTemplate: CellStyle, value: Int?, format: Short) {
+            if (value == null) {
+                row.createCell(colIndex).setCellValue("")
+            } else {
+                row.createCell(colIndex).setCellValue(value.toDouble())
+            }
+            row.getCell(colIndex).cellStyle = styleTemplate
+            row.getCell(colIndex).cellStyle.dataFormat = format
+        }
+
+        fun setCellValueDecimal(row: Row, colIndex: Int, styleTemplate: CellStyle, value: BigDecimal?, format: Short) {
+            if (value == null) {
+                row.createCell(colIndex).setCellValue("")
+            } else {
+                row.createCell(colIndex).setCellValue(value.toDouble())
+            }
+            row.getCell(colIndex).cellStyle = styleTemplate
+            row.getCell(colIndex).cellStyle.dataFormat = format
+        }
+
         fun createErrorCellStyle(workbook: Workbook, styleTemplate: CellStyle): CellStyle {
             val errorCellStyle = workbook.createCellStyle()
             errorCellStyle.cloneStyleFrom(styleTemplate)

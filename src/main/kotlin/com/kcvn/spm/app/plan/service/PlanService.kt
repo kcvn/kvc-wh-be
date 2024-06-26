@@ -2184,6 +2184,17 @@ class PlanService(
         numberStyleCommon.cloneStyleFrom(styleCommon)
         numberStyleCommon.alignment = HorizontalAlignment.RIGHT
 
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+        val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+        val percentFirstRowStyle = workbook.createCellStyle()
+        percentFirstRowStyle.cloneStyleFrom(firstRowStyle)
+        percentFirstRowStyle.dataFormat = percentFormat
+
+        val percentStartRowStyle = workbook.createCellStyle()
+        percentStartRowStyle.cloneStyleFrom(startRowStyle)
+        percentStartRowStyle.dataFormat = percentFormat
+
         //
 
         var rowNumber = 1
@@ -2195,6 +2206,7 @@ class PlanService(
             for (planProcess in dataExport.productPlanDetails!!) {
                 var rowProcessIndex = rowNumber
                 val styleProcess = if (isNextProduct) startRowStyle else firstRowStyle
+                val percentStyle = if (isNextProduct) percentStartRowStyle else percentFirstRowStyle
                 var dataRow = ExcelHelper.createRow(sheet, rowProcessIndex)
 
                 ExcelHelper.setCellValue(dataRow, 6, styleProcess, planProcess.layerCode)
@@ -2202,7 +2214,7 @@ class PlanService(
                 ExcelHelper.setCellValue(dataRow, 8, styleProcess, planProcess.processCode)
                 ExcelHelper.setCellValue(dataRow, 9, styleProcess, planProcess.processName)
                 ExcelHelper.setCellValue(dataRow, 10, styleProcess, "")
-                ExcelHelper.setCellValue(dataRow, 11, styleProcess, if (planProcess.completionRate != null) "${planProcess.completionRate?.toString()} %" else "")
+                ExcelHelper.setCellValuePercent(dataRow, 11, percentStyle, planProcess.completionRate, percentFormat)
 
                 rowProcessIndex++
                 if (!planProcess.processChildren.isNullOrEmpty()) {
@@ -2230,8 +2242,8 @@ class PlanService(
 
                     ExcelHelper.setCellValue(dataRow, 0, style, dataExport.productName?.substring(dataExport.productName!!.length - 7, dataExport.productName!!.length))
                     ExcelHelper.setCellValue(dataRow, 1, style, dataExport.productName)
-                    ExcelHelper.setCellValue(dataRow, 2, style, dataExport.pcsSh?.toString())
-                    ExcelHelper.setCellValue(dataRow, 3, style, dataExport.blockSh?.toString())
+                    ExcelHelper.setCellValueInt(dataRow, 2, style, dataExport.pcsSh, numberFormat)
+                    ExcelHelper.setCellValueInt(dataRow, 3, style, dataExport.blockSh, numberFormat)
                     ExcelHelper.setCellValue(dataRow, 4, style, dataExport.frame_1)
                     ExcelHelper.setCellValue(dataRow, 5, style, dataExport.mold)
 
@@ -2251,8 +2263,8 @@ class PlanService(
                     }
                     //ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
                     if (item.titleKey == PlanTitle.PLAN_KEY) {
-                        ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(planProcess.sumInventory))
-                        ExcelHelper.setCellValue(dataRow, 14, totalStyle, NumberHelper.formatNumber(planProcess.inventory))
+                        ExcelHelper.setCellValueInt(dataRow, 13, totalStyle, planProcess.sumInventory, numberFormat)
+                        ExcelHelper.setCellValueInt(dataRow, 14, totalStyle, planProcess.inventory, numberFormat)
                     } else {
                         ExcelHelper.setCellValue(dataRow, 13, totalStyle, "")
                         ExcelHelper.setCellValue(dataRow, 14, totalStyle, "")
@@ -2283,7 +2295,7 @@ class PlanService(
                                 }
                             }
                         }
-                        ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toIntOrNull()))
+                        ExcelHelper.setCellValueInt(dataRow, colIndex, st, value?.toIntOrNull(), numberFormat)
                         colIndex++
                     }
 
@@ -2310,8 +2322,8 @@ class PlanService(
                             dataRow = ExcelHelper.createRow(sheet, i)
                             ExcelHelper.setCellValue(dataRow, 0, style, dataExport.productName?.substring(dataExport.productName!!.length - 7, dataExport.productName!!.length))
                             ExcelHelper.setCellValue(dataRow, 1, style, dataExport.productName)
-                            ExcelHelper.setCellValue(dataRow, 2, style, dataExport.pcsSh?.toString())
-                            ExcelHelper.setCellValue(dataRow, 3, style, dataExport.blockSh?.toString())
+                            ExcelHelper.setCellValueInt(dataRow, 2, style, dataExport.pcsSh, numberFormat)
+                            ExcelHelper.setCellValueInt(dataRow, 3, style, dataExport.blockSh, numberFormat)
                             ExcelHelper.setCellValue(dataRow, 4, style, dataExport.frame_1)
                             ExcelHelper.setCellValue(dataRow, 5, style, dataExport.mold)
                             ExcelHelper.setCellValue(dataRow, 12, styleCommon, "")
@@ -2418,7 +2430,7 @@ class PlanService(
                             else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
                             else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
                             else numberStyleCommon
-                            ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+                            ExcelHelper.setCellValueInt(dataRow, 13, totalStyle, item.total?.toInt(), numberFormat)
 
                             var colIndex = 14
                             for (col in columns) {
@@ -2442,7 +2454,7 @@ class PlanService(
                                         else numberStyleCommon
                                     }
                                 }
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toInt()))
+                                ExcelHelper.setCellValueInt(dataRow, colIndex, st, value?.toInt(), numberFormat)
                                 colIndex++
                             }
                             rowIndex++
@@ -2490,7 +2502,7 @@ class PlanService(
                             else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
                             else if (item.titleKey == PlanTitle.PLAN_ACCUMULATION_KEY || item.titleKey == PlanTitle.ACTUAL_ACCUMULATION_KEY) accumulationRowStyle
                             else numberStyleCommon
-                            ExcelHelper.setCellValue(dataRow, 13, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+                            ExcelHelper.setCellValueInt(dataRow, 13, totalStyle, item.total?.toInt(), numberFormat)
 
                             var colIndex = 14
                             for (col in columns) {
@@ -2514,7 +2526,7 @@ class PlanService(
                                         else numberStyleCommon
                                     }
                                 }
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toInt()))
+                                ExcelHelper.setCellValueInt(dataRow, colIndex, st, value?.toInt(), numberFormat)
                                 colIndex++
                             }
                             rowIndex++
@@ -2620,6 +2632,8 @@ class PlanService(
         val numberStyleCommon = workbook.createCellStyle()
         numberStyleCommon.cloneStyleFrom(styleCommon)
         numberStyleCommon.alignment = HorizontalAlignment.RIGHT
+
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
         //
 
         var rowNumber = 1
@@ -2659,7 +2673,7 @@ class PlanService(
                             else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
                             else numberStyleCommon
 
-                            ExcelHelper.setCellValue(dataRow, 4, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+                            ExcelHelper.setCellValueInt(dataRow, 4, totalStyle, item.total?.toInt(), numberFormat)
 
                             var colIndex = 5
                             for (col in columns) {
@@ -2673,7 +2687,7 @@ class PlanService(
                                     else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
                                     else numberStyleCommon
                                 }
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toIntOrNull()))
+                                ExcelHelper.setCellValueInt(dataRow, colIndex, st, value?.toIntOrNull(), numberFormat)
                                 colIndex++
                             }
                             rowIndex++
@@ -2714,7 +2728,7 @@ class PlanService(
                             else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
                             else numberStyleCommon
 
-                            ExcelHelper.setCellValue(dataRow, 4, totalStyle, NumberHelper.formatNumber(item.total?.toInt()))
+                            ExcelHelper.setCellValueInt(dataRow, 4, totalStyle, item.total?.toInt(), numberFormat)
 
                             var colIndex = 5
                             for (col in columns) {
@@ -2728,7 +2742,7 @@ class PlanService(
                                     else if (item.titleKey == PlanTitle.ACTUAL_KEY) actualRowStyle
                                     else numberStyleCommon
                                 }
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, NumberHelper.formatNumber(value?.toIntOrNull()))
+                                ExcelHelper.setCellValueInt(dataRow, colIndex, st, value?.toIntOrNull(), numberFormat)
                                 colIndex++
                             }
                             rowIndex++
@@ -2845,6 +2859,8 @@ class PlanService(
             yellowStyle.borderTop = BorderStyle.DOTTED
             yellowStyle.alignment = HorizontalAlignment.RIGHT
 
+            val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
             var rowNumber = 1
             var index = 0
             val groupedByFrame1: Map<String?, List<EquipmentProductivityModel>> = dataEquipment.groupBy { it.frame1 }
@@ -2859,7 +2875,7 @@ class PlanService(
                     for ((iItem, item) in planProcess.processDetail!!.withIndex()) {
                         var dataRow = ExcelHelper.createRow(sheet, rowTitleIndex)
                         ExcelHelper.setCellValue(dataRow, 2, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, item.name)
-                        ExcelHelper.setCellValue(dataRow, 3, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, NumberHelper.formatNumber(item.totalProcess ?: 0))
+                        ExcelHelper.setCellValueInt(dataRow, 3, styleCollections.first { x -> x.key == PlanStyleKey.PLAN_SUMMARY_FIRST_ROW }.cellStyle, item.totalProcess, numberFormat)
 
                         rowTitleIndex++
                         dataRow = ExcelHelper.createRow(sheet, rowTitleIndex)
@@ -2907,7 +2923,6 @@ class PlanService(
                                         else -> if (col.isHoliday) holidayEndRowStyle else detailEndRowStyle
                                     }
                                 } else {
-                                    quantityByCalendar?.value = NumberHelper.formatNumber(quantityByCalendar?.value?.toIntOrNull())
                                     if (col.isHoliday) {
                                         if (iData == 0) holidayFirstRowStyle
                                         else if (iData == item.processDetailList.size - 1) holidayEndRowStyle
@@ -2918,8 +2933,12 @@ class PlanService(
                                         else detailMiddleRowStyle
                                     }
                                 }
+                                if (data.type == ProcessPlan.QUANTITY_MACHINE) {
+                                    ExcelHelper.setCellValue(dataRow, colIndex, st, quantityByCalendar?.value)
+                                } else {
+                                    ExcelHelper.setCellValueInt(dataRow, colIndex, st, quantityByCalendar?.value?.toIntOrNull(), numberFormat)
+                                }
 
-                                ExcelHelper.setCellValue(dataRow, colIndex, st, quantityByCalendar?.value)
                                 colIndex++
                             }
                             rowDataIndex++

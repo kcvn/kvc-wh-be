@@ -9,7 +9,6 @@ import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
-import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.CellStyleModel
@@ -511,9 +510,26 @@ class MaterialsService(
             val style = ExcelHelper.getCellStyleCommon(workbook)
             style.alignment = HorizontalAlignment.CENTER
 
+            val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+            val numberFormat4F = workbook.createDataFormat().getFormat("#,##0.0000")
+            val numberFormat2F = workbook.createDataFormat().getFormat("#,##0.00")
+
             val numberStyle = workbook.createCellStyle()
             numberStyle.cloneStyleFrom(style)
             numberStyle.alignment = HorizontalAlignment.RIGHT
+            numberStyle.dataFormat = numberFormat
+
+            val number4FStyle = workbook.createCellStyle()
+            number4FStyle.cloneStyleFrom(style)
+            number4FStyle.alignment = HorizontalAlignment.RIGHT
+            number4FStyle.dataFormat = numberFormat4F
+
+            val number2FStyle = workbook.createCellStyle()
+            number2FStyle.cloneStyleFrom(style)
+            number2FStyle.alignment = HorizontalAlignment.RIGHT
+            number2FStyle.dataFormat = numberFormat2F
+
+
 
             var rowNumber = 1
             for (item in query.first) {
@@ -525,9 +541,9 @@ class MaterialsService(
                 ExcelHelper.setCellValue(dataRow, 4, style, item?.exportType)
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.tapeShared)
                 ExcelHelper.setCellValue(dataRow, 6, style, item?.typeTape)
-                ExcelHelper.setCellValue(dataRow, 7, numberStyle, NumberHelper.formatNumber(item?.quantityTape))
-                ExcelHelper.setCellValue(dataRow, 8, numberStyle,String.format("%,.4f",item?.unitPrice))
-                ExcelHelper.setCellValue(dataRow, 9, numberStyle, String.format("%,.2f",item?.intoMoney))
+                ExcelHelper.setCellValueInt(dataRow, 7, numberStyle, item?.quantityTape, numberFormat)
+                ExcelHelper.setCellValueDouble(dataRow, 8, number4FStyle, item?.unitPrice, numberFormat4F)
+                ExcelHelper.setCellValueDouble(dataRow, 9, number2FStyle, item?.intoMoney, numberFormat2F)
             }
         }
 

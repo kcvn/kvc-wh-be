@@ -29,8 +29,20 @@ import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.KeyValueResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.*
-import com.kcvn.spm.repository.*
+import com.kcvn.spm.model.tables.pojos.CouponCodeDropdown
+import com.kcvn.spm.model.tables.pojos.InventorySemiProduct
+import com.kcvn.spm.model.tables.pojos.TapeEnRoute
+import com.kcvn.spm.model.tables.pojos.TapeInventory
+import com.kcvn.spm.model.tables.pojos.WorkResult
+import com.kcvn.spm.repository.AppSettingRepository
+import com.kcvn.spm.repository.CompletionRateProductRepository
+import com.kcvn.spm.repository.HolidaysCalenderRepository
+import com.kcvn.spm.repository.InventorySemiProductRepository
+import com.kcvn.spm.repository.OrderInfoRepository
+import com.kcvn.spm.repository.ProductRepository
+import com.kcvn.spm.repository.TapeEnRouteRepository
+import com.kcvn.spm.repository.TapeInventoryRepository
+import com.kcvn.spm.repository.WorkResultRepository
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
@@ -554,6 +566,13 @@ class ExternalQualityReportService(
         numberStyle.cloneStyleFrom(styleCommon)
         numberStyle.alignment = HorizontalAlignment.RIGHT
 
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+        val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+        val percentStyle = workbook.createCellStyle()
+        percentStyle.cloneStyleFrom(styleCommon)
+        percentStyle.dataFormat = percentFormat
+
         if (dataExport.data?.isNotEmpty() == true) {
             var rowProductIndex = rowNumber
             var rowShippingIndex = rowNumber
@@ -568,14 +587,13 @@ class ExternalQualityReportService(
                         setCellValue(dataRow, 0, styleCommon, productReport.productShortcutName)
                         setCellValue(dataRow, 1, styleCommon, productReport.productName)
                         setCellValue(dataRow, 2, styleCommon, productReport.mold)
-                        setCellValue(dataRow, 3, numberStyle, NumberHelper.formatNumber(productReport.pcsSh))
-                        setCellValue(dataRow, 4, styleCommon, productReport.blockSh.toString())
+                        setCellValueInt(dataRow, 3, numberStyle, productReport.pcsSh, numberFormat)
+                        setCellValueInt(dataRow, 4, styleCommon, productReport.blockSh, numberFormat)
                         setCellValue(dataRow, 5, styleCommon, productReport.productLine)
                         setCellValue(dataRow, 6, styleCommon, productReport.snapMold)
-                        setCellValue(dataRow, 7, styleCommon, productReport.layerCount.toString())
+                        setCellValueInt(dataRow, 7, styleCommon, productReport.layerCount, numberFormat)
                         setCellValue(dataRow, 8, styleCommon, productReport.tapeCommon)
-                        val completionRate = if (productReport.completionRate?.toString().isNullOrEmpty()) "" else "${productReport.completionRate}%"
-                        setCellValue( dataRow, 9, styleCommon, completionRate)
+                        setCellValuePercent( dataRow, 9, percentStyle, productReport.completionRate, percentFormat)
                     }
                     rowProductIndex++
                 }
@@ -584,8 +602,7 @@ class ExternalQualityReportService(
             for (productReport in dataExport.data!!) {
                 for (shippingData in productReport.shippingData) {
                     val dataRow = sheet.getRow(rowShippingIndex) ?: sheet.createRow(rowShippingIndex)
-                    val value = if (shippingData.value?.toIntOrNull() == null) shippingData.value else NumberHelper.formatNumber(shippingData.value?.toInt())
-                    ExcelHelper.setCellValue(dataRow, 11, styleCommon, value)
+                    ExcelHelper.setCellValueInt(dataRow, 11, styleCommon, shippingData.value?.toIntOrNull(), numberFormat)
                     rowShippingIndex++
                 }
             }
@@ -615,10 +632,10 @@ class ExternalQualityReportService(
                 for (reportData in productReport.details) {
                     val dataRow = sheet.getRow(rowReportIndex) ?: sheet.createRow(rowReportIndex)
                     ExcelHelper.setCellValue(dataRow, 12, styleCommon, reportData.title)
-                    ExcelHelper.setCellValue(dataRow, 13, numberStyle, NumberHelper.formatNumber(reportData.inventory))
+                    ExcelHelper.setCellValueInt(dataRow, 13, numberStyle, reportData.inventory, numberFormat)
                     headerCol=14
                     for(col in reportData.quantityByCalendars){
-                        ExcelHelper.setCellValue(dataRow, headerCol, numberStyle, NumberHelper.formatNumber(col.value?.toIntOrNull()))
+                        ExcelHelper.setCellValueInt(dataRow, headerCol, numberStyle, col.value?.toIntOrNull(), numberFormat)
                         headerCol++
                     }
 

@@ -512,6 +512,8 @@ class QuantityReportService(
         val numberStyle = workbook.createCellStyle()
         numberStyle.cloneStyleFrom(style)
         numberStyle.alignment = HorizontalAlignment.RIGHT
+        val dataFormat = workbook.createDataFormat()
+        numberStyle.dataFormat = dataFormat.getFormat("#,##0")
 
         var rowIndex = rowNumber
 

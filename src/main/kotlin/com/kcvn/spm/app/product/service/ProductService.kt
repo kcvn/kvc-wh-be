@@ -84,6 +84,7 @@ class ProductService(
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportProductTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
 
         if (!productMapping.data.isNullOrEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
@@ -141,7 +142,12 @@ class ProductService(
                 ExcelHelper.setCellValue(dataRow, 0, style, item.name?.substring((if (item.name!!.length < 7) 0 else item.name!!.length - 7), item.name!!.length))
                 ExcelHelper.setCellValue(dataRow, 1, style, item.name)
                 ExcelHelper.setCellValue(dataRow, 2, style, item.exportType)
-                ExcelHelper.setCellValue(dataRow, 3, numberStyle, sizeFormat)
+                if (size?.toIntOrNull() == null) {
+                    ExcelHelper.setCellValue(dataRow, 3, numberStyle, size)
+                } else {
+                    ExcelHelper.setCellValueInt(dataRow, 3, numberStyle, size.toIntOrNull(), numberFormat)
+                }
+
                 ExcelHelper.setCellValue(dataRow, 4, style, item.frame_1)
                 ExcelHelper.setCellValue(dataRow, 5, style, item.frame_2)
                 ExcelHelper.setCellValue(dataRow, 6, style, item.mold)
@@ -153,7 +159,7 @@ class ProductService(
                     val layerValues = JsonConvert.deserialize<List<LayerImportProductModel>>(item.productLayerDetail!!, type).sortedBy { x -> x.layerCode }
                     for (layer in layers) {
                         val cellValue = layerValues.find { x -> x.layerCode?.toIntOrNull() == layer }
-                        ExcelHelper.setCellValue(dataRow, colIndex, style, cellValue?.value?.toString())
+                        ExcelHelper.setCellValueInt(dataRow, colIndex, style, cellValue?.value, numberFormat)
                         colIndex++
                     }
                 }
@@ -161,13 +167,13 @@ class ProductService(
                 ExcelHelper.setCellValue(dataRow, colIndex, style, item.srNosr)
                 colIndex++
 
-                ExcelHelper.setCellValue(dataRow, colIndex, numberStyle, NumberHelper.formatNumber(item.pcsSh))
+                ExcelHelper.setCellValueInt(dataRow, colIndex, numberStyle, item.pcsSh, numberFormat)
                 colIndex++
 
-                ExcelHelper.setCellValue(dataRow, colIndex, style, item.shBlock?.toString() ?: "")
+                ExcelHelper.setCellValueInt(dataRow, colIndex, style, item.shBlock, numberFormat)
                 colIndex++
 
-                ExcelHelper.setCellValue(dataRow, colIndex, style, item.layerCount?.toString() ?: "")
+                ExcelHelper.setCellValueInt(dataRow, colIndex, style, item.layerCount, numberFormat)
                 colIndex++
 
                 ExcelHelper.setCellValue(dataRow, colIndex, style, item.process?.toString() ?: "")
@@ -184,8 +190,8 @@ class ProductService(
 
                 if (!productMapping.columns.isNullOrEmpty()) {
                     for (col in productMapping.columns!!) {
-                        val cellValue = item.lstProcess.find { x -> x.key == col.key }
-                        ExcelHelper.setCellValue(dataRow, colIndex, style, cellValue?.value ?: "0")
+                        val cellValue = item.lstProcess.find { x -> x.key == col.key }?.value?.toIntOrNull() ?: 0
+                        ExcelHelper.setCellValueInt(dataRow, colIndex, style, cellValue, numberFormat)
                         colIndex++
                     }
                 }

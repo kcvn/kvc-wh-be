@@ -113,6 +113,8 @@ class OrderService(
         numberStyle.cloneStyleFrom(style)
         numberStyle.alignment = HorizontalAlignment.RIGHT
 
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
         val headerStyle = dataRow.getCell(0).cellStyle
 
         if (listOrderResponse.columns.isNotEmpty()) {
@@ -131,11 +133,11 @@ class OrderService(
                 val row: Row = sheet.createRow(rowNumberFill++)
                 ExcelHelper.setCellValue(row, 0, style, item.productShortcutName)
                 ExcelHelper.setCellValue(row, 1, style, item.productName)
-                ExcelHelper.setCellValue(row, 2, numberStyle, NumberHelper.formatNumber(item.quantity))
+                ExcelHelper.setCellValueInt(row, 2, numberStyle, item.quantity, numberFormat)
                 ExcelHelper.setCellValue(row, 3, style, item.frame_1)
-                ExcelHelper.setCellValue(row, 4, style, item.layerCount?.toString())
-                ExcelHelper.setCellValue(row, 5, style, item.pcsSh?.toString())
-                ExcelHelper.setCellValue(row, 6, style, item.shBlock?.toString())
+                ExcelHelper.setCellValueInt(row, 4, style, item.layerCount, numberFormat)
+                ExcelHelper.setCellValueInt(row, 5, style, item.pcsSh, numberFormat)
+                ExcelHelper.setCellValueInt(row, 6, style, item.shBlock, numberFormat)
                 ExcelHelper.setCellValue(row, 7, style, item.srNosr)
                 ExcelHelper.setCellValue(row, 8, style, item.version)
 
@@ -145,7 +147,7 @@ class OrderService(
                         val orderDetail = item.quantityByCalendars?.find { it.key == col.key }
                         val color = if (orderDetail?.isHasDifferent == true) Color.PINK else null
                         val value = NumberHelper.formatNumber(orderDetail?.value?.toIntOrNull())
-                        ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, numberStyle, value, col.isHoliday, color= color)
+                        ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, numberStyle, value, col.isHoliday, color= color, isNumberFormat = true)
                         colIndex++
                     }
                 }

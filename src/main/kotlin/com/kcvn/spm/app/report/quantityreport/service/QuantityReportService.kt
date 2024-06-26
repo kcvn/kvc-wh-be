@@ -499,6 +499,7 @@ class QuantityReportService(
     fun setCellHeader(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?) {
         row.createCell(colIndex).setCellValue(value)
         row.getCell(colIndex).cellStyle = style
+        style.wrapText = true
     }
 
     private fun generateExcelRowPlan(

@@ -7,7 +7,6 @@ import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.constants.ProcessUnit
 import com.kcvn.spm.common.helper.DateTimeHelper
 import com.kcvn.spm.common.helper.ExcelHelper
-import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
@@ -153,6 +152,8 @@ class WorkResultService(
             numberStyle.cloneStyleFrom(style)
             numberStyle.alignment = HorizontalAlignment.RIGHT
 
+            val numberFormat = workBook.createDataFormat().getFormat("#,##0")
+
             var rowNumber = 2
             for (item in workResultMapping.data!!) {
                 val dataRow: Row = ExcelHelper.createRow(sheet, rowNumber)
@@ -173,12 +174,12 @@ class WorkResultService(
                 ExcelHelper.setCellValue(dataRow, 13, style, "")
                 ExcelHelper.setCellValue(dataRow, 14, style, item.code)
                 ExcelHelper.setCellValue(dataRow, 15, style, item.layerCode)
-                ExcelHelper.setCellValue(dataRow, 16, numberStyle, NumberHelper.formatNumber(item.total))
-                ExcelHelper.setCellValue(dataRow, 17, numberStyle, NumberHelper.formatNumber(item.totalTapeQuantity))
-                ExcelHelper.setCellValue(dataRow, 18, numberStyle, NumberHelper.formatNumber(item.totalSheetQuantity))
-                ExcelHelper.setCellValue(dataRow, 19, numberStyle, NumberHelper.formatNumber(item.goodItemQuantity))
-                ExcelHelper.setCellValue(dataRow, 20, numberStyle, NumberHelper.formatNumber(item.goodTapeQuantity))
-                ExcelHelper.setCellValue(dataRow, 21, numberStyle, NumberHelper.formatNumber(item.goodSheetQuantity))
+                ExcelHelper.setCellValueInt(dataRow, 16, numberStyle, item.total, numberFormat)
+                ExcelHelper.setCellValueInt(dataRow, 17, numberStyle, item.totalTapeQuantity, numberFormat)
+                ExcelHelper.setCellValueInt(dataRow, 18, numberStyle, item.totalSheetQuantity, numberFormat)
+                ExcelHelper.setCellValueInt(dataRow, 19, numberStyle, item.goodItemQuantity, numberFormat)
+                ExcelHelper.setCellValueInt(dataRow, 20, numberStyle, item.goodTapeQuantity, numberFormat)
+                ExcelHelper.setCellValueInt(dataRow, 21, numberStyle, item.goodSheetQuantity, numberFormat)
                 ExcelHelper.setCellValue(dataRow, 22, style, item.performance)
                 ExcelHelper.setCellValue(dataRow, 23, style, "")
                 ExcelHelper.setCellValue(dataRow, 24, style, item.departmentCode)

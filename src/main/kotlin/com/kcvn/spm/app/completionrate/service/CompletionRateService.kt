@@ -216,11 +216,18 @@ class CompletionRateService(
 
         if (products.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+
+            val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+            val percentStyle = workbook.createCellStyle()
+            percentStyle.cloneStyleFrom(style)
+            percentStyle.dataFormat = percentFormat
+
             var rowNumber = 1
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 ExcelHelper.setCellValue(dataRow, 0, style, item.productName)
-                ExcelHelper.setCellValue(dataRow, 1, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValuePercent(dataRow, 1, percentStyle, item.rate, percentFormat)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -469,6 +476,11 @@ class CompletionRateService(
 
         if (products.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+            val percentStyle = workbook.createCellStyle()
+            percentStyle.cloneStyleFrom(style)
+            percentStyle.dataFormat = percentFormat
             var rowNumber = 1
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
@@ -476,7 +488,7 @@ class CompletionRateService(
                 ExcelHelper.setCellValue(dataRow, 1, style, item.processName)
                 ExcelHelper.setCellValue(dataRow, 2, style, item.processNameJp)
                 ExcelHelper.setCellValue(dataRow, 3, style, item.layerCode)
-                ExcelHelper.setCellValue(dataRow, 4, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValuePercent(dataRow, 4, percentStyle, item.rate, percentFormat)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -954,6 +966,11 @@ class CompletionRateService(
 
         if (processProducts.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+            val percentStyle = workbook.createCellStyle()
+            percentStyle.cloneStyleFrom(style)
+            percentStyle.dataFormat = percentFormat
             var rowNumber = 1
             for (item in processProducts.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
@@ -962,7 +979,7 @@ class CompletionRateService(
                 ExcelHelper.setCellValue(dataRow, 2, style, item.processName)
                 ExcelHelper.setCellValue(dataRow, 3, style, item.processNameJp)
                 ExcelHelper.setCellValue(dataRow, 4, style, item.layerCode)
-                ExcelHelper.setCellValue(dataRow, 5, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValuePercent(dataRow, 5, percentStyle, item.rate, percentFormat)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

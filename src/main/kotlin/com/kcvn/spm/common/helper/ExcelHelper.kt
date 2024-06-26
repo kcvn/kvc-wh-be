@@ -18,6 +18,7 @@ import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
@@ -88,11 +89,22 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle.dataFormat = format
         }
 
-        fun setCellValueDecimal(row: Row, colIndex: Int, styleTemplate: CellStyle, value: BigDecimal?, format: Short) {
+        fun setCellValueDouble(row: Row, colIndex: Int, styleTemplate: CellStyle, value: Double?, format: Short) {
             if (value == null) {
                 row.createCell(colIndex).setCellValue("")
             } else {
                 row.createCell(colIndex).setCellValue(value.toDouble())
+            }
+            row.getCell(colIndex).cellStyle = styleTemplate
+            row.getCell(colIndex).cellStyle.dataFormat = format
+        }
+
+        fun setCellValuePercent(row: Row, colIndex: Int, styleTemplate: CellStyle, value: BigDecimal?, format: Short) {
+            if (value == null) {
+                row.createCell(colIndex).setCellValue("")
+            } else {
+                val cellValue = value.divide(BigDecimal(100), 4, RoundingMode.HALF_UP).toDouble()
+                row.createCell(colIndex).setCellValue(cellValue)
             }
             row.getCell(colIndex).cellStyle = styleTemplate
             row.getCell(colIndex).cellStyle.dataFormat = format

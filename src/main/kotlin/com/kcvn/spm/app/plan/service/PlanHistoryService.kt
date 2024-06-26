@@ -86,7 +86,7 @@ class PlanHistoryService(
                 file.isFile && (file.name.endsWith(".xls")
                     || file.name.endsWith(".xlsx")) && (request.fileName.isEmpty()
                     || file.name.contains(request.fileName, ignoreCase = true))
-            }?.sortedByDescending { it.lastModified() }
+            }?.filter { it.name != "default.xlsx" }?.sortedByDescending { it.lastModified() }
 
             excelFiles?.forEach { file ->
                 val fileNameParts = file.name.split("_")

@@ -212,6 +212,7 @@ class CreatePlanService(
                         val eqConfigs = equipmentByProducts.filter { x -> x.grpProcess == grp }
                         if (eqConfigs.isEmpty()) {
                             if (grp == "21800") continue //Tháo khung
+                            if (grp == "23400") continue
                             if (grp == "21500" && (product!!.frame_1 == Frame1.SWR || product.frame_1 == Frame1.ML)) continue //Tháo khung CSP
                             errors.add(CommonUtils.getMessage("validate.plan.processGroupIsNotEquipmentConfig", arrayOf(grp)))
                         }

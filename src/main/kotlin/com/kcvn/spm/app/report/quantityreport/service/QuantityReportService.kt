@@ -507,7 +507,8 @@ class QuantityReportService(
         rowNumber: Int,
         style: CellStyle,
         data: QuantityReportModel,
-        columns: List<KeyValueResponse>
+        columns: List<KeyValueResponse>,
+        isLineReport: Boolean = false
     ): Int {
         val numberStyle = workbook.createCellStyle()
         numberStyle.cloneStyleFrom(style)
@@ -518,10 +519,13 @@ class QuantityReportService(
         var rowIndex = rowNumber
 
         val rowPlan = sheet.getRow(rowIndex) ?: sheet.createRow(rowIndex)
-        ExcelHelper.setCellValue(rowPlan, 0, style, data.productName)
-        val month = data.monthNumber?.toString() ?: ""
-        val year = data.yearNumber?.toString() ?: ""
-        ExcelHelper.setCellValue(rowPlan, 1, style, if (month.isEmpty() && year.isEmpty()) "" else "$month/$year")
+        if(!isLineReport){
+            ExcelHelper.setCellValue(rowPlan, 0, style, data.productName)
+            val month = data.monthNumber?.toString() ?: ""
+            val year = data.yearNumber?.toString() ?: ""
+            ExcelHelper.setCellValue(rowPlan, 1, style, if (month.isEmpty() && year.isEmpty()) "" else "$month/$year")
+        }
+
         ExcelHelper.setCellValue(rowPlan, 2, style, data.orderDateFromTo)
         var colIndex = 3
         for (col in columns) {
@@ -590,7 +594,7 @@ class QuantityReportService(
             rowNumber++
             for(report in productLineResponse){
                 if (columns != null) {
-                    rowNumber = generateExcelRowPlan(workbook, sheet, rowNumber, style, report,columns)
+                    rowNumber = generateExcelRowPlan(workbook, sheet, rowNumber, style, report,columns,isLineReport = true)
                 }
             }
         }

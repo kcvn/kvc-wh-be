@@ -562,7 +562,7 @@ class QuantityReportService(
                     }.toMutableList()
 
                 val newQuantityReportModel = QuantityReportModel(
-                    productName = productLine,
+                    orderDateFromTo = productLine,
                     lstProcess = summedResponses
                 )
 

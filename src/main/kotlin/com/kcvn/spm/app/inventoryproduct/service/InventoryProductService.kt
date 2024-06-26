@@ -10,7 +10,6 @@ import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.DateTimeHelper.Companion.convertOffSetDateTimeUtc7ToString
 import com.kcvn.spm.common.helper.ExcelHelper
-import com.kcvn.spm.common.helper.NumberHelper
 import com.kcvn.spm.common.helper.StringHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -481,6 +480,8 @@ class InventoryProductService(
             numberStyle.cloneStyleFrom(style)
             numberStyle.alignment = HorizontalAlignment.RIGHT
 
+            val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
             var rowNumber = 1
             for (item in data) {
                 val dataRow: Row = ExcelHelper.createRow(sheet, rowNumber)
@@ -498,15 +499,15 @@ class InventoryProductService(
                 ExcelHelper.setCellValue(dataRow, 8, style, item.tapeLotNo)
                 ExcelHelper.setCellValue(dataRow, 9, style, item.processingDirective?.toString() ?: "")
                 ExcelHelper.setCellValue(dataRow, 10, style, item.productName)
-                ExcelHelper.setCellValue(dataRow, 11, numberStyle, NumberHelper.formatNumber(item.piecesPerSheet))
+                ExcelHelper.setCellValueInt(dataRow, 11, numberStyle, item.piecesPerSheet, numberFormat)
                 ExcelHelper.setCellValue(dataRow, 12, style, item.orderCode)
                 ExcelHelper.setCellValue(dataRow, 13, style, item.productionAreaName)
-                ExcelHelper.setCellValue(dataRow, 14, numberStyle, NumberHelper.formatNumber(item.processCount))
-                ExcelHelper.setCellValue(dataRow, 15, numberStyle, NumberHelper.formatNumber(item.productQuantity))
-                ExcelHelper.setCellValue(dataRow, 16, numberStyle, NumberHelper.formatNumber(item.sheetQuantity))
+                ExcelHelper.setCellValueInt(dataRow, 14, numberStyle, item.processCount, numberFormat)
+                ExcelHelper.setCellValueInt(dataRow, 15, numberStyle, item.productQuantity, numberFormat)
+                ExcelHelper.setCellValueInt(dataRow, 16, numberStyle, item.sheetQuantity, numberFormat)
                 ExcelHelper.setCellValue(dataRow, 17, style, item.seidenRepNumber?.toString() ?: "")
-                ExcelHelper.setCellValue(dataRow, 18, numberStyle, NumberHelper.formatNumber(item.successQuantity))
-                ExcelHelper.setCellValue(dataRow, 19, numberStyle, NumberHelper.formatNumber(item.ins_30DayQuantity))
+                ExcelHelper.setCellValueInt(dataRow, 18, numberStyle, item.successQuantity, numberFormat)
+                ExcelHelper.setCellValueInt(dataRow, 19, numberStyle, item.ins_30DayQuantity, numberFormat)
                 rowNumber++
             }
         }

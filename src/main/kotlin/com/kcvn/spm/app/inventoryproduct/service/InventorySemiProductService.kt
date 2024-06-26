@@ -68,6 +68,13 @@ class InventorySemiProductService(
         numberStyle.cloneStyleFrom(style)
         numberStyle.alignment = HorizontalAlignment.RIGHT
 
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+        val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+        val percentStyle = workbook.createCellStyle()
+        percentStyle.cloneStyleFrom(style)
+        percentStyle.dataFormat = percentFormat
+
         var rowNumber = 1
 
         for (item in data) {
@@ -79,13 +86,13 @@ class InventorySemiProductService(
             ExcelHelper.setCellValue(dataRow, 0, style, invDate)
             ExcelHelper.setCellValue(dataRow, 1, style, item.productName)
             ExcelHelper.setCellValue(dataRow, 2, style, item.tapeLotNo)
-            ExcelHelper.setCellValue(dataRow, 3, style, if (item.completionRate != null) "${item.completionRate}%" else "")
-            ExcelHelper.setCellValue(dataRow, 4, style, NumberHelper.formatNumber(item.blockSh))
-            ExcelHelper.setCellValue(dataRow, 5, numberStyle, NumberHelper.formatNumber(item.setQuantity))
-            ExcelHelper.setCellValue(dataRow, 6, numberStyle, NumberHelper.formatNumber(item.blockQuantity))
-            ExcelHelper.setCellValue(dataRow, 7, numberStyle, NumberHelper.formatNumber(item.sumBlockQuantity))
-            ExcelHelper.setCellValue(dataRow, 8, numberStyle, NumberHelper.formatNumber(item.ngBlockQuantity))
-            ExcelHelper.setCellValue(dataRow, 9, numberStyle, NumberHelper.formatNumber(item.successBlockQuantity))
+            ExcelHelper.setCellValuePercent(dataRow, 3, percentStyle, item.completionRate, percentFormat)
+            ExcelHelper.setCellValueInt(dataRow, 4, style, item.blockSh, numberFormat)
+            ExcelHelper.setCellValueInt(dataRow, 5, numberStyle, item.setQuantity, numberFormat)
+            ExcelHelper.setCellValueInt(dataRow, 6, numberStyle, item.blockQuantity, numberFormat)
+            ExcelHelper.setCellValueInt(dataRow, 7, numberStyle, item.sumBlockQuantity, numberFormat)
+            ExcelHelper.setCellValueInt(dataRow, 8, numberStyle, item.ngBlockQuantity, numberFormat)
+            ExcelHelper.setCellValueInt(dataRow, 9, numberStyle, item.successBlockQuantity, numberFormat)
             rowNumber++
         }
 

@@ -216,11 +216,18 @@ class CompletionRateService(
 
         if (products.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+
+            val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+            val percentStyle = workbook.createCellStyle()
+            percentStyle.cloneStyleFrom(style)
+            percentStyle.dataFormat = percentFormat
+
             var rowNumber = 1
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 ExcelHelper.setCellValue(dataRow, 0, style, item.productName)
-                ExcelHelper.setCellValue(dataRow, 1, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValuePercent(dataRow, 1, percentStyle, item.rate, percentFormat)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -313,11 +320,6 @@ class CompletionRateService(
             }
 
             if (productExist == null) {
-//                if (convertEffectiveDate != null) {
-//                    if (convertEffectiveDate < currentDate) {
-//                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
-//                    }
-//                }
                 if (name.length != 12) {
                     errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.product.key"))
                 }
@@ -368,7 +370,25 @@ class CompletionRateService(
                                         count++
                                     }
                                     else{
-                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
+                                        val exceptCompletionRateProduct = productExists.find { x -> (x.productName == name && x.expirationDate == null) }
+
+                                        if(exceptCompletionRateProduct!=null && exceptCompletionRateProduct.effectiveDate?.toLocalDate()!! < convertEffectiveDate.toLocalDate()){
+                                            val completionRateProduct = CompletionRateProduct(
+                                                productName = name,
+                                                rate = rate,
+                                                effectiveDate = effectiveDate,
+                                                expirationDate = null
+                                            )
+                                            exceptCompletionRateProduct.expirationDate = effectiveDate.minusDays(1)
+                                            completionRateProductRepository.add(completionRateProduct)
+                                            completionRateProductRepository.update(exceptCompletionRateProduct)
+                                            count++
+                                        }
+                                        else{
+
+                                            errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
+
+                                        }
                                     }
                                 }
                                 else{
@@ -456,6 +476,11 @@ class CompletionRateService(
 
         if (products.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+            val percentStyle = workbook.createCellStyle()
+            percentStyle.cloneStyleFrom(style)
+            percentStyle.dataFormat = percentFormat
             var rowNumber = 1
             for (item in products.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
@@ -463,7 +488,7 @@ class CompletionRateService(
                 ExcelHelper.setCellValue(dataRow, 1, style, item.processName)
                 ExcelHelper.setCellValue(dataRow, 2, style, item.processNameJp)
                 ExcelHelper.setCellValue(dataRow, 3, style, item.layerCode)
-                ExcelHelper.setCellValue(dataRow, 4, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValuePercent(dataRow, 4, percentStyle, item.rate, percentFormat)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -561,9 +586,6 @@ class CompletionRateService(
             if (processExist == null) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processCode"))
             }
-//            if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
-//                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
-//            }
             if (key.length != 7 && key.length != 8 ) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process.product"))
             }
@@ -615,8 +637,26 @@ class CompletionRateService(
                                         completionRateProcessRepository.add(completionRateProduct)
                                         count++
                                     }else{
-                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
-                                    }
+                                        val exceptCompletionRateProcess = productExists.find { x -> (x.key == name && x.expirationDate == null) }
+
+                                        if(exceptCompletionRateProcess!=null && exceptCompletionRateProcess.effectiveDate?.toLocalDate()!! < convertEffectiveDate.toLocalDate()){
+                                            val completionRateProcess = CompletionRateProcess(
+                                                key = key,
+                                                rate = rate,
+                                                processCode = key.take(6),
+                                                layerCode = StringHelper.intToStringD2(key.substring(6, 7)),
+                                                expirationDate = null,
+                                                effectiveDate = effectiveDate
+                                            )
+                                            exceptCompletionRateProcess.expirationDate = effectiveDate.minusDays(1)
+                                            completionRateProcessRepository.add(completionRateProcess)
+                                            completionRateProcessRepository.update(exceptCompletionRateProcess)
+                                            count++
+                                        }
+                                        else{
+                                            errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
+
+                                        }                                    }
 
                                 } else {
                                     val completionRateProduct = CompletionRateProcess(
@@ -767,9 +807,6 @@ class CompletionRateService(
             if (processExist == null) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.processCode"))
             }
-//            if (productExist == null && convertEffectiveDate != null && convertEffectiveDate < currentDate) {
-//                errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
-//            }
 
             if (key.length != 14 && key.length != 15) {
                 errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.key.process"))
@@ -823,7 +860,27 @@ class CompletionRateService(
                                         completionRateProcessProductRepository.add(completionRateProcessProduct)
                                         count++
                                     }else{
-                                        errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
+                                        val exceptCompletionRateProcessProduct = productExists.find { x -> (x.key == name && x.expirationDate == null) }
+
+                                        if(exceptCompletionRateProcessProduct!=null && exceptCompletionRateProcessProduct.effectiveDate?.toLocalDate()!! < convertEffectiveDate.toLocalDate()){
+                                            val completionRateProcessProduct = CompletionRateProcessProduct(
+                                                key = key,
+                                                rate = rate,
+                                                productNameShortcut = key.substring(6, 13),
+                                                processCode = key.take(6),
+                                                layerCode = StringHelper.intToStringD2(key.substring(13, 14)),
+                                                expirationDate = null,
+                                                effectiveDate = effectiveDate
+                                            )
+                                            exceptCompletionRateProcessProduct.expirationDate = effectiveDate.minusDays(1)
+                                            completionRateProcessProductRepository.add(completionRateProcessProduct)
+                                            completionRateProcessProductRepository.update(exceptCompletionRateProcessProduct)
+                                            count++
+                                        }
+                                        else{
+                                            errorMessages.add(CommonUtils.getMessage("validate.excel.completion.rate.exDate"))
+
+                                        }
                                     }
 
                                 } else {
@@ -909,6 +966,11 @@ class CompletionRateService(
 
         if (processProducts.first.isNotEmpty()) {
             val style = ExcelHelper.getCellStyleCommon(workbook)
+            val percentFormat = workbook.createDataFormat().getFormat("0.00%")
+
+            val percentStyle = workbook.createCellStyle()
+            percentStyle.cloneStyleFrom(style)
+            percentStyle.dataFormat = percentFormat
             var rowNumber = 1
             for (item in processProducts.first) {
                 val dataRow: Row = sheet.createRow(rowNumber++)
@@ -917,7 +979,7 @@ class CompletionRateService(
                 ExcelHelper.setCellValue(dataRow, 2, style, item.processName)
                 ExcelHelper.setCellValue(dataRow, 3, style, item.processNameJp)
                 ExcelHelper.setCellValue(dataRow, 4, style, item.layerCode)
-                ExcelHelper.setCellValue(dataRow, 5, style, "${item.rate.toString()}%")
+                ExcelHelper.setCellValuePercent(dataRow, 5, percentStyle, item.rate, percentFormat)
             }
         }
         val byteArrayOutputStream = ByteArrayOutputStream()

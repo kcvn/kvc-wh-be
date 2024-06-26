@@ -17,6 +17,8 @@ import org.apache.poi.ss.usermodel.VerticalAlignment
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
@@ -76,6 +78,38 @@ class ExcelHelper {
             row.createCell(colIndex).setCellValue(value)
             row.getCell(colIndex).cellStyle = styleTemplate
         }
+
+        fun setCellValueInt(row: Row, colIndex: Int, styleTemplate: CellStyle, value: Int?, format: Short) {
+            if (value == null) {
+                row.createCell(colIndex).setCellValue("")
+            } else {
+                row.createCell(colIndex).setCellValue(value.toDouble())
+            }
+            row.getCell(colIndex).cellStyle = styleTemplate
+            row.getCell(colIndex).cellStyle.dataFormat = format
+        }
+
+        fun setCellValueDouble(row: Row, colIndex: Int, styleTemplate: CellStyle, value: Double?, format: Short) {
+            if (value == null) {
+                row.createCell(colIndex).setCellValue("")
+            } else {
+                row.createCell(colIndex).setCellValue(value.toDouble())
+            }
+            row.getCell(colIndex).cellStyle = styleTemplate
+            row.getCell(colIndex).cellStyle.dataFormat = format
+        }
+
+        fun setCellValuePercent(row: Row, colIndex: Int, styleTemplate: CellStyle, value: BigDecimal?, format: Short) {
+            if (value == null) {
+                row.createCell(colIndex).setCellValue("")
+            } else {
+                val cellValue = value.divide(BigDecimal(100), 4, RoundingMode.HALF_UP).toDouble()
+                row.createCell(colIndex).setCellValue(cellValue)
+            }
+            row.getCell(colIndex).cellStyle = styleTemplate
+            row.getCell(colIndex).cellStyle.dataFormat = format
+        }
+
         fun createErrorCellStyle(workbook: Workbook, styleTemplate: CellStyle): CellStyle {
             val errorCellStyle = workbook.createCellStyle()
             errorCellStyle.cloneStyleFrom(styleTemplate)
@@ -95,7 +129,7 @@ class ExcelHelper {
             row.getCell(colIndex).cellStyle = styleTemplate
         }
 
-        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false,isNumberFormat: Boolean = false,isBold: Boolean = false,isNotBold: Boolean = false) {
+        fun setCellValueWithCalendar(workbook: Workbook, row: Row, colIndex: Int, style: CellStyle, value: String?, isHoliday: Boolean = false, color: String? = null, isReportDetails: Boolean = false,isNumberFormat: Boolean = false,isBold: Boolean = false,isNotBold: Boolean = false,isWrapText:Boolean = true) {
             row.createCell(colIndex).setCellValue(value)
             val cellStyle = workbook.createCellStyle()
             cellStyle.cloneStyleFrom(style)
@@ -109,7 +143,9 @@ class ExcelHelper {
                 cellStyle.borderTop = BorderStyle.THIN
                 cellStyle.borderBottom = BorderStyle.THIN
             }
-
+            if(isWrapText){
+                cellStyle.wrapText = true
+            }
             if (isHoliday) {
                 cellStyle.fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
                 cellStyle.fillPattern = FillPatternType.SOLID_FOREGROUND
@@ -171,12 +207,14 @@ class ExcelHelper {
             isNumberFormat: Boolean = false,
             isAlignLeft: Boolean = false,
             isNotBold: Boolean = false,
-            isAlignRight: Boolean = false
+            isAlignRight: Boolean = false,
+
+            isWrapText: Boolean = true
         ) {
             val style = workbook.createCellStyle()
             style.cloneStyleFrom(styleTemplate)
             row.createCell(colIndex).setCellValue(value)
-
+            if(isWrapText) style.wrapText = true
             if (isBorderLeft) style.borderLeft = BorderStyle.THIN else style.borderLeft = BorderStyle.NONE
             if (isBorderRight) style.borderRight = BorderStyle.THIN else style.borderRight = BorderStyle.NONE
             if (isBorderTop) style.borderTop = BorderStyle.THIN else style.borderTop = BorderStyle.NONE

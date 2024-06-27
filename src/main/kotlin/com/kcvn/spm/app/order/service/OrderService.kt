@@ -146,7 +146,7 @@ class OrderService(
                     for (col in listOrderResponse.columns) {
                         val orderDetail = item.quantityByCalendars?.find { it.key == col.key }
                         val color = if (orderDetail?.isHasDifferent == true) Color.PINK else null
-                        val value = NumberHelper.formatNumber(orderDetail?.value?.toIntOrNull())
+                        val value = NumberHelper.formatNumber(orderDetail?.value?.toIntOrNull()).replace(",", "")
                         ExcelHelper.setCellValueWithCalendar(workbook, row, colIndex, numberStyle, value, col.isHoliday, color= color, isNumberFormat = true)
                         colIndex++
                     }

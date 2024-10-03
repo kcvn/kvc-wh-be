@@ -54,4 +54,6 @@ class AuthController(
         userService.updatePassword(user.id!!, passwordRequest.password!!)
         return ResponseEntity<MessageResponse>(MessageResponse(CommonUtils.getMessage("action.succeeded")), HttpStatus.OK)
     }
+	
+	
 }

@@ -1,0 +1,31 @@
+services:
+  pd1plansys_db:
+    image: postgres:15.7
+    container_name: pd1plansys_db
+    environment:
+      POSTGRES_USER: pd1plansys
+      POSTGRES_PASSWORD: pd1plansys
+      POSTGRES_DB: postgres
+      TX: Asia/Ho_Chi_Minh
+    ports:
+      - '30039:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  pd1plansys_api:
+    #    image: ghcr.io/kcvn/23-kcvn-spm-be:toan_develop
+    image: 23-kcvn-spm-be:staging
+    container_name: pd1plansys_api
+    ports:
+      - '8443:8080'
+      - '8090:8080'
+    volumes:
+      - ./data_app/planhistory:/app/target/classes/assets/planhistory
+  kcvn_web:
+    #    image: ghcr.io/kcvn/23-kcvn-spm-fe:toan_develop
+    image: 23-kcvn-spm-fe:toan_develop
+    container_name: kcvn_web
+    ports:
+      - '8000:80'
+volumes:
+  db_data:
+  data_app:

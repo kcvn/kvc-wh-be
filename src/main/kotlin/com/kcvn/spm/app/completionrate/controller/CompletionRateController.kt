@@ -45,7 +45,6 @@ class CompletionRateController(
 
     //Product Function
 
-
     @GetMapping("/product/export-excel")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_COMPLETION_RATE.value) || hasRole('ADMIN')")
     fun exportCompletionRateProductExcel(

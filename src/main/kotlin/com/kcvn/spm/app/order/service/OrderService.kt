@@ -155,6 +155,7 @@ class OrderService(
             }
         }
 
+        sheet.createFreezePane(9,1)
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
         val excelBytes = byteArrayOutputStream.toByteArray()

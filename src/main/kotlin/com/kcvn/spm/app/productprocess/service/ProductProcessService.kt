@@ -262,8 +262,8 @@ class ProductProcessService(
 
                 val dataRow: Row = sheet.createRow(rowNumber++)
                 ExcelHelper.setCellValue(dataRow, 0, style, item?.productName)
-                ExcelHelper.setCellValue(dataRow, 1, style, item?.layerCode)
-                ExcelHelper.setCellValue(dataRow, 2, style, item?.processCode)
+                ExcelHelper.setCellValue(dataRow, 1, style, item?.processCode)
+                ExcelHelper.setCellValue(dataRow, 2, style, item?.layerCode)
                 ExcelHelper.setCellValue(dataRow, 3, style, processMaster?.processName)
                 ExcelHelper.setCellValue(dataRow, 4, style, processMaster?.processNameJp)
                 ExcelHelper.setCellValue(dataRow, 5, style, item?.processConvertCode)
@@ -342,18 +342,18 @@ class ProductProcessService(
             else {
                 ""
             }
-            val cellLayerCode = row.getCell(3)
+            val cellLayerCode = row.getCell(2)
             val layerCode = if (cellLayerCode != null && cellLayerCode.cellType == CellType.NUMERIC && cellLayerCode.numericCellValue % 1 == 0.0) {
-                StringHelper.intToStringD2(row.getCell(3).numericCellValue.toInt())
+                StringHelper.intToStringD2(row.getCell(2).numericCellValue.toInt())
             } else if (cellLayerCode != null && cellLayerCode.cellType == CellType.STRING && cellLayerCode.stringCellValue.isNotBlank()) {
-                ExcelHelper.getCellValue(row, 3)
+                ExcelHelper.getCellValue(row, 2)
             } else {
                 ""
             }
             process.productName = ExcelHelper.getCellValue(row, 0)
             process.processCode = processCode
-            process.processName = ExcelHelper.getCellValue(row, 2)
             process.layerCode = layerCode
+            process.processName = ExcelHelper.getCellValue(row, 3)
             process.processConvertCode = ExcelHelper.getCellValue(row, 4)
             val processInventoryCode = if (ExcelHelper.getCellValue(row, 6).isEmpty()) {
                 ""

@@ -25,6 +25,7 @@ import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
+import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
@@ -73,6 +74,7 @@ import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
 import com.kcvn.spm.model.tables.records.InventoryIns_30dayRecord
 import com.kcvn.spm.model.tables.records.InventoryProductRecord
 import com.kcvn.spm.model.tables.records.InventorySemiProductRecord
+import com.kcvn.spm.model.tables.records.LocationsRecord
 import com.kcvn.spm.model.tables.records.OrderDetailRecord
 import com.kcvn.spm.model.tables.records.OrderInfoRecord
 import com.kcvn.spm.model.tables.records.OrderRecord
@@ -133,6 +135,7 @@ val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityDet
 val INVENTORY_INS_30DAY_PKEY: UniqueKey<InventoryIns_30dayRecord> = Internal.createUniqueKey(InventoryIns_30day.INVENTORY_INS_30DAY, DSL.name("inventory_ins_30day_pkey"), arrayOf(InventoryIns_30day.INVENTORY_INS_30DAY.ID), true)
 val INVENTORY_PRODUCT_PKEY: UniqueKey<InventoryProductRecord> = Internal.createUniqueKey(InventoryProduct.INVENTORY_PRODUCT, DSL.name("inventory_product_pkey"), arrayOf(InventoryProduct.INVENTORY_PRODUCT.ID), true)
 val INVENTORY_SEMI_PRODUCT_PKEY: UniqueKey<InventorySemiProductRecord> = Internal.createUniqueKey(InventorySemiProduct.INVENTORY_SEMI_PRODUCT, DSL.name("inventory_semi_product_pkey"), arrayOf(InventorySemiProduct.INVENTORY_SEMI_PRODUCT.ID), true)
+val LOCATIONS_PKEY: UniqueKey<LocationsRecord> = Internal.createUniqueKey(Locations.LOCATIONS, DSL.name("locations_pkey"), arrayOf(Locations.LOCATIONS.ID), true)
 val ORDER_PKEY: UniqueKey<OrderRecord> = Internal.createUniqueKey(Order.ORDER, DSL.name("order_pkey"), arrayOf(Order.ORDER.ID), true)
 val ORDER_DETAIL_PKEY: UniqueKey<OrderDetailRecord> = Internal.createUniqueKey(OrderDetail.ORDER_DETAIL, DSL.name("order_detail_pkey"), arrayOf(OrderDetail.ORDER_DETAIL.ID), true)
 val ORDER_INFO_PKEY: UniqueKey<OrderInfoRecord> = Internal.createUniqueKey(OrderInfo.ORDER_INFO, DSL.name("order_info_pkey"), arrayOf(OrderInfo.ORDER_INFO.ID), true)

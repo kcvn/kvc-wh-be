@@ -25,6 +25,7 @@ import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
 import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
+import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
@@ -177,6 +178,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.inventory_semi_product</code>.
      */
     val INVENTORY_SEMI_PRODUCT: InventorySemiProduct get() = InventorySemiProduct.INVENTORY_SEMI_PRODUCT
+
+    /**
+     * The table <code>public.locations</code>.
+     */
+    val LOCATIONS: Locations get() = Locations.LOCATIONS
 
     /**
      * The table <code>public.order</code>.
@@ -337,6 +343,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         InventoryIns_30day.INVENTORY_INS_30DAY,
         InventoryProduct.INVENTORY_PRODUCT,
         InventorySemiProduct.INVENTORY_SEMI_PRODUCT,
+        Locations.LOCATIONS,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,
         OrderInfo.ORDER_INFO,

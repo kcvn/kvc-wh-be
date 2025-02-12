@@ -23,13 +23,13 @@ class LocationsService(private val locationsRepo: LocationsRepository) {
     }
 
     fun createLocation(request: LocationsRequest): LocationsResponse? {
-        if (locationsRepo.findByName(request.code!!) != null) {
+        if (locationsRepo.findByName(request.locationCode!!) != null) {
             throw BusinessException(CommonUtils.getMessage("location.error.codeTaken"))
         }
 
         val location = Locations(
             null,
-            request.code
+            request.locationCode
         )
         val locationId = locationsRepo.save(location)
         return if (locationId != null) {

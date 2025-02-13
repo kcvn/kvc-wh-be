@@ -23,12 +23,12 @@ class LocationsRepository(private val context: DSLContext) : SortingRepository()
         if (keyword != null) {
             condition = condition.and(LOCATIONS.LOCATION_CODE.containsIgnoreCase(keyword))
         }
-        val roles = context.selectFrom(LOCATIONS).where(condition)
+        val locations = context.selectFrom(LOCATIONS).where(condition)
             .orderBy(getSortFields(pageable.sort, LOCATIONS.CREATED_DATE))
             .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(Locations::class.java)
         val total = context.fetchCount(LOCATIONS, condition)
-        return Pair(roles, total)
+        return Pair(locations, total)
     }
 
     fun save(location: Locations): String? =
@@ -44,7 +44,7 @@ class LocationsRepository(private val context: DSLContext) : SortingRepository()
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "code" -> LOCATIONS.LOCATION_CODE
+            "locationCode" -> LOCATIONS.LOCATION_CODE
             "createdDate" -> LOCATIONS.CREATED_DATE
             else -> LOCATIONS.CREATED_DATE
         }

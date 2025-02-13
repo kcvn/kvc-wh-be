@@ -11,6 +11,8 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.Backlog
+import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
@@ -46,6 +48,7 @@ import com.kcvn.spm.model.tables.ProcessMasterData
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
+import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -108,6 +111,16 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.auth_user_role</code>.
      */
     val AUTH_USER_ROLE: AuthUserRole get() = AuthUserRole.AUTH_USER_ROLE
+
+    /**
+     * The table <code>public.backlog</code>.
+     */
+    val BACKLOG: Backlog get() = Backlog.BACKLOG
+
+    /**
+     * The table <code>public.backlog_history</code>.
+     */
+    val BACKLOG_HISTORY: BacklogHistory get() = BacklogHistory.BACKLOG_HISTORY
 
     /**
      * The table <code>public.calculate_quantity_result</code>.
@@ -285,6 +298,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val PRODUCT_PROCESS: ProductProcess get() = ProductProcess.PRODUCT_PROCESS
 
     /**
+     * The table <code>public.receiving_transactions</code>.
+     */
+    val RECEIVING_TRANSACTIONS: ReceivingTransactions get() = ReceivingTransactions.RECEIVING_TRANSACTIONS
+
+    /**
      * The table <code>public.sync_history</code>.
      */
     val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
@@ -329,6 +347,8 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         AuthUser.AUTH_USER,
         AuthUserClaim.AUTH_USER_CLAIM,
         AuthUserRole.AUTH_USER_ROLE,
+        Backlog.BACKLOG,
+        BacklogHistory.BACKLOG_HISTORY,
         CalculateQuantityResult.CALCULATE_QUANTITY_RESULT,
         CommonCategory.COMMON_CATEGORY,
         CompletionRateProcess.COMPLETION_RATE_PROCESS,
@@ -364,6 +384,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE,
         Product.PRODUCT,
         ProductProcess.PRODUCT_PROCESS,
+        ReceivingTransactions.RECEIVING_TRANSACTIONS,
         SyncHistory.SYNC_HISTORY,
         SystemLock.SYSTEM_LOCK,
         TapeEnRoute.TAPE_EN_ROUTE,

@@ -33,15 +33,15 @@ class LocationsController(private val locationsService: LocationsService) {
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createLocation(@Valid @RequestBody request: LocationsRequest?): ResponseEntity<*> {
-        val role = locationsService.createLocation(request!!)
-        return if (role == null) {
+        val location = locationsService.createLocation(request!!)
+        return if (location == null) {
             ResponseEntity<MessageResponse>(
                 MessageResponse(CommonUtils.getMessage("action.failed")),
                 HttpStatus.BAD_REQUEST
             )
         } else {
             ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("action.succeeded"), role),
+                MessageResponse(CommonUtils.getMessage("action.succeeded"), location),
                 HttpStatus.CREATED
             )
         }

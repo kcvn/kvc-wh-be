@@ -11,6 +11,8 @@ import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
+import com.kcvn.spm.model.tables.Backlog
+import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
@@ -46,6 +48,7 @@ import com.kcvn.spm.model.tables.ProcessMasterData
 import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
+import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -60,6 +63,8 @@ import com.kcvn.spm.model.tables.records.AuthRoleRecord
 import com.kcvn.spm.model.tables.records.AuthUserClaimRecord
 import com.kcvn.spm.model.tables.records.AuthUserRecord
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
+import com.kcvn.spm.model.tables.records.BacklogHistoryRecord
+import com.kcvn.spm.model.tables.records.BacklogRecord
 import com.kcvn.spm.model.tables.records.CalculateQuantityResultRecord
 import com.kcvn.spm.model.tables.records.CommonCategoryRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProcessProductRecord
@@ -95,6 +100,7 @@ import com.kcvn.spm.model.tables.records.ProcessMasterRecord
 import com.kcvn.spm.model.tables.records.ProcessProcedureStructureRecord
 import com.kcvn.spm.model.tables.records.ProductProcessRecord
 import com.kcvn.spm.model.tables.records.ProductRecord
+import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SyncHistoryRecord
 import com.kcvn.spm.model.tables.records.SystemLockRecord
 import com.kcvn.spm.model.tables.records.TapeEnRouteRecord
@@ -121,6 +127,8 @@ val AUTH_ROLE_CLAIM_PKEY: UniqueKey<AuthRoleClaimRecord> = Internal.createUnique
 val AUTH_USER_PKEY: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_pkey"), arrayOf(AuthUser.AUTH_USER.ID), true)
 val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUniqueKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_pkey"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.ID), true)
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
+val BACKLOG_PKEY: UniqueKey<BacklogRecord> = Internal.createUniqueKey(Backlog.BACKLOG, DSL.name("backlog_pkey"), arrayOf(Backlog.BACKLOG.ID), true)
+val BACKLOG_HISTORY_PKEY: UniqueKey<BacklogHistoryRecord> = Internal.createUniqueKey(BacklogHistory.BACKLOG_HISTORY, DSL.name("backlog_history_pkey"), arrayOf(BacklogHistory.BACKLOG_HISTORY.ID), true)
 val CALCULATE_QUANTITY_RESULT_PKEY: UniqueKey<CalculateQuantityResultRecord> = Internal.createUniqueKey(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT, DSL.name("calculate_quantity_result_pkey"), arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
 val COMMON_CATEGORY_PKEY: UniqueKey<CommonCategoryRecord> = Internal.createUniqueKey(CommonCategory.COMMON_CATEGORY, DSL.name("common_category_pkey"), arrayOf(CommonCategory.COMMON_CATEGORY.ID), true)
 val COMPLETION_RATE_PROCESS_PKEY: UniqueKey<CompletionRateProcessRecord> = Internal.createUniqueKey(CompletionRateProcess.COMPLETION_RATE_PROCESS, DSL.name("completion_rate_process_pkey"), arrayOf(CompletionRateProcess.COMPLETION_RATE_PROCESS.ID), true)
@@ -156,6 +164,7 @@ val PROCESS_MASTER_DATA_KEY: UniqueKey<ProcessMasterDataRecord> = Internal.creat
 val PROCESS_PROCEDURE_STRUCTURE_PKEY: UniqueKey<ProcessProcedureStructureRecord> = Internal.createUniqueKey(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE, DSL.name("process_procedure_structure_pkey"), arrayOf(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE.ID), true)
 val PRODUCT_PKEY: UniqueKey<ProductRecord> = Internal.createUniqueKey(Product.PRODUCT, DSL.name("product_pkey"), arrayOf(Product.PRODUCT.ID), true)
 val PRODUCT_PROCESS_PKEY: UniqueKey<ProductProcessRecord> = Internal.createUniqueKey(ProductProcess.PRODUCT_PROCESS, DSL.name("product_process_pkey"), arrayOf(ProductProcess.PRODUCT_PROCESS.ID), true)
+val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)
 val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
 val SYSTEM_LOCK_PKEY: UniqueKey<SystemLockRecord> = Internal.createUniqueKey(SystemLock.SYSTEM_LOCK, DSL.name("system_lock_pkey"), arrayOf(SystemLock.SYSTEM_LOCK.ID), true)
 val TAPE_EN_ROUTE_PKEY: UniqueKey<TapeEnRouteRecord> = Internal.createUniqueKey(TapeEnRoute.TAPE_EN_ROUTE, DSL.name("tape_en_route_pkey"), arrayOf(TapeEnRoute.TAPE_EN_ROUTE.ID), true)

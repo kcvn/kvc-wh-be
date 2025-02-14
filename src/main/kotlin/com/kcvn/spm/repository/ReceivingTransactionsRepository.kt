@@ -8,10 +8,7 @@ import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.SortOrder
 import org.jooq.TableField
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 @Repository
 class ReceivingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
@@ -19,21 +16,14 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
         const val PERMISSION_TYPE = "permission"
     }
 
-    fun updateIsCanceled(data: ReceivingTransactions) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            transactionalContext.update(RECEIVING_TRANSACTIONS)
-                .set(RECEIVING_TRANSACTIONS.IS_CANCELED, true)
-                .set(RECEIVING_TRANSACTIONS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(RECEIVING_TRANSACTIONS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .where(RECEIVING_TRANSACTIONS.LOCATION_CODE.eq(data.locationCode)
-                    .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber))
-                    .and(RECEIVING_TRANSACTIONS.SEQ_NO.eq(data.seqNo))
-                    .and(RECEIVING_TRANSACTIONS.IS_CANCELED.eq(false))
-                )
-                .execute()
-        }
+    fun findRecTrans(locationCode: String, poNumber: String, qty: Int, seqNo: Int): ReceivingTransactions? {
+        return context.selectFrom(RECEIVING_TRANSACTIONS)
+            .where(RECEIVING_TRANSACTIONS.LOCATION_CODE.eq(locationCode)
+                .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
+                .and(RECEIVING_TRANSACTIONS.QTY.eq(qty))
+                .and(RECEIVING_TRANSACTIONS.SEQ_NO.eq(seqNo)))
+            .fetchInto(ReceivingTransactions::class.java)
+            .firstOrNull()
     }
 
     fun findLatestByLocationCodeAndPO(locationCode: String, poNumber: String): ReceivingTransactions? {

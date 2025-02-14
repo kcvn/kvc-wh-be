@@ -1,8 +1,7 @@
-package com.kcvn.spm.app.receivingtransactions.controller
+package com.kcvn.spm.app.transaction.receiving.controller
 
-import com.kcvn.spm.app.receivingtransactions.payload.RecTransRequest
-import com.kcvn.spm.app.receivingtransactions.payload.RecTransRequestWithSeq
-import com.kcvn.spm.app.receivingtransactions.service.ReceivingTransactionsService
+import com.kcvn.spm.app.transaction.receiving.payload.RecTransRequest
+import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
@@ -10,7 +9,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -25,16 +23,6 @@ class ReceivingTransactionsController(private val receivingService: ReceivingTra
         return ResponseEntity<MessageResponse>(
             MessageResponse(CommonUtils.getMessage("action.succeeded")),
             HttpStatus.CREATED
-        )
-    }
-
-    @PutMapping("/update-is-canceled")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
-    fun cancelRecTrans(@Valid @RequestBody request: RecTransRequestWithSeq?): ResponseEntity<*> {
-        receivingService.cancelRecTrans(request!!)
-        return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("update.succeeded")),
-            HttpStatus.OK
         )
     }
 }

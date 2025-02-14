@@ -14,6 +14,7 @@ import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
+import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
@@ -108,6 +109,11 @@ val BACKLOG_HISTORY: BacklogHistory = BacklogHistory.BACKLOG_HISTORY
  * The table <code>public.calculate_quantity_result</code>.
  */
 val CALCULATE_QUANTITY_RESULT: CalculateQuantityResult = CalculateQuantityResult.CALCULATE_QUANTITY_RESULT
+
+/**
+ * The table <code>public.cancel_receiving_transactions</code>.
+ */
+val CANCEL_RECEIVING_TRANSACTIONS: CancelReceivingTransactions = CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS
 
 /**
  * The table <code>public.common_category</code>.

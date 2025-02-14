@@ -1,6 +1,6 @@
-package com.kcvn.spm.app.receivingtransactions.payload
+package com.kcvn.spm.app.cancel.receiving.payload.response
 
-data class RecTransRequestWithSeq(
+data class CancelRecTransResponse(
     var locationCode: String? = null,
     var poNumber: String? = null,
     var qty : Int? = 0,

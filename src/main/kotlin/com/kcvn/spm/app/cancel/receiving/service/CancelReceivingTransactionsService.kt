@@ -25,12 +25,13 @@ class CancelReceivingTransactionsService(
     fun createCancelReceiving(request: CancelRecTransRequest): CancelRecTransResponse? {
         val cancelRec = CancelReceivingTransactions(
             null,
+            "KVC",
             request.locationCode,
             request.poNumber,
             request.qty,
             request.seqNo
         )
-            receivingRepo.findRecTrans(cancelRec.locationCode!!, cancelRec.poNumber!!, cancelRec.qty!!, cancelRec.seqNo!!)
+            receivingRepo.findRecTrans(cancelRec.destLocationCode!!, cancelRec.poNumber!!, cancelRec.qty!!, cancelRec.seqNo!!)
                 ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
         // save cancel receiving transactions
         val cancelRecId = cancelReceivingRepo.save(cancelRec)
@@ -48,7 +49,7 @@ class CancelReceivingTransactionsService(
         backlogHistoryRepo.save(entityBacklogHistory)
         return if (cancelRecId != null) {
             CancelRecTransResponse(
-                cancelRec.locationCode!!,
+                cancelRec.destLocationCode!!,
                 cancelRec.poNumber!!,
                 cancelRec.qty!!,
                 cancelRec.seqNo!!,

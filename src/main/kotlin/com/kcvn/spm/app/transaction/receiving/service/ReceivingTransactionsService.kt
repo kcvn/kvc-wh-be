@@ -23,6 +23,7 @@ class ReceivingTransactionsService(
         list.forEach {
             val recTransaction = ReceivingTransactions(
                 null,
+                "KVC",
                 it.locationCode,
                 it.poNumber,
                 it.qty,

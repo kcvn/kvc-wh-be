@@ -18,7 +18,7 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
 
     fun findRecTrans(locationCode: String, poNumber: String, qty: Int, seqNo: Int): ReceivingTransactions? {
         return context.selectFrom(RECEIVING_TRANSACTIONS)
-            .where(RECEIVING_TRANSACTIONS.LOCATION_CODE.eq(locationCode)
+            .where(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(locationCode)
                 .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
                 .and(RECEIVING_TRANSACTIONS.QTY.eq(qty))
                 .and(RECEIVING_TRANSACTIONS.SEQ_NO.eq(seqNo)))
@@ -27,23 +27,23 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
     }
 
     fun findLatestByLocationCodeAndPO(locationCode: String, poNumber: String): ReceivingTransactions? {
-        return context.selectFrom(RECEIVING_TRANSACTIONS).where(RECEIVING_TRANSACTIONS.LOCATION_CODE.eq(locationCode).and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber)))
+        return context.selectFrom(RECEIVING_TRANSACTIONS).where(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(locationCode).and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber)))
             .orderBy(RECEIVING_TRANSACTIONS.SEQ_NO.sort(SortOrder.DESC))
             .fetchInto(ReceivingTransactions::class.java)
             .firstOrNull()
     }
 
     fun save(rec: ReceivingTransactions) {
-        context.insertInto(RECEIVING_TRANSACTIONS, RECEIVING_TRANSACTIONS.LOCATION_CODE, RECEIVING_TRANSACTIONS.PO_NUMBER,
+        context.insertInto(RECEIVING_TRANSACTIONS, RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE, RECEIVING_TRANSACTIONS.PO_NUMBER,
             RECEIVING_TRANSACTIONS.QTY, RECEIVING_TRANSACTIONS.SEQ_NO, RECEIVING_TRANSACTIONS.CREATED_BY)
-            .values(rec.locationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .execute()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "locationCode" -> RECEIVING_TRANSACTIONS.LOCATION_CODE
+            "locationCode" -> RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE
             "createdDate" -> RECEIVING_TRANSACTIONS.CREATED_DATE
             else -> RECEIVING_TRANSACTIONS.CREATED_DATE
         }

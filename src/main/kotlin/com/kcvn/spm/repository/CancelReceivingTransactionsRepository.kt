@@ -17,16 +17,16 @@ class CancelReceivingTransactionsRepository(private val context: DSLContext) : S
 
     fun save(rec: CancelReceivingTransactions): String? =
         context.insertInto(
-            CANCEL_RECEIVING_TRANSACTIONS, CANCEL_RECEIVING_TRANSACTIONS.LOCATION_CODE, CANCEL_RECEIVING_TRANSACTIONS.PO_NUMBER,
-            CANCEL_RECEIVING_TRANSACTIONS.QTY, CANCEL_RECEIVING_TRANSACTIONS.SEQ_NO, CANCEL_RECEIVING_TRANSACTIONS.CREATED_BY)
-            .values(rec.locationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            CANCEL_RECEIVING_TRANSACTIONS, CANCEL_RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE, CANCEL_RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE,
+            CANCEL_RECEIVING_TRANSACTIONS.PO_NUMBER, CANCEL_RECEIVING_TRANSACTIONS.QTY, CANCEL_RECEIVING_TRANSACTIONS.SEQ_NO, CANCEL_RECEIVING_TRANSACTIONS.CREATED_BY)
+            .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .returningResult(CANCEL_RECEIVING_TRANSACTIONS.ID)
             .fetchOne()?.value1()
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "locationCode" -> CANCEL_RECEIVING_TRANSACTIONS.LOCATION_CODE
+            "locationCode" -> CANCEL_RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE
             "createdDate" -> CANCEL_RECEIVING_TRANSACTIONS.CREATED_DATE
             else -> CANCEL_RECEIVING_TRANSACTIONS.CREATED_DATE
         }

@@ -16,7 +16,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row9
+import org.jooq.Row10
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -70,9 +70,15 @@ open class CancelReceivingTransactions(
 
     /**
      * The column
-     * <code>public.cancel_receiving_transactions.location_code</code>.
+     * <code>public.cancel_receiving_transactions.source_location_code</code>.
      */
-    val LOCATION_CODE: TableField<CancelReceivingTransactionsRecord, String?> = createField(DSL.name("location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
+    val SOURCE_LOCATION_CODE: TableField<CancelReceivingTransactionsRecord, String?> = createField(DSL.name("source_location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
+
+    /**
+     * The column
+     * <code>public.cancel_receiving_transactions.dest_location_code</code>.
+     */
+    val DEST_LOCATION_CODE: TableField<CancelReceivingTransactionsRecord, String?> = createField(DSL.name("dest_location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
 
     /**
      * The column <code>public.cancel_receiving_transactions.po_number</code>.
@@ -155,18 +161,18 @@ open class CancelReceivingTransactions(
     override fun rename(name: Table<*>): CancelReceivingTransactions = CancelReceivingTransactions(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row9 type methods
+    // Row10 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row9<String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row9<String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun fieldsRow(): Row10<String?, String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row10<String?, String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

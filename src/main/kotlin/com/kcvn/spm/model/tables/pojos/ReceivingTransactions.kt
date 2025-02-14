@@ -14,7 +14,8 @@ import java.time.OffsetDateTime
 @Suppress("UNCHECKED_CAST")
 data class ReceivingTransactions(
     var id: String? = null,
-    var locationCode: String? = null,
+    var sourceLocationCode: String? = null,
+    var destLocationCode: String? = null,
     var poNumber: String? = null,
     var qty: Int? = null,
     var seqNo: Int? = null,
@@ -39,11 +40,17 @@ data class ReceivingTransactions(
         }
         else if (this.id != o.id)
             return false
-        if (this.locationCode == null) {
-            if (o.locationCode != null)
+        if (this.sourceLocationCode == null) {
+            if (o.sourceLocationCode != null)
                 return false
         }
-        else if (this.locationCode != o.locationCode)
+        else if (this.sourceLocationCode != o.sourceLocationCode)
+            return false
+        if (this.destLocationCode == null) {
+            if (o.destLocationCode != null)
+                return false
+        }
+        else if (this.destLocationCode != o.destLocationCode)
             return false
         if (this.poNumber == null) {
             if (o.poNumber != null)
@@ -94,7 +101,8 @@ data class ReceivingTransactions(
         val prime = 31
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
-        result = prime * result + (if (this.locationCode == null) 0 else this.locationCode.hashCode())
+        result = prime * result + (if (this.sourceLocationCode == null) 0 else this.sourceLocationCode.hashCode())
+        result = prime * result + (if (this.destLocationCode == null) 0 else this.destLocationCode.hashCode())
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
         result = prime * result + (if (this.qty == null) 0 else this.qty.hashCode())
         result = prime * result + (if (this.seqNo == null) 0 else this.seqNo.hashCode())
@@ -109,7 +117,8 @@ data class ReceivingTransactions(
         val sb = StringBuilder("ReceivingTransactions (")
 
         sb.append(id)
-        sb.append(", ").append(locationCode)
+        sb.append(", ").append(sourceLocationCode)
+        sb.append(", ").append(destLocationCode)
         sb.append(", ").append(poNumber)
         sb.append(", ").append(qty)
         sb.append(", ").append(seqNo)

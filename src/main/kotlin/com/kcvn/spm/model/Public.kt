@@ -14,6 +14,7 @@ import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
+import com.kcvn.spm.model.tables.CancelMoving
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
@@ -29,6 +30,7 @@ import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Locations
+import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
@@ -129,6 +131,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val CALCULATE_QUANTITY_RESULT: CalculateQuantityResult get() = CalculateQuantityResult.CALCULATE_QUANTITY_RESULT
 
     /**
+     * The table <code>public.cancel_moving</code>.
+     */
+    val CANCEL_MOVING: CancelMoving get() = CancelMoving.CANCEL_MOVING
+
+    /**
      * The table <code>public.cancel_receiving_transactions</code>.
      */
     val CANCEL_RECEIVING_TRANSACTIONS: CancelReceivingTransactions get() = CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS
@@ -202,6 +209,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.locations</code>.
      */
     val LOCATIONS: Locations get() = Locations.LOCATIONS
+
+    /**
+     * The table <code>public.moving</code>.
+     */
+    val MOVING: Moving get() = Moving.MOVING
 
     /**
      * The table <code>public.order</code>.
@@ -356,6 +368,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         Backlog.BACKLOG,
         BacklogHistory.BACKLOG_HISTORY,
         CalculateQuantityResult.CALCULATE_QUANTITY_RESULT,
+        CancelMoving.CANCEL_MOVING,
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
         CommonCategory.COMMON_CATEGORY,
         CompletionRateProcess.COMPLETION_RATE_PROCESS,
@@ -371,6 +384,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         InventoryProduct.INVENTORY_PRODUCT,
         InventorySemiProduct.INVENTORY_SEMI_PRODUCT,
         Locations.LOCATIONS,
+        Moving.MOVING,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,
         OrderInfo.ORDER_INFO,

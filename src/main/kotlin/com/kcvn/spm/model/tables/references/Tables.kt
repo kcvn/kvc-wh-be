@@ -14,6 +14,7 @@ import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
+import com.kcvn.spm.model.tables.CancelMoving
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
@@ -29,6 +30,7 @@ import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Locations
+import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
@@ -111,6 +113,11 @@ val BACKLOG_HISTORY: BacklogHistory = BacklogHistory.BACKLOG_HISTORY
 val CALCULATE_QUANTITY_RESULT: CalculateQuantityResult = CalculateQuantityResult.CALCULATE_QUANTITY_RESULT
 
 /**
+ * The table <code>public.cancel_moving</code>.
+ */
+val CANCEL_MOVING: CancelMoving = CancelMoving.CANCEL_MOVING
+
+/**
  * The table <code>public.cancel_receiving_transactions</code>.
  */
 val CANCEL_RECEIVING_TRANSACTIONS: CancelReceivingTransactions = CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS
@@ -184,6 +191,11 @@ val INVENTORY_SEMI_PRODUCT: InventorySemiProduct = InventorySemiProduct.INVENTOR
  * The table <code>public.locations</code>.
  */
 val LOCATIONS: Locations = Locations.LOCATIONS
+
+/**
+ * The table <code>public.moving</code>.
+ */
+val MOVING: Moving = Moving.MOVING
 
 /**
  * The table <code>public.order</code>.

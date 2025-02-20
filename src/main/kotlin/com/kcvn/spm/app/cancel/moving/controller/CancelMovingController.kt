@@ -1,0 +1,37 @@
+package com.kcvn.spm.app.cancel.moving.controller
+
+import com.kcvn.spm.app.cancel.moving.payload.request.CancelMovingRequest
+import com.kcvn.spm.app.cancel.moving.service.CancelMovingService
+import com.kcvn.spm.common.payload.MessageResponse
+import com.kcvn.spm.common.util.CommonUtils
+import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+
+@RestController
+@RequestMapping("/api/cancel/moving")
+class CancelMovingController(
+    private val cancelMovingService: CancelMovingService
+) {
+    @PostMapping("/create")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    fun createCancelMoving(@Valid @RequestBody request: CancelMovingRequest?): ResponseEntity<*> {
+        val cancelMoving = cancelMovingService.createCancelMoving(request!!)
+        return if (cancelMoving == null) {
+            ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("action.failed")),
+                HttpStatus.BAD_REQUEST
+            )
+        } else {
+            ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("action.succeeded"), cancelMoving),
+                HttpStatus.CREATED
+            )
+        }
+    }
+}

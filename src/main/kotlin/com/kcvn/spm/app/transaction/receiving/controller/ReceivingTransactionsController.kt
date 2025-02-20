@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/transactions")
+@RequestMapping("/api/receiving")
 class ReceivingTransactionsController(private val receivingService: ReceivingTransactionsService) {
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")

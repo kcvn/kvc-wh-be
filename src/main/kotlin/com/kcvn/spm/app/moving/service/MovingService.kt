@@ -1,11 +1,15 @@
 package com.kcvn.spm.app.moving.service
 
 import com.kcvn.spm.app.backlog.service.BacklogService
-import com.kcvn.spm.app.moving.payload.MovingRequest
-import com.kcvn.spm.app.moving.payload.MovingRequestWithSeq
+import com.kcvn.spm.app.moving.payload.request.MovingRequest
+import com.kcvn.spm.app.moving.payload.request.MovingRequestWithSeq
+import com.kcvn.spm.app.moving.payload.request.MovingSearchRequest
+import com.kcvn.spm.app.moving.payload.response.MovingResponse
+import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.Moving
 import com.kcvn.spm.repository.MovingRepository
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,6 +19,23 @@ class MovingService(
     private val movingRepo: MovingRepository,
     private val backlogService: BacklogService
 ) {
+    fun getList(request: MovingSearchRequest, pageable: Pageable): BasePagingResponse<MovingResponse> {
+        val moving = movingRepo.getList(request, pageable)
+        val data = moving.first.map {
+            MovingResponse(
+                sourceLocationCode = it.sourceLocationCode,
+                destLocationCode = it.destLocationCode,
+                poNumber = it.poNumber,
+                qty = it.qty,
+                seq = it.seqNo
+            )
+        }
+        return BasePagingResponse(
+            data,
+            moving.second
+        )
+    }
+
     fun saveMoving(request: List<MovingRequest>) {
         val list = createMovingRequestWithSeq(request)
         list.forEach {

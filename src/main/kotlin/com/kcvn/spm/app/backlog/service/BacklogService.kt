@@ -1,8 +1,9 @@
 package com.kcvn.spm.app.backlog.service
 
+import com.kcvn.spm.app.backlog.payload.request.BacklogSearchRequest
 import com.kcvn.spm.app.backlog.payload.response.BacklogResponse
 import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.payload.PaginatedResponse
+import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.BacklogHistory
@@ -18,11 +19,19 @@ class BacklogService(
     private val backlogRepo: BacklogRepository,
     private val backlogHistoryRepo: BacklogHistoryRepository
 ) {
-    fun findAllPaginated(search: String?, pageable: Pageable): PaginatedResponse {
-        val result = backlogRepo.findByKeywordPaginated(search, pageable)
-        return PaginatedResponse(
-            result.first.map { BacklogResponse(it.locationCode!!, it.poNumber!!, it.backlogQty!!, it.boxQty!!) },
-            result.second
+    fun getList(request: BacklogSearchRequest, pageable: Pageable): BasePagingResponse<BacklogResponse> {
+        val backlogData = backlogRepo.getList(request, pageable)
+        val data = backlogData.first.map {
+            BacklogResponse(
+                locationCode = it.locationCode,
+                poNumber = it.poNumber,
+                backlogQty = it.backlogQty,
+                boxQty = it.boxQty
+            )
+        }
+        return BasePagingResponse(
+            data,
+            backlogData.second
         )
     }
 

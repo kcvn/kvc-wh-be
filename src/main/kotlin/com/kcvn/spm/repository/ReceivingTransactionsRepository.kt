@@ -1,19 +1,48 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SortOrder
 import org.jooq.TableField
+import org.jooq.impl.DSL
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 
 @Repository
 class ReceivingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
-    companion object {
-        const val PERMISSION_TYPE = "permission"
+    fun getList(request: RecTransSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<ReceivingTransactions>, Int> {
+        var condition: Condition = DSL.noCondition()
+        if (!request.locationCode.isNullOrEmpty()) {
+            condition = condition.and(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.containsIgnoreCase(request.locationCode!!.trim()))
+        }
+        if (!request.poNumber.isNullOrEmpty()) {
+            condition = condition.and(RECEIVING_TRANSACTIONS.PO_NUMBER.containsIgnoreCase(request.poNumber!!.trim()))
+        }
+
+        val query = context.selectFrom(RECEIVING_TRANSACTIONS).where(condition)
+
+        if (isExport) {
+            val data = query
+                .orderBy(getSortFields(pageable.sort, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE))
+                .fetchInto(ReceivingTransactions::class.java)
+
+            return Pair(data, data.size)
+        } else {
+            val count = query.count()
+            val data = query
+                .orderBy(getSortFields(pageable.sort, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE))
+                .limit(pageable.pageSize)
+                .offset(pageable.offset)
+                .fetchInto(ReceivingTransactions::class.java)
+
+            return Pair(data, count)
+        }
     }
 
     fun findRecTrans(locationCode: String, poNumber: String, qty: Int, seqNo: Int): ReceivingTransactions? {

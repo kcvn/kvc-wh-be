@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.transaction.receiving.payload
+package com.kcvn.spm.app.transaction.receiving.payload.request
 
 data class RecTransRequestWithSeq(
     var locationCode: String? = null,

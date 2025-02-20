@@ -1,11 +1,15 @@
 package com.kcvn.spm.app.transaction.receiving.service
 
 import com.kcvn.spm.app.backlog.service.BacklogService
-import com.kcvn.spm.app.transaction.receiving.payload.RecTransRequest
-import com.kcvn.spm.app.transaction.receiving.payload.RecTransRequestWithSeq
+import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
+import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
+import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
+import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
+import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,6 +19,23 @@ class ReceivingTransactionsService(
     private val receivingRepo: ReceivingTransactionsRepository,
     private val backlogService: BacklogService
 ) {
+    fun getList(request: RecTransSearchRequest, pageable: Pageable): BasePagingResponse<RecTransResponse> {
+        val recTrans = receivingRepo.getList(request, pageable)
+        val data = recTrans.first.map {
+            RecTransResponse(
+                sourceLocationCode = it.sourceLocationCode,
+                destLocationCode = it.destLocationCode,
+                poNumber = it.poNumber,
+                qty = it.qty,
+                seq = it.seqNo
+            )
+        }
+        return BasePagingResponse(
+            data,
+            recTrans.second
+        )
+    }
+
     fun saveRecTrans(request: List<RecTransRequest>) {
         val list = createRecTransRequestWithSeq(request)
         list.forEach {

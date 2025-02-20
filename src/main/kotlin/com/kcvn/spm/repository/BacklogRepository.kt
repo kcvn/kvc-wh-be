@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.backlog.payload.request.BacklogSearchRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -16,8 +17,33 @@ import java.time.ZoneOffset
 
 @Repository
 class BacklogRepository(private val context: DSLContext) : SortingRepository() {
-    companion object {
-        const val PERMISSION_TYPE = "permission"
+    fun getList(request: BacklogSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<Backlog>, Int> {
+        var condition: Condition = DSL.noCondition()
+        if (!request.locationCode.isNullOrEmpty()) {
+            condition = condition.and(BACKLOG.LOCATION_CODE.containsIgnoreCase(request.locationCode!!.trim()))
+        }
+        if (!request.poNumber.isNullOrEmpty()) {
+            condition = condition.and(BACKLOG.PO_NUMBER.containsIgnoreCase(request.poNumber!!.trim()))
+        }
+
+        val query = context.selectFrom(BACKLOG).where(condition)
+
+        if (isExport) {
+            val data = query
+                .orderBy(getSortFields(pageable.sort, BACKLOG.LOCATION_CODE))
+                .fetchInto(Backlog::class.java)
+
+            return Pair(data, data.size)
+        } else {
+            val count = query.count()
+            val data = query
+                .orderBy(getSortFields(pageable.sort, BACKLOG.LOCATION_CODE))
+                .limit(pageable.pageSize)
+                .offset(pageable.offset)
+                .fetchInto(Backlog::class.java)
+
+            return Pair(data, count)
+        }
     }
 
     fun save(rec: Backlog) {
@@ -47,19 +73,6 @@ class BacklogRepository(private val context: DSLContext) : SortingRepository() {
             .where(BACKLOG.LOCATION_CODE.eq(locationCode).and(BACKLOG.PO_NUMBER.eq(poNumber)))
             .fetchInto(Backlog::class.java)
             .firstOrNull()
-    }
-
-    fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<Backlog>, Int> {
-        var condition: Condition = DSL.noCondition()
-        if (keyword != null) {
-            condition = condition.and(BACKLOG.LOCATION_CODE.containsIgnoreCase(keyword))
-        }
-        val backlog = context.selectFrom(BACKLOG).where(condition)
-            .orderBy(getSortFields(pageable.sort, BACKLOG.CREATED_DATE))
-            .limit(pageable.pageSize).offset(pageable.offset)
-            .fetchInto(Backlog::class.java)
-        val total = context.fetchCount(BACKLOG, condition)
-        return Pair(backlog, total)
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

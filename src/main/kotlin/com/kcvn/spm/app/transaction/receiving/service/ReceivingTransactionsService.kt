@@ -27,7 +27,8 @@ class ReceivingTransactionsService(
                 destLocationCode = it.destLocationCode,
                 poNumber = it.poNumber,
                 qty = it.qty,
-                seq = it.seqNo
+                seq = it.seqNo,
+                createdDate = it.createdDate
             )
         }
         return BasePagingResponse(

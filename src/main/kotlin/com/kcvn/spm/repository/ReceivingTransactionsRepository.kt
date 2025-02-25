@@ -24,6 +24,8 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
         if (!request.poNumber.isNullOrEmpty()) {
             condition = condition.and(RECEIVING_TRANSACTIONS.PO_NUMBER.containsIgnoreCase(request.poNumber!!.trim()))
         }
+        if (request.fromDate != null && request.toDate != null)
+            condition = condition.and(RECEIVING_TRANSACTIONS.CREATED_DATE.between(request.fromDate, request.toDate))
 
         val query = context.selectFrom(RECEIVING_TRANSACTIONS).where(condition)
 

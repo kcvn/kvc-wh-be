@@ -27,6 +27,8 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
         if (!request.poNumber.isNullOrEmpty()) {
             condition = condition.and(MOVING.PO_NUMBER.containsIgnoreCase(request.poNumber!!.trim()))
         }
+        if (request.fromDate != null && request.toDate != null)
+            condition = condition.and(MOVING.CREATED_DATE.between(request.fromDate, request.toDate))
 
         val query = context.selectFrom(MOVING).where(condition)
 

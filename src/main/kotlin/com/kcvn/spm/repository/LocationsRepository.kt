@@ -7,6 +7,7 @@ import com.kcvn.spm.model.tables.pojos.Locations
 import com.kcvn.spm.model.tables.references.LOCATIONS
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.SortOrder
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
@@ -17,6 +18,10 @@ class LocationsRepository(private val context: DSLContext) : SortingRepository()
     companion object {
         const val PERMISSION_TYPE = "permission"
     }
+
+    fun findAll(): List<Locations> = context.selectFrom(LOCATIONS)
+        .orderBy(LOCATIONS.LOCATION_CODE.sort(SortOrder.ASC))
+        .fetchInto(Locations::class.java)
 
     fun findByKeywordPaginated(keyword: String?, pageable: Pageable): Pair<List<Locations>, Int> {
         var condition: Condition = DSL.noCondition()

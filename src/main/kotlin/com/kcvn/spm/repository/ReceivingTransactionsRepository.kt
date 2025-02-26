@@ -18,8 +18,13 @@ import org.springframework.stereotype.Repository
 class ReceivingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: RecTransSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<ReceivingTransactions>, Int> {
         var condition: Condition = DSL.noCondition()
-        if (!request.locationCode.isNullOrEmpty()) {
-            condition = condition.and(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.containsIgnoreCase(request.locationCode!!.trim()))
+        if(!request.locationCode.isNullOrEmpty()){
+            val locationCodes = request.locationCode!!.split(",")
+            var condition1 : Condition = DSL.noCondition()
+            locationCodes.forEach { locationCode ->
+                condition1 = condition1.or(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(locationCode.trim()))
+            }
+            condition = condition.and(condition1)
         }
         if (!request.poNumber.isNullOrEmpty()) {
             condition = condition.and(RECEIVING_TRANSACTIONS.PO_NUMBER.containsIgnoreCase(request.poNumber!!.trim()))

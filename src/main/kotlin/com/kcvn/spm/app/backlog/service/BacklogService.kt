@@ -35,6 +35,11 @@ class BacklogService(
         )
     }
 
+    fun getByLocationCodeAndPO(locationCode: String, poNumber: String): Backlog {
+        return backlogRepo.findByLocationCodeAndPO(locationCode, poNumber)
+            ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+    }
+
     fun plusBacklog(data: Backlog, transactionType: String) {
         val backlog = backlogRepo.findByLocationCodeAndPO(data.locationCode!!, data.poNumber!!)
         if (backlog == null) {

@@ -4,7 +4,9 @@ import com.kcvn.spm.app.backlog.service.BacklogService
 import com.kcvn.spm.app.moving.payload.request.MovingRequest
 import com.kcvn.spm.app.moving.payload.request.MovingRequestWithSeq
 import com.kcvn.spm.app.moving.payload.request.MovingSearchRequest
+import com.kcvn.spm.app.moving.payload.request.ValidateMovingRequest
 import com.kcvn.spm.app.moving.payload.response.MovingResponse
+import com.kcvn.spm.app.moving.payload.response.ValidateMovingResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.Moving
@@ -35,6 +37,34 @@ class MovingService(
             data,
             moving.second
         )
+    }
+
+    fun validateSourceBacklog(request: List<MovingRequest>): List<ValidateMovingResponse> {
+        val list = aggregateMovingRequests(request)
+        val response = mutableListOf<ValidateMovingResponse>()
+        list.forEach {
+            val backlog = backlogService.getByLocationCodeAndPO(it.sourceLocationCode!!, it.poNumber!!)
+            if (it.qty!! > backlog.backlogQty!!) {
+                val vmr = ValidateMovingResponse(
+                    sourceLocationCode = it.sourceLocationCode,
+                    poNumber = it.poNumber
+                )
+                response.add(vmr)
+            }
+        }
+        return response
+    }
+
+    fun aggregateMovingRequests(movingRequests: List<MovingRequest>): List<ValidateMovingRequest> {
+        return movingRequests
+            .groupBy { it.sourceLocationCode to it.poNumber }
+            .map { (key, group) ->
+                ValidateMovingRequest(
+                    sourceLocationCode = key.first,
+                    poNumber = key.second,
+                    qty = group.sumOf { it.qty ?: 0 }
+                )
+            }
     }
 
     fun saveMoving(request: List<MovingRequest>) {

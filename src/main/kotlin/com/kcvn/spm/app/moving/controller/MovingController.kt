@@ -38,10 +38,19 @@ class MovingController(private val movingService: MovingService) {
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createMoving(@Valid @RequestBody request: List<MovingRequest>?): ResponseEntity<*> {
-        movingService.saveMoving(request!!)
-        return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded")),
-            HttpStatus.CREATED
-        )
+        val response = movingService.validateSourceBacklog(request!!)
+
+        return if (response.isNotEmpty()) {
+            ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("Không đủ tồn kho"), response),
+                HttpStatus.BAD_REQUEST
+            )
+        } else {
+            movingService.saveMoving(request)
+            ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("action.succeeded")),
+                HttpStatus.CREATED
+            )
+        }
     }
 }

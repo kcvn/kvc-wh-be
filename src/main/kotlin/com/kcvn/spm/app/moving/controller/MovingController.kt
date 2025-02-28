@@ -43,7 +43,7 @@ class MovingController(private val movingService: MovingService) {
         return if (response.isNotEmpty()) {
             ResponseEntity<MessageResponse>(
                 MessageResponse(CommonUtils.getMessage("Không đủ tồn kho"), response),
-                HttpStatus.BAD_REQUEST
+                HttpStatus.OK
             )
         } else {
             movingService.saveMoving(request)

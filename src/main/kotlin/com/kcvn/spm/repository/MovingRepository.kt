@@ -18,11 +18,21 @@ import org.springframework.stereotype.Repository
 class MovingRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: MovingSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<Moving>, Int> {
         var condition: Condition = DSL.noCondition()
-        if (!request.sourceLocationCode.isNullOrEmpty()) {
-            condition = condition.and(MOVING.SOURCE_LOCATION_CODE.containsIgnoreCase(request.sourceLocationCode!!.trim()))
+        if(!request.listSourceLocationCode.isNullOrEmpty()){
+            val sourceLocationCodes = request.listSourceLocationCode!!.split(",")
+            var condition1 : Condition = DSL.noCondition()
+            sourceLocationCodes.forEach { sourceLocationCode ->
+                condition1 = condition1.or(MOVING.SOURCE_LOCATION_CODE.eq(sourceLocationCode.trim()))
+            }
+            condition = condition.and(condition1)
         }
-        if (!request.destLocationCode.isNullOrEmpty()) {
-            condition = condition.and(MOVING.DEST_LOCATION_CODE.containsIgnoreCase(request.destLocationCode!!.trim()))
+        if(!request.listDestLocationCode.isNullOrEmpty()){
+            val destLocationCodes = request.listDestLocationCode!!.split(",")
+            var condition1 : Condition = DSL.noCondition()
+            destLocationCodes.forEach { destLocationCode ->
+                condition1 = condition1.or(MOVING.DEST_LOCATION_CODE.eq(destLocationCode.trim()))
+            }
+            condition = condition.and(condition1)
         }
         if (!request.poNumber.isNullOrEmpty()) {
             condition = condition.and(MOVING.PO_NUMBER.containsIgnoreCase(request.poNumber!!.trim()))

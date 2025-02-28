@@ -19,8 +19,13 @@ import java.time.ZoneOffset
 class BacklogRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: BacklogSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<Backlog>, Int> {
         var condition: Condition = DSL.noCondition()
-        if (!request.locationCode.isNullOrEmpty()) {
-            condition = condition.and(BACKLOG.LOCATION_CODE.containsIgnoreCase(request.locationCode!!.trim()))
+        if(!request.locationCode.isNullOrEmpty()){
+            val locationCodes = request.locationCode!!.split(",")
+            var condition1 : Condition = DSL.noCondition()
+            locationCodes.forEach { lc ->
+                condition1 = condition1.or(BACKLOG.LOCATION_CODE.eq(lc.trim()))
+            }
+            condition = condition.and(condition1)
         }
         if (!request.poNumber.isNullOrEmpty()) {
             condition = condition.and(BACKLOG.PO_NUMBER.containsIgnoreCase(request.poNumber!!.trim()))

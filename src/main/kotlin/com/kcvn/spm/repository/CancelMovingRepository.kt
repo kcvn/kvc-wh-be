@@ -18,8 +18,8 @@ class CancelMovingRepository(private val context: DSLContext) : SortingRepositor
     fun save(rec: CancelMoving): String? =
         context.insertInto(
             CANCEL_MOVING, CANCEL_MOVING.SOURCE_LOCATION_CODE, CANCEL_MOVING.DEST_LOCATION_CODE,
-            CANCEL_MOVING.PO_NUMBER, CANCEL_MOVING.QTY, CANCEL_MOVING.SEQ_NO, CANCEL_MOVING.CREATED_BY)
-            .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            CANCEL_MOVING.PO_NUMBER, CANCEL_MOVING.QTY, CANCEL_MOVING.SEQ_NO, CANCEL_MOVING.CREATED_BY, CANCEL_MOVING.RECEIVING_SEQ_NO)
+            .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM, rec.receivingSeqNo)
             .returningResult(CANCEL_MOVING.ID)
             .fetchOne()?.value1()
 

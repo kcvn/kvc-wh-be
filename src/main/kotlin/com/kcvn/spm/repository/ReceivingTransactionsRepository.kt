@@ -62,19 +62,22 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
             .firstOrNull()
     }
 
-    fun findLatestByLocationCodeAndPO(locationCode: String, poNumber: String): ReceivingTransactions? {
-        return context.selectFrom(RECEIVING_TRANSACTIONS).where(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(locationCode).and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber)))
+    fun findLatestByLocationCodeAndPO(sourceLocationCode: String, destLocationCode: String, poNumber: String): ReceivingTransactions? {
+        return context.selectFrom(RECEIVING_TRANSACTIONS)
+            .where(RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE.eq(sourceLocationCode)
+                .and(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(destLocationCode))
+                .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber)))
             .orderBy(RECEIVING_TRANSACTIONS.SEQ_NO.sort(SortOrder.DESC))
             .fetchInto(ReceivingTransactions::class.java)
             .firstOrNull()
     }
 
-    fun save(rec: ReceivingTransactions) {
+    fun save(rec: ReceivingTransactions): Int? =
         context.insertInto(RECEIVING_TRANSACTIONS, RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE, RECEIVING_TRANSACTIONS.PO_NUMBER,
             RECEIVING_TRANSACTIONS.QTY, RECEIVING_TRANSACTIONS.SEQ_NO, RECEIVING_TRANSACTIONS.CREATED_BY)
             .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-            .execute()
-    }
+            .returningResult(RECEIVING_TRANSACTIONS.SEQ_NO)
+            .fetchOne()?.value1()
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()

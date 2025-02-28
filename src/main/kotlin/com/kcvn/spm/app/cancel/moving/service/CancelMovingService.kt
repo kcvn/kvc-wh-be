@@ -7,7 +7,9 @@ import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.CancelMoving
+import com.kcvn.spm.model.tables.pojos.CancelReceivingTransactions
 import com.kcvn.spm.repository.CancelMovingRepository
+import com.kcvn.spm.repository.CancelReceivingTransactionsRepository
 import com.kcvn.spm.repository.MovingRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -17,7 +19,8 @@ import org.springframework.transaction.annotation.Transactional
 class CancelMovingService(
     private val cancelMovingRepo: CancelMovingRepository,
     private val movingRepo: MovingRepository,
-    private val backlogService: BacklogService
+    private val backlogService: BacklogService,
+    private val cancelReceivingRepo: CancelReceivingTransactionsRepository
 ) {
     fun createCancelMoving(request: CancelMovingRequest): CancelMovingResponse? {
         val cancelMoving = CancelMoving(
@@ -26,12 +29,27 @@ class CancelMovingService(
             request.destLocationCode,
             request.poNumber,
             request.qty,
-            request.seqNo
+            request.seqNo,
+            null,
+            null,
+            null,
+            null,
+            request.receivingSeqNo
         )
-        movingRepo.findMoving(cancelMoving.sourceLocationCode!!, cancelMoving.destLocationCode!!, cancelMoving.poNumber!!, cancelMoving.qty!!, cancelMoving.seqNo!!)
+        movingRepo.findMoving(cancelMoving.sourceLocationCode!!, cancelMoving.destLocationCode!!, cancelMoving.poNumber!!, cancelMoving.qty!!, cancelMoving.seqNo!!, cancelMoving.receivingSeqNo!!)
             ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
         // save cancel moving
         val cancelMovingId = cancelMovingRepo.save(cancelMoving)
+        // save cancel receiving transaction
+        val cancelRec = CancelReceivingTransactions(
+            null,
+            request.sourceLocationCode,
+            request.destLocationCode,
+            request.poNumber,
+            request.qty,
+            request.receivingSeqNo
+        )
+        cancelReceivingRepo.save(cancelRec)
         // plus backlog sourceLocation
         val backlogSourceData = Backlog(
             null,

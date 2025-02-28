@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.transaction.receiving.service
 
 import com.kcvn.spm.app.backlog.service.BacklogService
+import com.kcvn.spm.app.moving.payload.request.MovingRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
@@ -37,6 +38,19 @@ class ReceivingTransactionsService(
         )
     }
 
+    fun saveRecTransFromMoving(data: MovingRequestWithSeq): Int? {
+        val latestSeqNo = receivingRepo.findLatestByLocationCodeAndPO(data.sourceLocationCode!!, data.destLocationCode!!, data.poNumber!!)?.seqNo ?: 0
+        val recTransaction = ReceivingTransactions(
+            null,
+            data.sourceLocationCode,
+            data.destLocationCode,
+            data.poNumber,
+            data.qty,
+            latestSeqNo + 1
+        )
+        return receivingRepo.save(recTransaction)
+    }
+
     fun saveRecTrans(request: List<RecTransRequest>) {
         val list = createRecTransRequestWithSeq(request)
         list.forEach {
@@ -67,7 +81,7 @@ class ReceivingTransactionsService(
             .groupBy { it.locationCode to it.poNumber }
             .flatMap { (key, group) ->
                 val (locationCode, poNumber) = key
-                val latestSeqNo = receivingRepo.findLatestByLocationCodeAndPO(locationCode!!, poNumber!!)?.seqNo ?: 0
+                val latestSeqNo = receivingRepo.findLatestByLocationCodeAndPO("KVC", locationCode!!, poNumber!!)?.seqNo ?: 0
 
                 group.mapIndexed { index, recTransRequest ->
                     RecTransRequestWithSeq(

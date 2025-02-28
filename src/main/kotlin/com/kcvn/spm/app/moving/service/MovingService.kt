@@ -7,6 +7,7 @@ import com.kcvn.spm.app.moving.payload.request.MovingSearchRequest
 import com.kcvn.spm.app.moving.payload.request.ValidateMovingRequest
 import com.kcvn.spm.app.moving.payload.response.MovingResponse
 import com.kcvn.spm.app.moving.payload.response.ValidateMovingResponse
+import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.Moving
@@ -14,12 +15,15 @@ import com.kcvn.spm.repository.MovingRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Service
 @Transactional
 class MovingService(
     private val movingRepo: MovingRepository,
-    private val backlogService: BacklogService
+    private val backlogService: BacklogService,
+    private val receivingService: ReceivingTransactionsService
 ) {
     fun getList(request: MovingSearchRequest, pageable: Pageable): BasePagingResponse<MovingResponse> {
         val moving = movingRepo.getList(request, pageable)
@@ -70,15 +74,22 @@ class MovingService(
     fun saveMoving(request: List<MovingRequest>) {
         val list = createMovingRequestWithSeq(request)
         list.forEach {
+            // save receiving transaction
+            val seqReceiving = receivingService.saveRecTransFromMoving(it)
+            // save moving
             val moving = Moving(
                 null,
                 it.sourceLocationCode,
                 it.destLocationCode,
                 it.poNumber,
                 it.qty,
-                it.seqNo
+                it.seqNo,
+                null,
+                null,
+                null,
+                null,
+                seqReceiving
             )
-            // save moving
             movingRepo.save(moving)
             // plus backlog destLocation
             val backlogDestData = Backlog(
@@ -102,11 +113,12 @@ class MovingService(
     }
 
     fun createMovingRequestWithSeq(requests: List<MovingRequest>): List<MovingRequestWithSeq> {
+        val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         return requests
             .groupBy { Triple(it.sourceLocationCode, it.destLocationCode, it.poNumber) }
             .flatMap { (key, group) ->
                 val (sourceLocationCode, destLocationCode, poNumber) = key
-                val latestSeqNo = movingRepo.findLatestMoving(sourceLocationCode!!, destLocationCode!!, poNumber!!)?.seqNo ?: 0
+                val latestSeqNo = movingRepo.findLatestMoving(sourceLocationCode!!, destLocationCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
 
                 group.mapIndexed { index, movingRequest ->
                     MovingRequestWithSeq(

@@ -13,6 +13,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 
 @Repository
 class MovingRepository(private val context: DSLContext) : SortingRepository() {
@@ -60,24 +61,27 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
         }
     }
 
-    fun findMoving(sourceLocationCode: String, destLocationCode: String, poNumber: String, qty: Int, seqNo: Int): Moving? {
+    fun findMoving(sourceLocationCode: String, destLocationCode: String, poNumber: String, qty: Int, seqNo: Int, receivingSeqNo: Int): Moving? {
         return context.selectFrom(MOVING)
             .where(
                 MOVING.SOURCE_LOCATION_CODE.eq(sourceLocationCode)
                     .and(MOVING.DEST_LOCATION_CODE.eq(destLocationCode))
                     .and(MOVING.PO_NUMBER.eq(poNumber))
                     .and(MOVING.QTY.eq(qty))
-                    .and(MOVING.SEQ_NO.eq(seqNo)))
+                    .and(MOVING.SEQ_NO.eq(seqNo))
+                    .and(MOVING.RECEIVING_SEQ_NO.eq(receivingSeqNo))
+            )
             .fetchInto(Moving::class.java)
             .firstOrNull()
     }
 
-    fun findLatestMoving(sourceLocationCode: String, destLocationCode: String, poNumber: String): Moving? {
+    fun findLatestMoving(sourceLocationCode: String, destLocationCode: String, poNumber: String, todayUtc: LocalDate ): Moving? {
         return context.selectFrom(MOVING)
             .where(
                 MOVING.SOURCE_LOCATION_CODE.eq(sourceLocationCode)
                     .and(MOVING.DEST_LOCATION_CODE.eq(destLocationCode))
                     .and(MOVING.PO_NUMBER.eq(poNumber))
+                    .and(MOVING.CREATED_DATE.cast(LocalDate::class.java).eq(todayUtc))
             )
             .orderBy(MOVING.SEQ_NO.sort(SortOrder.DESC))
             .fetchInto(Moving::class.java)
@@ -87,8 +91,8 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
     fun save(rec: Moving) {
         context.insertInto(
             MOVING, MOVING.SOURCE_LOCATION_CODE, MOVING.DEST_LOCATION_CODE, MOVING.PO_NUMBER,
-            MOVING.QTY, MOVING.SEQ_NO, MOVING.CREATED_BY)
-            .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            MOVING.QTY, MOVING.SEQ_NO, MOVING.CREATED_BY, MOVING.RECEIVING_SEQ_NO)
+            .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM, rec.receivingSeqNo)
             .execute()
     }
 

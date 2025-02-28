@@ -5,5 +5,6 @@ data class CancelMovingRequest(
     var destLocationCode: String? = null,
     var poNumber: String? = null,
     var qty : Int? = 0,
-    var seqNo : Int? = 1
+    var seqNo : Int? = 1,
+    var receivingSeqNo : Int? = 1
 )

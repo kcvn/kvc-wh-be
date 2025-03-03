@@ -15,6 +15,7 @@ import com.kcvn.spm.repository.MovingRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -72,10 +73,11 @@ class MovingService(
     }
 
     fun saveMoving(request: List<MovingRequest>) {
-        val list = createMovingRequestWithSeq(request)
+        val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
+        val list = createMovingRequestWithSeq(request, todayUtc)
         list.forEach {
             // save receiving transaction
-            val seqReceiving = receivingService.saveRecTransFromMoving(it)
+            val seqReceiving = receivingService.saveRecTransFromMoving(it, todayUtc)
             // save moving
             val moving = Moving(
                 null,
@@ -112,8 +114,7 @@ class MovingService(
         }
     }
 
-    fun createMovingRequestWithSeq(requests: List<MovingRequest>): List<MovingRequestWithSeq> {
-        val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
+    fun createMovingRequestWithSeq(requests: List<MovingRequest>, todayUtc: LocalDate): List<MovingRequestWithSeq> {
         return requests
             .groupBy { Triple(it.sourceLocationCode, it.destLocationCode, it.poNumber) }
             .flatMap { (key, group) ->

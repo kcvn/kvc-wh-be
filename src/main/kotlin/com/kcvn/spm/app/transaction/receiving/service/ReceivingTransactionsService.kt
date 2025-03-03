@@ -13,6 +13,9 @@ import com.kcvn.spm.repository.ReceivingTransactionsRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Service
 @Transactional
@@ -38,8 +41,8 @@ class ReceivingTransactionsService(
         )
     }
 
-    fun saveRecTransFromMoving(data: MovingRequestWithSeq): Int? {
-        val latestSeqNo = receivingRepo.findLatestByLocationCodeAndPO(data.sourceLocationCode!!, data.destLocationCode!!, data.poNumber!!)?.seqNo ?: 0
+    fun saveRecTransFromMoving(data: MovingRequestWithSeq, todayUtc: LocalDate): Int? {
+        val latestSeqNo = receivingRepo.findLatestByLocationCodeAndPO(data.destLocationCode!!, data.poNumber!!, todayUtc)?.seqNo ?: 0
         val recTransaction = ReceivingTransactions(
             null,
             data.sourceLocationCode,
@@ -77,11 +80,12 @@ class ReceivingTransactionsService(
     }
 
     fun createRecTransRequestWithSeq(requests: List<RecTransRequest>): List<RecTransRequestWithSeq> {
+        val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         return requests
             .groupBy { it.locationCode to it.poNumber }
             .flatMap { (key, group) ->
                 val (locationCode, poNumber) = key
-                val latestSeqNo = receivingRepo.findLatestByLocationCodeAndPO("KVC", locationCode!!, poNumber!!)?.seqNo ?: 0
+                val latestSeqNo = receivingRepo.findLatestByLocationCodeAndPO(locationCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
 
                 group.mapIndexed { index, recTransRequest ->
                     RecTransRequestWithSeq(

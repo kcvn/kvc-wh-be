@@ -5,12 +5,11 @@ import com.kcvn.spm.app.cancel.moving.payload.request.CancelMovingRequest
 import com.kcvn.spm.app.cancel.moving.payload.response.CancelMovingResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.Backlog
-import com.kcvn.spm.model.tables.pojos.CancelMoving
-import com.kcvn.spm.model.tables.pojos.CancelReceivingTransactions
+import com.kcvn.spm.model.tables.pojos.*
 import com.kcvn.spm.repository.CancelMovingRepository
 import com.kcvn.spm.repository.CancelReceivingTransactionsRepository
 import com.kcvn.spm.repository.MovingRepository
+import com.kcvn.spm.repository.ReceivingTransactionsRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,7 +19,8 @@ class CancelMovingService(
     private val cancelMovingRepo: CancelMovingRepository,
     private val movingRepo: MovingRepository,
     private val backlogService: BacklogService,
-    private val cancelReceivingRepo: CancelReceivingTransactionsRepository
+    private val cancelReceivingRepo: CancelReceivingTransactionsRepository,
+    private val receivingRepo: ReceivingTransactionsRepository
 ) {
     fun createCancelMoving(request: CancelMovingRequest): CancelMovingResponse? {
         val cancelMoving = CancelMoving(
@@ -50,6 +50,26 @@ class CancelMovingService(
             request.receivingSeqNo
         )
         cancelReceivingRepo.save(cancelRec)
+        // update is_canceled in moving
+        val moving = Moving(
+            null,
+            request.sourceLocationCode,
+            request.destLocationCode,
+            request.poNumber,
+            request.qty,
+            request.seqNo
+        )
+        movingRepo.updateIsCanceled(moving)
+        // update is_canceled in receiving transactions
+        val rec = ReceivingTransactions(
+            null,
+            request.sourceLocationCode,
+            request.destLocationCode,
+            request.poNumber,
+            request.qty,
+            request.receivingSeqNo
+        )
+        receivingRepo.updateIsCanceled(rec)
         // plus backlog sourceLocation
         val backlogSourceData = Backlog(
             null,

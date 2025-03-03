@@ -13,6 +13,9 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Repository
 class ReceivingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
@@ -32,7 +35,7 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
         if (request.fromDate != null && request.toDate != null)
             condition = condition.and(RECEIVING_TRANSACTIONS.CREATED_DATE.between(request.fromDate, request.toDate))
 
-        val query = context.selectFrom(RECEIVING_TRANSACTIONS).where(condition)
+        val query = context.selectFrom(RECEIVING_TRANSACTIONS).where(condition.and(RECEIVING_TRANSACTIONS.IS_CANCELED.eq(false)))
 
         if (isExport) {
             val data = query
@@ -52,6 +55,24 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
         }
     }
 
+    fun updateIsCanceled(data: ReceivingTransactions) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+
+            transactionalContext.update(RECEIVING_TRANSACTIONS)
+                .set(RECEIVING_TRANSACTIONS.IS_CANCELED, true)
+                .set(RECEIVING_TRANSACTIONS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(RECEIVING_TRANSACTIONS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .where(RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE.eq(data.sourceLocationCode)
+                    .and(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(data.destLocationCode))
+                    .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber))
+                    .and(RECEIVING_TRANSACTIONS.SEQ_NO.eq(data.seqNo))
+                    .and(RECEIVING_TRANSACTIONS.IS_CANCELED.eq(false))
+                )
+                .execute()
+        }
+    }
+
     fun findRecTrans(locationCode: String, poNumber: String, qty: Int, seqNo: Int): ReceivingTransactions? {
         return context.selectFrom(RECEIVING_TRANSACTIONS)
             .where(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(locationCode)
@@ -62,11 +83,12 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
             .firstOrNull()
     }
 
-    fun findLatestByLocationCodeAndPO(sourceLocationCode: String, destLocationCode: String, poNumber: String): ReceivingTransactions? {
+    fun findLatestByLocationCodeAndPO(destLocationCode: String, poNumber: String, todayUtc: LocalDate): ReceivingTransactions? {
         return context.selectFrom(RECEIVING_TRANSACTIONS)
-            .where(RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE.eq(sourceLocationCode)
-                .and(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(destLocationCode))
-                .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber)))
+            .where(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(destLocationCode)
+                .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
+                .and(RECEIVING_TRANSACTIONS.CREATED_DATE.cast(LocalDate::class.java).eq(todayUtc))
+            )
             .orderBy(RECEIVING_TRANSACTIONS.SEQ_NO.sort(SortOrder.DESC))
             .fetchInto(ReceivingTransactions::class.java)
             .firstOrNull()

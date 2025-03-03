@@ -14,6 +14,8 @@ import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Repository
 class MovingRepository(private val context: DSLContext) : SortingRepository() {
@@ -41,7 +43,7 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
         if (request.fromDate != null && request.toDate != null)
             condition = condition.and(MOVING.CREATED_DATE.between(request.fromDate, request.toDate))
 
-        val query = context.selectFrom(MOVING).where(condition)
+        val query = context.selectFrom(MOVING).where(condition.and(MOVING.IS_CANCELED.eq(false)))
 
         if (isExport) {
             val data = query
@@ -58,6 +60,25 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
                 .fetchInto(Moving::class.java)
 
             return Pair(data, count)
+        }
+    }
+
+    fun updateIsCanceled(data: Moving) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+
+            transactionalContext.update(MOVING)
+                .set(MOVING.IS_CANCELED, true)
+                .set(MOVING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(MOVING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .where(
+                    MOVING.SOURCE_LOCATION_CODE.eq(data.sourceLocationCode)
+                    .and(MOVING.DEST_LOCATION_CODE.eq(data.destLocationCode))
+                    .and(MOVING.PO_NUMBER.eq(data.poNumber))
+                    .and(MOVING.SEQ_NO.eq(data.seqNo))
+                    .and(MOVING.IS_CANCELED.eq(false))
+                )
+                .execute()
         }
     }
 

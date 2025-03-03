@@ -7,6 +7,7 @@ import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.CancelReceivingTransactions
+import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.repository.CancelReceivingTransactionsRepository
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
 import org.springframework.stereotype.Service
@@ -32,6 +33,16 @@ class CancelReceivingTransactionsService(
                 ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
         // save cancel receiving transactions
         val cancelRecId = cancelReceivingRepo.save(cancelRec)
+        // update is_canceled in receiving transactions
+        val rec = ReceivingTransactions(
+            null,
+            "KVC",
+            request.locationCode,
+            request.poNumber,
+            request.qty,
+            request.seqNo
+        )
+        receivingRepo.updateIsCanceled(rec)
         // minus backlog
         val backlogData = Backlog(
             null,

@@ -22,7 +22,10 @@ data class ReceivingTransactions(
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
-    var updatedBy: String? = null
+    var updatedBy: String? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsCanceled")
+    var isCanceled: Boolean? = null
 ): Serializable {
 
 
@@ -94,6 +97,12 @@ data class ReceivingTransactions(
         }
         else if (this.updatedBy != o.updatedBy)
             return false
+        if (this.isCanceled == null) {
+            if (o.isCanceled != null)
+                return false
+        }
+        else if (this.isCanceled != o.isCanceled)
+            return false
         return true
     }
 
@@ -110,6 +119,7 @@ data class ReceivingTransactions(
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.isCanceled == null) 0 else this.isCanceled.hashCode())
         return result
     }
 
@@ -126,6 +136,7 @@ data class ReceivingTransactions(
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
+        sb.append(", ").append(isCanceled)
 
         sb.append(")")
         return sb.toString()

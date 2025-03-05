@@ -2,12 +2,9 @@ package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlog.service.BacklogService
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
-import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequest
-import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequestWithSeq
-import com.kcvn.spm.app.transaction.sending.payload.request.MovingSearchRequest
-import com.kcvn.spm.app.transaction.sending.payload.request.ValidateMovingRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.*
 import com.kcvn.spm.app.transaction.sending.payload.response.MovingResponse
-import com.kcvn.spm.app.transaction.sending.payload.response.ValidateMovingResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
@@ -44,13 +41,13 @@ class SendingTransactionsService(
         )
     }
 
-    fun validateSourceBacklog(request: List<MovingRequest>): List<ValidateMovingResponse> {
+    fun validateSourceBacklogFromMoving(request: List<MovingRequest>): List<ValidateSendTransResponse> {
         val list = aggregateMovingRequests(request)
-        val response = mutableListOf<ValidateMovingResponse>()
+        val response = mutableListOf<ValidateSendTransResponse>()
         list.forEach {
             val backlog = backlogService.getByLocationCodeAndPO(it.sourceLocationCode!!, it.poNumber!!)
             if (it.qty!! > backlog.backlogQty!!) {
-                val vmr = ValidateMovingResponse(
+                val vmr = ValidateSendTransResponse(
                     sourceLocationCode = it.sourceLocationCode,
                     poNumber = it.poNumber
                 )
@@ -60,16 +57,68 @@ class SendingTransactionsService(
         return response
     }
 
-    fun aggregateMovingRequests(movingRequests: List<MovingRequest>): List<ValidateMovingRequest> {
+    fun aggregateMovingRequests(movingRequests: List<MovingRequest>): List<ValidateSendTransRequest> {
         return movingRequests
             .groupBy { it.sourceLocationCode to it.poNumber }
             .map { (key, group) ->
-                ValidateMovingRequest(
+                ValidateSendTransRequest(
                     sourceLocationCode = key.first,
                     poNumber = key.second,
                     qty = group.sumOf { it.qty ?: 0 }
                 )
             }
+    }
+
+    fun validateSourceBacklogFromSending(request: List<SendingRequest>): List<ValidateSendTransResponse> {
+        val list = aggregateSendingRequests(request)
+        val response = mutableListOf<ValidateSendTransResponse>()
+        list.forEach {
+            val backlog = backlogService.getByLocationCodeAndPO(it.sourceLocationCode!!, it.poNumber!!)
+            if (it.qty!! > backlog.backlogQty!!) {
+                val vmr = ValidateSendTransResponse(
+                    sourceLocationCode = it.sourceLocationCode,
+                    poNumber = it.poNumber
+                )
+                response.add(vmr)
+            }
+        }
+        return response
+    }
+
+    fun aggregateSendingRequests(sendingRequests: List<SendingRequest>): List<ValidateSendTransRequest> {
+        return sendingRequests
+            .groupBy { it.locationCode to it.poNumber }
+            .map { (key, group) ->
+                ValidateSendTransRequest(
+                    sourceLocationCode = key.first,
+                    poNumber = key.second,
+                    qty = group.sumOf { it.qty ?: 0 }
+                )
+            }
+    }
+
+    fun saveSendTrans(request: List<SendingRequest>) {
+        val list = createSendTransRequestWithSeq(request)
+        list.forEach {
+            val sendTran = SendingTransactions(
+                null,
+                it.sourceLocationCode,
+                "KVC",
+                it.poNumber,
+                it.qty,
+                it.seqNo
+            )
+            sendingRepo.saveSendingTrans(sendTran)
+            // save backlog and backlog history
+            val backlogData = Backlog(
+                null,
+                it.sourceLocationCode,
+                it.poNumber,
+                it.qty,
+                null
+            )
+            backlogService.minusBacklog(backlogData, "OUT_ONLY")
+        }
     }
 
     fun saveMoving(request: List<MovingRequest>) {
@@ -88,7 +137,7 @@ class SendingTransactionsService(
                 it.seqNo,
                 seqReceiving
             )
-            sendingRepo.saveMoving(moving)
+            sendingRepo.saveSendingTrans(moving)
             // plus backlog destLocation
             val backlogDestData = Backlog(
                 null,
@@ -108,6 +157,25 @@ class SendingTransactionsService(
             )
             backlogService.minusBacklog(backlogSourceData, "OUT")
         }
+    }
+
+    fun createSendTransRequestWithSeq(requests: List<SendingRequest>): List<SendTransRequestWithSeq> {
+        val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
+        return requests
+            .groupBy { it.locationCode to it.poNumber }
+            .flatMap { (key, group) ->
+                val (sourceLocationCode, poNumber) = key
+                val latestSeqNo = sendingRepo.findLatestMoving(sourceLocationCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+
+                group.mapIndexed { index, sendTransRequest ->
+                    SendTransRequestWithSeq(
+                        sourceLocationCode = sendTransRequest.locationCode,
+                        poNumber = sendTransRequest.poNumber,
+                        qty = sendTransRequest.qty,
+                        seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
+                    )
+                }
+            }
     }
 
     fun createMovingRequestWithSeq(requests: List<MovingRequest>, todayUtc: LocalDate): List<MovingRequestWithSeq> {

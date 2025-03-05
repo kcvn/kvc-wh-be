@@ -76,14 +76,19 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                         .and(SENDING_TRANSACTIONS.DEST_LOCATION_CODE.eq(data.destLocationCode))
                         .and(SENDING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber))
                         .and(SENDING_TRANSACTIONS.SEQ_NO.eq(data.seqNo))
-                        .and(SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.eq(data.receivingSeqNo))
+                        .and(
+                            if (data.receivingSeqNo != null)
+                                SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.eq(data.receivingSeqNo)
+                            else
+                                SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.isNull
+                        )
                         .and(SENDING_TRANSACTIONS.IS_CANCELED.eq(false))
                 )
                 .execute()
         }
     }
 
-    fun findMoving(sourceLocationCode: String, destLocationCode: String, poNumber: String, qty: Int, seqNo: Int, receivingSeqNo: Int): SendingTransactions? {
+    fun findMoving(sourceLocationCode: String, destLocationCode: String, poNumber: String, qty: Int, seqNo: Int, receivingSeqNo: Int?): SendingTransactions? {
         return context.selectFrom(SENDING_TRANSACTIONS)
             .where(
                 SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE.eq(sourceLocationCode)
@@ -91,7 +96,12 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                     .and(SENDING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
                     .and(SENDING_TRANSACTIONS.QTY.eq(qty))
                     .and(SENDING_TRANSACTIONS.SEQ_NO.eq(seqNo))
-                    .and(SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.eq(receivingSeqNo))
+                    .and(
+                        if (receivingSeqNo != null)
+                            SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.eq(receivingSeqNo)
+                        else
+                            SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.isNull
+                    )
             )
             .fetchInto(SendingTransactions::class.java)
             .firstOrNull()
@@ -109,7 +119,7 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             .firstOrNull()
     }
 
-    fun saveMoving(moving: SendingTransactions) {
+    fun saveSendingTrans(moving: SendingTransactions) {
         context.insertInto(
             SENDING_TRANSACTIONS, SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE, SENDING_TRANSACTIONS.DEST_LOCATION_CODE, SENDING_TRANSACTIONS.PO_NUMBER,
             SENDING_TRANSACTIONS.QTY, SENDING_TRANSACTIONS.SEQ_NO, SENDING_TRANSACTIONS.RECEIVING_SEQ_NO, SENDING_TRANSACTIONS.CREATED_BY)

@@ -2,6 +2,7 @@ package com.kcvn.spm.app.transaction.sending.controller
 
 import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.MovingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.MovingResponse
 import com.kcvn.spm.app.transaction.sending.service.SendingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -19,7 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/moving")
+@RequestMapping("/api/sending")
 class SendingTransactionsController(private val sendingService: SendingTransactionsService) {
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
@@ -35,10 +36,10 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @PostMapping("/create")
+    @PostMapping("/create/moving")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createMoving(@Valid @RequestBody request: List<MovingRequest>?): ResponseEntity<*> {
-        val response = sendingService.validateSourceBacklog(request!!)
+        val response = sendingService.validateSourceBacklogFromMoving(request!!)
 
         return if (response.isNotEmpty()) {
             ResponseEntity<MessageResponse>(
@@ -47,6 +48,25 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
             )
         } else {
             sendingService.saveMoving(request)
+            ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("action.succeeded")),
+                HttpStatus.CREATED
+            )
+        }
+    }
+
+    @PostMapping("/create/sending-trans")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    fun createSendTrans(@Valid @RequestBody request: List<SendingRequest>?): ResponseEntity<*> {
+        val response = sendingService.validateSourceBacklogFromSending(request!!)
+
+        return if (response.isNotEmpty()) {
+            ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("Không đủ tồn kho"), response),
+                HttpStatus.OK
+            )
+        } else {
+            sendingService.saveSendTrans(request)
             ResponseEntity<MessageResponse>(
                 MessageResponse(CommonUtils.getMessage("action.succeeded")),
                 HttpStatus.CREATED

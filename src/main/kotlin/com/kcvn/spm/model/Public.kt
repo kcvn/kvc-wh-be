@@ -14,8 +14,8 @@ import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
-import com.kcvn.spm.model.tables.CancelMoving
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
+import com.kcvn.spm.model.tables.CancelSendingTransactions
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
@@ -30,7 +30,6 @@ import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Locations
-import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
@@ -52,6 +51,7 @@ import com.kcvn.spm.model.tables.ProcessProcedureStructure
 import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -131,14 +131,14 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val CALCULATE_QUANTITY_RESULT: CalculateQuantityResult get() = CalculateQuantityResult.CALCULATE_QUANTITY_RESULT
 
     /**
-     * The table <code>public.cancel_moving</code>.
-     */
-    val CANCEL_MOVING: CancelMoving get() = CancelMoving.CANCEL_MOVING
-
-    /**
      * The table <code>public.cancel_receiving_transactions</code>.
      */
     val CANCEL_RECEIVING_TRANSACTIONS: CancelReceivingTransactions get() = CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS
+
+    /**
+     * The table <code>public.cancel_sending_transactions</code>.
+     */
+    val CANCEL_SENDING_TRANSACTIONS: CancelSendingTransactions get() = CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS
 
     /**
      * The table <code>public.common_category</code>.
@@ -209,11 +209,6 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.locations</code>.
      */
     val LOCATIONS: Locations get() = Locations.LOCATIONS
-
-    /**
-     * The table <code>public.moving</code>.
-     */
-    val MOVING: Moving get() = Moving.MOVING
 
     /**
      * The table <code>public.order</code>.
@@ -321,6 +316,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val RECEIVING_TRANSACTIONS: ReceivingTransactions get() = ReceivingTransactions.RECEIVING_TRANSACTIONS
 
     /**
+     * The table <code>public.sending_transactions</code>.
+     */
+    val SENDING_TRANSACTIONS: SendingTransactions get() = SendingTransactions.SENDING_TRANSACTIONS
+
+    /**
      * The table <code>public.sync_history</code>.
      */
     val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
@@ -368,8 +368,8 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         Backlog.BACKLOG,
         BacklogHistory.BACKLOG_HISTORY,
         CalculateQuantityResult.CALCULATE_QUANTITY_RESULT,
-        CancelMoving.CANCEL_MOVING,
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
+        CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS,
         CommonCategory.COMMON_CATEGORY,
         CompletionRateProcess.COMPLETION_RATE_PROCESS,
         CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,
@@ -384,7 +384,6 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         InventoryProduct.INVENTORY_PRODUCT,
         InventorySemiProduct.INVENTORY_SEMI_PRODUCT,
         Locations.LOCATIONS,
-        Moving.MOVING,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,
         OrderInfo.ORDER_INFO,
@@ -406,6 +405,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         Product.PRODUCT,
         ProductProcess.PRODUCT_PROCESS,
         ReceivingTransactions.RECEIVING_TRANSACTIONS,
+        SendingTransactions.SENDING_TRANSACTIONS,
         SyncHistory.SYNC_HISTORY,
         SystemLock.SYSTEM_LOCK,
         TapeEnRoute.TAPE_EN_ROUTE,

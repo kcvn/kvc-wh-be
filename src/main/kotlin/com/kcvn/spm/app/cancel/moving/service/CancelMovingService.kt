@@ -8,8 +8,8 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.*
 import com.kcvn.spm.repository.CancelMovingRepository
 import com.kcvn.spm.repository.CancelReceivingTransactionsRepository
-import com.kcvn.spm.repository.MovingRepository
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
+import com.kcvn.spm.repository.SendingTransactionsRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -17,28 +17,24 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class CancelMovingService(
     private val cancelMovingRepo: CancelMovingRepository,
-    private val movingRepo: MovingRepository,
+    private val sendingRepo: SendingTransactionsRepository,
     private val backlogService: BacklogService,
     private val cancelReceivingRepo: CancelReceivingTransactionsRepository,
     private val receivingRepo: ReceivingTransactionsRepository
 ) {
     fun createCancelMoving(request: CancelMovingRequest): CancelMovingResponse? {
-        val cancelMoving = CancelMoving(
+        val cancelMoving = CancelSendingTransactions(
             null,
             request.sourceLocationCode,
             request.destLocationCode,
             request.poNumber,
             request.qty,
             request.seqNo,
-            null,
-            null,
-            null,
-            null,
             request.receivingSeqNo
         )
-        movingRepo.findMoving(cancelMoving.sourceLocationCode!!, cancelMoving.destLocationCode!!, cancelMoving.poNumber!!, cancelMoving.qty!!, cancelMoving.seqNo!!, cancelMoving.receivingSeqNo!!)
+        sendingRepo.findMoving(cancelMoving.sourceLocationCode!!, cancelMoving.destLocationCode!!, cancelMoving.poNumber!!, cancelMoving.qty!!, cancelMoving.seqNo!!, cancelMoving.receivingSeqNo!!)
             ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
-        // save cancel moving
+        // save cancel sending when moving
         val cancelMovingId = cancelMovingRepo.save(cancelMoving)
         // save cancel receiving transaction
         val cancelRec = CancelReceivingTransactions(
@@ -50,16 +46,17 @@ class CancelMovingService(
             request.receivingSeqNo
         )
         cancelReceivingRepo.save(cancelRec)
-        // update is_canceled in moving
-        val moving = Moving(
+        // update is_canceled when moving
+        val moving = SendingTransactions(
             null,
             request.sourceLocationCode,
             request.destLocationCode,
             request.poNumber,
             request.qty,
-            request.seqNo
+            request.seqNo,
+            request.receivingSeqNo
         )
-        movingRepo.updateIsCanceled(moving)
+        sendingRepo.updateIsCanceled(moving)
         // update is_canceled in receiving transactions
         val rec = ReceivingTransactions(
             null,

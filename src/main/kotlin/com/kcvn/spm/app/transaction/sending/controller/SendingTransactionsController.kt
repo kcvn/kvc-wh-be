@@ -1,9 +1,9 @@
-package com.kcvn.spm.app.moving.controller
+package com.kcvn.spm.app.transaction.sending.controller
 
-import com.kcvn.spm.app.moving.payload.request.MovingRequest
-import com.kcvn.spm.app.moving.payload.request.MovingSearchRequest
-import com.kcvn.spm.app.moving.payload.response.MovingResponse
-import com.kcvn.spm.app.moving.service.MovingService
+import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.MovingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.response.MovingResponse
+import com.kcvn.spm.app.transaction.sending.service.SendingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.MessageResponse
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/moving")
-class MovingController(private val movingService: MovingService) {
+class SendingTransactionsController(private val sendingService: SendingTransactionsService) {
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(
@@ -31,14 +31,14 @@ class MovingController(private val movingService: MovingService) {
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<MovingResponse>> {
-        val result = movingService.getList(request, pageable)
+        val result = sendingService.getList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createMoving(@Valid @RequestBody request: List<MovingRequest>?): ResponseEntity<*> {
-        val response = movingService.validateSourceBacklog(request!!)
+        val response = sendingService.validateSourceBacklog(request!!)
 
         return if (response.isNotEmpty()) {
             ResponseEntity<MessageResponse>(
@@ -46,7 +46,7 @@ class MovingController(private val movingService: MovingService) {
                 HttpStatus.OK
             )
         } else {
-            movingService.saveMoving(request)
+            sendingService.saveMoving(request)
             ResponseEntity<MessageResponse>(
                 MessageResponse(CommonUtils.getMessage("action.succeeded")),
                 HttpStatus.CREATED

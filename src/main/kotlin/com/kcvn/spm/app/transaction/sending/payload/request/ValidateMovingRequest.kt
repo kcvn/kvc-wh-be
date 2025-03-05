@@ -1,4 +1,4 @@
-package com.kcvn.spm.app.moving.payload.request
+package com.kcvn.spm.app.transaction.sending.payload.request
 
 data class ValidateMovingRequest(
     var sourceLocationCode: String? = null,

@@ -1,11 +1,11 @@
 package com.kcvn.spm.app.transaction.receiving.service
 
 import com.kcvn.spm.app.backlog.service.BacklogService
-import com.kcvn.spm.app.moving.payload.request.MovingRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
 import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
+import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequestWithSeq
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions

@@ -1,17 +1,17 @@
-package com.kcvn.spm.app.moving.service
+package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlog.service.BacklogService
-import com.kcvn.spm.app.moving.payload.request.MovingRequest
-import com.kcvn.spm.app.moving.payload.request.MovingRequestWithSeq
-import com.kcvn.spm.app.moving.payload.request.MovingSearchRequest
-import com.kcvn.spm.app.moving.payload.request.ValidateMovingRequest
-import com.kcvn.spm.app.moving.payload.response.MovingResponse
-import com.kcvn.spm.app.moving.payload.response.ValidateMovingResponse
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
+import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequestWithSeq
+import com.kcvn.spm.app.transaction.sending.payload.request.MovingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.ValidateMovingRequest
+import com.kcvn.spm.app.transaction.sending.payload.response.MovingResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.ValidateMovingResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
-import com.kcvn.spm.model.tables.pojos.Moving
-import com.kcvn.spm.repository.MovingRepository
+import com.kcvn.spm.model.tables.pojos.SendingTransactions
+import com.kcvn.spm.repository.SendingTransactionsRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,13 +21,13 @@ import java.time.ZoneOffset
 
 @Service
 @Transactional
-class MovingService(
-    private val movingRepo: MovingRepository,
+class SendingTransactionsService(
+    private val sendingRepo: SendingTransactionsRepository,
     private val backlogService: BacklogService,
     private val receivingService: ReceivingTransactionsService
 ) {
     fun getList(request: MovingSearchRequest, pageable: Pageable): BasePagingResponse<MovingResponse> {
-        val moving = movingRepo.getList(request, pageable)
+        val moving = sendingRepo.getList(request, pageable)
         val data = moving.first.map {
             MovingResponse(
                 sourceLocationCode = it.sourceLocationCode,
@@ -79,20 +79,16 @@ class MovingService(
             // save receiving transaction
             val seqReceiving = receivingService.saveRecTransFromMoving(it, todayUtc)
             // save moving
-            val moving = Moving(
+            val moving = SendingTransactions(
                 null,
                 it.sourceLocationCode,
                 it.destLocationCode,
                 it.poNumber,
                 it.qty,
                 it.seqNo,
-                null,
-                null,
-                null,
-                null,
                 seqReceiving
             )
-            movingRepo.save(moving)
+            sendingRepo.saveMoving(moving)
             // plus backlog destLocation
             val backlogDestData = Backlog(
                 null,
@@ -116,10 +112,10 @@ class MovingService(
 
     fun createMovingRequestWithSeq(requests: List<MovingRequest>, todayUtc: LocalDate): List<MovingRequestWithSeq> {
         return requests
-            .groupBy { Triple(it.sourceLocationCode, it.destLocationCode, it.poNumber) }
+            .groupBy { it.sourceLocationCode to it.poNumber }
             .flatMap { (key, group) ->
-                val (sourceLocationCode, destLocationCode, poNumber) = key
-                val latestSeqNo = movingRepo.findLatestMoving(sourceLocationCode!!, destLocationCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+                val (sourceLocationCode, poNumber) = key
+                val latestSeqNo = sendingRepo.findLatestMoving(sourceLocationCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
 
                 group.mapIndexed { index, movingRequest ->
                     MovingRequestWithSeq(

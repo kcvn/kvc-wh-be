@@ -26,12 +26,14 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(
         request: MovingSearchRequest,
+        @RequestParam(required = false) isMovingList: Boolean?,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["sourceLocationCode"], direction = Sort.Direction.ASC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<MovingResponse>> {
+        request.isMovingList = isMovingList ?: false
         val result = sendingService.getList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }

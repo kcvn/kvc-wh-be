@@ -42,6 +42,11 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
         }
         if (request.fromDate != null && request.toDate != null)
             condition = condition.and(SENDING_TRANSACTIONS.CREATED_DATE.between(request.fromDate, request.toDate))
+        if (request.isMovingList == true) {
+            condition = condition.and(SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.isNotNull)
+        } else {
+            condition = condition.and(SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.isNull)
+        }
 
         val query = context.selectFrom(SENDING_TRANSACTIONS).where(condition.and(SENDING_TRANSACTIONS.IS_CANCELED.eq(false)))
 

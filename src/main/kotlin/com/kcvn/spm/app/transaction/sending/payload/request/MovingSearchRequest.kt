@@ -8,4 +8,5 @@ class MovingSearchRequest {
     var poNumber: String? = null
     var fromDate: OffsetDateTime? = null
     var toDate: OffsetDateTime? = null
+    var isMovingList: Boolean? = null
 }

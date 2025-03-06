@@ -2,7 +2,7 @@ package com.kcvn.spm.app.transaction.sending.payload.response
 
 import java.time.OffsetDateTime
 
-data class MovingResponse(
+data class SendingResponse(
     var sourceLocationCode: String? = null,
     var destLocationCode: String? = null,
     var poNumber: String? = null,

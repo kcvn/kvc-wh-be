@@ -3,7 +3,7 @@ package com.kcvn.spm.app.transaction.sending.service
 import com.kcvn.spm.app.backlog.service.BacklogService
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
-import com.kcvn.spm.app.transaction.sending.payload.response.MovingResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
@@ -23,10 +23,10 @@ class SendingTransactionsService(
     private val backlogService: BacklogService,
     private val receivingService: ReceivingTransactionsService
 ) {
-    fun getList(request: MovingSearchRequest, pageable: Pageable): BasePagingResponse<MovingResponse> {
+    fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
         val moving = sendingRepo.getList(request, pageable)
         val data = moving.first.map {
-            MovingResponse(
+            SendingResponse(
                 sourceLocationCode = it.sourceLocationCode,
                 destLocationCode = it.destLocationCode,
                 poNumber = it.poNumber,

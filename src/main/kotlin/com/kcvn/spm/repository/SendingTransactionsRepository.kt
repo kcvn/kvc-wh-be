@@ -1,6 +1,6 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.app.transaction.sending.payload.request.MovingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -19,7 +19,7 @@ import java.time.ZoneOffset
 
 @Repository
 class SendingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(request: MovingSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<SendingTransactions>, Int> {
+    fun getList(request: SendingSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<SendingTransactions>, Int> {
         var condition: Condition = DSL.noCondition()
         if(!request.listSourceLocationCode.isNullOrEmpty()){
             val sourceLocationCodes = request.listSourceLocationCode!!.split(",")
@@ -42,11 +42,6 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
         }
         if (request.fromDate != null && request.toDate != null)
             condition = condition.and(SENDING_TRANSACTIONS.CREATED_DATE.between(request.fromDate, request.toDate))
-        if (request.isMovingList == true) {
-            condition = condition.and(SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.isNotNull)
-        } else {
-            condition = condition.and(SENDING_TRANSACTIONS.RECEIVING_SEQ_NO.isNull)
-        }
 
         val query = context.selectFrom(SENDING_TRANSACTIONS).where(condition.and(SENDING_TRANSACTIONS.IS_CANCELED.eq(false)))
 

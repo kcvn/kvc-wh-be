@@ -1,9 +1,9 @@
 package com.kcvn.spm.app.transaction.sending.controller
 
 import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequest
-import com.kcvn.spm.app.transaction.sending.payload.request.MovingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
-import com.kcvn.spm.app.transaction.sending.payload.response.MovingResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.service.SendingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -25,15 +25,13 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(
-        request: MovingSearchRequest,
-        @RequestParam(required = false) isMovingList: Boolean?,
+        request: SendingSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
             SortDefault(sort = ["sourceLocationCode"], direction = Sort.Direction.ASC),
         )
         pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<MovingResponse>> {
-        request.isMovingList = isMovingList ?: false
+    ): ResponseEntity<BasePagingResponse<SendingResponse>> {
         val result = sendingService.getList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }

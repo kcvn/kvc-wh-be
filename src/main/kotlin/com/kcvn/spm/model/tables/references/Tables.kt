@@ -16,6 +16,7 @@ import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
+import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
@@ -121,6 +122,11 @@ val CANCEL_RECEIVING_TRANSACTIONS: CancelReceivingTransactions = CancelReceiving
  * The table <code>public.cancel_sending_transactions</code>.
  */
 val CANCEL_SENDING_TRANSACTIONS: CancelSendingTransactions = CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS
+
+/**
+ * The table <code>public.checking</code>.
+ */
+val CHECKING: Checking = Checking.CHECKING
 
 /**
  * The table <code>public.common_category</code>.

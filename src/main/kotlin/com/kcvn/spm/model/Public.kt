@@ -16,6 +16,7 @@ import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
+import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
@@ -139,6 +140,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.cancel_sending_transactions</code>.
      */
     val CANCEL_SENDING_TRANSACTIONS: CancelSendingTransactions get() = CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS
+
+    /**
+     * The table <code>public.checking</code>.
+     */
+    val CHECKING: Checking get() = Checking.CHECKING
 
     /**
      * The table <code>public.common_category</code>.
@@ -370,6 +376,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         CalculateQuantityResult.CALCULATE_QUANTITY_RESULT,
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
         CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS,
+        Checking.CHECKING,
         CommonCategory.COMMON_CATEGORY,
         CompletionRateProcess.COMPLETION_RATE_PROCESS,
         CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,

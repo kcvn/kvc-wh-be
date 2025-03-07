@@ -16,6 +16,7 @@ import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
+import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CommonCategory
 import com.kcvn.spm.model.tables.CompletionRateProcess
 import com.kcvn.spm.model.tables.CompletionRateProcessProduct
@@ -71,6 +72,7 @@ import com.kcvn.spm.model.tables.records.BacklogRecord
 import com.kcvn.spm.model.tables.records.CalculateQuantityResultRecord
 import com.kcvn.spm.model.tables.records.CancelReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.CancelSendingTransactionsRecord
+import com.kcvn.spm.model.tables.records.CheckingRecord
 import com.kcvn.spm.model.tables.records.CommonCategoryRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProcessProductRecord
 import com.kcvn.spm.model.tables.records.CompletionRateProcessRecord
@@ -138,6 +140,7 @@ val BACKLOG_HISTORY_PKEY: UniqueKey<BacklogHistoryRecord> = Internal.createUniqu
 val CALCULATE_QUANTITY_RESULT_PKEY: UniqueKey<CalculateQuantityResultRecord> = Internal.createUniqueKey(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT, DSL.name("calculate_quantity_result_pkey"), arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
 val CANCEL_RECEIVING_TRANSACTIONS_PKEY: UniqueKey<CancelReceivingTransactionsRecord> = Internal.createUniqueKey(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS, DSL.name("cancel_receiving_transactions_pkey"), arrayOf(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS.ID), true)
 val CANCEL_SENDING_TRANSACTIONS_PKEY: UniqueKey<CancelSendingTransactionsRecord> = Internal.createUniqueKey(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS, DSL.name("cancel_sending_transactions_pkey"), arrayOf(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS.ID), true)
+val CHECKING_PKEY: UniqueKey<CheckingRecord> = Internal.createUniqueKey(Checking.CHECKING, DSL.name("checking_pkey"), arrayOf(Checking.CHECKING.ID), true)
 val COMMON_CATEGORY_PKEY: UniqueKey<CommonCategoryRecord> = Internal.createUniqueKey(CommonCategory.COMMON_CATEGORY, DSL.name("common_category_pkey"), arrayOf(CommonCategory.COMMON_CATEGORY.ID), true)
 val COMPLETION_RATE_PROCESS_PKEY: UniqueKey<CompletionRateProcessRecord> = Internal.createUniqueKey(CompletionRateProcess.COMPLETION_RATE_PROCESS, DSL.name("completion_rate_process_pkey"), arrayOf(CompletionRateProcess.COMPLETION_RATE_PROCESS.ID), true)
 val COMPLETION_RATE_PROCESS_PRODUCT_PKEY: UniqueKey<CompletionRateProcessProductRecord> = Internal.createUniqueKey(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT, DSL.name("completion_rate_process_product_pkey"), arrayOf(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.ID), true)

@@ -13,6 +13,7 @@ import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
+import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
@@ -53,6 +54,7 @@ import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
+import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -107,6 +109,11 @@ val BACKLOG: Backlog = Backlog.BACKLOG
  * The table <code>public.backlog_history</code>.
  */
 val BACKLOG_HISTORY: BacklogHistory = BacklogHistory.BACKLOG_HISTORY
+
+/**
+ * The table <code>public.backlog_wh</code>.
+ */
+val BACKLOG_WH: BacklogWh = BacklogWh.BACKLOG_WH
 
 /**
  * The table <code>public.calculate_quantity_result</code>.
@@ -307,6 +314,11 @@ val RECEIVING_TRANSACTIONS: ReceivingTransactions = ReceivingTransactions.RECEIV
  * The table <code>public.sending_transactions</code>.
  */
 val SENDING_TRANSACTIONS: SendingTransactions = SendingTransactions.SENDING_TRANSACTIONS
+
+/**
+ * The table <code>public.splitting</code>.
+ */
+val SPLITTING: Splitting = Splitting.SPLITTING
 
 /**
  * The table <code>public.sync_history</code>.

@@ -13,6 +13,7 @@ import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
+import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
@@ -53,6 +54,7 @@ import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
+import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -69,6 +71,7 @@ import com.kcvn.spm.model.tables.records.AuthUserRecord
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
 import com.kcvn.spm.model.tables.records.BacklogHistoryRecord
 import com.kcvn.spm.model.tables.records.BacklogRecord
+import com.kcvn.spm.model.tables.records.BacklogWhRecord
 import com.kcvn.spm.model.tables.records.CalculateQuantityResultRecord
 import com.kcvn.spm.model.tables.records.CancelReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.CancelSendingTransactionsRecord
@@ -109,6 +112,7 @@ import com.kcvn.spm.model.tables.records.ProductProcessRecord
 import com.kcvn.spm.model.tables.records.ProductRecord
 import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SendingTransactionsRecord
+import com.kcvn.spm.model.tables.records.SplittingRecord
 import com.kcvn.spm.model.tables.records.SyncHistoryRecord
 import com.kcvn.spm.model.tables.records.SystemLockRecord
 import com.kcvn.spm.model.tables.records.TapeEnRouteRecord
@@ -137,6 +141,7 @@ val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUnique
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
 val BACKLOG_PKEY: UniqueKey<BacklogRecord> = Internal.createUniqueKey(Backlog.BACKLOG, DSL.name("backlog_pkey"), arrayOf(Backlog.BACKLOG.ID), true)
 val BACKLOG_HISTORY_PKEY: UniqueKey<BacklogHistoryRecord> = Internal.createUniqueKey(BacklogHistory.BACKLOG_HISTORY, DSL.name("backlog_history_pkey"), arrayOf(BacklogHistory.BACKLOG_HISTORY.ID), true)
+val BACKLOG_WH_PKEY: UniqueKey<BacklogWhRecord> = Internal.createUniqueKey(BacklogWh.BACKLOG_WH, DSL.name("backlog_wh_pkey"), arrayOf(BacklogWh.BACKLOG_WH.ID), true)
 val CALCULATE_QUANTITY_RESULT_PKEY: UniqueKey<CalculateQuantityResultRecord> = Internal.createUniqueKey(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT, DSL.name("calculate_quantity_result_pkey"), arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
 val CANCEL_RECEIVING_TRANSACTIONS_PKEY: UniqueKey<CancelReceivingTransactionsRecord> = Internal.createUniqueKey(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS, DSL.name("cancel_receiving_transactions_pkey"), arrayOf(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS.ID), true)
 val CANCEL_SENDING_TRANSACTIONS_PKEY: UniqueKey<CancelSendingTransactionsRecord> = Internal.createUniqueKey(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS, DSL.name("cancel_sending_transactions_pkey"), arrayOf(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS.ID), true)
@@ -177,6 +182,7 @@ val PRODUCT_PKEY: UniqueKey<ProductRecord> = Internal.createUniqueKey(Product.PR
 val PRODUCT_PROCESS_PKEY: UniqueKey<ProductProcessRecord> = Internal.createUniqueKey(ProductProcess.PRODUCT_PROCESS, DSL.name("product_process_pkey"), arrayOf(ProductProcess.PRODUCT_PROCESS.ID), true)
 val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)
 val SENDING_TRANSACTIONS_PKEY: UniqueKey<SendingTransactionsRecord> = Internal.createUniqueKey(SendingTransactions.SENDING_TRANSACTIONS, DSL.name("sending_transactions_pkey"), arrayOf(SendingTransactions.SENDING_TRANSACTIONS.ID), true)
+val SPLITTING_PKEY: UniqueKey<SplittingRecord> = Internal.createUniqueKey(Splitting.SPLITTING, DSL.name("splitting_pkey"), arrayOf(Splitting.SPLITTING.ID), true)
 val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
 val SYSTEM_LOCK_PKEY: UniqueKey<SystemLockRecord> = Internal.createUniqueKey(SystemLock.SYSTEM_LOCK, DSL.name("system_lock_pkey"), arrayOf(SystemLock.SYSTEM_LOCK.ID), true)
 val TAPE_EN_ROUTE_PKEY: UniqueKey<TapeEnRouteRecord> = Internal.createUniqueKey(TapeEnRoute.TAPE_EN_ROUTE, DSL.name("tape_en_route_pkey"), arrayOf(TapeEnRoute.TAPE_EN_ROUTE.ID), true)

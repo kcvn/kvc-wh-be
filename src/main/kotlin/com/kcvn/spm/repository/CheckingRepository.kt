@@ -12,6 +12,14 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class CheckingRepository(private val context: DSLContext) : SortingRepository() {
+    fun getByPackageCode(packageCode: String): List<Checking> {
+        val condition = CHECKING.PACKAGE_CODE.eq(packageCode)
+
+        return context.selectFrom(CHECKING)
+            .where(condition)
+            .fetchInto(Checking::class.java)
+    }
+
     fun save(data: Checking): Int? =
         context.insertInto(
             CHECKING, CHECKING.PO_NUMBER, CHECKING.PACKAGE_CODE, CHECKING.QTY, CHECKING.SEQ_NO, CHECKING.CREATED_BY)

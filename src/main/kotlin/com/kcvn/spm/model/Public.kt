@@ -13,6 +13,7 @@ import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
+import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
@@ -53,6 +54,7 @@ import com.kcvn.spm.model.tables.Product
 import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
+import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -125,6 +127,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.backlog_history</code>.
      */
     val BACKLOG_HISTORY: BacklogHistory get() = BacklogHistory.BACKLOG_HISTORY
+
+    /**
+     * The table <code>public.backlog_wh</code>.
+     */
+    val BACKLOG_WH: BacklogWh get() = BacklogWh.BACKLOG_WH
 
     /**
      * The table <code>public.calculate_quantity_result</code>.
@@ -327,6 +334,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val SENDING_TRANSACTIONS: SendingTransactions get() = SendingTransactions.SENDING_TRANSACTIONS
 
     /**
+     * The table <code>public.splitting</code>.
+     */
+    val SPLITTING: Splitting get() = Splitting.SPLITTING
+
+    /**
      * The table <code>public.sync_history</code>.
      */
     val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
@@ -373,6 +385,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         AuthUserRole.AUTH_USER_ROLE,
         Backlog.BACKLOG,
         BacklogHistory.BACKLOG_HISTORY,
+        BacklogWh.BACKLOG_WH,
         CalculateQuantityResult.CALCULATE_QUANTITY_RESULT,
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
         CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS,
@@ -413,6 +426,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         ProductProcess.PRODUCT_PROCESS,
         ReceivingTransactions.RECEIVING_TRANSACTIONS,
         SendingTransactions.SENDING_TRANSACTIONS,
+        Splitting.SPLITTING,
         SyncHistory.SYNC_HISTORY,
         SystemLock.SYSTEM_LOCK,
         TapeEnRoute.TAPE_EN_ROUTE,

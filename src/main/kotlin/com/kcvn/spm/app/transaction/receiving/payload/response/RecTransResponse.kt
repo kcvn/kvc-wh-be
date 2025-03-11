@@ -1,12 +1,13 @@
 package com.kcvn.spm.app.transaction.receiving.payload.response
 
+import java.math.BigDecimal
 import java.time.OffsetDateTime
 
 data class RecTransResponse(
     var sourceLocationCode: String? = null,
     var destLocationCode: String? = null,
     var poNumber: String? = null,
-    var qty: Int? = null,
+    var qty: BigDecimal? = BigDecimal.ZERO,
     var seq: Int? = null,
     val createdDate: OffsetDateTime? = null
 )

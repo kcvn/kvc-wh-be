@@ -1,17 +1,21 @@
 package com.kcvn.spm.app.transaction.sending.service
 
-import com.kcvn.spm.app.backlog.service.BacklogService
+import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
-import com.kcvn.spm.model.tables.pojos.Backlog
+import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.repository.SendingTransactionsRepository
+import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -20,8 +24,9 @@ import java.time.ZoneOffset
 @Transactional
 class SendingTransactionsService(
     private val sendingRepo: SendingTransactionsRepository,
-    private val backlogService: BacklogService,
-    private val receivingService: ReceivingTransactionsService
+    private val backlogWhService: BacklogWhService,
+    private val receivingService: ReceivingTransactionsService,
+    private val splittingRepo: SplittingRepository
 ) {
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
         val moving = sendingRepo.getList(request, pageable)
@@ -45,10 +50,11 @@ class SendingTransactionsService(
         val list = aggregateMovingRequests(request)
         val response = mutableListOf<ValidateSendTransResponse>()
         list.forEach {
-            val backlog = backlogService.getByLocationCodeAndPO(it.sourceLocationCode!!, it.poNumber!!)
+            val backlog = backlogWhService.getByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
             if (it.qty!! > backlog.backlogQty!!) {
                 val vmr = ValidateSendTransResponse(
                     sourceLocationCode = it.sourceLocationCode,
+                    sourcePackageCode = it.sourcePackageCode,
                     poNumber = it.poNumber
                 )
                 response.add(vmr)
@@ -59,12 +65,13 @@ class SendingTransactionsService(
 
     fun aggregateMovingRequests(movingRequests: List<MovingRequest>): List<ValidateSendTransRequest> {
         return movingRequests
-            .groupBy { it.sourceLocationCode to it.poNumber }
+            .groupBy { Triple(it.sourceLocationCode, it.sourcePackageCode, it.poNumber) }
             .map { (key, group) ->
                 ValidateSendTransRequest(
                     sourceLocationCode = key.first,
-                    poNumber = key.second,
-                    qty = group.sumOf { it.qty ?: 0 }
+                    sourcePackageCode = key.second,
+                    poNumber = key.third,
+                    qty = group.sumOf { it.qty ?: BigDecimal.ZERO }
                 )
             }
     }
@@ -73,10 +80,11 @@ class SendingTransactionsService(
         val list = aggregateSendingRequests(request)
         val response = mutableListOf<ValidateSendTransResponse>()
         list.forEach {
-            val backlog = backlogService.getByLocationCodeAndPO(it.sourceLocationCode!!, it.poNumber!!)
+            val backlog = backlogWhService.getByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
             if (it.qty!! > backlog.backlogQty!!) {
                 val vmr = ValidateSendTransResponse(
                     sourceLocationCode = it.sourceLocationCode,
+                    sourcePackageCode = it.sourcePackageCode,
                     poNumber = it.poNumber
                 )
                 response.add(vmr)
@@ -87,12 +95,13 @@ class SendingTransactionsService(
 
     fun aggregateSendingRequests(sendingRequests: List<SendingRequest>): List<ValidateSendTransRequest> {
         return sendingRequests
-            .groupBy { it.locationCode to it.poNumber }
+            .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
             .map { (key, group) ->
                 ValidateSendTransRequest(
                     sourceLocationCode = key.first,
-                    poNumber = key.second,
-                    qty = group.sumOf { it.qty ?: 0 }
+                    sourcePackageCode = key.second,
+                    poNumber = key.third,
+                    qty = group.sumOf { it.qty ?: BigDecimal.ZERO }
                 )
             }
     }
@@ -104,20 +113,27 @@ class SendingTransactionsService(
                 null,
                 it.sourceLocationCode,
                 "KVC",
+                it.packageCode,
+                it.packageCode,
                 it.poNumber,
                 it.qty,
                 it.seqNo
             )
             sendingRepo.saveSendingTrans(sendTran)
             // save backlog and backlog history
-            val backlogData = Backlog(
+            val splitting = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.packageCode!!)
+                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+            val receivingDate = splitting.receivingDate
+            val backlogData = BacklogWh(
                 null,
                 it.sourceLocationCode,
                 it.poNumber,
+                it.packageCode,
                 it.qty,
-                null
+                null,
+                receivingDate
             )
-            backlogService.minusBacklog(backlogData, "OUT_ONLY")
+            backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
         }
     }
 
@@ -127,49 +143,61 @@ class SendingTransactionsService(
         list.forEach {
             // save receiving transaction
             val seqReceiving = receivingService.saveRecTransFromMoving(it, todayUtc)
-            // save moving
+            // save sending transactions
             val moving = SendingTransactions(
                 null,
                 it.sourceLocationCode,
                 it.destLocationCode,
+                it.sourcePackageCode,
+                it.destPackageCode,
                 it.poNumber,
                 it.qty,
                 it.seqNo,
                 seqReceiving
             )
             sendingRepo.saveSendingTrans(moving)
+            // get receiving date
+            val splitting = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
+                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+            val receivingDate = splitting.receivingDate
             // plus backlog destLocation
-            val backlogDestData = Backlog(
+            val backlogDestData = BacklogWh(
                 null,
                 it.destLocationCode,
                 it.poNumber,
+                it.destPackageCode,
                 it.qty,
-                null
+                null,
+                receivingDate
             )
-            backlogService.plusBacklog(backlogDestData, "IN")
+            backlogWhService.plusBacklog(backlogDestData, "IN")
             // minus backlog sourceLocation
-            val backlogSourceData = Backlog(
+            val backlogSourceData = BacklogWh(
                 null,
                 it.sourceLocationCode,
                 it.poNumber,
+                it.sourcePackageCode,
                 it.qty,
-                null
+                null,
+                receivingDate
             )
-            backlogService.minusBacklog(backlogSourceData, "OUT")
+            backlogWhService.minusBacklog(backlogSourceData, "OUT")
         }
     }
 
     fun createSendTransRequestWithSeq(requests: List<SendingRequest>): List<SendTransRequestWithSeq> {
         val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         return requests
-            .groupBy { it.locationCode to it.poNumber }
+            .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
             .flatMap { (key, group) ->
-                val (sourceLocationCode, poNumber) = key
-                val latestSeqNo = sendingRepo.findLatestMoving(sourceLocationCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+                val (sourceLocationCode, sourcePackageCode, poNumber) = key
+                val latestSeqNo = sendingRepo.findLatestMoving(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
 
                 group.mapIndexed { index, sendTransRequest ->
                     SendTransRequestWithSeq(
+                        issueDate = sendTransRequest.issueDate,
                         sourceLocationCode = sendTransRequest.locationCode,
+                        packageCode = sendTransRequest.packageCode,
                         poNumber = sendTransRequest.poNumber,
                         qty = sendTransRequest.qty,
                         seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
@@ -180,15 +208,17 @@ class SendingTransactionsService(
 
     fun createMovingRequestWithSeq(requests: List<MovingRequest>, todayUtc: LocalDate): List<MovingRequestWithSeq> {
         return requests
-            .groupBy { it.sourceLocationCode to it.poNumber }
+            .groupBy { Triple(it.sourceLocationCode, it.sourcePackageCode, it.poNumber) }
             .flatMap { (key, group) ->
-                val (sourceLocationCode, poNumber) = key
-                val latestSeqNo = sendingRepo.findLatestMoving(sourceLocationCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+                val (sourceLocationCode, sourcePackageCode, poNumber) = key
+                val latestSeqNo = sendingRepo.findLatestMoving(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
 
                 group.mapIndexed { index, movingRequest ->
                     MovingRequestWithSeq(
                         sourceLocationCode = movingRequest.sourceLocationCode,
                         destLocationCode = movingRequest.destLocationCode,
+                        sourcePackageCode = movingRequest.sourcePackageCode,
+                        destPackageCode = movingRequest.destPackageCode,
                         poNumber = movingRequest.poNumber,
                         qty = movingRequest.qty,
                         seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần

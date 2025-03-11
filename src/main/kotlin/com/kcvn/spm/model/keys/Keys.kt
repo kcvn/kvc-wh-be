@@ -14,6 +14,7 @@ import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.BacklogWh
+import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
@@ -71,6 +72,7 @@ import com.kcvn.spm.model.tables.records.AuthUserRecord
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
 import com.kcvn.spm.model.tables.records.BacklogHistoryRecord
 import com.kcvn.spm.model.tables.records.BacklogRecord
+import com.kcvn.spm.model.tables.records.BacklogWhHistoryRecord
 import com.kcvn.spm.model.tables.records.BacklogWhRecord
 import com.kcvn.spm.model.tables.records.CalculateQuantityResultRecord
 import com.kcvn.spm.model.tables.records.CancelReceivingTransactionsRecord
@@ -142,6 +144,7 @@ val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKe
 val BACKLOG_PKEY: UniqueKey<BacklogRecord> = Internal.createUniqueKey(Backlog.BACKLOG, DSL.name("backlog_pkey"), arrayOf(Backlog.BACKLOG.ID), true)
 val BACKLOG_HISTORY_PKEY: UniqueKey<BacklogHistoryRecord> = Internal.createUniqueKey(BacklogHistory.BACKLOG_HISTORY, DSL.name("backlog_history_pkey"), arrayOf(BacklogHistory.BACKLOG_HISTORY.ID), true)
 val BACKLOG_WH_PKEY: UniqueKey<BacklogWhRecord> = Internal.createUniqueKey(BacklogWh.BACKLOG_WH, DSL.name("backlog_wh_pkey"), arrayOf(BacklogWh.BACKLOG_WH.ID), true)
+val BACKLOG_WH_HISTORY_PKEY: UniqueKey<BacklogWhHistoryRecord> = Internal.createUniqueKey(BacklogWhHistory.BACKLOG_WH_HISTORY, DSL.name("backlog_wh_history_pkey"), arrayOf(BacklogWhHistory.BACKLOG_WH_HISTORY.ID), true)
 val CALCULATE_QUANTITY_RESULT_PKEY: UniqueKey<CalculateQuantityResultRecord> = Internal.createUniqueKey(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT, DSL.name("calculate_quantity_result_pkey"), arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
 val CANCEL_RECEIVING_TRANSACTIONS_PKEY: UniqueKey<CancelReceivingTransactionsRecord> = Internal.createUniqueKey(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS, DSL.name("cancel_receiving_transactions_pkey"), arrayOf(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS.ID), true)
 val CANCEL_SENDING_TRANSACTIONS_PKEY: UniqueKey<CancelSendingTransactionsRecord> = Internal.createUniqueKey(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS, DSL.name("cancel_sending_transactions_pkey"), arrayOf(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS.ID), true)

@@ -14,6 +14,7 @@ import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.BacklogWh
+import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
@@ -114,6 +115,11 @@ val BACKLOG_HISTORY: BacklogHistory = BacklogHistory.BACKLOG_HISTORY
  * The table <code>public.backlog_wh</code>.
  */
 val BACKLOG_WH: BacklogWh = BacklogWh.BACKLOG_WH
+
+/**
+ * The table <code>public.backlog_wh_history</code>.
+ */
+val BACKLOG_WH_HISTORY: BacklogWhHistory = BacklogWhHistory.BACKLOG_WH_HISTORY
 
 /**
  * The table <code>public.calculate_quantity_result</code>.

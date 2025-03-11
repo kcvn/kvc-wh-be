@@ -8,6 +8,7 @@ import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.SENDING_TRANSACTIONS_PKEY
 import com.kcvn.spm.model.tables.records.SendingTransactionsRecord
 
+import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.util.function.Function
 
@@ -16,7 +17,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row12
+import org.jooq.Row14
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -78,6 +79,16 @@ open class SendingTransactions(
     val DEST_LOCATION_CODE: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("dest_location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
 
     /**
+     * The column <code>public.sending_transactions.source_package_code</code>.
+     */
+    val SOURCE_PACKAGE_CODE: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("source_package_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+
+    /**
+     * The column <code>public.sending_transactions.dest_package_code</code>.
+     */
+    val DEST_PACKAGE_CODE: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("dest_package_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+
+    /**
      * The column <code>public.sending_transactions.po_number</code>.
      */
     val PO_NUMBER: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("po_number"), SQLDataType.VARCHAR(30).nullable(false), this, "")
@@ -85,7 +96,7 @@ open class SendingTransactions(
     /**
      * The column <code>public.sending_transactions.qty</code>.
      */
-    val QTY: TableField<SendingTransactionsRecord, Int?> = createField(DSL.name("qty"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+    val QTY: TableField<SendingTransactionsRecord, BigDecimal?> = createField(DSL.name("qty"), SQLDataType.NUMERIC, this, "")
 
     /**
      * The column <code>public.sending_transactions.seq_no</code>.
@@ -165,18 +176,18 @@ open class SendingTransactions(
     override fun rename(name: Table<*>): SendingTransactions = SendingTransactions(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row12 type methods
+    // Row14 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row12<String?, String?, String?, String?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row12<String?, String?, String?, String?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row14<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row14<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, Int?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

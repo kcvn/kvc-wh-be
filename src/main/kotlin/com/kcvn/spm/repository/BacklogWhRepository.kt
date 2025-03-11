@@ -12,6 +12,8 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @Repository
 class BacklogWhRepository(private val context: DSLContext) : SortingRepository() {
@@ -76,6 +78,35 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 data.boxQty, data.receivingDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
             )
             .execute()
+
+    fun findByLocationAndPackageAndPO(locationCode: String, packageCode: String, poNumber: String): BacklogWh? {
+        return context.selectFrom(BACKLOG_WH)
+            .where(
+                BACKLOG_WH.LOCATION_CODE.eq(locationCode)
+                    .and(BACKLOG_WH.PACKAGE_CODE.eq(packageCode))
+                    .and(BACKLOG_WH.PO_NUMBER.eq(poNumber))
+            )
+            .fetchInto(BacklogWh::class.java)
+            .firstOrNull()
+    }
+
+    fun update(data: BacklogWh) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+
+            transactionalContext.update(BACKLOG_WH)
+                .set(BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
+                .set(BACKLOG_WH.BOX_QTY, data.boxQty)
+                .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .where(
+                    BACKLOG_WH.LOCATION_CODE.eq(data.locationCode)
+                        .and(BACKLOG_WH.PACKAGE_CODE.eq(data.packageCode))
+                        .and(BACKLOG_WH.PO_NUMBER.eq(data.poNumber))
+                )
+                .execute()
+        }
+    }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()

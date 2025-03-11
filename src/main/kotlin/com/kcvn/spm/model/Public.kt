@@ -14,6 +14,7 @@ import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.BacklogWh
+import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
@@ -132,6 +133,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.backlog_wh</code>.
      */
     val BACKLOG_WH: BacklogWh get() = BacklogWh.BACKLOG_WH
+
+    /**
+     * The table <code>public.backlog_wh_history</code>.
+     */
+    val BACKLOG_WH_HISTORY: BacklogWhHistory get() = BacklogWhHistory.BACKLOG_WH_HISTORY
 
     /**
      * The table <code>public.calculate_quantity_result</code>.
@@ -386,6 +392,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         Backlog.BACKLOG,
         BacklogHistory.BACKLOG_HISTORY,
         BacklogWh.BACKLOG_WH,
+        BacklogWhHistory.BACKLOG_WH_HISTORY,
         CalculateQuantityResult.CALCULATE_QUANTITY_RESULT,
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
         CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS,

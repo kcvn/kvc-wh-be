@@ -1,11 +1,11 @@
 package com.kcvn.spm.app.splitting.service
 
 import com.kcvn.spm.app.splitting.payload.request.SplittingRequest
+import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
+import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.Splitting
-import com.kcvn.spm.repository.BacklogWhRepository
 import com.kcvn.spm.repository.CheckingRepository
 import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.stereotype.Service
@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class SplittingService(
     private val splittingRepo: SplittingRepository,
-    private val backlogWhRepo: BacklogWhRepository,
-    private val checkingRepo: CheckingRepository
+    private val checkingRepo: CheckingRepository,
+    private val receivingService: ReceivingTransactionsService
 ) {
     fun saveSplitting(request: List<SplittingRequest>) {
         request.forEach {
@@ -28,22 +28,22 @@ class SplittingService(
             )
             // save splitting
             splittingRepo.save(data)
-            // save backlogWh
+            // save receiving transaction, backlogWh, backlogWhHistory
             val checkingList = checkingRepo.getByPackageCode(it.packageCode!!)
             if (checkingList.isEmpty()) {
                 throw BusinessException(CommonUtils.getMessage("Mã gói không tồn tại"))
             }
-            val totalQty = checkingList.sumOf { checking -> checking.qty ?: 0 }
-            val backlogWhData = BacklogWh(
-                null,
-                it.locationCode,
-                checkingList[0].poNumber,
-                checkingList[0].packageCode,
-                totalQty,
-                checkingList.size,
-                it.receivingDate
-            )
-            backlogWhRepo.save(backlogWhData)
+            val recTransRequestList = mutableListOf<RecTransRequest>()
+            checkingList.forEach { ck ->
+                val recTrans = RecTransRequest(
+                    locationCode = it.locationCode,
+                    packageCode = it.packageCode,
+                    poNumber = ck.poNumber,
+                    qty = ck.qty
+                )
+                recTransRequestList.add(recTrans)
+            }
+            receivingService.saveRecTrans(recTransRequestList, it.receivingDate)
         }
     }
 }

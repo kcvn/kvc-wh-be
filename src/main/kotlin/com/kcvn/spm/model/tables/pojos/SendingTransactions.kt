@@ -5,6 +5,7 @@ package com.kcvn.spm.model.tables.pojos
 
 
 import java.io.Serializable
+import java.math.BigDecimal
 import java.time.OffsetDateTime
 
 
@@ -16,8 +17,10 @@ data class SendingTransactions(
     var id: String? = null,
     var sourceLocationCode: String? = null,
     var destLocationCode: String? = null,
+    var sourcePackageCode: String? = null,
+    var destPackageCode: String? = null,
     var poNumber: String? = null,
-    var qty: Int? = null,
+    var qty: BigDecimal? = null,
     var seqNo: Int? = null,
     var receivingSeqNo: Int? = null,
     var createdDate: OffsetDateTime? = null,
@@ -55,6 +58,18 @@ data class SendingTransactions(
                 return false
         }
         else if (this.destLocationCode != o.destLocationCode)
+            return false
+        if (this.sourcePackageCode == null) {
+            if (o.sourcePackageCode != null)
+                return false
+        }
+        else if (this.sourcePackageCode != o.sourcePackageCode)
+            return false
+        if (this.destPackageCode == null) {
+            if (o.destPackageCode != null)
+                return false
+        }
+        else if (this.destPackageCode != o.destPackageCode)
             return false
         if (this.poNumber == null) {
             if (o.poNumber != null)
@@ -119,6 +134,8 @@ data class SendingTransactions(
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.sourceLocationCode == null) 0 else this.sourceLocationCode.hashCode())
         result = prime * result + (if (this.destLocationCode == null) 0 else this.destLocationCode.hashCode())
+        result = prime * result + (if (this.sourcePackageCode == null) 0 else this.sourcePackageCode.hashCode())
+        result = prime * result + (if (this.destPackageCode == null) 0 else this.destPackageCode.hashCode())
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
         result = prime * result + (if (this.qty == null) 0 else this.qty.hashCode())
         result = prime * result + (if (this.seqNo == null) 0 else this.seqNo.hashCode())
@@ -137,6 +154,8 @@ data class SendingTransactions(
         sb.append(id)
         sb.append(", ").append(sourceLocationCode)
         sb.append(", ").append(destLocationCode)
+        sb.append(", ").append(sourcePackageCode)
+        sb.append(", ").append(destPackageCode)
         sb.append(", ").append(poNumber)
         sb.append(", ").append(qty)
         sb.append(", ").append(seqNo)

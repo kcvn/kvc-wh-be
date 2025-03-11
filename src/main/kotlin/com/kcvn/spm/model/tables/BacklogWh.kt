@@ -8,6 +8,7 @@ import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.BACKLOG_WH_PKEY
 import com.kcvn.spm.model.tables.records.BacklogWhRecord
 
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.function.Function
@@ -86,7 +87,7 @@ open class BacklogWh(
     /**
      * The column <code>public.backlog_wh.backlog_qty</code>.
      */
-    val BACKLOG_QTY: TableField<BacklogWhRecord, Int?> = createField(DSL.name("backlog_qty"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+    val BACKLOG_QTY: TableField<BacklogWhRecord, BigDecimal?> = createField(DSL.name("backlog_qty"), SQLDataType.NUMERIC, this, "")
 
     /**
      * The column <code>public.backlog_wh.box_qty</code>.
@@ -166,16 +167,16 @@ open class BacklogWh(
     // -------------------------------------------------------------------------
     // Row12 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row12<String?, String?, String?, String?, Int?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row12<String?, String?, String?, String?, Int?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun fieldsRow(): Row12<String?, String?, String?, String?, BigDecimal?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row12<String?, String?, String?, String?, BigDecimal?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, Int?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, BigDecimal?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, Int?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, BigDecimal?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

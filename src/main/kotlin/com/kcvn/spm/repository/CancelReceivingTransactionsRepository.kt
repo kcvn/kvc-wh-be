@@ -15,11 +15,15 @@ class CancelReceivingTransactionsRepository(private val context: DSLContext) : S
         const val PERMISSION_TYPE = "permission"
     }
 
-    fun save(rec: CancelReceivingTransactions): String? =
+    fun save(crt: CancelReceivingTransactions): String? =
         context.insertInto(
             CANCEL_RECEIVING_TRANSACTIONS, CANCEL_RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE, CANCEL_RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE,
-            CANCEL_RECEIVING_TRANSACTIONS.PO_NUMBER, CANCEL_RECEIVING_TRANSACTIONS.QTY, CANCEL_RECEIVING_TRANSACTIONS.SEQ_NO, CANCEL_RECEIVING_TRANSACTIONS.CREATED_BY)
-            .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            CANCEL_RECEIVING_TRANSACTIONS.SOURCE_PACKAGE_CODE, CANCEL_RECEIVING_TRANSACTIONS.DEST_PACKAGE_CODE, CANCEL_RECEIVING_TRANSACTIONS.PO_NUMBER,
+            CANCEL_RECEIVING_TRANSACTIONS.QTY, CANCEL_RECEIVING_TRANSACTIONS.SEQ_NO, CANCEL_RECEIVING_TRANSACTIONS.CREATED_BY
+        )
+            .values(
+                crt.sourceLocationCode, crt.destLocationCode, crt.sourcePackageCode, crt.destPackageCode, crt.poNumber, crt.qty, crt.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+            )
             .returningResult(CANCEL_RECEIVING_TRANSACTIONS.ID)
             .fetchOne()?.value1()
 

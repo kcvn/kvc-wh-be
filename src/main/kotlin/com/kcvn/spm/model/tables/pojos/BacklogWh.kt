@@ -5,6 +5,7 @@ package com.kcvn.spm.model.tables.pojos
 
 
 import java.io.Serializable
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -18,7 +19,7 @@ data class BacklogWh(
     var locationCode: String? = null,
     var poNumber: String? = null,
     var packageCode: String? = null,
-    var backlogQty: Int? = null,
+    var backlogQty: BigDecimal? = null,
     var boxQty: Int? = null,
     var receivingDate: LocalDate? = null,
     var issueDate: LocalDate? = null,

@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.transaction.receiving.service
 
 import com.kcvn.spm.app.backlog.service.BacklogService
+import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
@@ -8,6 +9,7 @@ import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
 import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequestWithSeq
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.Backlog
+import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
 import org.springframework.data.domain.Pageable
@@ -21,7 +23,8 @@ import java.time.ZoneOffset
 @Transactional
 class ReceivingTransactionsService(
     private val receivingRepo: ReceivingTransactionsRepository,
-    private val backlogService: BacklogService
+    private val backlogService: BacklogService,
+    private val backlogWhService: BacklogWhService,
 ) {
     fun getList(request: RecTransSearchRequest, pageable: Pageable): BasePagingResponse<RecTransResponse> {
         val recTrans = receivingRepo.getList(request, pageable)
@@ -47,6 +50,8 @@ class ReceivingTransactionsService(
             null,
             data.sourceLocationCode,
             data.destLocationCode,
+            data.sourcePackageCode,
+            data.destPackageCode,
             data.poNumber,
             data.qty,
             latestSeqNo + 1
@@ -54,13 +59,15 @@ class ReceivingTransactionsService(
         return receivingRepo.save(recTransaction)
     }
 
-    fun saveRecTrans(request: List<RecTransRequest>) {
+    fun saveRecTrans(request: List<RecTransRequest>, receivingDate: LocalDate?) {
         val list = createRecTransRequestWithSeq(request)
         list.forEach {
             val recTransaction = ReceivingTransactions(
                 null,
                 "KVC",
                 it.locationCode,
+                it.packageCode,
+                it.packageCode,
                 it.poNumber,
                 it.qty,
                 it.seqNo
@@ -68,14 +75,10 @@ class ReceivingTransactionsService(
             // save receiving transactions
             receivingRepo.save(recTransaction)
             // save backlog and backlog history
-            val backlogData = Backlog(
-                null,
-                it.locationCode,
-                it.poNumber,
-                it.qty,
-                null
+            val backlogData = BacklogWh(
+                null, it.locationCode, it.poNumber, it.packageCode, it.qty, 1, receivingDate
             )
-            backlogService.plusBacklog(backlogData, "IN_ONLY")
+            backlogWhService.plusBacklog(backlogData, "IN_ONLY")
         }
     }
 
@@ -90,6 +93,7 @@ class ReceivingTransactionsService(
                 group.mapIndexed { index, recTransRequest ->
                     RecTransRequestWithSeq(
                         locationCode = recTransRequest.locationCode,
+                        packageCode = recTransRequest.packageCode,
                         poNumber = recTransRequest.poNumber,
                         qty = recTransRequest.qty,
                         seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần

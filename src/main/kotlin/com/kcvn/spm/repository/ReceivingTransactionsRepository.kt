@@ -13,6 +13,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -65,6 +66,8 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
                 .set(RECEIVING_TRANSACTIONS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE.eq(data.sourceLocationCode)
                     .and(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(data.destLocationCode))
+                    .and(RECEIVING_TRANSACTIONS.SOURCE_PACKAGE_CODE.eq(data.sourcePackageCode))
+                    .and(RECEIVING_TRANSACTIONS.DEST_PACKAGE_CODE.eq(data.destPackageCode))
                     .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber))
                     .and(RECEIVING_TRANSACTIONS.SEQ_NO.eq(data.seqNo))
                     .and(RECEIVING_TRANSACTIONS.IS_CANCELED.eq(false))
@@ -73,9 +76,11 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
         }
     }
 
-    fun findRecTrans(locationCode: String, poNumber: String, qty: Int, seqNo: Int): ReceivingTransactions? {
+    fun findRecTrans(locationCode: String, packageCode: String, poNumber: String, qty: BigDecimal, seqNo: Int): ReceivingTransactions? {
         return context.selectFrom(RECEIVING_TRANSACTIONS)
             .where(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(locationCode)
+                .and(RECEIVING_TRANSACTIONS.SOURCE_PACKAGE_CODE.eq(packageCode))
+                .and(RECEIVING_TRANSACTIONS.DEST_PACKAGE_CODE.eq(packageCode))
                 .and(RECEIVING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
                 .and(RECEIVING_TRANSACTIONS.QTY.eq(qty))
                 .and(RECEIVING_TRANSACTIONS.SEQ_NO.eq(seqNo)))
@@ -95,9 +100,12 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
     }
 
     fun save(rec: ReceivingTransactions): Int? =
-        context.insertInto(RECEIVING_TRANSACTIONS, RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE, RECEIVING_TRANSACTIONS.PO_NUMBER,
-            RECEIVING_TRANSACTIONS.QTY, RECEIVING_TRANSACTIONS.SEQ_NO, RECEIVING_TRANSACTIONS.CREATED_BY)
-            .values(rec.sourceLocationCode, rec.destLocationCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+        context.insertInto(
+            RECEIVING_TRANSACTIONS, RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE,
+            RECEIVING_TRANSACTIONS.SOURCE_PACKAGE_CODE, RECEIVING_TRANSACTIONS.DEST_PACKAGE_CODE, RECEIVING_TRANSACTIONS.PO_NUMBER,
+            RECEIVING_TRANSACTIONS.QTY, RECEIVING_TRANSACTIONS.SEQ_NO, RECEIVING_TRANSACTIONS.CREATED_BY
+        )
+            .values(rec.sourceLocationCode, rec.destLocationCode, rec.sourcePackageCode, rec.destPackageCode, rec.poNumber, rec.qty, rec.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .returningResult(RECEIVING_TRANSACTIONS.SEQ_NO)
             .fetchOne()?.value1()
 

@@ -5,13 +5,10 @@ import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsServi
 import com.kcvn.spm.app.transaction.sending.payload.request.*
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
-import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
-import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.repository.SendingTransactionsRepository
-import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -25,8 +22,7 @@ import java.time.ZoneOffset
 class SendingTransactionsService(
     private val sendingRepo: SendingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
-    private val receivingService: ReceivingTransactionsService,
-    private val splittingRepo: SplittingRepository
+    private val receivingService: ReceivingTransactionsService
 ) {
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
         val moving = sendingRepo.getList(request, pageable)
@@ -121,17 +117,13 @@ class SendingTransactionsService(
             )
             sendingRepo.saveSendingTrans(sendTran)
             // save backlog and backlog history
-            val splitting = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.packageCode!!)
-                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
-            val receivingDate = splitting.receivingDate
             val backlogData = BacklogWh(
                 null,
                 it.sourceLocationCode,
                 it.poNumber,
                 it.packageCode,
                 it.qty,
-                null,
-                receivingDate
+                null
             )
             backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
         }
@@ -156,10 +148,6 @@ class SendingTransactionsService(
                 seqReceiving
             )
             sendingRepo.saveSendingTrans(moving)
-            // get receiving date
-            val splitting = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
-                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
-            val receivingDate = splitting.receivingDate
             // plus backlog destLocation
             val backlogDestData = BacklogWh(
                 null,
@@ -167,8 +155,7 @@ class SendingTransactionsService(
                 it.poNumber,
                 it.destPackageCode,
                 it.qty,
-                null,
-                receivingDate
+                null
             )
             backlogWhService.plusBacklog(backlogDestData, "IN")
             // minus backlog sourceLocation
@@ -178,8 +165,7 @@ class SendingTransactionsService(
                 it.poNumber,
                 it.sourcePackageCode,
                 it.qty,
-                null,
-                receivingDate
+                null
             )
             backlogWhService.minusBacklog(backlogSourceData, "OUT")
         }

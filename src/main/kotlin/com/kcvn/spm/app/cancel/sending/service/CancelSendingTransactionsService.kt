@@ -54,7 +54,7 @@ class CancelSendingTransactionsService(
             cancelSend.poNumber,
             cancelSend.sourcePackageCode,
             cancelSend.qty,
-            null
+            1
         )
         backlogWhService.plusBacklog(backlogData, "CANCEL_OUT_ONLY")
 

@@ -6,10 +6,7 @@ import com.kcvn.spm.app.cancel.moving.payload.response.CancelMovingResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.*
-import com.kcvn.spm.repository.CancelMovingRepository
-import com.kcvn.spm.repository.CancelReceivingTransactionsRepository
-import com.kcvn.spm.repository.ReceivingTransactionsRepository
-import com.kcvn.spm.repository.SendingTransactionsRepository
+import com.kcvn.spm.repository.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,7 +17,8 @@ class CancelMovingService(
     private val sendingRepo: SendingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
     private val cancelReceivingRepo: CancelReceivingTransactionsRepository,
-    private val receivingRepo: ReceivingTransactionsRepository
+    private val receivingRepo: ReceivingTransactionsRepository,
+    private val splittingRepo: SplittingRepository
 ) {
     fun createCancelMoving(request: CancelMovingRequest): CancelMovingResponse? {
         val cancelMoving = CancelSendingTransactions(
@@ -85,6 +83,10 @@ class CancelMovingService(
             null
         )
         backlogWhService.plusBacklog(backlogSourceData, "CANCEL_OUT")
+        // get receivingDate
+        val splittingSource = splittingRepo.findByLocationAndPackage(cancelMoving.destLocationCode!!, cancelMoving.destPackageCode!!)
+            ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+        val receivingDate = splittingSource.receivingDate
         // minus backlog destLocation
         val backlogDestData = BacklogWh(
             null,
@@ -92,7 +94,8 @@ class CancelMovingService(
             cancelMoving.poNumber,
             cancelMoving.destPackageCode,
             cancelMoving.qty,
-            null
+            1,
+            receivingDate
         )
         backlogWhService.minusBacklog(backlogDestData, "CANCEL_IN")
 

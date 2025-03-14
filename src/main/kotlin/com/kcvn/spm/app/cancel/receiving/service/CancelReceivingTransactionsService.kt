@@ -10,6 +10,7 @@ import com.kcvn.spm.model.tables.pojos.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.repository.CancelReceivingTransactionsRepository
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
+import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -18,7 +19,8 @@ import org.springframework.transaction.annotation.Transactional
 class CancelReceivingTransactionsService(
     private val cancelReceivingRepo: CancelReceivingTransactionsRepository,
     private val receivingRepo: ReceivingTransactionsRepository,
-    private val backlogWhService: BacklogWhService
+    private val backlogWhService: BacklogWhService,
+    private val splittingRepo: SplittingRepository
 ) {
     fun createCancelReceiving(request: CancelRecTransRequest): CancelRecTransResponse? {
         val cancelRec = CancelReceivingTransactions(
@@ -47,6 +49,10 @@ class CancelReceivingTransactionsService(
             request.seqNo
         )
         receivingRepo.updateIsCanceled(rec)
+        // get receivingDate
+        val splittingSource = splittingRepo.findByLocationAndPackage(cancelRec.destLocationCode!!, cancelRec.sourcePackageCode!!)
+            ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+        val receivingDate = splittingSource.receivingDate
         // minus backlog
         val backlogData = BacklogWh(
             null,
@@ -54,7 +60,8 @@ class CancelReceivingTransactionsService(
             cancelRec.poNumber,
             cancelRec.sourcePackageCode,
             cancelRec.qty,
-            null
+            1,
+            receivingDate
         )
         backlogWhService.minusBacklog(backlogData, "CANCEL_IN_ONLY")
 

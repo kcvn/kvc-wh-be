@@ -35,10 +35,12 @@ class BacklogWhService(
             )
             backlogWhHistoryRepo.save(entityBacklogHistory)
         } else {
-            val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!), 1.plus(backlog.boxQty!!))
+            val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!),
+                data.boxQty?.plus(backlog.boxQty!!)
+            )
             backlogWhRepo.update(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(
-                null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!), 1.plus(backlog.boxQty!!), receivingDate, null, transactionType
+                null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!), data.boxQty?.plus(backlog.boxQty!!), receivingDate, null, transactionType
             )
             backlogWhHistoryRepo.save(entityBacklogHistory)
         }
@@ -47,17 +49,13 @@ class BacklogWhService(
     fun minusBacklog(data: BacklogWh, transactionType: String) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
             ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
-        // get receiving date
-        val splitting = splittingRepo.findByLocationAndPackage(data.locationCode!!, data.packageCode!!)
-            ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
-        val receivingDate = splitting.receivingDate
         val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, backlog.backlogQty?.minus(data.backlogQty!!),
-            backlog.boxQty?.minus(1)
+            backlog.boxQty?.minus(data.boxQty!!)
         )
         backlogWhRepo.update(entityBacklog)
         // insert backlog history
         val entityBacklogHistory = BacklogWhHistory(
-            null, entityBacklog.locationCode, entityBacklog.poNumber, entityBacklog.packageCode, entityBacklog.backlogQty, entityBacklog.boxQty, receivingDate, null, transactionType
+            null, entityBacklog.locationCode, entityBacklog.poNumber, entityBacklog.packageCode, entityBacklog.backlogQty, entityBacklog.boxQty, data.receivingDate, null, transactionType
         )
         backlogWhHistoryRepo.save(entityBacklogHistory)
     }

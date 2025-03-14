@@ -1,8 +1,8 @@
 package com.kcvn.spm.app.transaction.sending.controller
 
 import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequest
-import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.service.SendingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -38,21 +38,12 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
 
     @PostMapping("/create/moving")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
-    fun createMoving(@Valid @RequestBody request: List<MovingRequest>?): ResponseEntity<*> {
-        val response = sendingService.validateSourceBacklogFromMoving(request!!)
-
-        return if (response.isNotEmpty()) {
-            ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("Không đủ tồn kho"), response),
-                HttpStatus.OK
-            )
-        } else {
+    fun createMoving(@Valid @RequestBody request: List<MovingRequest>): ResponseEntity<*> {
             sendingService.saveMoving(request)
-            ResponseEntity<MessageResponse>(
+            return ResponseEntity<MessageResponse>(
                 MessageResponse(CommonUtils.getMessage("action.succeeded")),
                 HttpStatus.CREATED
             )
-        }
     }
 
     @PostMapping("/create/sending-trans")

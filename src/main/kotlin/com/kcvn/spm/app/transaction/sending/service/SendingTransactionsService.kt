@@ -87,7 +87,8 @@ class SendingTransactionsService(
                 it.packageCode,
                 it.poNumber,
                 it.qty,
-                it.seqNo
+                it.seqNo,
+                "OUT_ONLY"
             )
             sendingRepo.saveSendingTrans(sendTran)
             // get receivingDate
@@ -124,6 +125,7 @@ class SendingTransactionsService(
                 it.poNumber,
                 it.qty,
                 it.seqNo,
+                "TRANSFER",
                 seqReceiving
             )
             sendingRepo.saveSendingTrans(moving)

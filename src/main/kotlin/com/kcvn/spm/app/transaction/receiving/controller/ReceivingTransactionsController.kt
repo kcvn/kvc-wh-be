@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.transaction.receiving.controller
 
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
+import com.kcvn.spm.app.transaction.receiving.payload.response.RecAndSendResponse
 import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -30,6 +31,20 @@ class ReceivingTransactionsController(private val receivingService: ReceivingTra
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<RecTransResponse>> {
         val result = receivingService.getList(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-list-rec-send")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getListReceivingAndSending(
+        request: RecTransSearchRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.ASC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<RecAndSendResponse>> {
+        val result = receivingService.getListRecAndSend(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 }

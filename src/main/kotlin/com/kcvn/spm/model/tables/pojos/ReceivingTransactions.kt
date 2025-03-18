@@ -22,6 +22,7 @@ data class ReceivingTransactions(
     var poNumber: String? = null,
     var qty: BigDecimal? = null,
     var seqNo: Int? = null,
+    var transactionType: String? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
@@ -88,6 +89,12 @@ data class ReceivingTransactions(
         }
         else if (this.seqNo != o.seqNo)
             return false
+        if (this.transactionType == null) {
+            if (o.transactionType != null)
+                return false
+        }
+        else if (this.transactionType != o.transactionType)
+            return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
                 return false
@@ -132,6 +139,7 @@ data class ReceivingTransactions(
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
         result = prime * result + (if (this.qty == null) 0 else this.qty.hashCode())
         result = prime * result + (if (this.seqNo == null) 0 else this.seqNo.hashCode())
+        result = prime * result + (if (this.transactionType == null) 0 else this.transactionType.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -151,6 +159,7 @@ data class ReceivingTransactions(
         sb.append(", ").append(poNumber)
         sb.append(", ").append(qty)
         sb.append(", ").append(seqNo)
+        sb.append(", ").append(transactionType)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

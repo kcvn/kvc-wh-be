@@ -58,6 +58,7 @@ class CancelMovingService(
             request.poNumber,
             request.qty,
             request.seqNo,
+            "TRANSFER",
             request.receivingSeqNo
         )
         sendingRepo.updateIsCanceled(moving)

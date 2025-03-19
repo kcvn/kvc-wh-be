@@ -1,6 +1,5 @@
 package com.kcvn.spm.app.transaction.sending.controller
 
-import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
@@ -34,16 +33,6 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     ): ResponseEntity<BasePagingResponse<SendingResponse>> {
         val result = sendingService.getList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
-    }
-
-    @PostMapping("/create/moving")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
-    fun createMoving(@Valid @RequestBody request: List<MovingRequest>): ResponseEntity<*> {
-            sendingService.saveMoving(request)
-            return ResponseEntity<MessageResponse>(
-                MessageResponse(CommonUtils.getMessage("action.succeeded")),
-                HttpStatus.CREATED
-            )
     }
 
     @PostMapping("/create/sending-trans")

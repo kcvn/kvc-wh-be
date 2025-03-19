@@ -9,6 +9,7 @@ import com.kcvn.spm.model.keys.RECEIVING_TRANSACTIONS_PKEY
 import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
 
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.function.Function
 
@@ -17,7 +18,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row14
+import org.jooq.Row15
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -111,6 +112,11 @@ open class ReceivingTransactions(
     val TRANSACTION_TYPE: TableField<ReceivingTransactionsRecord, String?> = createField(DSL.name("transaction_type"), SQLDataType.VARCHAR(20).nullable(false), this, "")
 
     /**
+     * The column <code>public.receiving_transactions.receiving_date</code>.
+     */
+    val RECEIVING_DATE: TableField<ReceivingTransactionsRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
+
+    /**
      * The column <code>public.receiving_transactions.created_date</code>.
      */
     val CREATED_DATE: TableField<ReceivingTransactionsRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
@@ -178,18 +184,18 @@ open class ReceivingTransactions(
     override fun rename(name: Table<*>): ReceivingTransactions = ReceivingTransactions(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row14 type methods
+    // Row15 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row14<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row14<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row15<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row15<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

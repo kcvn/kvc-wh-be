@@ -6,6 +6,7 @@ package com.kcvn.spm.model.tables.pojos
 
 import java.io.Serializable
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 
@@ -23,7 +24,7 @@ data class SendingTransactions(
     var qty: BigDecimal? = null,
     var seqNo: Int? = null,
     var transactionType: String? = null,
-    var receivingSeqNo: Int? = null,
+    var receivingDate: LocalDate? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
@@ -96,11 +97,11 @@ data class SendingTransactions(
         }
         else if (this.transactionType != o.transactionType)
             return false
-        if (this.receivingSeqNo == null) {
-            if (o.receivingSeqNo != null)
+        if (this.receivingDate == null) {
+            if (o.receivingDate != null)
                 return false
         }
-        else if (this.receivingSeqNo != o.receivingSeqNo)
+        else if (this.receivingDate != o.receivingDate)
             return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
@@ -147,7 +148,7 @@ data class SendingTransactions(
         result = prime * result + (if (this.qty == null) 0 else this.qty.hashCode())
         result = prime * result + (if (this.seqNo == null) 0 else this.seqNo.hashCode())
         result = prime * result + (if (this.transactionType == null) 0 else this.transactionType.hashCode())
-        result = prime * result + (if (this.receivingSeqNo == null) 0 else this.receivingSeqNo.hashCode())
+        result = prime * result + (if (this.receivingDate == null) 0 else this.receivingDate.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -168,7 +169,7 @@ data class SendingTransactions(
         sb.append(", ").append(qty)
         sb.append(", ").append(seqNo)
         sb.append(", ").append(transactionType)
-        sb.append(", ").append(receivingSeqNo)
+        sb.append(", ").append(receivingDate)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

@@ -6,10 +6,11 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
-import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
-import org.jooq.*
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.jooq.SortOrder
+import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.jooq.impl.DSL.table
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -53,79 +54,6 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
 
             return Pair(data, count)
         }
-    }
-
-    fun getListRecAndSend(request: RecTransSearchRequest, pageable: Pageable) : Pair<List<ReceivingTransactions>, Int> {
-        val condition = searchCondition(request)
-
-        val subQuery = context.select(
-            RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE.`as`("sourceLocationCode"),
-            RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.`as`("destLocationCode"),
-            RECEIVING_TRANSACTIONS.SOURCE_PACKAGE_CODE.`as`("sourcePackageCode"),
-            RECEIVING_TRANSACTIONS.DEST_PACKAGE_CODE.`as`("destPackageCode"),
-            RECEIVING_TRANSACTIONS.PO_NUMBER.`as`("poNumber"),
-            RECEIVING_TRANSACTIONS.QTY.`as`("qty"),
-            RECEIVING_TRANSACTIONS.SEQ_NO.`as`("seqNo"),
-            RECEIVING_TRANSACTIONS.TRANSACTION_TYPE.`as`("transactionType"),
-            RECEIVING_TRANSACTIONS.CREATED_DATE.`as`("createdDate")
-        ).from(RECEIVING_TRANSACTIONS)
-            .where(condition.and(RECEIVING_TRANSACTIONS.IS_CANCELED.eq(false)))
-            .union(
-                context.select(
-                    SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE.`as`("sourceLocationCode"),
-                    SENDING_TRANSACTIONS.DEST_LOCATION_CODE.`as`("destLocationCode"),
-                    SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE.`as`("sourcePackageCode"),
-                    SENDING_TRANSACTIONS.DEST_PACKAGE_CODE.`as`("destPackageCode"),
-                    SENDING_TRANSACTIONS.PO_NUMBER.`as`("poNumber"),
-                    SENDING_TRANSACTIONS.QTY.`as`("qty"),
-                    SENDING_TRANSACTIONS.SEQ_NO.`as`("seqNo"),
-                    SENDING_TRANSACTIONS.TRANSACTION_TYPE.`as`("transactionType"),
-                    SENDING_TRANSACTIONS.CREATED_DATE.`as`("createdDate")
-                ).from(SENDING_TRANSACTIONS)
-                    .where(condition.and(SENDING_TRANSACTIONS.IS_CANCELED.eq(false)))
-            )
-
-        val aliasTable = table(subQuery).`as`("aliasTable")
-
-        val count = context.fetchCount(aliasTable)
-        val createdDateField = aliasTable.field("createdDate") as Field<*>
-
-        val data = context.select(
-            aliasTable.field("sourceLocationCode"),
-            aliasTable.field("destLocationCode"),
-            aliasTable.field("sourcePackageCode"),
-            aliasTable.field("destPackageCode"),
-            aliasTable.field("poNumber"),
-            aliasTable.field("qty"),
-            aliasTable.field("seqNo"),
-            aliasTable.field("transactionType"),
-            createdDateField
-        ).from(aliasTable)
-            .orderBy(createdDateField.sort(SortOrder.ASC))
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .fetchInto(ReceivingTransactions::class.java)
-
-        return Pair(data, count)
-    }
-
-    private fun searchCondition(request: RecTransSearchRequest): Condition {
-        var condition: Condition = DSL.noCondition()
-        if(!request.locationCode.isNullOrEmpty()){
-            val locationCodes = request.locationCode!!.split(",")
-            var condition1 : Condition = DSL.noCondition()
-            locationCodes.forEach { locationCode ->
-                condition1 = condition1.or(RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE.eq(locationCode.trim()))
-            }
-            condition = condition.and(condition1)
-        }
-        if (!request.poNumber.isNullOrEmpty()) {
-            condition = condition.and(RECEIVING_TRANSACTIONS.PO_NUMBER.containsIgnoreCase(request.poNumber!!.trim()))
-        }
-        if (request.fromDate != null && request.toDate != null)
-            condition = condition.and(RECEIVING_TRANSACTIONS.CREATED_DATE.between(request.fromDate, request.toDate))
-
-        return condition
     }
 
     fun updateIsCanceled(data: ReceivingTransactions) {

@@ -31,7 +31,7 @@ class CancelSendingTransactionsService(
             request.qty,
             request.seqNo
         )
-        sendingRepo.findMoving(cancelSend.sourceLocationCode!!, cancelSend.destLocationCode!!, cancelSend.sourcePackageCode!!, cancelSend.destPackageCode!!, cancelSend.poNumber!!, cancelSend.qty!!, cancelSend.seqNo!!, null)
+        sendingRepo.findMoving(cancelSend.sourceLocationCode!!, cancelSend.destLocationCode!!, cancelSend.sourcePackageCode!!, cancelSend.destPackageCode!!, cancelSend.poNumber!!, cancelSend.qty!!, cancelSend.seqNo!!)
             ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
         // save cancel sending transactions
         val cancelSendId = cancelSendingRepo.save(cancelSend)

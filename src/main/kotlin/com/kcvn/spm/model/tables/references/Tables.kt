@@ -33,6 +33,7 @@ import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Locations
+import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
@@ -210,6 +211,11 @@ val INVENTORY_SEMI_PRODUCT: InventorySemiProduct = InventorySemiProduct.INVENTOR
  * The table <code>public.locations</code>.
  */
 val LOCATIONS: Locations = Locations.LOCATIONS
+
+/**
+ * The table <code>public.moving</code>.
+ */
+val MOVING: Moving = Moving.MOVING
 
 /**
  * The table <code>public.order</code>.

@@ -33,6 +33,7 @@ import com.kcvn.spm.model.tables.InventoryIns_30day
 import com.kcvn.spm.model.tables.InventoryProduct
 import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Locations
+import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.Order
 import com.kcvn.spm.model.tables.OrderDetail
 import com.kcvn.spm.model.tables.OrderInfo
@@ -230,6 +231,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val LOCATIONS: Locations get() = Locations.LOCATIONS
 
     /**
+     * The table <code>public.moving</code>.
+     */
+    val MOVING: Moving get() = Moving.MOVING
+
+    /**
      * The table <code>public.order</code>.
      */
     val ORDER: Order get() = Order.ORDER
@@ -411,6 +417,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         InventoryProduct.INVENTORY_PRODUCT,
         InventorySemiProduct.INVENTORY_SEMI_PRODUCT,
         Locations.LOCATIONS,
+        Moving.MOVING,
         Order.ORDER,
         OrderDetail.ORDER_DETAIL,
         OrderInfo.ORDER_INFO,

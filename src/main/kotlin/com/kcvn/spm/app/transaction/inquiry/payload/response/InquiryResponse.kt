@@ -1,9 +1,9 @@
-package com.kcvn.spm.app.transaction.receiving.payload.response
+package com.kcvn.spm.app.transaction.inquiry.payload.response
 
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 
-data class RecAndSendResponse(
+data class InquiryResponse(
     var sourceLocationCode: String? = null,
     var destLocationCode: String? = null,
     var sourcePackageCode: String? = null,

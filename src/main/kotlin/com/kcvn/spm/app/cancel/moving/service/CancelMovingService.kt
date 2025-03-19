@@ -32,7 +32,7 @@ class CancelMovingService(
             request.seqNo,
             request.receivingSeqNo
         )
-        sendingRepo.findMoving(cancelMoving.sourceLocationCode!!, cancelMoving.destLocationCode!!, cancelMoving.sourcePackageCode!!, cancelMoving.destPackageCode!!, cancelMoving.poNumber!!, cancelMoving.qty!!, cancelMoving.seqNo!!, cancelMoving.receivingSeqNo!!)
+        sendingRepo.findMoving(cancelMoving.sourceLocationCode!!, cancelMoving.destLocationCode!!, cancelMoving.sourcePackageCode!!, cancelMoving.destPackageCode!!, cancelMoving.poNumber!!, cancelMoving.qty!!, cancelMoving.seqNo!!)
             ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
         // save cancel sending when moving
         val cancelMovingId = cancelMovingRepo.save(cancelMoving)
@@ -58,8 +58,7 @@ class CancelMovingService(
             request.poNumber,
             request.qty,
             request.seqNo,
-            "TRANSFER",
-            request.receivingSeqNo
+            "TRANSFER"
         )
         sendingRepo.updateIsCanceled(moving)
         // update is_canceled in receiving transactions

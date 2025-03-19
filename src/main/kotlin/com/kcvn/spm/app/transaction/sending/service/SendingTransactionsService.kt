@@ -2,7 +2,10 @@ package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
-import com.kcvn.spm.app.transaction.sending.payload.request.*
+import com.kcvn.spm.app.transaction.sending.payload.request.SendTransRequestWithSeq
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.ValidateSendTransRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
 import com.kcvn.spm.common.exception.BusinessException
@@ -16,7 +19,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -79,6 +81,10 @@ class SendingTransactionsService(
     fun saveSendTrans(request: List<SendingRequest>) {
         val list = createSendTransRequestWithSeq(request)
         list.forEach {
+            // get receivingDate
+            val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.packageCode!!)
+                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+            val receivingDate = splittingSource.receivingDate
             val sendTran = SendingTransactions(
                 null,
                 it.sourceLocationCode,
@@ -88,13 +94,10 @@ class SendingTransactionsService(
                 it.poNumber,
                 it.qty,
                 it.seqNo,
-                "OUT_ONLY"
+                "OUT_ONLY",
+                receivingDate
             )
             sendingRepo.saveSendingTrans(sendTran)
-            // get receivingDate
-            val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.packageCode!!)
-                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
-            val receivingDate = splittingSource.receivingDate
             // save backlog and backlog history
             val backlogData = BacklogWh(
                 null,
@@ -106,58 +109,6 @@ class SendingTransactionsService(
                 receivingDate
             )
             backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
-        }
-    }
-
-    fun saveMoving(request: List<MovingRequest>) {
-        val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
-        val list = createMovingRequestWithSeq(request, todayUtc)
-        list.forEach {
-            // save receiving transaction
-            val seqReceiving = receivingService.saveRecTransFromMoving(it, todayUtc)
-            // save sending transactions
-            val moving = SendingTransactions(
-                null,
-                it.sourceLocationCode,
-                it.destLocationCode,
-                it.sourcePackageCode,
-                it.destPackageCode,
-                it.poNumber,
-                it.qty,
-                it.seqNo,
-                "TRANSFER",
-                seqReceiving
-            )
-            sendingRepo.saveSendingTrans(moving)
-            // get receivingDate from source
-            val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
-                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
-            val recDateSource = splittingSource.receivingDate
-            // update location for package when destPackageCode == ""
-            if (it.destPackageCode == "") {
-                splittingRepo.updateLocationCode(it.sourceLocationCode!!, it.destLocationCode!!, it.sourcePackageCode!!)
-            }
-            // plus backlog destLocation
-            val backlogDestData = BacklogWh(
-                null,
-                it.destLocationCode,
-                it.poNumber,
-                if (it.destPackageCode?.isNotEmpty() == true) it.destPackageCode else it.sourcePackageCode,
-                it.qty,
-                it.boxQty
-            )
-            backlogWhService.plusBacklog(backlogDestData, "IN")
-            // minus backlog sourceLocation
-            val backlogSourceData = BacklogWh(
-                null,
-                it.sourceLocationCode,
-                it.poNumber,
-                it.sourcePackageCode,
-                it.qty,
-                it.boxQty,
-                recDateSource
-            )
-            backlogWhService.minusBacklog(backlogSourceData, "OUT")
         }
     }
 
@@ -176,28 +127,6 @@ class SendingTransactionsService(
                         packageCode = sendTransRequest.packageCode,
                         poNumber = sendTransRequest.poNumber,
                         qty = sendTransRequest.qty,
-                        seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
-                    )
-                }
-            }
-    }
-
-    fun createMovingRequestWithSeq(requests: List<MovingRequest>, todayUtc: LocalDate): List<MovingRequestWithSeq> {
-        return requests
-            .groupBy { Triple(it.sourceLocationCode, it.sourcePackageCode, it.poNumber) }
-            .flatMap { (key, group) ->
-                val (sourceLocationCode, sourcePackageCode, poNumber) = key
-                val latestSeqNo = sendingRepo.findLatestMoving(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
-
-                group.mapIndexed { index, movingRequest ->
-                    MovingRequestWithSeq(
-                        destLocationCode = movingRequest.destLocationCode,
-                        destPackageCode = movingRequest.destPackageCode,
-                        sourceLocationCode = movingRequest.sourceLocationCode,
-                        sourcePackageCode = movingRequest.sourcePackageCode,
-                        poNumber = movingRequest.poNumber,
-                        qty = movingRequest.qty,
-                        boxQty = movingRequest.boxQty,
                         seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
                     )
                 }

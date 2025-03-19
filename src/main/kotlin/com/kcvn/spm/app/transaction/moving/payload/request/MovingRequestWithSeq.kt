@@ -1,8 +1,8 @@
-package com.kcvn.spm.app.transaction.sending.payload.request
+package com.kcvn.spm.app.transaction.moving.payload.request
 
 import java.math.BigDecimal
 
-data class MovingRequest(
+data class MovingRequestWithSeq(
     var destLocationCode: String? = null,
     var destPackageCode: String? = null,
     var sourceLocationCode: String? = null,
@@ -10,4 +10,5 @@ data class MovingRequest(
     var poNumber: String? = null,
     var qty : BigDecimal? = BigDecimal.ZERO,
     var boxQty : Int? = 0,
+    var seqNo : Int? = 1
 )

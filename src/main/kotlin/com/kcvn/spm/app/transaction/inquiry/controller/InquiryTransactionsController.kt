@@ -1,8 +1,8 @@
-package com.kcvn.spm.app.transaction.receiving.controller
+package com.kcvn.spm.app.transaction.inquiry.controller
 
-import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
-import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
-import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
+import com.kcvn.spm.app.transaction.inquiry.payload.request.InquirySearchRequest
+import com.kcvn.spm.app.transaction.inquiry.payload.response.InquiryResponse
+import com.kcvn.spm.app.transaction.inquiry.service.InquiryTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import org.springframework.data.domain.Pageable
@@ -17,19 +17,19 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/receiving")
-class ReceivingTransactionsController(private val receivingService: ReceivingTransactionsService) {
+@RequestMapping("/api/inquiry")
+class InquiryTransactionsController(private val inquiryService: InquiryTransactionsService) {
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(
-        request: RecTransSearchRequest,
+        request: InquirySearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["destLocationCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.ASC),
         )
         pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<RecTransResponse>> {
-        val result = receivingService.getList(request, pageable)
+    ): ResponseEntity<BasePagingResponse<InquiryResponse>> {
+        val result = inquiryService.getList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 }

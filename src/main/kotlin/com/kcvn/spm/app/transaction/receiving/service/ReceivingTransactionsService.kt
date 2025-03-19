@@ -5,9 +5,7 @@ import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
-import com.kcvn.spm.app.transaction.receiving.payload.response.RecAndSendResponse
 import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
-import com.kcvn.spm.app.transaction.sending.payload.request.MovingRequestWithSeq
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
@@ -42,43 +40,6 @@ class ReceivingTransactionsService(
             data,
             recTrans.second
         )
-    }
-
-    fun getListRecAndSend(request: RecTransSearchRequest, pageable: Pageable): BasePagingResponse<RecAndSendResponse> {
-        val recTrans = receivingRepo.getListRecAndSend(request, pageable)
-        val data = recTrans.first.map {
-            RecAndSendResponse(
-                sourceLocationCode = it.sourceLocationCode,
-                destLocationCode = it.destLocationCode,
-                sourcePackageCode = it.sourcePackageCode,
-                destPackageCode = it.destPackageCode,
-                poNumber = it.poNumber,
-                qty = it.qty,
-                seq = it.seqNo,
-                transactionType = it.transactionType,
-                createdDate = it.createdDate
-            )
-        }
-        return BasePagingResponse(
-            data,
-            recTrans.second
-        )
-    }
-
-    fun saveRecTransFromMoving(data: MovingRequestWithSeq, todayUtc: LocalDate): Int? {
-        val latestSeqNo = receivingRepo.findLatestByLocationCodeAndPO(data.destLocationCode!!, data.poNumber!!, todayUtc)?.seqNo ?: 0
-        val recTransaction = ReceivingTransactions(
-            null,
-            data.sourceLocationCode,
-            data.destLocationCode,
-            data.sourcePackageCode,
-            data.destPackageCode,
-            data.poNumber,
-            data.qty,
-            latestSeqNo + 1,
-            "TRANSFER"
-        )
-        return receivingRepo.save(recTransaction)
     }
 
     fun saveRecTrans(request: List<RecTransRequest>, receivingDate: LocalDate?) {

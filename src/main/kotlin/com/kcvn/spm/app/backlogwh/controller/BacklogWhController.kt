@@ -5,6 +5,8 @@ import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -31,5 +33,16 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     ): ResponseEntity<BasePagingResponse<BacklogWhResponse>> {
         val result = backlogWhService.getList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/export-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    fun exportExcel(
+        request: BacklogWhSearchRequest,
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
+        pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = backlogWhService.exportBacklogWhExcel(request, pageable)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 }

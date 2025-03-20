@@ -12,6 +12,7 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -48,15 +49,32 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         if (request.issueDate != null)
             condition = condition.and(BACKLOG_WH.ISSUE_DATE.eq(request.issueDate))
 
-        val query = context.selectFrom(BACKLOG_WH).where(condition)
-
         if (isExport) {
-            val data = query
+            condition = condition.and(BACKLOG_WH.ISSUE_DATE.isNull).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
+            val query = context.select(
+                BACKLOG_WH.LOCATION_CODE,
+                BACKLOG_WH.PO_NUMBER,
+                BACKLOG_WH.RECEIVING_DATE,
+                DSL.sum(BACKLOG_WH.BACKLOG_QTY).`as`("SUM_BACKLOG_QTY"),
+//                DSL.max(BACKLOG_WH.CREATED_DATE).`as`("LATEST_CREATED_DATE")
+            )
+                .from(BACKLOG_WH)
+                .where(condition)
+                .groupBy(BACKLOG_WH.LOCATION_CODE, BACKLOG_WH.PO_NUMBER, BACKLOG_WH.RECEIVING_DATE)
                 .orderBy(getSortFields(pageable.sort, BACKLOG_WH.LOCATION_CODE))
-                .fetchInto(BacklogWh::class.java)
 
+            val data = query.fetch { record ->
+                BacklogWh(
+                    locationCode = record[BACKLOG_WH.LOCATION_CODE],
+                    poNumber = record[BACKLOG_WH.PO_NUMBER],
+                    receivingDate = record[BACKLOG_WH.RECEIVING_DATE],
+                    backlogQty = record.get("SUM_BACKLOG_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO,
+//                    createdDate = record.get("LATEST_CREATED_DATE", OffsetDateTime::class.java)
+                )
+            }
             return Pair(data, data.size)
         } else {
+            val query = context.selectFrom(BACKLOG_WH).where(condition)
             val count = query.count()
             val data = query
                 .orderBy(getSortFields(pageable.sort, BACKLOG_WH.LOCATION_CODE))

@@ -3,24 +3,14 @@ package com.kcvn.spm.common.helper
 import com.kcvn.spm.common.constants.Color
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.util.CommonUtils
-import org.apache.poi.ss.usermodel.BorderStyle
-import org.apache.poi.ss.usermodel.CellStyle
-import org.apache.poi.ss.usermodel.CellType
-import org.apache.poi.ss.usermodel.DateUtil
-import org.apache.poi.ss.usermodel.FillPatternType
-import org.apache.poi.ss.usermodel.Font
-import org.apache.poi.ss.usermodel.HorizontalAlignment
-import org.apache.poi.ss.usermodel.IndexedColors
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.Sheet
-import org.apache.poi.ss.usermodel.VerticalAlignment
-import org.apache.poi.ss.usermodel.Workbook
+import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.FileInputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.*
@@ -50,6 +40,38 @@ class ExcelHelper {
             } catch (e: Exception) {
                 e.printStackTrace()
                 return ""
+            }
+        }
+
+        fun getCellValueDate(row: Row, colIdx: Int): LocalDate? {
+            return try {
+                val cell = row.getCell(colIdx)
+                when {
+                    cell == null -> null
+
+                    // Nếu ô là kiểu ngày (DATE), lấy giá trị ngày
+                    cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell) ->
+                        cell.localDateTimeCellValue.toLocalDate()
+
+                    // Nếu ô chứa số serial, chuyển đổi nó thành LocalDate
+                    cell.cellType == CellType.NUMERIC ->
+                        LocalDate.of(1900, 1, 1).plusDays(cell.numericCellValue.toLong() - 2)
+
+                    // Nếu ô chứa chuỗi ngày, chuyển thành LocalDate
+                    cell.cellType == CellType.STRING -> {
+                        val text = cell.stringCellValue.trim()
+                        try {
+                            LocalDate.parse(text)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
+                    else -> null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
             }
         }
 

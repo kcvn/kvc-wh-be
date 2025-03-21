@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.backlogwh.controller
 
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
+import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -14,9 +15,8 @@ import org.springframework.data.web.SortDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/backlog-wh")
@@ -33,6 +33,22 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     ): ResponseEntity<BasePagingResponse<BacklogWhResponse>> {
         val result = backlogWhService.getList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/download-template-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = backlogWhService.downloadTemplate()
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasRole('ADMIN')")
+    fun importExcel(
+        @RequestPart("file") file: MultipartFile
+    ): ResponseEntity<BaseResponse<List<ImportBacklogWh>>> {
+        val data = backlogWhService.importExcel(file)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")

@@ -1,6 +1,7 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
+import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -123,6 +124,25 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                         .and(BACKLOG_WH.PO_NUMBER.eq(data.poNumber))
                 )
                 .execute()
+        }
+    }
+
+    fun updateIssueDate(data: ImportBacklogWh): Boolean {
+        return context.transactionResult { configuration ->
+            val transactionalContext = DSL.using(configuration)
+
+            val affectedRows = transactionalContext.update(BACKLOG_WH)
+                .set(BACKLOG_WH.ISSUE_DATE, data.issueDate)
+                .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .where(
+                    BACKLOG_WH.LOCATION_CODE.eq(data.locationCode)
+                        .and(BACKLOG_WH.PO_NUMBER.eq(data.poNumber))
+                        .and(BACKLOG_WH.RECEIVING_DATE.eq(data.receivingDate))
+                )
+                .execute()
+
+            affectedRows > 0 // Trả về true nếu có ít nhất 1 dòng bị cập nhật
         }
     }
 

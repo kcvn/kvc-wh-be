@@ -63,6 +63,7 @@ import com.kcvn.spm.model.tables.TapeEnRoute
 import com.kcvn.spm.model.tables.TapeInfo
 import com.kcvn.spm.model.tables.TapeInventory
 import com.kcvn.spm.model.tables.UpdateTape
+import com.kcvn.spm.model.tables.WestFactoryLayout
 import com.kcvn.spm.model.tables.WorkResult
 
 
@@ -361,6 +362,11 @@ val TAPE_INVENTORY: TapeInventory = TapeInventory.TAPE_INVENTORY
  * The table <code>public.update_tape</code>.
  */
 val UPDATE_TAPE: UpdateTape = UpdateTape.UPDATE_TAPE
+
+/**
+ * The table <code>public.west_factory_layout</code>.
+ */
+val WEST_FACTORY_LAYOUT: WestFactoryLayout = WestFactoryLayout.WEST_FACTORY_LAYOUT
 
 /**
  * The table <code>public.work_result</code>.

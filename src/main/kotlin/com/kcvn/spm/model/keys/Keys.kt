@@ -63,6 +63,7 @@ import com.kcvn.spm.model.tables.TapeEnRoute
 import com.kcvn.spm.model.tables.TapeInfo
 import com.kcvn.spm.model.tables.TapeInventory
 import com.kcvn.spm.model.tables.UpdateTape
+import com.kcvn.spm.model.tables.WestFactoryLayout
 import com.kcvn.spm.model.tables.WorkResult
 import com.kcvn.spm.model.tables.records.AppSettingRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
@@ -123,6 +124,7 @@ import com.kcvn.spm.model.tables.records.TapeEnRouteRecord
 import com.kcvn.spm.model.tables.records.TapeInfoRecord
 import com.kcvn.spm.model.tables.records.TapeInventoryRecord
 import com.kcvn.spm.model.tables.records.UpdateTapeRecord
+import com.kcvn.spm.model.tables.records.WestFactoryLayoutRecord
 import com.kcvn.spm.model.tables.records.WorkResultRecord
 
 import org.jooq.ForeignKey
@@ -195,6 +197,7 @@ val TAPE_EN_ROUTE_PKEY: UniqueKey<TapeEnRouteRecord> = Internal.createUniqueKey(
 val TAPE_INFO_PKEY: UniqueKey<TapeInfoRecord> = Internal.createUniqueKey(TapeInfo.TAPE_INFO, DSL.name("tape_info_pkey"), arrayOf(TapeInfo.TAPE_INFO.ID), true)
 val TAPE_INVENTORY_PKEY: UniqueKey<TapeInventoryRecord> = Internal.createUniqueKey(TapeInventory.TAPE_INVENTORY, DSL.name("tape_inventory_pkey"), arrayOf(TapeInventory.TAPE_INVENTORY.ID), true)
 val UPDATE_TAPE_PKEY: UniqueKey<UpdateTapeRecord> = Internal.createUniqueKey(UpdateTape.UPDATE_TAPE, DSL.name("update_tape_pkey"), arrayOf(UpdateTape.UPDATE_TAPE.ID), true)
+val WEST_FACTORY_LAYOUT_PKEY: UniqueKey<WestFactoryLayoutRecord> = Internal.createUniqueKey(WestFactoryLayout.WEST_FACTORY_LAYOUT, DSL.name("west_factory_layout_pkey"), arrayOf(WestFactoryLayout.WEST_FACTORY_LAYOUT.ID), true)
 val WORK_RESULT_PKEY: UniqueKey<WorkResultRecord> = Internal.createUniqueKey(WorkResult.WORK_RESULT, DSL.name("work_result_pkey"), arrayOf(WorkResult.WORK_RESULT.ID), true)
 
 // -------------------------------------------------------------------------

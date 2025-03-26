@@ -1,0 +1,41 @@
+package com.kcvn.spm.app.westfactory.payload.response
+
+import com.kcvn.spm.common.payload.LayoutDetailResponse
+
+data class WestFactoryResponse(
+    var column1: LayoutDetailResponse? = null,
+    var column2: LayoutDetailResponse? = null,
+    var column3: LayoutDetailResponse? = null,
+    var column4: LayoutDetailResponse? = null,
+    var column5: LayoutDetailResponse? = null,
+    var column6: LayoutDetailResponse? = null,
+    var column7: LayoutDetailResponse? = null,
+    var column8: LayoutDetailResponse? = null,
+    var column9: LayoutDetailResponse? = null,
+    var column10: LayoutDetailResponse? = null,
+    var column11: LayoutDetailResponse? = null,
+    var column12: LayoutDetailResponse? = null,
+    var column13: LayoutDetailResponse? = null,
+    var column14: LayoutDetailResponse? = null,
+    var column15: LayoutDetailResponse? = null,
+    var column16: LayoutDetailResponse? = null,
+    var column17: LayoutDetailResponse? = null,
+    var column18: LayoutDetailResponse? = null,
+    var column19: LayoutDetailResponse? = null,
+    var column20: LayoutDetailResponse? = null,
+    var column21: LayoutDetailResponse? = null,
+    var column22: LayoutDetailResponse? = null,
+    var column23: LayoutDetailResponse? = null,
+    var column24: LayoutDetailResponse? = null,
+    var column25: LayoutDetailResponse? = null,
+    var column26: LayoutDetailResponse? = null,
+    var column27: LayoutDetailResponse? = null,
+    var column28: LayoutDetailResponse? = null,
+    var column29: LayoutDetailResponse? = null,
+    var column30: LayoutDetailResponse? = null,
+    var column31: LayoutDetailResponse? = null,
+    var column32: LayoutDetailResponse? = null,
+    var column33: LayoutDetailResponse? = null,
+    var column34: LayoutDetailResponse? = null,
+    var column35: LayoutDetailResponse? = null
+)

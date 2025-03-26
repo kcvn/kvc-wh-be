@@ -9,6 +9,7 @@ import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.SortOrder
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
@@ -86,6 +87,12 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             return Pair(data, count)
         }
     }
+
+    fun getListWithQtyGtZero(): List<BacklogWh> =
+        context.selectFrom(BACKLOG_WH)
+        .where(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
+        .orderBy(BACKLOG_WH.LOCATION_CODE.sort(SortOrder.ASC))
+        .fetchInto(BacklogWh::class.java)
 
     fun save(data: BacklogWh): Int? =
         context.insertInto(

@@ -36,6 +36,4 @@ data class WestFactoryResponse(
     var column31: LayoutDetailResponse? = null,
     var column32: LayoutDetailResponse? = null,
     var column33: LayoutDetailResponse? = null,
-    var column34: LayoutDetailResponse? = null,
-    var column35: LayoutDetailResponse? = null
 )

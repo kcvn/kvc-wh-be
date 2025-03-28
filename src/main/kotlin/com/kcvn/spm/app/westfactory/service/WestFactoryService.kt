@@ -132,9 +132,7 @@ class WestFactoryService(
                 column30 = getLayoutDetailResponse(it.column30, locationCodes),
                 column31 = getLayoutDetailResponse(it.column31, locationCodes),
                 column32 = getLayoutDetailResponse(it.column32, locationCodes),
-                column33 = getLayoutDetailResponse(it.column33, locationCodes),
-                column34 = getLayoutDetailResponse(it.column34, locationCodes),
-                column35 = getLayoutDetailResponse(it.column35, locationCodes)
+                column33 = getLayoutDetailResponse(it.column33, locationCodes)
             )
         }
         return BasePagingResponse(
@@ -152,7 +150,7 @@ class WestFactoryService(
                 LayoutDetailResponse(value = value, color = "#FF0000")
             } else {
                 // không tồn kho màu xanh
-                LayoutDetailResponse(value = value, color = "#0000FF")
+                LayoutDetailResponse(value = value, color = "#FFFFFF")
             }
         }
     }

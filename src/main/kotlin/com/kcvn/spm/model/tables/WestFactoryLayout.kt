@@ -231,16 +231,6 @@ open class WestFactoryLayout(
      */
     val COLUMN33: TableField<WestFactoryLayoutRecord, String?> = createField(DSL.name("column33"), SQLDataType.VARCHAR(6).nullable(false), this, "")
 
-    /**
-     * The column <code>public.west_factory_layout.column34</code>.
-     */
-    val COLUMN34: TableField<WestFactoryLayoutRecord, String?> = createField(DSL.name("column34"), SQLDataType.VARCHAR(6).nullable(false), this, "")
-
-    /**
-     * The column <code>public.west_factory_layout.column35</code>.
-     */
-    val COLUMN35: TableField<WestFactoryLayoutRecord, String?> = createField(DSL.name("column35"), SQLDataType.VARCHAR(6).nullable(false), this, "")
-
     private constructor(alias: Name, aliased: Table<WestFactoryLayoutRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<WestFactoryLayoutRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 

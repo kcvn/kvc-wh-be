@@ -53,8 +53,6 @@ class WestFactoryRepository(private val context: DSLContext) : SortingRepository
                         this.column31 = data.column31
                         this.column32 = data.column32
                         this.column33 = data.column33
-                        this.column34 = data.column34
-                        this.column35 = data.column35
                     }
                 }
             ).execute()

@@ -77,9 +77,7 @@ class WestFactoryService(
                     column30 = ExcelHelper.getCellValue(row, 30),
                     column31 = ExcelHelper.getCellValue(row, 31),
                     column32 = ExcelHelper.getCellValue(row, 32),
-                    column33 = ExcelHelper.getCellValue(row, 33),
-                    column34 = ExcelHelper.getCellValue(row, 34),
-                    column35 = ExcelHelper.getCellValue(row, 35)
+                    column33 = ExcelHelper.getCellValue(row, 33)
                 )
                 westFactoryList.add(westFactoryData)
             }

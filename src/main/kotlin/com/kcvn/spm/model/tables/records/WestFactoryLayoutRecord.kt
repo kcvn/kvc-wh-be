@@ -156,14 +156,6 @@ open class WestFactoryLayoutRecord() : UpdatableRecordImpl<WestFactoryLayoutReco
         set(value): Unit = set(34, value)
         get(): String? = get(34) as String?
 
-    open var column34: String?
-        set(value): Unit = set(35, value)
-        get(): String? = get(35) as String?
-
-    open var column35: String?
-        set(value): Unit = set(36, value)
-        get(): String? = get(36) as String?
-
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -173,7 +165,7 @@ open class WestFactoryLayoutRecord() : UpdatableRecordImpl<WestFactoryLayoutReco
     /**
      * Create a detached, initialised WestFactoryLayoutRecord
      */
-    constructor(id: String? = null, rowNum: Int? = null, column1: String? = null, column2: String? = null, column3: String? = null, column4: String? = null, column5: String? = null, column6: String? = null, column7: String? = null, column8: String? = null, column9: String? = null, column10: String? = null, column11: String? = null, column12: String? = null, column13: String? = null, column14: String? = null, column15: String? = null, column16: String? = null, column17: String? = null, column18: String? = null, column19: String? = null, column20: String? = null, column21: String? = null, column22: String? = null, column23: String? = null, column24: String? = null, column25: String? = null, column26: String? = null, column27: String? = null, column28: String? = null, column29: String? = null, column30: String? = null, column31: String? = null, column32: String? = null, column33: String? = null, column34: String? = null, column35: String? = null): this() {
+    constructor(id: String? = null, rowNum: Int? = null, column1: String? = null, column2: String? = null, column3: String? = null, column4: String? = null, column5: String? = null, column6: String? = null, column7: String? = null, column8: String? = null, column9: String? = null, column10: String? = null, column11: String? = null, column12: String? = null, column13: String? = null, column14: String? = null, column15: String? = null, column16: String? = null, column17: String? = null, column18: String? = null, column19: String? = null, column20: String? = null, column21: String? = null, column22: String? = null, column23: String? = null, column24: String? = null, column25: String? = null, column26: String? = null, column27: String? = null, column28: String? = null, column29: String? = null, column30: String? = null, column31: String? = null, column32: String? = null, column33: String? = null): this() {
         this.id = id
         this.rowNum = rowNum
         this.column1 = column1
@@ -209,8 +201,6 @@ open class WestFactoryLayoutRecord() : UpdatableRecordImpl<WestFactoryLayoutReco
         this.column31 = column31
         this.column32 = column32
         this.column33 = column33
-        this.column34 = column34
-        this.column35 = column35
         resetChangedOnNotNull()
     }
 
@@ -254,8 +244,6 @@ open class WestFactoryLayoutRecord() : UpdatableRecordImpl<WestFactoryLayoutReco
             this.column31 = value.column31
             this.column32 = value.column32
             this.column33 = value.column33
-            this.column34 = value.column34
-            this.column35 = value.column35
             resetChangedOnNotNull()
         }
     }

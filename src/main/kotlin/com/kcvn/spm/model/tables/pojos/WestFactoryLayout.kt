@@ -46,9 +46,7 @@ data class WestFactoryLayout(
     var column30: String? = null,
     var column31: String? = null,
     var column32: String? = null,
-    var column33: String? = null,
-    var column34: String? = null,
-    var column35: String? = null
+    var column33: String? = null
 ): Serializable {
 
 
@@ -270,18 +268,6 @@ data class WestFactoryLayout(
         }
         else if (this.column33 != o.column33)
             return false
-        if (this.column34 == null) {
-            if (o.column34 != null)
-                return false
-        }
-        else if (this.column34 != o.column34)
-            return false
-        if (this.column35 == null) {
-            if (o.column35 != null)
-                return false
-        }
-        else if (this.column35 != o.column35)
-            return false
         return true
     }
 
@@ -323,8 +309,6 @@ data class WestFactoryLayout(
         result = prime * result + (if (this.column31 == null) 0 else this.column31.hashCode())
         result = prime * result + (if (this.column32 == null) 0 else this.column32.hashCode())
         result = prime * result + (if (this.column33 == null) 0 else this.column33.hashCode())
-        result = prime * result + (if (this.column34 == null) 0 else this.column34.hashCode())
-        result = prime * result + (if (this.column35 == null) 0 else this.column35.hashCode())
         return result
     }
 
@@ -366,8 +350,6 @@ data class WestFactoryLayout(
         sb.append(", ").append(column31)
         sb.append(", ").append(column32)
         sb.append(", ").append(column33)
-        sb.append(", ").append(column34)
-        sb.append(", ").append(column35)
 
         sb.append(")")
         return sb.toString()

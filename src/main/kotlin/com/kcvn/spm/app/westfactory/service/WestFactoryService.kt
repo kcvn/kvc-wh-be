@@ -1,6 +1,5 @@
 package com.kcvn.spm.app.westfactory.service
 
-import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.westfactory.payload.response.WestFactoryResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -12,7 +11,6 @@ import com.kcvn.spm.model.tables.pojos.WestFactoryLayout
 import com.kcvn.spm.repository.BacklogWhRepository
 import com.kcvn.spm.repository.WestFactoryRepository
 import org.apache.poi.ss.usermodel.WorkbookFactory
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -96,8 +94,8 @@ class WestFactoryService(
         }
     }
 
-    fun getList(request: BacklogWhSearchRequest, pageable: Pageable): BasePagingResponse<WestFactoryResponse> {
-        val westFactoryData = westFactoryRepo.getList(request, pageable)
+    fun getList(): BasePagingResponse<WestFactoryResponse> {
+        val westFactoryData = westFactoryRepo.getList()
         val backlogData = backlogWhRepo.getListWithQtyGtZero()
         val locationCodes = backlogData.map { backlog -> backlog.locationCode }
         val data = westFactoryData.first.map {

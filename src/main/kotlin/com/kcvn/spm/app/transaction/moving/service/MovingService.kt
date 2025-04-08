@@ -3,7 +3,7 @@ package com.kcvn.spm.app.transaction.moving.service
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.moving.payload.request.MovingRequest
 import com.kcvn.spm.app.transaction.moving.payload.request.MovingRequestWithSeq
-import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.Moving
@@ -28,7 +28,9 @@ class MovingService(
         list.forEach {
             // get receivingDate from source
             val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
-                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+                ?: throw BusinessExceptionDetail(
+                    CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
+                )
             val recDateSource = splittingSource.receivingDate
             // save moving
             val moving = Moving(

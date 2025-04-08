@@ -3,7 +3,7 @@ package com.kcvn.spm.app.auth.service
 import com.kcvn.spm.app.auth.payload.request.UpdateUserRequest
 import com.kcvn.spm.common.enums.EPermission
 import com.kcvn.spm.common.enums.EUserStatus
-import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.AuthPasswordResetToken
@@ -80,7 +80,7 @@ class UserService(
 
     fun createUser(request: com.kcvn.spm.app.auth.payload.request.UserRequest): com.kcvn.spm.app.auth.payload.response.UserResponse? {
         if (userRep.findByUsername(request.username!!) != null) {
-            throw BusinessException(CommonUtils.getMessage("user.error.usernameTaken"))
+            throw BusinessExceptionDetail(CommonUtils.getMessage("user.error.usernameTaken"), "userName = ${request.username}")
         }
 
 //        if (userRep.findByEmployeeCode(request.employeeCode!!) != null) {
@@ -105,7 +105,7 @@ class UserService(
         val allRoles = roleRep.findAll()
         roleIds.forEach { roleId: String ->
             allRoles.find { it.id.equals(roleId) }
-                ?: throw BusinessException(CommonUtils.getMessage("role.error.notFound"))
+                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("role.error.notFound"), "roleId = $roleId")
         }
         val createdUser = userRep.save(user)
         return if (createdUser != null) {
@@ -120,7 +120,7 @@ class UserService(
     }
 
     fun updateInfo(userId: String, request: UpdateUserRequest): com.kcvn.spm.app.auth.payload.response.UserResponse {
-        val user = userRep.findById(userId) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
+        val user = userRep.findById(userId) ?: throw BusinessExceptionDetail(CommonUtils.getMessage("user.error.notFound"), "userId = $userId")
         user.employeeCode = request.employeeCode
         user.email = request.email
         user.phoneNumber = request.phoneNumber
@@ -134,7 +134,7 @@ class UserService(
         val allRoles = roleRep.findAll()
         roleIds.forEach { roleId: String ->
             allRoles.find { it.id.equals(roleId) }
-                ?: throw BusinessException(CommonUtils.getMessage("role.error.notFound"))
+                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("role.error.notFound"), "roleId = $roleId")
         }
         roleRep.saveUserRoles(userId, roleIds)
         userRep.savePositions(userId, request.positions ?: setOf())
@@ -147,12 +147,12 @@ class UserService(
     }
 
     fun validateOldPassword(userId: String, oldPassword: String): Boolean {
-        val user = userRep.findById(userId) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
+        val user = userRep.findById(userId) ?: throw BusinessExceptionDetail(CommonUtils.getMessage("user.error.notFound"), "userId = $userId")
         return encoder.matches(oldPassword, user.password)
     }
 
     fun updatePassword(userId: String, password: String): com.kcvn.spm.app.auth.payload.response.UserResponse {
-        val user = userRep.findById(userId) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
+        val user = userRep.findById(userId) ?: throw BusinessExceptionDetail(CommonUtils.getMessage("user.error.notFound"), "userId = $userId")
         user.password = encoder.encode(password)
         userRep.updatePassword(user)
         return com.kcvn.spm.app.auth.payload.response.UserResponse(
@@ -167,7 +167,7 @@ class UserService(
     }
 
     fun createPasswordResetToken(email: String, siteUrl: String) {
-        val user = userRep.findByEmail(email) ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
+        val user = userRep.findByEmail(email) ?: throw BusinessExceptionDetail(CommonUtils.getMessage("user.error.notFound"), "email = $email")
         val token: String = UUID.randomUUID().toString()
         passwordResetTokenRep.save(
             AuthPasswordResetToken(
@@ -214,15 +214,15 @@ class UserService(
 
     fun validatePasswordResetToken(token: String) {
         val passToken = passwordResetTokenRep.findByToken(token)
-            ?: throw BusinessException(CommonUtils.getMessage("login.resetPassword.error.invalidToken"))
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("login.resetPassword.error.invalidToken"), "token = $token")
         if (passToken.expiredDate!!.isBefore(OffsetDateTime.now()))
-            throw BusinessException(CommonUtils.getMessage("login.resetPassword.error.tokenExpired"))
+            throw BusinessExceptionDetail(CommonUtils.getMessage("login.resetPassword.error.tokenExpired"), "expiredDate = ${passToken.expiredDate}")
     }
 
     fun getUserByPasswordResetToken(token: String): AuthUser {
         val passToken = passwordResetTokenRep.findByToken(token)
-            ?: throw BusinessException(CommonUtils.getMessage("login.resetPassword.error.invalidToken"))
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("login.resetPassword.error.invalidToken"), "token = $token")
         return userRep.findById(passToken.userId!!)
-            ?: throw BusinessException(CommonUtils.getMessage("user.error.notFound"))
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("user.error.notFound"), "userId = ${passToken.userId}")
     }
 }

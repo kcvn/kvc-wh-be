@@ -8,7 +8,7 @@ import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.ValidateSendTransRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
-import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
@@ -83,7 +83,9 @@ class SendingTransactionsService(
         list.forEach {
             // get receivingDate
             val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.packageCode!!)
-                ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+                ?: throw BusinessExceptionDetail(
+                    CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.packageCode}"
+                )
             val receivingDate = splittingSource.receivingDate
             val sendTran = SendingTransactions(
                 null,

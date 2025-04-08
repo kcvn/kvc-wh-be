@@ -4,6 +4,7 @@ import com.kcvn.spm.app.splitting.payload.request.SplittingRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Splitting
 import com.kcvn.spm.repository.CheckingRepository
@@ -31,7 +32,7 @@ class SplittingService(
             // save receiving transaction, backlogWh, backlogWhHistory
             val checkingList = checkingRepo.getByPackageCode(it.packageCode!!)
             if (checkingList.isEmpty()) {
-                throw BusinessException(CommonUtils.getMessage("Mã gói không tồn tại"))
+                throw BusinessExceptionDetail(CommonUtils.getMessage("Mã gói không tồn tại"), "packageCode = ${it.packageCode}")
             }
             val recTransRequestList = mutableListOf<RecTransRequest>()
             checkingList.forEach { ck ->

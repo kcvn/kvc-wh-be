@@ -9,6 +9,7 @@ import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
+import mu.KotlinLogging
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -39,6 +40,10 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createSendTrans(@Valid @RequestBody request: List<SendingRequest>?): ResponseEntity<*> {
         val response = sendingService.validateSourceBacklogFromSending(request!!)
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
+        )
 
         return if (response.isNotEmpty()) {
             ResponseEntity<MessageResponse>(

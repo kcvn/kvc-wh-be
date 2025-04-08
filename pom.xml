@@ -136,7 +136,13 @@
             <artifactId>jooq</artifactId>
             <version>3.18.7</version>
         </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>io.github.microutils</groupId>
+			<artifactId>kotlin-logging-jvm</artifactId>
+			<version>3.0.5</version>
+		</dependency>
+
+	</dependencies>
 	<build>
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>

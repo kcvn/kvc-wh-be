@@ -5,6 +5,7 @@ import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
@@ -150,7 +151,7 @@ class BacklogWhService(
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
         // get receiving date
         val splitting = splittingRepo.findByLocationAndPackage(data.locationCode!!, data.packageCode!!)
-            ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}")
         val receivingDate = splitting.receivingDate
         if (backlog == null) {
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate)
@@ -173,7 +174,9 @@ class BacklogWhService(
 
     fun minusBacklog(data: BacklogWh, transactionType: String) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
-            ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+            ?: throw BusinessExceptionDetail(
+                CommonUtils.getMessage("data.not.found.in.backlog"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"
+            )
         val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, backlog.backlogQty?.minus(data.backlogQty!!),
             backlog.boxQty?.minus(data.boxQty!!)
         )
@@ -187,7 +190,9 @@ class BacklogWhService(
 
     fun getByLocationAndPackageAndPO(locationCode: String, packageCode: String, poNumber: String): BacklogWh {
         return backlogWhRepo.findByLocationAndPackageAndPO(locationCode, packageCode, poNumber)
-            ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
+            ?: throw BusinessExceptionDetail(
+                CommonUtils.getMessage("data.not.found.in.backlog"), "locationCode = $locationCode, packageCode = $packageCode, poNumber = $poNumber"
+            )
     }
 
     fun getList(request: BacklogWhSearchRequest, pageable: Pageable): BasePagingResponse<BacklogWhResponse> {

@@ -9,6 +9,7 @@ import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
+import mu.KotlinLogging
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
@@ -42,6 +43,10 @@ class LocationsController(private val locationsService: LocationsService) {
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createLocation(@Valid @RequestBody request: LocationsRequest?): ResponseEntity<*> {
         val location = locationsService.createLocation(request!!)
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post locations/create" + ", REQUEST: " + request
+        )
         return if (location == null) {
             ResponseEntity<MessageResponse>(
                 MessageResponse(CommonUtils.getMessage("action.failed")),

@@ -5,6 +5,7 @@ import com.kcvn.spm.app.splitting.service.SplittingService
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
+import mu.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -20,6 +21,10 @@ class SplittingController(private val splittingService: SplittingService) {
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createSplitting(@Valid @RequestBody request: List<SplittingRequest>?): ResponseEntity<*> {
         splittingService.saveSplitting(request!!)
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post splitting/create" + ", REQUEST: " + request
+        )
         return ResponseEntity<MessageResponse>(
             MessageResponse(CommonUtils.getMessage("action.succeeded")),
             HttpStatus.CREATED

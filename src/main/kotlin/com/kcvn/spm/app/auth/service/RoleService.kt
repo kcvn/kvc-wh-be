@@ -3,7 +3,7 @@ package com.kcvn.spm.app.auth.service
 import com.kcvn.spm.app.auth.payload.request.RoleRequest
 import com.kcvn.spm.app.auth.payload.response.RoleResponse
 import com.kcvn.spm.common.enums.EPermission
-import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.PaginatedResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.AuthRole
@@ -39,7 +39,7 @@ class RoleService(private val roleRep: RoleRepository) {
 
     fun createRole(request: RoleRequest): RoleResponse? {
         if (roleRep.findByName(request.name!!) != null) {
-            throw BusinessException(CommonUtils.getMessage("role.error.nameTaken"))
+            throw BusinessExceptionDetail(CommonUtils.getMessage("role.error.nameTaken"), "role = ${request.name}")
         }
 
         val role = AuthRole(
@@ -50,7 +50,8 @@ class RoleService(private val roleRep: RoleRepository) {
         val permissionCodes: Set<String> = request.permissionCodes ?: setOf()
         permissionCodes.forEach { p: String ->
             if (EPermission.values().none { it.value == p })
-                throw BusinessException(CommonUtils.getMessage("permission.error.notFound", arrayOf(p)))
+//                throw BusinessException(CommonUtils.getMessage("permission.error.notFound", arrayOf(p)))
+                throw BusinessExceptionDetail(CommonUtils.getMessage("permission.error.notFound"), arrayOf(p))
         }
         val roleId = roleRep.save(role)
         return if (roleId != null) {
@@ -65,14 +66,16 @@ class RoleService(private val roleRep: RoleRepository) {
     }
 
     fun updateRole(roleId: String, request: RoleRequest): RoleResponse {
-        val role = roleRep.findById(roleId) ?: throw BusinessException(CommonUtils.getMessage("role.error.notFound"))
+        val role = roleRep.findById(roleId)
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("role.error.notFound"), "roleId = $roleId")
         role.name = request.name
         role.description = request.description
 
         val permissionCodes: Set<String> = request.permissionCodes ?: setOf()
         permissionCodes.forEach { p: String ->
             if (EPermission.values().none { it.value == p })
-                throw BusinessException(CommonUtils.getMessage("permission.error.notFound", arrayOf(p)))
+//                throw BusinessException(CommonUtils.getMessage("permission.error.notFound", arrayOf(p)))
+                throw BusinessExceptionDetail(CommonUtils.getMessage("permission.error.notFound"), arrayOf(p))
         }
         roleRep.saveRolePermissions(roleId, permissionCodes)
         roleRep.update(role)
@@ -86,7 +89,7 @@ class RoleService(private val roleRep: RoleRepository) {
 
     fun deleteById(roleId: String) {
         if (roleRep.isRoleUsed(roleId))
-            throw BusinessException(CommonUtils.getMessage("role.error.inUse"))
+            throw BusinessExceptionDetail(CommonUtils.getMessage("role.error.inUse"), "roleId = $roleId")
         roleRep.deleteById(roleId)
     }
 }

@@ -1,8 +1,11 @@
 package com.kcvn.spm.common.exception.handler
 
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
+import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.servlet.http.HttpServletResponse
+import mu.KotlinLogging
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -17,6 +20,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @ControllerAdvice
 class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
+    private val loggerKotlin = KotlinLogging.logger {}
+
     @ExceptionHandler(value = [BadCredentialsException::class])
     protected fun handleBadCredentialsException(ex: RuntimeException, request: ServletWebRequest): ResponseEntity<Any>? {
         val bodyOfResponse: MutableMap<String, Any> = HashMap()
@@ -47,6 +52,12 @@ class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
             HttpStatus.BAD_REQUEST,
             request
         )
+    }
+
+    @ExceptionHandler(BusinessExceptionDetail::class)
+    fun handleBusinessException(ex: BusinessExceptionDetail): ResponseEntity<MessageResponse> {
+        loggerKotlin.error { "BUSINESS EXCEPTION: ${ex.message}" + " --- DATA: ${ex.data}" }
+        return ResponseEntity(MessageResponse(ex.message ?: "UNKNOWN ERROR"), HttpStatus.BAD_REQUEST)
     }
 
     override fun handleMethodArgumentNotValid(

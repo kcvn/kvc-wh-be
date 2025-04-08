@@ -3,6 +3,7 @@ package com.kcvn.spm.app.locations.service
 import com.kcvn.spm.app.locations.payload.request.LocationsRequest
 import com.kcvn.spm.app.locations.payload.response.LocationsResponse
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.PaginatedResponse
@@ -40,7 +41,7 @@ class LocationsService(private val locationsRepo: LocationsRepository) {
 
     fun createLocation(request: LocationsRequest): LocationsResponse? {
         if (locationsRepo.findByName(request.locationCode!!) != null) {
-            throw BusinessException(CommonUtils.getMessage("location.error.codeTaken"))
+            throw BusinessExceptionDetail(CommonUtils.getMessage("location.error.nameTaken"), "locationCode = ${request.locationCode}")
         }
 
         val location = Locations(

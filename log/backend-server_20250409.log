@@ -1,0 +1,50 @@
+2025-04-09T09:03:27.032+07:00  INFO 61392 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Starting ApplicationKt using Java 17.0.13 with PID 61392 (D:\Backend\kvc-wh-be\target\classes started by cong- in D:\Backend\kvc-wh-be)
+2025-04-09T09:03:27.034+07:00  INFO 61392 --- [restartedMain] com.kcvn.spm.ApplicationKt               : No active profile set, falling back to 1 default profile: "default"
+2025-04-09T09:03:27.088+07:00  INFO 61392 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\cong-\.m2\repository\com\oracle\database\jdbc\ojdbc10\19.8.0.0\ojdbc10-19.8.0.0.jar referenced one or more files that do not exist: file:/C:/Users/cong-/.m2/repository/com/oracle/database/jdbc/ojdbc10/19.8.0.0/oraclepki.jar
+2025-04-09T09:03:27.090+07:00  INFO 61392 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-04-09T09:03:27.090+07:00  INFO 61392 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-04-09T09:03:30.003+07:00  INFO 61392 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-04-09T09:03:30.020+07:00  INFO 61392 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-04-09T09:03:30.021+07:00  INFO 61392 --- [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.15]
+2025-04-09T09:03:30.120+07:00  INFO 61392 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-04-09T09:03:30.121+07:00  INFO 61392 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3030 ms
+2025-04-09T09:03:30.202+07:00  INFO 61392 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-04-09T09:03:30.620+07:00  INFO 61392 --- [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@e201f52
+2025-04-09T09:03:30.623+07:00  INFO 61392 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-04-09T09:03:32.838+07:00  INFO 61392 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@a6872a1, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7c4e28ac, org.springframework.security.web.context.SecurityContextHolderFilter@f361c18, org.springframework.security.web.header.HeaderWriterFilter@17b5369d, org.springframework.web.filter.CorsFilter@335819d1, org.springframework.security.web.authentication.logout.LogoutFilter@d972654, com.kcvn.spm.app.auth.security.jwt.AuthTokenFilter@75238019, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@6be3a438, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@25b2b126, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1ba00ac6, org.springframework.security.web.session.SessionManagementFilter@4cdee05, org.springframework.security.web.access.ExceptionTranslationFilter@241ab1e4, org.springframework.security.web.access.intercept.AuthorizationFilter@4ce43db]
+2025-04-09T09:03:33.326+07:00  INFO 61392 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-04-09T09:03:33.390+07:00  INFO 61392 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-04-09T09:03:33.404+07:00  INFO 61392 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Started ApplicationKt in 6.77 seconds (process running for 8.002)
+2025-04-09T09:03:33.864+07:00  INFO 61392 --- [scheduling-1] org.jooq.Constants                       : 
+                                      
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@  @@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@        @@  @  @  @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@  @@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Thank you for using jOOQ 3.18.7 (Build date: 2023-10-10T12:53:05Z)
+                                      
+2025-04-09T09:03:33.865+07:00  INFO 61392 --- [scheduling-1] org.jooq.Constants                       : 
+
+jOOQ tip of the day: The code generator produces Javadoc from table or column comments, but you can override those directly in the code generator: https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-comments/
+
+2025-04-09T09:03:33.911+07:00  INFO 61392 --- [scheduling-1] o.j.i.D.logVersionSupport                : Version                  : Database version is supported by dialect POSTGRES: 15.7
+2025-04-09T09:04:45.202+07:00  INFO 61392 --- [http-nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-04-09T09:04:45.202+07:00  INFO 61392 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-04-09T09:04:45.205+07:00  INFO 61392 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-04-09T09:04:45.865+07:00  INFO 61392 --- [http-nio-8080-exec-2] c.k.s.a.l.c.LocationsController          : USER: admin, API: post locations/create, REQUEST: LocationsRequest(locationCode=88888)
+2025-04-09T09:05:23.905+07:00 ERROR 61392 --- [http-nio-8080-exec-3] c.e.h.RestResponseEntityExceptionHandler : BUSINESS EXCEPTION: location.error.nameTaken --- DATA: locationCode = 88888
+2025-04-09T09:05:23.986+07:00  WARN 61392 --- [http-nio-8080-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [BusinessExceptionDetail(message=location.error.nameTaken, data=locationCode = 88888)]
+2025-04-09T09:07:00.323+07:00  INFO 61392 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-04-09T09:07:00.326+07:00  INFO 61392 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

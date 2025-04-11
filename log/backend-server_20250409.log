@@ -48,3 +48,50 @@ jOOQ tip of the day: The code generator produces Javadoc from table or column co
 2025-04-09T09:05:23.986+07:00  WARN 61392 --- [http-nio-8080-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [BusinessExceptionDetail(message=location.error.nameTaken, data=locationCode = 88888)]
 2025-04-09T09:07:00.323+07:00  INFO 61392 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
 2025-04-09T09:07:00.326+07:00  INFO 61392 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-04-09T11:28:08.005+07:00  INFO 64496 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Starting ApplicationKt using Java 17.0.13 with PID 64496 (D:\Backend\kvc-wh-be\target\classes started by cong- in D:\Backend\kvc-wh-be)
+2025-04-09T11:28:08.007+07:00  INFO 64496 --- [restartedMain] com.kcvn.spm.ApplicationKt               : No active profile set, falling back to 1 default profile: "default"
+2025-04-09T11:28:08.087+07:00  INFO 64496 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\cong-\.m2\repository\com\oracle\database\jdbc\ojdbc10\19.8.0.0\ojdbc10-19.8.0.0.jar referenced one or more files that do not exist: file:/C:/Users/cong-/.m2/repository/com/oracle/database/jdbc/ojdbc10/19.8.0.0/oraclepki.jar
+2025-04-09T11:28:08.088+07:00  INFO 64496 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-04-09T11:28:08.088+07:00  INFO 64496 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-04-09T11:28:11.612+07:00  INFO 64496 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-04-09T11:28:11.638+07:00  INFO 64496 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-04-09T11:28:11.639+07:00  INFO 64496 --- [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.15]
+2025-04-09T11:28:11.764+07:00  INFO 64496 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-04-09T11:28:11.766+07:00  INFO 64496 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3676 ms
+2025-04-09T11:28:11.860+07:00  INFO 64496 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-04-09T11:28:12.328+07:00  INFO 64496 --- [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@69132852
+2025-04-09T11:28:12.329+07:00  INFO 64496 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-04-09T11:28:14.625+07:00  INFO 64496 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@552dede8, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@8ad7795, org.springframework.security.web.context.SecurityContextHolderFilter@66c67c3e, org.springframework.security.web.header.HeaderWriterFilter@11794f2c, org.springframework.web.filter.CorsFilter@1e8e267f, org.springframework.security.web.authentication.logout.LogoutFilter@25f81161, com.kcvn.spm.app.auth.security.jwt.AuthTokenFilter@a4ee2a8, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@5c8f674c, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@491119e1, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@6945ad4, org.springframework.security.web.session.SessionManagementFilter@90e575c, org.springframework.security.web.access.ExceptionTranslationFilter@f2dc3dd, org.springframework.security.web.access.intercept.AuthorizationFilter@56717585]
+2025-04-09T11:28:15.146+07:00  INFO 64496 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-04-09T11:28:15.206+07:00  INFO 64496 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-04-09T11:28:15.217+07:00  INFO 64496 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Started ApplicationKt in 7.657 seconds (process running for 8.861)
+2025-04-09T11:28:15.694+07:00  INFO 64496 --- [scheduling-1] org.jooq.Constants                       : 
+                                      
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@  @@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@        @@  @  @  @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@  @@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Thank you for using jOOQ 3.18.7 (Build date: 2023-10-10T12:53:05Z)
+                                      
+2025-04-09T11:28:15.695+07:00  INFO 64496 --- [scheduling-1] org.jooq.Constants                       : 
+
+jOOQ tip of the day: When working with jOOQ and JPA, you can generate your jOOQ code also from your JPA entities rather than a live database: https://www.jooq.org/doc/latest/manual/code-generation/codegen-jpa/
+
+2025-04-09T11:28:15.745+07:00  INFO 64496 --- [scheduling-1] o.j.i.D.logVersionSupport                : Version                  : Database version is supported by dialect POSTGRES: 15.7
+2025-04-09T11:29:31.587+07:00  INFO 64496 --- [http-nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-04-09T11:29:31.587+07:00  INFO 64496 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-04-09T11:29:31.589+07:00  INFO 64496 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2025-04-09T11:44:44.186+07:00  INFO 64496 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-04-09T11:44:44.205+07:00  INFO 64496 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

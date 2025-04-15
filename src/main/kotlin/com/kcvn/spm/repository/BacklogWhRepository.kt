@@ -76,7 +76,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             }
             return Pair(data, data.size)
         } else {
-            val query = context.selectFrom(BACKLOG_WH).where(condition)
+            val query = context.selectFrom(BACKLOG_WH).where(condition.and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
             val count = query.count()
             val data = query
                 .orderBy(getSortFields(pageable.sort, BACKLOG_WH.LOCATION_CODE))

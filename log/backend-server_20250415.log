@@ -100,3 +100,145 @@ jOOQ tip of the day: You can nest collections directly in SQL using jOOQ's SQL/X
 2025-04-15T09:10:46.791+07:00  WARN 33728 --- [http-nio-8080-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [BusinessExceptionDetail(message=Mã gói không tồn tại, data=packageCode = PCA2)]
 2025-04-15T09:12:10.845+07:00  INFO 33728 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
 2025-04-15T09:12:10.853+07:00  INFO 33728 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-04-15T09:14:04.764+07:00  INFO 22468 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Starting ApplicationKt using Java 17.0.13 with PID 22468 (D:\Backend\kvc-wh-be\target\classes started by cong- in D:\Backend\kvc-wh-be)
+2025-04-15T09:14:04.766+07:00  INFO 22468 --- [restartedMain] com.kcvn.spm.ApplicationKt               : No active profile set, falling back to 1 default profile: "default"
+2025-04-15T09:14:04.838+07:00  INFO 22468 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\cong-\.m2\repository\com\oracle\database\jdbc\ojdbc10\19.8.0.0\ojdbc10-19.8.0.0.jar referenced one or more files that do not exist: file:/C:/Users/cong-/.m2/repository/com/oracle/database/jdbc/ojdbc10/19.8.0.0/oraclepki.jar
+2025-04-15T09:14:04.838+07:00  INFO 22468 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-04-15T09:14:04.838+07:00  INFO 22468 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-04-15T09:14:07.597+07:00  INFO 22468 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-04-15T09:14:07.608+07:00  INFO 22468 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-04-15T09:14:07.608+07:00  INFO 22468 --- [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.15]
+2025-04-15T09:14:07.700+07:00  INFO 22468 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-04-15T09:14:07.701+07:00  INFO 22468 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2861 ms
+2025-04-15T09:14:07.789+07:00  INFO 22468 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-04-15T09:14:08.141+07:00  INFO 22468 --- [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@e201f52
+2025-04-15T09:14:08.143+07:00  INFO 22468 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-04-15T09:14:10.436+07:00  INFO 22468 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@a6872a1, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7c4e28ac, org.springframework.security.web.context.SecurityContextHolderFilter@f361c18, org.springframework.security.web.header.HeaderWriterFilter@17b5369d, org.springframework.web.filter.CorsFilter@335819d1, org.springframework.security.web.authentication.logout.LogoutFilter@d972654, com.kcvn.spm.app.auth.security.jwt.AuthTokenFilter@75238019, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@6be3a438, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@25b2b126, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1ba00ac6, org.springframework.security.web.session.SessionManagementFilter@4cdee05, org.springframework.security.web.access.ExceptionTranslationFilter@241ab1e4, org.springframework.security.web.access.intercept.AuthorizationFilter@4ce43db]
+2025-04-15T09:14:10.933+07:00  INFO 22468 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-04-15T09:14:11.000+07:00  INFO 22468 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-04-15T09:14:11.017+07:00  INFO 22468 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Started ApplicationKt in 6.614 seconds (process running for 7.46)
+2025-04-15T09:14:11.443+07:00  INFO 22468 --- [scheduling-1] org.jooq.Constants                       : 
+                                      
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@  @@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@        @@  @  @  @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@  @@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Thank you for using jOOQ 3.18.7 (Build date: 2023-10-10T12:53:05Z)
+                                      
+2025-04-15T09:14:11.444+07:00  INFO 22468 --- [scheduling-1] org.jooq.Constants                       : 
+
+jOOQ tip of the day: You can extend jOOQ with alternative syntax using plain SQL templating: https://www.jooq.org/doc/latest/manual/sql-building/plain-sql-templating/
+
+2025-04-15T09:14:11.485+07:00  INFO 22468 --- [scheduling-1] o.j.i.D.logVersionSupport                : Version                  : Database version is supported by dialect POSTGRES: 15.7
+2025-04-15T09:15:45.904+07:00  INFO 22468 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-04-15T09:15:45.911+07:00  INFO 22468 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-04-15T09:33:46.194+07:00  INFO 30448 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Starting ApplicationKt using Java 17.0.13 with PID 30448 (D:\Backend\kvc-wh-be\target\classes started by cong- in D:\Backend\kvc-wh-be)
+2025-04-15T09:33:46.197+07:00  INFO 30448 --- [restartedMain] com.kcvn.spm.ApplicationKt               : No active profile set, falling back to 1 default profile: "default"
+2025-04-15T09:33:46.267+07:00  INFO 30448 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\cong-\.m2\repository\com\oracle\database\jdbc\ojdbc10\19.8.0.0\ojdbc10-19.8.0.0.jar referenced one or more files that do not exist: file:/C:/Users/cong-/.m2/repository/com/oracle/database/jdbc/ojdbc10/19.8.0.0/oraclepki.jar
+2025-04-15T09:33:46.267+07:00  INFO 30448 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-04-15T09:33:46.267+07:00  INFO 30448 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-04-15T09:33:48.975+07:00  INFO 30448 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-04-15T09:33:48.985+07:00  INFO 30448 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-04-15T09:33:48.986+07:00  INFO 30448 --- [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.15]
+2025-04-15T09:33:49.069+07:00  INFO 30448 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-04-15T09:33:49.071+07:00  INFO 30448 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2802 ms
+2025-04-15T09:33:49.148+07:00  INFO 30448 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-04-15T09:33:49.497+07:00  INFO 30448 --- [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@26c0fbed
+2025-04-15T09:33:49.498+07:00  INFO 30448 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-04-15T09:33:51.505+07:00  INFO 30448 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4182d62c, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@3923fe44, org.springframework.security.web.context.SecurityContextHolderFilter@693d0d36, org.springframework.security.web.header.HeaderWriterFilter@146eac37, org.springframework.web.filter.CorsFilter@2ef535c5, org.springframework.security.web.authentication.logout.LogoutFilter@3acfae2e, com.kcvn.spm.app.auth.security.jwt.AuthTokenFilter@355f4409, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@45113a22, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@62c0b8e7, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@233c4a20, org.springframework.security.web.session.SessionManagementFilter@6cd5c863, org.springframework.security.web.access.ExceptionTranslationFilter@7f98b8d7, org.springframework.security.web.access.intercept.AuthorizationFilter@7f50e131]
+2025-04-15T09:33:51.918+07:00  INFO 30448 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-04-15T09:33:51.978+07:00  INFO 30448 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-04-15T09:33:51.989+07:00  INFO 30448 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Started ApplicationKt in 6.142 seconds (process running for 6.932)
+2025-04-15T09:33:52.401+07:00  INFO 30448 --- [scheduling-1] org.jooq.Constants                       : 
+                                      
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@  @@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@        @@  @  @  @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@  @@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Thank you for using jOOQ 3.18.7 (Build date: 2023-10-10T12:53:05Z)
+                                      
+2025-04-15T09:33:52.401+07:00  INFO 30448 --- [scheduling-1] org.jooq.Constants                       : 
+
+jOOQ tip of the day: A Field<Boolean> can be turned into a Condition using DSL.condition(Field<Boolean>) for use in WHERE, HAVING, etc.: https://www.jooq.org/doc/latest/manual/sql-building/conditional-expressions/boolean-column/
+
+2025-04-15T09:33:52.438+07:00  INFO 30448 --- [scheduling-1] o.j.i.D.logVersionSupport                : Version                  : Database version is supported by dialect POSTGRES: 15.7
+2025-04-15T09:33:58.220+07:00  INFO 30448 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-04-15T09:33:58.221+07:00  INFO 30448 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-04-15T09:33:58.222+07:00  INFO 30448 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-04-15T09:33:58.731+07:00 ERROR 30448 --- [http-nio-8080-exec-1] c.e.h.RestResponseEntityExceptionHandler : BUSINESS EXCEPTION: không tồn tại trong kho --- DATA: packageCode = PCA2
+2025-04-15T09:33:58.858+07:00  WARN 30448 --- [http-nio-8080-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [BusinessExceptionDetail(message=không tồn tại trong kho, data=packageCode = PCA2)]
+2025-04-15T09:36:05.245+07:00  INFO 30448 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-04-15T09:36:05.280+07:00  INFO 30448 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-04-15T09:36:13.888+07:00  INFO 2392 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Starting ApplicationKt using Java 17.0.13 with PID 2392 (D:\Backend\kvc-wh-be\target\classes started by cong- in D:\Backend\kvc-wh-be)
+2025-04-15T09:36:13.891+07:00  INFO 2392 --- [restartedMain] com.kcvn.spm.ApplicationKt               : No active profile set, falling back to 1 default profile: "default"
+2025-04-15T09:36:13.953+07:00  INFO 2392 --- [restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in C:\Users\cong-\.m2\repository\com\oracle\database\jdbc\ojdbc10\19.8.0.0\ojdbc10-19.8.0.0.jar referenced one or more files that do not exist: file:/C:/Users/cong-/.m2/repository/com/oracle/database/jdbc/ojdbc10/19.8.0.0/oraclepki.jar
+2025-04-15T09:36:13.953+07:00  INFO 2392 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-04-15T09:36:13.953+07:00  INFO 2392 --- [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-04-15T09:36:17.358+07:00  INFO 2392 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-04-15T09:36:17.369+07:00  INFO 2392 --- [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-04-15T09:36:17.370+07:00  INFO 2392 --- [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.15]
+2025-04-15T09:36:17.473+07:00  INFO 2392 --- [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-04-15T09:36:17.474+07:00  INFO 2392 --- [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3519 ms
+2025-04-15T09:36:17.559+07:00  INFO 2392 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-04-15T09:36:17.953+07:00  INFO 2392 --- [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@69132852
+2025-04-15T09:36:17.955+07:00  INFO 2392 --- [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-04-15T09:36:20.577+07:00  INFO 2392 --- [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@8ad7795, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@1e8e267f, org.springframework.security.web.context.SecurityContextHolderFilter@1d89730d, org.springframework.security.web.header.HeaderWriterFilter@10f6e664, org.springframework.web.filter.CorsFilter@6945ad4, org.springframework.security.web.authentication.logout.LogoutFilter@4811e170, com.kcvn.spm.app.auth.security.jwt.AuthTokenFilter@a4ee2a8, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@1c63a1df, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@1fd60ad5, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@3c6cb543, org.springframework.security.web.session.SessionManagementFilter@73c64030, org.springframework.security.web.access.ExceptionTranslationFilter@4fd25e43, org.springframework.security.web.access.intercept.AuthorizationFilter@7b9da50a]
+2025-04-15T09:36:21.092+07:00  INFO 2392 --- [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-04-15T09:36:21.164+07:00  INFO 2392 --- [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-04-15T09:36:21.177+07:00  INFO 2392 --- [restartedMain] com.kcvn.spm.ApplicationKt               : Started ApplicationKt in 7.622 seconds (process running for 8.334)
+2025-04-15T09:36:21.641+07:00  INFO 2392 --- [scheduling-1] org.jooq.Constants                       : 
+                                      
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@  @@@@  @@  @@    @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@    @@  @@  @@@@  @@@@@@@@@@
+@@@@@@@@@@        @@  @  @  @@@@@@@@@@
+@@@@@@@@@@        @@        @@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@  @@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Thank you for using jOOQ 3.18.7 (Build date: 2023-10-10T12:53:05Z)
+                                      
+2025-04-15T09:36:21.642+07:00  INFO 2392 --- [scheduling-1] org.jooq.Constants                       : 
+
+jOOQ tip of the day: Whenever jOOQ doesn't support a native SQL feature, use plain SQL templating: https://www.jooq.org/doc/latest/manual/sql-building/plain-sql-templating/
+
+2025-04-15T09:36:21.684+07:00  INFO 2392 --- [scheduling-1] o.j.i.D.logVersionSupport                : Version                  : Database version is supported by dialect POSTGRES: 15.7
+2025-04-15T09:36:25.255+07:00  INFO 2392 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-04-15T09:36:25.256+07:00  INFO 2392 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-04-15T09:36:25.257+07:00  INFO 2392 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-04-15T09:36:25.703+07:00 ERROR 2392 --- [http-nio-8080-exec-1] c.e.h.RestResponseEntityExceptionHandler : BUSINESS EXCEPTION: mã gói không tồn tại --- DATA: packageCode = PCA2
+2025-04-15T09:36:25.800+07:00  WARN 2392 --- [http-nio-8080-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [BusinessExceptionDetail(message=mã gói không tồn tại, data=packageCode = PCA2)]
+2025-04-15T09:36:31.317+07:00  INFO 2392 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-04-15T09:36:31.358+07:00  INFO 2392 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

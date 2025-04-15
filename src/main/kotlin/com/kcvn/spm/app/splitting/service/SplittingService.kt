@@ -32,7 +32,7 @@ class SplittingService(
             // save receiving transaction, backlogWh, backlogWhHistory
             val checkingList = checkingRepo.getByPackageCode(it.packageCode!!)
             if (checkingList.isEmpty()) {
-                throw BusinessExceptionDetail(CommonUtils.getMessage("Mã gói không tồn tại"), "packageCode = ${it.packageCode}")
+                throw BusinessExceptionDetail(CommonUtils.getMessage("package.does.not.exist"), "packageCode = ${it.packageCode}")
             }
             val recTransRequestList = mutableListOf<RecTransRequest>()
             checkingList.forEach { ck ->

@@ -57,7 +57,7 @@ class RestResponseEntityExceptionHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(BusinessExceptionDetail::class)
     fun handleBusinessException(ex: BusinessExceptionDetail): ResponseEntity<MessageResponse> {
         loggerKotlin.error { "BUSINESS EXCEPTION: ${ex.message}" + " --- DATA: ${ex.data}" }
-        return ResponseEntity(MessageResponse(ex.message ?: "UNKNOWN ERROR"), HttpStatus.BAD_REQUEST)
+        return ResponseEntity(MessageResponse(ex.message ?: "UNKNOWN ERROR", ex.data), HttpStatus.BAD_REQUEST)
     }
 
     override fun handleMethodArgumentNotValid(

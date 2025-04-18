@@ -75,10 +75,13 @@ class BacklogWhService(
             val updatedList = mutableListOf<ImportBacklogWh>()
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val status = ExcelHelper.getCellValue(row, 4)
+                if (status != "Success") continue
+
                 val backlogWhData = ImportBacklogWh(
-                    locationCode = ExcelHelper.getCellValue(row, 0),
+                    receivingDate = ExcelHelper.getCellValueDate(row, 0),
                     poNumber = ExcelHelper.getCellValue(row, 1),
-                    receivingDate = ExcelHelper.getCellValueDate(row, 2),
+                    locationCode = ExcelHelper.getCellValue(row, 2),
                     issueDate = ExcelHelper.getCellValueDate(row, 3)
                 )
 
@@ -119,12 +122,12 @@ class BacklogWhService(
         var rowNumberFill = 1
         for (item in listBacklog) {
             val row: Row = sheet.createRow(rowNumberFill++)
-            ExcelHelper.setCellValue(row, 0, style, item.locationCode)
-            ExcelHelper.setCellValue(row, 1, style, item.poNumber)
-            ExcelHelper.setCellValueInt(row, 2, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
 
             val formattedDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
-            ExcelHelper.setCellValue(row, 3, style, formattedDate)
+            ExcelHelper.setCellValue(row, 0, style, formattedDate)
+            ExcelHelper.setCellValue(row, 1, style, item.poNumber)
+            ExcelHelper.setCellValue(row, 2, style, item.locationCode)
+            ExcelHelper.setCellValueInt(row, 3, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
         }
 
         sheet.createFreezePane(4, 1)
@@ -145,7 +148,6 @@ class BacklogWhService(
 
         return BaseResponse(response)
     }
-
 
     fun plusBacklog(data: BacklogWh, transactionType: String) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)

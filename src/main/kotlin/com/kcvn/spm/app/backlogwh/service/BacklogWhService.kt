@@ -47,7 +47,7 @@ class BacklogWhService(
         workbook.use { it.write(byteArrayOutputStream) }
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.importBacklogWhTemplate"),
+            fileName = CommonUtils.getMessage("ImportBacklogWhTemplate.xlsx"),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = byteArrayOutputStream.toByteArray()
         )
@@ -137,7 +137,7 @@ class BacklogWhService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("fileName.exportBacklog", arrayOf(
+            fileName = CommonUtils.getMessage("ExportBacklog.xlsx", arrayOf(
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
             )),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,

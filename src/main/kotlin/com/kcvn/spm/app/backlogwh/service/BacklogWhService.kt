@@ -38,8 +38,8 @@ class BacklogWhService(
     private val splittingRepo: SplittingRepository
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
-        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBacklogWhTemplate.xlsx")
-            ?: throw FileNotFoundException("ImportBacklogWhTemplate.xlsx file not found in resources.")
+        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBinEntryTemplate.xlsx")
+            ?: throw FileNotFoundException("ImportBinEntryTemplate.xlsx file not found in resources.")
 
         val workbook = templateStream.use { XSSFWorkbook(it) }
 
@@ -47,7 +47,7 @@ class BacklogWhService(
         workbook.use { it.write(byteArrayOutputStream) }
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("ImportBacklogWhTemplate.xlsx"),
+            fileName = CommonUtils.getMessage("ImportBinEntryTemplate.xlsx"),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
             content = byteArrayOutputStream.toByteArray()
         )
@@ -55,16 +55,16 @@ class BacklogWhService(
         return BaseResponse(response)
     }
 
-    fun importExcel(file: MultipartFile): BaseResponse<List<ImportBacklogWh>> {
-        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBacklogWhTemplate.xlsx")
-            ?: throw FileNotFoundException("ImportBacklogWhTemplate.xlsx file not found in resources.")
+    fun importBinEntry(file: MultipartFile): BaseResponse<List<ImportBacklogWh>> {
+        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBinEntryTemplate.xlsx")
+            ?: throw FileNotFoundException("ImportBinEntryTemplate.xlsx file not found in resources.")
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
             val sheet = workbook.getSheetAt(0)
             val rowIndex = 1
             val headerRow = sheet.getRow(0)
             // Tạo file tạm thời từ InputStream
-            val tempFile = File.createTempFile("ImportBacklogWhTemplate", ".xlsx").apply {
+            val tempFile = File.createTempFile("ImportBinEntryTemplate", ".xlsx").apply {
                 deleteOnExit()
                 outputStream().use { templateStream.copyTo(it) }
             }
@@ -99,10 +99,65 @@ class BacklogWhService(
     }
 
     fun exportBacklogWhExcel(request: BacklogWhSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
-        val listBacklogResponse = backlogWhRepo.getList(request, pageable, true)
+        val listBacklogResponse = backlogWhRepo.getList(request, pageable)
 
         val inputStream = this::class.java.classLoader.getResourceAsStream("assets/template/ExportBacklogWhTemplate.xlsx")
             ?: throw FileNotFoundException("ExportBacklogWhTemplate.xlsx file not found in resources.")
+        val workbook = XSSFWorkbook(inputStream)
+        val sheet = workbook.getSheetAt(0)
+
+        val rowNumber = 0
+        val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        style.alignment = HorizontalAlignment.CENTER
+
+        val numberStyle = workbook.createCellStyle()
+        numberStyle.cloneStyleFrom(style)
+        numberStyle.alignment = HorizontalAlignment.RIGHT
+
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
+        val listBacklog = listBacklogResponse.first
+
+        var rowNumberFill = 1
+        for (item in listBacklog) {
+            val row: Row = sheet.createRow(rowNumberFill++)
+
+            val formattedReceivingDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
+            ExcelHelper.setCellValue(row, 0, style, formattedReceivingDate)
+            val formattedIssueDate = item.issueDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
+            ExcelHelper.setCellValue(row, 1, style, formattedIssueDate)
+            ExcelHelper.setCellValue(row, 2, style, item.packageCode)
+            ExcelHelper.setCellValue(row, 3, style, item.poNumber)
+            ExcelHelper.setCellValue(row, 4, style, item.locationCode)
+            ExcelHelper.setCellValueInt(row, 5, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.boxQty ?: 0, numberFormat)
+        }
+
+        sheet.createFreezePane(4, 1)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("ExportBacklog.xlsx", arrayOf(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+            )),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
+    }
+
+    fun exportBinEntry(pageable: Pageable): BaseResponse<FileContentModel> {
+        val listBacklogResponse = backlogWhRepo.getBinEntryList(pageable)
+
+        val inputStream = this::class.java.classLoader.getResourceAsStream("assets/template/ExportBinEntryTemplate.xlsx")
+            ?: throw FileNotFoundException("ExportBinEntryTemplate.xlsx file not found in resources.")
         val workbook = XSSFWorkbook(inputStream)
         val sheet = workbook.getSheetAt(0)
 
@@ -137,7 +192,7 @@ class BacklogWhService(
         val excelBytes = byteArrayOutputStream.toByteArray()
 
         val response = FileContentModel(
-            fileName = CommonUtils.getMessage("ExportBacklog.xlsx", arrayOf(
+            fileName = CommonUtils.getMessage("ExportBinEntry.xlsx", arrayOf(
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
             )),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,

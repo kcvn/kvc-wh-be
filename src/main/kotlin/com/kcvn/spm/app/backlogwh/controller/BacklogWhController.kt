@@ -35,19 +35,29 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @GetMapping("/download-template-excel")
+    @GetMapping("/download-template-bin-entry")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
-    fun downloadTemplateExcel(): ResponseEntity<BaseResponse<FileContentModel>> {
+    fun downloadTemplateBinEntry(): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = backlogWhService.downloadTemplate()
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-    @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
+    @PostMapping(value = ["import-bin-entry"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasRole('ADMIN')")
-    fun importExcel(
+    fun importBinEntry(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<List<ImportBacklogWh>>> {
-        val data = backlogWhService.importExcel(file)
+        val data = backlogWhService.importBinEntry(file)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @GetMapping("/export-bin-entry")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    fun exportBinEntry(
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
+        pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = backlogWhService.exportBinEntry(pageable)
         return ResponseEntity(data, HttpStatus.OK)
     }
 

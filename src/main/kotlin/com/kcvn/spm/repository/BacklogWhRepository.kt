@@ -21,7 +21,7 @@ import java.time.ZoneOffset
 
 @Repository
 class BacklogWhRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(request: BacklogWhSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<BacklogWh>, Int> {
+    fun getList(request: BacklogWhSearchRequest, pageable: Pageable) : Pair<List<BacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
         val receivingDate = BACKLOG_WH.field("receiving_date", java.time.OffsetDateTime::class.java)
         if(!request.listLocationCode.isNullOrEmpty()){
@@ -51,32 +51,6 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         if (request.fromDate != null && request.toDate != null) {
             condition = condition.and(receivingDate?.between(request.fromDate, request.toDate))
         }
-
-        if (isExport) {
-            condition = condition.and(BACKLOG_WH.ISSUE_DATE.isNull).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
-            val query = context.select(
-                DSL.min(BACKLOG_WH.LOCATION_CODE.cast(SQLDataType.INTEGER)).`as`("MIN_LOCATION_CODE"),
-                BACKLOG_WH.PO_NUMBER,
-                BACKLOG_WH.RECEIVING_DATE,
-                DSL.sum(BACKLOG_WH.BACKLOG_QTY).`as`("SUM_BACKLOG_QTY")
-//                DSL.max(BACKLOG_WH.CREATED_DATE).`as`("LATEST_CREATED_DATE")
-            )
-                .from(BACKLOG_WH)
-                .where(condition)
-                .groupBy(BACKLOG_WH.PO_NUMBER, BACKLOG_WH.RECEIVING_DATE)
-                .orderBy(getSortFields(pageable.sort, BACKLOG_WH.RECEIVING_DATE))
-
-            val data = query.fetch { record ->
-                BacklogWh(
-                    locationCode = record.get("MIN_LOCATION_CODE", BigDecimal::class.java).toString(),
-                    poNumber = record[BACKLOG_WH.PO_NUMBER],
-                    receivingDate = record[BACKLOG_WH.RECEIVING_DATE],
-                    backlogQty = record.get("SUM_BACKLOG_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO,
-//                    createdDate = record.get("LATEST_CREATED_DATE", OffsetDateTime::class.java)
-                )
-            }
-            return Pair(data, data.size)
-        } else {
             val query = context.selectFrom(BACKLOG_WH).where(condition.and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
             val count = query.count()
             val data = query
@@ -86,7 +60,31 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 .fetchInto(BacklogWh::class.java)
 
             return Pair(data, count)
+    }
+
+    fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {
+        var condition: Condition = DSL.noCondition()
+        condition = condition.and(BACKLOG_WH.ISSUE_DATE.isNull).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
+        val query = context.select(
+            DSL.min(BACKLOG_WH.LOCATION_CODE.cast(SQLDataType.INTEGER)).`as`("MIN_LOCATION_CODE"),
+            BACKLOG_WH.PO_NUMBER,
+            BACKLOG_WH.RECEIVING_DATE,
+            DSL.sum(BACKLOG_WH.BACKLOG_QTY).`as`("SUM_BACKLOG_QTY")
+        )
+            .from(BACKLOG_WH)
+            .where(condition)
+            .groupBy(BACKLOG_WH.PO_NUMBER, BACKLOG_WH.RECEIVING_DATE)
+            .orderBy(getSortFields(pageable.sort, BACKLOG_WH.RECEIVING_DATE))
+
+        val data = query.fetch { record ->
+            BacklogWh(
+                locationCode = record.get("MIN_LOCATION_CODE", BigDecimal::class.java).toString(),
+                poNumber = record[BACKLOG_WH.PO_NUMBER],
+                receivingDate = record[BACKLOG_WH.RECEIVING_DATE],
+                backlogQty = record.get("SUM_BACKLOG_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO
+            )
         }
+        return Pair(data, data.size)
     }
 
     fun getListWithQtyGtZero(): List<BacklogWh> =

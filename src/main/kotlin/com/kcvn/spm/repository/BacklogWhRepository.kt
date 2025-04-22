@@ -23,6 +23,7 @@ import java.time.ZoneOffset
 class BacklogWhRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: BacklogWhSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<BacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
+        val receivingDate = BACKLOG_WH.field("receiving_date", java.time.OffsetDateTime::class.java)
         if(!request.listLocationCode.isNullOrEmpty()){
             val locationCodes = request.listLocationCode!!.split(",")
             var condition1 : Condition = DSL.noCondition()
@@ -47,10 +48,9 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             }
             condition = condition.and(condition1)
         }
-        if (request.receivingDate != null)
-            condition = condition.and(BACKLOG_WH.RECEIVING_DATE.eq(request.receivingDate))
-        if (request.issueDate != null)
-            condition = condition.and(BACKLOG_WH.ISSUE_DATE.eq(request.issueDate))
+        if (request.fromDate != null && request.toDate != null) {
+            condition = condition.and(receivingDate?.between(request.fromDate, request.toDate))
+        }
 
         if (isExport) {
             condition = condition.and(BACKLOG_WH.ISSUE_DATE.isNull).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
@@ -144,9 +144,9 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(
-                    BACKLOG_WH.LOCATION_CODE.eq(data.locationCode)
-                        .and(BACKLOG_WH.PO_NUMBER.eq(data.poNumber))
+                    BACKLOG_WH.PO_NUMBER.eq(data.poNumber)
                         .and(BACKLOG_WH.RECEIVING_DATE.eq(data.receivingDate))
+                        .and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
                 )
                 .execute()
 

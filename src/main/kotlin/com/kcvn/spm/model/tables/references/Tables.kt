@@ -4,6 +4,7 @@
 package com.kcvn.spm.model.tables.references
 
 
+import com.kcvn.spm.model.tables.Amoeba
 import com.kcvn.spm.model.tables.AppSetting
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
@@ -67,6 +68,11 @@ import com.kcvn.spm.model.tables.WestFactoryLayout
 import com.kcvn.spm.model.tables.WorkResult
 
 
+
+/**
+ * The table <code>public.amoeba</code>.
+ */
+val AMOEBA: Amoeba = Amoeba.AMOEBA
 
 /**
  * The table <code>public.app_setting</code>.

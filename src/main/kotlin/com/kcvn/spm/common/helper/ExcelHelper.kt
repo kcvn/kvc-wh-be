@@ -43,6 +43,27 @@ class ExcelHelper {
             }
         }
 
+        fun getCellValueAmoeba(row: Row, colIdx: Int, format: String? = null): String {
+            try {
+                val cell = row.getCell(colIdx)
+                if (!format.isNullOrEmpty() && cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                    val dateFormat = SimpleDateFormat(format)
+                    val date = cell.dateCellValue
+                    return dateFormat.format(date)
+                }
+                val value = when (cell.cellType) {
+                    CellType.STRING -> cell.stringCellValue
+                    CellType.NUMERIC -> BigDecimal(cell.numericCellValue).toPlainString()
+                    CellType.BOOLEAN -> if (cell.booleanCellValue) "1" else "0"
+                    else -> ""
+                }
+                return value.trim()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return ""
+            }
+        }
+
         fun getCellValueDate(row: Row, colIdx: Int): LocalDate? {
             return try {
                 val cell = row.getCell(colIdx)

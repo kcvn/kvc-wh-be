@@ -4,6 +4,7 @@
 package com.kcvn.spm.model.keys
 
 
+import com.kcvn.spm.model.tables.Amoeba
 import com.kcvn.spm.model.tables.AppSetting
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
@@ -65,6 +66,7 @@ import com.kcvn.spm.model.tables.TapeInventory
 import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WestFactoryLayout
 import com.kcvn.spm.model.tables.WorkResult
+import com.kcvn.spm.model.tables.records.AmoebaRecord
 import com.kcvn.spm.model.tables.records.AppSettingRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
 import com.kcvn.spm.model.tables.records.AuthRoleClaimRecord
@@ -138,6 +140,7 @@ import org.jooq.impl.Internal
 // UNIQUE and PRIMARY KEY definitions
 // -------------------------------------------------------------------------
 
+val AMOEBA_PKEY: UniqueKey<AmoebaRecord> = Internal.createUniqueKey(Amoeba.AMOEBA, DSL.name("amoeba_pkey"), arrayOf(Amoeba.AMOEBA.ID), true)
 val APP_SETTING_PKEY: UniqueKey<AppSettingRecord> = Internal.createUniqueKey(AppSetting.APP_SETTING, DSL.name("app_setting_pkey"), arrayOf(AppSetting.APP_SETTING.ID), true)
 val AUTH_PASSWORD_RESET_TOKEN_PKEY: UniqueKey<AuthPasswordResetTokenRecord> = Internal.createUniqueKey(AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN, DSL.name("auth_password_reset_token_pkey"), arrayOf(AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN.ID), true)
 val AUTH_ROLE_PKEY: UniqueKey<AuthRoleRecord> = Internal.createUniqueKey(AuthRole.AUTH_ROLE, DSL.name("auth_role_pkey"), arrayOf(AuthRole.AUTH_ROLE.ID), true)

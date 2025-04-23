@@ -4,6 +4,7 @@
 package com.kcvn.spm.model
 
 
+import com.kcvn.spm.model.tables.Amoeba
 import com.kcvn.spm.model.tables.AppSetting
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
@@ -85,6 +86,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
          */
         val PUBLIC: Public = Public()
     }
+
+    /**
+     * The table <code>public.amoeba</code>.
+     */
+    val AMOEBA: Amoeba get() = Amoeba.AMOEBA
 
     /**
      * The table <code>public.app_setting</code>.
@@ -394,6 +400,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     override fun getCatalog(): Catalog = DefaultCatalog.DEFAULT_CATALOG
 
     override fun getTables(): List<Table<*>> = listOf(
+        Amoeba.AMOEBA,
         AppSetting.APP_SETTING,
         AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN,
         AuthRole.AUTH_ROLE,

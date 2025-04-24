@@ -58,6 +58,8 @@ import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
+import com.kcvn.spm.model.tables.StockTaking
+import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -338,6 +340,16 @@ val SENDING_TRANSACTIONS: SendingTransactions = SendingTransactions.SENDING_TRAN
  * The table <code>public.splitting</code>.
  */
 val SPLITTING: Splitting = Splitting.SPLITTING
+
+/**
+ * The table <code>public.stock_taking</code>.
+ */
+val STOCK_TAKING: StockTaking = StockTaking.STOCK_TAKING
+
+/**
+ * The table <code>public.stock_taking_status</code>.
+ */
+val STOCK_TAKING_STATUS: StockTakingStatus = StockTakingStatus.STOCK_TAKING_STATUS
 
 /**
  * The table <code>public.sync_history</code>.

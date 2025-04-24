@@ -58,6 +58,8 @@ import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
+import com.kcvn.spm.model.tables.StockTaking
+import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -358,6 +360,16 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val SPLITTING: Splitting get() = Splitting.SPLITTING
 
     /**
+     * The table <code>public.stock_taking</code>.
+     */
+    val STOCK_TAKING: StockTaking get() = StockTaking.STOCK_TAKING
+
+    /**
+     * The table <code>public.stock_taking_status</code>.
+     */
+    val STOCK_TAKING_STATUS: StockTakingStatus get() = StockTakingStatus.STOCK_TAKING_STATUS
+
+    /**
      * The table <code>public.sync_history</code>.
      */
     val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
@@ -454,6 +466,8 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         ReceivingTransactions.RECEIVING_TRANSACTIONS,
         SendingTransactions.SENDING_TRANSACTIONS,
         Splitting.SPLITTING,
+        StockTaking.STOCK_TAKING,
+        StockTakingStatus.STOCK_TAKING_STATUS,
         SyncHistory.SYNC_HISTORY,
         SystemLock.SYSTEM_LOCK,
         TapeEnRoute.TAPE_EN_ROUTE,

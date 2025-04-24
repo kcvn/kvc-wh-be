@@ -58,6 +58,8 @@ import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
+import com.kcvn.spm.model.tables.StockTaking
+import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.SyncHistory
 import com.kcvn.spm.model.tables.SystemLock
 import com.kcvn.spm.model.tables.TapeEnRoute
@@ -120,6 +122,8 @@ import com.kcvn.spm.model.tables.records.ProductRecord
 import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SplittingRecord
+import com.kcvn.spm.model.tables.records.StockTakingRecord
+import com.kcvn.spm.model.tables.records.StockTakingStatusRecord
 import com.kcvn.spm.model.tables.records.SyncHistoryRecord
 import com.kcvn.spm.model.tables.records.SystemLockRecord
 import com.kcvn.spm.model.tables.records.TapeEnRouteRecord
@@ -194,6 +198,8 @@ val PRODUCT_PROCESS_PKEY: UniqueKey<ProductProcessRecord> = Internal.createUniqu
 val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)
 val SENDING_TRANSACTIONS_PKEY: UniqueKey<SendingTransactionsRecord> = Internal.createUniqueKey(SendingTransactions.SENDING_TRANSACTIONS, DSL.name("sending_transactions_pkey"), arrayOf(SendingTransactions.SENDING_TRANSACTIONS.ID), true)
 val SPLITTING_PKEY: UniqueKey<SplittingRecord> = Internal.createUniqueKey(Splitting.SPLITTING, DSL.name("splitting_pkey"), arrayOf(Splitting.SPLITTING.ID), true)
+val STOCK_TAKING_PKEY: UniqueKey<StockTakingRecord> = Internal.createUniqueKey(StockTaking.STOCK_TAKING, DSL.name("stock_taking_pkey"), arrayOf(StockTaking.STOCK_TAKING.ID), true)
+val STOCK_TAKING_STATUS_PKEY: UniqueKey<StockTakingStatusRecord> = Internal.createUniqueKey(StockTakingStatus.STOCK_TAKING_STATUS, DSL.name("stock_taking_status_pkey"), arrayOf(StockTakingStatus.STOCK_TAKING_STATUS.ID), true)
 val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
 val SYSTEM_LOCK_PKEY: UniqueKey<SystemLockRecord> = Internal.createUniqueKey(SystemLock.SYSTEM_LOCK, DSL.name("system_lock_pkey"), arrayOf(SystemLock.SYSTEM_LOCK.ID), true)
 val TAPE_EN_ROUTE_PKEY: UniqueKey<TapeEnRouteRecord> = Internal.createUniqueKey(TapeEnRoute.TAPE_EN_ROUTE, DSL.name("tape_en_route_pkey"), arrayOf(TapeEnRoute.TAPE_EN_ROUTE.ID), true)

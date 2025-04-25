@@ -3,7 +3,7 @@ package com.kcvn.spm.app.stocktaking.controller
 import com.kcvn.spm.app.stocktaking.payload.request.StartActualRequest
 import com.kcvn.spm.app.stocktaking.payload.request.StockTakingDailyRequest
 import com.kcvn.spm.app.stocktaking.payload.request.StopActualRequest
-import com.kcvn.spm.app.stocktaking.payload.response.StockTakingDailyResponse
+import com.kcvn.spm.app.stocktaking.payload.response.SystemStockTakingResponse
 import com.kcvn.spm.app.stocktaking.service.StockTakingService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -34,7 +34,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
             SortDefault(sort = ["locationCode"], direction = Sort.Direction.ASC),
         )
         pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<StockTakingDailyResponse>> {
+    ): ResponseEntity<BasePagingResponse<SystemStockTakingResponse>> {
         val result = stockTakingService.getList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
@@ -59,7 +59,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         stockTakingService.stopActual(request)
         val logger = KotlinLogging.logger {}
         logger.info(
-            "USER: " + CommonUtils.loggedInUser() + ", API: post actual-stock-taking/start" + ", REQUEST: " + request
+            "USER: " + CommonUtils.loggedInUser() + ", API: post actual-stock-taking/stop" + ", REQUEST: " + request
         )
         return ResponseEntity<MessageResponse>(
             MessageResponse(CommonUtils.getMessage("action.succeeded")),

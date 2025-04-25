@@ -4,6 +4,7 @@ import com.kcvn.spm.app.stocktaking.payload.request.StartActualRequest
 import com.kcvn.spm.app.stocktaking.payload.request.StockTakingDailyRequest
 import com.kcvn.spm.app.stocktaking.payload.request.StopActualRequest
 import com.kcvn.spm.app.stocktaking.payload.response.StockTakingDailyResponse
+import com.kcvn.spm.app.stocktaking.payload.response.SystemStockTakingResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -12,6 +13,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
 import com.kcvn.spm.model.tables.pojos.StockTakingStatus
 import com.kcvn.spm.repository.AmoebaRepository
+import com.kcvn.spm.repository.BacklogBinEntryRepository
 import com.kcvn.spm.repository.StockTakingRepository
 import com.kcvn.spm.repository.StockTakingStatusRepository
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -28,7 +30,8 @@ import java.math.BigDecimal
 class StockTakingService(
     private val amoebaRepo: AmoebaRepository,
     private val stockTakingStatusRepo: StockTakingStatusRepository,
-    private val stockTakingRepo: StockTakingRepository
+    private val stockTakingRepo: StockTakingRepository,
+    private val backlogBinEntryRepo: BacklogBinEntryRepository
 ) {
     fun startActual(request: StartActualRequest): BaseResponse<String> {
         val stt = stockTakingStatusRepo.findByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
@@ -61,13 +64,37 @@ class StockTakingService(
         stockTakingStatusRepo.updateStatus(request.yearNumber!!, request.monthNumber!!)
     }
 
-    fun getList(request: StockTakingDailyRequest, pageable: Pageable): BasePagingResponse<StockTakingDailyResponse> {
-        val data = amoebaRepo.getList(request, pageable)
+    fun getList(request: StockTakingDailyRequest, pageable: Pageable): BasePagingResponse<SystemStockTakingResponse> {
+        val stockTakingList = amoebaRepo.getList(request, pageable)
+        val systemList = mapToSystemResponse(stockTakingList.first)
         return BasePagingResponse(
-            data.first,
-            data.second
+            systemList,
+            systemList.size
         )
     }
+
+    fun mapToSystemResponse(input: List<StockTakingDailyResponse>): List<SystemStockTakingResponse> {
+        return input.map {
+            val result = when {
+                it.resultQty == "SAME" && it.resultLocationCode == "SAME" -> "SAME"
+                it.resultQty == "SAME" && it.resultLocationCode == "DIFFERENT" -> "resultLocationCode: DIFFERENT"
+                it.resultQty == "DIFFERENT" && it.resultLocationCode == "SAME" -> "resultQty: DIFFERENT"
+                it.resultQty == "DIFFERENT" && it.resultLocationCode == "DIFFERENT" -> "resultQty: DIFFERENT, resultLocationCode: DIFFERENT"
+                else -> null
+            }
+
+            SystemStockTakingResponse(
+                inspectionDate = it.inspectionDate,
+                poNumber = it.poNumber,
+                amoebaLocationCode = it.amoebaLocationCode,
+                systemLocationCode = it.systemLocationCode,
+                amoebaQty = it.amoebaQty,
+                systemQty = it.systemQty,
+                result = result
+            )
+        }
+    }
+
 
     fun importExcel(file: MultipartFile): BaseResponse<Int> {
         val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportAmoebaTemplate.xlsx")
@@ -90,16 +117,24 @@ class StockTakingService(
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
                 val amoebaData = Amoeba(
-                    locationCode = ExcelHelper.getCellValueAmoeba(row, 19),
+                    inspectionDate = ExcelHelper.getCellValueDate(row, 8),
                     poNumber = ExcelHelper.getCellValueAmoeba(row, 10),
+                    locationCode = ExcelHelper.getCellValueAmoeba(row, 19),
                     qty = ExcelHelper.getCellValueAmoeba(row, 11).toBigDecimalOrNull() ?: BigDecimal.ZERO
                 )
 
                 amoebaList.add(amoebaData)
             }
-            // xóa record
+            // xóa record amoeba
             amoebaRepo.delete()
+            // save amoeba
             val totalRecord = amoebaRepo.saveAll(amoebaList)
+            // xóa record backlog bin entry
+            backlogBinEntryRepo.delete()
+            // save backlog bin entry
+            val binEntryList = backlogBinEntryRepo.getBinEntryFromBacklog()
+            backlogBinEntryRepo.saveAll(binEntryList.first)
+
             return BaseResponse(totalRecord, CommonUtils.getMessage("Inserted"))
         } catch (e: Exception) {
             throw e

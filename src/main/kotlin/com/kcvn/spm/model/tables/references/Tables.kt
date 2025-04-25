@@ -13,6 +13,7 @@ import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
+import com.kcvn.spm.model.tables.BacklogBinEntry
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
@@ -115,6 +116,11 @@ val AUTH_USER_ROLE: AuthUserRole = AuthUserRole.AUTH_USER_ROLE
  * The table <code>public.backlog</code>.
  */
 val BACKLOG: Backlog = Backlog.BACKLOG
+
+/**
+ * The table <code>public.backlog_bin_entry</code>.
+ */
+val BACKLOG_BIN_ENTRY: BacklogBinEntry = BacklogBinEntry.BACKLOG_BIN_ENTRY
 
 /**
  * The table <code>public.backlog_history</code>.

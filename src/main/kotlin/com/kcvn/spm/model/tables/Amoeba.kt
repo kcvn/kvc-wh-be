@@ -9,6 +9,7 @@ import com.kcvn.spm.model.keys.AMOEBA_PKEY
 import com.kcvn.spm.model.tables.records.AmoebaRecord
 
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.function.Function
 
@@ -17,7 +18,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row8
+import org.jooq.Row9
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -69,14 +70,19 @@ open class Amoeba(
     val ID: TableField<AmoebaRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
-     * The column <code>public.amoeba.location_code</code>.
+     * The column <code>public.amoeba.inspection_date</code>.
      */
-    val LOCATION_CODE: TableField<AmoebaRecord, String?> = createField(DSL.name("location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
+    val INSPECTION_DATE: TableField<AmoebaRecord, LocalDate?> = createField(DSL.name("inspection_date"), SQLDataType.LOCALDATE, this, "")
 
     /**
      * The column <code>public.amoeba.po_number</code>.
      */
     val PO_NUMBER: TableField<AmoebaRecord, String?> = createField(DSL.name("po_number"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+
+    /**
+     * The column <code>public.amoeba.location_code</code>.
+     */
+    val LOCATION_CODE: TableField<AmoebaRecord, String?> = createField(DSL.name("location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
 
     /**
      * The column <code>public.amoeba.qty</code>.
@@ -144,18 +150,18 @@ open class Amoeba(
     override fun rename(name: Table<*>): Amoeba = Amoeba(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row8 type methods
+    // Row9 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row8<String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row8<String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun fieldsRow(): Row9<String?, LocalDate?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row9<String?, LocalDate?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, LocalDate?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, LocalDate?, String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

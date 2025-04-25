@@ -21,8 +21,10 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 .columns(
                     STOCK_TAKING.YEAR_NUMBER,
                     STOCK_TAKING.MONTH_NUMBER,
-                    STOCK_TAKING.LOCATION_CODE,
+                    STOCK_TAKING.INSPECTION_DATE,
                     STOCK_TAKING.PO_NUMBER,
+                    STOCK_TAKING.AMOEBA_LOCATION_CODE,
+                    STOCK_TAKING.ACTUAL_LOCATION_CODE,
                     STOCK_TAKING.AMOEBA_QTY,
                     STOCK_TAKING.ACTUAL_QTY
                 )
@@ -30,8 +32,10 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                     context.select(
                         DSL.`val`(year),
                         DSL.`val`(month),
-                        AMOEBA.LOCATION_CODE,
+                        AMOEBA.INSPECTION_DATE,
                         AMOEBA.PO_NUMBER,
+                        AMOEBA.LOCATION_CODE,
+                        DSL.inline(""),
                         AMOEBA.QTY,
                         DSL.inline(BigDecimal.ZERO)
                     ).from(AMOEBA)

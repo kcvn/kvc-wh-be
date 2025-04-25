@@ -13,6 +13,7 @@ import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
+import com.kcvn.spm.model.tables.BacklogBinEntry
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
@@ -76,6 +77,7 @@ import com.kcvn.spm.model.tables.records.AuthRoleRecord
 import com.kcvn.spm.model.tables.records.AuthUserClaimRecord
 import com.kcvn.spm.model.tables.records.AuthUserRecord
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
+import com.kcvn.spm.model.tables.records.BacklogBinEntryRecord
 import com.kcvn.spm.model.tables.records.BacklogHistoryRecord
 import com.kcvn.spm.model.tables.records.BacklogRecord
 import com.kcvn.spm.model.tables.records.BacklogWhHistoryRecord
@@ -153,6 +155,7 @@ val AUTH_USER_PKEY: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUse
 val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUniqueKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_pkey"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.ID), true)
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
 val BACKLOG_PKEY: UniqueKey<BacklogRecord> = Internal.createUniqueKey(Backlog.BACKLOG, DSL.name("backlog_pkey"), arrayOf(Backlog.BACKLOG.ID), true)
+val BACKLOG_BIN_ENTRY_PKEY: UniqueKey<BacklogBinEntryRecord> = Internal.createUniqueKey(BacklogBinEntry.BACKLOG_BIN_ENTRY, DSL.name("backlog_bin_entry_pkey"), arrayOf(BacklogBinEntry.BACKLOG_BIN_ENTRY.ID), true)
 val BACKLOG_HISTORY_PKEY: UniqueKey<BacklogHistoryRecord> = Internal.createUniqueKey(BacklogHistory.BACKLOG_HISTORY, DSL.name("backlog_history_pkey"), arrayOf(BacklogHistory.BACKLOG_HISTORY.ID), true)
 val BACKLOG_WH_PKEY: UniqueKey<BacklogWhRecord> = Internal.createUniqueKey(BacklogWh.BACKLOG_WH, DSL.name("backlog_wh_pkey"), arrayOf(BacklogWh.BACKLOG_WH.ID), true)
 val BACKLOG_WH_HISTORY_PKEY: UniqueKey<BacklogWhHistoryRecord> = Internal.createUniqueKey(BacklogWhHistory.BACKLOG_WH_HISTORY, DSL.name("backlog_wh_history_pkey"), arrayOf(BacklogWhHistory.BACKLOG_WH_HISTORY.ID), true)

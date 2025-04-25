@@ -6,6 +6,7 @@ package com.kcvn.spm.model.tables.pojos
 
 import java.io.Serializable
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 
@@ -17,8 +18,10 @@ data class StockTaking(
     var id: String? = null,
     var yearNumber: Int? = null,
     var monthNumber: Int? = null,
-    var locationCode: String? = null,
+    var inspectionDate: LocalDate? = null,
     var poNumber: String? = null,
+    var amoebaLocationCode: String? = null,
+    var actualLocationCode: String? = null,
     var amoebaQty: BigDecimal? = null,
     var actualQty: BigDecimal? = null,
     var createdDate: OffsetDateTime? = null,
@@ -54,17 +57,29 @@ data class StockTaking(
         }
         else if (this.monthNumber != o.monthNumber)
             return false
-        if (this.locationCode == null) {
-            if (o.locationCode != null)
+        if (this.inspectionDate == null) {
+            if (o.inspectionDate != null)
                 return false
         }
-        else if (this.locationCode != o.locationCode)
+        else if (this.inspectionDate != o.inspectionDate)
             return false
         if (this.poNumber == null) {
             if (o.poNumber != null)
                 return false
         }
         else if (this.poNumber != o.poNumber)
+            return false
+        if (this.amoebaLocationCode == null) {
+            if (o.amoebaLocationCode != null)
+                return false
+        }
+        else if (this.amoebaLocationCode != o.amoebaLocationCode)
+            return false
+        if (this.actualLocationCode == null) {
+            if (o.actualLocationCode != null)
+                return false
+        }
+        else if (this.actualLocationCode != o.actualLocationCode)
             return false
         if (this.amoebaQty == null) {
             if (o.amoebaQty != null)
@@ -111,8 +126,10 @@ data class StockTaking(
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.yearNumber == null) 0 else this.yearNumber.hashCode())
         result = prime * result + (if (this.monthNumber == null) 0 else this.monthNumber.hashCode())
-        result = prime * result + (if (this.locationCode == null) 0 else this.locationCode.hashCode())
+        result = prime * result + (if (this.inspectionDate == null) 0 else this.inspectionDate.hashCode())
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
+        result = prime * result + (if (this.amoebaLocationCode == null) 0 else this.amoebaLocationCode.hashCode())
+        result = prime * result + (if (this.actualLocationCode == null) 0 else this.actualLocationCode.hashCode())
         result = prime * result + (if (this.amoebaQty == null) 0 else this.amoebaQty.hashCode())
         result = prime * result + (if (this.actualQty == null) 0 else this.actualQty.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
@@ -128,8 +145,10 @@ data class StockTaking(
         sb.append(id)
         sb.append(", ").append(yearNumber)
         sb.append(", ").append(monthNumber)
-        sb.append(", ").append(locationCode)
+        sb.append(", ").append(inspectionDate)
         sb.append(", ").append(poNumber)
+        sb.append(", ").append(amoebaLocationCode)
+        sb.append(", ").append(actualLocationCode)
         sb.append(", ").append(amoebaQty)
         sb.append(", ").append(actualQty)
         sb.append(", ").append(createdDate)

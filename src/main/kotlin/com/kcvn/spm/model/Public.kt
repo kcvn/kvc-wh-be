@@ -13,6 +13,7 @@ import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
 import com.kcvn.spm.model.tables.Backlog
+import com.kcvn.spm.model.tables.BacklogBinEntry
 import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
@@ -133,6 +134,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.backlog</code>.
      */
     val BACKLOG: Backlog get() = Backlog.BACKLOG
+
+    /**
+     * The table <code>public.backlog_bin_entry</code>.
+     */
+    val BACKLOG_BIN_ENTRY: BacklogBinEntry get() = BacklogBinEntry.BACKLOG_BIN_ENTRY
 
     /**
      * The table <code>public.backlog_history</code>.
@@ -421,6 +427,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         AuthUserClaim.AUTH_USER_CLAIM,
         AuthUserRole.AUTH_USER_ROLE,
         Backlog.BACKLOG,
+        BacklogBinEntry.BACKLOG_BIN_ENTRY,
         BacklogHistory.BACKLOG_HISTORY,
         BacklogWh.BACKLOG_WH,
         BacklogWhHistory.BACKLOG_WH_HISTORY,

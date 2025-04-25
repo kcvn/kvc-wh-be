@@ -7,38 +7,41 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
 import com.kcvn.spm.model.tables.references.AMOEBA
+import com.kcvn.spm.model.tables.references.BACKLOG_BIN_ENTRY
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 
 @Repository
 class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: StockTakingDailyRequest, pageable: Pageable): Pair<List<StockTakingDailyResponse>, Int> {
-        val backlogWh = BACKLOG_WH
+        val backlogBinEntry = BACKLOG_BIN_ENTRY
         val amoeba = AMOEBA
 
-        val subQuery = context.select(backlogWh.LOCATION_CODE, backlogWh.PO_NUMBER)
-            .from(backlogWh)
+        val subQuery = context.select(backlogBinEntry.INSPECTION_DATE, backlogBinEntry.PO_NUMBER)
+            .from(backlogBinEntry)
             .union(
-                context.select(amoeba.LOCATION_CODE, amoeba.PO_NUMBER)
+                context.select(amoeba.INSPECTION_DATE, amoeba.PO_NUMBER)
                     .from(amoeba)
-            ).asTable("loc_po")
+            ).asTable("date_po")
 
         // Field alias
-        val locationField = subQuery.field("location_code", String::class.java)
+        val inspectionDateField = subQuery.field("inspection_date", LocalDate::class.java)
         val poNumberField = subQuery.field("po_number", String::class.java)
+        val amoebaLocationCodeField = DSL.max(amoeba.LOCATION_CODE).`as`("amoebaLocationCode")
+        val systemLocationCodeField = DSL.max(backlogBinEntry.LOCATION_CODE).`as`("systemLocationCode")
         val amoebaQtyField = DSL.max(amoeba.QTY).`as`("amoebaQty")
-        val backlogQtyField = DSL.max(backlogWh.BACKLOG_QTY).`as`("systemQty")
-        val resultField = DSL.`when`(DSL.max(amoeba.QTY).eq(DSL.max(backlogWh.BACKLOG_QTY)), "SAME")
-            .otherwise("DIFFERENT").`as`("result")
+        val systemQtyField = DSL.max(backlogBinEntry.BACKLOG_QTY).`as`("systemQty")
+        val resultQtyField = DSL.`when`(DSL.max(amoeba.QTY).eq(DSL.max(backlogBinEntry.BACKLOG_QTY)), "SAME")
+            .otherwise("DIFFERENT").`as`("resultQty")
+        val resultLocationCodeField = DSL.`when`(DSL.max(amoeba.LOCATION_CODE).eq(DSL.max(backlogBinEntry.LOCATION_CODE)), "SAME")
+            .otherwise("DIFFERENT").`as`("resultLocationCode")
 
         var whereCondition  = DSL.noCondition()
-        if (!request.locationCode.isNullOrEmpty()) {
-            whereCondition  = whereCondition .and(locationField?.eq(request.locationCode))
-        }
         if (!request.poNumber.isNullOrEmpty()) {
             whereCondition  = whereCondition .and(poNumberField?.eq(request.poNumber))
         }
@@ -46,30 +49,33 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
         var havingCondition = DSL.noCondition()
         if (request.isDifferentBacklog == true) {
             val maxAmoebaQty = DSL.max(amoeba.QTY)
-            val maxBacklogQty = DSL.max(backlogWh.BACKLOG_QTY)
+            val maxBacklogQty = DSL.max(backlogBinEntry.BACKLOG_QTY)
             havingCondition = havingCondition.and(maxAmoebaQty.ne(maxBacklogQty).or(maxAmoebaQty.isNull).or(maxBacklogQty.isNull))
         }
 
         val querySql = context.select(
-            locationField,
+            inspectionDateField,
             poNumberField,
-            backlogQtyField,
             amoebaQtyField,
-            resultField
+            systemQtyField,
+            amoebaLocationCodeField,
+            systemLocationCodeField,
+            resultQtyField,
+            resultLocationCodeField
         )
             .from(subQuery)
-            .leftJoin(backlogWh).on(
-                backlogWh.LOCATION_CODE.eq(locationField)
-                    .and(backlogWh.PO_NUMBER.eq(poNumberField))
+            .leftJoin(backlogBinEntry).on(
+                backlogBinEntry.INSPECTION_DATE.eq(inspectionDateField)
+                    .and(backlogBinEntry.PO_NUMBER.eq(poNumberField))
             )
             .leftJoin(amoeba).on(
-                amoeba.LOCATION_CODE.eq(locationField)
+                amoeba.INSPECTION_DATE.eq(inspectionDateField)
                     .and(amoeba.PO_NUMBER.eq(poNumberField))
             )
             .where(whereCondition )
-            .groupBy(locationField, poNumberField)
+            .groupBy(inspectionDateField, poNumberField)
             .having(havingCondition)
-            .orderBy(locationField?.asc())
+            .orderBy(poNumberField?.asc())
             .limit(pageable.pageSize)
             .offset(pageable.offset)
 
@@ -89,8 +95,9 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
             val result = transactionalContext.batchInsert(
                 dataList.map { data ->
                     AMOEBA.newRecord().apply {
-                        this.locationCode = data.locationCode
+                        this.inspectionDate = data.inspectionDate
                         this.poNumber = data.poNumber
+                        this.locationCode = data.locationCode
                         this.qty = data.qty
                         this.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                     }

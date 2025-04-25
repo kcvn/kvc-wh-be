@@ -1,8 +1,7 @@
 package com.kcvn.spm.app.stocktaking.controller
 
-import com.kcvn.spm.app.stocktaking.payload.request.StartActualRequest
-import com.kcvn.spm.app.stocktaking.payload.request.StockTakingDailyRequest
-import com.kcvn.spm.app.stocktaking.payload.request.StopActualRequest
+import com.kcvn.spm.app.stocktaking.payload.request.*
+import com.kcvn.spm.app.stocktaking.payload.response.ActualStockTakingResponse
 import com.kcvn.spm.app.stocktaking.payload.response.SystemStockTakingResponse
 import com.kcvn.spm.app.stocktaking.service.StockTakingService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -35,17 +34,45 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<SystemStockTakingResponse>> {
-        val result = stockTakingService.getList(request, pageable)
+        val result = stockTakingService.getListSystemStock(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/actual-stock-taking")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getListActualStock(
+        request: StockTakingMonthlyRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["locationCode"], direction = Sort.Direction.ASC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<ActualStockTakingResponse>> {
+        val result = stockTakingService.getListActualStock(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
     @PostMapping("/actual-stock-taking/start")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun startActual(@Valid @RequestBody request: StartActualRequest): ResponseEntity<*> {
-        stockTakingService.startActual(request)
+        val response = stockTakingService.startActual(request)
         val logger = KotlinLogging.logger {}
         logger.info(
             "USER: " + CommonUtils.loggedInUser() + ", API: post actual-stock-taking/start" + ", REQUEST: " + request
+        )
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(message = response.message!!, data = response.data),
+            HttpStatus.CREATED
+        )
+    }
+
+    @PostMapping("/actual-stock-taking/scan")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    fun scan(@Valid @RequestBody request: List<ScanRequest>): ResponseEntity<*> {
+        stockTakingService.scan(request)
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post actual-stock-taking/scan" + ", REQUEST: " + request
         )
         return ResponseEntity<MessageResponse>(
             MessageResponse(CommonUtils.getMessage("action.succeeded")),

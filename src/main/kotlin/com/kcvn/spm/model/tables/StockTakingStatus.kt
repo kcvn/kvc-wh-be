@@ -9,7 +9,6 @@ import com.kcvn.spm.model.keys.STOCK_TAKING_STATUS_PKEY
 import com.kcvn.spm.model.tables.records.StockTakingStatusRecord
 
 import java.time.OffsetDateTime
-import java.util.UUID
 import java.util.function.Function
 
 import org.jooq.Field
@@ -66,7 +65,7 @@ open class StockTakingStatus(
     /**
      * The column <code>public.stock_taking_status.id</code>.
      */
-    val ID: TableField<StockTakingStatusRecord, UUID?> = createField(DSL.name("id"), SQLDataType.UUID.nullable(false), this, "")
+    val ID: TableField<StockTakingStatusRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.stock_taking_status.year_number</code>.
@@ -146,16 +145,16 @@ open class StockTakingStatus(
     // -------------------------------------------------------------------------
     // Row8 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row8<UUID?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row8<UUID?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun fieldsRow(): Row8<String?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row8<String?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (UUID?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (UUID?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

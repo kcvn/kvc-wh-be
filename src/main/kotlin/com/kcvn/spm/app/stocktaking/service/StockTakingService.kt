@@ -1,16 +1,18 @@
 package com.kcvn.spm.app.stocktaking.service
 
-import com.kcvn.spm.app.stocktaking.payload.request.StartActualRequest
-import com.kcvn.spm.app.stocktaking.payload.request.StockTakingDailyRequest
-import com.kcvn.spm.app.stocktaking.payload.request.StopActualRequest
+import com.kcvn.spm.app.stocktaking.payload.request.*
+import com.kcvn.spm.app.stocktaking.payload.response.ActualStockTakingResponse
 import com.kcvn.spm.app.stocktaking.payload.response.StockTakingDailyResponse
+import com.kcvn.spm.app.stocktaking.payload.response.StockTakingMonthlyResponse
 import com.kcvn.spm.app.stocktaking.payload.response.SystemStockTakingResponse
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
+import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.pojos.StockTakingStatus
 import com.kcvn.spm.repository.AmoebaRepository
 import com.kcvn.spm.repository.BacklogBinEntryRepository
@@ -37,14 +39,14 @@ class StockTakingService(
         val stt = stockTakingStatusRepo.findByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
         if (stt != null) {
             if (stt.status == "on-going") {
-                return BaseResponse("on-going", "${request.yearNumber}/${request.yearNumber} đang kiểm kê")
+                return BaseResponse("on-going", "${request.monthNumber}/${request.yearNumber} đang kiểm kê")
             } else {
-                return BaseResponse("completed", "${request.yearNumber}/${request.yearNumber} đã đóng kiểm kê")
+                return BaseResponse("completed", "${request.monthNumber}/${request.yearNumber} đã đóng kiểm kê")
             }
         } else {
             val domain = stockTakingStatusRepo.findByStatus("on-going")
             if (domain != null) {
-                return BaseResponse("on-going", "${domain.yearNumber}/${domain.yearNumber} đang kiểm kê")
+                return BaseResponse("on-going", "${domain.monthNumber}/${domain.yearNumber} đang kiểm kê")
             } else {
                 // insert stock_taking_status
                 val sttDomain = StockTakingStatus(
@@ -55,7 +57,31 @@ class StockTakingService(
                 stockTakingStatusRepo.save(sttDomain)
                 // copy data from amoeba to stock_taking
                 stockTakingRepo.copyFromAmoebaToStockTaking(request)
-                return BaseResponse(null, "${request.yearNumber}/${request.yearNumber} bắt đầu kiểm kê")
+                return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
+            }
+        }
+    }
+
+    fun scan(request: List<ScanRequest>) {
+        val sTT = stockTakingStatusRepo.findByStatus("on-going")
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("không có tháng nào đang kiểm kê"), "")
+        request.forEach { element ->
+            val stockTaking = stockTakingRepo.findByInspectionDateAndPO(element.inspectionDate!!, element.poNumber!!)
+            if (stockTaking != null) {
+                stockTakingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
+            } else {
+                val domain = StockTaking(
+                    null,
+                    sTT.yearNumber,
+                    sTT.monthNumber,
+                    element.inspectionDate,
+                    element.poNumber,
+                    "",
+                    element.actualLocationCode,
+                    null,
+                    element.actualQty
+                )
+                stockTakingRepo.save(domain)
             }
         }
     }
@@ -64,7 +90,7 @@ class StockTakingService(
         stockTakingStatusRepo.updateStatus(request.yearNumber!!, request.monthNumber!!)
     }
 
-    fun getList(request: StockTakingDailyRequest, pageable: Pageable): BasePagingResponse<SystemStockTakingResponse> {
+    fun getListSystemStock(request: StockTakingDailyRequest, pageable: Pageable): BasePagingResponse<SystemStockTakingResponse> {
         val stockTakingList = amoebaRepo.getList(request, pageable)
         val systemList = mapToSystemResponse(stockTakingList.first)
         return BasePagingResponse(
@@ -73,16 +99,17 @@ class StockTakingService(
         )
     }
 
+    fun getListActualStock(request: StockTakingMonthlyRequest, pageable: Pageable): BasePagingResponse<ActualStockTakingResponse> {
+        val stockTakingList = stockTakingRepo.getList(request, pageable)
+        val systemList = mapToActualResponse(stockTakingList.first)
+        return BasePagingResponse(
+            systemList,
+            systemList.size
+        )
+    }
+
     fun mapToSystemResponse(input: List<StockTakingDailyResponse>): List<SystemStockTakingResponse> {
         return input.map {
-            val result = when {
-                it.resultQty == "SAME" && it.resultLocationCode == "SAME" -> "SAME"
-                it.resultQty == "SAME" && it.resultLocationCode == "DIFFERENT" -> "resultLocationCode: DIFFERENT"
-                it.resultQty == "DIFFERENT" && it.resultLocationCode == "SAME" -> "resultQty: DIFFERENT"
-                it.resultQty == "DIFFERENT" && it.resultLocationCode == "DIFFERENT" -> "resultQty: DIFFERENT, resultLocationCode: DIFFERENT"
-                else -> null
-            }
-
             SystemStockTakingResponse(
                 inspectionDate = it.inspectionDate,
                 poNumber = it.poNumber,
@@ -90,10 +117,35 @@ class StockTakingService(
                 systemLocationCode = it.systemLocationCode,
                 amoebaQty = it.amoebaQty,
                 systemQty = it.systemQty,
-                result = result
+                result = resolveResult(it.resultQty, it.resultLocationCode)
             )
         }
     }
+
+    fun mapToActualResponse(input: List<StockTakingMonthlyResponse>): List<ActualStockTakingResponse> {
+        return input.map {
+            ActualStockTakingResponse(
+                inspectionDate = it.inspectionDate,
+                poNumber = it.poNumber,
+                amoebaLocationCode = it.amoebaLocationCode,
+                actualLocationCode = it.actualLocationCode,
+                amoebaQty = it.amoebaQty,
+                actualQty = it.actualQty,
+                result = resolveResult(it.resultQty, it.resultLocationCode)
+            )
+        }
+    }
+
+    fun resolveResult(resultQty: String?, resultLocationCode: String?): String? {
+        return when {
+            resultQty == "SAME" && resultLocationCode == "SAME" -> "SAME"
+            resultQty == "SAME" && resultLocationCode == "DIFFERENT" -> "resultLocationCode: DIFFERENT"
+            resultQty == "DIFFERENT" && resultLocationCode == "SAME" -> "resultQty: DIFFERENT"
+            resultQty == "DIFFERENT" && resultLocationCode == "DIFFERENT" -> "resultQty: DIFFERENT, resultLocationCode: DIFFERENT"
+            else -> null
+        }
+    }
+
 
 
     fun importExcel(file: MultipartFile): BaseResponse<Int> {

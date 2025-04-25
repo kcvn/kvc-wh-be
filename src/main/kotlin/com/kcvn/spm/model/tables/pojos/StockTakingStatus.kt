@@ -6,7 +6,6 @@ package com.kcvn.spm.model.tables.pojos
 
 import java.io.Serializable
 import java.time.OffsetDateTime
-import java.util.UUID
 
 
 /**
@@ -14,7 +13,7 @@ import java.util.UUID
  */
 @Suppress("UNCHECKED_CAST")
 data class StockTakingStatus(
-    var id: UUID? = null,
+    var id: String? = null,
     var yearNumber: Int? = null,
     var monthNumber: Int? = null,
     var status: String? = null,

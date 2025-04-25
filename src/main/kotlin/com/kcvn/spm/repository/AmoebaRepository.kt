@@ -8,7 +8,6 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
 import com.kcvn.spm.model.tables.references.AMOEBA
 import com.kcvn.spm.model.tables.references.BACKLOG_BIN_ENTRY
-import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
@@ -42,15 +41,23 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
             .otherwise("DIFFERENT").`as`("resultLocationCode")
 
         var whereCondition  = DSL.noCondition()
+        if (request.inspectionDate != null) {
+            whereCondition  = whereCondition .and(inspectionDateField?.eq(request.inspectionDate))
+        }
         if (!request.poNumber.isNullOrEmpty()) {
             whereCondition  = whereCondition .and(poNumberField?.eq(request.poNumber))
         }
 
         var havingCondition = DSL.noCondition()
         if (request.isDifferentBacklog == true) {
-            val maxAmoebaQty = DSL.max(amoeba.QTY)
-            val maxBacklogQty = DSL.max(backlogBinEntry.BACKLOG_QTY)
-            havingCondition = havingCondition.and(maxAmoebaQty.ne(maxBacklogQty).or(maxAmoebaQty.isNull).or(maxBacklogQty.isNull))
+            val amoebaQty = DSL.max(amoeba.QTY)
+            val systemQty = DSL.max(backlogBinEntry.BACKLOG_QTY)
+            val amoebaLocationCode = DSL.max(amoeba.LOCATION_CODE)
+            val systemLocationCode = DSL.max(backlogBinEntry.LOCATION_CODE)
+            havingCondition = havingCondition.and(
+                amoebaQty.ne(systemQty).or(amoebaQty.isNull).or(systemQty.isNull)
+                    .or(amoebaLocationCode.ne(systemLocationCode)).or(amoebaLocationCode.eq("")).or(systemLocationCode.eq(""))
+            )
         }
 
         val querySql = context.select(

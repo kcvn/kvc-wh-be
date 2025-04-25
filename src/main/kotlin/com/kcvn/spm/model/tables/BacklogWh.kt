@@ -100,9 +100,9 @@ open class BacklogWh(
     val RECEIVING_DATE: TableField<BacklogWhRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
 
     /**
-     * The column <code>public.backlog_wh.issue_date</code>.
+     * The column <code>public.backlog_wh.inspection_date</code>.
      */
-    val ISSUE_DATE: TableField<BacklogWhRecord, LocalDate?> = createField(DSL.name("issue_date"), SQLDataType.LOCALDATE, this, "")
+    val INSPECTION_DATE: TableField<BacklogWhRecord, LocalDate?> = createField(DSL.name("inspection_date"), SQLDataType.LOCALDATE, this, "")
 
     /**
      * The column <code>public.backlog_wh.created_date</code>.

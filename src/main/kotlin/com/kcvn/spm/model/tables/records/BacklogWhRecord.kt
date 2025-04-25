@@ -51,7 +51,7 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
         set(value): Unit = set(6, value)
         get(): LocalDate? = get(6) as LocalDate?
 
-    open var issueDate: LocalDate?
+    open var inspectionDate: LocalDate?
         set(value): Unit = set(7, value)
         get(): LocalDate? = get(7) as LocalDate?
 
@@ -90,7 +90,7 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
     override fun field5(): Field<BigDecimal?> = BacklogWh.BACKLOG_WH.BACKLOG_QTY
     override fun field6(): Field<Int?> = BacklogWh.BACKLOG_WH.BOX_QTY
     override fun field7(): Field<LocalDate?> = BacklogWh.BACKLOG_WH.RECEIVING_DATE
-    override fun field8(): Field<LocalDate?> = BacklogWh.BACKLOG_WH.ISSUE_DATE
+    override fun field8(): Field<LocalDate?> = BacklogWh.BACKLOG_WH.INSPECTION_DATE
     override fun field9(): Field<OffsetDateTime?> = BacklogWh.BACKLOG_WH.CREATED_DATE
     override fun field10(): Field<String?> = BacklogWh.BACKLOG_WH.CREATED_BY
     override fun field11(): Field<OffsetDateTime?> = BacklogWh.BACKLOG_WH.UPDATED_DATE
@@ -102,7 +102,7 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
     override fun component5(): BigDecimal? = backlogQty
     override fun component6(): Int? = boxQty
     override fun component7(): LocalDate? = receivingDate
-    override fun component8(): LocalDate? = issueDate
+    override fun component8(): LocalDate? = inspectionDate
     override fun component9(): OffsetDateTime? = createdDate
     override fun component10(): String? = createdBy
     override fun component11(): OffsetDateTime? = updatedDate
@@ -114,7 +114,7 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
     override fun value5(): BigDecimal? = backlogQty
     override fun value6(): Int? = boxQty
     override fun value7(): LocalDate? = receivingDate
-    override fun value8(): LocalDate? = issueDate
+    override fun value8(): LocalDate? = inspectionDate
     override fun value9(): OffsetDateTime? = createdDate
     override fun value10(): String? = createdBy
     override fun value11(): OffsetDateTime? = updatedDate
@@ -199,7 +199,7 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
     /**
      * Create a detached, initialised BacklogWhRecord
      */
-    constructor(id: String? = null, locationCode: String? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, receivingDate: LocalDate? = null, issueDate: LocalDate? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
+    constructor(id: String? = null, locationCode: String? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, receivingDate: LocalDate? = null, inspectionDate: LocalDate? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
         this.id = id
         this.locationCode = locationCode
         this.poNumber = poNumber
@@ -207,7 +207,7 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
         this.backlogQty = backlogQty
         this.boxQty = boxQty
         this.receivingDate = receivingDate
-        this.issueDate = issueDate
+        this.inspectionDate = inspectionDate
         this.createdDate = createdDate
         this.createdBy = createdBy
         this.updatedDate = updatedDate
@@ -227,7 +227,7 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
             this.backlogQty = value.backlogQty
             this.boxQty = value.boxQty
             this.receivingDate = value.receivingDate
-            this.issueDate = value.issueDate
+            this.inspectionDate = value.inspectionDate
             this.createdDate = value.createdDate
             this.createdBy = value.createdBy
             this.updatedDate = value.updatedDate

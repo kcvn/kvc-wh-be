@@ -22,7 +22,7 @@ data class BacklogWh(
     var backlogQty: BigDecimal? = null,
     var boxQty: Int? = null,
     var receivingDate: LocalDate? = null,
-    var issueDate: LocalDate? = null,
+    var inspectionDate: LocalDate? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
@@ -80,11 +80,11 @@ data class BacklogWh(
         }
         else if (this.receivingDate != o.receivingDate)
             return false
-        if (this.issueDate == null) {
-            if (o.issueDate != null)
+        if (this.inspectionDate == null) {
+            if (o.inspectionDate != null)
                 return false
         }
-        else if (this.issueDate != o.issueDate)
+        else if (this.inspectionDate != o.inspectionDate)
             return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
@@ -123,7 +123,7 @@ data class BacklogWh(
         result = prime * result + (if (this.backlogQty == null) 0 else this.backlogQty.hashCode())
         result = prime * result + (if (this.boxQty == null) 0 else this.boxQty.hashCode())
         result = prime * result + (if (this.receivingDate == null) 0 else this.receivingDate.hashCode())
-        result = prime * result + (if (this.issueDate == null) 0 else this.issueDate.hashCode())
+        result = prime * result + (if (this.inspectionDate == null) 0 else this.inspectionDate.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -141,7 +141,7 @@ data class BacklogWh(
         sb.append(", ").append(backlogQty)
         sb.append(", ").append(boxQty)
         sb.append(", ").append(receivingDate)
-        sb.append(", ").append(issueDate)
+        sb.append(", ").append(inspectionDate)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

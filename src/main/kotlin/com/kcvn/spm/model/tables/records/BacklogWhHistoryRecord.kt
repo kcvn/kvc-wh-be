@@ -51,7 +51,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
         set(value): Unit = set(6, value)
         get(): LocalDate? = get(6) as LocalDate?
 
-    open var issueDate: LocalDate?
+    open var inspectionDate: LocalDate?
         set(value): Unit = set(7, value)
         get(): LocalDate? = get(7) as LocalDate?
 
@@ -94,7 +94,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
     override fun field5(): Field<BigDecimal?> = BacklogWhHistory.BACKLOG_WH_HISTORY.BACKLOG_QTY
     override fun field6(): Field<Int?> = BacklogWhHistory.BACKLOG_WH_HISTORY.BOX_QTY
     override fun field7(): Field<LocalDate?> = BacklogWhHistory.BACKLOG_WH_HISTORY.RECEIVING_DATE
-    override fun field8(): Field<LocalDate?> = BacklogWhHistory.BACKLOG_WH_HISTORY.ISSUE_DATE
+    override fun field8(): Field<LocalDate?> = BacklogWhHistory.BACKLOG_WH_HISTORY.INSPECTION_DATE
     override fun field9(): Field<String?> = BacklogWhHistory.BACKLOG_WH_HISTORY.TRANSACTION_TYPE
     override fun field10(): Field<OffsetDateTime?> = BacklogWhHistory.BACKLOG_WH_HISTORY.CREATED_DATE
     override fun field11(): Field<String?> = BacklogWhHistory.BACKLOG_WH_HISTORY.CREATED_BY
@@ -107,7 +107,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
     override fun component5(): BigDecimal? = backlogQty
     override fun component6(): Int? = boxQty
     override fun component7(): LocalDate? = receivingDate
-    override fun component8(): LocalDate? = issueDate
+    override fun component8(): LocalDate? = inspectionDate
     override fun component9(): String? = transactionType
     override fun component10(): OffsetDateTime? = createdDate
     override fun component11(): String? = createdBy
@@ -120,7 +120,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
     override fun value5(): BigDecimal? = backlogQty
     override fun value6(): Int? = boxQty
     override fun value7(): LocalDate? = receivingDate
-    override fun value8(): LocalDate? = issueDate
+    override fun value8(): LocalDate? = inspectionDate
     override fun value9(): String? = transactionType
     override fun value10(): OffsetDateTime? = createdDate
     override fun value11(): String? = createdBy
@@ -212,7 +212,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
     /**
      * Create a detached, initialised BacklogWhHistoryRecord
      */
-    constructor(id: String? = null, locationCode: String? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, receivingDate: LocalDate? = null, issueDate: LocalDate? = null, transactionType: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
+    constructor(id: String? = null, locationCode: String? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, receivingDate: LocalDate? = null, inspectionDate: LocalDate? = null, transactionType: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
         this.id = id
         this.locationCode = locationCode
         this.poNumber = poNumber
@@ -220,7 +220,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
         this.backlogQty = backlogQty
         this.boxQty = boxQty
         this.receivingDate = receivingDate
-        this.issueDate = issueDate
+        this.inspectionDate = inspectionDate
         this.transactionType = transactionType
         this.createdDate = createdDate
         this.createdBy = createdBy
@@ -241,7 +241,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
             this.backlogQty = value.backlogQty
             this.boxQty = value.boxQty
             this.receivingDate = value.receivingDate
-            this.issueDate = value.issueDate
+            this.inspectionDate = value.inspectionDate
             this.transactionType = value.transactionType
             this.createdDate = value.createdDate
             this.createdBy = value.createdBy

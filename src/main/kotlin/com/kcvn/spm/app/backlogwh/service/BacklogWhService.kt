@@ -82,10 +82,10 @@ class BacklogWhService(
                     receivingDate = ExcelHelper.getCellValueDate(row, 0),
                     poNumber = ExcelHelper.getCellValue(row, 1),
                     locationCode = ExcelHelper.getCellValue(row, 2),
-                    issueDate = ExcelHelper.getCellValueDate(row, 3)
+                    inspectionDate = ExcelHelper.getCellValueDate(row, 3)
                 )
 
-                val isSuccess = backlogWhRepo.updateIssueDate(backlogWhData)
+                val isSuccess = backlogWhRepo.updateInspectionDate(backlogWhData)
                 if (isSuccess) {
                     updatedList.add(backlogWhData)
                 }
@@ -125,8 +125,8 @@ class BacklogWhService(
 
             val formattedReceivingDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
             ExcelHelper.setCellValue(row, 0, style, formattedReceivingDate)
-            val formattedIssueDate = item.issueDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
-            ExcelHelper.setCellValue(row, 1, style, formattedIssueDate)
+            val formattedInspectionDate = item.inspectionDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
+            ExcelHelper.setCellValue(row, 1, style, formattedInspectionDate)
             ExcelHelper.setCellValue(row, 2, style, item.packageCode)
             ExcelHelper.setCellValue(row, 3, style, item.poNumber)
             ExcelHelper.setCellValue(row, 4, style, item.locationCode)
@@ -262,7 +262,7 @@ class BacklogWhService(
                 backlogQty = it.backlogQty,
                 boxQty = it.boxQty,
                 receivingDate = it.receivingDate,
-                issueDate = it.issueDate
+                inspectionDate = it.inspectionDate
             )
         }
         return BasePagingResponse(

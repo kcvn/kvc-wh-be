@@ -26,7 +26,7 @@ class BacklogBinEntryRepository(private val context: DSLContext) : SortingReposi
             BACKLOG_WH.PO_NUMBER,
             DSL.sum(BACKLOG_WH.BACKLOG_QTY).`as`("SUM_BACKLOG_QTY"),
             BACKLOG_WH.RECEIVING_DATE,
-            DSL.max(BACKLOG_WH.ISSUE_DATE).`as`("ISSUE_DATE")
+            DSL.max(BACKLOG_WH.INSPECTION_DATE).`as`("INSPECTION_DATE")
         )
             .from(BACKLOG_WH)
             .where(condition)
@@ -39,8 +39,7 @@ class BacklogBinEntryRepository(private val context: DSLContext) : SortingReposi
                 poNumber = record[BACKLOG_WH.PO_NUMBER],
                 backlogQty = record.get("SUM_BACKLOG_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO,
                 receivingDate = record[BACKLOG_WH.RECEIVING_DATE],
-//                inspectionDate = record[BACKLOG_WH.ISSUE_DATE]
-                        inspectionDate = record.get("ISSUE_DATE", LocalDate::class.java)
+                inspectionDate = record.get("INSPECTION_DATE", LocalDate::class.java)
             )
         }
         return Pair(data, data.size)

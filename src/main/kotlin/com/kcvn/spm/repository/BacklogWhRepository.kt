@@ -64,7 +64,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
 
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
-        condition = condition.and(BACKLOG_WH.ISSUE_DATE.isNull).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
+        condition = condition.and(BACKLOG_WH.INSPECTION_DATE.isNull).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
         val query = context.select(
             DSL.min(BACKLOG_WH.LOCATION_CODE.cast(SQLDataType.INTEGER)).`as`("MIN_LOCATION_CODE"),
             BACKLOG_WH.PO_NUMBER,
@@ -133,12 +133,12 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         }
     }
 
-    fun updateIssueDate(data: ImportBacklogWh): Boolean {
+    fun updateInspectionDate(data: ImportBacklogWh): Boolean {
         return context.transactionResult { configuration ->
             val transactionalContext = DSL.using(configuration)
 
             val affectedRows = transactionalContext.update(BACKLOG_WH)
-                .set(BACKLOG_WH.ISSUE_DATE, data.issueDate)
+                .set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(

@@ -52,6 +52,20 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @PostMapping("/actual-stock-taking/checking-start")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    fun checkingStartActual(@Valid @RequestBody request: StartActualRequest): ResponseEntity<*> {
+        val response = stockTakingService.checkingStartActual(request)
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post actual-stock-taking/checking-start" + ", REQUEST: " + request
+        )
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(message = response.message!!, data = response.data),
+            HttpStatus.CREATED
+        )
+    }
+
     @PostMapping("/actual-stock-taking/start")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun startActual(@Valid @RequestBody request: StartActualRequest): ResponseEntity<*> {

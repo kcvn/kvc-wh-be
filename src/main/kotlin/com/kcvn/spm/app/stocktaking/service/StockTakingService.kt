@@ -33,7 +33,7 @@ class StockTakingService(
     private val stockTakingRepo: StockTakingRepository,
     private val backlogBinEntryRepo: BacklogBinEntryRepository
 ) {
-    fun startActual(request: StartActualRequest): BaseResponse<String> {
+    fun checkingStartActual(request: StartActualRequest): BaseResponse<String> {
         val stt = stockTakingStatusRepo.findByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
         if (stt != null) {
             if (stt.status == "on-going") {
@@ -46,18 +46,22 @@ class StockTakingService(
             if (domain != null) {
                 return BaseResponse("on-going", "${domain.monthNumber}/${domain.yearNumber} đang kiểm kê")
             } else {
-                // insert stock_taking_status
-                val sttDomain = StockTakingStatus(
-                    yearNumber = request.yearNumber,
-                    monthNumber = request.monthNumber,
-                    status = "on-going"
-                )
-                stockTakingStatusRepo.save(sttDomain)
-                // copy data from amoeba to stock_taking
-                stockTakingRepo.copyFromAmoebaToStockTaking(request)
                 return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
             }
         }
+    }
+
+    fun startActual(request: StartActualRequest): BaseResponse<String> {
+        // insert stock_taking_status
+        val sttDomain = StockTakingStatus(
+            yearNumber = request.yearNumber,
+            monthNumber = request.monthNumber,
+            status = "on-going"
+        )
+        stockTakingStatusRepo.save(sttDomain)
+        // copy data from amoeba to stock_taking
+        stockTakingRepo.copyFromAmoebaToStockTaking(request)
+        return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
     }
 
     fun scan(request: List<ScanRequest>) {

@@ -14,8 +14,6 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import java.io.File
-import java.io.FileNotFoundException
 
 @Service
 @Transactional
@@ -24,19 +22,13 @@ class WestFactoryService(
     private val backlogWhRepo: BacklogWhRepository,
 ) {
     fun importExcel(file: MultipartFile): BaseResponse<Int> {
-        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportWestFactoryLayoutTemplate.xlsx")
-            ?: throw FileNotFoundException("ImportWestFactoryLayoutTemplate.xlsx file not found in resources.")
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportWestFactoryLayoutTemplate.xlsx"
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
             val sheet = workbook.getSheetAt(0)
             val rowIndex = 1
             val headerRow = sheet.getRow(0)
-            // Tạo file tạm thời từ InputStream
-            val tempFile = File.createTempFile("ImportWestFactoryLayoutTemplate", ".xlsx").apply {
-                deleteOnExit()
-                outputStream().use { templateStream.copyTo(it) }
-            }
-            if (!ExcelHelper.columnIsMatchingTemplate(tempFile.absolutePath, headerRow, 0, 36))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 36))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))

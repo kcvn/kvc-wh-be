@@ -23,8 +23,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-import java.io.File
-import java.io.FileNotFoundException
 import java.math.BigDecimal
 
 @Service
@@ -139,9 +137,9 @@ class StockTakingService(
     fun resolveResult(resultQty: String?, resultLocationCode: String?): String? {
         return when {
             resultQty == "SAME" && resultLocationCode == "SAME" -> "SAME"
-            resultQty == "SAME" && resultLocationCode == "DIFFERENT" -> "resultLocationCode: DIFFERENT"
-            resultQty == "DIFFERENT" && resultLocationCode == "SAME" -> "resultQty: DIFFERENT"
-            resultQty == "DIFFERENT" && resultLocationCode == "DIFFERENT" -> "resultQty: DIFFERENT, resultLocationCode: DIFFERENT"
+            resultQty == "SAME" && resultLocationCode == "DIFFERENT" -> "BIN#: DIFFERENT"
+            resultQty == "DIFFERENT" && resultLocationCode == "SAME" -> "QTY: DIFFERENT"
+            resultQty == "DIFFERENT" && resultLocationCode == "DIFFERENT" -> "QTY: DIFFERENT, BIN#: DIFFERENT"
             else -> null
         }
     }
@@ -149,19 +147,13 @@ class StockTakingService(
 
 
     fun importExcel(file: MultipartFile): BaseResponse<Int> {
-        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportAmoebaTemplate.xlsx")
-            ?: throw FileNotFoundException("ImportAmoebaTemplate.xlsx file not found in resources.")
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportAmoebaTemplate.xlsx"
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
             val sheet = workbook.getSheetAt(0)
             val rowIndex = 1
             val headerRow = sheet.getRow(0)
-            // Tạo file tạm thời từ InputStream
-            val tempFile = File.createTempFile("ImportAmoebaTemplate", ".xlsx").apply {
-                deleteOnExit()
-                outputStream().use { templateStream.copyTo(it) }
-            }
-            if (!ExcelHelper.columnIsMatchingTemplate(tempFile.absolutePath, headerRow, 0, 26))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 26))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))

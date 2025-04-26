@@ -4,7 +4,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class SendTransRequestWithSeq(
-    var issueDate: LocalDate? = null,
+    var inspectionDate: LocalDate? = null,
     var sourceLocationCode: String? = null,
     var packageCode: String? = null,
     var poNumber: String? = null,

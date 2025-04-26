@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -56,19 +57,13 @@ class BacklogWhService(
     }
 
     fun importBinEntry(file: MultipartFile): BaseResponse<List<ImportBacklogWh>> {
-        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBinEntryTemplate.xlsx")
-            ?: throw FileNotFoundException("ImportBinEntryTemplate.xlsx file not found in resources.")
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportAmoebaTemplate.xlsx"
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
             val sheet = workbook.getSheetAt(0)
             val rowIndex = 1
             val headerRow = sheet.getRow(0)
-            // Tạo file tạm thời từ InputStream
-            val tempFile = File.createTempFile("ImportBinEntryTemplate", ".xlsx").apply {
-                deleteOnExit()
-                outputStream().use { templateStream.copyTo(it) }
-            }
-            if (!ExcelHelper.columnIsMatchingTemplate(tempFile.absolutePath, headerRow, 0, 5))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
@@ -101,9 +96,11 @@ class BacklogWhService(
     fun exportBacklogWhExcel(request: BacklogWhSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
         val listBacklogResponse = backlogWhRepo.getList(request, pageable)
 
-        val inputStream = this::class.java.classLoader.getResourceAsStream("assets/template/ExportBacklogWhTemplate.xlsx")
-            ?: throw FileNotFoundException("ExportBacklogWhTemplate.xlsx file not found in resources.")
-        val workbook = XSSFWorkbook(inputStream)
+//        val inputStream = this::class.java.classLoader.getResourceAsStream("assets/template/ExportBacklogWhTemplate.xlsx")
+//            ?: throw FileNotFoundException("ExportBacklogWhTemplate.xlsx file not found in resources.")
+//        val workbook = XSSFWorkbook(inputStream)
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportBacklogWhTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
         val rowNumber = 0
@@ -155,10 +152,8 @@ class BacklogWhService(
 
     fun exportBinEntry(pageable: Pageable): BaseResponse<FileContentModel> {
         val listBacklogResponse = backlogWhRepo.getBinEntryList(pageable)
-
-        val inputStream = this::class.java.classLoader.getResourceAsStream("assets/template/ExportBinEntryTemplate.xlsx")
-            ?: throw FileNotFoundException("ExportBinEntryTemplate.xlsx file not found in resources.")
-        val workbook = XSSFWorkbook(inputStream)
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportBinEntryTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
         val sheet = workbook.getSheetAt(0)
 
         val rowNumber = 0

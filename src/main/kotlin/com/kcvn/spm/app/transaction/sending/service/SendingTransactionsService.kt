@@ -124,7 +124,7 @@ class SendingTransactionsService(
 
                 group.mapIndexed { index, sendTransRequest ->
                     SendTransRequestWithSeq(
-                        issueDate = sendTransRequest.issueDate,
+                        inspectionDate = sendTransRequest.inspectionDate,
                         sourceLocationCode = sendTransRequest.locationCode,
                         packageCode = sendTransRequest.packageCode,
                         poNumber = sendTransRequest.poNumber,

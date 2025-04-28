@@ -37,14 +37,14 @@ class StockTakingService(
         val stt = stockTakingStatusRepo.findByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
         if (stt != null) {
             if (stt.status == "on-going") {
-                return BaseResponse("on-going", "${request.monthNumber}/${request.yearNumber} đang kiểm kê")
+                return BaseResponse("permit", "${request.monthNumber}/${request.yearNumber} đang kiểm kê. Bạn muốn kiểm kê lại không?")
             } else {
-                return BaseResponse("completed", "${request.monthNumber}/${request.yearNumber} đã đóng kiểm kê")
+                return BaseResponse("deny", "${request.monthNumber}/${request.yearNumber} đã đóng kiểm kê")
             }
         } else {
             val domain = stockTakingStatusRepo.findByStatus("on-going")
             if (domain != null) {
-                return BaseResponse("on-going", "${domain.monthNumber}/${domain.yearNumber} đang kiểm kê")
+                return BaseResponse("deny", "${domain.monthNumber}/${domain.yearNumber} đang kiểm kê. Vui lòng đóng trước khi bắt đầu tháng mới")
             } else {
                 return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
             }
@@ -52,16 +52,24 @@ class StockTakingService(
     }
 
     fun startActual(request: StartActualRequest): BaseResponse<String> {
-        // insert stock_taking_status
-        val sttDomain = StockTakingStatus(
-            yearNumber = request.yearNumber,
-            monthNumber = request.monthNumber,
-            status = "on-going"
-        )
-        stockTakingStatusRepo.save(sttDomain)
-        // copy data from amoeba to stock_taking
-        stockTakingRepo.copyFromAmoebaToStockTaking(request)
-        return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
+        val stt = stockTakingStatusRepo.findByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
+        if (stt != null) {
+            // stock taking again
+            stockTakingRepo.deleteByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
+            stockTakingRepo.copyFromAmoebaToStockTaking(request)
+            return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
+        } else {
+            // stock taking new
+            val sttDomain = StockTakingStatus(
+                yearNumber = request.yearNumber,
+                monthNumber = request.monthNumber,
+                status = "on-going"
+            )
+            stockTakingStatusRepo.save(sttDomain)
+            // copy data from amoeba to stock_taking
+            stockTakingRepo.copyFromAmoebaToStockTaking(request)
+            return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
+        }
     }
 
     fun scan(request: List<ScanRequest>) {

@@ -122,6 +122,17 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
             .execute()
     }
 
+    fun deleteByYearAndMonth(yearNumber: Int, monthNumber: Int) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+            transactionalContext.deleteFrom(STOCK_TAKING)
+                .where(
+                    STOCK_TAKING.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
+                )
+                .execute()
+        }
+    }
+
     fun copyFromAmoebaToStockTaking(request: StartActualRequest) {
         val year = request.yearNumber
         val month = request.monthNumber

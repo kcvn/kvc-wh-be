@@ -37,16 +37,16 @@ class StockTakingService(
         val stt = stockTakingStatusRepo.findByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
         if (stt != null) {
             if (stt.status == "on-going") {
-                return BaseResponse("permit", "${request.monthNumber}/${request.yearNumber} đang kiểm kê. Bạn muốn kiểm kê lại không?")
+                return BaseResponse("permit", "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("taking.inventory") + ". " + CommonUtils.getMessage("check.again"))
             } else {
-                return BaseResponse("deny", "${request.monthNumber}/${request.yearNumber} đã đóng kiểm kê")
+                return BaseResponse("deny", "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("closed.inventory"))
             }
         } else {
             val domain = stockTakingStatusRepo.findByStatus("on-going")
             if (domain != null) {
-                return BaseResponse("deny", "${domain.monthNumber}/${domain.yearNumber} đang kiểm kê. Vui lòng đóng trước khi bắt đầu tháng mới")
+                return BaseResponse("deny", "${domain.monthNumber}/${domain.yearNumber} " + CommonUtils.getMessage("taking.inventory") + ". " + CommonUtils.getMessage("close.before.start.new.month"))
             } else {
-                return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
+                return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
             }
         }
     }
@@ -57,7 +57,7 @@ class StockTakingService(
             // stock taking again
             stockTakingRepo.deleteByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
             stockTakingRepo.copyFromAmoebaToStockTaking(request)
-            return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
+            return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
         } else {
             // stock taking new
             val sttDomain = StockTakingStatus(
@@ -68,13 +68,13 @@ class StockTakingService(
             stockTakingStatusRepo.save(sttDomain)
             // copy data from amoeba to stock_taking
             stockTakingRepo.copyFromAmoebaToStockTaking(request)
-            return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} bắt đầu kiểm kê")
+            return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
         }
     }
 
     fun scan(request: List<ScanRequest>) {
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
-            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("không có tháng nào đang kiểm kê"), "")
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
         request.forEach { element ->
             val stockTaking = stockTakingRepo.findByInspectionDateAndPO(element.inspectionDate!!, element.poNumber!!)
             if (stockTaking != null) {
@@ -191,7 +191,7 @@ class StockTakingService(
             val binEntryList = backlogBinEntryRepo.getBinEntryFromBacklog()
             backlogBinEntryRepo.saveAll(binEntryList.first)
 
-            return BaseResponse(totalRecord, CommonUtils.getMessage("Inserted"))
+            return BaseResponse(totalRecord, CommonUtils.getMessage("action.succeeded"))
         } catch (e: Exception) {
             throw e
         } finally {

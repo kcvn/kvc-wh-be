@@ -76,7 +76,7 @@ class WestFactoryService(
             // xóa record
             westFactoryRepo.delete()
             val totalRecord = westFactoryRepo.saveAll(westFactoryList)
-            return BaseResponse(totalRecord, CommonUtils.getMessage("Inserted"))
+            return BaseResponse(totalRecord, CommonUtils.getMessage("action.succeeded"))
         } catch (e: Exception) {
             throw e
         } finally {

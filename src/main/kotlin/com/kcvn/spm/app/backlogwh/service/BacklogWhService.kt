@@ -27,7 +27,6 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileNotFoundException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -39,10 +38,12 @@ class BacklogWhService(
     private val splittingRepo: SplittingRepository
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
-        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBinEntryTemplate.xlsx")
-            ?: throw FileNotFoundException("ImportBinEntryTemplate.xlsx file not found in resources.")
-
-        val workbook = templateStream.use { XSSFWorkbook(it) }
+//        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBinEntryTemplate.xlsx")
+//            ?: throw FileNotFoundException("ImportBinEntryTemplate.xlsx file not found in resources.")
+//
+//        val workbook = templateStream.use { XSSFWorkbook(it) }
+        val filePath = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportBinEntryTemplate.xlsx"
+        val workbook = FileInputStream(filePath).use { x -> XSSFWorkbook(x) }
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.use { it.write(byteArrayOutputStream) }

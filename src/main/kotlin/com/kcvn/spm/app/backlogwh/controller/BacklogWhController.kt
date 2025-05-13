@@ -51,22 +51,12 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
         return ResponseEntity(data, HttpStatus.OK)
     }
 
-//    @GetMapping("/export-bin-entry")
-//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
-//    fun exportBinEntry(
-//        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
-//        pageable: Pageable
-//    ): ResponseEntity<BaseResponse<FileContentModel>> {
-//        val data = backlogWhService.exportBinEntry(pageable)
-//        return ResponseEntity(data, HttpStatus.OK)
-//    }
-
     @GetMapping("/export-bin-entry")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportBinEntry(
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         pageable: Pageable
-    ): ResponseEntity<ByteArray> {
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = backlogWhService.exportBinEntry(pageable)
         return ResponseEntity(data, HttpStatus.OK)
     }

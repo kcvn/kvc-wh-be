@@ -152,63 +152,7 @@ class BacklogWhService(
         return BaseResponse(response)
     }
 
-//    fun exportBinEntry(pageable: Pageable): BaseResponse<FileContentModel> {
-//        val listBacklogResponse = backlogWhRepo.getBinEntryList(pageable)
-//        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportBinEntryTemplate.xlsx")
-//        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
-//        val sheet = workbook.getSheetAt(0)
-//
-//        val rowNumber = 0
-//        val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
-//        val style = ExcelHelper.getCellStyleCommon(workbook)
-//        style.alignment = HorizontalAlignment.CENTER
-//
-//        val numberStyle = workbook.createCellStyle()
-//        numberStyle.cloneStyleFrom(style)
-//        numberStyle.alignment = HorizontalAlignment.RIGHT
-//
-//        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
-//
-//        val listBacklog = listBacklogResponse.first
-//
-//        var rowNumberFill = 1
-//        for (item in listBacklog) {
-//            val row: Row = sheet.createRow(rowNumberFill++)
-//
-//            val formattedDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
-//            ExcelHelper.setCellValue(row, 0, style, formattedDate)
-//            ExcelHelper.setCellValue(row, 1, style, item.poNumber)
-//            ExcelHelper.setCellValue(row, 2, style, item.locationCode)
-//            ExcelHelper.setCellValueInt(row, 4, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
-//        }
-//
-//        for (i in 1 until rowNumberFill) {
-//            val row = sheet.getRow(i) ?: sheet.createRow(i)
-//            val formulaCell = row.createCell(3, CellType.FORMULA)
-//            formulaCell.cellFormula = "TEXT(E${i + 1},\"#,##0.000\")"
-//        }
-//        sheet.forceFormulaRecalculation = true
-//
-//        sheet.createFreezePane(4, 1)
-//
-//        val byteArrayOutputStream = ByteArrayOutputStream()
-//        workbook.write(byteArrayOutputStream)
-//        val excelBytes = byteArrayOutputStream.toByteArray()
-//
-//        val response = FileContentModel(
-//            fileName = CommonUtils.getMessage("ExportBinEntry.xlsx", arrayOf(
-//                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
-//            )),
-//            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
-//            content = excelBytes
-//        )
-//
-//        workbook.close()
-//
-//        return BaseResponse(response)
-//    }
-
-    fun exportBinEntry(pageable: Pageable): ByteArray {
+    fun exportBinEntry(pageable: Pageable): BaseResponse<FileContentModel> {
         val listBacklogResponse = backlogWhRepo.getBinEntryList(pageable)
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportBinEntryTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
@@ -262,7 +206,7 @@ class BacklogWhService(
 
         workbook.close()
 
-        return excelBytes
+        return BaseResponse(response)
     }
 
     fun plusBacklog(data: BacklogWh, transactionType: String) {

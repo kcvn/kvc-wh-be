@@ -18,7 +18,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row15
+import org.jooq.Row17
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -115,6 +115,16 @@ open class SendingTransactions(
     val RECEIVING_DATE: TableField<SendingTransactionsRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
 
     /**
+     * The column <code>public.sending_transactions.inspection_date</code>.
+     */
+    val INSPECTION_DATE: TableField<SendingTransactionsRecord, LocalDate?> = createField(DSL.name("inspection_date"), SQLDataType.LOCALDATE, this, "")
+
+    /**
+     * The column <code>public.sending_transactions.is_updated_amoeba</code>.
+     */
+    val IS_UPDATED_AMOEBA: TableField<SendingTransactionsRecord, Boolean?> = createField(DSL.name("is_updated_amoeba"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
+    /**
      * The column <code>public.sending_transactions.created_date</code>.
      */
     val CREATED_DATE: TableField<SendingTransactionsRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
@@ -182,18 +192,18 @@ open class SendingTransactions(
     override fun rename(name: Table<*>): SendingTransactions = SendingTransactions(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row15 type methods
+    // Row17 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row15<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row15<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun fieldsRow(): Row17<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, LocalDate?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row17<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, LocalDate?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, LocalDate?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, LocalDate?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
@@ -64,6 +65,50 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
         }
     }
 
+    fun getExcelList(pageable: Pageable) : Pair<List<SendingTransactions>, Int> {
+        var condition: Condition = DSL.noCondition()
+        condition = condition.and(SENDING_TRANSACTIONS.INSPECTION_DATE.isFalse)
+        val query = context.select(
+//            DSL.min(BACKLOG_WH.LOCATION_CODE.cast(SQLDataType.INTEGER)).`as`("MIN_LOCATION_CODE"),
+            SENDING_TRANSACTIONS.PO_NUMBER,
+            SENDING_TRANSACTIONS.INSPECTION_DATE,
+            DSL.sum(SENDING_TRANSACTIONS.QTY).`as`("SUM_SENDING_QTY")
+        )
+            .from(SENDING_TRANSACTIONS)
+            .where(condition)
+            .groupBy(SENDING_TRANSACTIONS.PO_NUMBER, SENDING_TRANSACTIONS.INSPECTION_DATE)
+            .orderBy(getSortFields(pageable.sort, SENDING_TRANSACTIONS.INSPECTION_DATE))
+
+        val data = query.fetch { record ->
+            SendingTransactions(
+//                locationCode = record.get("MIN_LOCATION_CODE", BigDecimal::class.java).toString(),
+                poNumber = record[SENDING_TRANSACTIONS.PO_NUMBER],
+                inspectionDate = record[SENDING_TRANSACTIONS.INSPECTION_DATE],
+                qty = record.get("SUM_SENDING_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO
+            )
+        }
+        return Pair(data, data.size)
+    }
+
+    fun updateIsUpdatedAmoeba(data: ImportSending): Boolean {
+        return context.transactionResult { configuration ->
+            val transactionalContext = DSL.using(configuration)
+
+            val affectedRows = transactionalContext.update(SENDING_TRANSACTIONS)
+                .set(SENDING_TRANSACTIONS.IS_UPDATED_AMOEBA, true)
+                .set(SENDING_TRANSACTIONS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(SENDING_TRANSACTIONS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .where(
+                    SENDING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber)
+                        .and(SENDING_TRANSACTIONS.INSPECTION_DATE.eq(data.inspectionDate))
+//                        .and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
+                )
+                .execute()
+
+            affectedRows > 0 // Trả về true nếu có ít nhất 1 dòng bị cập nhật
+        }
+    }
+
     fun updateIsCanceled(data: SendingTransactions) {
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
@@ -117,10 +162,14 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
         context.insertInto(
             SENDING_TRANSACTIONS, SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE, SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
             SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE, SENDING_TRANSACTIONS.DEST_PACKAGE_CODE, SENDING_TRANSACTIONS.PO_NUMBER,
-            SENDING_TRANSACTIONS.QTY, SENDING_TRANSACTIONS.SEQ_NO, SENDING_TRANSACTIONS.TRANSACTION_TYPE, SENDING_TRANSACTIONS.RECEIVING_DATE, SENDING_TRANSACTIONS.CREATED_BY
+            SENDING_TRANSACTIONS.QTY, SENDING_TRANSACTIONS.SEQ_NO, SENDING_TRANSACTIONS.TRANSACTION_TYPE,
+            SENDING_TRANSACTIONS.RECEIVING_DATE, SENDING_TRANSACTIONS.INSPECTION_DATE, SENDING_TRANSACTIONS.CREATED_BY
         )
             .values(
-                moving.sourceLocationCode, moving.destLocationCode, moving.sourcePackageCode, moving.destPackageCode, moving.poNumber, moving.qty, moving.seqNo, moving.transactionType, moving.receivingDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                moving.sourceLocationCode, moving.destLocationCode,
+                moving.sourcePackageCode, moving.destPackageCode, moving.poNumber,
+                moving.qty, moving.seqNo, moving.transactionType,
+                moving.receivingDate, moving.inspectionDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
             )
             .execute()
     }

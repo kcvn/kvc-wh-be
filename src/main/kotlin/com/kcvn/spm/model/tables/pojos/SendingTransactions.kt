@@ -25,6 +25,10 @@ data class SendingTransactions(
     var seqNo: Int? = null,
     var transactionType: String? = null,
     var receivingDate: LocalDate? = null,
+    var inspectionDate: LocalDate? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsUpdatedAmoeba")
+    var isUpdatedAmoeba: Boolean? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
@@ -103,6 +107,18 @@ data class SendingTransactions(
         }
         else if (this.receivingDate != o.receivingDate)
             return false
+        if (this.inspectionDate == null) {
+            if (o.inspectionDate != null)
+                return false
+        }
+        else if (this.inspectionDate != o.inspectionDate)
+            return false
+        if (this.isUpdatedAmoeba == null) {
+            if (o.isUpdatedAmoeba != null)
+                return false
+        }
+        else if (this.isUpdatedAmoeba != o.isUpdatedAmoeba)
+            return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
                 return false
@@ -149,6 +165,8 @@ data class SendingTransactions(
         result = prime * result + (if (this.seqNo == null) 0 else this.seqNo.hashCode())
         result = prime * result + (if (this.transactionType == null) 0 else this.transactionType.hashCode())
         result = prime * result + (if (this.receivingDate == null) 0 else this.receivingDate.hashCode())
+        result = prime * result + (if (this.inspectionDate == null) 0 else this.inspectionDate.hashCode())
+        result = prime * result + (if (this.isUpdatedAmoeba == null) 0 else this.isUpdatedAmoeba.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -170,6 +188,8 @@ data class SendingTransactions(
         sb.append(", ").append(seqNo)
         sb.append(", ").append(transactionType)
         sb.append(", ").append(receivingDate)
+        sb.append(", ").append(inspectionDate)
+        sb.append(", ").append(isUpdatedAmoeba)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

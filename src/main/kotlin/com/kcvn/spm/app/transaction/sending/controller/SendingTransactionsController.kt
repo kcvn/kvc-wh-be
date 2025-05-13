@@ -1,12 +1,15 @@
 package com.kcvn.spm.app.transaction.sending.controller
 
+import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.service.SendingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.MessageResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
 import mu.KotlinLogging
@@ -18,6 +21,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/sending")
@@ -57,5 +61,24 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
                 HttpStatus.CREATED
             )
         }
+    }
+
+    @GetMapping("/export-excel")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    fun exportExcel(
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
+        pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = sendingService.exportExcel(pageable)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasRole('ADMIN')")
+    fun importExcel(
+        @RequestPart("file") file: MultipartFile
+    ): ResponseEntity<BaseResponse<List<ImportSending>>> {
+        val data = sendingService.importExcel(file)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 }

@@ -2,25 +2,37 @@ package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
-import com.kcvn.spm.app.transaction.sending.payload.request.SendTransRequestWithSeq
-import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
-import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
-import com.kcvn.spm.app.transaction.sending.payload.request.ValidateSendTransRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.*
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
+import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
+import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.repository.SendingTransactionsRepository
 import com.kcvn.spm.repository.SplittingRepository
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -46,6 +58,90 @@ class SendingTransactionsService(
             data,
             moving.second
         )
+    }
+
+    fun exportExcel(pageable: Pageable): BaseResponse<FileContentModel> {
+        val listBacklogResponse = sendingRepo.getExcelList(pageable)
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportSendingTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        val rowNumber = 0
+        val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        style.alignment = HorizontalAlignment.CENTER
+
+        val numberStyle = workbook.createCellStyle()
+        numberStyle.cloneStyleFrom(style)
+        numberStyle.alignment = HorizontalAlignment.RIGHT
+
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
+        val listBacklog = listBacklogResponse.first
+
+        var rowNumberFill = 1
+        for (item in listBacklog) {
+            val row: Row = sheet.createRow(rowNumberFill++)
+
+            val formattedDate = item.inspectionDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
+            ExcelHelper.setCellValue(row, 0, style, formattedDate)
+            ExcelHelper.setCellValue(row, 1, style, item.poNumber)
+            ExcelHelper.setCellValueInt(row, 2, numberStyle, item.qty?.toInt() ?: 0, numberFormat)
+        }
+
+        sheet.createFreezePane(4, 1)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("ExportSending.xlsx", arrayOf(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+            )),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
+    }
+
+    fun importExcel(file: MultipartFile): BaseResponse<List<ImportSending>> {
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportSendingTemplate.xlsx"
+        val workbook = WorkbookFactory.create(file.inputStream)
+        try {
+            val sheet = workbook.getSheetAt(0)
+            val rowIndex = 1
+            val headerRow = sheet.getRow(0)
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 6))
+                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
+                throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+            val updatedList = mutableListOf<ImportSending>()
+
+            for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val status = ExcelHelper.getCellValue(row, 3)
+                if (status != "Success") continue
+
+                val importSendingData = ImportSending(
+                    inspectionDate = ExcelHelper.getCellValueDate(row, 0),
+                    poNumber = ExcelHelper.getCellValueAmoeba(row, 1),
+                    qty = ExcelHelper.getCellValueAmoeba(row, 2).toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                )
+
+                val isSuccess = sendingRepo.updateIsUpdatedAmoeba(importSendingData)
+                if (isSuccess) {
+                    updatedList.add(importSendingData)
+                }
+            }
+            return BaseResponse(updatedList, CommonUtils.getMessage("Updated"))
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            workbook.close()
+        }
     }
 
     fun validateSourceBacklogFromSending(request: List<SendingRequest>): List<ValidateSendTransResponse> {
@@ -97,7 +193,8 @@ class SendingTransactionsService(
                 it.qty,
                 it.seqNo,
                 "OUT_ONLY",
-                receivingDate
+                receivingDate,
+                it.inspectionDate
             )
             sendingRepo.saveSendingTrans(sendTran)
             // save backlog and backlog history

@@ -96,6 +96,40 @@ class ExcelHelper {
             }
         }
 
+        fun getCellValueDateAmoeba(row: Row, colIdx: Int): LocalDate? {
+            return try {
+                val cell = row.getCell(colIdx)
+                when {
+                    cell == null -> null
+
+                    // Nếu ô là kiểu ngày (DATE), lấy giá trị ngày
+                    cell.cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell) ->
+                        cell.localDateTimeCellValue.toLocalDate()
+
+                    // Nếu ô chứa số serial, chuyển đổi nó thành LocalDate
+                    cell.cellType == CellType.NUMERIC ->
+                        LocalDate.of(1900, 1, 1).plusDays(cell.numericCellValue.toLong() - 2)
+
+                    // Nếu ô chứa chuỗi ngày, chuyển thành LocalDate với định dạng "yyyy/MM/dd"
+                    cell.cellType == CellType.STRING -> {
+                        val text = cell.stringCellValue.trim()
+                        try {
+                            val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+                            LocalDate.parse(text, formatter)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
+                    else -> null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+
+
         fun getCellValueCustomImportTape(row: Row, columnIndex: Int): String {
             val cell = row.getCell(columnIndex)
             val value = when (cell.cellType) {

@@ -58,27 +58,27 @@ class BacklogWhService(
     }
 
     fun importBinEntry(file: MultipartFile): BaseResponse<List<ImportBacklogWh>> {
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportAmoebaTemplate.xlsx"
+        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportBinEntryTemplate.xlsx"
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
             val sheet = workbook.getSheetAt(0)
             val rowIndex = 1
             val headerRow = sheet.getRow(0)
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 5))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 6))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
             val updatedList = mutableListOf<ImportBacklogWh>()
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-                val status = ExcelHelper.getCellValue(row, 4)
+                val status = ExcelHelper.getCellValue(row, 5)
                 if (status != "Success") continue
 
                 val backlogWhData = ImportBacklogWh(
-                    receivingDate = ExcelHelper.getCellValueDate(row, 0),
+                    receivingDate = ExcelHelper.getCellValueDateAmoeba(row, 0),
                     poNumber = ExcelHelper.getCellValue(row, 1),
                     locationCode = ExcelHelper.getCellValue(row, 2),
-                    inspectionDate = ExcelHelper.getCellValueDate(row, 3)
+                    inspectionDate = ExcelHelper.getCellValueDateAmoeba(row, 4)
                 )
 
                 val isSuccess = backlogWhRepo.updateInspectionDate(backlogWhData)
@@ -174,7 +174,7 @@ class BacklogWhService(
         for (item in listBacklog) {
             val row: Row = sheet.createRow(rowNumberFill++)
 
-            val formattedDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
+            val formattedDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
             ExcelHelper.setCellValue(row, 0, style, formattedDate)
             ExcelHelper.setCellValue(row, 1, style, item.poNumber)
             ExcelHelper.setCellValue(row, 2, style, item.locationCode)

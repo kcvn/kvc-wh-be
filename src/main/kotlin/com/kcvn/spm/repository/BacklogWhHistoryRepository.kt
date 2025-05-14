@@ -18,9 +18,14 @@ class BacklogWhHistoryRepository(private val context: DSLContext) : SortingRepos
     fun save(data: BacklogWhHistory) {
         context.insertInto(
             BACKLOG_WH_HISTORY, BACKLOG_WH_HISTORY.LOCATION_CODE, BACKLOG_WH_HISTORY.PO_NUMBER, BACKLOG_WH_HISTORY.PACKAGE_CODE,
-            BACKLOG_WH_HISTORY.BACKLOG_QTY, BACKLOG_WH_HISTORY.BOX_QTY, BACKLOG_WH_HISTORY.RECEIVING_DATE, BACKLOG_WH_HISTORY.TRANSACTION_TYPE, BACKLOG_WH_HISTORY.CREATED_BY
+            BACKLOG_WH_HISTORY.BACKLOG_QTY, BACKLOG_WH_HISTORY.BOX_QTY, BACKLOG_WH_HISTORY.RECEIVING_DATE,
+            BACKLOG_WH_HISTORY.INSPECTION_DATE, BACKLOG_WH_HISTORY.TRANSACTION_TYPE, BACKLOG_WH_HISTORY.CREATED_BY
         )
-            .values(data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, data.receivingDate, data.transactionType, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .values(
+                data.locationCode, data.poNumber, data.packageCode,
+                data.backlogQty, data.boxQty, data.receivingDate,
+                data.inspectionDate, data.transactionType, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+            )
             .execute()
     }
 

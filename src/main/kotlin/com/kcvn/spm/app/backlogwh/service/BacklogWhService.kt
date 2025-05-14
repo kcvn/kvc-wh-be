@@ -245,7 +245,7 @@ class BacklogWhService(
         backlogWhRepo.update(entityBacklog)
         // insert backlog history
         val entityBacklogHistory = BacklogWhHistory(
-            null, entityBacklog.locationCode, entityBacklog.poNumber, entityBacklog.packageCode, entityBacklog.backlogQty, entityBacklog.boxQty, data.receivingDate, null, transactionType
+            null, entityBacklog.locationCode, entityBacklog.poNumber, entityBacklog.packageCode, entityBacklog.backlogQty, entityBacklog.boxQty, data.receivingDate, data.inspectionDate, transactionType
         )
         backlogWhHistoryRepo.save(entityBacklogHistory)
     }

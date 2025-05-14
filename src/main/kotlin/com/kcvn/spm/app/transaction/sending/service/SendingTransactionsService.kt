@@ -115,7 +115,7 @@ class SendingTransactionsService(
             val sheet = workbook.getSheetAt(0)
             val rowIndex = 1
             val headerRow = sheet.getRow(0)
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 6))
+            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 4))
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
@@ -126,7 +126,7 @@ class SendingTransactionsService(
                 if (status != "Success") continue
 
                 val importSendingData = ImportSending(
-                    inspectionDate = ExcelHelper.getCellValueDate(row, 0),
+                    inspectionDate = ExcelHelper.getCellValueDateAmoeba(row, 0),
                     poNumber = ExcelHelper.getCellValueAmoeba(row, 1),
                     qty = ExcelHelper.getCellValueAmoeba(row, 2).toBigDecimalOrNull() ?: BigDecimal.ZERO,
                 )
@@ -205,7 +205,8 @@ class SendingTransactionsService(
                 it.packageCode,
                 it.qty,
                 1,
-                receivingDate
+                receivingDate,
+                it.inspectionDate
             )
             backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
         }

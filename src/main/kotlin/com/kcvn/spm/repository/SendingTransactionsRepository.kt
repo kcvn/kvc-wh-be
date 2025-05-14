@@ -67,9 +67,8 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
 
     fun getExcelList(pageable: Pageable) : Pair<List<SendingTransactions>, Int> {
         var condition: Condition = DSL.noCondition()
-        condition = condition.and(SENDING_TRANSACTIONS.INSPECTION_DATE.isFalse)
+        condition = condition.and(SENDING_TRANSACTIONS.IS_UPDATED_AMOEBA.isFalse)
         val query = context.select(
-//            DSL.min(BACKLOG_WH.LOCATION_CODE.cast(SQLDataType.INTEGER)).`as`("MIN_LOCATION_CODE"),
             SENDING_TRANSACTIONS.PO_NUMBER,
             SENDING_TRANSACTIONS.INSPECTION_DATE,
             DSL.sum(SENDING_TRANSACTIONS.QTY).`as`("SUM_SENDING_QTY")
@@ -81,7 +80,6 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
 
         val data = query.fetch { record ->
             SendingTransactions(
-//                locationCode = record.get("MIN_LOCATION_CODE", BigDecimal::class.java).toString(),
                 poNumber = record[SENDING_TRANSACTIONS.PO_NUMBER],
                 inspectionDate = record[SENDING_TRANSACTIONS.INSPECTION_DATE],
                 qty = record.get("SUM_SENDING_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO
@@ -101,7 +99,6 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 .where(
                     SENDING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber)
                         .and(SENDING_TRANSACTIONS.INSPECTION_DATE.eq(data.inspectionDate))
-//                        .and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
                 )
                 .execute()
 

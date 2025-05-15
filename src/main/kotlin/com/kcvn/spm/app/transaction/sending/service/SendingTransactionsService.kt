@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.repository.SendingTransactionsRepository
 import com.kcvn.spm.repository.SplittingRepository
+import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -86,8 +87,16 @@ class SendingTransactionsService(
             val formattedDate = item.inspectionDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
             ExcelHelper.setCellValue(row, 0, style, formattedDate)
             ExcelHelper.setCellValue(row, 1, style, item.poNumber)
-            ExcelHelper.setCellValueInt(row, 2, numberStyle, item.qty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 3, numberStyle, item.qty?.toInt() ?: 0, numberFormat)
         }
+
+        for (i in 1 until rowNumberFill) {
+            val row = sheet.getRow(i) ?: sheet.createRow(i)
+            val formulaCell = row.createCell(2, CellType.FORMULA)
+            formulaCell.cellFormula = "TEXT(D${i + 1},\"#,##0.0\")"
+            formulaCell.cellStyle = numberStyle
+        }
+        sheet.forceFormulaRecalculation = true
 
         sheet.createFreezePane(4, 1)
 

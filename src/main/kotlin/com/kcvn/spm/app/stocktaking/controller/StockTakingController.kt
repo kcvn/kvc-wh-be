@@ -2,6 +2,7 @@ package com.kcvn.spm.app.stocktaking.controller
 
 import com.kcvn.spm.app.stocktaking.payload.request.*
 import com.kcvn.spm.app.stocktaking.payload.response.ActualStockTakingResponse
+import com.kcvn.spm.app.stocktaking.payload.response.StockTakingForAndroid
 import com.kcvn.spm.app.stocktaking.payload.response.SystemStockTakingResponse
 import com.kcvn.spm.app.stocktaking.service.StockTakingService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -49,6 +50,19 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<ActualStockTakingResponse>> {
         val result = stockTakingService.getListActualStock(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/actual-stock-taking/get-list")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getListForAndroid(
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["inspectionDate"], direction = Sort.Direction.ASC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<StockTakingForAndroid>> {
+        val result = stockTakingService.getListForAndroid(pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
@@ -110,10 +124,10 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasRole('ADMIN')")
-    fun importExcel(
+    fun importExcelAmoeba(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<Int>> {
-        val data = stockTakingService.importExcel(file)
+        val data = stockTakingService.importExcelAmoeba(file)
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

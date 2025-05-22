@@ -1,6 +1,5 @@
 package com.kcvn.spm.app.transaction.receiving.service
 
-import com.kcvn.spm.app.backlog.service.BacklogService
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
@@ -21,7 +20,6 @@ import java.time.ZoneOffset
 @Transactional
 class ReceivingTransactionsService(
     private val receivingRepo: ReceivingTransactionsRepository,
-    private val backlogService: BacklogService,
     private val backlogWhService: BacklogWhService,
 ) {
     fun getList(request: RecTransSearchRequest, pageable: Pageable): BasePagingResponse<RecTransResponse> {

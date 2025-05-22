@@ -5,70 +5,26 @@ package com.kcvn.spm.model
 
 
 import com.kcvn.spm.model.tables.Amoeba
-import com.kcvn.spm.model.tables.AppSetting
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
 import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
-import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogBinEntry
-import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
-import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
 import com.kcvn.spm.model.tables.Checking
-import com.kcvn.spm.model.tables.CommonCategory
-import com.kcvn.spm.model.tables.CompletionRateProcess
-import com.kcvn.spm.model.tables.CompletionRateProcessProduct
-import com.kcvn.spm.model.tables.CompletionRateProduct
-import com.kcvn.spm.model.tables.CouponCodeDropdown
-import com.kcvn.spm.model.tables.EquipmentProductivity
-import com.kcvn.spm.model.tables.ExportConfiguration
-import com.kcvn.spm.model.tables.HolidaysCalendar
-import com.kcvn.spm.model.tables.InformationCalculateQuantity
-import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
-import com.kcvn.spm.model.tables.InventoryIns_30day
-import com.kcvn.spm.model.tables.InventoryProduct
-import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
-import com.kcvn.spm.model.tables.Order
-import com.kcvn.spm.model.tables.OrderDetail
-import com.kcvn.spm.model.tables.OrderInfo
-import com.kcvn.spm.model.tables.OrderVersionDropdown
-import com.kcvn.spm.model.tables.Plan
-import com.kcvn.spm.model.tables.PlanCalendarConfig
-import com.kcvn.spm.model.tables.PlanColorConfig
-import com.kcvn.spm.model.tables.PlanDetail
-import com.kcvn.spm.model.tables.PlanDetailTemp
-import com.kcvn.spm.model.tables.PlanProcess
-import com.kcvn.spm.model.tables.PlanProcessTemp
-import com.kcvn.spm.model.tables.PlanProduct
-import com.kcvn.spm.model.tables.PlanProductTemp
-import com.kcvn.spm.model.tables.PlanTemp
-import com.kcvn.spm.model.tables.ProcessGroup
-import com.kcvn.spm.model.tables.ProcessMaster
-import com.kcvn.spm.model.tables.ProcessMasterData
-import com.kcvn.spm.model.tables.ProcessProcedureStructure
-import com.kcvn.spm.model.tables.Product
-import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingStatus
-import com.kcvn.spm.model.tables.SyncHistory
-import com.kcvn.spm.model.tables.SystemLock
-import com.kcvn.spm.model.tables.TapeEnRoute
-import com.kcvn.spm.model.tables.TapeInfo
-import com.kcvn.spm.model.tables.TapeInventory
-import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WestFactoryLayout
-import com.kcvn.spm.model.tables.WorkResult
 
 import kotlin.collections.List
 
@@ -94,11 +50,6 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.amoeba</code>.
      */
     val AMOEBA: Amoeba get() = Amoeba.AMOEBA
-
-    /**
-     * The table <code>public.app_setting</code>.
-     */
-    val APP_SETTING: AppSetting get() = AppSetting.APP_SETTING
 
     /**
      * The table <code>public.auth_password_reset_token</code>.
@@ -131,19 +82,9 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val AUTH_USER_ROLE: AuthUserRole get() = AuthUserRole.AUTH_USER_ROLE
 
     /**
-     * The table <code>public.backlog</code>.
-     */
-    val BACKLOG: Backlog get() = Backlog.BACKLOG
-
-    /**
      * The table <code>public.backlog_bin_entry</code>.
      */
     val BACKLOG_BIN_ENTRY: BacklogBinEntry get() = BacklogBinEntry.BACKLOG_BIN_ENTRY
-
-    /**
-     * The table <code>public.backlog_history</code>.
-     */
-    val BACKLOG_HISTORY: BacklogHistory get() = BacklogHistory.BACKLOG_HISTORY
 
     /**
      * The table <code>public.backlog_wh</code>.
@@ -154,11 +95,6 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.backlog_wh_history</code>.
      */
     val BACKLOG_WH_HISTORY: BacklogWhHistory get() = BacklogWhHistory.BACKLOG_WH_HISTORY
-
-    /**
-     * The table <code>public.calculate_quantity_result</code>.
-     */
-    val CALCULATE_QUANTITY_RESULT: CalculateQuantityResult get() = CalculateQuantityResult.CALCULATE_QUANTITY_RESULT
 
     /**
      * The table <code>public.cancel_receiving_transactions</code>.
@@ -176,71 +112,6 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val CHECKING: Checking get() = Checking.CHECKING
 
     /**
-     * The table <code>public.common_category</code>.
-     */
-    val COMMON_CATEGORY: CommonCategory get() = CommonCategory.COMMON_CATEGORY
-
-    /**
-     * The table <code>public.completion_rate_process</code>.
-     */
-    val COMPLETION_RATE_PROCESS: CompletionRateProcess get() = CompletionRateProcess.COMPLETION_RATE_PROCESS
-
-    /**
-     * The table <code>public.completion_rate_process_product</code>.
-     */
-    val COMPLETION_RATE_PROCESS_PRODUCT: CompletionRateProcessProduct get() = CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT
-
-    /**
-     * The table <code>public.completion_rate_product</code>.
-     */
-    val COMPLETION_RATE_PRODUCT: CompletionRateProduct get() = CompletionRateProduct.COMPLETION_RATE_PRODUCT
-
-    /**
-     * The table <code>public.coupon_code_dropdown</code>.
-     */
-    val COUPON_CODE_DROPDOWN: CouponCodeDropdown get() = CouponCodeDropdown.COUPON_CODE_DROPDOWN
-
-    /**
-     * The table <code>public.equipment_productivity</code>.
-     */
-    val EQUIPMENT_PRODUCTIVITY: EquipmentProductivity get() = EquipmentProductivity.EQUIPMENT_PRODUCTIVITY
-
-    /**
-     * The table <code>public.export_configuration</code>.
-     */
-    val EXPORT_CONFIGURATION: ExportConfiguration get() = ExportConfiguration.EXPORT_CONFIGURATION
-
-    /**
-     * The table <code>public.holidays_calendar</code>.
-     */
-    val HOLIDAYS_CALENDAR: HolidaysCalendar get() = HolidaysCalendar.HOLIDAYS_CALENDAR
-
-    /**
-     * The table <code>public.information_calculate_quantity</code>.
-     */
-    val INFORMATION_CALCULATE_QUANTITY: InformationCalculateQuantity get() = InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY
-
-    /**
-     * The table <code>public.information_calculate_quantity_detail</code>.
-     */
-    val INFORMATION_CALCULATE_QUANTITY_DETAIL: InformationCalculateQuantityDetail get() = InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL
-
-    /**
-     * The table <code>public.inventory_ins_30day</code>.
-     */
-    val INVENTORY_INS_30DAY: InventoryIns_30day get() = InventoryIns_30day.INVENTORY_INS_30DAY
-
-    /**
-     * The table <code>public.inventory_product</code>.
-     */
-    val INVENTORY_PRODUCT: InventoryProduct get() = InventoryProduct.INVENTORY_PRODUCT
-
-    /**
-     * The table <code>public.inventory_semi_product</code>.
-     */
-    val INVENTORY_SEMI_PRODUCT: InventorySemiProduct get() = InventorySemiProduct.INVENTORY_SEMI_PRODUCT
-
-    /**
      * The table <code>public.locations</code>.
      */
     val LOCATIONS: Locations get() = Locations.LOCATIONS
@@ -249,106 +120,6 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.moving</code>.
      */
     val MOVING: Moving get() = Moving.MOVING
-
-    /**
-     * The table <code>public.order</code>.
-     */
-    val ORDER: Order get() = Order.ORDER
-
-    /**
-     * The table <code>public.order_detail</code>.
-     */
-    val ORDER_DETAIL: OrderDetail get() = OrderDetail.ORDER_DETAIL
-
-    /**
-     * The table <code>public.order_info</code>.
-     */
-    val ORDER_INFO: OrderInfo get() = OrderInfo.ORDER_INFO
-
-    /**
-     * The table <code>public.order_version_dropdown</code>.
-     */
-    val ORDER_VERSION_DROPDOWN: OrderVersionDropdown get() = OrderVersionDropdown.ORDER_VERSION_DROPDOWN
-
-    /**
-     * The table <code>public.plan</code>.
-     */
-    val PLAN: Plan get() = Plan.PLAN
-
-    /**
-     * The table <code>public.plan_calendar_config</code>.
-     */
-    val PLAN_CALENDAR_CONFIG: PlanCalendarConfig get() = PlanCalendarConfig.PLAN_CALENDAR_CONFIG
-
-    /**
-     * The table <code>public.plan_color_config</code>.
-     */
-    val PLAN_COLOR_CONFIG: PlanColorConfig get() = PlanColorConfig.PLAN_COLOR_CONFIG
-
-    /**
-     * The table <code>public.plan_detail</code>.
-     */
-    val PLAN_DETAIL: PlanDetail get() = PlanDetail.PLAN_DETAIL
-
-    /**
-     * The table <code>public.plan_detail_temp</code>.
-     */
-    val PLAN_DETAIL_TEMP: PlanDetailTemp get() = PlanDetailTemp.PLAN_DETAIL_TEMP
-
-    /**
-     * The table <code>public.plan_process</code>.
-     */
-    val PLAN_PROCESS: PlanProcess get() = PlanProcess.PLAN_PROCESS
-
-    /**
-     * The table <code>public.plan_process_temp</code>.
-     */
-    val PLAN_PROCESS_TEMP: PlanProcessTemp get() = PlanProcessTemp.PLAN_PROCESS_TEMP
-
-    /**
-     * The table <code>public.plan_product</code>.
-     */
-    val PLAN_PRODUCT: PlanProduct get() = PlanProduct.PLAN_PRODUCT
-
-    /**
-     * The table <code>public.plan_product_temp</code>.
-     */
-    val PLAN_PRODUCT_TEMP: PlanProductTemp get() = PlanProductTemp.PLAN_PRODUCT_TEMP
-
-    /**
-     * The table <code>public.plan_temp</code>.
-     */
-    val PLAN_TEMP: PlanTemp get() = PlanTemp.PLAN_TEMP
-
-    /**
-     * The table <code>public.process_group</code>.
-     */
-    val PROCESS_GROUP: ProcessGroup get() = ProcessGroup.PROCESS_GROUP
-
-    /**
-     * The table <code>public.process_master</code>.
-     */
-    val PROCESS_MASTER: ProcessMaster get() = ProcessMaster.PROCESS_MASTER
-
-    /**
-     * The table <code>public.process_master_data</code>.
-     */
-    val PROCESS_MASTER_DATA: ProcessMasterData get() = ProcessMasterData.PROCESS_MASTER_DATA
-
-    /**
-     * The table <code>public.process_procedure_structure</code>.
-     */
-    val PROCESS_PROCEDURE_STRUCTURE: ProcessProcedureStructure get() = ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE
-
-    /**
-     * The table <code>public.product</code>.
-     */
-    val PRODUCT: Product get() = Product.PRODUCT
-
-    /**
-     * The table <code>public.product_process</code>.
-     */
-    val PRODUCT_PROCESS: ProductProcess get() = ProductProcess.PRODUCT_PROCESS
 
     /**
      * The table <code>public.receiving_transactions</code>.
@@ -376,112 +147,33 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val STOCK_TAKING_STATUS: StockTakingStatus get() = StockTakingStatus.STOCK_TAKING_STATUS
 
     /**
-     * The table <code>public.sync_history</code>.
-     */
-    val SYNC_HISTORY: SyncHistory get() = SyncHistory.SYNC_HISTORY
-
-    /**
-     * The table <code>public.system_lock</code>.
-     */
-    val SYSTEM_LOCK: SystemLock get() = SystemLock.SYSTEM_LOCK
-
-    /**
-     * The table <code>public.tape_en_route</code>.
-     */
-    val TAPE_EN_ROUTE: TapeEnRoute get() = TapeEnRoute.TAPE_EN_ROUTE
-
-    /**
-     * The table <code>public.tape_info</code>.
-     */
-    val TAPE_INFO: TapeInfo get() = TapeInfo.TAPE_INFO
-
-    /**
-     * The table <code>public.tape_inventory</code>.
-     */
-    val TAPE_INVENTORY: TapeInventory get() = TapeInventory.TAPE_INVENTORY
-
-    /**
-     * The table <code>public.update_tape</code>.
-     */
-    val UPDATE_TAPE: UpdateTape get() = UpdateTape.UPDATE_TAPE
-
-    /**
      * The table <code>public.west_factory_layout</code>.
      */
     val WEST_FACTORY_LAYOUT: WestFactoryLayout get() = WestFactoryLayout.WEST_FACTORY_LAYOUT
-
-    /**
-     * The table <code>public.work_result</code>.
-     */
-    val WORK_RESULT: WorkResult get() = WorkResult.WORK_RESULT
 
     override fun getCatalog(): Catalog = DefaultCatalog.DEFAULT_CATALOG
 
     override fun getTables(): List<Table<*>> = listOf(
         Amoeba.AMOEBA,
-        AppSetting.APP_SETTING,
         AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN,
         AuthRole.AUTH_ROLE,
         AuthRoleClaim.AUTH_ROLE_CLAIM,
         AuthUser.AUTH_USER,
         AuthUserClaim.AUTH_USER_CLAIM,
         AuthUserRole.AUTH_USER_ROLE,
-        Backlog.BACKLOG,
         BacklogBinEntry.BACKLOG_BIN_ENTRY,
-        BacklogHistory.BACKLOG_HISTORY,
         BacklogWh.BACKLOG_WH,
         BacklogWhHistory.BACKLOG_WH_HISTORY,
-        CalculateQuantityResult.CALCULATE_QUANTITY_RESULT,
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
         CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS,
         Checking.CHECKING,
-        CommonCategory.COMMON_CATEGORY,
-        CompletionRateProcess.COMPLETION_RATE_PROCESS,
-        CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT,
-        CompletionRateProduct.COMPLETION_RATE_PRODUCT,
-        CouponCodeDropdown.COUPON_CODE_DROPDOWN,
-        EquipmentProductivity.EQUIPMENT_PRODUCTIVITY,
-        ExportConfiguration.EXPORT_CONFIGURATION,
-        HolidaysCalendar.HOLIDAYS_CALENDAR,
-        InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY,
-        InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL,
-        InventoryIns_30day.INVENTORY_INS_30DAY,
-        InventoryProduct.INVENTORY_PRODUCT,
-        InventorySemiProduct.INVENTORY_SEMI_PRODUCT,
         Locations.LOCATIONS,
         Moving.MOVING,
-        Order.ORDER,
-        OrderDetail.ORDER_DETAIL,
-        OrderInfo.ORDER_INFO,
-        OrderVersionDropdown.ORDER_VERSION_DROPDOWN,
-        Plan.PLAN,
-        PlanCalendarConfig.PLAN_CALENDAR_CONFIG,
-        PlanColorConfig.PLAN_COLOR_CONFIG,
-        PlanDetail.PLAN_DETAIL,
-        PlanDetailTemp.PLAN_DETAIL_TEMP,
-        PlanProcess.PLAN_PROCESS,
-        PlanProcessTemp.PLAN_PROCESS_TEMP,
-        PlanProduct.PLAN_PRODUCT,
-        PlanProductTemp.PLAN_PRODUCT_TEMP,
-        PlanTemp.PLAN_TEMP,
-        ProcessGroup.PROCESS_GROUP,
-        ProcessMaster.PROCESS_MASTER,
-        ProcessMasterData.PROCESS_MASTER_DATA,
-        ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE,
-        Product.PRODUCT,
-        ProductProcess.PRODUCT_PROCESS,
         ReceivingTransactions.RECEIVING_TRANSACTIONS,
         SendingTransactions.SENDING_TRANSACTIONS,
         Splitting.SPLITTING,
         StockTaking.STOCK_TAKING,
         StockTakingStatus.STOCK_TAKING_STATUS,
-        SyncHistory.SYNC_HISTORY,
-        SystemLock.SYSTEM_LOCK,
-        TapeEnRoute.TAPE_EN_ROUTE,
-        TapeInfo.TAPE_INFO,
-        TapeInventory.TAPE_INVENTORY,
-        UpdateTape.UPDATE_TAPE,
-        WestFactoryLayout.WEST_FACTORY_LAYOUT,
-        WorkResult.WORK_RESULT
+        WestFactoryLayout.WEST_FACTORY_LAYOUT
     )
 }

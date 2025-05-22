@@ -5,72 +5,27 @@ package com.kcvn.spm.model.keys
 
 
 import com.kcvn.spm.model.tables.Amoeba
-import com.kcvn.spm.model.tables.AppSetting
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
 import com.kcvn.spm.model.tables.AuthRoleClaim
 import com.kcvn.spm.model.tables.AuthUser
 import com.kcvn.spm.model.tables.AuthUserClaim
 import com.kcvn.spm.model.tables.AuthUserRole
-import com.kcvn.spm.model.tables.Backlog
 import com.kcvn.spm.model.tables.BacklogBinEntry
-import com.kcvn.spm.model.tables.BacklogHistory
 import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
-import com.kcvn.spm.model.tables.CalculateQuantityResult
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
 import com.kcvn.spm.model.tables.Checking
-import com.kcvn.spm.model.tables.CommonCategory
-import com.kcvn.spm.model.tables.CompletionRateProcess
-import com.kcvn.spm.model.tables.CompletionRateProcessProduct
-import com.kcvn.spm.model.tables.CompletionRateProduct
-import com.kcvn.spm.model.tables.CouponCodeDropdown
-import com.kcvn.spm.model.tables.EquipmentProductivity
-import com.kcvn.spm.model.tables.ExportConfiguration
-import com.kcvn.spm.model.tables.HolidaysCalendar
-import com.kcvn.spm.model.tables.InformationCalculateQuantity
-import com.kcvn.spm.model.tables.InformationCalculateQuantityDetail
-import com.kcvn.spm.model.tables.InventoryIns_30day
-import com.kcvn.spm.model.tables.InventoryProduct
-import com.kcvn.spm.model.tables.InventorySemiProduct
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
-import com.kcvn.spm.model.tables.Order
-import com.kcvn.spm.model.tables.OrderDetail
-import com.kcvn.spm.model.tables.OrderInfo
-import com.kcvn.spm.model.tables.OrderVersionDropdown
-import com.kcvn.spm.model.tables.Plan
-import com.kcvn.spm.model.tables.PlanCalendarConfig
-import com.kcvn.spm.model.tables.PlanColorConfig
-import com.kcvn.spm.model.tables.PlanDetail
-import com.kcvn.spm.model.tables.PlanDetailTemp
-import com.kcvn.spm.model.tables.PlanProcess
-import com.kcvn.spm.model.tables.PlanProcessTemp
-import com.kcvn.spm.model.tables.PlanProduct
-import com.kcvn.spm.model.tables.PlanProductTemp
-import com.kcvn.spm.model.tables.PlanTemp
-import com.kcvn.spm.model.tables.ProcessGroup
-import com.kcvn.spm.model.tables.ProcessMaster
-import com.kcvn.spm.model.tables.ProcessMasterData
-import com.kcvn.spm.model.tables.ProcessProcedureStructure
-import com.kcvn.spm.model.tables.Product
-import com.kcvn.spm.model.tables.ProductProcess
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingStatus
-import com.kcvn.spm.model.tables.SyncHistory
-import com.kcvn.spm.model.tables.SystemLock
-import com.kcvn.spm.model.tables.TapeEnRoute
-import com.kcvn.spm.model.tables.TapeInfo
-import com.kcvn.spm.model.tables.TapeInventory
-import com.kcvn.spm.model.tables.UpdateTape
 import com.kcvn.spm.model.tables.WestFactoryLayout
-import com.kcvn.spm.model.tables.WorkResult
 import com.kcvn.spm.model.tables.records.AmoebaRecord
-import com.kcvn.spm.model.tables.records.AppSettingRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
 import com.kcvn.spm.model.tables.records.AuthRoleClaimRecord
 import com.kcvn.spm.model.tables.records.AuthRoleRecord
@@ -78,62 +33,19 @@ import com.kcvn.spm.model.tables.records.AuthUserClaimRecord
 import com.kcvn.spm.model.tables.records.AuthUserRecord
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
 import com.kcvn.spm.model.tables.records.BacklogBinEntryRecord
-import com.kcvn.spm.model.tables.records.BacklogHistoryRecord
-import com.kcvn.spm.model.tables.records.BacklogRecord
 import com.kcvn.spm.model.tables.records.BacklogWhHistoryRecord
 import com.kcvn.spm.model.tables.records.BacklogWhRecord
-import com.kcvn.spm.model.tables.records.CalculateQuantityResultRecord
 import com.kcvn.spm.model.tables.records.CancelReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.CancelSendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.CheckingRecord
-import com.kcvn.spm.model.tables.records.CommonCategoryRecord
-import com.kcvn.spm.model.tables.records.CompletionRateProcessProductRecord
-import com.kcvn.spm.model.tables.records.CompletionRateProcessRecord
-import com.kcvn.spm.model.tables.records.CompletionRateProductRecord
-import com.kcvn.spm.model.tables.records.CouponCodeDropdownRecord
-import com.kcvn.spm.model.tables.records.EquipmentProductivityRecord
-import com.kcvn.spm.model.tables.records.ExportConfigurationRecord
-import com.kcvn.spm.model.tables.records.HolidaysCalendarRecord
-import com.kcvn.spm.model.tables.records.InformationCalculateQuantityDetailRecord
-import com.kcvn.spm.model.tables.records.InformationCalculateQuantityRecord
-import com.kcvn.spm.model.tables.records.InventoryIns_30dayRecord
-import com.kcvn.spm.model.tables.records.InventoryProductRecord
-import com.kcvn.spm.model.tables.records.InventorySemiProductRecord
 import com.kcvn.spm.model.tables.records.LocationsRecord
 import com.kcvn.spm.model.tables.records.MovingRecord
-import com.kcvn.spm.model.tables.records.OrderDetailRecord
-import com.kcvn.spm.model.tables.records.OrderInfoRecord
-import com.kcvn.spm.model.tables.records.OrderRecord
-import com.kcvn.spm.model.tables.records.OrderVersionDropdownRecord
-import com.kcvn.spm.model.tables.records.PlanCalendarConfigRecord
-import com.kcvn.spm.model.tables.records.PlanColorConfigRecord
-import com.kcvn.spm.model.tables.records.PlanDetailRecord
-import com.kcvn.spm.model.tables.records.PlanDetailTempRecord
-import com.kcvn.spm.model.tables.records.PlanProcessRecord
-import com.kcvn.spm.model.tables.records.PlanProcessTempRecord
-import com.kcvn.spm.model.tables.records.PlanProductRecord
-import com.kcvn.spm.model.tables.records.PlanProductTempRecord
-import com.kcvn.spm.model.tables.records.PlanRecord
-import com.kcvn.spm.model.tables.records.PlanTempRecord
-import com.kcvn.spm.model.tables.records.ProcessGroupRecord
-import com.kcvn.spm.model.tables.records.ProcessMasterDataRecord
-import com.kcvn.spm.model.tables.records.ProcessMasterRecord
-import com.kcvn.spm.model.tables.records.ProcessProcedureStructureRecord
-import com.kcvn.spm.model.tables.records.ProductProcessRecord
-import com.kcvn.spm.model.tables.records.ProductRecord
 import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SplittingRecord
 import com.kcvn.spm.model.tables.records.StockTakingRecord
 import com.kcvn.spm.model.tables.records.StockTakingStatusRecord
-import com.kcvn.spm.model.tables.records.SyncHistoryRecord
-import com.kcvn.spm.model.tables.records.SystemLockRecord
-import com.kcvn.spm.model.tables.records.TapeEnRouteRecord
-import com.kcvn.spm.model.tables.records.TapeInfoRecord
-import com.kcvn.spm.model.tables.records.TapeInventoryRecord
-import com.kcvn.spm.model.tables.records.UpdateTapeRecord
 import com.kcvn.spm.model.tables.records.WestFactoryLayoutRecord
-import com.kcvn.spm.model.tables.records.WorkResultRecord
 
 import org.jooq.ForeignKey
 import org.jooq.UniqueKey
@@ -147,70 +59,26 @@ import org.jooq.impl.Internal
 // -------------------------------------------------------------------------
 
 val AMOEBA_PKEY: UniqueKey<AmoebaRecord> = Internal.createUniqueKey(Amoeba.AMOEBA, DSL.name("amoeba_pkey"), arrayOf(Amoeba.AMOEBA.ID), true)
-val APP_SETTING_PKEY: UniqueKey<AppSettingRecord> = Internal.createUniqueKey(AppSetting.APP_SETTING, DSL.name("app_setting_pkey"), arrayOf(AppSetting.APP_SETTING.ID), true)
 val AUTH_PASSWORD_RESET_TOKEN_PKEY: UniqueKey<AuthPasswordResetTokenRecord> = Internal.createUniqueKey(AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN, DSL.name("auth_password_reset_token_pkey"), arrayOf(AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN.ID), true)
 val AUTH_ROLE_PKEY: UniqueKey<AuthRoleRecord> = Internal.createUniqueKey(AuthRole.AUTH_ROLE, DSL.name("auth_role_pkey"), arrayOf(AuthRole.AUTH_ROLE.ID), true)
 val AUTH_ROLE_CLAIM_PKEY: UniqueKey<AuthRoleClaimRecord> = Internal.createUniqueKey(AuthRoleClaim.AUTH_ROLE_CLAIM, DSL.name("auth_role_claim_pkey"), arrayOf(AuthRoleClaim.AUTH_ROLE_CLAIM.ID), true)
 val AUTH_USER_PKEY: UniqueKey<AuthUserRecord> = Internal.createUniqueKey(AuthUser.AUTH_USER, DSL.name("auth_user_pkey"), arrayOf(AuthUser.AUTH_USER.ID), true)
 val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUniqueKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_pkey"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.ID), true)
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
-val BACKLOG_PKEY: UniqueKey<BacklogRecord> = Internal.createUniqueKey(Backlog.BACKLOG, DSL.name("backlog_pkey"), arrayOf(Backlog.BACKLOG.ID), true)
 val BACKLOG_BIN_ENTRY_PKEY: UniqueKey<BacklogBinEntryRecord> = Internal.createUniqueKey(BacklogBinEntry.BACKLOG_BIN_ENTRY, DSL.name("backlog_bin_entry_pkey"), arrayOf(BacklogBinEntry.BACKLOG_BIN_ENTRY.ID), true)
-val BACKLOG_HISTORY_PKEY: UniqueKey<BacklogHistoryRecord> = Internal.createUniqueKey(BacklogHistory.BACKLOG_HISTORY, DSL.name("backlog_history_pkey"), arrayOf(BacklogHistory.BACKLOG_HISTORY.ID), true)
 val BACKLOG_WH_PKEY: UniqueKey<BacklogWhRecord> = Internal.createUniqueKey(BacklogWh.BACKLOG_WH, DSL.name("backlog_wh_pkey"), arrayOf(BacklogWh.BACKLOG_WH.ID), true)
 val BACKLOG_WH_HISTORY_PKEY: UniqueKey<BacklogWhHistoryRecord> = Internal.createUniqueKey(BacklogWhHistory.BACKLOG_WH_HISTORY, DSL.name("backlog_wh_history_pkey"), arrayOf(BacklogWhHistory.BACKLOG_WH_HISTORY.ID), true)
-val CALCULATE_QUANTITY_RESULT_PKEY: UniqueKey<CalculateQuantityResultRecord> = Internal.createUniqueKey(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT, DSL.name("calculate_quantity_result_pkey"), arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
 val CANCEL_RECEIVING_TRANSACTIONS_PKEY: UniqueKey<CancelReceivingTransactionsRecord> = Internal.createUniqueKey(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS, DSL.name("cancel_receiving_transactions_pkey"), arrayOf(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS.ID), true)
 val CANCEL_SENDING_TRANSACTIONS_PKEY: UniqueKey<CancelSendingTransactionsRecord> = Internal.createUniqueKey(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS, DSL.name("cancel_sending_transactions_pkey"), arrayOf(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS.ID), true)
 val CHECKING_PKEY: UniqueKey<CheckingRecord> = Internal.createUniqueKey(Checking.CHECKING, DSL.name("checking_pkey"), arrayOf(Checking.CHECKING.ID), true)
-val COMMON_CATEGORY_PKEY: UniqueKey<CommonCategoryRecord> = Internal.createUniqueKey(CommonCategory.COMMON_CATEGORY, DSL.name("common_category_pkey"), arrayOf(CommonCategory.COMMON_CATEGORY.ID), true)
-val COMPLETION_RATE_PROCESS_PKEY: UniqueKey<CompletionRateProcessRecord> = Internal.createUniqueKey(CompletionRateProcess.COMPLETION_RATE_PROCESS, DSL.name("completion_rate_process_pkey"), arrayOf(CompletionRateProcess.COMPLETION_RATE_PROCESS.ID), true)
-val COMPLETION_RATE_PROCESS_PRODUCT_PKEY: UniqueKey<CompletionRateProcessProductRecord> = Internal.createUniqueKey(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT, DSL.name("completion_rate_process_product_pkey"), arrayOf(CompletionRateProcessProduct.COMPLETION_RATE_PROCESS_PRODUCT.ID), true)
-val COMPLETION_RATE_PRODUCT_PKEY: UniqueKey<CompletionRateProductRecord> = Internal.createUniqueKey(CompletionRateProduct.COMPLETION_RATE_PRODUCT, DSL.name("completion_rate_product_pkey"), arrayOf(CompletionRateProduct.COMPLETION_RATE_PRODUCT.ID), true)
-val COUPON_CODE_DROPDOWN_PKEY: UniqueKey<CouponCodeDropdownRecord> = Internal.createUniqueKey(CouponCodeDropdown.COUPON_CODE_DROPDOWN, DSL.name("coupon_code_dropdown_pkey"), arrayOf(CouponCodeDropdown.COUPON_CODE_DROPDOWN.ID), true)
-val EQUIPMENT_PRODUCTIVITY_PKEY: UniqueKey<EquipmentProductivityRecord> = Internal.createUniqueKey(EquipmentProductivity.EQUIPMENT_PRODUCTIVITY, DSL.name("equipment_productivity_pkey"), arrayOf(EquipmentProductivity.EQUIPMENT_PRODUCTIVITY.ID), true)
-val EXPORT_CONFIG_PKEY: UniqueKey<ExportConfigurationRecord> = Internal.createUniqueKey(ExportConfiguration.EXPORT_CONFIGURATION, DSL.name("export_config_pkey"), arrayOf(ExportConfiguration.EXPORT_CONFIGURATION.ID), true)
-val HOLIDAYS_CALENDAR_PKEY: UniqueKey<HolidaysCalendarRecord> = Internal.createUniqueKey(HolidaysCalendar.HOLIDAYS_CALENDAR, DSL.name("holidays_calendar_pkey"), arrayOf(HolidaysCalendar.HOLIDAYS_CALENDAR.ID), true)
-val INFORMATION_CALCULATE_QUANTITY_PKEY: UniqueKey<InformationCalculateQuantityRecord> = Internal.createUniqueKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantity_pkey"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)
-val INFORMATION_CALCULATE_QUANTITY_PK: UniqueKey<InformationCalculateQuantityDetailRecord> = Internal.createUniqueKey(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL, DSL.name("information_calculate_quantity_pk"), arrayOf(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL.ID), true)
-val INVENTORY_INS_30DAY_PKEY: UniqueKey<InventoryIns_30dayRecord> = Internal.createUniqueKey(InventoryIns_30day.INVENTORY_INS_30DAY, DSL.name("inventory_ins_30day_pkey"), arrayOf(InventoryIns_30day.INVENTORY_INS_30DAY.ID), true)
-val INVENTORY_PRODUCT_PKEY: UniqueKey<InventoryProductRecord> = Internal.createUniqueKey(InventoryProduct.INVENTORY_PRODUCT, DSL.name("inventory_product_pkey"), arrayOf(InventoryProduct.INVENTORY_PRODUCT.ID), true)
-val INVENTORY_SEMI_PRODUCT_PKEY: UniqueKey<InventorySemiProductRecord> = Internal.createUniqueKey(InventorySemiProduct.INVENTORY_SEMI_PRODUCT, DSL.name("inventory_semi_product_pkey"), arrayOf(InventorySemiProduct.INVENTORY_SEMI_PRODUCT.ID), true)
 val LOCATIONS_PKEY: UniqueKey<LocationsRecord> = Internal.createUniqueKey(Locations.LOCATIONS, DSL.name("locations_pkey"), arrayOf(Locations.LOCATIONS.ID), true)
 val MOVING_PKEY: UniqueKey<MovingRecord> = Internal.createUniqueKey(Moving.MOVING, DSL.name("moving_pkey"), arrayOf(Moving.MOVING.ID), true)
-val ORDER_PKEY: UniqueKey<OrderRecord> = Internal.createUniqueKey(Order.ORDER, DSL.name("order_pkey"), arrayOf(Order.ORDER.ID), true)
-val ORDER_DETAIL_PKEY: UniqueKey<OrderDetailRecord> = Internal.createUniqueKey(OrderDetail.ORDER_DETAIL, DSL.name("order_detail_pkey"), arrayOf(OrderDetail.ORDER_DETAIL.ID), true)
-val ORDER_INFO_PKEY: UniqueKey<OrderInfoRecord> = Internal.createUniqueKey(OrderInfo.ORDER_INFO, DSL.name("order_info_pkey"), arrayOf(OrderInfo.ORDER_INFO.ID), true)
-val ORDER_VERSION_DROPDOWN_PKEY: UniqueKey<OrderVersionDropdownRecord> = Internal.createUniqueKey(OrderVersionDropdown.ORDER_VERSION_DROPDOWN, DSL.name("order_version_dropdown_pkey"), arrayOf(OrderVersionDropdown.ORDER_VERSION_DROPDOWN.ID), true)
-val PLAN_PKEY: UniqueKey<PlanRecord> = Internal.createUniqueKey(Plan.PLAN, DSL.name("plan_pkey"), arrayOf(Plan.PLAN.ID), true)
-val PLAN_CALENDAR_CONFIG_PKEY: UniqueKey<PlanCalendarConfigRecord> = Internal.createUniqueKey(PlanCalendarConfig.PLAN_CALENDAR_CONFIG, DSL.name("plan_calendar_config_pkey"), arrayOf(PlanCalendarConfig.PLAN_CALENDAR_CONFIG.ID), true)
-val PLAN_COLOR_CONFIG_PKEY: UniqueKey<PlanColorConfigRecord> = Internal.createUniqueKey(PlanColorConfig.PLAN_COLOR_CONFIG, DSL.name("plan_color_config_pkey"), arrayOf(PlanColorConfig.PLAN_COLOR_CONFIG.ID), true)
-val PLAN_DETAIL_PKEY: UniqueKey<PlanDetailRecord> = Internal.createUniqueKey(PlanDetail.PLAN_DETAIL, DSL.name("plan_detail_pkey"), arrayOf(PlanDetail.PLAN_DETAIL.ID), true)
-val PLAN_DETAIL_TEMP_PKEY: UniqueKey<PlanDetailTempRecord> = Internal.createUniqueKey(PlanDetailTemp.PLAN_DETAIL_TEMP, DSL.name("plan_detail_temp_pkey"), arrayOf(PlanDetailTemp.PLAN_DETAIL_TEMP.ID), true)
-val PLAN_PROCESS_PKEY: UniqueKey<PlanProcessRecord> = Internal.createUniqueKey(PlanProcess.PLAN_PROCESS, DSL.name("plan_process_pkey"), arrayOf(PlanProcess.PLAN_PROCESS.ID), true)
-val PLAN_PROCESS_TEMP_PKEY: UniqueKey<PlanProcessTempRecord> = Internal.createUniqueKey(PlanProcessTemp.PLAN_PROCESS_TEMP, DSL.name("plan_process_temp_pkey"), arrayOf(PlanProcessTemp.PLAN_PROCESS_TEMP.ID), true)
-val PLAN_PRODUCT_PKEY: UniqueKey<PlanProductRecord> = Internal.createUniqueKey(PlanProduct.PLAN_PRODUCT, DSL.name("plan_product_pkey"), arrayOf(PlanProduct.PLAN_PRODUCT.ID), true)
-val PLAN_PRODUCT_TEMP_PKEY: UniqueKey<PlanProductTempRecord> = Internal.createUniqueKey(PlanProductTemp.PLAN_PRODUCT_TEMP, DSL.name("plan_product_temp_pkey"), arrayOf(PlanProductTemp.PLAN_PRODUCT_TEMP.ID), true)
-val PLAN_TEMP_PKEY: UniqueKey<PlanTempRecord> = Internal.createUniqueKey(PlanTemp.PLAN_TEMP, DSL.name("plan_temp_pkey"), arrayOf(PlanTemp.PLAN_TEMP.ID), true)
-val PROCESS_GROUP_PKEY: UniqueKey<ProcessGroupRecord> = Internal.createUniqueKey(ProcessGroup.PROCESS_GROUP, DSL.name("process_group_pkey"), arrayOf(ProcessGroup.PROCESS_GROUP.ID), true)
-val PROCESS_MASTER_PKEY: UniqueKey<ProcessMasterRecord> = Internal.createUniqueKey(ProcessMaster.PROCESS_MASTER, DSL.name("process_master_pkey"), arrayOf(ProcessMaster.PROCESS_MASTER.ID), true)
-val PROCESS_MASTER_DATA_KEY: UniqueKey<ProcessMasterDataRecord> = Internal.createUniqueKey(ProcessMasterData.PROCESS_MASTER_DATA, DSL.name("process_master_data_key"), arrayOf(ProcessMasterData.PROCESS_MASTER_DATA.ID), true)
-val PROCESS_PROCEDURE_STRUCTURE_PKEY: UniqueKey<ProcessProcedureStructureRecord> = Internal.createUniqueKey(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE, DSL.name("process_procedure_structure_pkey"), arrayOf(ProcessProcedureStructure.PROCESS_PROCEDURE_STRUCTURE.ID), true)
-val PRODUCT_PKEY: UniqueKey<ProductRecord> = Internal.createUniqueKey(Product.PRODUCT, DSL.name("product_pkey"), arrayOf(Product.PRODUCT.ID), true)
-val PRODUCT_PROCESS_PKEY: UniqueKey<ProductProcessRecord> = Internal.createUniqueKey(ProductProcess.PRODUCT_PROCESS, DSL.name("product_process_pkey"), arrayOf(ProductProcess.PRODUCT_PROCESS.ID), true)
 val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)
 val SENDING_TRANSACTIONS_PKEY: UniqueKey<SendingTransactionsRecord> = Internal.createUniqueKey(SendingTransactions.SENDING_TRANSACTIONS, DSL.name("sending_transactions_pkey"), arrayOf(SendingTransactions.SENDING_TRANSACTIONS.ID), true)
 val SPLITTING_PKEY: UniqueKey<SplittingRecord> = Internal.createUniqueKey(Splitting.SPLITTING, DSL.name("splitting_pkey"), arrayOf(Splitting.SPLITTING.ID), true)
 val STOCK_TAKING_PKEY: UniqueKey<StockTakingRecord> = Internal.createUniqueKey(StockTaking.STOCK_TAKING, DSL.name("stock_taking_pkey"), arrayOf(StockTaking.STOCK_TAKING.ID), true)
 val STOCK_TAKING_STATUS_PKEY: UniqueKey<StockTakingStatusRecord> = Internal.createUniqueKey(StockTakingStatus.STOCK_TAKING_STATUS, DSL.name("stock_taking_status_pkey"), arrayOf(StockTakingStatus.STOCK_TAKING_STATUS.ID), true)
-val SYNC_HISTORY_PKEY: UniqueKey<SyncHistoryRecord> = Internal.createUniqueKey(SyncHistory.SYNC_HISTORY, DSL.name("sync_history_pkey"), arrayOf(SyncHistory.SYNC_HISTORY.ID), true)
-val SYSTEM_LOCK_PKEY: UniqueKey<SystemLockRecord> = Internal.createUniqueKey(SystemLock.SYSTEM_LOCK, DSL.name("system_lock_pkey"), arrayOf(SystemLock.SYSTEM_LOCK.ID), true)
-val TAPE_EN_ROUTE_PKEY: UniqueKey<TapeEnRouteRecord> = Internal.createUniqueKey(TapeEnRoute.TAPE_EN_ROUTE, DSL.name("tape_en_route_pkey"), arrayOf(TapeEnRoute.TAPE_EN_ROUTE.ID), true)
-val TAPE_INFO_PKEY: UniqueKey<TapeInfoRecord> = Internal.createUniqueKey(TapeInfo.TAPE_INFO, DSL.name("tape_info_pkey"), arrayOf(TapeInfo.TAPE_INFO.ID), true)
-val TAPE_INVENTORY_PKEY: UniqueKey<TapeInventoryRecord> = Internal.createUniqueKey(TapeInventory.TAPE_INVENTORY, DSL.name("tape_inventory_pkey"), arrayOf(TapeInventory.TAPE_INVENTORY.ID), true)
-val UPDATE_TAPE_PKEY: UniqueKey<UpdateTapeRecord> = Internal.createUniqueKey(UpdateTape.UPDATE_TAPE, DSL.name("update_tape_pkey"), arrayOf(UpdateTape.UPDATE_TAPE.ID), true)
 val WEST_FACTORY_LAYOUT_PKEY: UniqueKey<WestFactoryLayoutRecord> = Internal.createUniqueKey(WestFactoryLayout.WEST_FACTORY_LAYOUT, DSL.name("west_factory_layout_pkey"), arrayOf(WestFactoryLayout.WEST_FACTORY_LAYOUT.ID), true)
-val WORK_RESULT_PKEY: UniqueKey<WorkResultRecord> = Internal.createUniqueKey(WorkResult.WORK_RESULT, DSL.name("work_result_pkey"), arrayOf(WorkResult.WORK_RESULT.ID), true)
 
 // -------------------------------------------------------------------------
 // FOREIGN KEY definitions
@@ -221,11 +89,3 @@ val AUTH_ROLE_CLAIM__AUTH_ROLE_CLAIM_AUTH_ROLE_ID_FK: ForeignKey<AuthRoleClaimRe
 val AUTH_USER_CLAIM__AUTH_USER_CLAIM_AUTH_USER_ID_FK: ForeignKey<AuthUserClaimRecord, AuthUserRecord> = Internal.createForeignKey(AuthUserClaim.AUTH_USER_CLAIM, DSL.name("auth_user_claim_auth_user_id_fk"), arrayOf(AuthUserClaim.AUTH_USER_CLAIM.USER_ID), com.kcvn.spm.model.keys.AUTH_USER_PKEY, arrayOf(AuthUser.AUTH_USER.ID), true)
 val AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_ROLE_ID_FK: ForeignKey<AuthUserRoleRecord, AuthRoleRecord> = Internal.createForeignKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_auth_role_id_fk"), arrayOf(AuthUserRole.AUTH_USER_ROLE.ROLE_ID), com.kcvn.spm.model.keys.AUTH_ROLE_PKEY, arrayOf(AuthRole.AUTH_ROLE.ID), true)
 val AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_USER_ID_FK: ForeignKey<AuthUserRoleRecord, AuthUserRecord> = Internal.createForeignKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_auth_user_id_fk"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID), com.kcvn.spm.model.keys.AUTH_USER_PKEY, arrayOf(AuthUser.AUTH_USER.ID), true)
-val INFORMATION_CALCULATE_QUANTITY__INFORMATION_CALCULATE_QUANTIT_CALCULATE_QUANTITY_RESULT_ID_FKEY: ForeignKey<InformationCalculateQuantityRecord, CalculateQuantityResultRecord> = Internal.createForeignKey(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY, DSL.name("information_calculate_quantit_calculate_quantity_result_id_fkey"), arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.CALCULATE_QUANTITY_RESULT_ID), com.kcvn.spm.model.keys.CALCULATE_QUANTITY_RESULT_PKEY, arrayOf(CalculateQuantityResult.CALCULATE_QUANTITY_RESULT.ID), true)
-val INFORMATION_CALCULATE_QUANTITY_DETAIL__INFORMATION_CALCULATE_QUANTITY_DETAIL_INFORMATION_CALCULATE_QUA: ForeignKey<InformationCalculateQuantityDetailRecord, InformationCalculateQuantityRecord> = Internal.createForeignKey(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL, DSL.name("information_calculate_quantity_detail_information_calculate_qua"), arrayOf(InformationCalculateQuantityDetail.INFORMATION_CALCULATE_QUANTITY_DETAIL.INFORMATION_CALCULATE_QUANTITY_ID), com.kcvn.spm.model.keys.INFORMATION_CALCULATE_QUANTITY_PKEY, arrayOf(InformationCalculateQuantity.INFORMATION_CALCULATE_QUANTITY.ID), true)
-val PLAN_DETAIL__PLAN_DETAIL_FKEY: ForeignKey<PlanDetailRecord, PlanProcessRecord> = Internal.createForeignKey(PlanDetail.PLAN_DETAIL, DSL.name("plan_detail_fkey"), arrayOf(PlanDetail.PLAN_DETAIL.PLAN_PROCESS_ID), com.kcvn.spm.model.keys.PLAN_PROCESS_PKEY, arrayOf(PlanProcess.PLAN_PROCESS.ID), true)
-val PLAN_DETAIL_TEMP__PLAN_DETAIL_TEMP_FKEY: ForeignKey<PlanDetailTempRecord, PlanProcessTempRecord> = Internal.createForeignKey(PlanDetailTemp.PLAN_DETAIL_TEMP, DSL.name("plan_detail_temp_fkey"), arrayOf(PlanDetailTemp.PLAN_DETAIL_TEMP.PLAN_PROCESS_ID), com.kcvn.spm.model.keys.PLAN_PROCESS_TEMP_PKEY, arrayOf(PlanProcessTemp.PLAN_PROCESS_TEMP.ID), true)
-val PLAN_PROCESS__PLAN_PROCESS_FKEY: ForeignKey<PlanProcessRecord, PlanProductRecord> = Internal.createForeignKey(PlanProcess.PLAN_PROCESS, DSL.name("plan_process_fkey"), arrayOf(PlanProcess.PLAN_PROCESS.PLAN_PRODUCT_ID), com.kcvn.spm.model.keys.PLAN_PRODUCT_PKEY, arrayOf(PlanProduct.PLAN_PRODUCT.ID), true)
-val PLAN_PROCESS_TEMP__PLAN_PROCESS_TEMP_FKEY: ForeignKey<PlanProcessTempRecord, PlanProductTempRecord> = Internal.createForeignKey(PlanProcessTemp.PLAN_PROCESS_TEMP, DSL.name("plan_process_temp_fkey"), arrayOf(PlanProcessTemp.PLAN_PROCESS_TEMP.PLAN_PRODUCT_ID), com.kcvn.spm.model.keys.PLAN_PRODUCT_TEMP_PKEY, arrayOf(PlanProductTemp.PLAN_PRODUCT_TEMP.ID), true)
-val PLAN_PRODUCT__PLAN_PRODUCT_FKEY: ForeignKey<PlanProductRecord, PlanRecord> = Internal.createForeignKey(PlanProduct.PLAN_PRODUCT, DSL.name("plan_product_fkey"), arrayOf(PlanProduct.PLAN_PRODUCT.PLAN_ID), com.kcvn.spm.model.keys.PLAN_PKEY, arrayOf(Plan.PLAN.ID), true)
-val PLAN_PRODUCT_TEMP__PLAN_PRODUCT_TEMP_FKEY: ForeignKey<PlanProductTempRecord, PlanTempRecord> = Internal.createForeignKey(PlanProductTemp.PLAN_PRODUCT_TEMP, DSL.name("plan_product_temp_fkey"), arrayOf(PlanProductTemp.PLAN_PRODUCT_TEMP.PLAN_ID), com.kcvn.spm.model.keys.PLAN_TEMP_PKEY, arrayOf(PlanTemp.PLAN_TEMP.ID), true)

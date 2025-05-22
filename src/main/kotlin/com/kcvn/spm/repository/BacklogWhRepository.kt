@@ -74,7 +74,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .from(BACKLOG_WH)
             .where(condition)
             .groupBy(BACKLOG_WH.PO_NUMBER, BACKLOG_WH.RECEIVING_DATE)
-            .orderBy(getSortFields(pageable.sort, BACKLOG_WH.RECEIVING_DATE))
+            .orderBy(BACKLOG_WH.RECEIVING_DATE.asc())
 
         val data = query.fetch { record ->
             BacklogWh(

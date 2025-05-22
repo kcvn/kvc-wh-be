@@ -89,7 +89,7 @@ class StockTakingService(
         }
     }
 
-    fun scan(request: List<ScanRequest>) {
+    fun scans(request: List<ScanRequest>) {
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
         request.forEach { element ->
@@ -112,6 +112,38 @@ class StockTakingService(
             }
         }
     }
+
+    fun scan(request: List<ScanRequest>) {
+        val sTT = stockTakingStatusRepo.findByStatus("on-going")
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
+        request.forEach { element ->
+            val inspectionDate = element.inspectionDate
+            val poNumber = element.poNumber
+            val domain = StockTaking(
+                null,
+                sTT.yearNumber,
+                sTT.monthNumber,
+                element.inspectionDate,
+                element.poNumber,
+                "",
+                element.actualLocationCode,
+                null,
+                element.actualQty
+            )
+
+            if (inspectionDate == null || poNumber == null) {
+                stockTakingRepo.save(domain)
+                return@forEach
+            }
+            val stockTaking = stockTakingRepo.findByInspectionDateAndPO(inspectionDate, poNumber)
+            if (stockTaking != null) {
+                stockTakingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
+            } else {
+                stockTakingRepo.save(domain)
+            }
+        }
+    }
+
 
     fun stopActual(request: StopActualRequest) {
         stockTakingStatusRepo.updateStatus(request.yearNumber!!, request.monthNumber!!)

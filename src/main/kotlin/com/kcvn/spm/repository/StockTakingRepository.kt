@@ -22,6 +22,19 @@ import java.time.ZoneOffset
 
 @Repository
 class StockTakingRepository(private val context: DSLContext) : SortingRepository() {
+    fun getListForAndroid(yearNumber: Int, monthNumber: Int, pageable: Pageable) : Pair<List<StockTaking>, Int> {
+        val query = context.selectFrom(STOCK_TAKING)
+            .where(STOCK_TAKING.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber)))
+        val count = query.count()
+        val data = query
+            .orderBy(getSortFields(pageable.sort, STOCK_TAKING.INSPECTION_DATE))
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
+            .fetchInto(StockTaking::class.java)
+
+        return Pair(data, count)
+    }
+
     fun getList(request: StockTakingMonthlyRequest, pageable: Pageable): Pair<List<StockTakingMonthlyResponse>, Int> {
         val stockTaking = STOCK_TAKING
 

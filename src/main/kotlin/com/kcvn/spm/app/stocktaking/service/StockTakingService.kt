@@ -89,30 +89,6 @@ class StockTakingService(
         }
     }
 
-    fun scans(request: List<ScanRequest>) {
-        val sTT = stockTakingStatusRepo.findByStatus("on-going")
-            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
-        request.forEach { element ->
-            val stockTaking = stockTakingRepo.findByInspectionDateAndPO(element.inspectionDate!!, element.poNumber!!)
-            if (stockTaking != null) {
-                stockTakingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
-            } else {
-                val domain = StockTaking(
-                    null,
-                    sTT.yearNumber,
-                    sTT.monthNumber,
-                    element.inspectionDate,
-                    element.poNumber,
-                    "",
-                    element.actualLocationCode,
-                    null,
-                    element.actualQty
-                )
-                stockTakingRepo.save(domain)
-            }
-        }
-    }
-
     fun scan(request: List<ScanRequest>) {
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
@@ -144,7 +120,6 @@ class StockTakingService(
         }
     }
 
-
     fun stopActual(request: StopActualRequest) {
         stockTakingStatusRepo.updateStatus(request.yearNumber!!, request.monthNumber!!)
     }
@@ -154,7 +129,7 @@ class StockTakingService(
         val systemList = mapToSystemResponse(stockTakingList.first)
         return BasePagingResponse(
             systemList,
-            systemList.size
+            stockTakingList.second
         )
     }
 
@@ -163,7 +138,7 @@ class StockTakingService(
         val systemList = mapToActualResponse(stockTakingList.first)
         return BasePagingResponse(
             systemList,
-            systemList.size
+            stockTakingList.second
         )
     }
 

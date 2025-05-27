@@ -240,7 +240,7 @@ class BacklogWhService(
                 CommonUtils.getMessage("data.not.found.in.backlog"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"
             )
         val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, backlog.backlogQty?.minus(data.backlogQty!!),
-            backlog.boxQty?.minus(data.boxQty!!)
+            backlog.boxQty?.minus(data.boxQty!!), data.inspectionDate
         )
         backlogWhRepo.update(entityBacklog)
         // insert backlog history

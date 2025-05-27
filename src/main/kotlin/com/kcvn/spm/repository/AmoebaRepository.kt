@@ -83,11 +83,12 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
             .groupBy(inspectionDateField, poNumberField)
             .having(havingCondition)
             .orderBy(poNumberField?.asc())
+
+        val count = querySql.count()
+        val data = querySql
             .limit(pageable.pageSize)
             .offset(pageable.offset)
-
-        val data = querySql.fetchInto(StockTakingDailyResponse::class.java)
-        val count = querySql.count()
+            .fetchInto(StockTakingDailyResponse::class.java)
 
         return Pair(data, count)
     }

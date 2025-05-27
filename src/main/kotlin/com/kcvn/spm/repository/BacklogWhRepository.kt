@@ -74,7 +74,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .from(BACKLOG_WH)
             .where(condition)
             .groupBy(BACKLOG_WH.PO_NUMBER, BACKLOG_WH.RECEIVING_DATE)
-            .orderBy(getSortFields(pageable.sort, BACKLOG_WH.RECEIVING_DATE))
+            .orderBy(BACKLOG_WH.RECEIVING_DATE.asc())
 
         val data = query.fetch { record ->
             BacklogWh(
@@ -122,6 +122,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             transactionalContext.update(BACKLOG_WH)
                 .set(BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
                 .set(BACKLOG_WH.BOX_QTY, data.boxQty)
+                .set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(

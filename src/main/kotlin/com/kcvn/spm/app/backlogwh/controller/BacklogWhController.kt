@@ -35,6 +35,20 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @GetMapping("/get-list-for-android")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getListForAndroid(
+        request: BacklogWhSearchRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["locationCode"], direction = Sort.Direction.ASC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<BacklogWhResponse>> {
+        val result = backlogWhService.getListForAndroid(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
     @GetMapping("/download-template-bin-entry")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun downloadTemplateBinEntry(): ResponseEntity<BaseResponse<FileContentModel>> {

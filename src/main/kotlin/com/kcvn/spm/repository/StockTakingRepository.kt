@@ -28,8 +28,6 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
         val count = query.count()
         val data = query
             .orderBy(getSortFields(pageable.sort, STOCK_TAKING.INSPECTION_DATE))
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
             .fetchInto(StockTaking::class.java)
 
         return Pair(data, count)

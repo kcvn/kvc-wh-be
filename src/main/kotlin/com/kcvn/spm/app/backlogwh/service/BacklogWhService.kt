@@ -275,4 +275,23 @@ class BacklogWhService(
             backlogData.second
         )
     }
+
+    fun getListForAndroid(request: BacklogWhSearchRequest, pageable: Pageable): BasePagingResponse<BacklogWhResponse> {
+        val backlogData = backlogWhRepo.getListForAndroid(request, pageable)
+        val data = backlogData.first.map {
+            BacklogWhResponse(
+                locationCode = it.locationCode,
+                poNumber = it.poNumber,
+                packageCode = it.packageCode,
+                backlogQty = it.backlogQty,
+                boxQty = it.boxQty,
+                receivingDate = it.receivingDate,
+                inspectionDate = it.inspectionDate
+            )
+        }
+        return BasePagingResponse(
+            data,
+            backlogData.second
+        )
+    }
 }

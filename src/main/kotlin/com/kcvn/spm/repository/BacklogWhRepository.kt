@@ -62,6 +62,45 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             return Pair(data, count)
     }
 
+    fun getListForAndroid(request: BacklogWhSearchRequest, pageable: Pageable) : Pair<List<BacklogWh>, Int> {
+        var condition: Condition = DSL.noCondition()
+        val receivingDate = BACKLOG_WH.field("receiving_date", java.time.OffsetDateTime::class.java)
+        if(!request.listLocationCode.isNullOrEmpty()){
+            val locationCodes = request.listLocationCode!!.split(",")
+            var condition1 : Condition = DSL.noCondition()
+            locationCodes.forEach { lc ->
+                condition1 = condition1.or(BACKLOG_WH.LOCATION_CODE.eq(lc.trim()))
+            }
+            condition = condition.and(condition1)
+        }
+        if(!request.listPoNumber.isNullOrEmpty()){
+            val poNumbers = request.listPoNumber!!.split(",")
+            var condition1 : Condition = DSL.noCondition()
+            poNumbers.forEach { pn ->
+                condition1 = condition1.or(BACKLOG_WH.PO_NUMBER.eq(pn.trim()))
+            }
+            condition = condition.and(condition1)
+        }
+        if(!request.listPackageCode.isNullOrEmpty()){
+            val packageCodes = request.listPackageCode!!.split(",")
+            var condition1 : Condition = DSL.noCondition()
+            packageCodes.forEach { pc ->
+                condition1 = condition1.or(BACKLOG_WH.PACKAGE_CODE.eq(pc.trim()))
+            }
+            condition = condition.and(condition1)
+        }
+        if (request.fromDate != null && request.toDate != null) {
+            condition = condition.and(receivingDate?.between(request.fromDate, request.toDate))
+        }
+        val query = context.selectFrom(BACKLOG_WH).where(condition.and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
+        val count = query.count()
+        val data = query
+            .orderBy(getSortFields(pageable.sort, BACKLOG_WH.LOCATION_CODE))
+            .fetchInto(BacklogWh::class.java)
+
+        return Pair(data, count)
+    }
+
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
         condition = condition.and(BACKLOG_WH.INSPECTION_DATE.isNull).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))

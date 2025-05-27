@@ -30,7 +30,6 @@ class LocationsRepository(private val context: DSLContext) : SortingRepository()
         }
         val locations = context.selectFrom(LOCATIONS).where(condition)
             .orderBy(getSortFields(pageable.sort, LOCATIONS.CREATED_DATE))
-            .limit(pageable.pageSize).offset(pageable.offset)
             .fetchInto(Locations::class.java)
         val total = context.fetchCount(LOCATIONS, condition)
         return Pair(locations, total)

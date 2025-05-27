@@ -129,7 +129,7 @@ class StockTakingService(
         val systemList = mapToSystemResponse(stockTakingList.first)
         return BasePagingResponse(
             systemList,
-            systemList.size
+            stockTakingList.second
         )
     }
 
@@ -138,7 +138,7 @@ class StockTakingService(
         val systemList = mapToActualResponse(stockTakingList.first)
         return BasePagingResponse(
             systemList,
-            systemList.size
+            stockTakingList.second
         )
     }
 

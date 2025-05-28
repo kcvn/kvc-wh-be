@@ -24,6 +24,7 @@ import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingStatus
+import com.kcvn.spm.model.tables.TempCheckingImportedDate
 import com.kcvn.spm.model.tables.WestFactoryLayout
 
 
@@ -127,6 +128,11 @@ val STOCK_TAKING: StockTaking = StockTaking.STOCK_TAKING
  * The table <code>public.stock_taking_status</code>.
  */
 val STOCK_TAKING_STATUS: StockTakingStatus = StockTakingStatus.STOCK_TAKING_STATUS
+
+/**
+ * The table <code>public.temp_checking_imported_date</code>.
+ */
+val TEMP_CHECKING_IMPORTED_DATE: TempCheckingImportedDate = TempCheckingImportedDate.TEMP_CHECKING_IMPORTED_DATE
 
 /**
  * The table <code>public.west_factory_layout</code>.

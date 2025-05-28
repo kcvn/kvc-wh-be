@@ -24,6 +24,7 @@ import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingStatus
+import com.kcvn.spm.model.tables.TempCheckingImportedDate
 import com.kcvn.spm.model.tables.WestFactoryLayout
 
 import kotlin.collections.List
@@ -147,6 +148,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val STOCK_TAKING_STATUS: StockTakingStatus get() = StockTakingStatus.STOCK_TAKING_STATUS
 
     /**
+     * The table <code>public.temp_checking_imported_date</code>.
+     */
+    val TEMP_CHECKING_IMPORTED_DATE: TempCheckingImportedDate get() = TempCheckingImportedDate.TEMP_CHECKING_IMPORTED_DATE
+
+    /**
      * The table <code>public.west_factory_layout</code>.
      */
     val WEST_FACTORY_LAYOUT: WestFactoryLayout get() = WestFactoryLayout.WEST_FACTORY_LAYOUT
@@ -174,6 +180,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         Splitting.SPLITTING,
         StockTaking.STOCK_TAKING,
         StockTakingStatus.STOCK_TAKING_STATUS,
+        TempCheckingImportedDate.TEMP_CHECKING_IMPORTED_DATE,
         WestFactoryLayout.WEST_FACTORY_LAYOUT
     )
 }

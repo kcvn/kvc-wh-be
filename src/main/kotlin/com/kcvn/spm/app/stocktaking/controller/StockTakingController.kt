@@ -123,7 +123,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun importExcelAmoeba(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<Int>> {

@@ -57,7 +57,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     }
 
     @PostMapping(value = ["import-bin-entry"], consumes = ["multipart/form-data"])
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun importBinEntry(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<List<ImportBacklogWh>>> {

@@ -8,7 +8,7 @@ import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.TempCheckingImportedDate
+import com.kcvn.spm.model.tables.pojos.TempCheckingImported
 import com.kcvn.spm.repository.TempCheckingImportedDateRepository
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -47,17 +47,17 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
                 throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-            val dataList = mutableListOf<TempCheckingImportedDate>()
+            val dataList = mutableListOf<TempCheckingImported>()
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-                val data = TempCheckingImportedDate(
+                val data = TempCheckingImported(
                     poNumber = ExcelHelper.getCellValueAmoeba(row, 2),
                     qty = ExcelHelper.getCellValueAmoeba(row, 3).toBigDecimalOrNull() ?: BigDecimal.ZERO
                 )
 
                 dataList.add(data)
             }
-            // delete record of user import
+            // delete record of user import before
             tempCheckingImportedRepo.delete(CommonUtils.loggedInUser() ?: "")
             // save temp checking imported date
             val totalRecord = tempCheckingImportedRepo.saveAll(dataList)

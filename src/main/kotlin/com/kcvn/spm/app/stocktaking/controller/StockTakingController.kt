@@ -127,7 +127,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     fun importExcelAmoeba(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<Int>> {
-        val data = stockTakingService.importExcelAmoeba(file)
+        val data = stockTakingService.importTSVAmoeba(file)
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

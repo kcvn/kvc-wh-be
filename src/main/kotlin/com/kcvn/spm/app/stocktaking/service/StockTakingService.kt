@@ -4,7 +4,6 @@ import com.kcvn.spm.app.stocktaking.payload.request.*
 import com.kcvn.spm.app.stocktaking.payload.response.*
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
-import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.util.CommonUtils
@@ -15,7 +14,6 @@ import com.kcvn.spm.repository.AmoebaRepository
 import com.kcvn.spm.repository.BacklogBinEntryRepository
 import com.kcvn.spm.repository.StockTakingRepository
 import com.kcvn.spm.repository.StockTakingStatusRepository
-import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -180,29 +178,31 @@ class StockTakingService(
         }
     }
 
-
-
-    fun importExcelAmoeba(file: MultipartFile): BaseResponse<Int> {
-        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/ImportAmoebaTemplate.xlsx"
-        val workbook = WorkbookFactory.create(file.inputStream)
+    fun importTSVAmoeba(file: MultipartFile): BaseResponse<Int> {
+        val amoebaList = mutableListOf<Amoeba>()
         try {
-            val sheet = workbook.getSheetAt(0)
-            val rowIndex = 1
-            val headerRow = sheet.getRow(0)
-            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 0, 26))
-                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
-            if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
+            if (!file.originalFilename.orEmpty().lowercase().endsWith(".txt")) {
+                throw BusinessException(CommonUtils.getMessage("validate.invalidFormatTXT"))
+            }
+            val lines = file.inputStream.bufferedReader().readLines()
+            if (lines.isEmpty() || lines.size <= 1) {
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-            val amoebaList = mutableListOf<Amoeba>()
+            }
+            val header = lines[0].split("\t")
+            if (header.size != 26) {
+                throw BusinessException(CommonUtils.getMessage("validate.invalidFormat"))
+            }
+            for (i in 1 until lines.size) {
+                val columns = lines[i].split("\t")
 
-            for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                if (columns.size < 26) continue
+
                 val amoebaData = Amoeba(
-                    inspectionDate = ExcelHelper.getCellValueDate(row, 8),
-                    poNumber = ExcelHelper.getCellValueAmoeba(row, 10),
-                    locationCode = ExcelHelper.getCellValueAmoeba(row, 19),
-                    qty = ExcelHelper.getCellValueAmoeba(row, 11).toBigDecimalOrNull() ?: BigDecimal.ZERO
+                    inspectionDate = CommonUtils.parseDate(columns[8]),
+                    poNumber = columns[10].trim(),
+                    locationCode = columns[19].trim(),
+                    qty = columns[11].trim().toBigDecimalOrNull() ?: BigDecimal.ZERO
                 )
-
                 amoebaList.add(amoebaData)
             }
             // xóa record amoeba
@@ -218,8 +218,6 @@ class StockTakingService(
             return BaseResponse(totalRecord, CommonUtils.getMessage("action.succeeded"))
         } catch (e: Exception) {
             throw e
-        } finally {
-            workbook.close()
         }
     }
 }

@@ -8,6 +8,9 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import java.text.Normalizer
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.regex.Pattern
 
 class CommonUtils {
@@ -41,5 +44,17 @@ class CommonUtils {
 
         fun getMessage(code: String): String =
             getMessageResource().getMessage(code, null, LocaleContextHolder.getLocale())
+
+        fun parseDate(dateStr: String?): LocalDate? {
+            return try {
+                if (!dateStr.isNullOrBlank()) {
+                    LocalDate.parse(dateStr.trim(), DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                } else {
+                    null
+                }
+            } catch (e: DateTimeParseException) {
+                throw e
+            }
+        }
     }
 }

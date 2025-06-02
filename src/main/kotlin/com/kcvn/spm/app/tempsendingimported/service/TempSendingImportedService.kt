@@ -31,42 +31,6 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
         )
     }
 
-//    fun importTxtSending(file: MultipartFile): BaseResponse<Int> {
-//        val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/TempCheckingImportedTemplate.xlsx"
-//        val workbook = WorkbookFactory.create(file.inputStream)
-//        try {
-//            val sheet = workbook.getSheetAt(0)
-//            val rowIndex = 5
-//            val headerRow = sheet.getRow(4)
-//            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 4, 4))
-//                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
-//            if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
-//                throw BusinessException(CommonUtils.getMessage("import.file.empty"))
-//            val dataList = mutableListOf<TempSendingImported>()
-//
-//            for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
-//                val data = TempSendingImported(
-//                    inspectionDate = ExcelHelper.getCellValueDate(row, 29),
-//                    locationCode = ExcelHelper.getCellValueAmoeba(row, 20),
-//                    poNumber = ExcelHelper.getCellValueAmoeba(row, 33),
-//                    qty = ExcelHelper.getCellValueAmoeba(row, 21).toBigDecimalOrNull() ?: BigDecimal.ZERO
-//                )
-//
-//                dataList.add(data)
-//            }
-//            // delete record of user import before
-//            tempSendingImportedRepo.delete(CommonUtils.loggedInUser() ?: "")
-//            // save temp sending imported date
-//            val totalRecord = tempSendingImportedRepo.saveAll(dataList)
-//
-//            return BaseResponse(totalRecord, CommonUtils.getMessage("action.succeeded"))
-//        } catch (e: Exception) {
-//            throw e
-//        } finally {
-//            workbook.close()
-//        }
-//    }
-
     fun importTxtSending(file: MultipartFile): BaseResponse<Int> {
         val dataList = mutableListOf<TempSendingImported>()
         try {

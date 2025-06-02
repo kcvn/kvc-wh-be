@@ -11,7 +11,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
-class TempCheckingImportedDateRepository(private val context: DSLContext) : SortingRepository() {
+class TempCheckingImportedRepository(private val context: DSLContext) : SortingRepository() {
     fun getList() : Pair<List<TempCheckingImported>, Int> {
         val userName = CommonUtils.loggedInUser() ?: ""
         val query = context.selectFrom(TEMP_CHECKING_IMPORTED).where(TEMP_CHECKING_IMPORTED.CREATED_BY.eq(userName))

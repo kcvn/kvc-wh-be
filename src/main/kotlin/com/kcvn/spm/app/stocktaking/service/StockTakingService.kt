@@ -178,7 +178,7 @@ class StockTakingService(
         }
     }
 
-    fun importTSVAmoeba(file: MultipartFile): BaseResponse<Int> {
+    fun importTXTAmoeba(file: MultipartFile): BaseResponse<Int> {
         val amoebaList = mutableListOf<Amoeba>()
         try {
             if (!file.originalFilename.orEmpty().lowercase().endsWith(".txt")) {

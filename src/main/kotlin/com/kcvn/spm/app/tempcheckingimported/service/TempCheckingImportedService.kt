@@ -9,7 +9,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TempCheckingImported
-import com.kcvn.spm.repository.TempCheckingImportedDateRepository
+import com.kcvn.spm.repository.TempCheckingImportedRepository
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.stereotype.Service
@@ -21,7 +21,7 @@ import java.math.BigDecimal
 
 @Service
 @Transactional
-class TempCheckingImportedService(private val tempCheckingImportedRepo: TempCheckingImportedDateRepository) {
+class TempCheckingImportedService(private val tempCheckingImportedRepo: TempCheckingImportedRepository) {
     fun getList(): BasePagingResponse<TempCheckingImportedResponse> {
         val data = tempCheckingImportedRepo.getList()
         val response = data.first.map {

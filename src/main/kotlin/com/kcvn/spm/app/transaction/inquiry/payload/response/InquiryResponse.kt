@@ -1,6 +1,5 @@
 package com.kcvn.spm.app.transaction.inquiry.payload.response
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 
@@ -13,6 +12,5 @@ data class InquiryResponse(
     var qty: BigDecimal? = BigDecimal.ZERO,
     var seq: Int? = null,
     var transactionType: String? = null,
-    @JsonFormat(pattern = "dd-MM-yyyy")
     val createdDate: OffsetDateTime? = null
 )

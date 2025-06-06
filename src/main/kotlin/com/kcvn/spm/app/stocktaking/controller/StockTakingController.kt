@@ -31,7 +31,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         request: StockTakingDailyRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["locationCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<SystemStockTakingResponse>> {
@@ -45,7 +45,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         request: StockTakingMonthlyRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["locationCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<ActualStockTakingResponse>> {
@@ -58,7 +58,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     fun getListForAndroid(
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["inspectionDate"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<StockTakingForAndroid>> {

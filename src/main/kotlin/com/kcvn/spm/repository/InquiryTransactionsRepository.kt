@@ -76,7 +76,7 @@ class InquiryTransactionsRepository(private val context: DSLContext) : SortingRe
             aliasTable.field("transactionType"),
             createdDateField
         ).from(aliasTable)
-            .orderBy(createdDateField.sort(SortOrder.ASC))
+            .orderBy(createdDateField.sort(SortOrder.DESC))
             .limit(pageable.pageSize)
             .offset(pageable.offset)
             .fetchInto(ReceivingTransactions::class.java)
@@ -119,7 +119,6 @@ class InquiryTransactionsRepository(private val context: DSLContext) : SortingRe
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "locationCode" -> RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE
             "createdDate" -> RECEIVING_TRANSACTIONS.CREATED_DATE
             else -> RECEIVING_TRANSACTIONS.CREATED_DATE
         }

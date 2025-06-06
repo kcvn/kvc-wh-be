@@ -27,7 +27,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
         request: BacklogWhSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["locationCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<BacklogWhResponse>> {
@@ -41,7 +41,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
         request: BacklogWhSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["locationCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<BacklogWhResponse>> {

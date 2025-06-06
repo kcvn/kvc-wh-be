@@ -127,8 +127,8 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "locationCode" -> AMOEBA.LOCATION_CODE
-            else -> AMOEBA.LOCATION_CODE
+            "createdDate" -> AMOEBA.CREATED_DATE
+            else -> AMOEBA.CREATED_DATE
         }
         return sortField
     }

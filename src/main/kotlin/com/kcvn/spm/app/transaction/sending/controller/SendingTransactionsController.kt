@@ -32,7 +32,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         request: SendingSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["sourceLocationCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<SendingResponse>> {

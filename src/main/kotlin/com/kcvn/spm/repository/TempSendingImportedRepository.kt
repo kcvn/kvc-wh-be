@@ -17,7 +17,7 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
         val query = context.selectFrom(TEMP_SENDING_IMPORTED).where(TEMP_SENDING_IMPORTED.CREATED_BY.eq(userName))
         val count = query.count()
         val data = query
-            .orderBy(TEMP_SENDING_IMPORTED.INSPECTION_DATE.asc())
+            .orderBy(TEMP_SENDING_IMPORTED.CREATED_DATE.desc())
             .fetchInto(TempSendingImported::class.java)
 
         return Pair(data, count)

@@ -17,7 +17,7 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
         val query = context.selectFrom(TEMP_CHECKING_IMPORTED).where(TEMP_CHECKING_IMPORTED.CREATED_BY.eq(userName))
         val count = query.count()
         val data = query
-            .orderBy(TEMP_CHECKING_IMPORTED.PO_NUMBER.asc())
+            .orderBy(TEMP_CHECKING_IMPORTED.CREATED_DATE.desc())
             .fetchInto(TempCheckingImported::class.java)
 
         return Pair(data, count)

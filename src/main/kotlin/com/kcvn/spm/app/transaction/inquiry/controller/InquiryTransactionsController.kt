@@ -25,7 +25,7 @@ class InquiryTransactionsController(private val inquiryService: InquiryTransacti
         request: InquirySearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["createdDate"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<InquiryResponse>> {

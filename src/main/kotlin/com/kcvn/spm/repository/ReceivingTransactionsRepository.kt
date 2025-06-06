@@ -47,7 +47,7 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
         } else {
             val count = query.count()
             val data = query
-                .orderBy(getSortFields(pageable.sort, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE))
+                .orderBy(getSortFields(pageable.sort, RECEIVING_TRANSACTIONS.CREATED_DATE))
                 .limit(pageable.pageSize)
                 .offset(pageable.offset)
                 .fetchInto(ReceivingTransactions::class.java)
@@ -112,7 +112,6 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "locationCode" -> RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE
             "createdDate" -> RECEIVING_TRANSACTIONS.CREATED_DATE
             else -> RECEIVING_TRANSACTIONS.CREATED_DATE
         }

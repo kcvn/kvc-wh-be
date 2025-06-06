@@ -27,7 +27,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
             .where(STOCK_TAKING.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber)))
         val count = query.count()
         val data = query
-            .orderBy(getSortFields(pageable.sort, STOCK_TAKING.INSPECTION_DATE))
+            .orderBy(getSortFields(pageable.sort, STOCK_TAKING.CREATED_DATE))
             .fetchInto(StockTaking::class.java)
 
         return Pair(data, count)
@@ -186,7 +186,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
         val sortField: TableField<*, *> = when (fieldName) {
             "yearNumber" -> STOCK_TAKING.YEAR_NUMBER
             "monthNumber" -> STOCK_TAKING.MONTH_NUMBER
-            else -> STOCK_TAKING.YEAR_NUMBER
+            else -> STOCK_TAKING.CREATED_DATE
         }
         return sortField
     }

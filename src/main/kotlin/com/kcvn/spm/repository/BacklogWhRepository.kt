@@ -54,7 +54,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             val query = context.selectFrom(BACKLOG_WH).where(condition.and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
             val count = query.count()
             val data = query
-                .orderBy(getSortFields(pageable.sort, BACKLOG_WH.LOCATION_CODE))
+                .orderBy(getSortFields(pageable.sort, BACKLOG_WH.CREATED_DATE))
                 .limit(pageable.pageSize)
                 .offset(pageable.offset)
                 .fetchInto(BacklogWh::class.java)
@@ -95,7 +95,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         val query = context.selectFrom(BACKLOG_WH).where(condition.and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
         val count = query.count()
         val data = query
-            .orderBy(getSortFields(pageable.sort, BACKLOG_WH.LOCATION_CODE))
+            .orderBy(getSortFields(pageable.sort, BACKLOG_WH.CREATED_DATE))
             .fetchInto(BacklogWh::class.java)
 
         return Pair(data, count)
@@ -195,7 +195,6 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "locationCode" -> BACKLOG_WH.LOCATION_CODE
             "createdDate" -> BACKLOG_WH.CREATED_DATE
             else -> BACKLOG_WH.CREATED_DATE
         }

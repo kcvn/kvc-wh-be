@@ -25,7 +25,7 @@ class ReceivingTransactionsController(private val receivingService: ReceivingTra
         request: RecTransSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["destLocationCode"], direction = Sort.Direction.ASC),
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<RecTransResponse>> {

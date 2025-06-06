@@ -49,14 +49,14 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
 
         if (isExport) {
             val data = query
-                .orderBy(getSortFields(pageable.sort, SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE))
+                .orderBy(getSortFields(pageable.sort, SENDING_TRANSACTIONS.CREATED_DATE))
                 .fetchInto(SendingTransactions::class.java)
 
             return Pair(data, data.size)
         } else {
             val count = query.count()
             val data = query
-                .orderBy(getSortFields(pageable.sort, SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE))
+                .orderBy(getSortFields(pageable.sort, SENDING_TRANSACTIONS.CREATED_DATE))
                 .limit(pageable.pageSize)
                 .offset(pageable.offset)
                 .fetchInto(SendingTransactions::class.java)
@@ -174,7 +174,6 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "locationCode" -> SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE
             "createdDate" -> SENDING_TRANSACTIONS.CREATED_DATE
             else -> SENDING_TRANSACTIONS.CREATED_DATE
         }

@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
 import com.kcvn.spm.model.tables.Checking
+import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.ReceivingTransactions
@@ -114,6 +115,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val CHECKING: Checking get() = Checking.CHECKING
 
     /**
+     * The table <code>public.checking_history</code>.
+     */
+    val CHECKING_HISTORY: CheckingHistory get() = CheckingHistory.CHECKING_HISTORY
+
+    /**
      * The table <code>public.locations</code>.
      */
     val LOCATIONS: Locations get() = Locations.LOCATIONS
@@ -179,6 +185,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
         CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS,
         Checking.CHECKING,
+        CheckingHistory.CHECKING_HISTORY,
         Locations.LOCATIONS,
         Moving.MOVING,
         ReceivingTransactions.RECEIVING_TRANSACTIONS,

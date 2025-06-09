@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
 import com.kcvn.spm.model.tables.Checking
+import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.ReceivingTransactions
@@ -39,6 +40,7 @@ import com.kcvn.spm.model.tables.records.BacklogWhHistoryRecord
 import com.kcvn.spm.model.tables.records.BacklogWhRecord
 import com.kcvn.spm.model.tables.records.CancelReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.CancelSendingTransactionsRecord
+import com.kcvn.spm.model.tables.records.CheckingHistoryRecord
 import com.kcvn.spm.model.tables.records.CheckingRecord
 import com.kcvn.spm.model.tables.records.LocationsRecord
 import com.kcvn.spm.model.tables.records.MovingRecord
@@ -75,6 +77,7 @@ val BACKLOG_WH_HISTORY_PKEY: UniqueKey<BacklogWhHistoryRecord> = Internal.create
 val CANCEL_RECEIVING_TRANSACTIONS_PKEY: UniqueKey<CancelReceivingTransactionsRecord> = Internal.createUniqueKey(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS, DSL.name("cancel_receiving_transactions_pkey"), arrayOf(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS.ID), true)
 val CANCEL_SENDING_TRANSACTIONS_PKEY: UniqueKey<CancelSendingTransactionsRecord> = Internal.createUniqueKey(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS, DSL.name("cancel_sending_transactions_pkey"), arrayOf(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS.ID), true)
 val CHECKING_PKEY: UniqueKey<CheckingRecord> = Internal.createUniqueKey(Checking.CHECKING, DSL.name("checking_pkey"), arrayOf(Checking.CHECKING.ID), true)
+val CHECKING_HISTORY_PKEY: UniqueKey<CheckingHistoryRecord> = Internal.createUniqueKey(CheckingHistory.CHECKING_HISTORY, DSL.name("checking_history_pkey"), arrayOf(CheckingHistory.CHECKING_HISTORY.ID), true)
 val LOCATIONS_PKEY: UniqueKey<LocationsRecord> = Internal.createUniqueKey(Locations.LOCATIONS, DSL.name("locations_pkey"), arrayOf(Locations.LOCATIONS.ID), true)
 val MOVING_PKEY: UniqueKey<MovingRecord> = Internal.createUniqueKey(Moving.MOVING, DSL.name("moving_pkey"), arrayOf(Moving.MOVING.ID), true)
 val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)

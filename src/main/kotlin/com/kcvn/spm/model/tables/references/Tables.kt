@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
 import com.kcvn.spm.model.tables.Checking
+import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.ReceivingTransactions
@@ -94,6 +95,11 @@ val CANCEL_SENDING_TRANSACTIONS: CancelSendingTransactions = CancelSendingTransa
  * The table <code>public.checking</code>.
  */
 val CHECKING: Checking = Checking.CHECKING
+
+/**
+ * The table <code>public.checking_history</code>.
+ */
+val CHECKING_HISTORY: CheckingHistory = CheckingHistory.CHECKING_HISTORY
 
 /**
  * The table <code>public.locations</code>.

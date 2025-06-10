@@ -49,7 +49,7 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
         }
 
         var havingCondition = DSL.noCondition()
-        if (request.isDifferentBacklog == true) {
+        if (request.conditionQuery == "DIFFERENT") {
             val amoebaQty = DSL.max(amoeba.QTY)
             val systemQty = DSL.max(backlogBinEntry.BACKLOG_QTY)
             val amoebaLocationCode = DSL.max(amoeba.LOCATION_CODE)
@@ -57,6 +57,15 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
             havingCondition = havingCondition.and(
                 amoebaQty.ne(systemQty).or(amoebaQty.isNull).or(systemQty.isNull)
                     .or(amoebaLocationCode.ne(systemLocationCode)).or(amoebaLocationCode.eq("")).or(systemLocationCode.eq(""))
+            )
+        }
+        if (request.conditionQuery == "SAME") {
+            val amoebaQty = DSL.max(amoeba.QTY)
+            val systemQty = DSL.max(backlogBinEntry.BACKLOG_QTY)
+            val amoebaLocationCode = DSL.max(amoeba.LOCATION_CODE)
+            val systemLocationCode = DSL.max(backlogBinEntry.LOCATION_CODE)
+            havingCondition = havingCondition.and(
+                amoebaQty.eq(systemQty).and(amoebaLocationCode.eq(systemLocationCode))
             )
         }
 

@@ -5,5 +5,5 @@ import java.time.LocalDate
 data class StockTakingDailyRequest (
     val inspectionDate: LocalDate? = null,
     var poNumber: String? = null,
-    var isDifferentBacklog: Boolean? = null
+    var conditionQuery: String? = null
 )

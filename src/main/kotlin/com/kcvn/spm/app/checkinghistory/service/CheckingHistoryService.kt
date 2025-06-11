@@ -44,33 +44,35 @@ class CheckingHistoryService(
         }
     }
 
-    fun save(request: CheckingHistoryRequest) {
+    fun save(requestList: List<CheckingHistoryRequest>) {
         val scanDate = LocalDate.now()
-        if (!request.reChecking) {
-            val data = checkingHistoryRepo.findByScanDateAndPOAndSeqNo(scanDate, request.poNumber, 1)
-            if (data == null) {
+        requestList.forEach { request ->
+            if (!request.reChecking) {
+                val data = checkingHistoryRepo.findByScanDateAndPOAndSeqNo(scanDate, request.poNumber, 1)
+                if (data == null) {
+                    val domain = CheckingHistory(
+                        poNumber = request.poNumber,
+                        importQty = request.importQty,
+                        scanQty = request.scanQty,
+                        seqNo = 1
+                    )
+                    checkingHistoryRepo.save(domain)
+                } else {
+                    val newScanQty = data.scanQty?.plus(request.scanQty)
+                    checkingHistoryRepo.update(newScanQty!!, scanDate, data.poNumber!!, 1)
+                }
+            } else {
+                val data = checkingHistoryRepo.findLatestByScanDateAndPO(scanDate, request.poNumber)
+                    ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.checkingHistory"), "scanDate = ${scanDate}, poNumber = ${request.poNumber}")
+                val seqNo = data.seqNo?.plus(1)
                 val domain = CheckingHistory(
                     poNumber = request.poNumber,
                     importQty = request.importQty,
                     scanQty = request.scanQty,
-                    seqNo = 1
+                    seqNo = seqNo
                 )
                 checkingHistoryRepo.save(domain)
-            } else {
-                val newScanQty = data.scanQty?.plus(request.scanQty)
-                checkingHistoryRepo.update(newScanQty!!, scanDate, data.poNumber!!, 1)
             }
-        } else {
-            val data = checkingHistoryRepo.findLatestByScanDateAndPO(scanDate, request.poNumber)
-                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.checkingHistory"), "scanDate = ${scanDate}, poNumber = ${request.poNumber}")
-            val seqNo = data.seqNo?.plus(1)
-            val domain = CheckingHistory(
-                poNumber = request.poNumber,
-                importQty = request.importQty,
-                scanQty = request.scanQty,
-                seqNo = seqNo
-            )
-            checkingHistoryRepo.save(domain)
         }
     }
 }

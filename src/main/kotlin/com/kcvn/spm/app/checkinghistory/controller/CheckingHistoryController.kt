@@ -38,7 +38,7 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
-    fun create(@Valid @RequestBody request: CheckingHistoryRequest): ResponseEntity<*> {
+    fun create(@Valid @RequestBody request: List<CheckingHistoryRequest>): ResponseEntity<*> {
         checkingHistoryService.save(request)
         val logger = KotlinLogging.logger {}
         logger.info(

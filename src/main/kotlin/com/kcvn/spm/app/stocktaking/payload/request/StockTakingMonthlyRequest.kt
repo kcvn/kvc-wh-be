@@ -7,5 +7,5 @@ data class StockTakingMonthlyRequest(
     var monthNumber: Int? = null,
     val inspectionDate: LocalDate? = null,
     var poNumber: String? = null,
-    var isDifferentBacklog: Boolean? = null
+    var conditionQuery: String? = null
 )

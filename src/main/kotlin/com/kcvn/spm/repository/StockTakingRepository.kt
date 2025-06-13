@@ -62,7 +62,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
         }
 
         var havingCondition = DSL.noCondition()
-        if (request.isDifferentBacklog == true) {
+        if (request.conditionQuery == "DIFFERENT") {
             val amoebaQty = DSL.max(stockTaking.AMOEBA_QTY)
             val actualQty = DSL.max(stockTaking.ACTUAL_QTY)
             val amoebaLocationCode = DSL.max(stockTaking.AMOEBA_LOCATION_CODE)
@@ -70,6 +70,15 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
             havingCondition = havingCondition.and(
                 amoebaQty.ne(actualQty).or(amoebaQty.isNull).or(actualQty.isNull)
                     .or(amoebaLocationCode.ne(actualLocationCode)).or(amoebaLocationCode.eq("")).or(actualLocationCode.eq(""))
+            )
+        }
+        if (request.conditionQuery == "SAME") {
+            val amoebaQty = DSL.max(stockTaking.AMOEBA_QTY)
+            val actualQty = DSL.max(stockTaking.ACTUAL_QTY)
+            val amoebaLocationCode = DSL.max(stockTaking.AMOEBA_LOCATION_CODE)
+            val actualLocationCode = DSL.max(stockTaking.ACTUAL_LOCATION_CODE)
+            havingCondition = havingCondition.and(
+                amoebaQty.eq(actualQty).and(amoebaLocationCode.eq(actualLocationCode))
             )
         }
 

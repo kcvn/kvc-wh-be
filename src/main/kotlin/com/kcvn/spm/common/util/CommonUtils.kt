@@ -28,7 +28,7 @@ class CommonUtils {
             if (s == null) return null
             val temp: String = Normalizer.normalize(s, Normalizer.Form.NFD)
             return REMOVE_ACCENT_PATTERN.matcher(temp).replaceAll("")
-                .replace('đ','d').replace('Đ','D')
+                .replace('đ', 'd').replace('Đ', 'D')
         }
 
         private fun getMessageResource(): MessageSource {
@@ -48,7 +48,7 @@ class CommonUtils {
         fun parseDate(dateStr: String?): LocalDate? {
             return try {
                 if (!dateStr.isNullOrBlank()) {
-                    LocalDate.parse(dateStr.trim(), DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                    LocalDate.parse(dateStr.trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 } else {
                     null
                 }
@@ -56,5 +56,6 @@ class CommonUtils {
                 throw e
             }
         }
+
     }
 }

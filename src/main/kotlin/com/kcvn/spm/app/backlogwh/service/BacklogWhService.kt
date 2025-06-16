@@ -1,6 +1,7 @@
 package com.kcvn.spm.app.backlogwh.service
 
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
+import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.common.constants.ExcelConstant
@@ -248,6 +249,21 @@ class BacklogWhService(
             null, entityBacklog.locationCode, entityBacklog.poNumber, entityBacklog.packageCode, entityBacklog.backlogQty, entityBacklog.boxQty, data.receivingDate, data.inspectionDate, transactionType
         )
         backlogWhHistoryRepo.save(entityBacklogHistory)
+    }
+
+    fun update(request: List<BacklogWhUpdateRequest>) {
+        request.forEach {
+            val backlog = backlogWhRepo.findByPackageCode(it.packageCode!!)
+                ?: throw BusinessExceptionDetail(
+                    CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = $it.packageCode"
+                )
+            backlogWhRepo.updateQty(it.packageCode!!, it.backlogQty!!, it.boxQty!!)
+            // insert backlog history
+            val entityBacklogHistory = BacklogWhHistory(
+                null, backlog.locationCode, backlog.poNumber, it.packageCode, it.backlogQty, it.boxQty, backlog.receivingDate, backlog.inspectionDate, "UPDATE"
+            )
+            backlogWhHistoryRepo.save(entityBacklogHistory)
+        }
     }
 
     fun getByLocationAndPackageAndPO(locationCode: String, packageCode: String, poNumber: String): BacklogWh {

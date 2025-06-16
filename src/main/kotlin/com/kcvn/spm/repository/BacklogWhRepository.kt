@@ -154,6 +154,15 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .firstOrNull()
     }
 
+    fun findByPackageCode(packageCode: String): BacklogWh? {
+        return context.selectFrom(BACKLOG_WH)
+            .where(
+                BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
+            )
+            .fetchInto(BacklogWh::class.java)
+            .firstOrNull()
+    }
+
     fun update(data: BacklogWh) {
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
@@ -168,6 +177,23 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                     BACKLOG_WH.LOCATION_CODE.eq(data.locationCode)
                         .and(BACKLOG_WH.PACKAGE_CODE.eq(data.packageCode))
                         .and(BACKLOG_WH.PO_NUMBER.eq(data.poNumber))
+                )
+                .execute()
+        }
+    }
+
+    fun updateQty(packageCode: String, backlogQty: BigDecimal, boxQty: Int) {
+        context.transaction { configuration ->
+            val transactionalContext = DSL.using(configuration)
+
+            transactionalContext.update(BACKLOG_WH)
+                .set(BACKLOG_WH.BACKLOG_QTY, backlogQty)
+                .set(BACKLOG_WH.BOX_QTY, boxQty)
+                .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .where(
+                    BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
+                        .and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
                 )
                 .execute()
         }

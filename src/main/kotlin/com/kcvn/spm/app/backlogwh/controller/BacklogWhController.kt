@@ -1,13 +1,17 @@
 package com.kcvn.spm.app.backlogwh.controller
 
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
+import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
+import com.kcvn.spm.common.util.CommonUtils
+import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -47,6 +51,18 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     ): ResponseEntity<BasePagingResponse<BacklogWhResponse>> {
         val result = backlogWhService.getListForAndroid(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @PutMapping("/update")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun update(
+        @Valid @RequestBody request: List<BacklogWhUpdateRequest>
+    ): ResponseEntity<*> {
+        backlogWhService.update(request)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.OK
+        )
     }
 
     @GetMapping("/download-template-bin-entry")

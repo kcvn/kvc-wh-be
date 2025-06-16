@@ -13,7 +13,6 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
 
 @Repository
 class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
@@ -21,31 +20,26 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
         val backlogBinEntry = BACKLOG_BIN_ENTRY
         val amoeba = AMOEBA
 
-        val subQuery = context.select(backlogBinEntry.INSPECTION_DATE, backlogBinEntry.PO_NUMBER)
-            .from(backlogBinEntry)
-            .union(
-                context.select(amoeba.INSPECTION_DATE, amoeba.PO_NUMBER)
-                    .from(amoeba)
-            ).asTable("date_po")
-
-        // Field alias
-        val inspectionDateField = subQuery.field("inspection_date", LocalDate::class.java)
-        val poNumberField = subQuery.field("po_number", String::class.java)
-        val amoebaLocationCodeField = DSL.max(amoeba.LOCATION_CODE).`as`("amoebaLocationCode")
-        val systemLocationCodeField = DSL.max(backlogBinEntry.LOCATION_CODE).`as`("systemLocationCode")
+        val inspectionDateField = DSL.coalesce(amoeba.INSPECTION_DATE, backlogBinEntry.INSPECTION_DATE).`as`("inspectionDate")
+        val poNumberField = DSL.coalesce(amoeba.PO_NUMBER, backlogBinEntry.PO_NUMBER).`as`("poNumber")
         val amoebaQtyField = DSL.max(amoeba.QTY).`as`("amoebaQty")
         val systemQtyField = DSL.max(backlogBinEntry.BACKLOG_QTY).`as`("systemQty")
+        val amoebaLocationCodeField = DSL.max(amoeba.LOCATION_CODE).`as`("amoebaLocationCode")
+        val systemLocationCodeField = DSL.max(backlogBinEntry.LOCATION_CODE).`as`("systemLocationCode")
         val resultQtyField = DSL.`when`(DSL.max(amoeba.QTY).eq(DSL.max(backlogBinEntry.BACKLOG_QTY)), "SAME")
             .otherwise("DIFFERENT").`as`("resultQty")
         val resultLocationCodeField = DSL.`when`(DSL.max(amoeba.LOCATION_CODE).eq(DSL.max(backlogBinEntry.LOCATION_CODE)), "SAME")
             .otherwise("DIFFERENT").`as`("resultLocationCode")
 
+        val coalescedPoNumber = DSL.coalesce(amoeba.PO_NUMBER, backlogBinEntry.PO_NUMBER)
+        val coalescedInspectionDate = DSL.coalesce(amoeba.INSPECTION_DATE, backlogBinEntry.INSPECTION_DATE)
+
         var whereCondition  = DSL.noCondition()
         if (request.inspectionDate != null) {
-            whereCondition  = whereCondition .and(inspectionDateField?.eq(request.inspectionDate))
+            whereCondition  = whereCondition .and(coalescedInspectionDate.eq(request.inspectionDate))
         }
         if (!request.poNumber.isNullOrEmpty()) {
-            whereCondition  = whereCondition .and(poNumberField?.eq(request.poNumber))
+            whereCondition  = whereCondition .and(coalescedPoNumber.eq(request.poNumber))
         }
 
         var havingCondition = DSL.noCondition()
@@ -79,19 +73,16 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
             resultQtyField,
             resultLocationCodeField
         )
-            .from(subQuery)
-            .leftJoin(backlogBinEntry).on(
-                backlogBinEntry.INSPECTION_DATE.eq(inspectionDateField)
-                    .and(backlogBinEntry.PO_NUMBER.eq(poNumberField))
-            )
-            .leftJoin(amoeba).on(
-                amoeba.INSPECTION_DATE.eq(inspectionDateField)
-                    .and(amoeba.PO_NUMBER.eq(poNumberField))
+            .from(amoeba)
+            .fullOuterJoin(backlogBinEntry)
+            .on(
+                amoeba.PO_NUMBER.eq(backlogBinEntry.PO_NUMBER)
+                    .and(amoeba.INSPECTION_DATE.eq(backlogBinEntry.INSPECTION_DATE))
             )
             .where(whereCondition )
-            .groupBy(inspectionDateField, poNumberField)
+            .groupBy(coalescedInspectionDate, coalescedPoNumber)
             .having(havingCondition)
-            .orderBy(poNumberField?.asc())
+            .orderBy(coalescedPoNumber.asc())
 
         val count = querySql.count()
         val data = querySql

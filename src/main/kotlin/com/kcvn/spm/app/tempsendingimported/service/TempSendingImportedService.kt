@@ -51,7 +51,7 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
                 if (columns.size < 50) continue
 
                 val data = TempSendingImported(
-                    inspectionDate = CommonUtils.parseDate(columns[29]),
+                    inspectionDate = CommonUtils.parseDateSending(columns[29]),
                     locationCode = columns[20].trim(),
                     poNumber = columns[33].trim(),
                     qty = columns[21].trim().toBigDecimalOrNull() ?: BigDecimal.ZERO

@@ -45,10 +45,22 @@ class CommonUtils {
         fun getMessage(code: String): String =
             getMessageResource().getMessage(code, null, LocaleContextHolder.getLocale())
 
-        fun parseDate(dateStr: String?): LocalDate? {
+        fun parseDateSending(dateStr: String?): LocalDate? {
             return try {
                 if (!dateStr.isNullOrBlank()) {
                     LocalDate.parse(dateStr.trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                } else {
+                    null
+                }
+            } catch (e: DateTimeParseException) {
+                throw e
+            }
+        }
+
+        fun parseDateAmoeba(dateStr: String?): LocalDate? {
+            return try {
+                if (!dateStr.isNullOrBlank()) {
+                    LocalDate.parse(dateStr.trim(), DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                 } else {
                     null
                 }

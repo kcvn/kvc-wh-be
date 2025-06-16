@@ -198,7 +198,7 @@ class StockTakingService(
                 if (columns.size < 26) continue
 
                 val amoebaData = Amoeba(
-                    inspectionDate = CommonUtils.parseDate(columns[8]),
+                    inspectionDate = CommonUtils.parseDateAmoeba(columns[8]),
                     poNumber = columns[10].trim(),
                     locationCode = columns[19].trim(),
                     qty = columns[11].trim().toBigDecimalOrNull() ?: BigDecimal.ZERO

@@ -9,6 +9,7 @@ import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.MessageResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
 import mu.KotlinLogging
@@ -37,6 +38,17 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     ): ResponseEntity<BasePagingResponse<SystemStockTakingResponse>> {
         val result = stockTakingService.getListSystemStock(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/export/system-stock-taking")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    fun exportSystemStockTaking(
+        request: StockTakingDailyRequest,
+        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
+        pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = stockTakingService.exportSystemStockTaking(request, pageable)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/actual-stock-taking")

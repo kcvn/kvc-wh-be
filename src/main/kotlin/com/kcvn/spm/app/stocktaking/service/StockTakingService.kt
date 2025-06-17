@@ -2,10 +2,13 @@ package com.kcvn.spm.app.stocktaking.service
 
 import com.kcvn.spm.app.stocktaking.payload.request.*
 import com.kcvn.spm.app.stocktaking.payload.response.*
+import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
+import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
 import com.kcvn.spm.model.tables.pojos.StockTaking
@@ -14,11 +17,19 @@ import com.kcvn.spm.repository.AmoebaRepository
 import com.kcvn.spm.repository.BacklogBinEntryRepository
 import com.kcvn.spm.repository.StockTakingRepository
 import com.kcvn.spm.repository.StockTakingStatusRepository
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -176,6 +187,63 @@ class StockTakingService(
             resultQty == "DIFFERENT" && resultLocationCode == "DIFFERENT" -> "QTY: DIFFERENT, BIN#: DIFFERENT"
             else -> null
         }
+    }
+
+    fun exportSystemStockTaking(request: StockTakingDailyRequest, pageable: Pageable): BaseResponse<FileContentModel> {
+        val listSystemStockTakingResponse = getListSystemStock(request, pageable)
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportSystemStockTakingTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        val rowNumber = 0
+        val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        style.alignment = HorizontalAlignment.CENTER
+
+        val numberStyle = workbook.createCellStyle()
+        numberStyle.cloneStyleFrom(style)
+        numberStyle.alignment = HorizontalAlignment.RIGHT
+
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
+        val listSystemStockTaking = listSystemStockTakingResponse.data
+
+        if (listSystemStockTaking.isNullOrEmpty()) {
+            throw BusinessException(CommonUtils.getMessage("data.notFound"))
+        }
+
+        var rowNumberFill = 1
+        for (item in listSystemStockTaking) {
+            val row: Row = sheet.createRow(rowNumberFill++)
+
+            val formattedInspectionDate = item.inspectionDate?.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) ?: ""
+            ExcelHelper.setCellValue(row, 0, style, formattedInspectionDate)
+            ExcelHelper.setCellValue(row, 1, style, item.poNumber)
+            ExcelHelper.setCellValue(row, 2, style, item.amoebaLocationCode)
+            ExcelHelper.setCellValue(row, 3, style, item.systemLocationCode)
+            ExcelHelper.setCellValueInt(row, 4, numberStyle, item.amoebaQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 5, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 6, style, item.result)
+        }
+
+        sheet.createFreezePane(4, 1)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("ExportSystemStockTaking.xlsx", arrayOf(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+            )),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
     }
 
     fun importTXTAmoeba(file: MultipartFile): BaseResponse<Int> {

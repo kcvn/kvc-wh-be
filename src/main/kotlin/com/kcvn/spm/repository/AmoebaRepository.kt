@@ -75,46 +75,50 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
 
     fun createSqlQuery(request: StockTakingDailyRequest): Pair<String, List<Any>> {
         val sql = """
-    WITH temp1 as (SELECT 
-    MIN(CAST(b.location_code AS INTEGER)) AS MIN_LOCATION_CODE,
-    b.po_number,
-    SUM(b.backlog_qty) AS SUM_BACKLOG_QTY,
-    b.receiving_date,
-    MAX(b.inspection_date) AS INSPECTION_DATE
-FROM 
-    public.backlog_wh b
-WHERE 
-    b.backlog_qty > 0
-GROUP BY 
-    b.po_number, 
-    b.receiving_date
-ORDER BY 
-    b.receiving_date ASC)
+    SELECT * FROM (
+  WITH temp1 AS (
+    SELECT 
+      MIN(CAST(b.location_code AS INTEGER)) AS MIN_LOCATION_CODE,
+      b.po_number,
+      SUM(b.backlog_qty) AS SUM_BACKLOG_QTY,
+      b.receiving_date,
+      MAX(b.inspection_date) AS INSPECTION_DATE
+    FROM 
+      public.backlog_wh b
+    WHERE 
+      b.backlog_qty > 0
+    GROUP BY 
+      b.po_number, 
+      b.receiving_date
+    ORDER BY 
+      b.receiving_date ASC
+  )
 
-SELECT
-  COALESCE(a.inspection_date, temp1.inspection_date) AS inspection_date,
-  COALESCE(a.po_number, temp1.po_number) AS po_number,
+  SELECT
+    COALESCE(a.inspection_date, temp1.inspection_date) AS inspection_date,
+    COALESCE(a.po_number, temp1.po_number) AS po_number,
 
-  a.location_code AS amoeba_location_code,
-  a.qty AS amoeba_qty,
+    a.location_code AS amoeba_location_code,
+    a.qty AS amoeba_qty,
 
-  temp1.MIN_LOCATION_CODE AS system_location_code,
-  temp1.SUM_BACKLOG_QTY AS system_qty,
-  
-  CASE 
-    WHEN CAST(a.location_code AS INTEGER) = temp1.MIN_LOCATION_CODE THEN 'SAME'
-    ELSE 'DIFFERENT'
-  END AS result_location_code,
-  
-  CASE 
-    WHEN CAST(a.qty AS INTEGER) = temp1.SUM_BACKLOG_QTY THEN 'SAME'
-    ELSE 'DIFFERENT'
-  END AS result_qty
+    temp1.MIN_LOCATION_CODE AS system_location_code,
+    temp1.SUM_BACKLOG_QTY AS system_qty,
+    
+    CASE 
+      WHEN CAST(NULLIF(a.location_code, '') AS INTEGER) = temp1.MIN_LOCATION_CODE THEN 'SAME'
+      ELSE 'DIFFERENT'
+    END AS result_location_code,
+    
+    CASE 
+      WHEN a.qty = temp1.SUM_BACKLOG_QTY THEN 'SAME'
+      ELSE 'DIFFERENT'
+    END AS result_qty
 
-FROM public.amoeba a
-FULL OUTER JOIN temp1 
-  ON a.po_number = temp1.po_number
-  AND a.inspection_date = temp1.inspection_date
+  FROM public.amoeba a
+  FULL OUTER JOIN temp1 
+    ON a.po_number = temp1.po_number
+    AND a.inspection_date = temp1.inspection_date
+) AS final_data
 """.trimIndent()
 
         val sqlBuilder = StringBuilder()
@@ -127,16 +131,12 @@ FULL OUTER JOIN temp1
             params.add(request.poNumber!!)
         }
         if (request.conditionQuery == "DIFFERENT") {
-            whereConditions.add("(a.qty)::numeric IS DISTINCT FROM (temp1.SUM_BACKLOG_QTY)\n" +
-                    "                OR (a.location_code)::int IS DISTINCT FROM (temp1.MIN_LOCATION_CODE)\n" +
-                    "                OR (a.location_code) = ''\n" +
-                    "                OR (temp1.MIN_LOCATION_CODE) IS null\n" +
-                    "                OR (a.qty) IS NULL\n" +
-                    "                OR (temp1.SUM_BACKLOG_QTY) IS NULL")
+            whereConditions.add("result_location_code = 'DIFFERENT'\n" +
+                    "or result_qty = 'DIFFERENT'")
         }
         if (request.conditionQuery == "SAME") {
-            whereConditions.add("(a.qty)::numeric = (temp1.SUM_BACKLOG_QTY)\n" +
-                    "                AND (a.location_code)::int = (temp1.MIN_LOCATION_CODE)")
+            whereConditions.add("result_location_code = 'SAME'\n" +
+                    "and result_qty = 'SAME'")
         }
         if (whereConditions.isNotEmpty()) {
             sqlBuilder.appendLine("WHERE")

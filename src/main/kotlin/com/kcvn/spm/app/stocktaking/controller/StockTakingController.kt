@@ -36,18 +36,16 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<SystemStockTakingResponse>> {
-        val result = stockTakingService.getListSystemStock(request, pageable)
+        val result = stockTakingService.getListSystemStockByRawSql(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
     @GetMapping("/export/system-stock-taking")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportSystemStockTaking(
-        request: StockTakingDailyRequest,
-        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
-        pageable: Pageable
+        request: StockTakingDailyRequest
     ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = stockTakingService.exportSystemStockTaking(request, pageable)
+        val data = stockTakingService.exportSystemStockTaking(request)
         return ResponseEntity(data, HttpStatus.OK)
     }
 

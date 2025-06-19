@@ -7,92 +7,144 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
 import com.kcvn.spm.model.tables.references.AMOEBA
-import com.kcvn.spm.model.tables.references.BACKLOG_BIN_ENTRY
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDate
 
 @Repository
 class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(request: StockTakingDailyRequest, pageable: Pageable): Pair<List<StockTakingDailyResponse>, Int> {
-        val backlogBinEntry = BACKLOG_BIN_ENTRY
-        val amoeba = AMOEBA
+    fun getListByRawSql(request: StockTakingDailyRequest, pageable: Pageable): Pair<List<StockTakingDailyResponse>, Int> {
+        val (sql, params) = createSqlQuery(request)
 
-        val inspectionDateField = DSL.coalesce(amoeba.INSPECTION_DATE, backlogBinEntry.INSPECTION_DATE).`as`("inspectionDate")
-        val poNumberField = DSL.coalesce(amoeba.PO_NUMBER, backlogBinEntry.PO_NUMBER).`as`("poNumber")
-        val amoebaQtyField = DSL.max(amoeba.QTY).`as`("amoebaQty")
-        val systemQtyField = DSL.max(backlogBinEntry.BACKLOG_QTY).`as`("systemQty")
-        val amoebaLocationCodeField = DSL.max(amoeba.LOCATION_CODE).`as`("amoebaLocationCode")
-        val systemLocationCodeField = DSL.max(backlogBinEntry.LOCATION_CODE).`as`("systemLocationCode")
-        val resultQtyField = DSL.`when`(DSL.max(amoeba.QTY).eq(DSL.max(backlogBinEntry.BACKLOG_QTY)), "SAME")
-            .otherwise("DIFFERENT").`as`("resultQty")
-        val resultLocationCodeField = DSL.`when`(DSL.max(amoeba.LOCATION_CODE).eq(DSL.max(backlogBinEntry.LOCATION_CODE)), "SAME")
-            .otherwise("DIFFERENT").`as`("resultLocationCode")
+        val countSql = "SELECT COUNT(*) FROM (${sql}) AS count_table"
+        val totalCount = context.fetchOne(countSql, *params.toTypedArray())?.get(0, Int::class.java) ?: 0
 
-        val coalescedPoNumber = DSL.coalesce(amoeba.PO_NUMBER, backlogBinEntry.PO_NUMBER)
-        val coalescedInspectionDate = DSL.coalesce(amoeba.INSPECTION_DATE, backlogBinEntry.INSPECTION_DATE)
-
-        var whereCondition  = DSL.noCondition()
-        if (request.inspectionDate != null) {
-            whereCondition  = whereCondition .and(coalescedInspectionDate.eq(request.inspectionDate))
-        }
-        if (!request.poNumber.isNullOrEmpty()) {
-            whereCondition  = whereCondition .and(coalescedPoNumber.eq(request.poNumber))
+        val paginatedSql = "$sql LIMIT ? OFFSET ?"
+        val paginatedParams = params.toMutableList().apply {
+            add(pageable.pageSize)
+            add(pageable.offset.toInt())
         }
 
-        var havingCondition = DSL.noCondition()
-        if (request.conditionQuery == "DIFFERENT") {
-            val amoebaQty = DSL.max(amoeba.QTY)
-            val systemQty = DSL.max(backlogBinEntry.BACKLOG_QTY)
-            val amoebaLocationCode = DSL.max(amoeba.LOCATION_CODE)
-            val systemLocationCode = DSL.max(backlogBinEntry.LOCATION_CODE)
-            havingCondition = havingCondition.and(
-                amoebaQty.ne(systemQty).or(amoebaQty.isNull).or(systemQty.isNull)
-                    .or(amoebaLocationCode.ne(systemLocationCode)).or(amoebaLocationCode.eq("")).or(systemLocationCode.eq(""))
-            )
-        }
-        if (request.conditionQuery == "SAME") {
-            val amoebaQty = DSL.max(amoeba.QTY)
-            val systemQty = DSL.max(backlogBinEntry.BACKLOG_QTY)
-            val amoebaLocationCode = DSL.max(amoeba.LOCATION_CODE)
-            val systemLocationCode = DSL.max(backlogBinEntry.LOCATION_CODE)
-            havingCondition = havingCondition.and(
-                amoebaQty.eq(systemQty).and(amoebaLocationCode.eq(systemLocationCode))
-            )
-        }
+        val result = context
+            .fetch(paginatedSql, *paginatedParams.toTypedArray())
+            .map {
+                StockTakingDailyResponse(
+                    inspectionDate = it.get("inspection_date", LocalDate::class.java),
+                    poNumber = it.get("po_number", String::class.java),
+                    amoebaLocationCode = it.get("amoeba_location_code", String::class.java),
+                    systemLocationCode = it.get("system_location_code", String::class.java),
+                    amoebaQty = it.get("amoeba_qty", BigDecimal::class.java),
+                    systemQty = it.get("system_qty", BigDecimal::class.java),
+                    resultQty = it.get("result_qty", String::class.java),
+                    resultLocationCode = it.get("result_location_code", String::class.java),
+                )
+            }
 
-        val querySql = context.select(
-            inspectionDateField,
-            poNumberField,
-            amoebaQtyField,
-            systemQtyField,
-            amoebaLocationCodeField,
-            systemLocationCodeField,
-            resultQtyField,
-            resultLocationCodeField
-        )
-            .from(amoeba)
-            .fullOuterJoin(backlogBinEntry)
-            .on(
-                amoeba.PO_NUMBER.eq(backlogBinEntry.PO_NUMBER)
-                    .and(amoeba.INSPECTION_DATE.eq(backlogBinEntry.INSPECTION_DATE))
-            )
-            .where(whereCondition )
-            .groupBy(coalescedInspectionDate, coalescedPoNumber)
-            .having(havingCondition)
-            .orderBy(coalescedPoNumber.asc())
-
-        val count = querySql.count()
-        val data = querySql
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .fetchInto(StockTakingDailyResponse::class.java)
-
-        return Pair(data, count)
+        return result to totalCount
     }
 
+    fun getAll(
+        request: StockTakingDailyRequest
+    ): Pair<List<StockTakingDailyResponse>, Int> {
+        val (sql, params) = createSqlQuery(request)
+
+        val countSql = "SELECT COUNT(*) FROM (${sql}) AS count_table"
+        val totalCount = context.fetchOne(countSql, *params.toTypedArray())?.get(0, Int::class.java) ?: 0
+
+        val result = context
+            .fetch(sql, *params.toTypedArray())
+            .map {
+                StockTakingDailyResponse(
+                    inspectionDate = it.get("inspection_date", LocalDate::class.java),
+                    poNumber = it.get("po_number", String::class.java),
+                    amoebaLocationCode = it.get("amoeba_location_code", String::class.java),
+                    systemLocationCode = it.get("system_location_code", String::class.java),
+                    amoebaQty = it.get("amoeba_qty", BigDecimal::class.java),
+                    systemQty = it.get("system_qty", BigDecimal::class.java),
+                    resultQty = it.get("result_qty", String::class.java),
+                    resultLocationCode = it.get("result_location_code", String::class.java),
+                )
+            }
+
+        return result to totalCount
+    }
+
+    fun createSqlQuery(request: StockTakingDailyRequest): Pair<String, List<Any>> {
+        val sql = """
+    WITH temp1 as (SELECT 
+    MIN(CAST(b.location_code AS INTEGER)) AS MIN_LOCATION_CODE,
+    b.po_number,
+    SUM(b.backlog_qty) AS SUM_BACKLOG_QTY,
+    b.receiving_date,
+    MAX(b.inspection_date) AS INSPECTION_DATE
+FROM 
+    public.backlog_wh b
+WHERE 
+    b.backlog_qty > 0
+GROUP BY 
+    b.po_number, 
+    b.receiving_date
+ORDER BY 
+    b.receiving_date ASC)
+
+SELECT
+  COALESCE(a.inspection_date, temp1.inspection_date) AS inspection_date,
+  COALESCE(a.po_number, temp1.po_number) AS po_number,
+
+  a.location_code AS amoeba_location_code,
+  a.qty AS amoeba_qty,
+
+  temp1.MIN_LOCATION_CODE AS system_location_code,
+  temp1.SUM_BACKLOG_QTY AS system_qty,
+  
+  CASE 
+    WHEN CAST(a.location_code AS INTEGER) = temp1.MIN_LOCATION_CODE THEN 'SAME'
+    ELSE 'DIFFERENT'
+  END AS result_location_code,
+  
+  CASE 
+    WHEN CAST(a.qty AS INTEGER) = temp1.SUM_BACKLOG_QTY THEN 'SAME'
+    ELSE 'DIFFERENT'
+  END AS result_qty
+
+FROM public.amoeba a
+FULL OUTER JOIN temp1 
+  ON a.po_number = temp1.po_number
+  AND a.inspection_date = temp1.inspection_date
+""".trimIndent()
+
+        val sqlBuilder = StringBuilder()
+        val params = mutableListOf<Any>()
+        sqlBuilder.appendLine(sql)
+
+        val whereConditions = mutableListOf<String>()
+        if (!request.poNumber.isNullOrBlank()) {
+            whereConditions.add(" COALESCE(a.po_number, temp1.po_number) = ?")
+            params.add(request.poNumber!!)
+        }
+        if (request.conditionQuery == "DIFFERENT") {
+            whereConditions.add("(a.qty)::numeric IS DISTINCT FROM (temp1.SUM_BACKLOG_QTY)\n" +
+                    "                OR (a.location_code)::int IS DISTINCT FROM (temp1.MIN_LOCATION_CODE)\n" +
+                    "                OR (a.location_code) = ''\n" +
+                    "                OR (temp1.MIN_LOCATION_CODE) IS null\n" +
+                    "                OR (a.qty) IS NULL\n" +
+                    "                OR (temp1.SUM_BACKLOG_QTY) IS NULL")
+        }
+        if (request.conditionQuery == "SAME") {
+            whereConditions.add("(a.qty)::numeric = (temp1.SUM_BACKLOG_QTY)\n" +
+                    "                AND (a.location_code)::int = (temp1.MIN_LOCATION_CODE)")
+        }
+        if (whereConditions.isNotEmpty()) {
+            sqlBuilder.appendLine("WHERE")
+            sqlBuilder.appendLine(whereConditions.joinToString("\nAND "))
+        }
+
+        return sqlBuilder.toString() to params
+    }
 
     fun saveAll(dataList: List<Amoeba>): Int {
         if (dataList.isEmpty()) return 0

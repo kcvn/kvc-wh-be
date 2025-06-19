@@ -133,8 +133,17 @@ class StockTakingService(
         stockTakingStatusRepo.updateStatus(request.yearNumber!!, request.monthNumber!!)
     }
 
-    fun getListSystemStock(request: StockTakingDailyRequest, pageable: Pageable): BasePagingResponse<SystemStockTakingResponse> {
-        val stockTakingList = amoebaRepo.getList(request, pageable)
+    fun getListSystemStockByRawSql(request: StockTakingDailyRequest, pageable: Pageable): BasePagingResponse<SystemStockTakingResponse> {
+        val stockTakingList = amoebaRepo.getListByRawSql(request, pageable)
+        val systemList = mapToSystemResponse(stockTakingList.first)
+        return BasePagingResponse(
+            systemList,
+            stockTakingList.second
+        )
+    }
+
+    fun getAllListSystemStockForExport(request: StockTakingDailyRequest): BasePagingResponse<SystemStockTakingResponse> {
+        val stockTakingList = amoebaRepo.getAll(request)
         val systemList = mapToSystemResponse(stockTakingList.first)
         return BasePagingResponse(
             systemList,
@@ -189,8 +198,8 @@ class StockTakingService(
         }
     }
 
-    fun exportSystemStockTaking(request: StockTakingDailyRequest, pageable: Pageable): BaseResponse<FileContentModel> {
-        val listSystemStockTakingResponse = getListSystemStock(request, pageable)
+    fun exportSystemStockTaking(request: StockTakingDailyRequest): BaseResponse<FileContentModel> {
+        val listSystemStockTakingResponse = getAllListSystemStockForExport(request)
 
         val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportSystemStockTakingTemplate.xlsx")
         val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }

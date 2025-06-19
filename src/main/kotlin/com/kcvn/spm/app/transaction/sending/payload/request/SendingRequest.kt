@@ -8,5 +8,6 @@ data class SendingRequest(
     var locationCode: String? = null,
     var packageCode: String? = null,
     var poNumber: String? = null,
-    var qty : BigDecimal? = BigDecimal.ZERO
+    var qty : BigDecimal? = BigDecimal.ZERO,
+    var notMinusBoxQty : Boolean? = null
 )

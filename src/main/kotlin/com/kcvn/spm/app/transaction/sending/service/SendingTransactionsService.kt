@@ -207,13 +207,18 @@ class SendingTransactionsService(
             )
             sendingRepo.saveSendingTrans(sendTran)
             // save backlog and backlog history
+            val boxQty: Int = if (it.notMinusBoxQty == true) {
+                0
+            } else {
+                1
+            }
             val backlogData = BacklogWh(
                 null,
                 it.sourceLocationCode,
                 it.poNumber,
                 it.packageCode,
                 it.qty,
-                1,
+                boxQty,
                 receivingDate,
                 it.inspectionDate
             )
@@ -236,6 +241,7 @@ class SendingTransactionsService(
                         packageCode = sendTransRequest.packageCode,
                         poNumber = sendTransRequest.poNumber,
                         qty = sendTransRequest.qty,
+                        notMinusBoxQty = sendTransRequest.notMinusBoxQty,
                         seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
                     )
                 }

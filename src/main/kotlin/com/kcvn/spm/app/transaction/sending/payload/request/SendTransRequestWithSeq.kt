@@ -9,5 +9,6 @@ data class SendTransRequestWithSeq(
     var packageCode: String? = null,
     var poNumber: String? = null,
     var qty : BigDecimal? = BigDecimal.ZERO,
+    var notMinusBoxQty : Boolean? = null,
     var seqNo : Int? = 1
 )

@@ -4,11 +4,13 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class ActualStockTakingResponse(
-    var inspectionDate: LocalDate? = null,
     var poNumber: String? = null,
-    var amoebaLocationCode: String? = null,
+    var packageCode: String? = null,
+    var systemLocationCode: String? = null,
     var actualLocationCode: String? = null,
-    var amoebaQty: BigDecimal? = null,
+    var systemQty: BigDecimal? = null,
     var actualQty: BigDecimal? = null,
+    var systemBoxQty: Int? = null,
+    var actualBoxQty: Int? = null,
     var result: String? = null
 )

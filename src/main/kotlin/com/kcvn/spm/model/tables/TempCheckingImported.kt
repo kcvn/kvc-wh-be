@@ -5,7 +5,7 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
-import com.kcvn.spm.model.keys.TEMP_CHECKING_IMPORTED_PKEY
+import com.kcvn.spm.model.keys.TEMP_CHECKING_IMPORTED_DATE_PKEY
 import com.kcvn.spm.model.tables.records.TempCheckingImportedRecord
 
 import java.math.BigDecimal
@@ -120,7 +120,7 @@ open class TempCheckingImported(
 
     constructor(child: Table<out Record>, key: ForeignKey<out Record, TempCheckingImportedRecord>): this(Internal.createPathAlias(child, key), child, key, TEMP_CHECKING_IMPORTED, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getPrimaryKey(): UniqueKey<TempCheckingImportedRecord> = TEMP_CHECKING_IMPORTED_PKEY
+    override fun getPrimaryKey(): UniqueKey<TempCheckingImportedRecord> = TEMP_CHECKING_IMPORTED_DATE_PKEY
     override fun `as`(alias: String): TempCheckingImported = TempCheckingImported(DSL.name(alias), this)
     override fun `as`(alias: Name): TempCheckingImported = TempCheckingImported(alias, this)
     override fun `as`(alias: Table<*>): TempCheckingImported = TempCheckingImported(alias.getQualifiedName(), this)

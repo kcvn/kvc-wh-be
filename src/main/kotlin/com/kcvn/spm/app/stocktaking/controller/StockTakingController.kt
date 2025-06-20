@@ -59,7 +59,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<ActualStockTakingResponse>> {
-        val result = stockTakingService.getListActualStock(request, pageable)
+        val result = stockTakingService.getListActualStockByRawSql(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

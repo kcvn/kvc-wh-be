@@ -5,7 +5,7 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
-import com.kcvn.spm.model.keys.TEMP_SENDING_IMPORTED_PKEY
+import com.kcvn.spm.model.keys.TEMP_SENDING_IMPORTED_PKEY_1
 import com.kcvn.spm.model.tables.records.TempSendingImportedRecord
 
 import java.math.BigDecimal
@@ -131,7 +131,7 @@ open class TempSendingImported(
 
     constructor(child: Table<out Record>, key: ForeignKey<out Record, TempSendingImportedRecord>): this(Internal.createPathAlias(child, key), child, key, TEMP_SENDING_IMPORTED, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getPrimaryKey(): UniqueKey<TempSendingImportedRecord> = TEMP_SENDING_IMPORTED_PKEY
+    override fun getPrimaryKey(): UniqueKey<TempSendingImportedRecord> = TEMP_SENDING_IMPORTED_PKEY_1
     override fun `as`(alias: String): TempSendingImported = TempSendingImported(DSL.name(alias), this)
     override fun `as`(alias: Name): TempSendingImported = TempSendingImported(alias, this)
     override fun `as`(alias: Table<*>): TempSendingImported = TempSendingImported(alias.getQualifiedName(), this)

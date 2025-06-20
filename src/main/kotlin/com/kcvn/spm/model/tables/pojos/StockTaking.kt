@@ -6,7 +6,6 @@ package com.kcvn.spm.model.tables.pojos
 
 import java.io.Serializable
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.OffsetDateTime
 
 
@@ -18,12 +17,14 @@ data class StockTaking(
     var id: String? = null,
     var yearNumber: Int? = null,
     var monthNumber: Int? = null,
-    var inspectionDate: LocalDate? = null,
     var poNumber: String? = null,
-    var amoebaLocationCode: String? = null,
+    var packageCode: String? = null,
+    var systemLocationCode: String? = null,
     var actualLocationCode: String? = null,
-    var amoebaQty: BigDecimal? = null,
+    var systemQty: BigDecimal? = null,
     var actualQty: BigDecimal? = null,
+    var systemBoxQty: Int? = null,
+    var actualBoxQty: Int? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
@@ -57,23 +58,23 @@ data class StockTaking(
         }
         else if (this.monthNumber != o.monthNumber)
             return false
-        if (this.inspectionDate == null) {
-            if (o.inspectionDate != null)
-                return false
-        }
-        else if (this.inspectionDate != o.inspectionDate)
-            return false
         if (this.poNumber == null) {
             if (o.poNumber != null)
                 return false
         }
         else if (this.poNumber != o.poNumber)
             return false
-        if (this.amoebaLocationCode == null) {
-            if (o.amoebaLocationCode != null)
+        if (this.packageCode == null) {
+            if (o.packageCode != null)
                 return false
         }
-        else if (this.amoebaLocationCode != o.amoebaLocationCode)
+        else if (this.packageCode != o.packageCode)
+            return false
+        if (this.systemLocationCode == null) {
+            if (o.systemLocationCode != null)
+                return false
+        }
+        else if (this.systemLocationCode != o.systemLocationCode)
             return false
         if (this.actualLocationCode == null) {
             if (o.actualLocationCode != null)
@@ -81,17 +82,29 @@ data class StockTaking(
         }
         else if (this.actualLocationCode != o.actualLocationCode)
             return false
-        if (this.amoebaQty == null) {
-            if (o.amoebaQty != null)
+        if (this.systemQty == null) {
+            if (o.systemQty != null)
                 return false
         }
-        else if (this.amoebaQty != o.amoebaQty)
+        else if (this.systemQty != o.systemQty)
             return false
         if (this.actualQty == null) {
             if (o.actualQty != null)
                 return false
         }
         else if (this.actualQty != o.actualQty)
+            return false
+        if (this.systemBoxQty == null) {
+            if (o.systemBoxQty != null)
+                return false
+        }
+        else if (this.systemBoxQty != o.systemBoxQty)
+            return false
+        if (this.actualBoxQty == null) {
+            if (o.actualBoxQty != null)
+                return false
+        }
+        else if (this.actualBoxQty != o.actualBoxQty)
             return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
@@ -126,12 +139,14 @@ data class StockTaking(
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.yearNumber == null) 0 else this.yearNumber.hashCode())
         result = prime * result + (if (this.monthNumber == null) 0 else this.monthNumber.hashCode())
-        result = prime * result + (if (this.inspectionDate == null) 0 else this.inspectionDate.hashCode())
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
-        result = prime * result + (if (this.amoebaLocationCode == null) 0 else this.amoebaLocationCode.hashCode())
+        result = prime * result + (if (this.packageCode == null) 0 else this.packageCode.hashCode())
+        result = prime * result + (if (this.systemLocationCode == null) 0 else this.systemLocationCode.hashCode())
         result = prime * result + (if (this.actualLocationCode == null) 0 else this.actualLocationCode.hashCode())
-        result = prime * result + (if (this.amoebaQty == null) 0 else this.amoebaQty.hashCode())
+        result = prime * result + (if (this.systemQty == null) 0 else this.systemQty.hashCode())
         result = prime * result + (if (this.actualQty == null) 0 else this.actualQty.hashCode())
+        result = prime * result + (if (this.systemBoxQty == null) 0 else this.systemBoxQty.hashCode())
+        result = prime * result + (if (this.actualBoxQty == null) 0 else this.actualBoxQty.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -145,12 +160,14 @@ data class StockTaking(
         sb.append(id)
         sb.append(", ").append(yearNumber)
         sb.append(", ").append(monthNumber)
-        sb.append(", ").append(inspectionDate)
         sb.append(", ").append(poNumber)
-        sb.append(", ").append(amoebaLocationCode)
+        sb.append(", ").append(packageCode)
+        sb.append(", ").append(systemLocationCode)
         sb.append(", ").append(actualLocationCode)
-        sb.append(", ").append(amoebaQty)
+        sb.append(", ").append(systemQty)
         sb.append(", ").append(actualQty)
+        sb.append(", ").append(systemBoxQty)
+        sb.append(", ").append(actualBoxQty)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

@@ -9,7 +9,6 @@ import com.kcvn.spm.model.keys.STOCK_TAKING_PKEY
 import com.kcvn.spm.model.tables.records.StockTakingRecord
 
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.function.Function
 
@@ -18,7 +17,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row13
+import org.jooq.Row15
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -80,34 +79,44 @@ open class StockTaking(
     val MONTH_NUMBER: TableField<StockTakingRecord, Int?> = createField(DSL.name("month_number"), SQLDataType.INTEGER, this, "")
 
     /**
-     * The column <code>public.stock_taking.inspection_date</code>.
-     */
-    val INSPECTION_DATE: TableField<StockTakingRecord, LocalDate?> = createField(DSL.name("inspection_date"), SQLDataType.LOCALDATE, this, "")
-
-    /**
      * The column <code>public.stock_taking.po_number</code>.
      */
     val PO_NUMBER: TableField<StockTakingRecord, String?> = createField(DSL.name("po_number"), SQLDataType.VARCHAR(30).nullable(false), this, "")
 
     /**
-     * The column <code>public.stock_taking.amoeba_location_code</code>.
+     * The column <code>public.stock_taking.package_code</code>.
      */
-    val AMOEBA_LOCATION_CODE: TableField<StockTakingRecord, String?> = createField(DSL.name("amoeba_location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
+    val PACKAGE_CODE: TableField<StockTakingRecord, String?> = createField(DSL.name("package_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+
+    /**
+     * The column <code>public.stock_taking.system_location_code</code>.
+     */
+    val SYSTEM_LOCATION_CODE: TableField<StockTakingRecord, String?> = createField(DSL.name("system_location_code"), SQLDataType.VARCHAR(6), this, "")
 
     /**
      * The column <code>public.stock_taking.actual_location_code</code>.
      */
-    val ACTUAL_LOCATION_CODE: TableField<StockTakingRecord, String?> = createField(DSL.name("actual_location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
+    val ACTUAL_LOCATION_CODE: TableField<StockTakingRecord, String?> = createField(DSL.name("actual_location_code"), SQLDataType.VARCHAR(6), this, "")
 
     /**
-     * The column <code>public.stock_taking.amoeba_qty</code>.
+     * The column <code>public.stock_taking.system_qty</code>.
      */
-    val AMOEBA_QTY: TableField<StockTakingRecord, BigDecimal?> = createField(DSL.name("amoeba_qty"), SQLDataType.NUMERIC, this, "")
+    val SYSTEM_QTY: TableField<StockTakingRecord, BigDecimal?> = createField(DSL.name("system_qty"), SQLDataType.NUMERIC, this, "")
 
     /**
      * The column <code>public.stock_taking.actual_qty</code>.
      */
     val ACTUAL_QTY: TableField<StockTakingRecord, BigDecimal?> = createField(DSL.name("actual_qty"), SQLDataType.NUMERIC, this, "")
+
+    /**
+     * The column <code>public.stock_taking.system_box_qty</code>.
+     */
+    val SYSTEM_BOX_QTY: TableField<StockTakingRecord, Int?> = createField(DSL.name("system_box_qty"), SQLDataType.INTEGER, this, "")
+
+    /**
+     * The column <code>public.stock_taking.actual_box_qty</code>.
+     */
+    val ACTUAL_BOX_QTY: TableField<StockTakingRecord, Int?> = createField(DSL.name("actual_box_qty"), SQLDataType.INTEGER, this, "")
 
     /**
      * The column <code>public.stock_taking.created_date</code>.
@@ -170,18 +179,18 @@ open class StockTaking(
     override fun rename(name: Table<*>): StockTaking = StockTaking(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row13 type methods
+    // Row15 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row13<String?, Int?, Int?, LocalDate?, String?, String?, String?, BigDecimal?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row13<String?, Int?, Int?, LocalDate?, String?, String?, String?, BigDecimal?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun fieldsRow(): Row15<String?, Int?, Int?, String?, String?, String?, String?, BigDecimal?, BigDecimal?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row15<String?, Int?, Int?, String?, String?, String?, String?, BigDecimal?, BigDecimal?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, Int?, Int?, LocalDate?, String?, String?, String?, BigDecimal?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, Int?, Int?, String?, String?, String?, String?, BigDecimal?, BigDecimal?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, Int?, Int?, LocalDate?, String?, String?, String?, BigDecimal?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, Int?, Int?, String?, String?, String?, String?, BigDecimal?, BigDecimal?, Int?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

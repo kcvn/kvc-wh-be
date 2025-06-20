@@ -13,10 +13,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
 import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.pojos.StockTakingStatus
-import com.kcvn.spm.repository.AmoebaRepository
-import com.kcvn.spm.repository.BacklogBinEntryRepository
-import com.kcvn.spm.repository.StockTakingRepository
-import com.kcvn.spm.repository.StockTakingStatusRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -37,7 +34,8 @@ class StockTakingService(
     private val amoebaRepo: AmoebaRepository,
     private val stockTakingStatusRepo: StockTakingStatusRepository,
     private val stockTakingRepo: StockTakingRepository,
-    private val backlogBinEntryRepo: BacklogBinEntryRepository
+    private val backlogBinEntryRepo: BacklogBinEntryRepository,
+    private val backlogWhRepo: BacklogWhRepository,
 ) {
     fun getListForAndroid(pageable: Pageable): BasePagingResponse<StockTakingForAndroid> {
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
@@ -45,12 +43,14 @@ class StockTakingService(
         val stockTakingData = stockTakingRepo.getListForAndroid(sTT.yearNumber!!, sTT.monthNumber!!, pageable)
         val data = stockTakingData.first.map {
             StockTakingForAndroid(
-                inspectionDate = it.inspectionDate,
                 poNumber = it.poNumber,
-                amoebaLocationCode = it.amoebaLocationCode,
+                packageCode = it.packageCode,
+                systemLocationCode = it.systemLocationCode,
                 actualLocationCode = it.actualLocationCode,
-                amoebaQty = it.amoebaQty,
-                actualQty = it.actualQty
+                systemQty = it.systemQty,
+                actualQty = it.actualQty,
+                systemBoxQty = it.systemBoxQty,
+                actualBoxQty = it.actualBoxQty,
             )
         }
         return BasePagingResponse(
@@ -82,7 +82,7 @@ class StockTakingService(
         if (stt != null) {
             // stock taking again
             stockTakingRepo.deleteByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
-            stockTakingRepo.copyFromAmoebaToStockTaking(request)
+            stockTakingRepo.copyFromBacklogWhToStockTaking(request)
             return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
         } else {
             // stock taking new
@@ -92,8 +92,8 @@ class StockTakingService(
                 status = "on-going"
             )
             stockTakingStatusRepo.save(sttDomain)
-            // copy data from amoeba to stock_taking
-            stockTakingRepo.copyFromAmoebaToStockTaking(request)
+            // copy data from backlog_wh to stock_taking
+            stockTakingRepo.copyFromBacklogWhToStockTaking(request)
             return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
         }
     }
@@ -102,25 +102,24 @@ class StockTakingService(
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
         request.forEach { element ->
-            val inspectionDate = element.inspectionDate
-            val poNumber = element.poNumber
+            val backlog = backlogWhRepo.findByPackageCode(element.packageCode!!)
+                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = ${element.packageCode}")
+            val poNumber = backlog.poNumber
             val domain = StockTaking(
                 null,
                 sTT.yearNumber,
                 sTT.monthNumber,
-                element.inspectionDate,
-                element.poNumber,
-                "",
+                poNumber,
+                element.packageCode,
+                null,
                 element.actualLocationCode,
                 null,
-                element.actualQty
+                element.actualQty,
+                null,
+                element.actualBoxQty
             )
 
-            if (inspectionDate == null || poNumber == null) {
-                stockTakingRepo.save(domain)
-                return@forEach
-            }
-            val stockTaking = stockTakingRepo.findByInspectionDateAndPO(inspectionDate, poNumber)
+            val stockTaking = stockTakingRepo.findByPackageCode(element.packageCode!!)
             if (stockTaking != null) {
                 stockTakingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
             } else {
@@ -151,8 +150,8 @@ class StockTakingService(
         )
     }
 
-    fun getListActualStock(request: StockTakingMonthlyRequest, pageable: Pageable): BasePagingResponse<ActualStockTakingResponse> {
-        val stockTakingList = stockTakingRepo.getList(request, pageable)
+    fun getListActualStockByRawSql(request: StockTakingMonthlyRequest, pageable: Pageable): BasePagingResponse<ActualStockTakingResponse> {
+        val stockTakingList = stockTakingRepo.getListByRawSql(request, pageable)
         val systemList = mapToActualResponse(stockTakingList.first)
         return BasePagingResponse(
             systemList,
@@ -177,13 +176,15 @@ class StockTakingService(
     fun mapToActualResponse(input: List<StockTakingMonthlyResponse>): List<ActualStockTakingResponse> {
         return input.map {
             ActualStockTakingResponse(
-                inspectionDate = it.inspectionDate,
                 poNumber = it.poNumber,
-                amoebaLocationCode = it.amoebaLocationCode,
+                packageCode = it.packageCode,
+                systemLocationCode = it.systemLocationCode,
                 actualLocationCode = it.actualLocationCode,
-                amoebaQty = it.amoebaQty,
+                systemQty = it.systemQty,
                 actualQty = it.actualQty,
-                result = resolveResult(it.resultQty, it.resultLocationCode)
+                systemBoxQty = it.systemBoxQty,
+                actualBoxQty = it.actualBoxQty,
+                result = resolveResult(it.resultLocationCode, it.resultQty, it.resultBoxQty)
             )
         }
     }
@@ -195,6 +196,19 @@ class StockTakingService(
             resultQty == "DIFFERENT" && resultLocationCode == "SAME" -> "QTY: DIFFERENT"
             resultQty == "DIFFERENT" && resultLocationCode == "DIFFERENT" -> "QTY: DIFFERENT, BIN#: DIFFERENT"
             else -> null
+        }
+    }
+
+    fun resolveResult(resultLocationCode: String?, resultQty: String?, resultBoxQty: String?): String? {
+        val results = mutableListOf<String>()
+
+        if (resultLocationCode == "DIFFERENT") results.add("BIN#: DIFFERENT")
+        if (resultQty == "DIFFERENT") results.add("QTY: DIFFERENT")
+        if (resultBoxQty == "DIFFERENT") results.add("BOX QTY: DIFFERENT")
+
+        return when {
+            results.isEmpty() -> "SAME"
+            else -> results.joinToString(", ")
         }
     }
 

@@ -8,7 +8,7 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.StockTaking
-import com.kcvn.spm.model.tables.references.AMOEBA
+import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import com.kcvn.spm.model.tables.references.STOCK_TAKING
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -16,13 +16,117 @@ import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
 class StockTakingRepository(private val context: DSLContext) : SortingRepository() {
-    fun getListForAndroid(yearNumber: Int, monthNumber: Int, pageable: Pageable) : Pair<List<StockTaking>, Int> {
+    fun getListByRawSql(
+        request: StockTakingMonthlyRequest,
+        pageable: Pageable
+    ): Pair<List<StockTakingMonthlyResponse>, Int> {
+        val (sql, params) = createSqlQuery(request)
+
+        val countSql = "SELECT COUNT(*) FROM (${sql}) AS count_table"
+        val totalCount = context.fetchOne(countSql, *params.toTypedArray())?.get(0, Int::class.java) ?: 0
+
+        val paginatedSql = "$sql LIMIT ? OFFSET ?"
+        val paginatedParams = params.toMutableList().apply {
+            add(pageable.pageSize)
+            add(pageable.offset.toInt())
+        }
+
+        val result = context
+            .fetch(paginatedSql, *paginatedParams.toTypedArray())
+            .map {
+                StockTakingMonthlyResponse(
+                    poNumber = it.get("po_number", String::class.java),
+                    packageCode = it.get("package_code", String::class.java),
+                    systemLocationCode = it.get("system_location_code", String::class.java),
+                    actualLocationCode = it.get("actual_location_code", String::class.java),
+                    systemQty = it.get("system_qty", BigDecimal::class.java),
+                    actualQty = it.get("actual_qty", BigDecimal::class.java),
+                    systemBoxQty = it.get("system_box_qty", Int::class.java),
+                    actualBoxQty = it.get("actual_box_qty", Int::class.java),
+                    resultLocationCode = it.get("result_location_code", String::class.java),
+                    resultQty = it.get("result_qty", String::class.java),
+                    resultBoxQty = it.get("result_box_qty", String::class.java)
+                )
+            }
+
+        return result to totalCount
+    }
+
+    fun createSqlQuery(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
+        val sql = """
+    SELECT * FROM (
+SELECT
+    st.po_number,
+    st.package_code,
+    st.system_location_code,
+    st.system_qty,
+    st.system_box_qty,
+    st.actual_location_code,
+    st.actual_qty,
+    st.actual_box_qty,
+    st.year_number,
+    st.month_number,
+    
+    CASE 
+      WHEN st.actual_location_code = st.system_location_code THEN 'SAME'
+      ELSE 'DIFFERENT'
+    END AS result_location_code,
+    
+    CASE 
+      WHEN st.actual_qty = st.system_qty THEN 'SAME'
+      ELSE 'DIFFERENT'
+    END AS result_qty,
+    
+    CASE 
+      WHEN st.actual_box_qty = st.system_box_qty THEN 'SAME'
+      ELSE 'DIFFERENT'
+    END AS result_box_qty
+
+  FROM public.stock_taking st
+) as final_data
+""".trimIndent()
+
+        val sqlBuilder = StringBuilder()
+        val params = mutableListOf<Any>()
+        sqlBuilder.appendLine(sql)
+
+        val whereConditions = mutableListOf<String>()
+        whereConditions.add("final_data.system_qty > 0")
+        if (!request.poNumber.isNullOrBlank()) {
+            whereConditions.add("final_data.po_number = ?")
+            params.add(request.poNumber!!)
+        }
+        if (request.yearNumber != null && request.monthNumber != null) {
+            whereConditions.add("final_data.year_number = ? and final_data.month_number = ?")
+            params.add(request.yearNumber!!)
+            params.add(request.monthNumber!!)
+        }
+        if (request.conditionQuery == "DIFFERENT") {
+            whereConditions.add(
+                "(final_data.result_location_code = 'DIFFERENT'\n" +
+                        "or final_data.result_qty = 'DIFFERENT' or final_data.result_box_qty = 'DIFFERENT')"
+            )
+        }
+        if (request.conditionQuery == "SAME") {
+            whereConditions.add(
+                "final_data.result_location_code = 'SAME'\n" +
+                        "and final_data.result_qty = 'SAME' and final_data.result_box_qty = 'SAME'"
+            )
+        }
+        if (whereConditions.isNotEmpty()) {
+            sqlBuilder.appendLine("WHERE")
+            sqlBuilder.appendLine(whereConditions.joinToString("\nAND "))
+        }
+
+        return sqlBuilder.toString() to params
+    }
+
+    fun getListForAndroid(yearNumber: Int, monthNumber: Int, pageable: Pageable): Pair<List<StockTaking>, Int> {
         val query = context.selectFrom(STOCK_TAKING)
             .where(STOCK_TAKING.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber)))
         val count = query.count()
@@ -33,83 +137,11 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
         return Pair(data, count)
     }
 
-    fun getList(request: StockTakingMonthlyRequest, pageable: Pageable): Pair<List<StockTakingMonthlyResponse>, Int> {
-        val stockTaking = STOCK_TAKING
-
-        val inspectionDateField = stockTaking.INSPECTION_DATE.`as`("inspectionDate")
-        val poNumberField = stockTaking.PO_NUMBER.`as`("poNumber")
-        val amoebaLocationCodeField = DSL.max(stockTaking.AMOEBA_LOCATION_CODE).`as`("amoebaLocationCode")
-        val actualLocationCodeField = DSL.max(stockTaking.ACTUAL_LOCATION_CODE).`as`("actualLocationCode")
-        val amoebaQtyField = DSL.max(stockTaking.AMOEBA_QTY).`as`("amoebaQty")
-        val actualQtyField = DSL.max(stockTaking.ACTUAL_QTY).`as`("actualQty")
-        val resultQtyField = DSL.`when`(DSL.max(stockTaking.AMOEBA_QTY).eq(DSL.max(stockTaking.ACTUAL_QTY)), "SAME")
-            .otherwise("DIFFERENT").`as`("resultQty")
-        val resultLocationCodeField = DSL.`when`(DSL.max(stockTaking.AMOEBA_LOCATION_CODE).eq(DSL.max(stockTaking.ACTUAL_LOCATION_CODE)), "SAME")
-            .otherwise("DIFFERENT").`as`("resultLocationCode")
-
-        var whereCondition  = DSL.noCondition()
-        if (request.yearNumber != null) {
-            whereCondition = whereCondition.and(stockTaking.YEAR_NUMBER.eq(request.yearNumber))
-        }
-        if (request.monthNumber != null) {
-            whereCondition = whereCondition.and(stockTaking.MONTH_NUMBER.eq(request.monthNumber))
-        }
-        if (request.inspectionDate != null) {
-            whereCondition  = whereCondition .and(stockTaking.INSPECTION_DATE.eq(request.inspectionDate))
-        }
-        if (!request.poNumber.isNullOrEmpty()) {
-            whereCondition  = whereCondition .and(stockTaking.PO_NUMBER.eq(request.poNumber))
-        }
-
-        var havingCondition = DSL.noCondition()
-        if (request.conditionQuery == "DIFFERENT") {
-            val amoebaQty = DSL.max(stockTaking.AMOEBA_QTY)
-            val actualQty = DSL.max(stockTaking.ACTUAL_QTY)
-            val amoebaLocationCode = DSL.max(stockTaking.AMOEBA_LOCATION_CODE)
-            val actualLocationCode = DSL.max(stockTaking.ACTUAL_LOCATION_CODE)
-            havingCondition = havingCondition.and(
-                amoebaQty.ne(actualQty).or(amoebaQty.isNull).or(actualQty.isNull)
-                    .or(amoebaLocationCode.ne(actualLocationCode)).or(amoebaLocationCode.eq("")).or(actualLocationCode.eq(""))
-            )
-        }
-        if (request.conditionQuery == "SAME") {
-            val amoebaQty = DSL.max(stockTaking.AMOEBA_QTY)
-            val actualQty = DSL.max(stockTaking.ACTUAL_QTY)
-            val amoebaLocationCode = DSL.max(stockTaking.AMOEBA_LOCATION_CODE)
-            val actualLocationCode = DSL.max(stockTaking.ACTUAL_LOCATION_CODE)
-            havingCondition = havingCondition.and(
-                amoebaQty.eq(actualQty).and(amoebaLocationCode.eq(actualLocationCode))
-            )
-        }
-
-        val querySql = context.select(
-            inspectionDateField,
-            poNumberField,
-            amoebaQtyField,
-            actualQtyField,
-            amoebaLocationCodeField,
-            actualLocationCodeField,
-            resultQtyField,
-            resultLocationCodeField
-        )
-            .from(stockTaking)
-            .where(whereCondition )
-            .groupBy(inspectionDateField, poNumberField)
-            .having(havingCondition)
-            .orderBy(poNumberField.asc())
-
-        val count = querySql.count()
-        val data = querySql
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .fetchInto(StockTakingMonthlyResponse::class.java)
-
-        return Pair(data, count)
-    }
-
-    fun findByInspectionDateAndPO(inspectionDate: LocalDate, poNumber: String): StockTaking? {
+    fun findByPackageCode(packageCode: String): StockTaking? {
         return context.selectFrom(STOCK_TAKING)
-            .where(STOCK_TAKING.INSPECTION_DATE.eq(inspectionDate).and(STOCK_TAKING.PO_NUMBER.eq(poNumber)))
+            .where(
+                STOCK_TAKING.PACKAGE_CODE.eq(packageCode)
+            )
             .fetchInto(StockTaking::class.java)
             .firstOrNull()
     }
@@ -121,13 +153,13 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
             transactionalContext.update(STOCK_TAKING)
                 .set(STOCK_TAKING.ACTUAL_LOCATION_CODE, request.actualLocationCode)
                 .set(STOCK_TAKING.ACTUAL_QTY, request.actualQty)
+                .set(STOCK_TAKING.ACTUAL_BOX_QTY, request.actualBoxQty)
                 .set(STOCK_TAKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(STOCK_TAKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(
                     STOCK_TAKING.YEAR_NUMBER.eq(yearNumber)
                         .and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
-                        .and(STOCK_TAKING.INSPECTION_DATE.eq(request.inspectionDate))
-                        .and(STOCK_TAKING.PO_NUMBER.eq(request.poNumber))
+                        .and(STOCK_TAKING.PACKAGE_CODE.eq(request.packageCode))
                 )
                 .execute()
         }
@@ -135,11 +167,15 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
 
     fun save(domain: StockTaking) {
         context.insertInto(
-            STOCK_TAKING, STOCK_TAKING.YEAR_NUMBER, STOCK_TAKING.MONTH_NUMBER, STOCK_TAKING.INSPECTION_DATE,
-            STOCK_TAKING.PO_NUMBER, STOCK_TAKING.AMOEBA_LOCATION_CODE, STOCK_TAKING.ACTUAL_LOCATION_CODE,
-            STOCK_TAKING.AMOEBA_QTY, STOCK_TAKING.ACTUAL_QTY, STOCK_TAKING.CREATED_BY)
-            .values(domain.yearNumber, domain.monthNumber, domain.inspectionDate, domain.poNumber, domain.amoebaLocationCode,
-                domain.actualLocationCode, domain.amoebaQty, domain.actualQty, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            STOCK_TAKING, STOCK_TAKING.YEAR_NUMBER, STOCK_TAKING.MONTH_NUMBER, STOCK_TAKING.PO_NUMBER,
+            STOCK_TAKING.PACKAGE_CODE, STOCK_TAKING.ACTUAL_LOCATION_CODE, STOCK_TAKING.ACTUAL_QTY,
+            STOCK_TAKING.ACTUAL_BOX_QTY, STOCK_TAKING.CREATED_BY
+        )
+            .values(
+                domain.yearNumber, domain.monthNumber, domain.poNumber,
+                domain.packageCode, domain.actualLocationCode, domain.actualQty,
+                domain.actualBoxQty, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+            )
             .execute()
     }
 
@@ -154,7 +190,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
         }
     }
 
-    fun copyFromAmoebaToStockTaking(request: StartActualRequest) {
+    fun copyFromBacklogWhToStockTaking(request: StartActualRequest) {
         val year = request.yearNumber
         val month = request.monthNumber
 
@@ -163,24 +199,31 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 .columns(
                     STOCK_TAKING.YEAR_NUMBER,
                     STOCK_TAKING.MONTH_NUMBER,
-                    STOCK_TAKING.INSPECTION_DATE,
                     STOCK_TAKING.PO_NUMBER,
-                    STOCK_TAKING.AMOEBA_LOCATION_CODE,
+                    STOCK_TAKING.PACKAGE_CODE,
+                    STOCK_TAKING.SYSTEM_LOCATION_CODE,
                     STOCK_TAKING.ACTUAL_LOCATION_CODE,
-                    STOCK_TAKING.AMOEBA_QTY,
-                    STOCK_TAKING.ACTUAL_QTY
+                    STOCK_TAKING.SYSTEM_QTY,
+                    STOCK_TAKING.ACTUAL_QTY,
+                    STOCK_TAKING.SYSTEM_BOX_QTY,
+                    STOCK_TAKING.ACTUAL_BOX_QTY,
+                    STOCK_TAKING.CREATED_BY
                 )
                 .select(
                     context.select(
                         DSL.`val`(year),
                         DSL.`val`(month),
-                        AMOEBA.INSPECTION_DATE,
-                        AMOEBA.PO_NUMBER,
-                        AMOEBA.LOCATION_CODE,
-                        DSL.inline(""),
-                        AMOEBA.QTY,
-                        DSL.inline(BigDecimal.ZERO)
-                    ).from(AMOEBA)
+                        BACKLOG_WH.PO_NUMBER,
+                        BACKLOG_WH.PACKAGE_CODE,
+                        BACKLOG_WH.LOCATION_CODE,
+                        DSL.inline(null as String?),
+                        BACKLOG_WH.BACKLOG_QTY,
+                        DSL.inline(null as BigDecimal?),
+                        BACKLOG_WH.BOX_QTY,
+                        DSL.inline(null as Int?),
+                        DSL.inline(CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                    ).from(BACKLOG_WH)
+                        .where(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
                 )
 
             insertQuery.execute()
@@ -188,6 +231,41 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
             throw IllegalArgumentException("yearNumber and monthNumber must not be null")
         }
     }
+
+//    fun copyFromAmoebaToStockTaking(request: StartActualRequest) {
+//        val year = request.yearNumber
+//        val month = request.monthNumber
+//
+//        if (year != null && month != null) {
+//            val insertQuery = context.insertInto(STOCK_TAKING)
+//                .columns(
+//                    STOCK_TAKING.YEAR_NUMBER,
+//                    STOCK_TAKING.MONTH_NUMBER,
+//                    STOCK_TAKING.INSPECTION_DATE,
+//                    STOCK_TAKING.PO_NUMBER,
+//                    STOCK_TAKING.AMOEBA_LOCATION_CODE,
+//                    STOCK_TAKING.ACTUAL_LOCATION_CODE,
+//                    STOCK_TAKING.AMOEBA_QTY,
+//                    STOCK_TAKING.ACTUAL_QTY
+//                )
+//                .select(
+//                    context.select(
+//                        DSL.`val`(year),
+//                        DSL.`val`(month),
+//                        AMOEBA.INSPECTION_DATE,
+//                        AMOEBA.PO_NUMBER,
+//                        AMOEBA.LOCATION_CODE,
+//                        DSL.inline(""),
+//                        AMOEBA.QTY,
+//                        DSL.inline(BigDecimal.ZERO)
+//                    ).from(AMOEBA)
+//                )
+//
+//            insertQuery.execute()
+//        } else {
+//            throw IllegalArgumentException("yearNumber and monthNumber must not be null")
+//        }
+//    }
 
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

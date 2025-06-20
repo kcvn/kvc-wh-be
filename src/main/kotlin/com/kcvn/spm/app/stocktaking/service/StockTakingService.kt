@@ -190,12 +190,14 @@ class StockTakingService(
     }
 
     fun resolveResult(resultQty: String?, resultLocationCode: String?): String? {
+        val results = mutableListOf<String>()
+
+        if (resultQty == "DIFFERENT") results.add("QTY: DIFFERENT")
+        if (resultLocationCode == "DIFFERENT") results.add("BIN#: DIFFERENT")
+
         return when {
-            resultQty == "SAME" && resultLocationCode == "SAME" -> "SAME"
-            resultQty == "SAME" && resultLocationCode == "DIFFERENT" -> "BIN#: DIFFERENT"
-            resultQty == "DIFFERENT" && resultLocationCode == "SAME" -> "QTY: DIFFERENT"
-            resultQty == "DIFFERENT" && resultLocationCode == "DIFFERENT" -> "QTY: DIFFERENT, BIN#: DIFFERENT"
-            else -> null
+            results.isEmpty() -> "SAME"
+            else -> results.joinToString(", ")
         }
     }
 

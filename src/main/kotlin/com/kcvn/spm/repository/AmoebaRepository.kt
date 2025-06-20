@@ -127,12 +127,12 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
 
         val whereConditions = mutableListOf<String>()
         if (!request.poNumber.isNullOrBlank()) {
-            whereConditions.add(" COALESCE(a.po_number, temp1.po_number) = ?")
+            whereConditions.add(" final_data.po_number = ?")
             params.add(request.poNumber!!)
         }
         if (request.conditionQuery == "DIFFERENT") {
-            whereConditions.add("result_location_code = 'DIFFERENT'\n" +
-                    "or result_qty = 'DIFFERENT'")
+            whereConditions.add("(result_location_code = 'DIFFERENT'\n" +
+                    "or result_qty = 'DIFFERENT')")
         }
         if (request.conditionQuery == "SAME") {
             whereConditions.add("result_location_code = 'SAME'\n" +

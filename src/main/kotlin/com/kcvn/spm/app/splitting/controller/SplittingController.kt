@@ -20,13 +20,13 @@ class SplittingController(private val splittingService: SplittingService) {
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createSplitting(@Valid @RequestBody request: List<SplittingRequest>?): ResponseEntity<*> {
-        splittingService.saveSplitting(request!!)
+        val data = splittingService.saveSplitting(request!!)
         val logger = KotlinLogging.logger {}
         logger.info(
             "USER: " + CommonUtils.loggedInUser() + ", API: post splitting/create" + ", REQUEST: " + request
         )
         return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            MessageResponse(CommonUtils.getMessage("action.succeeded"), data),
             HttpStatus.CREATED
         )
     }

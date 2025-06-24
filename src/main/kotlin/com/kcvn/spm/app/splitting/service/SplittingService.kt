@@ -3,9 +3,6 @@ package com.kcvn.spm.app.splitting.service
 import com.kcvn.spm.app.splitting.payload.request.SplittingRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
-import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.exception.BusinessExceptionDetail
-import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Splitting
 import com.kcvn.spm.repository.CheckingRepository
 import com.kcvn.spm.repository.SplittingRepository
@@ -19,8 +16,14 @@ class SplittingService(
     private val checkingRepo: CheckingRepository,
     private val receivingService: ReceivingTransactionsService
 ) {
-    fun saveSplitting(request: List<SplittingRequest>) {
+    fun saveSplitting(request: List<SplittingRequest>): List<String> {
+        val packageInvalidList = mutableListOf<String>()
         request.forEach {
+            val checkingList = checkingRepo.getByPackageCode(it.packageCode!!)
+            if (checkingList.isEmpty()) {
+                packageInvalidList.add(it.packageCode!!)
+                return@forEach
+            }
             val data = Splitting(
                 null,
                 it.receivingDate,
@@ -30,10 +33,6 @@ class SplittingService(
             // save splitting
             splittingRepo.save(data)
             // save receiving transaction, backlogWh, backlogWhHistory
-            val checkingList = checkingRepo.getByPackageCode(it.packageCode!!)
-            if (checkingList.isEmpty()) {
-                throw BusinessExceptionDetail(CommonUtils.getMessage("package.does.not.exist"), "packageCode = ${it.packageCode}")
-            }
             val recTransRequestList = mutableListOf<RecTransRequest>()
             checkingList.forEach { ck ->
                 val recTrans = RecTransRequest(
@@ -46,5 +45,6 @@ class SplittingService(
             }
             receivingService.saveRecTrans(recTransRequestList, it.receivingDate)
         }
+        return packageInvalidList
     }
 }

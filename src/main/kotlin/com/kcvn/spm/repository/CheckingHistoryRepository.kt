@@ -18,6 +18,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @Repository
 class CheckingHistoryRepository(private val context: DSLContext) : SortingRepository() {
@@ -26,6 +27,9 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
         val scanDate = CHECKING_HISTORY.field("scan_date", java.time.OffsetDateTime::class.java)
         if (!request.poNumber.isNullOrEmpty()) {
             condition = condition.and(CHECKING_HISTORY.PO_NUMBER.eq(request.poNumber))
+        }
+        if (!request.formCode.isNullOrEmpty()) {
+            condition = condition.and(CHECKING_HISTORY.FORM_CODE.eq(request.formCode))
         }
         if (request.fromDate != null && request.toDate != null) {
             condition = condition.and(scanDate?.between(request.fromDate, request.toDate))
@@ -63,14 +67,32 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
             .firstOrNull()
     }
 
+    fun findLatestHistory(): CheckingHistory? {
+        val todayPrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "%"
+        return context.selectFrom(CHECKING_HISTORY)
+            .where(CHECKING_HISTORY.FORM_CODE.like(todayPrefix))
+            .orderBy(CHECKING_HISTORY.FORM_CODE.desc())
+            .fetchInto(CheckingHistory::class.java)
+            .firstOrNull()
+    }
+
+    fun getListFormCode(): List<String> {
+        return context.selectDistinct(CHECKING_HISTORY.FORM_CODE)
+            .from(CHECKING_HISTORY)
+            .where(CHECKING_HISTORY.FORM_CODE.isNotNull)
+            .orderBy(CHECKING_HISTORY.FORM_CODE.desc())
+            .fetch(CHECKING_HISTORY.FORM_CODE)
+            .filterNotNull()
+    }
+
     fun save(data: CheckingHistory) {
         context.insertInto(
             CHECKING_HISTORY, CHECKING_HISTORY.PO_NUMBER, CHECKING_HISTORY.IMPORT_QTY,
-            CHECKING_HISTORY.SCAN_QTY, CHECKING_HISTORY.SEQ_NO, SENDING_TRANSACTIONS.CREATED_BY
+            CHECKING_HISTORY.SCAN_QTY, CHECKING_HISTORY.SEQ_NO, CHECKING_HISTORY.FORM_CODE, SENDING_TRANSACTIONS.CREATED_BY
         )
             .values(
                 data.poNumber, data.importQty,
-                data.scanQty, data.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                data.scanQty, data.seqNo, data.formCode, CommonUtils.loggedInUser() ?: Constants.SYSTEM
             )
             .execute()
     }

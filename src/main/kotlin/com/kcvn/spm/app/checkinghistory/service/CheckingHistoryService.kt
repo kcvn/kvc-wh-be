@@ -5,6 +5,8 @@ import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchReq
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CheckingHistory
 import com.kcvn.spm.repository.CheckingHistoryRepository
@@ -12,12 +14,27 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
 class CheckingHistoryService(
     private val checkingHistoryRepo: CheckingHistoryRepository
 ) {
+    fun getListFormCodeDropdown(): BaseResponse<List<DropdownResponse>> {
+        val listFormCode = checkingHistoryRepo.getListFormCode()
+
+        // Map DropDownResponse
+        val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->
+            DropdownResponse(
+                formCode,
+                formCode
+            )
+        }
+
+        return BaseResponse(data = dropDownList)
+    }
+
     fun getList(request: CheckingHistorySearchRequest, pageable: Pageable): BasePagingResponse<CheckingHistoryResponse> {
         val checkingHistoryData = checkingHistoryRepo.getList(request, pageable)
         val data = checkingHistoryData.first.map {
@@ -27,6 +44,7 @@ class CheckingHistoryService(
                 importQty = it.importQty,
                 scanQty = it.scanQty,
                 seqNo = it.seqNo,
+                formCode = it.formCode,
                 result = getResult(it)
             )
         }
@@ -46,6 +64,7 @@ class CheckingHistoryService(
 
     fun save(requestList: List<CheckingHistoryRequest>) {
         val scanDate = LocalDate.now()
+        val formCode = getFormCode()
         requestList.forEach { request ->
             if (!request.reChecking) {
                 val data = checkingHistoryRepo.findByScanDateAndPOAndSeqNo(scanDate, request.poNumber, 1)
@@ -54,7 +73,8 @@ class CheckingHistoryService(
                         poNumber = request.poNumber,
                         importQty = request.importQty,
                         scanQty = request.scanQty,
-                        seqNo = 1
+                        seqNo = 1,
+                        formCode = formCode
                     )
                     checkingHistoryRepo.save(domain)
                 } else {
@@ -69,10 +89,25 @@ class CheckingHistoryService(
                     poNumber = request.poNumber,
                     importQty = request.importQty,
                     scanQty = request.scanQty,
-                    seqNo = seqNo
+                    seqNo = seqNo,
+                    formCode = formCode
                 )
                 checkingHistoryRepo.save(domain)
             }
         }
+    }
+
+    private fun getFormCode(): String {
+        val datePrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        val latestSuffix = checkingHistoryRepo.findLatestHistory()
+            ?.formCode
+            ?.substringAfter("-")
+            ?.let { suffix ->
+                (suffix.toIntOrNull()?.plus(1))
+                    ?.toString()
+                    ?.padStart(suffix.length, '0')
+            }
+
+        return "$datePrefix-${latestSuffix ?: "01"}"
     }
 }

@@ -9,5 +9,6 @@ data class CheckingHistoryResponse(
     var importQty: BigDecimal? = null,
     var scanQty: BigDecimal? = null,
     var seqNo: Int? = null,
+    var formCode: String? = null,
     var result: String? = null
 )

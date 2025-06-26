@@ -39,7 +39,7 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
         )
     }
 
-    fun getFormCode(): String {
+    private fun getFormCode(): String {
         val datePrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
         val latestSuffix = tempCheckingImportedRepo.findLatestImport()
             ?.formCode

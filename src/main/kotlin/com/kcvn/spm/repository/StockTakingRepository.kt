@@ -125,7 +125,6 @@ SELECT
         sqlBuilder.appendLine(sql)
 
         val whereConditions = mutableListOf<String>()
-        whereConditions.add("final_data.system_qty > 0")
         if (!request.poNumber.isNullOrBlank()) {
             whereConditions.add("final_data.po_number = ?")
             params.add(request.poNumber!!)

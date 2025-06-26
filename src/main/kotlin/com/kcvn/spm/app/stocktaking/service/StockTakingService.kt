@@ -159,6 +159,15 @@ class StockTakingService(
         )
     }
 
+    fun getAllListActualStockForExport(request: StockTakingMonthlyRequest): BasePagingResponse<ActualStockTakingResponse> {
+        val stockTakingList = stockTakingRepo.getAll(request)
+        val systemList = mapToActualResponse(stockTakingList.first)
+        return BasePagingResponse(
+            systemList,
+            stockTakingList.second
+        )
+    }
+
     fun mapToSystemResponse(input: List<StockTakingDailyResponse>): List<SystemStockTakingResponse> {
         return input.map {
             SystemStockTakingResponse(
@@ -260,6 +269,64 @@ class StockTakingService(
 
         val response = FileContentModel(
             fileName = CommonUtils.getMessage("ExportSystemStockTaking.xlsx", arrayOf(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+            )),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
+    }
+
+    fun exportActualStockTaking(request: StockTakingMonthlyRequest): BaseResponse<FileContentModel> {
+        val listActualStockTakingResponse = getAllListActualStockForExport(request)
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportActualStockTakingTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        val rowNumber = 0
+        val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        style.alignment = HorizontalAlignment.CENTER
+
+        val numberStyle = workbook.createCellStyle()
+        numberStyle.cloneStyleFrom(style)
+        numberStyle.alignment = HorizontalAlignment.RIGHT
+
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
+        val listActualStockTaking = listActualStockTakingResponse.data
+
+        if (listActualStockTaking.isNullOrEmpty()) {
+            throw BusinessException(CommonUtils.getMessage("data.notFound"))
+        }
+
+        var rowNumberFill = 1
+        for (item in listActualStockTaking) {
+            val row: Row = sheet.createRow(rowNumberFill++)
+
+            ExcelHelper.setCellValue(row, 0, style, item.poNumber)
+            ExcelHelper.setCellValue(row, 1, style, item.packageCode)
+            ExcelHelper.setCellValue(row, 2, style, item.systemLocationCode)
+            ExcelHelper.setCellValue(row, 3, style, item.actualLocationCode)
+            ExcelHelper.setCellValueInt(row, 4, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 5, numberStyle, item.actualQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.systemBoxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.actualBoxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 8, style, item.result)
+        }
+
+        sheet.createFreezePane(4, 1)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("ExportActualStockTaking.xlsx", arrayOf(
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
             )),
             contentType = ExcelConstant.EXCEL_CONTENT_TYPE,

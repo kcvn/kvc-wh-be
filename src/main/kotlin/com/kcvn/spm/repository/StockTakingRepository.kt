@@ -57,6 +57,35 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
         return result to totalCount
     }
 
+    fun getAll(
+        request: StockTakingMonthlyRequest
+    ): Pair<List<StockTakingMonthlyResponse>, Int> {
+        val (sql, params) = createSqlQuery(request)
+
+        val countSql = "SELECT COUNT(*) FROM (${sql}) AS count_table"
+        val totalCount = context.fetchOne(countSql, *params.toTypedArray())?.get(0, Int::class.java) ?: 0
+
+        val result = context
+            .fetch(sql, *params.toTypedArray())
+            .map {
+                StockTakingMonthlyResponse(
+                    poNumber = it.get("po_number", String::class.java),
+                    packageCode = it.get("package_code", String::class.java),
+                    systemLocationCode = it.get("system_location_code", String::class.java),
+                    actualLocationCode = it.get("actual_location_code", String::class.java),
+                    systemQty = it.get("system_qty", BigDecimal::class.java),
+                    actualQty = it.get("actual_qty", BigDecimal::class.java),
+                    systemBoxQty = it.get("system_box_qty", Int::class.java),
+                    actualBoxQty = it.get("actual_box_qty", Int::class.java),
+                    resultLocationCode = it.get("result_location_code", String::class.java),
+                    resultQty = it.get("result_qty", String::class.java),
+                    resultBoxQty = it.get("result_box_qty", String::class.java)
+                )
+            }
+
+        return result to totalCount
+    }
+
     fun createSqlQuery(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
         val sql = """
     SELECT * FROM (

@@ -63,6 +63,15 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @GetMapping("/export/actual-stock-taking")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    fun exportActualStockTaking(
+        request: StockTakingMonthlyRequest
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = stockTakingService.exportActualStockTaking(request)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
     @GetMapping("/actual-stock-taking/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getListForAndroid(

@@ -102,14 +102,14 @@ class StockTakingService(
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
         request.forEach { element ->
-            val backlog = backlogWhRepo.findByPackageCode(element.packageCode!!)
-                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = ${element.packageCode}")
-            val poNumber = backlog.poNumber
+//            val backlog = backlogWhRepo.findByPackageCode(element.packageCode!!)
+//                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = ${element.packageCode}")
+//            val poNumber = backlog.poNumber
             val domain = StockTaking(
                 null,
                 sTT.yearNumber,
                 sTT.monthNumber,
-                poNumber,
+                element.poNumber,
                 element.packageCode,
                 null,
                 element.actualLocationCode,

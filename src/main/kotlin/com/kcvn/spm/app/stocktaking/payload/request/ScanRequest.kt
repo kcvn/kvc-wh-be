@@ -6,5 +6,6 @@ data class ScanRequest(
     var packageCode: String? = null,
     var actualLocationCode: String? = null,
     var actualQty : BigDecimal? = BigDecimal.ZERO,
-    var actualBoxQty : Int? = 0
+    var actualBoxQty : Int? = 0,
+    var poNumber: String? = null,
 )

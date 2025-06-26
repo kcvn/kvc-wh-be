@@ -75,8 +75,6 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
                 )
                 dataList.add(data)
             }
-            // delete record of user import before
-//            tempCheckingImportedRepo.delete(CommonUtils.loggedInUser() ?: "")
             // save temp checking imported
             val totalRecord = tempCheckingImportedRepo.saveAll(dataList)
 

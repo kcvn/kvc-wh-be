@@ -79,11 +79,6 @@ open class TempCheckingImported(
     val QTY: TableField<TempCheckingImportedRecord, BigDecimal?> = createField(DSL.name("qty"), SQLDataType.NUMERIC, this, "")
 
     /**
-     * The column <code>public.temp_checking_imported.form_code</code>.
-     */
-    val FORM_CODE: TableField<TempCheckingImportedRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(12).nullable(false), this, "")
-
-    /**
      * The column <code>public.temp_checking_imported.created_date</code>.
      */
     val CREATED_DATE: TableField<TempCheckingImportedRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
@@ -102,6 +97,11 @@ open class TempCheckingImported(
      * The column <code>public.temp_checking_imported.updated_by</code>.
      */
     val UPDATED_BY: TableField<TempCheckingImportedRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.temp_checking_imported.form_code</code>.
+     */
+    val FORM_CODE: TableField<TempCheckingImportedRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(12), this, "")
 
     private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
@@ -148,16 +148,16 @@ open class TempCheckingImported(
     // -------------------------------------------------------------------------
     // Row8 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row8<String?, String?, BigDecimal?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row8<String?, String?, BigDecimal?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun fieldsRow(): Row8<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?> = super.fieldsRow() as Row8<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, BigDecimal?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, BigDecimal?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

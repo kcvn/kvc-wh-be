@@ -9,18 +9,30 @@ import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Repository
 class TempCheckingImportedRepository(private val context: DSLContext) : SortingRepository() {
     fun getList() : Pair<List<TempCheckingImported>, Int> {
-        val userName = CommonUtils.loggedInUser() ?: ""
-        val query = context.selectFrom(TEMP_CHECKING_IMPORTED).where(TEMP_CHECKING_IMPORTED.CREATED_BY.eq(userName))
+//        val userName = CommonUtils.loggedInUser() ?: ""
+//        val query = context.selectFrom(TEMP_CHECKING_IMPORTED).where(TEMP_CHECKING_IMPORTED.CREATED_BY.eq(userName))
+        val query = context.selectFrom(TEMP_CHECKING_IMPORTED)
         val count = query.count()
         val data = query
             .orderBy(TEMP_CHECKING_IMPORTED.CREATED_DATE.desc())
             .fetchInto(TempCheckingImported::class.java)
 
         return Pair(data, count)
+    }
+
+    fun findLatestImport(): TempCheckingImported? {
+        val todayPrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "%"
+        return context.selectFrom(TEMP_CHECKING_IMPORTED)
+            .where(TEMP_CHECKING_IMPORTED.FORM_CODE.like(todayPrefix))
+            .orderBy(TEMP_CHECKING_IMPORTED.FORM_CODE.desc())
+            .fetchInto(TempCheckingImported::class.java)
+            .firstOrNull()
     }
 
     fun saveAll(dataList: List<TempCheckingImported>): Int {
@@ -34,6 +46,7 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
                     TEMP_CHECKING_IMPORTED.newRecord().apply {
                         this.poNumber = data.poNumber
                         this.qty = data.qty
+                        this.formCode = data.formCode
                         this.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                     }
                 }

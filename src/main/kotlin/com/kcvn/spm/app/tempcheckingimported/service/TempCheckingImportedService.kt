@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -27,13 +29,28 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
         val response = data.first.map {
             TempCheckingImportedResponse(
                 poNumber = it.poNumber,
-                qty = it.qty
+                qty = it.qty,
+                formCode = it.formCode
             )
         }
         return BasePagingResponse(
             response,
             data.second
         )
+    }
+
+    fun getFormCode(): String {
+        val datePrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        val latestSuffix = tempCheckingImportedRepo.findLatestImport()
+            ?.formCode
+            ?.substringAfter("-")
+            ?.let { suffix ->
+                (suffix.toIntOrNull()?.plus(1))
+                    ?.toString()
+                    ?.padStart(suffix.length, '0')
+            }
+
+        return "$datePrefix-${latestSuffix ?: "01"}"
     }
 
     fun importChecking(file: MultipartFile): BaseResponse<Int> {
@@ -48,18 +65,19 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
             val dataList = mutableListOf<TempCheckingImported>()
+            val formCode = getFormCode()
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
                 val data = TempCheckingImported(
                     poNumber = ExcelHelper.getCellValueAmoeba(row, 2),
-                    qty = ExcelHelper.getCellValueAmoeba(row, 3).toBigDecimalOrNull() ?: BigDecimal.ZERO
+                    qty = ExcelHelper.getCellValueAmoeba(row, 3).toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    formCode = formCode
                 )
-
                 dataList.add(data)
             }
             // delete record of user import before
-            tempCheckingImportedRepo.delete(CommonUtils.loggedInUser() ?: "")
-            // save temp checking imported date
+//            tempCheckingImportedRepo.delete(CommonUtils.loggedInUser() ?: "")
+            // save temp checking imported
             val totalRecord = tempCheckingImportedRepo.saveAll(dataList)
 
             return BaseResponse(totalRecord, CommonUtils.getMessage("action.succeeded"))

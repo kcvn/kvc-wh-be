@@ -17,7 +17,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row7
+import org.jooq.Row8
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -77,6 +77,11 @@ open class TempCheckingImported(
      * The column <code>public.temp_checking_imported.qty</code>.
      */
     val QTY: TableField<TempCheckingImportedRecord, BigDecimal?> = createField(DSL.name("qty"), SQLDataType.NUMERIC, this, "")
+
+    /**
+     * The column <code>public.temp_checking_imported.form_code</code>.
+     */
+    val FORM_CODE: TableField<TempCheckingImportedRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(12).nullable(false), this, "")
 
     /**
      * The column <code>public.temp_checking_imported.created_date</code>.
@@ -141,18 +146,18 @@ open class TempCheckingImported(
     override fun rename(name: Table<*>): TempCheckingImported = TempCheckingImported(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row7 type methods
+    // Row8 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row7<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row7<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun fieldsRow(): Row8<String?, String?, BigDecimal?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row8<String?, String?, BigDecimal?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (String?, String?, BigDecimal?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (String?, String?, BigDecimal?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

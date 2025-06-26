@@ -4,5 +4,6 @@ import java.math.BigDecimal
 
 data class TempCheckingImportedResponse(
     var poNumber: String? = null,
-    var qty: BigDecimal? = null
+    var qty: BigDecimal? = null,
+    var formCode: String? = null
 )

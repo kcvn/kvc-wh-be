@@ -17,6 +17,7 @@ data class TempCheckingImported(
     var id: String? = null,
     var poNumber: String? = null,
     var qty: BigDecimal? = null,
+    var formCode: String? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
@@ -49,6 +50,12 @@ data class TempCheckingImported(
                 return false
         }
         else if (this.qty != o.qty)
+            return false
+        if (this.formCode == null) {
+            if (o.formCode != null)
+                return false
+        }
+        else if (this.formCode != o.formCode)
             return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
@@ -83,6 +90,7 @@ data class TempCheckingImported(
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
         result = prime * result + (if (this.qty == null) 0 else this.qty.hashCode())
+        result = prime * result + (if (this.formCode == null) 0 else this.formCode.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -96,6 +104,7 @@ data class TempCheckingImported(
         sb.append(id)
         sb.append(", ").append(poNumber)
         sb.append(", ").append(qty)
+        sb.append(", ").append(formCode)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

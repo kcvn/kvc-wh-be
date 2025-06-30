@@ -72,6 +72,13 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
             val dataList = mutableListOf<TempCheckingImported>()
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val poNumber = ExcelHelper.getCellValueAmoeba(row, 2).trim()
+                val qtyStr = ExcelHelper.getCellValueAmoeba(row, 3).trim()
+
+                if (poNumber.isBlank() && qtyStr.isBlank()) {
+                    continue
+                }
+
                 val data = TempCheckingImported(
                     poNumber = ExcelHelper.getCellValueAmoeba(row, 2),
                     qty = ExcelHelper.getCellValueAmoeba(row, 3).toBigDecimalOrNull() ?: BigDecimal.ZERO,

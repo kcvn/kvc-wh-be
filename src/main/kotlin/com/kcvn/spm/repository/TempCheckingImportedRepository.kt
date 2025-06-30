@@ -10,14 +10,31 @@ import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Repository
 class TempCheckingImportedRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList() : Pair<List<TempCheckingImported>, Int> {
-//        val userName = CommonUtils.loggedInUser() ?: ""
-//        val query = context.selectFrom(TEMP_CHECKING_IMPORTED).where(TEMP_CHECKING_IMPORTED.CREATED_BY.eq(userName))
+    fun getListFormCode(): List<String> {
+        val offset = OffsetDateTime.now().offset
+        val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(2), LocalTime.MIDNIGHT, offset)
+        val tomorrow = OffsetDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT, offset)
+        return context.selectDistinct(TEMP_CHECKING_IMPORTED.FORM_CODE)
+            .from(TEMP_CHECKING_IMPORTED)
+            .where(
+                TEMP_CHECKING_IMPORTED.FORM_CODE.isNotNull
+                    .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
+                    .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.lt(tomorrow))
+            )
+            .orderBy(TEMP_CHECKING_IMPORTED.FORM_CODE.desc())
+            .fetch(TEMP_CHECKING_IMPORTED.FORM_CODE)
+            .filterNotNull()
+    }
+
+    fun getList(formCode: String) : Pair<List<TempCheckingImported>, Int> {
         val query = context.selectFrom(TEMP_CHECKING_IMPORTED)
+            .where(TEMP_CHECKING_IMPORTED.FORM_CODE.eq(formCode))
         val count = query.count()
         val data = query
             .orderBy(TEMP_CHECKING_IMPORTED.CREATED_DATE.desc())

@@ -18,7 +18,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 @Repository
 class CheckingHistoryRepository(private val context: DSLContext) : SortingRepository() {
@@ -65,24 +64,6 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
             .orderBy(CHECKING_HISTORY.SEQ_NO.sort(SortOrder.DESC))
             .fetchInto(CheckingHistory::class.java)
             .firstOrNull()
-    }
-
-    fun findLatestHistory(): CheckingHistory? {
-        val todayPrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "%"
-        return context.selectFrom(CHECKING_HISTORY)
-            .where(CHECKING_HISTORY.FORM_CODE.like(todayPrefix))
-            .orderBy(CHECKING_HISTORY.FORM_CODE.desc())
-            .fetchInto(CheckingHistory::class.java)
-            .firstOrNull()
-    }
-
-    fun getListFormCode(): List<String> {
-        return context.selectDistinct(CHECKING_HISTORY.FORM_CODE)
-            .from(CHECKING_HISTORY)
-            .where(CHECKING_HISTORY.FORM_CODE.isNotNull)
-            .orderBy(CHECKING_HISTORY.FORM_CODE.desc())
-            .fetch(CHECKING_HISTORY.FORM_CODE)
-            .filterNotNull()
     }
 
     fun save(data: CheckingHistory) {

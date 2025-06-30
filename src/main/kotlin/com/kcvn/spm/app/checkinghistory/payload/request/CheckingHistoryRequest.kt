@@ -6,5 +6,6 @@ data class CheckingHistoryRequest(
     var reChecking: Boolean,
     var poNumber: String,
     var importQty : BigDecimal,
-    var scanQty : BigDecimal
+    var scanQty : BigDecimal,
+    var formCode: String
 )

@@ -6,6 +6,7 @@ import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TempCheckingImported
@@ -24,8 +25,22 @@ import java.time.format.DateTimeFormatter
 @Service
 @Transactional
 class TempCheckingImportedService(private val tempCheckingImportedRepo: TempCheckingImportedRepository) {
-    fun getList(): BasePagingResponse<TempCheckingImportedResponse> {
-        val data = tempCheckingImportedRepo.getList()
+    fun getListFormCodeDropdown(): BaseResponse<List<DropdownResponse>> {
+        val listFormCode = tempCheckingImportedRepo.getListFormCode()
+
+        // Map DropDownResponse
+        val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->
+            DropdownResponse(
+                formCode,
+                formCode
+            )
+        }
+
+        return BaseResponse(data = dropDownList)
+    }
+
+    fun getList(formCode: String): BasePagingResponse<TempCheckingImportedResponse> {
+        val data = tempCheckingImportedRepo.getList(formCode)
         val response = data.first.map {
             TempCheckingImportedResponse(
                 poNumber = it.poNumber,

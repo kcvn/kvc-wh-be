@@ -4,6 +4,7 @@ import com.kcvn.spm.app.tempcheckingimported.payload.response.TempCheckingImport
 import com.kcvn.spm.app.tempcheckingimported.service.TempCheckingImportedService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,10 +15,18 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 @RequestMapping("/api/temp-checking-imported")
 class TempCheckingImportedController(private val tempCheckingImportedService: TempCheckingImportedService) {
+    @GetMapping("form-code-dropdown")
+    fun getListFormCodeDropdown(): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = tempCheckingImportedService.getListFormCodeDropdown()
+        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
+    }
+
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
-    fun getList(): ResponseEntity<BasePagingResponse<TempCheckingImportedResponse>> {
-        val result = tempCheckingImportedService.getList()
+    fun getList(
+        @RequestParam(required = false) formCode: String
+    ): ResponseEntity<BasePagingResponse<TempCheckingImportedResponse>> {
+        val result = tempCheckingImportedService.getList(formCode)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

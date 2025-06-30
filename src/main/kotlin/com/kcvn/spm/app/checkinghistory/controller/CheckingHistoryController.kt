@@ -6,8 +6,6 @@ import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.app.checkinghistory.service.CheckingHistoryService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
-import com.kcvn.spm.common.payload.BaseResponse
-import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
 import jakarta.validation.Valid
@@ -24,12 +22,6 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/checking-history")
 class CheckingHistoryController(private val checkingHistoryService: CheckingHistoryService) {
-    @GetMapping("form-code-dropdown")
-    fun getListFormCodeDropdown(): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
-        val data = checkingHistoryService.getListFormCodeDropdown()
-        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
-    }
-
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(

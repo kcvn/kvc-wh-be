@@ -49,7 +49,7 @@ class CheckingHistoryService(
         val scanDate = LocalDate.now()
         requestList.forEach { request ->
             if (!request.reChecking) {
-                val data = checkingHistoryRepo.findByScanDateAndPOAndSeqNo(scanDate, request.poNumber, 1)
+                val data = checkingHistoryRepo.findByScanDateAndPOAndSeqNoAndFormCode(scanDate, request.poNumber, 1, request.formCode)
                 if (data == null) {
                     val domain = CheckingHistory(
                         poNumber = request.poNumber,
@@ -61,10 +61,10 @@ class CheckingHistoryService(
                     checkingHistoryRepo.save(domain)
                 } else {
                     val newScanQty = data.scanQty?.plus(request.scanQty)
-                    checkingHistoryRepo.update(newScanQty!!, scanDate, data.poNumber!!, 1)
+                    checkingHistoryRepo.update(newScanQty!!, scanDate, data.poNumber!!, 1, data.formCode!!)
                 }
             } else {
-                val data = checkingHistoryRepo.findLatestByScanDateAndPO(scanDate, request.poNumber)
+                val data = checkingHistoryRepo.findLatestByScanDateAndPOAndFormCode(scanDate, request.poNumber, request.formCode)
                     ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.checkingHistory"), "scanDate = ${scanDate}, poNumber = ${request.poNumber}")
                 val seqNo = data.seqNo?.plus(1)
                 val domain = CheckingHistory(

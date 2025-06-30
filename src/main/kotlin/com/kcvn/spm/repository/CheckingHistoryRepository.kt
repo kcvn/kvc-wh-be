@@ -44,22 +44,24 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
         return Pair(data, count)
     }
 
-    fun findByScanDateAndPOAndSeqNo(scanDate: LocalDate, poNumber: String, seqNo: Int): CheckingHistory? {
+    fun findByScanDateAndPOAndSeqNoAndFormCode(scanDate: LocalDate, poNumber: String, seqNo: Int, formCode: String): CheckingHistory? {
         return context.selectFrom(CHECKING_HISTORY)
             .where(
                 CHECKING_HISTORY.SCAN_DATE.eq(scanDate)
                     .and(CHECKING_HISTORY.PO_NUMBER.eq(poNumber))
                     .and(CHECKING_HISTORY.SEQ_NO.eq(seqNo))
+                    .and(CHECKING_HISTORY.FORM_CODE.eq(formCode))
             )
             .fetchInto(CheckingHistory::class.java)
             .firstOrNull()
     }
 
-    fun findLatestByScanDateAndPO(scanDate: LocalDate, poNumber: String): CheckingHistory? {
+    fun findLatestByScanDateAndPOAndFormCode(scanDate: LocalDate, poNumber: String, formCode: String): CheckingHistory? {
         return context.selectFrom(CHECKING_HISTORY)
             .where(
                 CHECKING_HISTORY.SCAN_DATE.eq(scanDate)
                     .and(CHECKING_HISTORY.PO_NUMBER.eq(poNumber))
+                    .and(CHECKING_HISTORY.FORM_CODE.eq(formCode))
             )
             .orderBy(CHECKING_HISTORY.SEQ_NO.sort(SortOrder.DESC))
             .fetchInto(CheckingHistory::class.java)
@@ -78,7 +80,7 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
             .execute()
     }
 
-    fun update(scanQty: BigDecimal, scanDate: LocalDate, poNumber: String, seqNo: Int) {
+    fun update(scanQty: BigDecimal, scanDate: LocalDate, poNumber: String, seqNo: Int, formCode: String) {
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
 
@@ -90,6 +92,7 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
                     CHECKING_HISTORY.SCAN_DATE.eq(scanDate)
                         .and(CHECKING_HISTORY.PO_NUMBER.eq(poNumber))
                         .and(CHECKING_HISTORY.SEQ_NO.eq(seqNo))
+                        .and(CHECKING_HISTORY.FORM_CODE.eq(formCode))
                 )
                 .execute()
         }

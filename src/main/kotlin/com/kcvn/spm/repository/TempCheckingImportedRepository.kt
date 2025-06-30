@@ -28,14 +28,14 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
         val offset = OffsetDateTime.now().offset
         val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(2), LocalTime.MIDNIGHT, offset)
         val tomorrow = OffsetDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT, offset)
-        return context.selectDistinct(TEMP_CHECKING_IMPORTED.FORM_CODE)
+        return context.selectDistinct(TEMP_CHECKING_IMPORTED.FORM_CODE, TEMP_CHECKING_IMPORTED.CREATED_DATE)
             .from(TEMP_CHECKING_IMPORTED)
             .where(
                 TEMP_CHECKING_IMPORTED.FORM_CODE.isNotNull
                     .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
                     .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.lt(tomorrow))
             )
-            .orderBy(TEMP_CHECKING_IMPORTED.FORM_CODE.desc())
+            .orderBy(TEMP_CHECKING_IMPORTED.CREATED_DATE.desc())
             .fetch(TEMP_CHECKING_IMPORTED.FORM_CODE)
             .filterNotNull()
     }

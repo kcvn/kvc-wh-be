@@ -33,9 +33,10 @@ class TempCheckingImportedController(private val tempCheckingImportedService: Te
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun importExcelChecking(
+        @RequestParam("formCode") formCode: String,
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<Int>> {
-        val data = tempCheckingImportedService.importChecking(file)
+        val data = tempCheckingImportedService.importChecking(formCode, file)
         return ResponseEntity(data, HttpStatus.OK)
     }
 

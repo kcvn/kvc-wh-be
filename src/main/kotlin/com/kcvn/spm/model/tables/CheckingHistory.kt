@@ -117,7 +117,7 @@ open class CheckingHistory(
     /**
      * The column <code>public.checking_history.form_code</code>.
      */
-    val FORM_CODE: TableField<CheckingHistoryRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(12), this, "")
+    val FORM_CODE: TableField<CheckingHistoryRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(200), this, "")
 
     private constructor(alias: Name, aliased: Table<CheckingHistoryRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<CheckingHistoryRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

@@ -101,7 +101,7 @@ open class TempCheckingImported(
     /**
      * The column <code>public.temp_checking_imported.form_code</code>.
      */
-    val FORM_CODE: TableField<TempCheckingImportedRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(12), this, "")
+    val FORM_CODE: TableField<TempCheckingImportedRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(200), this, "")
 
     private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

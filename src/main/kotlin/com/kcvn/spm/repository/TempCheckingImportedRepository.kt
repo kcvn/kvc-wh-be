@@ -12,10 +12,18 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
 
 @Repository
 class TempCheckingImportedRepository(private val context: DSLContext) : SortingRepository() {
+    fun findByFormCode(formCode: String): TempCheckingImported? {
+        return context.selectFrom(TEMP_CHECKING_IMPORTED)
+            .where(
+                TEMP_CHECKING_IMPORTED.FORM_CODE.eq(formCode)
+            )
+            .fetchInto(TempCheckingImported::class.java)
+            .firstOrNull()
+    }
+
     fun getListFormCode(): List<String> {
         val offset = OffsetDateTime.now().offset
         val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(2), LocalTime.MIDNIGHT, offset)
@@ -41,15 +49,6 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
             .fetchInto(TempCheckingImported::class.java)
 
         return Pair(data, count)
-    }
-
-    fun findLatestImport(): TempCheckingImported? {
-        val todayPrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "%"
-        return context.selectFrom(TEMP_CHECKING_IMPORTED)
-            .where(TEMP_CHECKING_IMPORTED.FORM_CODE.like(todayPrefix))
-            .orderBy(TEMP_CHECKING_IMPORTED.FORM_CODE.desc())
-            .fetchInto(TempCheckingImported::class.java)
-            .firstOrNull()
     }
 
     fun saveAll(dataList: List<TempCheckingImported>): Int {

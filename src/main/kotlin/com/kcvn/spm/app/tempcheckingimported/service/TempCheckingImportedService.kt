@@ -19,8 +19,6 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -54,21 +52,13 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
         )
     }
 
-    private fun getFormCode(): String {
-        val datePrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-        val latestSuffix = tempCheckingImportedRepo.findLatestImport()
-            ?.formCode
-            ?.substringAfter("-")
-            ?.let { suffix ->
-                (suffix.toIntOrNull()?.plus(1))
-                    ?.toString()
-                    ?.padStart(suffix.length, '0')
-            }
+    fun importChecking(formCode: String, file: MultipartFile): BaseResponse<Int> {
+        // validate formCode
+        val entity = tempCheckingImportedRepo.findByFormCode(formCode)
+        if (entity != null) {
+            throw BusinessException(CommonUtils.getMessage("form.code.error.nameTaken"))
+        }
 
-        return "$datePrefix-${latestSuffix ?: "01"}"
-    }
-
-    fun importChecking(file: MultipartFile): BaseResponse<Int> {
         val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/TempCheckingImportedTemplate.xlsx"
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
@@ -80,7 +70,6 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
             if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
             val dataList = mutableListOf<TempCheckingImported>()
-            val formCode = getFormCode()
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
                 val data = TempCheckingImported(

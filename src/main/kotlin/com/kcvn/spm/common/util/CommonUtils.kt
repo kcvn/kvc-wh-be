@@ -45,13 +45,34 @@ class CommonUtils {
         fun getMessage(code: String): String =
             getMessageResource().getMessage(code, null, LocaleContextHolder.getLocale())
 
+//        fun parseDateSendings(dateStr: String?): LocalDate? {
+//            return try {
+//                if (!dateStr.isNullOrBlank()) {
+//                    LocalDate.parse(dateStr.trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+//                } else {
+//                    null
+//                }
+//            } catch (e: DateTimeParseException) {
+//                throw e
+//            }
+//        }
+
         fun parseDateSending(dateStr: String?): LocalDate? {
+            if (dateStr.isNullOrBlank()) return null
+
+            val trimmed = dateStr.trim()
+
             return try {
-                if (!dateStr.isNullOrBlank()) {
-                    LocalDate.parse(dateStr.trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                } else {
-                    null
+                val pattern = when {
+                    Regex("^\\d{4}/\\d{2}/\\d{2}$").matches(trimmed) -> "yyyy/MM/dd"
+
+                    Regex("^\\d{2}/\\d{2}/\\d{4}$").matches(trimmed) -> "dd/MM/yyyy"
+
+                    else -> throw DateTimeParseException("Unrecognized date format", trimmed, 0)
                 }
+
+                LocalDate.parse(trimmed, DateTimeFormatter.ofPattern(pattern))
+
             } catch (e: DateTimeParseException) {
                 throw e
             }

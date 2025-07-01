@@ -24,11 +24,12 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
     fun getList(request: CheckingHistorySearchRequest, pageable: Pageable) : Pair<List<CheckingHistory>, Int> {
         var condition: Condition = DSL.noCondition()
         val scanDate = CHECKING_HISTORY.field("scan_date", java.time.OffsetDateTime::class.java)
+
         if (!request.poNumber.isNullOrEmpty()) {
-            condition = condition.and(CHECKING_HISTORY.PO_NUMBER.eq(request.poNumber))
+            condition = condition.and(CHECKING_HISTORY.PO_NUMBER.likeIgnoreCase("%${request.poNumber}%"))
         }
         if (!request.formCode.isNullOrEmpty()) {
-            condition = condition.and(CHECKING_HISTORY.FORM_CODE.eq(request.formCode))
+            condition = condition.and(CHECKING_HISTORY.FORM_CODE.likeIgnoreCase("%${request.formCode}%"))
         }
         if (request.fromDate != null && request.toDate != null) {
             condition = condition.and(scanDate?.between(request.fromDate, request.toDate))
@@ -36,7 +37,7 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
         val query = context.selectFrom(CHECKING_HISTORY).where(condition)
         val count = query.count()
         val data = query
-            .orderBy(getSortFields(pageable.sort, CHECKING_HISTORY.CREATED_DATE))
+            .orderBy(CHECKING_HISTORY.UPDATED_DATE.sort(SortOrder.DESC))
             .limit(pageable.pageSize)
             .offset(pageable.offset)
             .fetchInto(CheckingHistory::class.java)
@@ -71,11 +72,13 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
     fun save(data: CheckingHistory) {
         context.insertInto(
             CHECKING_HISTORY, CHECKING_HISTORY.PO_NUMBER, CHECKING_HISTORY.IMPORT_QTY,
-            CHECKING_HISTORY.SCAN_QTY, CHECKING_HISTORY.SEQ_NO, CHECKING_HISTORY.FORM_CODE, SENDING_TRANSACTIONS.CREATED_BY
+            CHECKING_HISTORY.SCAN_QTY, CHECKING_HISTORY.SEQ_NO, CHECKING_HISTORY.FORM_CODE, SENDING_TRANSACTIONS.CREATED_BY,
+            CHECKING_HISTORY.UPDATED_DATE, CHECKING_HISTORY.UPDATED_BY
         )
             .values(
                 data.poNumber, data.importQty,
-                data.scanQty, data.seqNo, data.formCode, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                data.scanQty, data.seqNo, data.formCode, CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                OffsetDateTime.now(ZoneOffset.UTC), CommonUtils.loggedInUser() ?: Constants.SYSTEM,
             )
             .execute()
     }

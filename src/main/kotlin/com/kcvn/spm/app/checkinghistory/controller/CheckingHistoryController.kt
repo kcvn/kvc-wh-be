@@ -28,7 +28,7 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         request: CheckingHistorySearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
-            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
+            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {

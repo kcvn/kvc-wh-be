@@ -20,8 +20,12 @@ class SplittingService(
         val packageInvalidList = mutableListOf<String>()
         request.forEach {
             val checkingList = checkingRepo.getByPackageCode(it.packageCode!!)
+            val splittingData = splittingRepo.findByPackage(it.packageCode!!)
             if (checkingList.isEmpty()) {
                 packageInvalidList.add(it.packageCode!!)
+                return@forEach
+            }
+            if (splittingData != null) {
                 return@forEach
             }
             val data = Splitting(

@@ -14,6 +14,15 @@ import java.time.ZoneOffset
 
 @Repository
 class SplittingRepository(private val context: DSLContext) : SortingRepository() {
+    fun findByPackage(packageCode: String): Splitting? {
+        return context.selectFrom(SPLITTING)
+            .where(
+                SPLITTING.PACKAGE_CODE.eq(packageCode)
+            )
+            .fetchInto(Splitting::class.java)
+            .firstOrNull()
+    }
+
     fun findByLocationAndPackage(locationCode: String, packageCode: String): Splitting? {
         return context.selectFrom(SPLITTING)
             .where(

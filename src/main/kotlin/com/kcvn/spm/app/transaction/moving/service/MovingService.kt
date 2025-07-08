@@ -7,6 +7,7 @@ import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.Moving
+import com.kcvn.spm.repository.BacklogWhRepository
 import com.kcvn.spm.repository.MovingRepository
 import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.stereotype.Service
@@ -20,13 +21,16 @@ import java.time.ZoneOffset
 class MovingService(
     private val movingRepo: MovingRepository,
     private val backlogWhService: BacklogWhService,
-    private val splittingRepo: SplittingRepository
+    private val splittingRepo: SplittingRepository,
+    private val backlogWhRepo: BacklogWhRepository
 ) {
     fun saveMoving(request: List<MovingRequest>) {
         val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         val list = createMovingRequestWithSeq(request, todayUtc)
+
         list.forEach {
             // get receivingDate from source
+            val sourceBacklog = backlogWhRepo.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
             val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
                 ?: throw BusinessExceptionDetail(
                     CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
@@ -57,7 +61,9 @@ class MovingService(
                 it.poNumber,
                 if (it.destPackageCode?.isNotEmpty() == true) it.destPackageCode else it.sourcePackageCode,
                 it.qty,
-                it.boxQty
+                it.boxQty,
+                isEntried = false,
+                inspectionDate = sourceBacklog?.inspectionDate
             )
             backlogWhService.plusBacklog(backlogDestData, "IN")
             // minus backlog sourceLocation
@@ -68,7 +74,9 @@ class MovingService(
                 it.sourcePackageCode,
                 it.qty,
                 it.boxQty,
-                recDateSource
+                recDateSource,
+                isEntried = sourceBacklog?.isEntried,
+                inspectionDate = sourceBacklog?.inspectionDate
             )
             backlogWhService.minusBacklog(backlogSourceData, "OUT")
         }

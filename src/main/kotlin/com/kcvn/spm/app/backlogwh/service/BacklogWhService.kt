@@ -217,7 +217,7 @@ class BacklogWhService(
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}")
         val receivingDate = splitting.receivingDate
         if (backlog == null) {
-            val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate)
+            val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, isEntried = data.isEntried, inspectionDate = data.inspectionDate)
             backlogWhRepo.save(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(
                 null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, null, transactionType
@@ -241,7 +241,7 @@ class BacklogWhService(
                 CommonUtils.getMessage("data.not.found.in.backlog"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"
             )
         val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, backlog.backlogQty?.minus(data.backlogQty!!),
-            backlog.boxQty?.minus(data.boxQty!!), data.receivingDate, data.inspectionDate
+            backlog.boxQty?.minus(data.boxQty!!), data.receivingDate, data.inspectionDate, isEntried = data.isEntried
         )
         backlogWhRepo.update(entityBacklog)
         // insert backlog history

@@ -58,7 +58,7 @@ class ReceivingTransactionsService(
             receivingRepo.save(recTransaction)
             // save backlog and backlog history
             val backlogData = BacklogWh(
-                null, it.locationCode, it.poNumber, it.packageCode, it.qty, 1, receivingDate
+                null, it.locationCode, it.poNumber, it.packageCode, it.qty, 1, receivingDate, isEntried = false
             )
             backlogWhService.plusBacklog(backlogData, "IN_ONLY")
         }

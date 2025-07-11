@@ -103,16 +103,17 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
 
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
-        condition = condition.and(BACKLOG_WH.INSPECTION_DATE.isNull).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
+        condition = condition.and(BACKLOG_WH.IS_ENTRIED.eq(false)).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
         val query = context.select(
             DSL.min(BACKLOG_WH.LOCATION_CODE.cast(SQLDataType.INTEGER)).`as`("MIN_LOCATION_CODE"),
             BACKLOG_WH.PO_NUMBER,
             BACKLOG_WH.RECEIVING_DATE,
-            DSL.sum(BACKLOG_WH.BACKLOG_QTY).`as`("SUM_BACKLOG_QTY")
+            DSL.sum(BACKLOG_WH.BACKLOG_QTY).`as`("SUM_BACKLOG_QTY"),
+            BACKLOG_WH.INSPECTION_DATE
         )
             .from(BACKLOG_WH)
             .where(condition)
-            .groupBy(BACKLOG_WH.PO_NUMBER, BACKLOG_WH.RECEIVING_DATE)
+            .groupBy(BACKLOG_WH.PO_NUMBER, BACKLOG_WH.RECEIVING_DATE, BACKLOG_WH.INSPECTION_DATE)
             .orderBy(BACKLOG_WH.RECEIVING_DATE.asc())
 
         val data = query.fetch { record ->
@@ -120,7 +121,8 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 locationCode = record.get("MIN_LOCATION_CODE", BigDecimal::class.java).toString(),
                 poNumber = record[BACKLOG_WH.PO_NUMBER],
                 receivingDate = record[BACKLOG_WH.RECEIVING_DATE],
-                backlogQty = record.get("SUM_BACKLOG_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO
+                backlogQty = record.get("SUM_BACKLOG_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO,
+                inspectionDate = record[BACKLOG_WH.INSPECTION_DATE],
             )
         }
         return Pair(data, data.size)
@@ -135,11 +137,11 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
     fun save(data: BacklogWh): Int? =
         context.insertInto(
             BACKLOG_WH, BACKLOG_WH.LOCATION_CODE, BACKLOG_WH.PO_NUMBER, BACKLOG_WH.PACKAGE_CODE, BACKLOG_WH.BACKLOG_QTY,
-            BACKLOG_WH.BOX_QTY, BACKLOG_WH.RECEIVING_DATE, BACKLOG_WH.CREATED_BY
+            BACKLOG_WH.BOX_QTY, BACKLOG_WH.RECEIVING_DATE, BACKLOG_WH.CREATED_BY, BACKLOG_WH.IS_ENTRIED, BACKLOG_WH.INSPECTION_DATE
         )
             .values(
                 data.locationCode, data.poNumber, data.packageCode, data.backlogQty,
-                data.boxQty, data.receivingDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                data.boxQty, data.receivingDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM, data.isEntried, data.inspectionDate
             )
             .execute()
 
@@ -171,6 +173,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 .set(BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
                 .set(BACKLOG_WH.BOX_QTY, data.boxQty)
                 .set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
+                .set(BACKLOG_WH.IS_ENTRIED, data.isEntried)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(
@@ -207,6 +210,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 .set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(BACKLOG_WH.IS_ENTRIED, data.isEntried)
                 .where(
                     BACKLOG_WH.PO_NUMBER.eq(data.poNumber)
                         .and(BACKLOG_WH.RECEIVING_DATE.eq(data.receivingDate))

@@ -6,5 +6,6 @@ data class ImportBacklogWh(
     var locationCode: String? = null,
     var poNumber: String? = null,
     var receivingDate: LocalDate? = null,
-    var inspectionDate: LocalDate? = null
+    var inspectionDate: LocalDate? = null,
+    var isEntried: Boolean? = false
 )

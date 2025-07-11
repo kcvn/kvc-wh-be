@@ -80,7 +80,8 @@ class BacklogWhService(
                     receivingDate = ExcelHelper.getCellValueDateAmoeba(row, 0),
                     poNumber = ExcelHelper.getCellValue(row, 1),
                     locationCode = ExcelHelper.getCellValue(row, 2),
-                    inspectionDate = ExcelHelper.getCellValueDateAmoeba(row, 4)
+                    inspectionDate = ExcelHelper.getCellValueDateAmoeba(row, 4),
+                    isEntried = true
                 )
 
                 val isSuccess = backlogWhRepo.updateInspectionDate(backlogWhData)
@@ -176,11 +177,13 @@ class BacklogWhService(
         for (item in listBacklog) {
             val row: Row = sheet.createRow(rowNumberFill++)
 
-            val formattedDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
-            ExcelHelper.setCellValue(row, 0, style, formattedDate)
+            val formattedReceivingDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
+            val formattedInspectionDate = item.inspectionDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
+            ExcelHelper.setCellValue(row, 0, style, formattedReceivingDate)
             ExcelHelper.setCellValue(row, 1, style, item.poNumber)
             ExcelHelper.setCellValue(row, 2, style, item.locationCode)
             ExcelHelper.setCellValueInt(row, 4, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 5, style, formattedInspectionDate)
         }
 
         for (i in 1 until rowNumberFill) {
@@ -217,7 +220,7 @@ class BacklogWhService(
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}")
         val receivingDate = splitting.receivingDate
         if (backlog == null) {
-            val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate)
+            val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, isEntried = data.isEntried, inspectionDate = data.inspectionDate)
             backlogWhRepo.save(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(
                 null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, null, transactionType
@@ -225,7 +228,7 @@ class BacklogWhService(
             backlogWhHistoryRepo.save(entityBacklogHistory)
         } else {
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!),
-                data.boxQty?.plus(backlog.boxQty!!)
+                data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried,
             )
             backlogWhRepo.update(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(
@@ -241,7 +244,7 @@ class BacklogWhService(
                 CommonUtils.getMessage("data.not.found.in.backlog"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"
             )
         val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, backlog.backlogQty?.minus(data.backlogQty!!),
-            backlog.boxQty?.minus(data.boxQty!!), data.receivingDate, data.inspectionDate
+            backlog.boxQty?.minus(data.boxQty!!), data.receivingDate, data.inspectionDate, isEntried = data.isEntried
         )
         backlogWhRepo.update(entityBacklog)
         // insert backlog history

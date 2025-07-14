@@ -4,6 +4,7 @@ import com.kcvn.spm.app.tempsendingimported.payload.response.TempSendingImported
 import com.kcvn.spm.app.tempsendingimported.service.TempSendingImportedService
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -20,12 +21,19 @@ class TempSendingImportedController(private val tempSendingImportedService: Temp
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @GetMapping("form-code-dropdown")
+    fun getListFormCodeDropdown(): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = tempSendingImportedService.getListFormCodeDropdown()
+        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
+    }
+
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun importTxtSending(
+        @RequestParam("formCode") formCode: String,
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<Int>> {
-        val data = tempSendingImportedService.importTxtSending(file)
+        val data = tempSendingImportedService.importTxtSending(formCode, file)
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

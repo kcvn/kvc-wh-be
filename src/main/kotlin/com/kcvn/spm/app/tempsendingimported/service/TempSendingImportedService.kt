@@ -16,10 +16,11 @@ import java.math.BigDecimal
 @Service
 @Transactional
 class TempSendingImportedService(private val tempSendingImportedRepo: TempSendingImportedRepository) {
-    fun getList(): BasePagingResponse<TempSendingImportedResponse> {
-        val data = tempSendingImportedRepo.getList()
+    fun getList(formCode: String): BasePagingResponse<TempSendingImportedResponse> {
+        val data = tempSendingImportedRepo.getList(formCode)
         val response = data.first.map {
             TempSendingImportedResponse(
+                formCode = it.formCode,
                 inspectionDate = it.inspectionDate,
                 locationCode = it.locationCode,
                 poNumber = it.poNumber,

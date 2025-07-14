@@ -14,17 +14,19 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 @RequestMapping("/api/temp-sending-imported")
 class TempSendingImportedController(private val tempSendingImportedService: TempSendingImportedService) {
-    @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
-    fun getList(): ResponseEntity<BasePagingResponse<TempSendingImportedResponse>> {
-        val result = tempSendingImportedService.getList()
-        return ResponseEntity(result, HttpStatus.OK)
-    }
-
     @GetMapping("form-code-dropdown")
     fun getListFormCodeDropdown(): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
         val data = tempSendingImportedService.getListFormCodeDropdown()
         return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-list")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getList(
+        @RequestParam(required = false) formCode: String
+    ): ResponseEntity<BasePagingResponse<TempSendingImportedResponse>> {
+        val result = tempSendingImportedService.getList(formCode)
+        return ResponseEntity(result, HttpStatus.OK)
     }
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])

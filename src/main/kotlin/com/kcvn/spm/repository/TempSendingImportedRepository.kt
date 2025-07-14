@@ -26,9 +26,9 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
             .firstOrNull()
     }
 
-    fun getList() : Pair<List<TempSendingImported>, Int> {
+    fun getList(formCode: String) : Pair<List<TempSendingImported>, Int> {
         val userName = CommonUtils.loggedInUser() ?: ""
-        val query = context.selectFrom(TEMP_SENDING_IMPORTED).where(TEMP_SENDING_IMPORTED.CREATED_BY.eq(userName))
+        val query = context.selectFrom(TEMP_SENDING_IMPORTED).where(TEMP_SENDING_IMPORTED.FORM_CODE.eq(formCode))
         val count = query.count()
         val data = query
             .orderBy(TEMP_SENDING_IMPORTED.CREATED_DATE.desc())

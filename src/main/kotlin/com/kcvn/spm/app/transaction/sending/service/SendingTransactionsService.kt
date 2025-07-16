@@ -1,9 +1,11 @@
 package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
+import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingInquiryResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -61,6 +63,14 @@ class SendingTransactionsService(
         return BasePagingResponse(
             data,
             moving.second
+        )
+    }
+
+    fun getTempSendingList(formCode: String, pageable: Pageable):BasePagingResponse<TempSendingInquiryResponse>{
+        val data = tempSendingRepo.getList(formCode, pageable)
+        return BasePagingResponse(
+            data.first,
+            data.second
         )
     }
 

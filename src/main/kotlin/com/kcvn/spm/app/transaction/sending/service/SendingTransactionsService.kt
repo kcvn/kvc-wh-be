@@ -15,8 +15,10 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
+import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.repository.SendingTransactionsRepository
 import com.kcvn.spm.repository.SplittingRepository
+import com.kcvn.spm.repository.TempSendingTransactionsRepository
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
@@ -39,6 +41,7 @@ import java.time.format.DateTimeFormatter
 @Transactional
 class SendingTransactionsService(
     private val sendingRepo: SendingTransactionsRepository,
+    private val tempSendingRepo: TempSendingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
     private val receivingService: ReceivingTransactionsService,
     private val splittingRepo: SplittingRepository
@@ -203,9 +206,24 @@ class SendingTransactionsService(
                 it.seqNo,
                 "OUT_ONLY",
                 receivingDate,
-                it.inspectionDate
+                it.inspectionDate,
+            )
+            val tempSendTran = TempSendingTransactions(
+                null,
+                it.formCode,
+                it.sourceLocationCode,
+                "KVC",
+                it.packageCode,
+                it.packageCode,
+                it.poNumber,
+                it.qty,
+                it.seqNo,
+                "OUT_ONLY",
+                receivingDate,
+                it.inspectionDate,
             )
             sendingRepo.saveSendingTrans(sendTran)
+            tempSendingRepo.saveTempSendingTrans(tempSendTran)
             // save backlog and backlog history
             val boxQty: Int = if (it.notMinusBoxQty == true) {
                 0
@@ -236,6 +254,7 @@ class SendingTransactionsService(
 
                 group.mapIndexed { index, sendTransRequest ->
                     SendTransRequestWithSeq(
+                        formCode = sendTransRequest.formCode,
                         inspectionDate = sendTransRequest.inspectionDate,
                         sourceLocationCode = sendTransRequest.locationCode,
                         packageCode = sendTransRequest.packageCode,

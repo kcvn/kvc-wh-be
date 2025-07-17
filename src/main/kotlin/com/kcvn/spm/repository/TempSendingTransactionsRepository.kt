@@ -25,22 +25,23 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
                         END AS status
                     FROM (
                         SELECT
-                            tst.form_code,
+                            a.form_code,
                             tsi.inspection_date,
                             tsi.location_code,
                             tsi.po_number,
                             tsi.qty AS request_qty,
-                            COALESCE(tst.qty, 0) AS actual_qty,
-                            tst.created_date
+                            COALESCE(a.qty, 0) AS actual_qty
                         FROM
                             temp_sending_imported tsi
-                        LEFT JOIN temp_sending_transactions tst 
-                            ON tsi.inspection_date = tst.inspection_date
-                            AND tsi.po_number = tst.po_number
-                            AND tsi.form_code = tst.form_code
+                        LEFT JOIN 
+                        	(SELECT po_number, inspection_date, form_code, sum(qty) AS qty  FROM 
+                        temp_sending_transactions tst GROUP BY po_number, inspection_date, form_code) a
+                            ON tsi.inspection_date = a.inspection_date
+                            AND tsi.po_number = a.po_number
+                            AND tsi.form_code = a.form_code
                     ) final_data
                     WHERE form_code like ?
-                    ORDER BY status, created_date desc
+                    ORDER BY status
             """.trimIndent()
 
                 val result = context
@@ -77,6 +78,17 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
             )
             .execute()
     }
+
+    fun deleteSendingTrans(formCode: String?, poNumber: String?, inspectionDate: LocalDate?) {
+        context.deleteFrom(TEMP_SENDING_TRANSACTIONS)
+            .where(
+                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode)
+                    .and(TEMP_SENDING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
+                    .and(TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE.eq(inspectionDate))
+            )
+            .execute()
+    }
+
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()

@@ -27,6 +27,7 @@ import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
 import com.kcvn.spm.model.tables.TempSendingImported
+import com.kcvn.spm.model.tables.TempSendingTransactions
 import com.kcvn.spm.model.tables.WestFactoryLayout
 import com.kcvn.spm.model.tables.records.AmoebaRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
@@ -51,6 +52,7 @@ import com.kcvn.spm.model.tables.records.StockTakingRecord
 import com.kcvn.spm.model.tables.records.StockTakingStatusRecord
 import com.kcvn.spm.model.tables.records.TempCheckingImportedRecord
 import com.kcvn.spm.model.tables.records.TempSendingImportedRecord
+import com.kcvn.spm.model.tables.records.TempSendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.WestFactoryLayoutRecord
 
 import org.jooq.ForeignKey
@@ -87,6 +89,7 @@ val STOCK_TAKING_PKEY: UniqueKey<StockTakingRecord> = Internal.createUniqueKey(S
 val STOCK_TAKING_STATUS_PKEY: UniqueKey<StockTakingStatusRecord> = Internal.createUniqueKey(StockTakingStatus.STOCK_TAKING_STATUS, DSL.name("stock_taking_status_pkey"), arrayOf(StockTakingStatus.STOCK_TAKING_STATUS.ID), true)
 val TEMP_CHECKING_IMPORTED_DATE_PKEY: UniqueKey<TempCheckingImportedRecord> = Internal.createUniqueKey(TempCheckingImported.TEMP_CHECKING_IMPORTED, DSL.name("temp_checking_imported_date_pkey"), arrayOf(TempCheckingImported.TEMP_CHECKING_IMPORTED.ID), true)
 val TEMP_SENDING_IMPORTED_PKEY_1: UniqueKey<TempSendingImportedRecord> = Internal.createUniqueKey(TempSendingImported.TEMP_SENDING_IMPORTED, DSL.name("temp_sending_imported_pkey_1"), arrayOf(TempSendingImported.TEMP_SENDING_IMPORTED.ID), true)
+val TEMP_SENDING_TRANSACTIONS_PKEY: UniqueKey<TempSendingTransactionsRecord> = Internal.createUniqueKey(TempSendingTransactions.TEMP_SENDING_TRANSACTIONS, DSL.name("temp_sending_transactions_pkey"), arrayOf(TempSendingTransactions.TEMP_SENDING_TRANSACTIONS.ID), true)
 val WEST_FACTORY_LAYOUT_PKEY: UniqueKey<WestFactoryLayoutRecord> = Internal.createUniqueKey(WestFactoryLayout.WEST_FACTORY_LAYOUT, DSL.name("west_factory_layout_pkey"), arrayOf(WestFactoryLayout.WEST_FACTORY_LAYOUT.ID), true)
 
 // -------------------------------------------------------------------------

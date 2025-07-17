@@ -4,6 +4,7 @@ import com.kcvn.spm.app.tempsendingimported.payload.response.TempSendingImported
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TempSendingImported
 import com.kcvn.spm.repository.TempSendingImportedRepository
@@ -15,10 +16,11 @@ import java.math.BigDecimal
 @Service
 @Transactional
 class TempSendingImportedService(private val tempSendingImportedRepo: TempSendingImportedRepository) {
-    fun getList(): BasePagingResponse<TempSendingImportedResponse> {
-        val data = tempSendingImportedRepo.getList()
+    fun getList(formCode: String): BasePagingResponse<TempSendingImportedResponse> {
+        val data = tempSendingImportedRepo.getList(formCode)
         val response = data.first.map {
             TempSendingImportedResponse(
+                formCode = it.formCode,
                 inspectionDate = it.inspectionDate,
                 locationCode = it.locationCode,
                 poNumber = it.poNumber,
@@ -31,7 +33,26 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
         )
     }
 
-    fun importTxtSending(file: MultipartFile): BaseResponse<Int> {
+    fun getListFormCodeDropdown(): BaseResponse<List<DropdownResponse>> {
+        val listFormCode = tempSendingImportedRepo.getListFormCode()
+
+        // Map DropDownResponse
+        val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->
+            DropdownResponse(
+                formCode,
+                formCode
+            )
+        }
+
+        return BaseResponse(data = dropDownList)
+    }
+
+    fun importTxtSending(formCode: String, file: MultipartFile): BaseResponse<Int> {
+        val entity = tempSendingImportedRepo.findByFormCode(formCode)
+        if (entity != null) {
+            throw BusinessException(CommonUtils.getMessage("form.code.error.nameTaken"))
+        }
+
         val dataList = mutableListOf<TempSendingImported>()
         try {
             if (!file.originalFilename.orEmpty().lowercase().endsWith(".txt")) {
@@ -54,12 +75,13 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
                     inspectionDate = CommonUtils.parseDateSending(columns[29]),
                     locationCode = columns[20].trim(),
                     poNumber = columns[33].trim(),
-                    qty = columns[21].trim().toBigDecimalOrNull() ?: BigDecimal.ZERO
+                    qty = columns[21].trim().toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    formCode = formCode
                 )
                 dataList.add(data)
             }
             // delete record of user import before
-            tempSendingImportedRepo.delete(CommonUtils.loggedInUser() ?: "")
+            //tempSendingImportedRepo.delete(CommonUtils.loggedInUser() ?: "")
             // save temp sending imported date
             val totalRecord = tempSendingImportedRepo.saveAll(dataList)
 

@@ -1,9 +1,12 @@
 package com.kcvn.spm.app.transaction.sending.controller
 
+import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingInquiryResponse
 import com.kcvn.spm.app.transaction.sending.service.SendingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -61,6 +64,20 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
                 HttpStatus.CREATED
             )
         }
+    }
+
+    @GetMapping("/get-temp-sending-list")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getList(
+        formCode: String,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+//        @SortDefault.SortDefaults(
+//            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
+//        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<TempSendingInquiryResponse>> {
+        val result = sendingService.getTempSendingList(formCode, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
     }
 
     @GetMapping("/export-excel")

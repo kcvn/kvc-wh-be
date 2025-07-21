@@ -256,7 +256,8 @@ class SendingTransactionsService(
                 it.qty,
                 boxQty,
                 receivingDate,
-                it.inspectionDate
+                it.inspectionDate,
+                isEntried = true
             )
             backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
         }

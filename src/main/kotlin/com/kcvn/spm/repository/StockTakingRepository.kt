@@ -88,71 +88,102 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
 
     fun createSqlQuery(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
         val sql = """
-    select * from (select
-	st.po_number,
-	st.package_code,
-    bw.location_code as system_location_code,
-    bw.backlog_qty as system_qty,
-    bw.box_qty as system_box_qty,
-    st.actual_location_code,
-    st.actual_qty,
-    st.actual_box_qty,
-    st.year_number,
-    st.month_number,
-    CASE 
-      WHEN st.actual_location_code IS NOT DISTINCT FROM bw.location_code THEN 'SAME'
-      ELSE 'DIFFERENT'
-    END AS result_location_code,
-    
-    CASE 
-      WHEN st.actual_qty IS NOT DISTINCT FROM bw.backlog_qty THEN 'SAME'
-      ELSE 'DIFFERENT'
-    END AS result_qty,
-    
-    CASE 
-      WHEN st.actual_box_qty IS NOT DISTINCT FROM bw.box_qty THEN 'SAME'
-      ELSE 'DIFFERENT'
-    END AS result_box_qty
-    from
-        stock_taking st
-    full outer join (select * from backlog_wh bw where backlog_qty > 0) bw on
-        st.package_code = bw.package_code
-) as final_data 
-""".trimIndent()
+        SELECT * FROM (
+            SELECT 
+                COALESCE(stock_data.po_number, bw.po_number) AS po_number,
+                COALESCE(stock_data.package_code, bw.package_code) AS package_code,
+                bw.location_code AS system_location_code,
+                bw.backlog_qty AS system_qty,
+                bw.box_qty AS system_box_qty,
+                stock_data.actual_location_code,
+                stock_data.actual_qty,
+                stock_data.actual_box_qty,
+                stock_data.year_number,
+                stock_data.month_number,
+                CASE 
+                    WHEN stock_data.actual_location_code = bw.location_code THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_location_code,
+                CASE 
+                    WHEN stock_data.actual_qty = bw.backlog_qty THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_qty,
+                CASE 
+                    WHEN stock_data.actual_box_qty = bw.box_qty THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_box_qty
+            FROM (
+                SELECT
+                    st.po_number,
+                    st.package_code,
+                    st.actual_location_code,
+                    st.actual_qty,
+                    st.actual_box_qty,
+                    st.year_number,
+                    st.month_number
+                FROM stock_taking st
+                WHERE 1 = 1 
+    """.trimIndent()
 
-        val sqlBuilder = StringBuilder()
         val params = mutableListOf<Any>()
-        sqlBuilder.appendLine(sql)
+        val stockTakingWhere = mutableListOf<String>()
 
-        val whereConditions = mutableListOf<String>()
-        if (!request.poNumber.isNullOrBlank()) {
-            whereConditions.add("final_data.po_number = ?")
-            params.add(request.poNumber!!)
-        }
-        if (request.yearNumber != null && request.monthNumber != null) {
-            whereConditions.add("final_data.year_number = ? and final_data.month_number = ?")
+        if (request.yearNumber != null) {
+            stockTakingWhere.add("st.year_number = ?")
             params.add(request.yearNumber!!)
+        }
+
+        if (request.monthNumber != null) {
+            stockTakingWhere.add("st.month_number = ?")
             params.add(request.monthNumber!!)
         }
+
+        val sqlBuilder = StringBuilder(sql)
+
+        if (stockTakingWhere.isNotEmpty()) {
+            sqlBuilder.appendLine("AND ${stockTakingWhere.joinToString(" AND ")}")
+        }
+
+        sqlBuilder.appendLine("""
+            ) stock_data
+            FULL OUTER JOIN (
+                SELECT * FROM backlog_wh bw WHERE bw.backlog_qty > 0
+            ) bw ON stock_data.package_code = bw.package_code
+        ) final_data
+    """.trimIndent())
+
+        val finalWhere = mutableListOf<String>()
+
+        if (!request.poNumber.isNullOrBlank()) {
+            finalWhere.add("final_data.po_number = ?")
+            params.add(request.poNumber!!)
+        }
+
         if (request.conditionQuery == "DIFFERENT") {
-            whereConditions.add(
-                "(final_data.result_location_code = 'DIFFERENT'\n" +
-                        "or final_data.result_qty = 'DIFFERENT' or final_data.result_box_qty = 'DIFFERENT')"
+            finalWhere.add("""
+            (
+                final_data.result_location_code = 'DIFFERENT' OR 
+                final_data.result_qty = 'DIFFERENT' OR 
+                final_data.result_box_qty = 'DIFFERENT'
             )
+        """.trimIndent())
         }
+
         if (request.conditionQuery == "SAME") {
-            whereConditions.add(
-                "final_data.result_location_code = 'SAME'\n" +
-                        "and final_data.result_qty = 'SAME' and final_data.result_box_qty = 'SAME'"
-            )
+            finalWhere.add("""
+            final_data.result_location_code = 'SAME' AND 
+            final_data.result_qty = 'SAME' AND 
+            final_data.result_box_qty = 'SAME'
+        """.trimIndent())
         }
-        if (whereConditions.isNotEmpty()) {
-            sqlBuilder.appendLine("WHERE")
-            sqlBuilder.appendLine(whereConditions.joinToString("\nAND "))
+
+        if (finalWhere.isNotEmpty()) {
+            sqlBuilder.appendLine("WHERE ${finalWhere.joinToString(" AND ")}")
         }
 
         return sqlBuilder.toString() to params
     }
+
 
     fun getListForAndroid(yearNumber: Int, monthNumber: Int, pageable: Pageable): Pair<List<StockTaking>, Int> {
         val query = context.selectFrom(STOCK_TAKING)

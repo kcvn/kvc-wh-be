@@ -88,36 +88,36 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
 
     fun createSqlQuery(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
         val sql = """
-    SELECT * FROM (
-SELECT
-    st.po_number,
-    st.package_code,
-    st.system_location_code,
-    st.system_qty,
-    st.system_box_qty,
+    select * from (select
+	st.po_number,
+	st.package_code,
+    bw.location_code as system_location_code,
+    bw.backlog_qty as system_qty,
+    bw.box_qty as system_box_qty,
     st.actual_location_code,
     st.actual_qty,
     st.actual_box_qty,
     st.year_number,
     st.month_number,
-    
     CASE 
-      WHEN st.actual_location_code = st.system_location_code THEN 'SAME'
+      WHEN st.actual_location_code IS NOT DISTINCT FROM bw.location_code THEN 'SAME'
       ELSE 'DIFFERENT'
     END AS result_location_code,
     
     CASE 
-      WHEN st.actual_qty = st.system_qty THEN 'SAME'
+      WHEN st.actual_qty IS NOT DISTINCT FROM bw.backlog_qty THEN 'SAME'
       ELSE 'DIFFERENT'
     END AS result_qty,
     
     CASE 
-      WHEN st.actual_box_qty = st.system_box_qty THEN 'SAME'
+      WHEN st.actual_box_qty IS NOT DISTINCT FROM bw.box_qty THEN 'SAME'
       ELSE 'DIFFERENT'
     END AS result_box_qty
-
-  FROM public.stock_taking st
-) as final_data
+    from
+        stock_taking st
+    full outer join (select * from backlog_wh bw where backlog_qty > 0) bw on
+        st.package_code = bw.package_code
+) as final_data 
 """.trimIndent()
 
         val sqlBuilder = StringBuilder()

@@ -18,52 +18,33 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
     fun getList(formCode: String, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingInquiryResponse>, Int> {
         val sql = """
                     SELECT
-                        tsi.form_code,
-                        tsi.inspection_date,
-                        tsi.location_code,
-                        tsi.po_number,
-                        tsi.qty AS request_qty,
+                        COALESCE (tsi.form_code, tst_summary.form_code) AS form_code,
+                        COALESCE (tsi.inspection_date, tst_summary.inspection_date) as inspection_date,
+                        COALESCE (tsi.location_code, tst_summary.location_code) AS location_code,
+                        COALESCE (tsi.po_number, tst_summary.po_number) AS po_number,
+                        COALESCE (tsi.qty,0) AS request_qty,
                         COALESCE(tst_summary.qty, 0) AS actual_qty,
                         CASE
-                            WHEN tsi.qty = COALESCE(tst_summary.qty, 0) THEN 'SAME'
+                            WHEN COALESCE (tsi.qty,0) = COALESCE(tst_summary.qty, 0) THEN 'SAME'
                             ELSE 'DIFFERENT'
                         END AS status
                     FROM temp_sending_imported tsi
-                    JOIN (
-                        SELECT form_code, po_number, inspection_date, SUM(qty) AS qty
+                    FULL OUTER JOIN (
+                        SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty
                         FROM temp_sending_transactions
-                        GROUP BY form_code, po_number, inspection_date
+                        WHERE form_code = ?
+                        GROUP BY form_code, po_number, inspection_date, source_location_code
+                        
                     ) tst_summary
                         ON tsi.form_code = tst_summary.form_code
                         AND tsi.po_number = tst_summary.po_number
                         AND tsi.inspection_date = tst_summary.inspection_date
-                    
-                    WHERE tsi.form_code = ?
-                    
-                    UNION ALL
-                    
-                    SELECT
-                        tsi.form_code,
-                        tsi.inspection_date,
-                        tsi.location_code,
-                        tsi.po_number,
-                        tsi.qty AS request_qty,
-                        0 AS actual_qty,
-                        'DIFFERENT' AS status
-                    FROM temp_sending_imported tsi
-                    WHERE tsi.form_code = ?
-                      AND NOT EXISTS (
-                          SELECT 1
-                          FROM temp_sending_transactions tst
-                          WHERE tst.form_code = tsi.form_code
-                            AND tst.po_number = tsi.po_number
-                            AND tst.inspection_date = tsi.inspection_date
-                      )
-                    ORDER BY status
+                        AND tsi.location_code = tst_summary.location_code
+                        WHERE (tsi.form_code = ? OR tst_summary.form_code = ?)
             """.trimIndent()
 
                 val result = context
-                    .resultQuery(sql, formCode, formCode)
+                    .resultQuery(sql, formCode, formCode, formCode)
                     .fetch()
                     .map {
                         TempSendingInquiryResponse(

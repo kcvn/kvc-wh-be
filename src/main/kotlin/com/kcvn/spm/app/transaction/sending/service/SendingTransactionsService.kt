@@ -263,6 +263,37 @@ class SendingTransactionsService(
         }
     }
 
+    fun saveSendCheckingTrans(request: List<SendingRequest>) {
+        val removeList = request
+            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
+            .distinct()
+        removeList.forEach { (formCode, poNumber, inspectionDate) ->
+            tempSendingRepo.deleteSendingTrans(formCode, poNumber, inspectionDate)
+        }
+        val list = createSendTransRequestWithSeq(request)
+
+        list.forEach {
+            // get receivingDate
+            val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.packageCode!!, it.poNumber!!)
+            val receivingDate = backlog?.receivingDate
+            val tempSendTran = TempSendingTransactions(
+                null,
+                it.formCode,
+                it.sourceLocationCode,
+                "KVC",
+                it.packageCode,
+                it.packageCode,
+                it.poNumber,
+                it.qty,
+                it.seqNo,
+                "OUT_ONLY",
+                receivingDate,
+                it.inspectionDate,
+            )
+            tempSendingRepo.saveTempSendingTrans(tempSendTran)
+        }
+    }
+
     fun createSendTransRequestWithSeq(requests: List<SendingRequest>): List<SendTransRequestWithSeq> {
         val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         return requests

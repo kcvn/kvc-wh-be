@@ -10,6 +10,7 @@ data class TempSendingInquiryResponse(
     var poNumber: String? = null,
     var requestQty: BigDecimal? = BigDecimal.ZERO,
     var actualQty: BigDecimal? = BigDecimal.ZERO,
+    var doubleCheckQty: BigDecimal? = BigDecimal.ZERO,
     var result: String? = null,
     val createdDate: LocalDate? = null
 )

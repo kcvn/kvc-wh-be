@@ -26,6 +26,7 @@ import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
+import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.TempSendingImported
 import com.kcvn.spm.model.tables.TempSendingTransactions
 import com.kcvn.spm.model.tables.WestFactoryLayout
@@ -161,6 +162,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val TEMP_CHECKING_IMPORTED: TempCheckingImported get() = TempCheckingImported.TEMP_CHECKING_IMPORTED
 
     /**
+     * The table <code>public.temp_sending_checking_transactions</code>.
+     */
+    val TEMP_SENDING_CHECKING_TRANSACTIONS: TempSendingCheckingTransactions get() = TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS
+
+    /**
      * The table <code>public.temp_sending_imported</code>.
      */
     val TEMP_SENDING_IMPORTED: TempSendingImported get() = TempSendingImported.TEMP_SENDING_IMPORTED
@@ -200,6 +206,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         StockTaking.STOCK_TAKING,
         StockTakingStatus.STOCK_TAKING_STATUS,
         TempCheckingImported.TEMP_CHECKING_IMPORTED,
+        TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS,
         TempSendingImported.TEMP_SENDING_IMPORTED,
         TempSendingTransactions.TEMP_SENDING_TRANSACTIONS,
         WestFactoryLayout.WEST_FACTORY_LAYOUT

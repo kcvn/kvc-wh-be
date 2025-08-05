@@ -5,7 +5,7 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
-import com.kcvn.spm.model.keys.STOCK_TAKING_PKEY
+import com.kcvn.spm.model.keys.STOCK_TAKING_PKEY_1
 import com.kcvn.spm.model.tables.records.StockTakingRecord
 
 import java.math.BigDecimal
@@ -158,7 +158,7 @@ open class StockTaking(
 
     constructor(child: Table<out Record>, key: ForeignKey<out Record, StockTakingRecord>): this(Internal.createPathAlias(child, key), child, key, STOCK_TAKING, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getPrimaryKey(): UniqueKey<StockTakingRecord> = STOCK_TAKING_PKEY
+    override fun getPrimaryKey(): UniqueKey<StockTakingRecord> = STOCK_TAKING_PKEY_1
     override fun `as`(alias: String): StockTaking = StockTaking(DSL.name(alias), this)
     override fun `as`(alias: Name): StockTaking = StockTaking(alias, this)
     override fun `as`(alias: Table<*>): StockTaking = StockTaking(alias.getQualifiedName(), this)

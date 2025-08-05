@@ -16,11 +16,9 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
+import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
-import com.kcvn.spm.repository.BacklogWhRepository
-import com.kcvn.spm.repository.SendingTransactionsRepository
-import com.kcvn.spm.repository.SplittingRepository
-import com.kcvn.spm.repository.TempSendingTransactionsRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
@@ -44,6 +42,7 @@ import java.time.format.DateTimeFormatter
 class SendingTransactionsService(
     private val sendingRepo: SendingTransactionsRepository,
     private val tempSendingRepo: TempSendingTransactionsRepository,
+    private val tempSendingCheckingRepo: TempSendingCheckingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
     private val receivingService: ReceivingTransactionsService,
     private val splittingRepo: SplittingRepository,
@@ -276,7 +275,7 @@ class SendingTransactionsService(
             // get receivingDate
             val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.packageCode!!, it.poNumber!!)
             val receivingDate = backlog?.receivingDate
-            val tempSendTran = TempSendingTransactions(
+            val tempSendTran = TempSendingCheckingTransactions(
                 null,
                 it.formCode,
                 it.sourceLocationCode,
@@ -290,7 +289,7 @@ class SendingTransactionsService(
                 receivingDate,
                 it.inspectionDate,
             )
-            tempSendingRepo.saveTempSendingTrans(tempSendTran)
+            tempSendingCheckingRepo.saveTempSendingCheckingTrans(tempSendTran)
         }
     }
 

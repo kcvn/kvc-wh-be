@@ -5,7 +5,7 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
-import com.kcvn.spm.model.keys.LOCATIONS_PKEY
+import com.kcvn.spm.model.keys.LOCATIONS_PK
 import com.kcvn.spm.model.tables.records.LocationsRecord
 
 import java.time.OffsetDateTime
@@ -112,7 +112,7 @@ open class Locations(
 
     constructor(child: Table<out Record>, key: ForeignKey<out Record, LocationsRecord>): this(Internal.createPathAlias(child, key), child, key, LOCATIONS, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getPrimaryKey(): UniqueKey<LocationsRecord> = LOCATIONS_PKEY
+    override fun getPrimaryKey(): UniqueKey<LocationsRecord> = LOCATIONS_PK
     override fun `as`(alias: String): Locations = Locations(DSL.name(alias), this)
     override fun `as`(alias: Name): Locations = Locations(alias, this)
     override fun `as`(alias: Table<*>): Locations = Locations(alias.getQualifiedName(), this)

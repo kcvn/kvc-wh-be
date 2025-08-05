@@ -26,6 +26,7 @@ import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
+import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.TempSendingImported
 import com.kcvn.spm.model.tables.TempSendingTransactions
 import com.kcvn.spm.model.tables.WestFactoryLayout
@@ -51,6 +52,7 @@ import com.kcvn.spm.model.tables.records.SplittingRecord
 import com.kcvn.spm.model.tables.records.StockTakingRecord
 import com.kcvn.spm.model.tables.records.StockTakingStatusRecord
 import com.kcvn.spm.model.tables.records.TempCheckingImportedRecord
+import com.kcvn.spm.model.tables.records.TempSendingCheckingTransactionsRecord
 import com.kcvn.spm.model.tables.records.TempSendingImportedRecord
 import com.kcvn.spm.model.tables.records.TempSendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.WestFactoryLayoutRecord
@@ -80,14 +82,15 @@ val CANCEL_RECEIVING_TRANSACTIONS_PKEY: UniqueKey<CancelReceivingTransactionsRec
 val CANCEL_SENDING_TRANSACTIONS_PKEY: UniqueKey<CancelSendingTransactionsRecord> = Internal.createUniqueKey(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS, DSL.name("cancel_sending_transactions_pkey"), arrayOf(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS.ID), true)
 val CHECKING_PKEY: UniqueKey<CheckingRecord> = Internal.createUniqueKey(Checking.CHECKING, DSL.name("checking_pkey"), arrayOf(Checking.CHECKING.ID), true)
 val CHECKING_HISTORY_PKEY: UniqueKey<CheckingHistoryRecord> = Internal.createUniqueKey(CheckingHistory.CHECKING_HISTORY, DSL.name("checking_history_pkey"), arrayOf(CheckingHistory.CHECKING_HISTORY.ID), true)
-val LOCATIONS_PKEY: UniqueKey<LocationsRecord> = Internal.createUniqueKey(Locations.LOCATIONS, DSL.name("locations_pkey"), arrayOf(Locations.LOCATIONS.ID), true)
+val LOCATIONS_PK: UniqueKey<LocationsRecord> = Internal.createUniqueKey(Locations.LOCATIONS, DSL.name("locations_pk"), arrayOf(Locations.LOCATIONS.LOCATION_CODE), true)
 val MOVING_PKEY: UniqueKey<MovingRecord> = Internal.createUniqueKey(Moving.MOVING, DSL.name("moving_pkey"), arrayOf(Moving.MOVING.ID), true)
 val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)
 val SENDING_TRANSACTIONS_PKEY: UniqueKey<SendingTransactionsRecord> = Internal.createUniqueKey(SendingTransactions.SENDING_TRANSACTIONS, DSL.name("sending_transactions_pkey"), arrayOf(SendingTransactions.SENDING_TRANSACTIONS.ID), true)
 val SPLITTING_PKEY: UniqueKey<SplittingRecord> = Internal.createUniqueKey(Splitting.SPLITTING, DSL.name("splitting_pkey"), arrayOf(Splitting.SPLITTING.ID), true)
-val STOCK_TAKING_PKEY: UniqueKey<StockTakingRecord> = Internal.createUniqueKey(StockTaking.STOCK_TAKING, DSL.name("stock_taking_pkey"), arrayOf(StockTaking.STOCK_TAKING.ID), true)
+val STOCK_TAKING_PKEY_1: UniqueKey<StockTakingRecord> = Internal.createUniqueKey(StockTaking.STOCK_TAKING, DSL.name("stock_taking_pkey_1"), arrayOf(StockTaking.STOCK_TAKING.ID), true)
 val STOCK_TAKING_STATUS_PKEY: UniqueKey<StockTakingStatusRecord> = Internal.createUniqueKey(StockTakingStatus.STOCK_TAKING_STATUS, DSL.name("stock_taking_status_pkey"), arrayOf(StockTakingStatus.STOCK_TAKING_STATUS.ID), true)
 val TEMP_CHECKING_IMPORTED_DATE_PKEY: UniqueKey<TempCheckingImportedRecord> = Internal.createUniqueKey(TempCheckingImported.TEMP_CHECKING_IMPORTED, DSL.name("temp_checking_imported_date_pkey"), arrayOf(TempCheckingImported.TEMP_CHECKING_IMPORTED.ID), true)
+val TEMP_SENDING_TRANSACTIONS_PKEY_1: UniqueKey<TempSendingCheckingTransactionsRecord> = Internal.createUniqueKey(TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS, DSL.name("temp_sending_transactions_pkey_1"), arrayOf(TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS.ID), true)
 val TEMP_SENDING_IMPORTED_PKEY_1: UniqueKey<TempSendingImportedRecord> = Internal.createUniqueKey(TempSendingImported.TEMP_SENDING_IMPORTED, DSL.name("temp_sending_imported_pkey_1"), arrayOf(TempSendingImported.TEMP_SENDING_IMPORTED.ID), true)
 val TEMP_SENDING_TRANSACTIONS_PKEY: UniqueKey<TempSendingTransactionsRecord> = Internal.createUniqueKey(TempSendingTransactions.TEMP_SENDING_TRANSACTIONS, DSL.name("temp_sending_transactions_pkey"), arrayOf(TempSendingTransactions.TEMP_SENDING_TRANSACTIONS.ID), true)
 val WEST_FACTORY_LAYOUT_PKEY: UniqueKey<WestFactoryLayoutRecord> = Internal.createUniqueKey(WestFactoryLayout.WEST_FACTORY_LAYOUT, DSL.name("west_factory_layout_pkey"), arrayOf(WestFactoryLayout.WEST_FACTORY_LAYOUT.ID), true)

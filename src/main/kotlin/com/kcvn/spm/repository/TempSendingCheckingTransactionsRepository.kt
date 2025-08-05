@@ -79,15 +79,15 @@ class TempSendingCheckingTransactionsRepository(private val context: DSLContext)
             .execute()
     }
 
-//    fun deleteSendingTrans(formCode: String?, poNumber: String?, inspectionDate: LocalDate?) {
-//        context.deleteFrom(TEMP_SENDING_CHECKING_TRANSACTIONS)
-//            .where(
-//                TEMP_SENDING_CHECKING_TRANSACTIONS.FORM_CODE.eq(formCode)
-//                    .and(TEMP_SENDING_CHECKING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
-//                    .and(TEMP_SENDING_CHECKING_TRANSACTIONS.INSPECTION_DATE.eq(inspectionDate))
-//            )
-//            .execute()
-//    }
+    fun deleteSendingTrans(formCode: String?, poNumber: String?, inspectionDate: LocalDate?) {
+        context.deleteFrom(TEMP_SENDING_CHECKING_TRANSACTIONS)
+            .where(
+                TEMP_SENDING_CHECKING_TRANSACTIONS.FORM_CODE.eq(formCode)
+                    .and(TEMP_SENDING_CHECKING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
+                    .and(TEMP_SENDING_CHECKING_TRANSACTIONS.INSPECTION_DATE.eq(inspectionDate))
+            )
+            .execute()
+    }
 
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

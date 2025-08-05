@@ -44,8 +44,6 @@ class SendingTransactionsService(
     private val tempSendingRepo: TempSendingTransactionsRepository,
     private val tempSendingCheckingRepo: TempSendingCheckingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
-    private val receivingService: ReceivingTransactionsService,
-    private val splittingRepo: SplittingRepository,
     private val backlogWhRepository: BacklogWhRepository
 ) {
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
@@ -72,6 +70,10 @@ class SendingTransactionsService(
             data.first,
             data.second
         )
+    }
+
+    fun approveSendingForm(formCode: String){
+        sendingRepo.copyToSendingTable(formCode)
     }
 
     fun exportExcel(pageable: Pageable): BaseResponse<FileContentModel> {
@@ -212,19 +214,19 @@ class SendingTransactionsService(
                     CommonUtils.getMessage("not.enough.backlog"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.packageCode}"
                 )
             val receivingDate = backlog.receivingDate
-            val sendTran = SendingTransactions(
-                null,
-                it.sourceLocationCode,
-                "KVC",
-                it.packageCode,
-                it.packageCode,
-                it.poNumber,
-                it.qty,
-                it.seqNo,
-                "OUT_ONLY",
-                receivingDate,
-                it.inspectionDate,
-            )
+//            val sendTran = SendingTransactions(
+//                null,
+//                it.sourceLocationCode,
+//                "KVC",
+//                it.packageCode,
+//                it.packageCode,
+//                it.poNumber,
+//                it.qty,
+//                it.seqNo,
+//                "OUT_ONLY",
+//                receivingDate,
+//                it.inspectionDate,
+//            )
             val tempSendTran = TempSendingTransactions(
                 null,
                 it.formCode,
@@ -239,26 +241,26 @@ class SendingTransactionsService(
                 receivingDate,
                 it.inspectionDate,
             )
-            sendingRepo.saveSendingTrans(sendTran)
+            //sendingRepo.saveSendingTrans(sendTran)
             tempSendingRepo.saveTempSendingTrans(tempSendTran)
             // save backlog and backlog history
-            val boxQty: Int = if (it.notMinusBoxQty == true) {
-                0
-            } else {
-                1
-            }
-            val backlogData = BacklogWh(
-                null,
-                it.sourceLocationCode,
-                it.poNumber,
-                it.packageCode,
-                it.qty,
-                boxQty,
-                receivingDate,
-                it.inspectionDate,
-                isEntried = true
-            )
-            backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
+//            val boxQty: Int = if (it.notMinusBoxQty == true) {
+//                0
+//            } else {
+//                1
+//            }
+//            val backlogData = BacklogWh(
+//                null,
+//                it.sourceLocationCode,
+//                it.poNumber,
+//                it.packageCode,
+//                it.qty,
+//                boxQty,
+//                receivingDate,
+//                it.inspectionDate,
+//                isEntried = true
+//            )
+//            backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
         }
     }
 
@@ -267,7 +269,7 @@ class SendingTransactionsService(
             .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
             .distinct()
         removeList.forEach { (formCode, poNumber, inspectionDate) ->
-            tempSendingRepo.deleteSendingTrans(formCode, poNumber, inspectionDate)
+            tempSendingCheckingRepo.deleteSendingTrans(formCode, poNumber, inspectionDate)
         }
         val list = createSendTransRequestWithSeq(request)
 

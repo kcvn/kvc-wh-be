@@ -7,6 +7,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
+import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -169,6 +170,38 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 moving.receivingDate, moving.inspectionDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
             )
             .execute()
+    }
+
+    fun copyToSendingTable(formCode: String) {
+        context.insertInto(
+            SENDING_TRANSACTIONS,
+            SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE,
+            SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
+            SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE,
+            SENDING_TRANSACTIONS.DEST_PACKAGE_CODE,
+            SENDING_TRANSACTIONS.PO_NUMBER,
+            SENDING_TRANSACTIONS.QTY,
+            SENDING_TRANSACTIONS.SEQ_NO,
+            SENDING_TRANSACTIONS.TRANSACTION_TYPE,
+            SENDING_TRANSACTIONS.RECEIVING_DATE,
+            SENDING_TRANSACTIONS.INSPECTION_DATE,
+            SENDING_TRANSACTIONS.CREATED_BY
+        ).select(
+            context.select(
+                TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE,
+                TEMP_SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
+                TEMP_SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE,
+                TEMP_SENDING_TRANSACTIONS.DEST_PACKAGE_CODE,
+                TEMP_SENDING_TRANSACTIONS.PO_NUMBER,
+                TEMP_SENDING_TRANSACTIONS.QTY,
+                TEMP_SENDING_TRANSACTIONS.SEQ_NO,
+                TEMP_SENDING_TRANSACTIONS.TRANSACTION_TYPE,
+                TEMP_SENDING_TRANSACTIONS.RECEIVING_DATE,
+                TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE,
+                TEMP_SENDING_TRANSACTIONS.CREATED_BY
+            ).from(TEMP_SENDING_TRANSACTIONS)
+                .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode))
+        ).execute()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

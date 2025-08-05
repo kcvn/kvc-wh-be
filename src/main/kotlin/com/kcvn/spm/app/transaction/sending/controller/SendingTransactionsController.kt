@@ -2,6 +2,7 @@ package com.kcvn.spm.app.transaction.sending.controller
 
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
+import com.kcvn.spm.app.stocktaking.payload.request.StopActualRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
@@ -93,6 +94,20 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     ): ResponseEntity<BasePagingResponse<TempSendingInquiryResponse>> {
         val result = sendingService.getTempSendingList(formCode, pageable)
         return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @PostMapping("/approve/sending-trans")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    fun approveSendingForm(@RequestParam formCode: String): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post approve/sending-trans" + ", REQUEST: " + formCode
+        )
+        sendingService.approveSendingForm(formCode)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
     }
 
     @GetMapping("/export-excel")

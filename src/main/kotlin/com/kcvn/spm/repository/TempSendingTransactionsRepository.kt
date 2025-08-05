@@ -5,6 +5,7 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
+import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -27,13 +28,14 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
                         CASE
                             WHEN COALESCE (tsi.qty,0) = COALESCE(tst_summary.qty, 0) THEN 'SAME'
                             ELSE 'DIFFERENT'
-                        END AS status
+                        END AS status,
+                        tst_summary.is_approved
                     FROM temp_sending_imported tsi
                     FULL OUTER JOIN (
-                        SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty
+                        SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty, is_approved
                         FROM temp_sending_transactions
                         WHERE form_code = ?
-                        GROUP BY form_code, po_number, inspection_date, source_location_code 
+                        GROUP BY form_code, po_number, inspection_date, source_location_code, is_approved
                     ) tst_summary
                         ON tsi.form_code = tst_summary.form_code
                         AND tsi.po_number = tst_summary.po_number
@@ -51,7 +53,8 @@ SELECT COALESCE (temp1.form_code, tsct_summary.form_code) AS form_code,
                         CASE
                             WHEN COALESCE (temp1.request_qty,0) = COALESCE(temp1.actual_qty, 0) and COALESCE (temp1.request_qty,0) = COALESCE(tsct_summary.qty, 0)  THEN 'SAME'
                             ELSE 'DIFFERENT'
-                        END AS status
+                        END AS status,
+                        temp1.is_approved
                         FROM temp1
 FULL OUTER JOIN (
                         SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty
@@ -79,6 +82,7 @@ FULL OUTER JOIN (
                             actualQty = it.get("actual_qty", BigDecimal::class.java),
                             doubleCheckQty = it.get("double_check_qty", BigDecimal::class.java),
                             result = it.get("status", String::class.java),
+                            isApproved = it.get("is_approved", Boolean::class.java),
                         )
                     }
 
@@ -111,6 +115,8 @@ FULL OUTER JOIN (
             )
             .execute()
     }
+
+
 
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

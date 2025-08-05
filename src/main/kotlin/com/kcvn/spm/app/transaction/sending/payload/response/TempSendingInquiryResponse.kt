@@ -11,6 +11,7 @@ data class TempSendingInquiryResponse(
     var requestQty: BigDecimal? = BigDecimal.ZERO,
     var actualQty: BigDecimal? = BigDecimal.ZERO,
     var doubleCheckQty: BigDecimal? = BigDecimal.ZERO,
+    var isApproved: Boolean? = false,
     var result: String? = null,
     val createdDate: LocalDate? = null
 )

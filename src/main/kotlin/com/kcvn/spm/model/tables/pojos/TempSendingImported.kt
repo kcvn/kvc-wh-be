@@ -24,7 +24,10 @@ data class TempSendingImported(
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
-    var formCode: String? = null
+    var formCode: String? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsApproved")
+    var isApproved: Boolean? = null
 ): Serializable {
 
 
@@ -96,6 +99,12 @@ data class TempSendingImported(
         }
         else if (this.formCode != o.formCode)
             return false
+        if (this.isApproved == null) {
+            if (o.isApproved != null)
+                return false
+        }
+        else if (this.isApproved != o.isApproved)
+            return false
         return true
     }
 
@@ -112,6 +121,7 @@ data class TempSendingImported(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.formCode == null) 0 else this.formCode.hashCode())
+        result = prime * result + (if (this.isApproved == null) 0 else this.isApproved.hashCode())
         return result
     }
 
@@ -128,6 +138,7 @@ data class TempSendingImported(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(formCode)
+        sb.append(", ").append(isApproved)
 
         sb.append(")")
         return sb.toString()

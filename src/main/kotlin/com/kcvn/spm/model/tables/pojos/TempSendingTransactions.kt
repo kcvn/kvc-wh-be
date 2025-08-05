@@ -36,10 +36,7 @@ data class TempSendingTransactions(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsCanceled")
-    var isCanceled: Boolean? = null,
-    @Suppress("INAPPLICABLE_JVM_NAME")
-    @set:JvmName("setIsApproved")
-    var isApproved: Boolean? = null
+    var isCanceled: Boolean? = null
 ): Serializable {
 
 
@@ -159,12 +156,6 @@ data class TempSendingTransactions(
         }
         else if (this.isCanceled != o.isCanceled)
             return false
-        if (this.isApproved == null) {
-            if (o.isApproved != null)
-                return false
-        }
-        else if (this.isApproved != o.isApproved)
-            return false
         return true
     }
 
@@ -189,7 +180,6 @@ data class TempSendingTransactions(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isCanceled == null) 0 else this.isCanceled.hashCode())
-        result = prime * result + (if (this.isApproved == null) 0 else this.isApproved.hashCode())
         return result
     }
 
@@ -214,7 +204,6 @@ data class TempSendingTransactions(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isCanceled)
-        sb.append(", ").append(isApproved)
 
         sb.append(")")
         return sb.toString()

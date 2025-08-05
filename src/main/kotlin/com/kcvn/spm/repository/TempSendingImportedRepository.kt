@@ -3,9 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.TempCheckingImported
 import com.kcvn.spm.model.tables.pojos.TempSendingImported
-import com.kcvn.spm.model.tables.references.TEMP_CHECKING_IMPORTED
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -37,17 +35,21 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
         return Pair(data, count)
     }
 
-    fun getListFormCode(): List<String> {
+    fun getListFormCode(isIncludeApproved:Boolean): List<String> {
         val offset = OffsetDateTime.now().offset
         val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(2), LocalTime.MIDNIGHT, offset)
         val tomorrow = OffsetDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT, offset)
+        val condition = TEMP_SENDING_IMPORTED.FORM_CODE.isNotNull
+            .and(TEMP_SENDING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
+            .and(TEMP_SENDING_IMPORTED.CREATED_DATE.lt(tomorrow))
+            .let {
+                if (isIncludeApproved) it
+                else it.and(TEMP_SENDING_IMPORTED.IS_APPROVED.eq(false))
+            }
+
         return context.selectDistinct(TEMP_SENDING_IMPORTED.FORM_CODE, TEMP_SENDING_IMPORTED.CREATED_DATE)
             .from(TEMP_SENDING_IMPORTED)
-            .where(
-                TEMP_SENDING_IMPORTED.FORM_CODE.isNotNull
-                    .and(TEMP_SENDING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
-                    .and(TEMP_SENDING_IMPORTED.CREATED_DATE.lt(tomorrow))
-            )
+            .where(condition)
             .orderBy(TEMP_SENDING_IMPORTED.CREATED_DATE.desc())
             .fetch(TEMP_SENDING_IMPORTED.FORM_CODE)
             .filterNotNull()
@@ -68,6 +70,7 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
                         this.qty = data.qty
                         this.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                         this.formCode = data.formCode
+                        this.isApproved = data.isApproved
                     }
                 }
             ).execute()
@@ -82,6 +85,13 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
             transactionalContext.deleteFrom(TEMP_SENDING_IMPORTED).where(TEMP_SENDING_IMPORTED.CREATED_BY.eq(userName))
                 .execute()
         }
+    }
+
+    fun updateAfterApprove(formCode: String){
+        context.update(TEMP_SENDING_IMPORTED)
+            .set(TEMP_SENDING_IMPORTED.IS_APPROVED, true)
+            .where(TEMP_SENDING_IMPORTED.FORM_CODE.eq(formCode))
+            .execute()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

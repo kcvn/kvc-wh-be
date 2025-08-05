@@ -33,8 +33,8 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
         )
     }
 
-    fun getListFormCodeDropdown(): BaseResponse<List<DropdownResponse>> {
-        val listFormCode = tempSendingImportedRepo.getListFormCode()
+    fun getListFormCodeDropdown(isIncludeApproved: Boolean): BaseResponse<List<DropdownResponse>> {
+        val listFormCode = tempSendingImportedRepo.getListFormCode(isIncludeApproved)
 
         // Map DropDownResponse
         val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->
@@ -76,7 +76,8 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
                     locationCode = columns[20].trim(),
                     poNumber = columns[33].trim(),
                     qty = columns[21].trim().toBigDecimalOrNull() ?: BigDecimal.ZERO,
-                    formCode = formCode
+                    formCode = formCode,
+                    isApproved = false
                 )
                 dataList.add(data)
             }

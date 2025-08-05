@@ -42,6 +42,7 @@ import java.time.format.DateTimeFormatter
 class SendingTransactionsService(
     private val sendingRepo: SendingTransactionsRepository,
     private val tempSendingRepo: TempSendingTransactionsRepository,
+    private val tempSendingImportedRepo: TempSendingImportedRepository,
     private val tempSendingCheckingRepo: TempSendingCheckingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
     private val backlogWhRepository: BacklogWhRepository
@@ -74,6 +75,7 @@ class SendingTransactionsService(
 
     fun approveSendingForm(formCode: String){
         sendingRepo.copyToSendingTable(formCode)
+        tempSendingImportedRepo.updateAfterApprove(formCode)
     }
 
     fun exportExcel(pageable: Pageable): BaseResponse<FileContentModel> {

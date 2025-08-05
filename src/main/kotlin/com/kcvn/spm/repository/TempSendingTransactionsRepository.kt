@@ -29,10 +29,10 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
                             WHEN COALESCE (tsi.qty,0) = COALESCE(tst_summary.qty, 0) THEN 'SAME'
                             ELSE 'DIFFERENT'
                         END AS status,
-                        tst_summary.is_approved
+                        tsi.is_approved
                     FROM temp_sending_imported tsi
                     FULL OUTER JOIN (
-                        SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty, is_approved
+                        SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty
                         FROM temp_sending_transactions
                         WHERE form_code = ?
                         GROUP BY form_code, po_number, inspection_date, source_location_code, is_approved

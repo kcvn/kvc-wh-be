@@ -36,7 +36,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             val poNumbers = request.listPoNumber!!.split(",")
             var condition1 : Condition = DSL.noCondition()
             poNumbers.forEach { pn ->
-                condition1 = condition1.or(BACKLOG_WH.PO_NUMBER.eq(pn.trim()))
+                condition1 = condition1.or(BACKLOG_WH.PO_NUMBER.containsIgnoreCase(pn))
             }
             condition = condition.and(condition1)
         }
@@ -44,7 +44,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             val packageCodes = request.listPackageCode!!.split(",")
             var condition1 : Condition = DSL.noCondition()
             packageCodes.forEach { pc ->
-                condition1 = condition1.or(BACKLOG_WH.PACKAGE_CODE.eq(pc.trim()))
+                condition1 = condition1.or(BACKLOG_WH.PACKAGE_CODE.containsIgnoreCase(pc))
             }
             condition = condition.and(condition1)
         }

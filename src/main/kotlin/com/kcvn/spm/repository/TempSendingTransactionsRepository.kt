@@ -4,8 +4,9 @@ import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingInquiryR
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.TempCheckingImported
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
-import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
+import com.kcvn.spm.model.tables.references.TEMP_CHECKING_IMPORTED
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -16,7 +17,7 @@ import java.time.LocalDate
 
 @Repository
 class TempSendingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(formCode: String, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingInquiryResponse>, Int> {
+    fun getListForApprove(formCode: String, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingInquiryResponse>, Int> {
         val sql = """
                     WITH temp1 AS (SELECT
                         COALESCE (tsi.form_code, tst_summary.form_code) AS form_code,
@@ -35,7 +36,7 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
                         SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty
                         FROM temp_sending_transactions
                         WHERE form_code = ?
-                        GROUP BY form_code, po_number, inspection_date, source_location_code, is_approved
+                        GROUP BY form_code, po_number, inspection_date, source_location_code
                     ) tst_summary
                         ON tsi.form_code = tst_summary.form_code
                         AND tsi.po_number = tst_summary.po_number
@@ -94,14 +95,14 @@ FULL OUTER JOIN (
             TEMP_SENDING_TRANSACTIONS, TEMP_SENDING_TRANSACTIONS.FORM_CODE, TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE, TEMP_SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
             TEMP_SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE, TEMP_SENDING_TRANSACTIONS.DEST_PACKAGE_CODE, TEMP_SENDING_TRANSACTIONS.PO_NUMBER,
             TEMP_SENDING_TRANSACTIONS.QTY, TEMP_SENDING_TRANSACTIONS.SEQ_NO, TEMP_SENDING_TRANSACTIONS.TRANSACTION_TYPE,
-            TEMP_SENDING_TRANSACTIONS.RECEIVING_DATE, TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE, TEMP_SENDING_TRANSACTIONS.CREATED_BY
+            TEMP_SENDING_TRANSACTIONS.RECEIVING_DATE, TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE, TEMP_SENDING_TRANSACTIONS.CREATED_BY, TEMP_SENDING_TRANSACTIONS.NOT_MINUS_BOX_QTY
         )
             .values(
                 record.formCode,
                 record.sourceLocationCode, record.destLocationCode,
                 record.sourcePackageCode, record.destPackageCode, record.poNumber,
                 record.qty, record.seqNo, record.transactionType,
-                record.receivingDate, record.inspectionDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                record.receivingDate, record.inspectionDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM, record.notMinusBoxQty
             )
             .execute()
     }
@@ -116,7 +117,13 @@ FULL OUTER JOIN (
             .execute()
     }
 
-
+    fun getListByFormCode(formCode: String): List<TempSendingTransactions>? {
+        return context.selectFrom(TEMP_SENDING_TRANSACTIONS)
+            .where(
+                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode)
+            )
+            .fetchInto(TempSendingTransactions::class.java)
+    }
 
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

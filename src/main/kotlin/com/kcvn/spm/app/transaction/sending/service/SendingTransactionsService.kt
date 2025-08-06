@@ -1,7 +1,6 @@
 package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
-import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingInquiryResponse
@@ -15,7 +14,6 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
-import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.repository.*
@@ -66,7 +64,7 @@ class SendingTransactionsService(
     }
 
     fun getTempSendingList(formCode: String, pageable: Pageable):BasePagingResponse<TempSendingInquiryResponse>{
-        val data = tempSendingRepo.getList(formCode, pageable)
+        val data = tempSendingRepo.getListForApprove(formCode, pageable)
         return BasePagingResponse(
             data.first,
             data.second
@@ -76,6 +74,30 @@ class SendingTransactionsService(
     fun approveSendingForm(formCode: String){
         sendingRepo.copyToSendingTable(formCode)
         tempSendingImportedRepo.updateAfterApprove(formCode)
+        val sendingList = tempSendingRepo.getListByFormCode(formCode)
+        sendingList?.forEach {
+            val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
+            if (backlog == null || backlog.backlogQty!! < it.qty) throw BusinessExceptionDetail(
+                CommonUtils.getMessage("not.enough.backlog"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
+            )
+            val boxQty: Int = if (it.notMinusBoxQty == true) {
+                0
+            } else {
+                1
+            }
+            val backlogData = BacklogWh(
+                null,
+                it.sourceLocationCode,
+                it.poNumber,
+                it.sourcePackageCode,
+                it.qty,
+                boxQty,
+                backlog.receivingDate,
+                it.inspectionDate,
+                isEntried = true
+            )
+            backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
+        }
     }
 
     fun exportExcel(pageable: Pageable): BaseResponse<FileContentModel> {
@@ -242,6 +264,7 @@ class SendingTransactionsService(
                 "OUT_ONLY",
                 receivingDate,
                 it.inspectionDate,
+                notMinusBoxQty = it.notMinusBoxQty
             )
             //sendingRepo.saveSendingTrans(sendTran)
             tempSendingRepo.saveTempSendingTrans(tempSendTran)

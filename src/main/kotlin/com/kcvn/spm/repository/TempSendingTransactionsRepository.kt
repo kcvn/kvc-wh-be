@@ -68,6 +68,7 @@ FULL OUTER JOIN (
                         AND temp1.inspection_date = tsct_summary.inspection_date
                         AND temp1.location_code = tsct_summary.location_code
                         WHERE (temp1.form_code = ? OR tsct_summary.form_code = ?)
+                        ORDER BY status
             """.trimIndent()
 
                 val result = context

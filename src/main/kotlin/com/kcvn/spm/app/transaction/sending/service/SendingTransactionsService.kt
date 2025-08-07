@@ -296,25 +296,18 @@ class SendingTransactionsService(
         removeList.forEach { (formCode, poNumber, inspectionDate) ->
             tempSendingCheckingRepo.deleteSendingTrans(formCode, poNumber, inspectionDate)
         }
-        val list = createSendTransRequestWithSeq(request)
 
-        list.forEach {
+        request.forEach {
             // get receivingDate
-            val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.packageCode!!, it.poNumber!!)
-            val receivingDate = backlog?.receivingDate
+            //val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.packageCode!!, it.poNumber!!)
+            //val receivingDate = backlog?.receivingDate
             val tempSendTran = TempSendingCheckingTransactions(
                 null,
-                it.formCode,
-                it.sourceLocationCode,
-                "KVC",
-                it.packageCode,
-                it.packageCode,
-                it.poNumber,
-                it.qty,
-                it.seqNo,
-                "OUT_ONLY",
-                receivingDate,
-                it.inspectionDate,
+                formCode = it.formCode,
+                sourceLocationCode = it.locationCode,
+                poNumber = it.poNumber,
+                qty = it.qty,
+                inspectionDate = it.inspectionDate
             )
             tempSendingCheckingRepo.saveTempSendingCheckingTrans(tempSendTran)
         }
@@ -326,7 +319,7 @@ class SendingTransactionsService(
             .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
             .flatMap { (key, group) ->
                 val (sourceLocationCode, sourcePackageCode, poNumber) = key
-                val latestSeqNo = sendingRepo.findLatestMoving(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+                val latestSeqNo = sendingRepo.findLatestSending(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
 
                 group.mapIndexed { index, sendTransRequest ->
                     SendTransRequestWithSeq(
@@ -342,4 +335,28 @@ class SendingTransactionsService(
                 }
             }
     }
+
+    fun createSendCheckingTransRequestWithSeq(requests: List<SendingRequest>): List<SendTransRequestWithSeq> {
+        val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
+        return requests
+            .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
+            .flatMap { (key, group) ->
+                val (sourceLocationCode, sourcePackageCode, poNumber) = key
+                val latestSeqNo = sendingRepo.findLatestSending(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+
+                group.mapIndexed { index, sendTransRequest ->
+                    SendTransRequestWithSeq(
+                        formCode = sendTransRequest.formCode,
+                        inspectionDate = sendTransRequest.inspectionDate,
+                        sourceLocationCode = sendTransRequest.locationCode,
+                        packageCode = sendTransRequest.packageCode,
+                        poNumber = sendTransRequest.poNumber,
+                        qty = sendTransRequest.qty,
+                        notMinusBoxQty = sendTransRequest.notMinusBoxQty,
+                        seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
+                    )
+                }
+            }
+    }
+
 }

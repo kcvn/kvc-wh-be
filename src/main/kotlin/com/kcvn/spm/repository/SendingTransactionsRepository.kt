@@ -143,7 +143,7 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             .firstOrNull()
     }
 
-    fun findLatestMoving(sourceLocationCode: String, sourcePackageCode: String, poNumber: String, todayUtc: LocalDate): SendingTransactions? {
+    fun findLatestSending(sourceLocationCode: String, sourcePackageCode: String, poNumber: String, todayUtc: LocalDate): SendingTransactions? {
         return context.selectFrom(SENDING_TRANSACTIONS)
             .where(
                 SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE.eq(sourceLocationCode)

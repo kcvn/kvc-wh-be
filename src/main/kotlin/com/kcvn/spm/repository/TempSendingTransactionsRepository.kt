@@ -33,10 +33,10 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
                         tsi.is_approved
                     FROM temp_sending_imported tsi
                     FULL OUTER JOIN (
-                        SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty
+                        SELECT form_code, po_number, min(source_location_code) AS location_code, inspection_date, SUM(qty) AS qty
                         FROM temp_sending_transactions
                         WHERE form_code = ?
-                        GROUP BY form_code, po_number, inspection_date, source_location_code
+                        GROUP BY form_code, po_number, inspection_date
                     ) tst_summary
                         ON tsi.form_code = tst_summary.form_code
                         AND tsi.po_number = tst_summary.po_number
@@ -58,10 +58,10 @@ SELECT COALESCE (temp1.form_code, tsct_summary.form_code) AS form_code,
                         temp1.is_approved
                         FROM temp1
 FULL OUTER JOIN (
-                        SELECT form_code, po_number, source_location_code AS location_code, inspection_date, SUM(qty) AS qty
+                        SELECT form_code, po_number, min(source_location_code) AS location_code, inspection_date, SUM(qty) AS qty
                         FROM temp_sending_checking_transactions tsct
                         WHERE form_code = ?
-                        GROUP BY form_code, po_number, inspection_date, source_location_code 
+                        GROUP BY form_code, po_number, inspection_date
                     ) tsct_summary
                         ON temp1.form_code = tsct_summary.form_code
                         AND temp1.po_number = tsct_summary.po_number

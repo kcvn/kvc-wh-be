@@ -37,7 +37,8 @@ data class TempSendingTransactions(
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsCanceled")
     var isCanceled: Boolean? = null,
-    var notMinusBoxQty: Boolean? = null
+    var notMinusBoxQty: Boolean? = null,
+    var minBinCode: String? = null
 ): Serializable {
 
 
@@ -163,6 +164,12 @@ data class TempSendingTransactions(
         }
         else if (this.notMinusBoxQty != o.notMinusBoxQty)
             return false
+        if (this.minBinCode == null) {
+            if (o.minBinCode != null)
+                return false
+        }
+        else if (this.minBinCode != o.minBinCode)
+            return false
         return true
     }
 
@@ -188,6 +195,7 @@ data class TempSendingTransactions(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isCanceled == null) 0 else this.isCanceled.hashCode())
         result = prime * result + (if (this.notMinusBoxQty == null) 0 else this.notMinusBoxQty.hashCode())
+        result = prime * result + (if (this.minBinCode == null) 0 else this.minBinCode.hashCode())
         return result
     }
 
@@ -213,6 +221,7 @@ data class TempSendingTransactions(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isCanceled)
         sb.append(", ").append(notMinusBoxQty)
+        sb.append(", ").append(minBinCode)
 
         sb.append(")")
         return sb.toString()

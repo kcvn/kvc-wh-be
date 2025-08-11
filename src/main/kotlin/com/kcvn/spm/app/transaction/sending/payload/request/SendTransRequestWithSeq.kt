@@ -11,5 +11,6 @@ data class SendTransRequestWithSeq(
     var poNumber: String? = null,
     var qty : BigDecimal? = BigDecimal.ZERO,
     var notMinusBoxQty : Boolean? = null,
-    var seqNo : Int? = 1
+    var seqNo : Int? = 1,
+    var minBinCode: String? = null,
 )

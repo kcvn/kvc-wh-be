@@ -80,31 +80,31 @@ open class TempSendingCheckingTransactions(
      * The column
      * <code>public.temp_sending_checking_transactions.source_location_code</code>.
      */
-    val SOURCE_LOCATION_CODE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("source_location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
+    val SOURCE_LOCATION_CODE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("source_location_code"), SQLDataType.VARCHAR(6), this, "")
 
     /**
      * The column
      * <code>public.temp_sending_checking_transactions.dest_location_code</code>.
      */
-    val DEST_LOCATION_CODE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("dest_location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
+    val DEST_LOCATION_CODE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("dest_location_code"), SQLDataType.VARCHAR(6), this, "")
 
     /**
      * The column
      * <code>public.temp_sending_checking_transactions.source_package_code</code>.
      */
-    val SOURCE_PACKAGE_CODE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("source_package_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+    val SOURCE_PACKAGE_CODE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("source_package_code"), SQLDataType.VARCHAR(30), this, "")
 
     /**
      * The column
      * <code>public.temp_sending_checking_transactions.dest_package_code</code>.
      */
-    val DEST_PACKAGE_CODE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("dest_package_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+    val DEST_PACKAGE_CODE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("dest_package_code"), SQLDataType.VARCHAR(30), this, "")
 
     /**
      * The column
      * <code>public.temp_sending_checking_transactions.po_number</code>.
      */
-    val PO_NUMBER: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("po_number"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+    val PO_NUMBER: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("po_number"), SQLDataType.VARCHAR(30), this, "")
 
     /**
      * The column <code>public.temp_sending_checking_transactions.qty</code>.
@@ -114,19 +114,19 @@ open class TempSendingCheckingTransactions(
     /**
      * The column <code>public.temp_sending_checking_transactions.seq_no</code>.
      */
-    val SEQ_NO: TableField<TempSendingCheckingTransactionsRecord, Int?> = createField(DSL.name("seq_no"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("1"), SQLDataType.INTEGER)), this, "")
+    val SEQ_NO: TableField<TempSendingCheckingTransactionsRecord, Int?> = createField(DSL.name("seq_no"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("1"), SQLDataType.INTEGER)), this, "")
 
     /**
      * The column
      * <code>public.temp_sending_checking_transactions.transaction_type</code>.
      */
-    val TRANSACTION_TYPE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("transaction_type"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val TRANSACTION_TYPE: TableField<TempSendingCheckingTransactionsRecord, String?> = createField(DSL.name("transaction_type"), SQLDataType.VARCHAR(20), this, "")
 
     /**
      * The column
      * <code>public.temp_sending_checking_transactions.receiving_date</code>.
      */
-    val RECEIVING_DATE: TableField<TempSendingCheckingTransactionsRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
+    val RECEIVING_DATE: TableField<TempSendingCheckingTransactionsRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
 
     /**
      * The column
@@ -138,7 +138,7 @@ open class TempSendingCheckingTransactions(
      * The column
      * <code>public.temp_sending_checking_transactions.is_updated_amoeba</code>.
      */
-    val IS_UPDATED_AMOEBA: TableField<TempSendingCheckingTransactionsRecord, Boolean?> = createField(DSL.name("is_updated_amoeba"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+    val IS_UPDATED_AMOEBA: TableField<TempSendingCheckingTransactionsRecord, Boolean?> = createField(DSL.name("is_updated_amoeba"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     /**
      * The column
@@ -168,7 +168,7 @@ open class TempSendingCheckingTransactions(
      * The column
      * <code>public.temp_sending_checking_transactions.is_canceled</code>.
      */
-    val IS_CANCELED: TableField<TempSendingCheckingTransactionsRecord, Boolean?> = createField(DSL.name("is_canceled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+    val IS_CANCELED: TableField<TempSendingCheckingTransactionsRecord, Boolean?> = createField(DSL.name("is_canceled"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     private constructor(alias: Name, aliased: Table<TempSendingCheckingTransactionsRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<TempSendingCheckingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

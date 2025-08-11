@@ -264,7 +264,8 @@ class SendingTransactionsService(
                 "OUT_ONLY",
                 receivingDate,
                 it.inspectionDate,
-                notMinusBoxQty = it.notMinusBoxQty
+                notMinusBoxQty = it.notMinusBoxQty,
+                minBinCode = it.minBinCode
             )
             //sendingRepo.saveSendingTrans(sendTran)
             tempSendingRepo.saveTempSendingTrans(tempSendTran)
@@ -330,7 +331,8 @@ class SendingTransactionsService(
                         poNumber = sendTransRequest.poNumber,
                         qty = sendTransRequest.qty,
                         notMinusBoxQty = sendTransRequest.notMinusBoxQty,
-                        seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
+                        seqNo = latestSeqNo + index + 1, // Bắt đầu từ latestSeqNo + 1, tăng dần
+                        minBinCode = sendTransRequest.minBinCode
                     )
                 }
             }

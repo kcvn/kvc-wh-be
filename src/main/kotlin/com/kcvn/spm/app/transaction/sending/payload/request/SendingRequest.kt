@@ -10,5 +10,6 @@ data class SendingRequest(
     var packageCode: String? = null,
     var poNumber: String? = null,
     var qty : BigDecimal? = BigDecimal.ZERO,
-    var notMinusBoxQty : Boolean? = null
+    var notMinusBoxQty : Boolean? = null,
+    var minBinCode: String? = null
 )

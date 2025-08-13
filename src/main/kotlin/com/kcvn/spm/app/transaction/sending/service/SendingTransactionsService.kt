@@ -72,8 +72,6 @@ class SendingTransactionsService(
     }
 
     fun approveSendingForm(formCode: String){
-        sendingRepo.copyToSendingTable(formCode)
-        tempSendingImportedRepo.updateAfterApprove(formCode)
         val sendingList = tempSendingRepo.getListByFormCode(formCode)
         sendingList?.forEach {
             val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
@@ -98,6 +96,8 @@ class SendingTransactionsService(
             )
             backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
         }
+        tempSendingImportedRepo.updateAfterApprove(formCode)
+        sendingRepo.copyToSendingTable(formCode)
     }
 
     fun exportExcel(pageable: Pageable): BaseResponse<FileContentModel> {

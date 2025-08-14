@@ -124,17 +124,19 @@ class SendingTransactionsService(
             val row: Row = sheet.createRow(rowNumberFill++)
 
             val formattedDate = item.inspectionDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
+            val formattedRequestDate = item.requestDate?.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) ?: ""
             ExcelHelper.setCellValue(row, 0, style, formattedDate)
             ExcelHelper.setCellValue(row, 1, style, item.poNumber)
-            ExcelHelper.setCellValueInt(row, 3, numberStyle, item.qty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 2, numberStyle, item.qty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 3, style, formattedRequestDate)
         }
 
-        for (i in 1 until rowNumberFill) {
-            val row = sheet.getRow(i) ?: sheet.createRow(i)
-            val formulaCell = row.createCell(2, CellType.FORMULA)
-            formulaCell.cellFormula = "TEXT(D${i + 1},\"#,##0.0\")"
-            formulaCell.cellStyle = numberStyle
-        }
+//        for (i in 1 until rowNumberFill) {
+//            val row = sheet.getRow(i) ?: sheet.createRow(i)
+//            val formulaCell = row.createCell(2, CellType.FORMULA)
+//            formulaCell.cellFormula = "TEXT(D${i + 1},\"#,##0.0\")"
+//            formulaCell.cellStyle = numberStyle
+//        }
         sheet.forceFormulaRecalculation = true
 
         sheet.createFreezePane(4, 1)

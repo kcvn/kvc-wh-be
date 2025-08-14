@@ -69,21 +69,27 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
     fun getExcelList(pageable: Pageable) : Pair<List<SendingTransactions>, Int> {
         var condition: Condition = DSL.noCondition()
         condition = condition.and(SENDING_TRANSACTIONS.IS_UPDATED_AMOEBA.isFalse)
+        val createdDateFormatted = DSL.toChar(SENDING_TRANSACTIONS.CREATED_DATE, "YYYY-MM-DD").`as`("CREATED_DATE")
+
         val query = context.select(
             SENDING_TRANSACTIONS.PO_NUMBER,
             SENDING_TRANSACTIONS.INSPECTION_DATE,
-            DSL.sum(SENDING_TRANSACTIONS.QTY).`as`("SUM_SENDING_QTY")
+            DSL.sum(SENDING_TRANSACTIONS.QTY).`as`("SUM_SENDING_QTY"),
+            createdDateFormatted
         )
             .from(SENDING_TRANSACTIONS)
             .where(condition)
-            .groupBy(SENDING_TRANSACTIONS.PO_NUMBER, SENDING_TRANSACTIONS.INSPECTION_DATE)
+            .groupBy(SENDING_TRANSACTIONS.PO_NUMBER, SENDING_TRANSACTIONS.INSPECTION_DATE, createdDateFormatted)
             .orderBy(getSortFields(pageable.sort, SENDING_TRANSACTIONS.INSPECTION_DATE))
 
         val data = query.fetch { record ->
             SendingTransactions(
                 poNumber = record[SENDING_TRANSACTIONS.PO_NUMBER],
                 inspectionDate = record[SENDING_TRANSACTIONS.INSPECTION_DATE],
-                qty = record.get("SUM_SENDING_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO
+                qty = record.get("SUM_SENDING_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO,
+                requestDate = record.get(createdDateFormatted, String::class.java)?.let {
+                    LocalDate.parse(it)
+                }
             )
         }
         return Pair(data, data.size)

@@ -35,7 +35,8 @@ data class SendingTransactions(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsCanceled")
-    var isCanceled: Boolean? = null
+    var isCanceled: Boolean? = null,
+    var requestDate: LocalDate? = null
 ): Serializable {
 
 
@@ -149,6 +150,12 @@ data class SendingTransactions(
         }
         else if (this.isCanceled != o.isCanceled)
             return false
+        if (this.requestDate == null) {
+            if (o.requestDate != null)
+                return false
+        }
+        else if (this.requestDate != o.requestDate)
+            return false
         return true
     }
 
@@ -172,6 +179,7 @@ data class SendingTransactions(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isCanceled == null) 0 else this.isCanceled.hashCode())
+        result = prime * result + (if (this.requestDate == null) 0 else this.requestDate.hashCode())
         return result
     }
 
@@ -195,6 +203,7 @@ data class SendingTransactions(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isCanceled)
+        sb.append(", ").append(requestDate)
 
         sb.append(")")
         return sb.toString()

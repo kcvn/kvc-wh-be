@@ -239,7 +239,7 @@ class BacklogWhService(
     fun minusBacklog(data: BacklogWh, transactionType: String) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
             ?: throw BusinessExceptionDetail(
-                CommonUtils.getMessage("data.not.found.in.backlog"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"
+                CommonUtils.getMessage("data.not.found.in.backlog ${data.locationCode} - ${data.packageCode} - ${data.poNumber}"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"
             )
         val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, backlog.backlogQty?.minus(data.backlogQty!!),
             backlog.boxQty?.minus(data.boxQty!!), data.receivingDate, data.inspectionDate, isEntried = data.isEntried

@@ -76,7 +76,7 @@ class SendingTransactionsService(
         sendingList?.forEach {
             val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
             if (backlog == null || backlog.backlogQty!! < it.qty) throw BusinessExceptionDetail(
-                CommonUtils.getMessage("not.enough.backlog"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
+                CommonUtils.getMessage("not.enough.backlog ${it.sourcePackageCode} - ${it.sourceLocationCode}"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
             )
             val boxQty: Int = if (it.notMinusBoxQty == true) {
                 0

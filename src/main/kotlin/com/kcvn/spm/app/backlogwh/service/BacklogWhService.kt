@@ -84,10 +84,8 @@ class BacklogWhService(
                     isEntried = true
                 )
 
-                val isSuccess = backlogWhRepo.updateInspectionDate(backlogWhData)
-                if (isSuccess) {
-                    updatedList.add(backlogWhData)
-                }
+                backlogWhRepo.updateInspectionDate(backlogWhData)
+                updatedList.add(backlogWhData)
             }
             return BaseResponse(updatedList, CommonUtils.getMessage("Updated"))
         } catch (e: Exception) {

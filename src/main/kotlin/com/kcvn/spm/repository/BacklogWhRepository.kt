@@ -166,10 +166,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
     }
 
     fun update(data: BacklogWh) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            transactionalContext.update(BACKLOG_WH)
+            context.update(BACKLOG_WH)
                 .set(BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
                 .set(BACKLOG_WH.BOX_QTY, data.boxQty)
                 .set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
@@ -182,14 +179,12 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                         .and(BACKLOG_WH.PO_NUMBER.eq(data.poNumber))
                 )
                 .execute()
-        }
     }
 
     fun updateQty(packageCode: String, backlogQty: BigDecimal, boxQty: Int) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
 
-            transactionalContext.update(BACKLOG_WH)
+
+            context.update(BACKLOG_WH)
                 .set(BACKLOG_WH.BACKLOG_QTY, backlogQty)
                 .set(BACKLOG_WH.BOX_QTY, boxQty)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
@@ -199,14 +194,12 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                         .and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
                 )
                 .execute()
-        }
+
     }
 
-    fun updateInspectionDate(data: ImportBacklogWh): Boolean {
-        return context.transactionResult { configuration ->
-            val transactionalContext = DSL.using(configuration)
+    fun updateInspectionDate(data: ImportBacklogWh) {
 
-            val affectedRows = transactionalContext.update(BACKLOG_WH)
+            val affectedRows = context.update(BACKLOG_WH)
                 .set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
@@ -218,8 +211,6 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 )
                 .execute()
 
-            affectedRows > 0 // Trả về true nếu có ít nhất 1 dòng bị cập nhật
-        }
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

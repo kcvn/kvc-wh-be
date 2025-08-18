@@ -33,8 +33,8 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
         )
     }
 
-    fun getListFormCodeDropdown(isIncludeApproved: Boolean): BaseResponse<List<DropdownResponse>> {
-        val listFormCode = tempSendingImportedRepo.getListFormCode(isIncludeApproved)
+    fun getListFormCodeDropdown(isIncludeApproved: Boolean, isIncludeGe3Days: Boolean): BaseResponse<List<DropdownResponse>> {
+        val listFormCode = tempSendingImportedRepo.getListFormCode(isIncludeApproved, isIncludeGe3Days)
 
         // Map DropDownResponse
         val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->

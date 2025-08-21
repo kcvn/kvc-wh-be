@@ -35,14 +35,14 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
         return Pair(data, count)
     }
 
-    fun getListFormCode(isIncludeApproved: Boolean, isIncludeGe3Days: Boolean): List<String> {
+    fun getListFormCode(formStatus: String, isIncludeGe3Days: Boolean): List<String> {
         val offset = OffsetDateTime.now().offset
         val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(2), LocalTime.MIDNIGHT, offset)
         val tomorrow = OffsetDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT, offset)
 
         val condition = TEMP_SENDING_IMPORTED.FORM_CODE.isNotNull
             .and(TEMP_SENDING_IMPORTED.CREATED_DATE.lt(tomorrow))
-            .and(if (isIncludeApproved) DSL.noCondition() else TEMP_SENDING_IMPORTED.IS_APPROVED.eq(false))
+            .and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") TEMP_SENDING_IMPORTED.IS_APPROVED.eq(true) else TEMP_SENDING_IMPORTED.IS_APPROVED.eq(false))
             .and(if (isIncludeGe3Days) DSL.noCondition() else TEMP_SENDING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
 
         return context.selectDistinct(TEMP_SENDING_IMPORTED.FORM_CODE, TEMP_SENDING_IMPORTED.CREATED_DATE)

@@ -86,13 +86,14 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getList(
         formCode: String,
+        poNumber: String?,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
 //        @SortDefault.SortDefaults(
 //            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
 //        )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<TempSendingInquiryResponse>> {
-        val result = sendingService.getTempSendingList(formCode, pageable)
+        val result = sendingService.getTempSendingList(formCode, poNumber, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

@@ -17,7 +17,8 @@ import java.time.LocalDate
 
 @Repository
 class TempSendingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
-    fun getListForApprove(formCode: String, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingInquiryResponse>, Int> {
+    fun getListForApprove(formCode: String, poNumber: String?, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingInquiryResponse>, Int> {
+        val searchPoNumber = poNumber ?: ""
         val sql = """
                     WITH temp1 AS (SELECT
                         COALESCE (tsi.form_code, tst_summary.form_code) AS form_code,
@@ -35,7 +36,7 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
                     FULL OUTER JOIN (
                         SELECT form_code, po_number, min_bin_code AS location_code, inspection_date, SUM(qty) AS qty
                         FROM temp_sending_transactions
-                        WHERE form_code = :formCode
+                        WHERE form_code = ?
                         GROUP BY form_code, po_number, inspection_date, min_bin_code
                     ) tst_summary
                         ON tsi.form_code = tst_summary.form_code
@@ -67,12 +68,12 @@ FULL OUTER JOIN (
                         AND temp1.po_number = tsct_summary.po_number
                         AND temp1.inspection_date = tsct_summary.inspection_date
                         AND temp1.location_code = tsct_summary.location_code
-                        WHERE (temp1.form_code = ? OR tsct_summary.form_code = ?)
+                        WHERE (temp1.form_code = ? OR tsct_summary.form_code = ?) and (temp1.po_number ilike ? OR tsct_summary.po_number ilike ?)
                         ORDER BY status
             """.trimIndent()
 
                 val result = context
-                    .resultQuery(sql, formCode, formCode, formCode, formCode, formCode, formCode)
+                    .resultQuery(sql, formCode, formCode, formCode, formCode, formCode, formCode, "%${searchPoNumber}%", "%${searchPoNumber}%")
                     .fetch()
                     .map {
                         TempSendingInquiryResponse(

@@ -63,8 +63,8 @@ class SendingTransactionsService(
         )
     }
 
-    fun getTempSendingList(formCode: String, pageable: Pageable):BasePagingResponse<TempSendingInquiryResponse>{
-        val data = tempSendingRepo.getListForApprove(formCode, pageable)
+    fun getTempSendingList(formCode: String, poNumber: String?, pageable: Pageable):BasePagingResponse<TempSendingInquiryResponse>{
+        val data = tempSendingRepo.getListForApprove(formCode, poNumber, pageable)
         return BasePagingResponse(
             data.first,
             data.second

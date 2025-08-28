@@ -21,7 +21,7 @@ import java.time.ZoneOffset
 
 @Repository
 class StockTakingRepository(private val context: DSLContext) : SortingRepository() {
-    fun getListByRawSql(
+    fun getListOnGoingByRawSql(
         request: StockTakingMonthlyRequest,
         pageable: Pageable
     ): Pair<List<StockTakingMonthlyResponse>, Int> {
@@ -55,6 +55,68 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
             }
 
         return result to totalCount
+    }
+
+    fun getListCompletedByRawSql(
+        request: StockTakingMonthlyRequest,
+        pageable: Pageable
+    ): Pair<List<StockTakingMonthlyResponse>, Int> {
+        val (sql, params) = createSqlQueryCompleted(request)
+
+        val countSql = "SELECT COUNT(*) FROM (${sql}) AS count_table"
+        val totalCount = context.fetchOne(countSql, *params.toTypedArray())?.get(0, Int::class.java) ?: 0
+
+        val paginatedSql = "$sql LIMIT ? OFFSET ?"
+        val paginatedParams = params.toMutableList().apply {
+            add(pageable.pageSize)
+            add(pageable.offset.toInt())
+        }
+
+        val result = context
+            .fetch(paginatedSql, *paginatedParams.toTypedArray())
+            .map {
+                StockTakingMonthlyResponse(
+                    poNumber = it.get("po_number", String::class.java),
+                    packageCode = it.get("package_code", String::class.java),
+                    systemLocationCode = it.get("system_location_code", String::class.java),
+                    actualLocationCode = it.get("actual_location_code", String::class.java),
+                    systemQty = it.get("system_qty", BigDecimal::class.java),
+                    actualQty = it.get("actual_qty", BigDecimal::class.java),
+                    systemBoxQty = it.get("system_box_qty", Int::class.java),
+                    actualBoxQty = it.get("actual_box_qty", Int::class.java),
+                    resultLocationCode = it.get("result_location_code", String::class.java),
+                    resultQty = it.get("result_qty", String::class.java),
+                    resultBoxQty = it.get("result_box_qty", String::class.java)
+                )
+            }
+
+        return result to totalCount
+    }
+
+    fun getListOnGoingForStopByRawSql(
+        request: StockTakingMonthlyRequest,
+    ): List<StockTakingMonthlyResponse> {
+        val (sql, params) = createSqlQuery(request)
+        val paginatedParams = params.toMutableList().apply {}
+        val result = context
+            .fetch(sql, *paginatedParams.toTypedArray())
+            .map {
+                StockTakingMonthlyResponse(
+                    poNumber = it.get("po_number", String::class.java),
+                    packageCode = it.get("package_code", String::class.java),
+                    systemLocationCode = it.get("system_location_code", String::class.java),
+                    actualLocationCode = it.get("actual_location_code", String::class.java),
+                    systemQty = it.get("system_qty", BigDecimal::class.java),
+                    actualQty = it.get("actual_qty", BigDecimal::class.java),
+                    systemBoxQty = it.get("system_box_qty", Int::class.java),
+                    actualBoxQty = it.get("actual_box_qty", Int::class.java),
+                    resultLocationCode = it.get("result_location_code", String::class.java),
+                    resultQty = it.get("result_qty", String::class.java),
+                    resultBoxQty = it.get("result_box_qty", String::class.java)
+                )
+            }
+
+        return result
     }
 
     fun getAll(
@@ -184,6 +246,80 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
         return sqlBuilder.toString() to params
     }
 
+    fun createSqlQueryCompleted(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
+        val sql = """
+    SELECT 
+        po_number,
+        package_code,
+        system_location_code,
+        system_qty,
+        system_box_qty,
+        actual_location_code,
+        actual_qty,
+        actual_box_qty,
+        year_number,
+        month_number,
+        CASE 
+            WHEN actual_location_code = system_location_code THEN 'SAME'
+            ELSE 'DIFFERENT'
+        END AS result_location_code,
+        CASE 
+            WHEN actual_qty = system_qty THEN 'SAME'
+            ELSE 'DIFFERENT'
+        END AS result_qty,
+        CASE 
+            WHEN actual_box_qty = system_box_qty THEN 'SAME'
+            ELSE 'DIFFERENT'
+        END AS result_box_qty
+    FROM stock_taking st
+    WHERE 1 = 1 
+""".trimIndent()
+
+        val params = mutableListOf<Any>()
+        val whereConditions = mutableListOf<String>()
+
+        if (request.yearNumber != null) {
+            whereConditions.add("st.year_number = ?")
+            params.add(request.yearNumber!!)
+        }
+
+        if (request.monthNumber != null) {
+            whereConditions.add("st.month_number = ?")
+            params.add(request.monthNumber!!)
+        }
+
+        if (!request.poNumber.isNullOrBlank()) {
+            whereConditions.add("st.po_number = ?")
+            params.add(request.poNumber!!)
+        }
+
+        if (request.conditionQuery == "DIFFERENT") {
+            whereConditions.add("""
+        (
+            actual_location_code != system_location_code OR 
+            actual_qty != system_qty OR 
+            actual_box_qty != system_box_qty
+        )
+    """.trimIndent())
+        }
+
+        if (request.conditionQuery == "SAME") {
+            whereConditions.add("""
+        actual_location_code = system_location_code AND 
+        actual_qty = system_qty AND 
+        actual_box_qty = system_box_qty
+    """.trimIndent())
+        }
+
+        val sqlBuilder = StringBuilder(sql)
+
+        if (whereConditions.isNotEmpty()) {
+            sqlBuilder.appendLine("AND ${whereConditions.joinToString(" AND ")}")
+        }
+
+        return sqlBuilder.toString() to params
+    }
+
 
     fun getListForAndroid(yearNumber: Int, monthNumber: Int, pageable: Pageable): Pair<List<StockTaking>, Int> {
         val query = context.selectFrom(STOCK_TAKING)
@@ -222,6 +358,22 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 )
                 .execute()
         }
+    }
+
+    fun updateSystem(yearNumber: Int, monthNumber: Int, request: StockTakingMonthlyResponse) {
+        context.update(STOCK_TAKING)
+                .set(STOCK_TAKING.SYSTEM_LOCATION_CODE, request.systemLocationCode)
+                .set(STOCK_TAKING.SYSTEM_QTY, request.systemQty)
+                .set(STOCK_TAKING.SYSTEM_BOX_QTY, request.systemBoxQty)
+                .set(STOCK_TAKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(STOCK_TAKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .where(
+                    STOCK_TAKING.YEAR_NUMBER.eq(yearNumber)
+                        .and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
+                        .and(STOCK_TAKING.PACKAGE_CODE.eq(request.packageCode))
+                )
+                .execute()
+
     }
 
     fun save(domain: StockTaking) {

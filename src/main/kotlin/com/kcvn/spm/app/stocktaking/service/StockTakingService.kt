@@ -129,6 +129,13 @@ class StockTakingService(
     }
 
     fun stopActual(request: StopActualRequest) {
+        val newRequest = StockTakingMonthlyRequest(
+            yearNumber = request.yearNumber,
+            monthNumber = request.monthNumber
+        )
+        val stockTakingList = stockTakingRepo.getListOnGoingForStopByRawSql(newRequest)
+        stockTakingList.forEach{p ->
+        stockTakingRepo.updateSystem(newRequest.yearNumber!!, newRequest.monthNumber!!, p)}
         stockTakingStatusRepo.updateStatus(request.yearNumber!!, request.monthNumber!!)
     }
 
@@ -151,7 +158,11 @@ class StockTakingService(
     }
 
     fun getListActualStockByRawSql(request: StockTakingMonthlyRequest, pageable: Pageable): BasePagingResponse<ActualStockTakingResponse> {
-        val stockTakingList = stockTakingRepo.getListByRawSql(request, pageable)
+        val stt = stockTakingStatusRepo.findByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("stock.taking.not.start.yet"), arrayOf(""))
+        val stockTakingList = if (stt.status == "on-going") stockTakingRepo.getListOnGoingByRawSql(request, pageable)
+        else stockTakingRepo.getListCompletedByRawSql(request, pageable)
+
         val systemList = mapToActualResponse(stockTakingList.first)
         return BasePagingResponse(
             systemList,

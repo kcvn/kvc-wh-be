@@ -282,6 +282,22 @@ FROM
         """.trimIndent())
         }
 
+        if (request.isChecked == "CHECKED") {
+            finalWhere.add("""
+            final_data.checking_location_code IS NOT NULL
+            AND final_data.checking_qty IS NOT NULL
+            AND final_data.checking_box_qty IS NOT NULL
+        """.trimIndent())
+        }
+
+        if (request.isChecked == "UNCHECKED") {
+            finalWhere.add("""
+            final_data.checking_location_code IS NULL
+            AND final_data.checking_qty IS NULL
+            AND final_data.checking_box_qty IS NULL
+        """.trimIndent())
+        }
+
         if (request.yearNumber != null) {
             finalWhere.add("final_data.year_number = ?")
             params.add(request.yearNumber!!)

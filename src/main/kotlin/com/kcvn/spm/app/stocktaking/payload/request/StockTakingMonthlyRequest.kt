@@ -4,5 +4,6 @@ data class StockTakingMonthlyRequest(
     var yearNumber: Int? = null,
     var monthNumber: Int? = null,
     var poNumber: String? = null,
-    var conditionQuery: String? = null
+    var conditionQuery: String? = null,
+    var isChecked: String? = null
 )

@@ -24,6 +24,7 @@ import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
+import com.kcvn.spm.model.tables.StockTakingChecking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
 import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
@@ -132,6 +133,11 @@ val SPLITTING: Splitting = Splitting.SPLITTING
  * The table <code>public.stock_taking</code>.
  */
 val STOCK_TAKING: StockTaking = StockTaking.STOCK_TAKING
+
+/**
+ * The table <code>public.stock_taking_checking</code>.
+ */
+val STOCK_TAKING_CHECKING: StockTakingChecking = StockTakingChecking.STOCK_TAKING_CHECKING
 
 /**
  * The table <code>public.stock_taking_status</code>.

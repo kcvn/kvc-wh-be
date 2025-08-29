@@ -24,6 +24,7 @@ import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
+import com.kcvn.spm.model.tables.StockTakingChecking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
 import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
@@ -49,6 +50,7 @@ import com.kcvn.spm.model.tables.records.MovingRecord
 import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SplittingRecord
+import com.kcvn.spm.model.tables.records.StockTakingCheckingRecord
 import com.kcvn.spm.model.tables.records.StockTakingRecord
 import com.kcvn.spm.model.tables.records.StockTakingStatusRecord
 import com.kcvn.spm.model.tables.records.TempCheckingImportedRecord
@@ -88,6 +90,7 @@ val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Intern
 val SENDING_TRANSACTIONS_PKEY: UniqueKey<SendingTransactionsRecord> = Internal.createUniqueKey(SendingTransactions.SENDING_TRANSACTIONS, DSL.name("sending_transactions_pkey"), arrayOf(SendingTransactions.SENDING_TRANSACTIONS.ID), true)
 val SPLITTING_PKEY: UniqueKey<SplittingRecord> = Internal.createUniqueKey(Splitting.SPLITTING, DSL.name("splitting_pkey"), arrayOf(Splitting.SPLITTING.ID), true)
 val STOCK_TAKING_PKEY_1: UniqueKey<StockTakingRecord> = Internal.createUniqueKey(StockTaking.STOCK_TAKING, DSL.name("stock_taking_pkey_1"), arrayOf(StockTaking.STOCK_TAKING.ID), true)
+val STOCK_TAKING_PKEY_1_1: UniqueKey<StockTakingCheckingRecord> = Internal.createUniqueKey(StockTakingChecking.STOCK_TAKING_CHECKING, DSL.name("stock_taking_pkey_1_1"), arrayOf(StockTakingChecking.STOCK_TAKING_CHECKING.ID), true)
 val STOCK_TAKING_STATUS_PKEY: UniqueKey<StockTakingStatusRecord> = Internal.createUniqueKey(StockTakingStatus.STOCK_TAKING_STATUS, DSL.name("stock_taking_status_pkey"), arrayOf(StockTakingStatus.STOCK_TAKING_STATUS.ID), true)
 val TEMP_CHECKING_IMPORTED_DATE_PKEY: UniqueKey<TempCheckingImportedRecord> = Internal.createUniqueKey(TempCheckingImported.TEMP_CHECKING_IMPORTED, DSL.name("temp_checking_imported_date_pkey"), arrayOf(TempCheckingImported.TEMP_CHECKING_IMPORTED.ID), true)
 val TEMP_SENDING_TRANSACTIONS_PKEY_1: UniqueKey<TempSendingCheckingTransactionsRecord> = Internal.createUniqueKey(TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS, DSL.name("temp_sending_transactions_pkey_1"), arrayOf(TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS.ID), true)

@@ -8,9 +8,12 @@ data class ActualStockTakingResponse(
     var packageCode: String? = null,
     var systemLocationCode: String? = null,
     var actualLocationCode: String? = null,
+    var checkingLocationCode: String? = null,
     var systemQty: BigDecimal? = null,
     var actualQty: BigDecimal? = null,
+    var checkingQty: BigDecimal? = null,
     var systemBoxQty: Int? = null,
     var actualBoxQty: Int? = null,
+    var checkingBoxQty: Int? = null,
     var result: String? = null
 )

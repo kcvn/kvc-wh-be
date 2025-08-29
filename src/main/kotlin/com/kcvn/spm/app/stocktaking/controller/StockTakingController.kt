@@ -127,6 +127,20 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         )
     }
 
+    @PostMapping("/actual-stock-taking-checking/scan")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    fun checkingScan(@Valid @RequestBody request: List<ScanRequest>): ResponseEntity<*> {
+        stockTakingService.checkingScan(request)
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post actual-stock-taking-checking/scan" + ", REQUEST: " + request
+        )
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
+    }
+
     @PostMapping("/actual-stock-taking/stop")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun stopActual(@Valid @RequestBody request: StopActualRequest): ResponseEntity<*> {

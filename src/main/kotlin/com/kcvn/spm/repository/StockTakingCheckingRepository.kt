@@ -9,7 +9,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
-import com.kcvn.spm.model.tables.references.STOCK_TAKING
+import com.kcvn.spm.model.tables.references.STOCK_TAKING_CHECKING
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
@@ -20,7 +20,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
-class StockTakingRepository(private val context: DSLContext) : SortingRepository() {
+class StockTakingCheckingRepository(private val context: DSLContext) : SortingRepository() {
     fun getListOnGoingByRawSql(
         request: StockTakingMonthlyRequest,
         pageable: Pageable
@@ -44,13 +44,10 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                     packageCode = it.get("package_code", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
-                    checkingLocationCode = it.get("checking_location_code", String::class.java),
                     systemQty = it.get("system_qty", BigDecimal::class.java),
                     actualQty = it.get("actual_qty", BigDecimal::class.java),
-                    checkingQty = it.get("checking_qty", BigDecimal::class.java),
                     systemBoxQty = it.get("system_box_qty", Int::class.java),
                     actualBoxQty = it.get("actual_box_qty", Int::class.java),
-                    checkingBoxQty = it.get("checking_box_qty", Int::class.java),
                     resultLocationCode = it.get("result_location_code", String::class.java),
                     resultQty = it.get("result_qty", String::class.java),
                     resultBoxQty = it.get("result_box_qty", String::class.java)
@@ -154,74 +151,29 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
     fun createSqlQuery(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
         val sql = """
         SELECT * FROM (
-SELECT
-	COALESCE(temp_data.po_number,checking_stock_data.po_number) AS po_number,
-	COALESCE (temp_data.package_code,checking_stock_data.package_code) AS package_code,
-	temp_data.system_location_code,
-	temp_data.system_qty,
-	temp_data.system_box_qty,
-	temp_data.actual_location_code,
-	temp_data.actual_qty,
-	temp_data.actual_box_qty,
-	COALESCE(temp_data.year_number,checking_stock_data.year_number) AS year_number,
-	COALESCE(temp_data.month_number,checking_stock_data.month_number) AS month_number,
-	checking_stock_data.actual_location_code AS checking_location_code,
-	checking_stock_data.actual_qty AS checking_qty,
-	checking_stock_data.actual_box_qty AS checking_box_qty,
-	CASE 
-	    WHEN temp_data.actual_location_code = temp_data.system_location_code
-	         AND (
-	              checking_stock_data.actual_location_code IS NULL
-	              OR checking_stock_data.actual_location_code = temp_data.actual_location_code
-	         )
-	    THEN 'SAME'
-	    ELSE 'DIFFERENT'
-	END AS result_location_code,
-	CASE 
-	    WHEN temp_data.actual_qty = temp_data.system_qty
-	         AND (
-	              checking_stock_data.actual_qty IS NULL
-	              OR checking_stock_data.actual_qty = temp_data.actual_qty
-	         )
-	    THEN 'SAME'
-	    ELSE 'DIFFERENT'
-	END AS result_qty,
-	CASE 
-	    WHEN temp_data.actual_box_qty = temp_data.system_box_qty
-	         AND (
-	              checking_stock_data.actual_box_qty IS NULL
-	              OR checking_stock_data.actual_box_qty = temp_data.actual_box_qty
-	         )
-	    THEN 'SAME'
-	    ELSE 'DIFFERENT'
-	END AS result_box_qty
-
-FROM
-	(
-		SELECT
-			COALESCE(
-				stock_data.po_number
-				, bw.po_number
-			) AS po_number
-			,
-                COALESCE(
-				stock_data.package_code
-				, bw.package_code
-			) AS package_code
-			,
-                bw.location_code AS system_location_code
-			,
-                bw.backlog_qty AS system_qty
-			,
-                bw.box_qty AS system_box_qty
-			,
-                stock_data.actual_location_code
-   ,             stock_data.actual_qty
-   ,             stock_data.actual_box_qty
-			,
-                stock_data.year_number
-			,
-                stock_data.month_number
+            SELECT 
+                COALESCE(stock_data.po_number, bw.po_number) AS po_number,
+                COALESCE(stock_data.package_code, bw.package_code) AS package_code,
+                bw.location_code AS system_location_code,
+                bw.backlog_qty AS system_qty,
+                bw.box_qty AS system_box_qty,
+                stock_data.actual_location_code,
+                stock_data.actual_qty,
+                stock_data.actual_box_qty,
+                stock_data.year_number,
+                stock_data.month_number,
+                CASE 
+                    WHEN stock_data.actual_location_code = bw.location_code THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_location_code,
+                CASE 
+                    WHEN stock_data.actual_qty = bw.backlog_qty THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_qty,
+                CASE 
+                    WHEN stock_data.actual_box_qty = bw.box_qty THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_box_qty
             FROM (
                 SELECT
                     st.po_number,
@@ -231,31 +183,36 @@ FROM
                     st.actual_box_qty,
                     st.year_number,
                     st.month_number
-                FROM stock_taking st
-                WHERE 1 = 1  ) stock_data
-            FULL OUTER JOIN (
-                SELECT * FROM backlog_wh bw WHERE bw.backlog_qty > 0
-            ) bw ON stock_data.package_code = bw.package_code
-        ) temp_data
-         FULL OUTER JOIN (
-            SELECT
-                    st.po_number,
-                    st.package_code,
-                    st.actual_location_code,
-                    st.actual_qty,
-                    st.actual_box_qty,
-                    st.year_number,
-                    st.month_number
-                FROM stock_taking_checking st
-                WHERE 1 = 1  ) checking_stock_data
-            ON temp_data.package_code = checking_stock_data.package_code 
-            AND temp_data.year_number = checking_stock_data.year_number
-            AND temp_data.month_number = checking_stock_data.month_number
-            ) final_data 
+                FROM STOCK_TAKING_CHECKING st
+                WHERE 1 = 1 
     """.trimIndent()
 
         val params = mutableListOf<Any>()
+        val stockTakingWhere = mutableListOf<String>()
+
+        if (request.yearNumber != null) {
+            stockTakingWhere.add("st.year_number = ?")
+            params.add(request.yearNumber!!)
+        }
+
+        if (request.monthNumber != null) {
+            stockTakingWhere.add("st.month_number = ?")
+            params.add(request.monthNumber!!)
+        }
+
         val sqlBuilder = StringBuilder(sql)
+
+        if (stockTakingWhere.isNotEmpty()) {
+            sqlBuilder.appendLine("AND ${stockTakingWhere.joinToString(" AND ")}")
+        }
+
+        sqlBuilder.appendLine("""
+            ) stock_data
+            FULL OUTER JOIN (
+                SELECT * FROM backlog_wh bw WHERE bw.backlog_qty > 0
+            ) bw ON stock_data.package_code = bw.package_code
+        ) final_data
+    """.trimIndent())
 
         val finalWhere = mutableListOf<String>()
 
@@ -280,16 +237,6 @@ FROM
             final_data.result_qty = 'SAME' AND 
             final_data.result_box_qty = 'SAME'
         """.trimIndent())
-        }
-
-        if (request.yearNumber != null) {
-            finalWhere.add("final_data.year_number = ?")
-            params.add(request.yearNumber!!)
-        }
-
-        if (request.monthNumber != null) {
-            finalWhere.add("final_data.month_number = ?")
-            params.add(request.monthNumber!!)
         }
 
         if (finalWhere.isNotEmpty()) {
@@ -324,7 +271,7 @@ FROM
             WHEN actual_box_qty = system_box_qty THEN 'SAME'
             ELSE 'DIFFERENT'
         END AS result_box_qty
-    FROM stock_taking st
+    FROM STOCK_TAKING_CHECKING st
     WHERE 1 = 1 
 """.trimIndent()
 
@@ -375,20 +322,20 @@ FROM
 
 
     fun getListForAndroid(yearNumber: Int, monthNumber: Int, pageable: Pageable): Pair<List<StockTaking>, Int> {
-        val query = context.selectFrom(STOCK_TAKING)
-            .where(STOCK_TAKING.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber)))
+        val query = context.selectFrom(STOCK_TAKING_CHECKING)
+            .where(STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber)))
         val count = query.count()
         val data = query
-            .orderBy(getSortFields(pageable.sort, STOCK_TAKING.CREATED_DATE))
+            .orderBy(getSortFields(pageable.sort, STOCK_TAKING_CHECKING.CREATED_DATE))
             .fetchInto(StockTaking::class.java)
 
         return Pair(data, count)
     }
 
     fun findByPackageCode(packageCode: String): StockTaking? {
-        return context.selectFrom(STOCK_TAKING)
+        return context.selectFrom(STOCK_TAKING_CHECKING)
             .where(
-                STOCK_TAKING.PACKAGE_CODE.eq(packageCode)
+                STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(packageCode)
             )
             .fetchInto(StockTaking::class.java)
             .firstOrNull()
@@ -398,32 +345,32 @@ FROM
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
 
-            transactionalContext.update(STOCK_TAKING)
-                .set(STOCK_TAKING.ACTUAL_LOCATION_CODE, request.actualLocationCode)
-                .set(STOCK_TAKING.ACTUAL_QTY, request.actualQty)
-                .set(STOCK_TAKING.ACTUAL_BOX_QTY, request.actualBoxQty)
-                .set(STOCK_TAKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(STOCK_TAKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            transactionalContext.update(STOCK_TAKING_CHECKING)
+                .set(STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE, request.actualLocationCode)
+                .set(STOCK_TAKING_CHECKING.ACTUAL_QTY, request.actualQty)
+                .set(STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, request.actualBoxQty)
+                .set(STOCK_TAKING_CHECKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(STOCK_TAKING_CHECKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(
-                    STOCK_TAKING.YEAR_NUMBER.eq(yearNumber)
-                        .and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
-                        .and(STOCK_TAKING.PACKAGE_CODE.eq(request.packageCode))
+                    STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
+                        .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
+                        .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
                 )
                 .execute()
         }
     }
 
     fun updateSystem(yearNumber: Int, monthNumber: Int, request: StockTakingMonthlyResponse) {
-        context.update(STOCK_TAKING)
-                .set(STOCK_TAKING.SYSTEM_LOCATION_CODE, request.systemLocationCode)
-                .set(STOCK_TAKING.SYSTEM_QTY, request.systemQty)
-                .set(STOCK_TAKING.SYSTEM_BOX_QTY, request.systemBoxQty)
-                .set(STOCK_TAKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(STOCK_TAKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+        context.update(STOCK_TAKING_CHECKING)
+                .set(STOCK_TAKING_CHECKING.SYSTEM_LOCATION_CODE, request.systemLocationCode)
+                .set(STOCK_TAKING_CHECKING.SYSTEM_QTY, request.systemQty)
+                .set(STOCK_TAKING_CHECKING.SYSTEM_BOX_QTY, request.systemBoxQty)
+                .set(STOCK_TAKING_CHECKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+                .set(STOCK_TAKING_CHECKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(
-                    STOCK_TAKING.YEAR_NUMBER.eq(yearNumber)
-                        .and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
-                        .and(STOCK_TAKING.PACKAGE_CODE.eq(request.packageCode))
+                    STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
+                        .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
+                        .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
                 )
                 .execute()
 
@@ -431,9 +378,9 @@ FROM
 
     fun save(domain: StockTaking) {
         context.insertInto(
-            STOCK_TAKING, STOCK_TAKING.YEAR_NUMBER, STOCK_TAKING.MONTH_NUMBER, STOCK_TAKING.PO_NUMBER,
-            STOCK_TAKING.PACKAGE_CODE, STOCK_TAKING.ACTUAL_LOCATION_CODE, STOCK_TAKING.ACTUAL_QTY,
-            STOCK_TAKING.ACTUAL_BOX_QTY, STOCK_TAKING.CREATED_BY
+            STOCK_TAKING_CHECKING, STOCK_TAKING_CHECKING.YEAR_NUMBER, STOCK_TAKING_CHECKING.MONTH_NUMBER, STOCK_TAKING_CHECKING.PO_NUMBER,
+            STOCK_TAKING_CHECKING.PACKAGE_CODE, STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE, STOCK_TAKING_CHECKING.ACTUAL_QTY,
+            STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, STOCK_TAKING_CHECKING.CREATED_BY
         )
             .values(
                 domain.yearNumber, domain.monthNumber, domain.poNumber,
@@ -446,9 +393,9 @@ FROM
     fun deleteByYearAndMonth(yearNumber: Int, monthNumber: Int) {
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)
-            transactionalContext.deleteFrom(STOCK_TAKING)
+            transactionalContext.deleteFrom(STOCK_TAKING_CHECKING)
                 .where(
-                    STOCK_TAKING.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
+                    STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
                 )
                 .execute()
         }
@@ -459,19 +406,19 @@ FROM
         val month = request.monthNumber
 
         if (year != null && month != null) {
-            val insertQuery = context.insertInto(STOCK_TAKING)
+            val insertQuery = context.insertInto(STOCK_TAKING_CHECKING)
                 .columns(
-                    STOCK_TAKING.YEAR_NUMBER,
-                    STOCK_TAKING.MONTH_NUMBER,
-                    STOCK_TAKING.PO_NUMBER,
-                    STOCK_TAKING.PACKAGE_CODE,
-                    STOCK_TAKING.SYSTEM_LOCATION_CODE,
-                    STOCK_TAKING.ACTUAL_LOCATION_CODE,
-                    STOCK_TAKING.SYSTEM_QTY,
-                    STOCK_TAKING.ACTUAL_QTY,
-                    STOCK_TAKING.SYSTEM_BOX_QTY,
-                    STOCK_TAKING.ACTUAL_BOX_QTY,
-                    STOCK_TAKING.CREATED_BY
+                    STOCK_TAKING_CHECKING.YEAR_NUMBER,
+                    STOCK_TAKING_CHECKING.MONTH_NUMBER,
+                    STOCK_TAKING_CHECKING.PO_NUMBER,
+                    STOCK_TAKING_CHECKING.PACKAGE_CODE,
+                    STOCK_TAKING_CHECKING.SYSTEM_LOCATION_CODE,
+                    STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE,
+                    STOCK_TAKING_CHECKING.SYSTEM_QTY,
+                    STOCK_TAKING_CHECKING.ACTUAL_QTY,
+                    STOCK_TAKING_CHECKING.SYSTEM_BOX_QTY,
+                    STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY,
+                    STOCK_TAKING_CHECKING.CREATED_BY
                 )
                 .select(
                     context.select(
@@ -501,16 +448,16 @@ FROM
 //        val month = request.monthNumber
 //
 //        if (year != null && month != null) {
-//            val insertQuery = context.insertInto(STOCK_TAKING)
+//            val insertQuery = context.insertInto(STOCK_TAKING_CHECKING)
 //                .columns(
-//                    STOCK_TAKING.YEAR_NUMBER,
-//                    STOCK_TAKING.MONTH_NUMBER,
-//                    STOCK_TAKING.INSPECTION_DATE,
-//                    STOCK_TAKING.PO_NUMBER,
-//                    STOCK_TAKING.AMOEBA_LOCATION_CODE,
-//                    STOCK_TAKING.ACTUAL_LOCATION_CODE,
-//                    STOCK_TAKING.AMOEBA_QTY,
-//                    STOCK_TAKING.ACTUAL_QTY
+//                    STOCK_TAKING_CHECKING.YEAR_NUMBER,
+//                    STOCK_TAKING_CHECKING.MONTH_NUMBER,
+//                    STOCK_TAKING_CHECKING.INSPECTION_DATE,
+//                    STOCK_TAKING_CHECKING.PO_NUMBER,
+//                    STOCK_TAKING_CHECKING.AMOEBA_LOCATION_CODE,
+//                    STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE,
+//                    STOCK_TAKING_CHECKING.AMOEBA_QTY,
+//                    STOCK_TAKING_CHECKING.ACTUAL_QTY
 //                )
 //                .select(
 //                    context.select(
@@ -535,9 +482,9 @@ FROM
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "yearNumber" -> STOCK_TAKING.YEAR_NUMBER
-            "monthNumber" -> STOCK_TAKING.MONTH_NUMBER
-            else -> STOCK_TAKING.CREATED_DATE
+            "yearNumber" -> STOCK_TAKING_CHECKING.YEAR_NUMBER
+            "monthNumber" -> STOCK_TAKING_CHECKING.MONTH_NUMBER
+            else -> STOCK_TAKING_CHECKING.CREATED_DATE
         }
         return sortField
     }

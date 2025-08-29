@@ -34,6 +34,7 @@ class StockTakingService(
     private val amoebaRepo: AmoebaRepository,
     private val stockTakingStatusRepo: StockTakingStatusRepository,
     private val stockTakingRepo: StockTakingRepository,
+    private val stockTakingCheckingRepo: StockTakingCheckingRepository,
     private val backlogBinEntryRepo: BacklogBinEntryRepository,
     private val backlogWhRepo: BacklogWhRepository,
 ) {
@@ -128,6 +129,36 @@ class StockTakingService(
         }
     }
 
+    fun checkingScan(request: List<ScanRequest>) {
+        val sTT = stockTakingStatusRepo.findByStatus("on-going")
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
+        request.forEach { element ->
+//            val backlog = backlogWhRepo.findByPackageCode(element.packageCode!!)
+//                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = ${element.packageCode}")
+//            val poNumber = backlog.poNumber
+            val domain = StockTaking(
+                null,
+                sTT.yearNumber,
+                sTT.monthNumber,
+                element.poNumber,
+                element.packageCode,
+                null,
+                element.actualLocationCode,
+                null,
+                element.actualQty,
+                null,
+                element.actualBoxQty
+            )
+
+            val stockTakingChecking = stockTakingCheckingRepo.findByPackageCode(element.packageCode!!)
+            if (stockTakingChecking != null) {
+                stockTakingCheckingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
+            } else {
+                stockTakingCheckingRepo.save(domain)
+            }
+        }
+    }
+
     fun stopActual(request: StopActualRequest) {
         val newRequest = StockTakingMonthlyRequest(
             yearNumber = request.yearNumber,
@@ -200,10 +231,13 @@ class StockTakingService(
                 packageCode = it.packageCode,
                 systemLocationCode = it.systemLocationCode,
                 actualLocationCode = it.actualLocationCode,
+                checkingLocationCode = it.checkingLocationCode,
                 systemQty = it.systemQty,
                 actualQty = it.actualQty,
+                checkingQty = it.checkingQty,
                 systemBoxQty = it.systemBoxQty,
                 actualBoxQty = it.actualBoxQty,
+                checkingBoxQty = it.checkingBoxQty,
                 result = resolveResult(it.resultLocationCode, it.resultQty, it.resultBoxQty)
             )
         }

@@ -24,6 +24,7 @@ import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
+import com.kcvn.spm.model.tables.StockTakingChecking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
 import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
@@ -152,6 +153,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val STOCK_TAKING: StockTaking get() = StockTaking.STOCK_TAKING
 
     /**
+     * The table <code>public.stock_taking_checking</code>.
+     */
+    val STOCK_TAKING_CHECKING: StockTakingChecking get() = StockTakingChecking.STOCK_TAKING_CHECKING
+
+    /**
      * The table <code>public.stock_taking_status</code>.
      */
     val STOCK_TAKING_STATUS: StockTakingStatus get() = StockTakingStatus.STOCK_TAKING_STATUS
@@ -204,6 +210,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         SendingTransactions.SENDING_TRANSACTIONS,
         Splitting.SPLITTING,
         StockTaking.STOCK_TAKING,
+        StockTakingChecking.STOCK_TAKING_CHECKING,
         StockTakingStatus.STOCK_TAKING_STATUS,
         TempCheckingImported.TEMP_CHECKING_IMPORTED,
         TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS,

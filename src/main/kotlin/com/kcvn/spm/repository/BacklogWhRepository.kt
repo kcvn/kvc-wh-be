@@ -16,6 +16,7 @@ import org.jooq.impl.SQLDataType
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -169,7 +170,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             context.update(BACKLOG_WH)
                 .set(BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
                 .set(BACKLOG_WH.BOX_QTY, data.boxQty)
-                .set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
+                //.set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
                 .set(BACKLOG_WH.IS_ENTRIED, data.isEntried)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
@@ -211,6 +212,19 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 )
                 .execute()
 
+    }
+
+    fun updateIsEntried(isEntried: Boolean, poNumber: String, receivingDate: LocalDate, inspectionDate: LocalDate) {
+        context.update(BACKLOG_WH)
+            .set(BACKLOG_WH.IS_ENTRIED, isEntried)
+            .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                BACKLOG_WH.PO_NUMBER.eq(poNumber)
+                    .and(BACKLOG_WH.RECEIVING_DATE.eq(receivingDate))
+                    .and(BACKLOG_WH.INSPECTION_DATE.eq(inspectionDate))
+            )
+            .execute()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

@@ -79,6 +79,7 @@ class MovingService(
                 inspectionDate = sourceBacklog?.inspectionDate
             )
             backlogWhService.minusBacklog(backlogSourceData, "OUT")
+            backlogWhRepo.updateIsEntried(false, sourceBacklog?.poNumber!!, recDateSource!!, sourceBacklog.inspectionDate!!)
         }
     }
 

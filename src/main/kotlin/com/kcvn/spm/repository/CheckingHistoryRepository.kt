@@ -22,27 +22,104 @@ import java.time.ZoneOffset
 @Repository
 class CheckingHistoryRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: CheckingHistorySearchRequest, pageable: Pageable) : Pair<List<CheckingHistory>, Int> {
-        var condition: Condition = DSL.noCondition()
-        val scanDate = CHECKING_HISTORY.field("scan_date", java.time.OffsetDateTime::class.java)
+        val keywordFormCode = request.formCode?.let { "%$it%" } ?: "%"
+        val keywordPoNumber = request.poNumber?.let { "%$it%" } ?: "%"
 
-        if (!request.poNumber.isNullOrEmpty()) {
-            condition = condition.and(CHECKING_HISTORY.PO_NUMBER.likeIgnoreCase("%${request.poNumber}%"))
-        }
-        if (!request.formCode.isNullOrEmpty()) {
-            condition = condition.and(CHECKING_HISTORY.FORM_CODE.likeIgnoreCase("%${request.formCode}%"))
-        }
-        if (request.fromDate != null && request.toDate != null) {
-            condition = condition.and(scanDate?.between(request.fromDate, request.toDate))
-        }
-        val query = context.selectFrom(CHECKING_HISTORY).where(condition)
-        val count = query.count()
-        val data = query
-            .orderBy(CHECKING_HISTORY.UPDATED_DATE.sort(SortOrder.DESC))
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .fetchInto(CheckingHistory::class.java)
+        val sql = """
+            SELECT 
+                ch.scan_date,
+                COALESCE(tci.form_code, ch.form_code) AS form_code,
+                COALESCE(tci.po_number, ch.po_number) AS po_number,
+                COALESCE(tci.qty, 0) AS imported_qty,
+                COALESCE(ch.scan_qty, 0) AS scanned_qty,
+                ch.seq_no
+            FROM temp_checking_imported tci
+            FULL OUTER JOIN checking_history ch
+                ON tci.form_code = ch.form_code
+               AND tci.po_number = ch.po_number
+            WHERE (tci.form_code ilike ? OR ch.form_code ilike ?)
+            AND (tci.po_number ilike ? OR ch.po_number ilike ?)
+        """.trimIndent()
+        val result = context
+            .resultQuery(sql, keywordFormCode, keywordFormCode, keywordPoNumber, keywordPoNumber)
+            .fetch()
+            .map {
+                CheckingHistory(
+                    scanDate = it.get("scan_date", LocalDate::class.java),
+                    formCode = it.get("form_code", String::class.java),
+                    poNumber = it.get("po_number", String::class.java),
+                    importQty = it.get("imported_qty", BigDecimal::class.java),
+                    scanQty = it.get("scanned_qty", BigDecimal::class.java),
+                    seqNo = it.get("seq_no", Int::class.java),
+                )
+            }
+        val duplicates = result.groupBy { it.poNumber to it.seqNo }
+            .filter { it.value.size > 1 }
 
-        return Pair(data, count)
+        val finalData = mutableListOf<CheckingHistory>()
+
+        duplicates.forEach { (key, records) ->
+            val (poNumber, seqNo) = key
+
+            var totalScannedQty = records[0].scanQty
+
+            records.forEach { record ->
+                if (record.importQty!! <= totalScannedQty) {
+                    val a = CheckingHistory(
+                        scanDate = record.scanDate,
+                        formCode = record.formCode,
+                        poNumber = record.poNumber,
+                        importQty = record.importQty,
+                        scanQty = record.importQty,
+                        seqNo = record.seqNo
+                    )
+                    finalData.add(a)
+                    totalScannedQty = totalScannedQty?.minus(record.importQty!!)
+                } else {
+                    val a = CheckingHistory(
+                        scanDate = record.scanDate,
+                        formCode = record.formCode,
+                        poNumber = record.poNumber,
+                        importQty = record.importQty,
+                        scanQty = totalScannedQty,
+                        seqNo = record.seqNo
+                    )
+                    finalData.add(a)
+
+                }
+            }
+        }
+
+
+
+
+        println(finalData)
+
+
+
+
+
+//        var condition: Condition = DSL.noCondition()
+//        val scanDate = CHECKING_HISTORY.field("scan_date", java.time.OffsetDateTime::class.java)
+//
+//        if (!request.poNumber.isNullOrEmpty()) {
+//            condition = condition.and(CHECKING_HISTORY.PO_NUMBER.likeIgnoreCase("%${request.poNumber}%"))
+//        }
+//        if (!request.formCode.isNullOrEmpty()) {
+//            condition = condition.and(CHECKING_HISTORY.FORM_CODE.likeIgnoreCase("%${request.formCode}%"))
+//        }
+//        if (request.fromDate != null && request.toDate != null) {
+//            condition = condition.and(scanDate?.between(request.fromDate, request.toDate))
+//        }
+//        val query = context.selectFrom(CHECKING_HISTORY).where(condition)
+//        val count = query.count()
+//        val data = query
+//            .orderBy(CHECKING_HISTORY.UPDATED_DATE.sort(SortOrder.DESC))
+//            .limit(pageable.pageSize)
+//            .offset(pageable.offset)
+//            .fetchInto(CheckingHistory::class.java)
+
+        return Pair(finalData, finalData.size)
     }
 
     fun findByScanDateAndPOAndSeqNoAndFormCode(scanDate: LocalDate, poNumber: String, seqNo: Int, formCode: String): CheckingHistory? {

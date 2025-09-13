@@ -23,8 +23,8 @@ import java.math.BigDecimal
 @Service
 @Transactional
 class TempCheckingImportedService(private val tempCheckingImportedRepo: TempCheckingImportedRepository) {
-    fun getListFormCodeDropdown(): BaseResponse<List<DropdownResponse>> {
-        val listFormCode = tempCheckingImportedRepo.getListFormCode()
+    fun getListFormCodeDropdown(formStatus: String, isIncludeGe3Days: Boolean): BaseResponse<List<DropdownResponse>> {
+        val listFormCode = tempCheckingImportedRepo.getListFormCode(formStatus, isIncludeGe3Days)
 
         // Map DropDownResponse
         val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->

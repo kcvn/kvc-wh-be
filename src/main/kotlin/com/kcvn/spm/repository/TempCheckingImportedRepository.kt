@@ -5,6 +5,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TempCheckingImported
 import com.kcvn.spm.model.tables.references.TEMP_CHECKING_IMPORTED
+import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
@@ -24,7 +25,7 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
             .firstOrNull()
     }
 
-    fun getListFormCode(): List<String> {
+    fun getListFormCode(formStatus: String, isIncludeGe3Days: Boolean): List<String> {
         val offset = OffsetDateTime.now().offset
         val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(2), LocalTime.MIDNIGHT, offset)
         val tomorrow = OffsetDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT, offset)
@@ -32,8 +33,10 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
             .from(TEMP_CHECKING_IMPORTED)
             .where(
                 TEMP_CHECKING_IMPORTED.FORM_CODE.isNotNull
-                    .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
+                    //.and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
+                    .and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") TEMP_SENDING_IMPORTED.IS_APPROVED.eq(true) else TEMP_SENDING_IMPORTED.IS_APPROVED.eq(false))
                     .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.lt(tomorrow))
+                    .and(if (isIncludeGe3Days) DSL.noCondition() else TEMP_SENDING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
             )
             .orderBy(TEMP_CHECKING_IMPORTED.CREATED_DATE.desc())
             .fetch(TEMP_CHECKING_IMPORTED.FORM_CODE)

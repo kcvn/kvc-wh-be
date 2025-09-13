@@ -22,7 +22,6 @@ import java.time.ZoneOffset
 @Repository
 class CheckingHistoryRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: CheckingHistorySearchRequest, pageable: Pageable) : Pair<List<CheckingHistory>, Int> {
-        val keywordFormCode = request.formCode?.let { "%$it%" } ?: "%"
         val keywordPoNumber = request.poNumber?.let { "%$it%" } ?: "%"
 
         val sql = """
@@ -37,11 +36,11 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
             FULL OUTER JOIN checking_history ch
                 ON tci.form_code = ch.form_code
                AND tci.po_number = ch.po_number
-            WHERE (tci.form_code ilike ? OR ch.form_code ilike ?)
+            WHERE (tci.form_code = ? OR ch.form_code = ?)
             AND (tci.po_number ilike ? OR ch.po_number ilike ?)
         """.trimIndent()
         val result = context
-            .resultQuery(sql, keywordFormCode, keywordFormCode, keywordPoNumber, keywordPoNumber)
+            .resultQuery(sql, request.formCode, request.formCode, keywordPoNumber, keywordPoNumber)
             .fetch()
             .map {
                 CheckingHistory(
@@ -53,17 +52,35 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
                     seqNo = it.get("seq_no", Int::class.java),
                 )
             }
+
+        val notDuplicate = result.groupBy { it.poNumber to it.seqNo }
+            .filter { it.value.size == 1 }
+
         val duplicates = result.groupBy { it.poNumber to it.seqNo }
             .filter { it.value.size > 1 }
 
         val finalData = mutableListOf<CheckingHistory>()
+
+        notDuplicate.forEach { (key, records) ->
+            records.forEach { record ->
+                val a = CheckingHistory(
+                    scanDate = record.scanDate,
+                    formCode = record.formCode,
+                    poNumber = record.poNumber,
+                    importQty = record.importQty,
+                    scanQty = record.scanQty,
+                    seqNo = record.seqNo
+                )
+                finalData.add(a)
+            }
+        }
 
         duplicates.forEach { (key, records) ->
             val (poNumber, seqNo) = key
 
             var totalScannedQty = records[0].scanQty
 
-            records.forEach { record ->
+            for (record in records) {
                 if (record.importQty!! <= totalScannedQty) {
                     val a = CheckingHistory(
                         scanDate = record.scanDate,
@@ -85,40 +102,11 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
                         seqNo = record.seqNo
                     )
                     finalData.add(a)
-
+                    totalScannedQty = BigDecimal.ZERO
                 }
             }
         }
-
-
-
-
-        println(finalData)
-
-
-
-
-
-//        var condition: Condition = DSL.noCondition()
-//        val scanDate = CHECKING_HISTORY.field("scan_date", java.time.OffsetDateTime::class.java)
-//
-//        if (!request.poNumber.isNullOrEmpty()) {
-//            condition = condition.and(CHECKING_HISTORY.PO_NUMBER.likeIgnoreCase("%${request.poNumber}%"))
-//        }
-//        if (!request.formCode.isNullOrEmpty()) {
-//            condition = condition.and(CHECKING_HISTORY.FORM_CODE.likeIgnoreCase("%${request.formCode}%"))
-//        }
-//        if (request.fromDate != null && request.toDate != null) {
-//            condition = condition.and(scanDate?.between(request.fromDate, request.toDate))
-//        }
-//        val query = context.selectFrom(CHECKING_HISTORY).where(condition)
-//        val count = query.count()
-//        val data = query
-//            .orderBy(CHECKING_HISTORY.UPDATED_DATE.sort(SortOrder.DESC))
-//            .limit(pageable.pageSize)
-//            .offset(pageable.offset)
-//            .fetchInto(CheckingHistory::class.java)
-
+        finalData.sortWith(compareBy<CheckingHistory> { it.poNumber }.thenBy { it.seqNo })
         return Pair(finalData, finalData.size)
     }
 

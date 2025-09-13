@@ -34,9 +34,9 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
             .where(
                 TEMP_CHECKING_IMPORTED.FORM_CODE.isNotNull
                     //.and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
-                    .and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") TEMP_SENDING_IMPORTED.IS_APPROVED.eq(true) else TEMP_SENDING_IMPORTED.IS_APPROVED.eq(false))
+                    //.and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(true) else TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(false))
                     .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.lt(tomorrow))
-                    .and(if (isIncludeGe3Days) DSL.noCondition() else TEMP_SENDING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
+                    .and(if (isIncludeGe3Days) DSL.noCondition() else TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
             )
             .orderBy(TEMP_CHECKING_IMPORTED.CREATED_DATE.desc())
             .fetch(TEMP_CHECKING_IMPORTED.FORM_CODE)

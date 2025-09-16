@@ -73,18 +73,19 @@ class CommonUtils {
                     Regex("^\\d{2}/\\d{2}/\\d{4}$").matches(trimmed) ->
                         "dd/MM/yyyy"
 
-                    // dd/MM/yyyy HH:mm or HH:mm:ss
+                    // dd/MM/yyyy HH:mm:ss AM/PM
+                    Regex("^\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}:\\d{2}\\s+(AM|PM)$",
+                        RegexOption.IGNORE_CASE).matches(trimmed) ->
+                        "dd/MM/yyyy hh:mm:ss a"
+
+                    // dd/MM/yyyy HH:mm:ss (24h format)
                     Regex("^\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}(:\\d{2})?$").matches(trimmed) ->
                         "dd/MM/yyyy HH:mm[:ss]"
-
-                    // MM/dd/yyyy HH:mm or HH:mm:ss (nếu có dùng format kiểu Mỹ)
-                    Regex("^\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}(:\\d{2})?$").matches(trimmed) ->
-                        "MM/dd/yyyy HH:mm[:ss]"
 
                     else -> throw DateTimeParseException("Unrecognized date format", trimmed, 0)
                 }
 
-                if (pattern.contains("HH")) {
+                if (pattern.contains("hh") || pattern.contains("HH")) {
                     LocalDateTime.parse(trimmed, DateTimeFormatter.ofPattern(pattern)).toLocalDate()
                 } else {
                     LocalDate.parse(trimmed, DateTimeFormatter.ofPattern(pattern))
@@ -93,6 +94,7 @@ class CommonUtils {
                 throw e
             }
         }
+
 
 
 

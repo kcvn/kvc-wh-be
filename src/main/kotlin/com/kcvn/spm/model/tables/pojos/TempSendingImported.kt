@@ -28,7 +28,8 @@ data class TempSendingImported(
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsApproved")
     var isApproved: Boolean? = null,
-    var requestDate: LocalDate? = null
+    var requestDate: LocalDate? = null,
+    var lotNo: String? = null
 ): Serializable {
 
 
@@ -112,6 +113,12 @@ data class TempSendingImported(
         }
         else if (this.requestDate != o.requestDate)
             return false
+        if (this.lotNo == null) {
+            if (o.lotNo != null)
+                return false
+        }
+        else if (this.lotNo != o.lotNo)
+            return false
         return true
     }
 
@@ -130,6 +137,7 @@ data class TempSendingImported(
         result = prime * result + (if (this.formCode == null) 0 else this.formCode.hashCode())
         result = prime * result + (if (this.isApproved == null) 0 else this.isApproved.hashCode())
         result = prime * result + (if (this.requestDate == null) 0 else this.requestDate.hashCode())
+        result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
         return result
     }
 
@@ -148,6 +156,7 @@ data class TempSendingImported(
         sb.append(", ").append(formCode)
         sb.append(", ").append(isApproved)
         sb.append(", ").append(requestDate)
+        sb.append(", ").append(lotNo)
 
         sb.append(")")
         return sb.toString()

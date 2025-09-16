@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import java.text.Normalizer
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.regex.Pattern
@@ -68,15 +69,21 @@ class CommonUtils {
 
                     Regex("^\\d{2}/\\d{2}/\\d{4}$").matches(trimmed) -> "dd/MM/yyyy"
 
+                    Regex("^\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}(:\\d{2})?$").matches(trimmed) -> "MM/dd/yyyy HH:mm[:ss]"
+
                     else -> throw DateTimeParseException("Unrecognized date format", trimmed, 0)
                 }
 
-                LocalDate.parse(trimmed, DateTimeFormatter.ofPattern(pattern))
-
+                if (pattern.contains("HH")) {
+                    LocalDateTime.parse(trimmed, DateTimeFormatter.ofPattern(pattern)).toLocalDate()
+                } else {
+                    LocalDate.parse(trimmed, DateTimeFormatter.ofPattern(pattern))
+                }
             } catch (e: DateTimeParseException) {
                 throw e
             }
         }
+
 
         fun parseDateAmoeba(dateStr: String?): LocalDate? {
             return try {

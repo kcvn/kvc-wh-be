@@ -64,9 +64,11 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
                 dataList.map { data ->
                     TEMP_SENDING_IMPORTED.newRecord().apply {
                         this.inspectionDate = data.inspectionDate
+                        this.requestDate = data.requestDate
                         this.locationCode = data.locationCode
                         this.poNumber = data.poNumber
                         this.qty = data.qty
+                        this.lotNo = data.lotNo
                         this.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                         this.formCode = data.formCode
                         this.isApproved = data.isApproved

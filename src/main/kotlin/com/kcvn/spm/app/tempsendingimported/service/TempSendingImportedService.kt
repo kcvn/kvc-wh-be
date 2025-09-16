@@ -75,7 +75,7 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
 
                 val data = TempSendingImported(
                     inspectionDate = CommonUtils.parseDateSending(columns[29]),
-                    requestDate = CommonUtils.parseDateSending(columns[4]),
+                    //requestDate = CommonUtils.parseDateSending(columns[4]),
                     locationCode = columns[20].trim(),
                     poNumber = columns[33].trim(),
                     qty = columns[21].trim().toBigDecimalOrNull() ?: BigDecimal.ZERO,

@@ -127,7 +127,7 @@ open class TempSendingImported(
     /**
      * The column <code>public.temp_sending_imported.lot_no</code>.
      */
-    val LOT_NO: TableField<TempSendingImportedRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10), this, "")
+    val LOT_NO: TableField<TempSendingImportedRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10000), this, "")
 
     private constructor(alias: Name, aliased: Table<TempSendingImportedRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<TempSendingImportedRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

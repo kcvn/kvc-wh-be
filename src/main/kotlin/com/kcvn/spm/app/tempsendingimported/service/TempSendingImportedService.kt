@@ -65,11 +65,13 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
                 throw BusinessException(CommonUtils.getMessage("import.file.empty"))
             }
             val header = lines[0].split("\t")
-            if (header.size != 51) {
+            if (header.size != 51 && header.size != 50) {
                 throw BusinessException(CommonUtils.getMessage("validate.invalidFormat"))
             }
             for (i in 1 until lines.size) {
                 val columns = lines[i].split("\t")
+
+                if (header.size == 51){
 
                 if (columns.size < 51) continue
 
@@ -83,7 +85,23 @@ class TempSendingImportedService(private val tempSendingImportedRepo: TempSendin
                     formCode = formCode,
                     isApproved = false
                 )
-                dataList.add(data)
+                dataList.add(data)}
+
+                if (header.size == 50){
+
+                    if (columns.size < 50) continue
+
+                    val data = TempSendingImported(
+                        inspectionDate = CommonUtils.parseDateSending(columns[29]),
+                        //requestDate = CommonUtils.parseDateSending(columns[4]),
+                        locationCode = columns[20].trim(),
+                        poNumber = columns[33].trim(),
+                        qty = columns[21].trim().toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                        //lotNo = columns[50].trim(),
+                        formCode = formCode,
+                        isApproved = false
+                    )
+                    dataList.add(data)}
             }
             // delete record of user import before
             //tempSendingImportedRepo.delete(CommonUtils.loggedInUser() ?: "")

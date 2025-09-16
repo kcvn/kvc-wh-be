@@ -65,38 +65,19 @@ class CommonUtils {
 
             return try {
                 val pattern = when {
-                    // yyyy/MM/dd
-                    Regex("^\\d{4}/\\d{2}/\\d{2}$").matches(trimmed) ->
-                        "yyyy/MM/dd"
+                    Regex("^\\d{4}/\\d{2}/\\d{2}$").matches(trimmed) -> "yyyy/MM/dd"
 
-                    // dd/MM/yyyy
-                    Regex("^\\d{2}/\\d{2}/\\d{4}$").matches(trimmed) ->
-                        "dd/MM/yyyy"
-
-                    // dd/MM/yyyy HH:mm:ss AM/PM
-                    Regex("^\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}:\\d{2}\\s+(AM|PM)$",
-                        RegexOption.IGNORE_CASE).matches(trimmed) ->
-                        "dd/MM/yyyy hh:mm:ss a"
-
-                    // dd/MM/yyyy HH:mm:ss (24h format)
-                    Regex("^\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}(:\\d{2})?$").matches(trimmed) ->
-                        "dd/MM/yyyy HH:mm[:ss]"
+                    Regex("^\\d{2}/\\d{2}/\\d{4}$").matches(trimmed) -> "dd/MM/yyyy"
 
                     else -> throw DateTimeParseException("Unrecognized date format", trimmed, 0)
                 }
 
-                if (pattern.contains("hh") || pattern.contains("HH")) {
-                    LocalDateTime.parse(trimmed, DateTimeFormatter.ofPattern(pattern)).toLocalDate()
-                } else {
-                    LocalDate.parse(trimmed, DateTimeFormatter.ofPattern(pattern))
-                }
+                LocalDate.parse(trimmed, DateTimeFormatter.ofPattern(pattern))
+
             } catch (e: DateTimeParseException) {
                 throw e
             }
         }
-
-
-
 
         fun parseDateAmoeba(dateStr: String?): LocalDate? {
             return try {

@@ -29,7 +29,8 @@ data class BacklogWh(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsEntried")
-    var isEntried: Boolean? = null
+    var isEntried: Boolean? = null,
+    var itemName: String? = null
 ): Serializable {
 
 
@@ -119,6 +120,12 @@ data class BacklogWh(
         }
         else if (this.isEntried != o.isEntried)
             return false
+        if (this.itemName == null) {
+            if (o.itemName != null)
+                return false
+        }
+        else if (this.itemName != o.itemName)
+            return false
         return true
     }
 
@@ -138,6 +145,7 @@ data class BacklogWh(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isEntried == null) 0 else this.isEntried.hashCode())
+        result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
         return result
     }
 
@@ -157,6 +165,7 @@ data class BacklogWh(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isEntried)
+        sb.append(", ").append(itemName)
 
         sb.append(")")
         return sb.toString()

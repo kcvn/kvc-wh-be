@@ -205,6 +205,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .set(BACKLOG_WH.IS_ENTRIED, data.isEntried)
+                .set(BACKLOG_WH.ITEM_NAME, data.itemName)
                 .where(
                     BACKLOG_WH.PO_NUMBER.eq(data.poNumber)
                         .and(BACKLOG_WH.RECEIVING_DATE.eq(data.receivingDate))

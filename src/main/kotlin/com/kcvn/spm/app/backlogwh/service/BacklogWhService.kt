@@ -81,7 +81,8 @@ class BacklogWhService(
                     poNumber = ExcelHelper.getCellValue(row, 1),
                     locationCode = ExcelHelper.getCellValue(row, 2),
                     inspectionDate = ExcelHelper.getCellValueDateAmoeba(row, 4),
-                    isEntried = true
+                    isEntried = true,
+                    itemName = ExcelHelper.getCellValue(row, 6)
                 )
 
                 backlogWhRepo.updateInspectionDate(backlogWhData)
@@ -284,7 +285,8 @@ class BacklogWhService(
                 backlogQty = it.backlogQty,
                 boxQty = it.boxQty,
                 receivingDate = it.receivingDate,
-                inspectionDate = it.inspectionDate
+                inspectionDate = it.inspectionDate,
+                itemName = it.itemName
             )
         }
         return BasePagingResponse(

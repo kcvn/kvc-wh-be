@@ -129,12 +129,13 @@ class BacklogWhService(
             ExcelHelper.setCellValue(row, 1, style, formattedInspectionDate)
             ExcelHelper.setCellValue(row, 2, style, item.packageCode)
             ExcelHelper.setCellValue(row, 3, style, item.poNumber)
-            ExcelHelper.setCellValue(row, 4, style, item.locationCode)
-            ExcelHelper.setCellValueInt(row, 5, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.boxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 4, style, item.itemName)
+            ExcelHelper.setCellValue(row, 5, style, item.locationCode)
+            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.boxQty ?: 0, numberFormat)
         }
 
-        sheet.createFreezePane(4, 1)
+        //sheet.createFreezePane(4, 1)
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)

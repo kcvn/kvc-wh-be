@@ -8,6 +8,7 @@ data class TempSendingInquiryResponse(
     var inspectionDate: LocalDate? = null,
     var locationCode: String? = null,
     var poNumber: String? = null,
+    var itemName: String? = null,
     var requestQty: BigDecimal? = BigDecimal.ZERO,
     var actualQty: BigDecimal? = BigDecimal.ZERO,
     var doubleCheckQty: BigDecimal? = BigDecimal.ZERO,

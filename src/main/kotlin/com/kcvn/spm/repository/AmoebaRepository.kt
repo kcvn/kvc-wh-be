@@ -35,6 +35,7 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
                 StockTakingDailyResponse(
                     inspectionDate = it.get("inspection_date", LocalDate::class.java),
                     poNumber = it.get("po_number", String::class.java),
+                    itemName = it.get("item_name", String::class.java),
                     amoebaLocationCode = it.get("amoeba_location_code", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     amoebaQty = it.get("amoeba_qty", BigDecimal::class.java),
@@ -61,6 +62,7 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
                 StockTakingDailyResponse(
                     inspectionDate = it.get("inspection_date", LocalDate::class.java),
                     poNumber = it.get("po_number", String::class.java),
+                    itemName = it.get("item_name", String::class.java),
                     amoebaLocationCode = it.get("amoeba_location_code", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     amoebaQty = it.get("amoeba_qty", BigDecimal::class.java),
@@ -82,14 +84,16 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
       b.po_number,
       SUM(b.backlog_qty) AS SUM_BACKLOG_QTY,
       b.receiving_date,
-      MAX(b.inspection_date) AS INSPECTION_DATE
+      MAX(b.inspection_date) AS INSPECTION_DATE,
+      b.item_name
     FROM 
       public.backlog_wh b
     WHERE 
       b.backlog_qty > 0
     GROUP BY 
       b.po_number, 
-      b.receiving_date
+      b.receiving_date,
+      b.item_name
     ORDER BY 
       b.receiving_date ASC
   )
@@ -103,6 +107,7 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
 
     temp1.MIN_LOCATION_CODE AS system_location_code,
     temp1.SUM_BACKLOG_QTY AS system_qty,
+    temp1.item_name,
     
     CASE 
       WHEN CAST(NULLIF(a.location_code, '') AS INTEGER) = temp1.MIN_LOCATION_CODE THEN 'SAME'

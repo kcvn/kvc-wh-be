@@ -67,6 +67,7 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
                         this.requestDate = data.requestDate
                         this.locationCode = data.locationCode
                         this.poNumber = data.poNumber
+                        this.itemName = data.itemName
                         this.qty = data.qty
                         this.lotNo = data.lotNo
                         this.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM

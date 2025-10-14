@@ -132,7 +132,7 @@ open class BacklogWh(
     /**
      * The column <code>public.backlog_wh.item_name</code>.
      */
-    val ITEM_NAME: TableField<BacklogWhRecord, String?> = createField(DSL.name("item_name"), SQLDataType.VARCHAR(30), this, "")
+    val ITEM_NAME: TableField<BacklogWhRecord, String?> = createField(DSL.name("item_name"), SQLDataType.VARCHAR(100), this, "")
 
     private constructor(alias: Name, aliased: Table<BacklogWhRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<BacklogWhRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)

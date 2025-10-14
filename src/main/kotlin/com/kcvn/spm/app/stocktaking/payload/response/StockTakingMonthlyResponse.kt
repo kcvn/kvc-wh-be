@@ -5,6 +5,7 @@ import java.math.BigDecimal
 data class StockTakingMonthlyResponse(
     var poNumber: String? = null,
     var packageCode: String? = null,
+    var itemName: String? = null,
     var systemLocationCode: String? = null,
     var actualLocationCode: String? = null,
     var checkingLocationCode: String? = null,

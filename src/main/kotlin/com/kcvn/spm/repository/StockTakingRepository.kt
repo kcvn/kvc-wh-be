@@ -42,6 +42,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 StockTakingMonthlyResponse(
                     poNumber = it.get("po_number", String::class.java),
                     packageCode = it.get("package_code", String::class.java),
+                    itemName = it.get("item_name", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
                     checkingLocationCode = it.get("checking_location_code", String::class.java),
@@ -107,6 +108,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 StockTakingMonthlyResponse(
                     poNumber = it.get("po_number", String::class.java),
                     packageCode = it.get("package_code", String::class.java),
+                    itemName = it.get("item_name", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
                     systemQty = it.get("system_qty", BigDecimal::class.java),
@@ -136,6 +138,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 StockTakingMonthlyResponse(
                     poNumber = it.get("po_number", String::class.java),
                     packageCode = it.get("package_code", String::class.java),
+                    itemName = it.get("item_name", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
                     systemQty = it.get("system_qty", BigDecimal::class.java),
@@ -163,6 +166,7 @@ SELECT
 	temp_data.actual_location_code,
 	temp_data.actual_qty,
 	temp_data.actual_box_qty,
+	temp_data.item_name,
 	COALESCE(temp_data.year_number,checking_stock_data.year_number) AS year_number,
 	COALESCE(temp_data.month_number,checking_stock_data.month_number) AS month_number,
 	checking_stock_data.actual_location_code AS checking_location_code,
@@ -222,6 +226,7 @@ FROM
                 stock_data.year_number
 			,
                 stock_data.month_number
+                , bw.item_name
             FROM (
                 SELECT
                     st.po_number,
@@ -320,6 +325,7 @@ FROM
     SELECT 
         po_number,
         package_code,
+        item_name
         system_location_code,
         system_qty,
         system_box_qty,
@@ -481,6 +487,7 @@ FROM
                     STOCK_TAKING.MONTH_NUMBER,
                     STOCK_TAKING.PO_NUMBER,
                     STOCK_TAKING.PACKAGE_CODE,
+                    STOCK_TAKING.ITEM_NAME,
                     STOCK_TAKING.SYSTEM_LOCATION_CODE,
                     STOCK_TAKING.ACTUAL_LOCATION_CODE,
                     STOCK_TAKING.SYSTEM_QTY,
@@ -495,6 +502,7 @@ FROM
                         DSL.`val`(month),
                         BACKLOG_WH.PO_NUMBER,
                         BACKLOG_WH.PACKAGE_CODE,
+                        BACKLOG_WH.ITEM_NAME,
                         BACKLOG_WH.LOCATION_CODE,
                         DSL.inline(null as String?),
                         BACKLOG_WH.BACKLOG_QTY,

@@ -215,6 +215,7 @@ class StockTakingService(
             SystemStockTakingResponse(
                 inspectionDate = it.inspectionDate,
                 poNumber = it.poNumber,
+                itemName = it.itemName,
                 amoebaLocationCode = it.amoebaLocationCode,
                 systemLocationCode = it.systemLocationCode,
                 amoebaQty = it.amoebaQty,
@@ -229,6 +230,7 @@ class StockTakingService(
             ActualStockTakingResponse(
                 poNumber = it.poNumber,
                 packageCode = it.packageCode,
+                itemName = it.itemName,
                 systemLocationCode = it.systemLocationCode,
                 actualLocationCode = it.actualLocationCode,
                 checkingLocationCode = it.checkingLocationCode,

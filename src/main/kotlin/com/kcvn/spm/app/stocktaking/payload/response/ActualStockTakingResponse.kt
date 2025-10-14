@@ -6,6 +6,7 @@ import java.time.LocalDate
 data class ActualStockTakingResponse(
     var poNumber: String? = null,
     var packageCode: String? = null,
+    var itemName: String? = null,
     var systemLocationCode: String? = null,
     var actualLocationCode: String? = null,
     var checkingLocationCode: String? = null,

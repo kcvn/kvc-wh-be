@@ -215,7 +215,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
 
     }
 
-    fun updateIsEntried(isEntried: Boolean, poNumber: String, receivingDate: LocalDate, inspectionDate: LocalDate) {
+    fun updateIsEntried(isEntried: Boolean, poNumber: String, receivingDate: LocalDate, inspectionDate: LocalDate?) {
         context.update(BACKLOG_WH)
             .set(BACKLOG_WH.IS_ENTRIED, isEntried)
             .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)

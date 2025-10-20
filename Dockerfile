@@ -1,4 +1,4 @@
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM eclipse-temurin:17-jdk-focal AS build
 #ARG CONFIG_FILE
 
 LABEL mentainer="phong.ld@3si.vn"

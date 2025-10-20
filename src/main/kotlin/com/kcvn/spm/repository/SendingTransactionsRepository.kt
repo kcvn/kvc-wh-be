@@ -107,7 +107,6 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                         .and(SENDING_TRANSACTIONS.INSPECTION_DATE.eq(data.inspectionDate))
                 )
                 .execute()
-
             affectedRows > 0 // Trả về true nếu có ít nhất 1 dòng bị cập nhật
         }
     }

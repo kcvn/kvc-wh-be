@@ -7,6 +7,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
+import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -75,11 +76,11 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             SENDING_TRANSACTIONS.PO_NUMBER,
             SENDING_TRANSACTIONS.INSPECTION_DATE,
             DSL.sum(SENDING_TRANSACTIONS.QTY).`as`("SUM_SENDING_QTY"),
-            createdDateFormatted
+            SENDING_TRANSACTIONS.REQUEST_DATE
         )
             .from(SENDING_TRANSACTIONS)
             .where(condition)
-            .groupBy(SENDING_TRANSACTIONS.PO_NUMBER, SENDING_TRANSACTIONS.INSPECTION_DATE, createdDateFormatted)
+            .groupBy(SENDING_TRANSACTIONS.PO_NUMBER, SENDING_TRANSACTIONS.INSPECTION_DATE, SENDING_TRANSACTIONS.REQUEST_DATE)
             .orderBy(getSortFields(pageable.sort, SENDING_TRANSACTIONS.INSPECTION_DATE))
 
         val data = query.fetch { record ->
@@ -87,9 +88,7 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 poNumber = record[SENDING_TRANSACTIONS.PO_NUMBER],
                 inspectionDate = record[SENDING_TRANSACTIONS.INSPECTION_DATE],
                 qty = record.get("SUM_SENDING_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO,
-                requestDate = record.get(createdDateFormatted, String::class.java)?.let {
-                    LocalDate.parse(it)
-                }
+                requestDate = record.get(SENDING_TRANSACTIONS.REQUEST_DATE)
             )
         }
         return Pair(data, data.size)
@@ -191,7 +190,8 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             SENDING_TRANSACTIONS.TRANSACTION_TYPE,
             SENDING_TRANSACTIONS.RECEIVING_DATE,
             SENDING_TRANSACTIONS.INSPECTION_DATE,
-            SENDING_TRANSACTIONS.CREATED_BY
+            SENDING_TRANSACTIONS.CREATED_BY,
+            SENDING_TRANSACTIONS.REQUEST_DATE
         ).select(
             context.select(
                 TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE,
@@ -204,8 +204,10 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 TEMP_SENDING_TRANSACTIONS.TRANSACTION_TYPE,
                 TEMP_SENDING_TRANSACTIONS.RECEIVING_DATE,
                 TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE,
-                TEMP_SENDING_TRANSACTIONS.CREATED_BY
+                TEMP_SENDING_TRANSACTIONS.CREATED_BY,
+                TEMP_SENDING_IMPORTED.REQUEST_DATE
             ).from(TEMP_SENDING_TRANSACTIONS)
+                .join(TEMP_SENDING_IMPORTED).on(TEMP_SENDING_IMPORTED.FORM_CODE.eq(TEMP_SENDING_TRANSACTIONS.FORM_CODE))
                 .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode))
         ).execute()
     }

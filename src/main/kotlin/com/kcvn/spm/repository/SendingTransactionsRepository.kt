@@ -206,7 +206,11 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 TEMP_SENDING_TRANSACTIONS.CREATED_BY,
                 TEMP_SENDING_IMPORTED.REQUEST_DATE
             ).from(TEMP_SENDING_TRANSACTIONS)
-                .join(TEMP_SENDING_IMPORTED).on(TEMP_SENDING_IMPORTED.FORM_CODE.eq(TEMP_SENDING_TRANSACTIONS.FORM_CODE))
+                .join(TEMP_SENDING_IMPORTED)
+                .on(TEMP_SENDING_IMPORTED.FORM_CODE.eq(TEMP_SENDING_TRANSACTIONS.FORM_CODE)
+                    .and(TEMP_SENDING_IMPORTED.PO_NUMBER.eq(TEMP_SENDING_TRANSACTIONS.PO_NUMBER))
+                    .and(TEMP_SENDING_IMPORTED.INSPECTION_DATE.eq(TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE))
+                )
                 .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode))
         ).execute()
     }

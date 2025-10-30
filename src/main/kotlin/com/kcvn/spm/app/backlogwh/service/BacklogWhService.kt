@@ -37,7 +37,7 @@ import java.time.format.DateTimeFormatter
 class BacklogWhService(
     private val backlogWhRepo: BacklogWhRepository,
     private val backlogWhHistoryRepo: BacklogWhHistoryRepository,
-    private val splittingRepo: SplittingRepository
+
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
 //        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBinEntryTemplate.xlsx")
@@ -216,9 +216,8 @@ class BacklogWhService(
     fun plusBacklog(data: BacklogWh, transactionType: String) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
         // get receiving date
-        val splitting = splittingRepo.findByLocationAndPackage(data.locationCode!!, data.packageCode!!)
-            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}")
-        val receivingDate = splitting.receivingDate
+
+        val receivingDate = data.receivingDate
         if (backlog == null) {
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, isEntried = data.isEntried, inspectionDate = data.inspectionDate)
             backlogWhRepo.save(entityBacklog)

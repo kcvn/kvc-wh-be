@@ -5,10 +5,13 @@ import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
 import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
+import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.BasePagingResponse
+import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
+import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,6 +24,7 @@ import java.time.ZoneOffset
 class ReceivingTransactionsService(
     private val receivingRepo: ReceivingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
+    private val splittingRepo: SplittingRepository
 ) {
     fun getList(request: RecTransSearchRequest, pageable: Pageable): BasePagingResponse<RecTransResponse> {
         val recTrans = receivingRepo.getList(request, pageable)
@@ -54,6 +58,8 @@ class ReceivingTransactionsService(
                 it.seqNo,
                 "IN_ONLY"
             )
+            val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)
+                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.locationCode}, packageCode = ${it.packageCode}")
             // save receiving transactions
             receivingRepo.save(recTransaction)
             // save backlog and backlog history

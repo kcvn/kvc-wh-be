@@ -31,11 +31,13 @@ class MovingService(
         list.forEach {
             // get receivingDate from source
             val sourceBacklog = backlogWhRepo.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
-            val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
+                ?: throw BusinessExceptionDetail(
+                    CommonUtils.getMessage("data.not.found.in.backlog"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}")
+            /*val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
                 ?: throw BusinessExceptionDetail(
                     CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
-                )
-            val recDateSource = splittingSource.receivingDate
+                )*/
+            val recDateSource = sourceBacklog.receivingDate
             // save moving
             val moving = Moving(
                 null,
@@ -51,9 +53,9 @@ class MovingService(
             )
             movingRepo.saveMoving(moving)
             // update location for package when destPackageCode == ""
-            if (it.destPackageCode == "") {
-                splittingRepo.updateLocationCode(it.sourceLocationCode!!, it.destLocationCode!!, it.sourcePackageCode!!)
-            }
+//            if (it.destPackageCode == "") {
+//                splittingRepo.updateLocationCode(it.sourceLocationCode!!, it.destLocationCode!!, it.sourcePackageCode!!)
+//            }
             // plus backlog destLocation
             val backlogDestData = BacklogWh(
                 null,
@@ -62,6 +64,7 @@ class MovingService(
                 if (it.destPackageCode?.isNotEmpty() == true) it.destPackageCode else it.sourcePackageCode,
                 it.qty,
                 it.boxQty,
+                recDateSource,
                 isEntried = false,
                 inspectionDate = sourceBacklog?.inspectionDate
             )

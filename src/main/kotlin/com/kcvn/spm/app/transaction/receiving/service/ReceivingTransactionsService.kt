@@ -58,8 +58,8 @@ class ReceivingTransactionsService(
                 it.seqNo,
                 "IN_ONLY"
             )
-            val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)
-                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.locationCode}, packageCode = ${it.packageCode}")
+            /*val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)
+                ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.locationCode}, packageCode = ${it.packageCode}")*/
             // save receiving transactions
             receivingRepo.save(recTransaction)
             // save backlog and backlog history

@@ -202,7 +202,11 @@ class StockTakingService(
     }
 
     fun getAllListActualStockForExport(request: StockTakingMonthlyRequest): BasePagingResponse<ActualStockTakingResponse> {
-        val stockTakingList = stockTakingRepo.getAll(request)
+        val stt = stockTakingStatusRepo.findByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("stock.taking.not.start.yet"), arrayOf(""))
+        val stockTakingList = if (stt.status == "on-going") stockTakingRepo.getListOnGoingByRawSql(request, null)
+        else stockTakingRepo.getListCompletedByRawSql(request, null)
+
         val systemList = mapToActualResponse(stockTakingList.first)
         return BasePagingResponse(
             systemList,
@@ -361,12 +365,14 @@ class StockTakingService(
             ExcelHelper.setCellValue(row, 3, style, item.actualLocationCode)
             ExcelHelper.setCellValueInt(row, 4, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
             ExcelHelper.setCellValueInt(row, 5, numberStyle, item.actualQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.systemBoxQty ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.actualBoxQty ?: 0, numberFormat)
-            ExcelHelper.setCellValue(row, 8, style, item.result)
+            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.checkingQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.systemBoxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 8, numberStyle, item.actualBoxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 9, numberStyle, item.checkingBoxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 10, style, item.result)
         }
 
-        sheet.createFreezePane(4, 1)
+        sheet.createFreezePane(0, 1)
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)

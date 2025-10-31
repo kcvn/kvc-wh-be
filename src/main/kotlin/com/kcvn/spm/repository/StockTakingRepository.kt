@@ -23,18 +23,24 @@ import java.time.ZoneOffset
 class StockTakingRepository(private val context: DSLContext) : SortingRepository() {
     fun getListOnGoingByRawSql(
         request: StockTakingMonthlyRequest,
-        pageable: Pageable
+        pageable: Pageable?
     ): Pair<List<StockTakingMonthlyResponse>, Int> {
         val (sql, params) = createSqlQuery(request)
 
         val countSql = "SELECT COUNT(*) FROM (${sql}) AS count_table"
         val totalCount = context.fetchOne(countSql, *params.toTypedArray())?.get(0, Int::class.java) ?: 0
 
-        val paginatedSql = "$sql LIMIT ? OFFSET ?"
-        val paginatedParams = params.toMutableList().apply {
-            add(pageable.pageSize)
-            add(pageable.offset.toInt())
+        var paginatedSql = sql
+        var paginatedParams = params.toMutableList()
+        if (pageable != null)
+        {
+            paginatedSql = "$paginatedSql LIMIT ? OFFSET ?"
+            paginatedParams = params.toMutableList().apply {
+                add(pageable.pageSize)
+                add(pageable.offset.toInt())
+            }
         }
+
 
         val result = context
             .fetch(paginatedSql, *paginatedParams.toTypedArray())
@@ -63,17 +69,22 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
 
     fun getListCompletedByRawSql(
         request: StockTakingMonthlyRequest,
-        pageable: Pageable
+        pageable: Pageable?
     ): Pair<List<StockTakingMonthlyResponse>, Int> {
         val (sql, params) = createSqlQueryCompleted(request)
 
         val countSql = "SELECT COUNT(*) FROM (${sql}) AS count_table"
         val totalCount = context.fetchOne(countSql, *params.toTypedArray())?.get(0, Int::class.java) ?: 0
 
-        val paginatedSql = "$sql LIMIT ? OFFSET ?"
-        val paginatedParams = params.toMutableList().apply {
-            add(pageable.pageSize)
-            add(pageable.offset.toInt())
+        var paginatedSql = sql
+        var paginatedParams = params.toMutableList()
+        if (pageable != null)
+        {
+            paginatedSql = "$paginatedSql LIMIT ? OFFSET ?"
+            paginatedParams = params.toMutableList().apply {
+                add(pageable.pageSize)
+                add(pageable.offset.toInt())
+            }
         }
 
         val result = context

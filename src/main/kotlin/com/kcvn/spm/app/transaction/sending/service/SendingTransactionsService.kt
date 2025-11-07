@@ -3,7 +3,7 @@ package com.kcvn.spm.app.transaction.sending.service
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
-import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingInquiryResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -17,7 +17,6 @@ import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.repository.*
-import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -63,12 +62,18 @@ class SendingTransactionsService(
         )
     }
 
-    fun getTempSendingList(formCode: String, poNumber: String?, pageable: Pageable):BasePagingResponse<TempSendingInquiryResponse>{
+    fun getTempSendingList(formCode: String, poNumber: String?, pageable: Pageable):BasePagingResponse<TempSendingResultInquiryResponse>{
         val data = tempSendingRepo.getListForApprove(formCode, poNumber, pageable)
         return BasePagingResponse(
             data.first,
             data.second
         )
+    }
+
+    fun getScannedTempSendingList(formCode: String): List<TempSendingTransactions>? {
+        val data = tempSendingRepo.getListByFormCode(formCode)
+
+        return data
     }
 
     fun approveSendingForm(formCode: String){
@@ -225,12 +230,12 @@ class SendingTransactionsService(
     }
 
     fun saveSendTrans(request: List<SendingRequest>) {
-        val removeList = request
-            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
-            .distinct()
-        removeList.forEach { (formCode, poNumber, inspectionDate) ->
-            tempSendingRepo.deleteSendingTrans(formCode, poNumber, inspectionDate)
-        }
+//        val removeList = request
+//            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
+//            .distinct()
+//        removeList.forEach { (formCode, poNumber, inspectionDate) ->
+//            tempSendingRepo.deleteSendingTrans(formCode, poNumber, inspectionDate)
+//        }
         val list = createSendTransRequestWithSeq(request)
 
         list.forEach {
@@ -240,19 +245,6 @@ class SendingTransactionsService(
                     CommonUtils.getMessage("not.enough.backlog"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.packageCode}"
                 )
             val receivingDate = backlog.receivingDate
-//            val sendTran = SendingTransactions(
-//                null,
-//                it.sourceLocationCode,
-//                "KVC",
-//                it.packageCode,
-//                it.packageCode,
-//                it.poNumber,
-//                it.qty,
-//                it.seqNo,
-//                "OUT_ONLY",
-//                receivingDate,
-//                it.inspectionDate,
-//            )
             val tempSendTran = TempSendingTransactions(
                 null,
                 it.formCode,
@@ -269,26 +261,7 @@ class SendingTransactionsService(
                 notMinusBoxQty = it.notMinusBoxQty,
                 minBinCode = it.minBinCode
             )
-            //sendingRepo.saveSendingTrans(sendTran)
             tempSendingRepo.saveTempSendingTrans(tempSendTran)
-            // save backlog and backlog history
-//            val boxQty: Int = if (it.notMinusBoxQty == true) {
-//                0
-//            } else {
-//                1
-//            }
-//            val backlogData = BacklogWh(
-//                null,
-//                it.sourceLocationCode,
-//                it.poNumber,
-//                it.packageCode,
-//                it.qty,
-//                boxQty,
-//                receivingDate,
-//                it.inspectionDate,
-//                isEntried = true
-//            )
-//            backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
         }
     }
 
@@ -322,7 +295,8 @@ class SendingTransactionsService(
             .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
             .flatMap { (key, group) ->
                 val (sourceLocationCode, sourcePackageCode, poNumber) = key
-                val latestSeqNo = sendingRepo.findLatestSending(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+                //val latestSendingSeqNo = sendingRepo.findLatestSending(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+                val latestTempSendingSeqNo = tempSendingRepo.findLatestTempSending(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
 
                 group.mapIndexed { index, sendTransRequest ->
                     SendTransRequestWithSeq(
@@ -333,7 +307,7 @@ class SendingTransactionsService(
                         poNumber = sendTransRequest.poNumber,
                         qty = sendTransRequest.qty,
                         notMinusBoxQty = sendTransRequest.notMinusBoxQty,
-                        seqNo = latestSeqNo + index + 1, // Bắt đầu từ latestSeqNo + 1, tăng dần
+                        seqNo = latestTempSendingSeqNo + index + 1, // Bắt đầu từ latestSeqNo + 1, tăng dần
                         minBinCode = sendTransRequest.minBinCode
                     )
                 }

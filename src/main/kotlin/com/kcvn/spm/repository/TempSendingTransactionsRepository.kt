@@ -1,14 +1,15 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingInquiryResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.TempCheckingImported
+import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
-import com.kcvn.spm.model.tables.references.TEMP_CHECKING_IMPORTED
+import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.DSLContext
+import org.jooq.SortOrder
 import org.jooq.TableField
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
@@ -17,7 +18,7 @@ import java.time.LocalDate
 
 @Repository
 class TempSendingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
-    fun getListForApprove(formCode: String, poNumber: String?, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingInquiryResponse>, Int> {
+    fun getListForApprove(formCode: String, poNumber: String?, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingResultInquiryResponse>, Int> {
         val searchPoNumber = poNumber ?: ""
         val sql = """
                     WITH temp1 AS (SELECT
@@ -78,7 +79,7 @@ FULL OUTER JOIN (
                     .resultQuery(sql, formCode, formCode, formCode, formCode, formCode, formCode, "%${searchPoNumber}%", "%${searchPoNumber}%")
                     .fetch()
                     .map {
-                        TempSendingInquiryResponse(
+                        TempSendingResultInquiryResponse(
                             formCode = it.get("form_code", String::class.java),
                             inspectionDate = it.get("inspection_date", LocalDate::class.java),
                             locationCode = it.get("location_code", String::class.java),
@@ -93,6 +94,19 @@ FULL OUTER JOIN (
                     }
 
                 return result to result.size
+    }
+
+    fun findLatestTempSending(sourceLocationCode: String, sourcePackageCode: String, poNumber: String, todayUtc: LocalDate): SendingTransactions? {
+        return context.selectFrom(TEMP_SENDING_TRANSACTIONS)
+            .where(
+                TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE.eq(sourceLocationCode)
+                    .and(TEMP_SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE.eq(sourcePackageCode))
+                    .and(TEMP_SENDING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
+                    .and(TEMP_SENDING_TRANSACTIONS.CREATED_DATE.cast(LocalDate::class.java).eq(todayUtc))
+            )
+            .orderBy(TEMP_SENDING_TRANSACTIONS.SEQ_NO.sort(SortOrder.DESC))
+            .fetchInto(SendingTransactions::class.java)
+            .firstOrNull()
     }
 
     fun saveTempSendingTrans(record: TempSendingTransactions) {
@@ -112,15 +126,15 @@ FULL OUTER JOIN (
             .execute()
     }
 
-    fun deleteSendingTrans(formCode: String?, poNumber: String?, inspectionDate: LocalDate?) {
-        context.deleteFrom(TEMP_SENDING_TRANSACTIONS)
-            .where(
-                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode)
-                    .and(TEMP_SENDING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
-                    .and(TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE.eq(inspectionDate))
-            )
-            .execute()
-    }
+//    fun deleteSendingTrans(formCode: String?, poNumber: String?, inspectionDate: LocalDate?) {
+//        context.deleteFrom(TEMP_SENDING_TRANSACTIONS)
+//            .where(
+//                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode)
+//                    .and(TEMP_SENDING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
+//                    .and(TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE.eq(inspectionDate))
+//            )
+//            .execute()
+//    }
 
     fun getListByFormCode(formCode: String): List<TempSendingTransactions>? {
         return context.selectFrom(TEMP_SENDING_TRANSACTIONS)

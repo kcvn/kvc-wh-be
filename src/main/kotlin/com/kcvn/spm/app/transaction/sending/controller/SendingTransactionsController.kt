@@ -1,13 +1,10 @@
 package com.kcvn.spm.app.transaction.sending.controller
 
-import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
-import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
-import com.kcvn.spm.app.stocktaking.payload.request.StopActualRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
-import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingInquiryResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.app.transaction.sending.service.SendingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -15,6 +12,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import jakarta.validation.Valid
 import mu.KotlinLogging
 import org.springframework.data.domain.Pageable
@@ -92,8 +90,17 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
 //            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
 //        )
         pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<TempSendingInquiryResponse>> {
+    ): ResponseEntity<BasePagingResponse<TempSendingResultInquiryResponse>> {
         val result = sendingService.getTempSendingList(formCode, poNumber, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-scanned-temp-sending")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getScannedTempSendingList(
+        @RequestParam(required = false) formCode: String
+    ): ResponseEntity<List<TempSendingTransactions>> {
+        val result = sendingService.getScannedTempSendingList(formCode)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

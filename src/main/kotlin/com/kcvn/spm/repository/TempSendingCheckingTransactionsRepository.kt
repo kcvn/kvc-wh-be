@@ -1,11 +1,10 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingInquiryResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
-import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_CHECKING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -16,7 +15,7 @@ import java.time.LocalDate
 
 @Repository
 class TempSendingCheckingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(formCode: String, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingInquiryResponse>, Int> {
+    fun getList(formCode: String, pageable: Pageable, isExport: Boolean = false) : Pair<List<TempSendingResultInquiryResponse>, Int> {
         val sql = """
                     SELECT
                         COALESCE (tsi.form_code, tst_summary.form_code) AS form_code,
@@ -48,7 +47,7 @@ class TempSendingCheckingTransactionsRepository(private val context: DSLContext)
                     .resultQuery(sql, formCode, formCode, formCode)
                     .fetch()
                     .map {
-                        TempSendingInquiryResponse(
+                        TempSendingResultInquiryResponse(
                             formCode = it.get("form_code", String::class.java),
                             inspectionDate = it.get("inspection_date", LocalDate::class.java),
                             locationCode = it.get("location_code", String::class.java),

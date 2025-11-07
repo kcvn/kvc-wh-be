@@ -3,7 +3,7 @@ package com.kcvn.spm.app.transaction.sending.payload.response
 import java.math.BigDecimal
 import java.time.LocalDate
 
-data class TempSendingInquiryResponse(
+data class TempSendingResultInquiryResponse(
     var formCode: String? = null,
     var inspectionDate: LocalDate? = null,
     var locationCode: String? = null,

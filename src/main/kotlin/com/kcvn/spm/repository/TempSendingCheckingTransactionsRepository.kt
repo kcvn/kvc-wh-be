@@ -5,7 +5,9 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
+import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_CHECKING_TRANSACTIONS
+import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.springframework.data.domain.Pageable
@@ -78,12 +80,19 @@ class TempSendingCheckingTransactionsRepository(private val context: DSLContext)
             .execute()
     }
 
-    fun deleteSendingTrans(formCode: String?, poNumber: String?, inspectionDate: LocalDate?) {
+    fun getListByFormCode(formCode: String): List<TempSendingCheckingTransactions>? {
+        return context.selectFrom(TEMP_SENDING_CHECKING_TRANSACTIONS)
+            .where(
+                TEMP_SENDING_CHECKING_TRANSACTIONS.FORM_CODE.eq(formCode)
+            )
+            .fetchInto(TempSendingCheckingTransactions::class.java)
+    }
+
+    fun deleteSendingTrans(formCode: String?, poNumber: String?) {
         context.deleteFrom(TEMP_SENDING_CHECKING_TRANSACTIONS)
             .where(
                 TEMP_SENDING_CHECKING_TRANSACTIONS.FORM_CODE.eq(formCode)
                     .and(TEMP_SENDING_CHECKING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
-                    .and(TEMP_SENDING_CHECKING_TRANSACTIONS.INSPECTION_DATE.eq(inspectionDate))
             )
             .execute()
     }

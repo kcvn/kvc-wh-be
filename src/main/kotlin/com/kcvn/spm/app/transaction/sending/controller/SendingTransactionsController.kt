@@ -12,6 +12,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import jakarta.validation.Valid
 import mu.KotlinLogging
@@ -101,6 +102,15 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         @RequestParam(required = false) formCode: String
     ): ResponseEntity<List<TempSendingTransactions>> {
         val result = sendingService.getScannedTempSendingList(formCode)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-scanned-temp-sending-checking")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getScannedTempSendingCheckingList(
+        @RequestParam(required = false) formCode: String
+    ): ResponseEntity<List<TempSendingCheckingTransactions>> {
+        val result = sendingService.getScannedTempSendingCheckingList(formCode)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

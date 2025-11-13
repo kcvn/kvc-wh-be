@@ -76,6 +76,13 @@ class SendingTransactionsService(
         return data
     }
 
+    fun getScannedTempSendingCheckingList(formCode: String): List<TempSendingCheckingTransactions>? {
+        val data = tempSendingCheckingRepo.getListByFormCode(formCode)
+
+        return data
+    }
+
+
     fun approveSendingForm(formCode: String){
         val sendingList = tempSendingRepo.getListByFormCode(formCode)
         sendingList?.forEach {
@@ -267,10 +274,10 @@ class SendingTransactionsService(
 
     fun saveSendCheckingTrans(request: List<SendingRequest>) {
         val removeList = request
-            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
+            .map { Pair(it.formCode, it.poNumber) }
             .distinct()
-        removeList.forEach { (formCode, poNumber, inspectionDate) ->
-            tempSendingCheckingRepo.deleteSendingTrans(formCode, poNumber, inspectionDate)
+        removeList.forEach { (formCode, poNumber) ->
+            tempSendingCheckingRepo.deleteSendingTrans(formCode, poNumber)
         }
 
         request.forEach {

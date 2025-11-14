@@ -69,8 +69,8 @@ FULL OUTER JOIN (
                     ) tsct_summary
                         ON temp1.form_code = tsct_summary.form_code
                         AND temp1.po_number = tsct_summary.po_number
-                        AND temp1.inspection_date = tsct_summary.inspection_date
-                        AND temp1.location_code = tsct_summary.location_code
+                        --AND temp1.inspection_date = tsct_summary.inspection_date
+                        --AND temp1.location_code = tsct_summary.location_code
                         WHERE (temp1.form_code = ? OR tsct_summary.form_code = ?) and (temp1.po_number ilike ? OR tsct_summary.po_number ilike ?)
                         ORDER BY status
             """.trimIndent()

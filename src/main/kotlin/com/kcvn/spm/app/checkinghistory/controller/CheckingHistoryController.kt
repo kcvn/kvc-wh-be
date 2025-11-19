@@ -2,7 +2,6 @@ package com.kcvn.spm.app.checkinghistory.controller
 
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
-import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryExportResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.app.checkinghistory.service.CheckingHistoryService
 import com.kcvn.spm.app.tempcheckingimported.payload.response.TempCheckingImportedResponse
@@ -23,6 +22,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/api/checking-history")
@@ -62,31 +64,20 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         response: HttpServletResponse,
     ) {
         response.contentType = "text/csv"
-        response.setHeader("Content-Disposition", "attachment; filename=\"products.csv\"")
+        val fileName = "receive_checking_result_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))}.csv"
+        response.setHeader("Content-Disposition", "attachment; filename=$fileName")
+        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition")
 
         val pagingResponse: BasePagingResponse<CheckingHistoryResponse> =
             checkingHistoryService.getList(request, Pageable.unpaged())
 
         val productsList: List<CheckingHistoryResponse> = pagingResponse.data ?: emptyList()
 
-        val exportList = productsList.map { item ->
-            CheckingHistoryExportResponse(
-                scanDate = item.scanDate,
-                formCode = item.formCode,
-                poNumber = item.poNumber,
-                importQty = item.importQty,
-                scanQty = item.scanQty,
-                seqNo = item.seqNo,
-                result = item.result
-            )
-        }
-
         val writer = response.writer
-        val beanToCsv = StatefulBeanToCsvBuilder<CheckingHistoryExportResponse>(writer)
-            .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-            .build()
-
-        beanToCsv.write(exportList)
+        writer.append("scanned_date,form_code,po_no,imported_qty,scanned_qty,seq_no,result\n")
+        productsList.forEach { item ->
+            writer.append("${item.scanDate},${item.formCode},${item.poNumber},${item.importQty},${item.scanQty},${item.seqNo},${item.result}\n")
+        }
         writer.flush()
     }
 }

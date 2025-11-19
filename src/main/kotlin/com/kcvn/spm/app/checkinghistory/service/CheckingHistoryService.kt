@@ -39,9 +39,9 @@ class CheckingHistoryService(
 
     private fun getResult(data: CheckingHistory): String {
         return when {
-            data.importQty!! < data.scanQty -> "Thừa"
-            data.importQty == data.scanQty -> "Đủ"
-            else -> "Thiếu"
+            data.importQty!! < data.scanQty -> "Thua"
+            data.importQty == data.scanQty -> "Du"
+            else -> "Thieu"
         }
     }
 

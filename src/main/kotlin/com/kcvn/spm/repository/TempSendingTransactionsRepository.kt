@@ -116,7 +116,7 @@ FULL OUTER JOIN (
                     doubleCheckQty = record.doubleCheckQty,
                     isApproved = record.isApproved
                 )
-                finalData.add(a)
+                afterAllocateActualQtyData.add(a)
             }
         }
 
@@ -158,12 +158,10 @@ FULL OUTER JOIN (
             }
         }
 
-        val duplicatesAfterAllocateActualData = afterAllocateActualQtyData.groupBy { it.poNumber to it.inspectionDate }
+        val duplicatesAfterAllocateActualData = afterAllocateActualQtyData.groupBy { it.poNumber }
             .filter { it.value.size > 1 }
 
-        duplicatesAfterAllocateActualData.forEach { (key, records) ->
-            val (poNumber, seqNo) = key
-
+        duplicatesAfterAllocateActualData.forEach { (poNumber, records) ->
             var tempDoubleCheckQty = records[0].doubleCheckQty
 
             for (record in records) {

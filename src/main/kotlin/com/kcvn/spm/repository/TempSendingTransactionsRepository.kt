@@ -4,9 +4,9 @@ import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultIn
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.CheckingHistory
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
-import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -93,7 +93,114 @@ FULL OUTER JOIN (
                         )
                     }
 
-                return result to result.size
+        val notDuplicate = result.groupBy { it.poNumber to it.inspectionDate }
+            .filter { it.value.size == 1 }
+
+        val duplicatesInRawData = result.groupBy { it.poNumber to it.inspectionDate }
+            .filter { it.value.size > 1 }
+
+        val afterAllocateActualQtyData = mutableListOf<TempSendingResultInquiryResponse>()
+        val finalData = mutableListOf<TempSendingResultInquiryResponse>()
+
+
+        notDuplicate.forEach { (key, records) ->
+            records.forEach { record ->
+                val a = TempSendingResultInquiryResponse(
+                    formCode = record.formCode,
+                    inspectionDate = record.inspectionDate,
+                    locationCode = record.locationCode,
+                    poNumber = record.poNumber,
+                    itemName = record.itemName,
+                    requestQty = record.requestQty,
+                    actualQty = record.actualQty,
+                    doubleCheckQty = record.doubleCheckQty,
+                    isApproved = record.isApproved
+                )
+                finalData.add(a)
+            }
+        }
+
+        duplicatesInRawData.forEach { (key, records) ->
+            val (poNumber, seqNo) = key
+
+            var tempActualQty = records[0].actualQty
+
+            for (record in records) {
+                if (record.requestQty!! <= tempActualQty) {
+                    val a = TempSendingResultInquiryResponse(
+                        formCode = record.formCode,
+                        inspectionDate = record.inspectionDate,
+                        locationCode = record.locationCode,
+                        poNumber = record.poNumber,
+                        itemName = record.itemName,
+                        requestQty = record.requestQty,
+                        actualQty = if (record === records.last()) tempActualQty else record.requestQty,
+                        doubleCheckQty = record.doubleCheckQty,
+                        isApproved = record.isApproved
+                    )
+                    afterAllocateActualQtyData.add(a)
+                    tempActualQty = tempActualQty?.minus(record.requestQty!!)
+                } else {
+                    val a = TempSendingResultInquiryResponse(
+                        formCode = record.formCode,
+                        inspectionDate = record.inspectionDate,
+                        locationCode = record.locationCode,
+                        poNumber = record.poNumber,
+                        itemName = record.itemName,
+                        requestQty = record.requestQty,
+                        actualQty = record.actualQty,
+                        doubleCheckQty = record.doubleCheckQty,
+                        isApproved = record.isApproved
+                    )
+                    afterAllocateActualQtyData.add(a)
+                    tempActualQty = BigDecimal.ZERO
+                }
+            }
+        }
+
+        val duplicatesAfterAllocateActualData = afterAllocateActualQtyData.groupBy { it.poNumber to it.inspectionDate }
+            .filter { it.value.size > 1 }
+
+        duplicatesAfterAllocateActualData.forEach { (key, records) ->
+            val (poNumber, seqNo) = key
+
+            var tempDoubleCheckQty = records[0].doubleCheckQty
+
+            for (record in records) {
+                if (record.requestQty!! <= tempDoubleCheckQty) {
+                    val a = TempSendingResultInquiryResponse(
+                        formCode = record.formCode,
+                        inspectionDate = record.inspectionDate,
+                        locationCode = record.locationCode,
+                        poNumber = record.poNumber,
+                        itemName = record.itemName,
+                        requestQty = record.requestQty,
+                        actualQty = record.requestQty,
+                        doubleCheckQty = if (record === records.last()) tempDoubleCheckQty else record.requestQty,
+                        isApproved = record.isApproved
+                    )
+                    finalData.add(a)
+                    tempDoubleCheckQty = tempDoubleCheckQty?.minus(record.requestQty!!)
+                } else {
+                    val a = TempSendingResultInquiryResponse(
+                        formCode = record.formCode,
+                        inspectionDate = record.inspectionDate,
+                        locationCode = record.locationCode,
+                        poNumber = record.poNumber,
+                        itemName = record.itemName,
+                        requestQty = record.requestQty,
+                        actualQty = record.actualQty,
+                        doubleCheckQty = record.doubleCheckQty,
+                        isApproved = record.isApproved
+                    )
+                    finalData.add(a)
+                    tempDoubleCheckQty = BigDecimal.ZERO
+                }
+            }
+        }
+        finalData.forEach { row -> if (row.requestQty == row.actualQty && row.requestQty == row.doubleCheckQty) row.result = "SAME" else row.result = "DIFFERENT" }
+        finalData.sortWith(compareBy<TempSendingResultInquiryResponse> { it.poNumber }.thenBy { it.inspectionDate })
+        return Pair(finalData, finalData.size)
     }
 
     fun findLatestTempSending(sourceLocationCode: String, sourcePackageCode: String, poNumber: String, todayUtc: LocalDate): SendingTransactions? {

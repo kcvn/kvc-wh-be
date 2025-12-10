@@ -158,8 +158,28 @@ FULL OUTER JOIN (
             }
         }
 
+        val notDuplicatesAfterAllocateActualData = afterAllocateActualQtyData.groupBy { it.poNumber }
+            .filter { it.value.size == 1 }
+
         val duplicatesAfterAllocateActualData = afterAllocateActualQtyData.groupBy { it.poNumber }
             .filter { it.value.size > 1 }
+
+        notDuplicatesAfterAllocateActualData.forEach { (poNumber, records) ->
+            records.forEach { record ->
+                val a = TempSendingResultInquiryResponse(
+                    formCode = record.formCode,
+                    inspectionDate = record.inspectionDate,
+                    locationCode = record.locationCode,
+                    poNumber = record.poNumber,
+                    itemName = record.itemName,
+                    requestQty = record.requestQty,
+                    actualQty = record.actualQty,
+                    doubleCheckQty = record.doubleCheckQty,
+                    isApproved = record.isApproved
+                )
+                finalData.add(a)
+            }
+        }
 
         duplicatesAfterAllocateActualData.forEach { (poNumber, records) ->
             var tempDoubleCheckQty = records[0].doubleCheckQty

@@ -292,7 +292,7 @@ class StockTakingService(
 
         val numberFormat = workbook.createDataFormat().getFormat("#,##0")
 
-        val listSystemStockTaking = listSystemStockTakingResponse.data
+        val listSystemStockTaking = listSystemStockTakingResponse.data?.sortedBy { it.result }
 
         if (listSystemStockTaking.isNullOrEmpty()) {
             throw BusinessException(CommonUtils.getMessage("data.notFound"))
@@ -305,14 +305,15 @@ class StockTakingService(
             val formattedInspectionDate = item.inspectionDate?.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) ?: ""
             ExcelHelper.setCellValue(row, 0, style, formattedInspectionDate)
             ExcelHelper.setCellValue(row, 1, style, item.poNumber)
-            ExcelHelper.setCellValue(row, 2, style, item.amoebaLocationCode)
-            ExcelHelper.setCellValue(row, 3, style, item.systemLocationCode)
-            ExcelHelper.setCellValueInt(row, 4, numberStyle, item.amoebaQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 5, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValue(row, 6, style, item.result)
+            ExcelHelper.setCellValue(row, 2, style, item.itemName)
+            ExcelHelper.setCellValue(row, 3, style, item.amoebaLocationCode)
+            ExcelHelper.setCellValue(row, 4, style, item.systemLocationCode)
+            ExcelHelper.setCellValueInt(row, 5, numberStyle, item.amoebaQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 7, style, item.result)
         }
 
-        sheet.createFreezePane(4, 1)
+        sheet.createFreezePane(2, 1)
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         workbook.write(byteArrayOutputStream)
@@ -349,7 +350,7 @@ class StockTakingService(
 
         val numberFormat = workbook.createDataFormat().getFormat("#,##0")
 
-        val listActualStockTaking = listActualStockTakingResponse.data
+        val listActualStockTaking = listActualStockTakingResponse.data?.sortedBy { it.result }
 
         if (listActualStockTaking.isNullOrEmpty()) {
             throw BusinessException(CommonUtils.getMessage("data.notFound"))
@@ -360,17 +361,18 @@ class StockTakingService(
             val row: Row = sheet.createRow(rowNumberFill++)
 
             ExcelHelper.setCellValue(row, 0, style, item.poNumber)
-            ExcelHelper.setCellValue(row, 1, style, item.packageCode)
-            ExcelHelper.setCellValue(row, 2, style, item.systemLocationCode)
-            ExcelHelper.setCellValue(row, 3, style, item.actualLocationCode)
-            ExcelHelper.setCellValue(row, 4, style, item.checkingLocationCode)
-            ExcelHelper.setCellValueInt(row, 5, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.actualQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.checkingQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 8, numberStyle, item.systemBoxQty ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 9, numberStyle, item.actualBoxQty ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 10, numberStyle, item.checkingBoxQty ?: 0, numberFormat)
-            ExcelHelper.setCellValue(row, 11, style, item.result)
+            ExcelHelper.setCellValue(row, 1, style, item.itemName)
+            ExcelHelper.setCellValue(row, 2, style, item.packageCode)
+            ExcelHelper.setCellValue(row, 3, style, item.systemLocationCode)
+            ExcelHelper.setCellValue(row, 4, style, item.actualLocationCode)
+            ExcelHelper.setCellValue(row, 5, style, item.checkingLocationCode)
+            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.actualQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 8, numberStyle, item.checkingQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 9, numberStyle, item.systemBoxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 10, numberStyle, item.actualBoxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 11, numberStyle, item.checkingBoxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 12, style, item.result)
         }
 
         sheet.createFreezePane(0, 1)

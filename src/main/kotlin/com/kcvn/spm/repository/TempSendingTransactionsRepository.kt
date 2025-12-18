@@ -217,7 +217,7 @@ FULL OUTER JOIN (
             }
         }
         finalData.forEach { row -> if (row.requestQty == row.actualQty && row.requestQty == row.doubleCheckQty) row.result = "SAME" else row.result = "DIFFERENT" }
-        finalData.sortWith(compareBy<TempSendingResultInquiryResponse> { it.poNumber }.thenBy { it.inspectionDate })
+        finalData.sortWith(compareBy<TempSendingResultInquiryResponse> {it.result}.thenBy { it.poNumber }.thenBy { it.inspectionDate })
         return Pair(finalData, finalData.size)
     }
 

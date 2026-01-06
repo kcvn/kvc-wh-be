@@ -36,6 +36,7 @@ class DownloadApkService(
 
             if (!apkFile.exists()) {
                 println("File có đọc được không? ${apkFile.canRead()}")
+                println("Path ${System.getProperty("user.dir")}/log/${apk?.newVersion}.apk")
                 return ResponseEntity.notFound().build()
             }
 

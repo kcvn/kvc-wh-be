@@ -3,6 +3,7 @@ package com.kcvn.spm.app.backlogwh.controller
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
+import com.kcvn.spm.app.backlogwh.payload.response.BacklogHistoryResponse
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -50,6 +51,15 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<BacklogWhResponse>> {
         val result = backlogWhService.getListForAndroid(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-backlog-history")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getBacklogHistory(
+        packageCode: String,
+    ): ResponseEntity<BasePagingResponse<BacklogHistoryResponse>> {
+        val result = backlogWhService.getBacklogHistoryList(packageCode)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

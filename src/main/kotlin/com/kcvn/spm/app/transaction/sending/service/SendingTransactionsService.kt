@@ -106,7 +106,7 @@ class SendingTransactionsService(
                 it.inspectionDate,
                 isEntried = true
             )
-            backlogWhService.minusBacklog(backlogData, "OUT_ONLY")
+            backlogWhService.minusBacklog(backlogData, "OUT_ONLY", it.id)
         }
         tempSendingImportedRepo.updateAfterApprove(formCode)
         sendingRepo.copyToSendingTable(formCode)

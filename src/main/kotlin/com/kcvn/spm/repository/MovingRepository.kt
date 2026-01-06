@@ -4,7 +4,9 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Moving
+import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.references.MOVING
+import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.SortOrder
 import org.jooq.TableField
@@ -13,17 +15,30 @@ import java.time.LocalDate
 
 @Repository
 class MovingRepository(private val context: DSLContext) : SortingRepository() {
-    fun saveMoving(moving: Moving) {
-        context.insertInto(
+    fun saveMoving(moving: Moving): String? {
+        return context.insertInto(
             MOVING, MOVING.SOURCE_LOCATION_CODE, MOVING.DEST_LOCATION_CODE,
             MOVING.SOURCE_PACKAGE_CODE, MOVING.DEST_PACKAGE_CODE, MOVING.PO_NUMBER,
-            MOVING.QTY, MOVING.SEQ_NO, MOVING.TRANSACTION_TYPE, MOVING.RECEIVING_DATE, MOVING.CREATED_BY
+            MOVING.QTY, MOVING.SEQ_NO, MOVING.TRANSACTION_TYPE,
+            MOVING.RECEIVING_DATE, MOVING.CREATED_BY
         )
             .values(
-                moving.sourceLocationCode, moving.destLocationCode, moving.sourcePackageCode, moving.destPackageCode, moving.poNumber, moving.qty, moving.seqNo, moving.transactionType, moving.receivingDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                moving.sourceLocationCode,
+                moving.destLocationCode,
+                moving.sourcePackageCode,
+                moving.destPackageCode,
+                moving.poNumber,
+                moving.qty,
+                moving.seqNo,
+                moving.transactionType,
+                moving.receivingDate,
+                CommonUtils.loggedInUser() ?: Constants.SYSTEM
             )
-            .execute()
+            .returning(MOVING.ID)
+            .fetchOne()!!
+            .id
     }
+
 
     fun findLatestMoving(sourceLocationCode: String, sourcePackageCode: String, poNumber: String, todayUtc: LocalDate): Moving? {
         return context.selectFrom(MOVING)
@@ -34,6 +49,15 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
                     .and(MOVING.CREATED_DATE.cast(LocalDate::class.java).eq(todayUtc))
             )
             .orderBy(MOVING.SEQ_NO.sort(SortOrder.DESC))
+            .fetchInto(Moving::class.java)
+            .firstOrNull()
+    }
+
+    fun findOneRecordById(id: String?): Moving?{
+        return context.selectFrom(MOVING)
+            .where(
+                MOVING.ID.eq(id)
+            )
             .fetchInto(Moving::class.java)
             .firstOrNull()
     }

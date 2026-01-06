@@ -51,7 +51,7 @@ class MovingService(
                 "TRANSFER",
                 recDateSource
             )
-            movingRepo.saveMoving(moving)
+            val refId = movingRepo.saveMoving(moving)
             // update location for package when destPackageCode == ""
 //            if (it.destPackageCode == "") {
 //                splittingRepo.updateLocationCode(it.sourceLocationCode!!, it.destLocationCode!!, it.sourcePackageCode!!)
@@ -68,7 +68,7 @@ class MovingService(
                 isEntried = false,
                 inspectionDate = sourceBacklog?.inspectionDate
             )
-            backlogWhService.plusBacklog(backlogDestData, "IN")
+            backlogWhService.plusBacklog(backlogDestData, "IN", refId)
             // minus backlog sourceLocation
             val backlogSourceData = BacklogWh(
                 null,
@@ -81,7 +81,7 @@ class MovingService(
                 isEntried = sourceBacklog?.isEntried,
                 inspectionDate = sourceBacklog?.inspectionDate
             )
-            backlogWhService.minusBacklog(backlogSourceData, "OUT")
+            backlogWhService.minusBacklog(backlogSourceData, "OUT", refId)
             backlogWhRepo.updateIsEntried(false, sourceBacklog?.poNumber!!, recDateSource!!, sourceBacklog.inspectionDate)
         }
     }

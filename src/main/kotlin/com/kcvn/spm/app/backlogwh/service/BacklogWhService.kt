@@ -3,6 +3,7 @@ package com.kcvn.spm.app.backlogwh.service
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
+import com.kcvn.spm.app.backlogwh.payload.response.BacklogHistoryResponse
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -14,9 +15,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.BacklogWhHistory
-import com.kcvn.spm.repository.BacklogWhHistoryRepository
-import com.kcvn.spm.repository.BacklogWhRepository
-import com.kcvn.spm.repository.SplittingRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
@@ -29,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -37,6 +37,9 @@ import java.time.format.DateTimeFormatter
 class BacklogWhService(
     private val backlogWhRepo: BacklogWhRepository,
     private val backlogWhHistoryRepo: BacklogWhHistoryRepository,
+    private val receivingTransRepo: ReceivingTransactionsRepository,
+    private val movingTransRepo: MovingRepository,
+    private val sendingTransRepo: SendingTransactionsRepository
 
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
@@ -213,7 +216,7 @@ class BacklogWhService(
         return BaseResponse(response)
     }
 
-    fun plusBacklog(data: BacklogWh, transactionType: String) {
+    fun plusBacklog(data: BacklogWh, transactionType: String, refId: String?) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
         // get receiving date
 
@@ -224,7 +227,7 @@ class BacklogWhService(
             val entityBacklogHistory = BacklogWhHistory(
                 null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, data.inspectionDate, transactionType
             )
-            backlogWhHistoryRepo.save(entityBacklogHistory)
+            backlogWhHistoryRepo.save(entityBacklogHistory, refId)
         } else {
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!),
                 data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried,
@@ -233,11 +236,11 @@ class BacklogWhService(
             val entityBacklogHistory = BacklogWhHistory(
                 null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!), data.boxQty?.plus(backlog.boxQty!!), receivingDate, data.inspectionDate, transactionType
             )
-            backlogWhHistoryRepo.save(entityBacklogHistory)
+            backlogWhHistoryRepo.save(entityBacklogHistory, refId)
         }
     }
 
-    fun minusBacklog(data: BacklogWh, transactionType: String) {
+    fun minusBacklog(data: BacklogWh, transactionType: String, refId: String?) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
             ?: throw BusinessExceptionDetail(
                 CommonUtils.getMessage("data.not.found.in.backlog ${data.locationCode} - ${data.packageCode} - ${data.poNumber}"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"
@@ -250,7 +253,7 @@ class BacklogWhService(
         val entityBacklogHistory = BacklogWhHistory(
             null, entityBacklog.locationCode, entityBacklog.poNumber, entityBacklog.packageCode, entityBacklog.backlogQty, entityBacklog.boxQty, data.receivingDate, data.inspectionDate, transactionType
         )
-        backlogWhHistoryRepo.save(entityBacklogHistory)
+        backlogWhHistoryRepo.save(entityBacklogHistory, refId)
     }
 
     fun update(request: List<BacklogWhUpdateRequest>) {
@@ -264,7 +267,7 @@ class BacklogWhService(
             val entityBacklogHistory = BacklogWhHistory(
                 null, backlog.locationCode, backlog.poNumber, it.packageCode, it.backlogQty, it.boxQty, backlog.receivingDate, backlog.inspectionDate, "UPDATE"
             )
-            backlogWhHistoryRepo.save(entityBacklogHistory)
+            backlogWhHistoryRepo.save(entityBacklogHistory, backlog.id)
         }
     }
 
@@ -312,5 +315,33 @@ class BacklogWhService(
             data,
             backlogData.second
         )
+    }
+
+    fun getBacklogHistoryList(packageCode: String): BasePagingResponse<BacklogHistoryResponse>{
+        val listBacklogHistoryResponse = backlogWhHistoryRepo.getBacklogHistoryList(packageCode)
+        val data = listBacklogHistoryResponse.first.map {
+            val receiving = receivingTransRepo.findOneRecordById(it.refId)
+            val moving = movingTransRepo.findOneRecordById(it.refId)
+            val sending = sendingTransRepo.findOneRecordById(it.refId)
+            BacklogHistoryResponse(
+                locationCode = it.locationCode,
+                poNumber = it.poNumber,
+                inspectionDate = it.inspectionDate,
+                receivingDate = it.receivingDate,
+                transactionQty = if (receiving != null) receiving.qty else if (moving != null) moving.qty else if (sending != null) sending.qty else BigDecimal.ZERO,
+                backlogQty = it.backlogQty,
+                boxQty = it.boxQty,
+                transactionType = when (it.transactionType) {
+                    "IN_ONLY"   -> "Nhập"
+                    "OUT_ONLY"  -> "Xuất"
+                    "IN" -> "N. Chuyển"
+                    "OUT"   -> "X. Chuyển"
+                    else        -> "Không xác định"
+                },
+                createDate = it.createdDate?.toLocalDate()
+
+            )
+        }
+        return BasePagingResponse(data, listBacklogHistoryResponse.second)
     }
 }

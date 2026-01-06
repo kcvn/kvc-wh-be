@@ -27,7 +27,8 @@ data class BacklogWhHistory(
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
-    var updatedBy: String? = null
+    var updatedBy: String? = null,
+    var refId: String? = null
 ): Serializable {
 
 
@@ -117,6 +118,12 @@ data class BacklogWhHistory(
         }
         else if (this.updatedBy != o.updatedBy)
             return false
+        if (this.refId == null) {
+            if (o.refId != null)
+                return false
+        }
+        else if (this.refId != o.refId)
+            return false
         return true
     }
 
@@ -136,6 +143,7 @@ data class BacklogWhHistory(
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.refId == null) 0 else this.refId.hashCode())
         return result
     }
 
@@ -155,6 +163,7 @@ data class BacklogWhHistory(
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
+        sb.append(", ").append(refId)
 
         sb.append(")")
         return sb.toString()

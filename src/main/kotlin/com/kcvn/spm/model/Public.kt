@@ -5,6 +5,7 @@ package com.kcvn.spm.model
 
 
 import com.kcvn.spm.model.tables.Amoeba
+import com.kcvn.spm.model.tables.ApkVersion
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
 import com.kcvn.spm.model.tables.AuthRoleClaim
@@ -56,6 +57,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.amoeba</code>.
      */
     val AMOEBA: Amoeba get() = Amoeba.AMOEBA
+
+    /**
+     * The table <code>public.apk_version</code>.
+     */
+    val APK_VERSION: ApkVersion get() = ApkVersion.APK_VERSION
 
     /**
      * The table <code>public.auth_password_reset_token</code>.
@@ -191,6 +197,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
 
     override fun getTables(): List<Table<*>> = listOf(
         Amoeba.AMOEBA,
+        ApkVersion.APK_VERSION,
         AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN,
         AuthRole.AUTH_ROLE,
         AuthRoleClaim.AUTH_ROLE_CLAIM,

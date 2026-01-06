@@ -82,7 +82,7 @@ class CancelMovingService(
             cancelMoving.qty,
             null
         )
-        backlogWhService.plusBacklog(backlogSourceData, "CANCEL_OUT")
+        backlogWhService.plusBacklog(backlogSourceData, "CANCEL_OUT", cancelMovingId)
         // get receivingDate
         val splittingSource = splittingRepo.findByLocationAndPackage(cancelMoving.destLocationCode!!, cancelMoving.destPackageCode!!)
             ?: throw BusinessException(CommonUtils.getMessage("data.notFound"))
@@ -97,7 +97,7 @@ class CancelMovingService(
             1,
             receivingDate
         )
-        backlogWhService.minusBacklog(backlogDestData, "CANCEL_IN")
+        backlogWhService.minusBacklog(backlogDestData, "CANCEL_IN", cancelMovingId)
 
         return if (cancelMovingId != null) {
             CancelMovingResponse(

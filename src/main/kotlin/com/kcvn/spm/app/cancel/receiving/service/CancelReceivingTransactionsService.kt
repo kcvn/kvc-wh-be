@@ -63,7 +63,7 @@ class CancelReceivingTransactionsService(
             1,
             receivingDate
         )
-        backlogWhService.minusBacklog(backlogData, "CANCEL_IN_ONLY")
+        backlogWhService.minusBacklog(backlogData, "CANCEL_IN_ONLY", cancelRecId)
 
         return if (cancelRecId != null) {
             CancelRecTransResponse(

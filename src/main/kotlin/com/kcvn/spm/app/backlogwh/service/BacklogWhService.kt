@@ -214,7 +214,7 @@ class BacklogWhService(
         return BaseResponse(response)
     }
 
-    fun plusBacklog(data: BacklogWh, transactionType: String) {
+    fun plusBacklog(data: BacklogWh, transactionType: String, refId: String?) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
         // get receiving date
 
@@ -225,7 +225,7 @@ class BacklogWhService(
             val entityBacklogHistory = BacklogWhHistory(
                 null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, data.inspectionDate, transactionType
             )
-            backlogWhHistoryRepo.save(entityBacklogHistory)
+            backlogWhHistoryRepo.save(entityBacklogHistory, refId)
         } else {
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!),
                 data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried,
@@ -234,11 +234,11 @@ class BacklogWhService(
             val entityBacklogHistory = BacklogWhHistory(
                 null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!), data.boxQty?.plus(backlog.boxQty!!), receivingDate, data.inspectionDate, transactionType
             )
-            backlogWhHistoryRepo.save(entityBacklogHistory)
+            backlogWhHistoryRepo.save(entityBacklogHistory, refId)
         }
     }
 
-    fun minusBacklog(data: BacklogWh, transactionType: String) {
+    fun minusBacklog(data: BacklogWh, transactionType: String, refId: String?) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
             ?: throw BusinessExceptionDetail(
                 CommonUtils.getMessage("data.not.found.in.backlog ${data.locationCode} - ${data.packageCode} - ${data.poNumber}"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"
@@ -251,7 +251,7 @@ class BacklogWhService(
         val entityBacklogHistory = BacklogWhHistory(
             null, entityBacklog.locationCode, entityBacklog.poNumber, entityBacklog.packageCode, entityBacklog.backlogQty, entityBacklog.boxQty, data.receivingDate, data.inspectionDate, transactionType
         )
-        backlogWhHistoryRepo.save(entityBacklogHistory)
+        backlogWhHistoryRepo.save(entityBacklogHistory, refId)
     }
 
     fun update(request: List<BacklogWhUpdateRequest>) {
@@ -265,7 +265,7 @@ class BacklogWhService(
             val entityBacklogHistory = BacklogWhHistory(
                 null, backlog.locationCode, backlog.poNumber, it.packageCode, it.backlogQty, it.boxQty, backlog.receivingDate, backlog.inspectionDate, "UPDATE"
             )
-            backlogWhHistoryRepo.save(entityBacklogHistory)
+            backlogWhHistoryRepo.save(entityBacklogHistory, backlog.id)
         }
     }
 

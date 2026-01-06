@@ -13,17 +13,30 @@ import java.time.LocalDate
 
 @Repository
 class MovingRepository(private val context: DSLContext) : SortingRepository() {
-    fun saveMoving(moving: Moving) {
-        context.insertInto(
+    fun saveMoving(moving: Moving): String? {
+        return context.insertInto(
             MOVING, MOVING.SOURCE_LOCATION_CODE, MOVING.DEST_LOCATION_CODE,
             MOVING.SOURCE_PACKAGE_CODE, MOVING.DEST_PACKAGE_CODE, MOVING.PO_NUMBER,
-            MOVING.QTY, MOVING.SEQ_NO, MOVING.TRANSACTION_TYPE, MOVING.RECEIVING_DATE, MOVING.CREATED_BY
+            MOVING.QTY, MOVING.SEQ_NO, MOVING.TRANSACTION_TYPE,
+            MOVING.RECEIVING_DATE, MOVING.CREATED_BY
         )
             .values(
-                moving.sourceLocationCode, moving.destLocationCode, moving.sourcePackageCode, moving.destPackageCode, moving.poNumber, moving.qty, moving.seqNo, moving.transactionType, moving.receivingDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                moving.sourceLocationCode,
+                moving.destLocationCode,
+                moving.sourcePackageCode,
+                moving.destPackageCode,
+                moving.poNumber,
+                moving.qty,
+                moving.seqNo,
+                moving.transactionType,
+                moving.receivingDate,
+                CommonUtils.loggedInUser() ?: Constants.SYSTEM
             )
-            .execute()
+            .returning(MOVING.ID)
+            .fetchOne()!!
+            .id
     }
+
 
     fun findLatestMoving(sourceLocationCode: String, sourcePackageCode: String, poNumber: String, todayUtc: LocalDate): Moving? {
         return context.selectFrom(MOVING)

@@ -56,7 +56,7 @@ class CancelSendingTransactionsService(
             cancelSend.qty,
             1
         )
-        backlogWhService.plusBacklog(backlogData, "CANCEL_OUT_ONLY")
+        backlogWhService.plusBacklog(backlogData, "CANCEL_OUT_ONLY", cancelSendId)
 
         return if (cancelSendId != null) {
             CancelSendTransResponse(

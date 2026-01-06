@@ -22,16 +22,16 @@ class BacklogWhHistoryRepository(private val context: DSLContext) : SortingRepos
         const val PERMISSION_TYPE = "permission"
     }
 
-    fun save(data: BacklogWhHistory) {
+    fun save(data: BacklogWhHistory, refId: String?) {
         context.insertInto(
             BACKLOG_WH_HISTORY, BACKLOG_WH_HISTORY.LOCATION_CODE, BACKLOG_WH_HISTORY.PO_NUMBER, BACKLOG_WH_HISTORY.PACKAGE_CODE,
             BACKLOG_WH_HISTORY.BACKLOG_QTY, BACKLOG_WH_HISTORY.BOX_QTY, BACKLOG_WH_HISTORY.RECEIVING_DATE,
-            BACKLOG_WH_HISTORY.INSPECTION_DATE, BACKLOG_WH_HISTORY.TRANSACTION_TYPE, BACKLOG_WH_HISTORY.CREATED_BY
+            BACKLOG_WH_HISTORY.INSPECTION_DATE, BACKLOG_WH_HISTORY.TRANSACTION_TYPE, BACKLOG_WH_HISTORY.CREATED_BY, BACKLOG_WH_HISTORY.REF_ID
         )
             .values(
                 data.locationCode, data.poNumber, data.packageCode,
                 data.backlogQty, data.boxQty, data.receivingDate,
-                data.inspectionDate, data.transactionType, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                data.inspectionDate, data.transactionType, CommonUtils.loggedInUser() ?: Constants.SYSTEM, refId
             )
             .execute()
     }

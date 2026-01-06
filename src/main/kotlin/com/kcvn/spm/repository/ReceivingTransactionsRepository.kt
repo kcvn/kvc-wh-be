@@ -99,14 +99,14 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
             .firstOrNull()
     }
 
-    fun save(rec: ReceivingTransactions): Int? =
+    fun save(rec: ReceivingTransactions): String? =
         context.insertInto(
             RECEIVING_TRANSACTIONS, RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE,
             RECEIVING_TRANSACTIONS.SOURCE_PACKAGE_CODE, RECEIVING_TRANSACTIONS.DEST_PACKAGE_CODE, RECEIVING_TRANSACTIONS.PO_NUMBER,
             RECEIVING_TRANSACTIONS.QTY, RECEIVING_TRANSACTIONS.SEQ_NO, RECEIVING_TRANSACTIONS.TRANSACTION_TYPE, RECEIVING_TRANSACTIONS.CREATED_BY
         )
             .values(rec.sourceLocationCode, rec.destLocationCode, rec.sourcePackageCode, rec.destPackageCode, rec.poNumber, rec.qty, rec.seqNo, rec.transactionType, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-            .returningResult(RECEIVING_TRANSACTIONS.SEQ_NO)
+            .returningResult(RECEIVING_TRANSACTIONS.ID)
             .fetchOne()?.value1()
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

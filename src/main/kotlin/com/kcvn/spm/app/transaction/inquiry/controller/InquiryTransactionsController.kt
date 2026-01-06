@@ -1,5 +1,7 @@
 package com.kcvn.spm.app.transaction.inquiry.controller
 
+import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
+import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.app.transaction.inquiry.payload.request.InquirySearchRequest
 import com.kcvn.spm.app.transaction.inquiry.payload.response.InquiryResponse
 import com.kcvn.spm.app.transaction.inquiry.service.InquiryTransactionsService
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController

@@ -3,6 +3,7 @@ package com.kcvn.spm.app.backlogwh.service
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
+import com.kcvn.spm.app.backlogwh.payload.response.BacklogHistoryResponse
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -312,5 +313,28 @@ class BacklogWhService(
             data,
             backlogData.second
         )
+    }
+
+    fun getBacklogHistoryList(packageCode: String): BasePagingResponse<BacklogHistoryResponse>{
+        val listBacklogHistoryResponse = backlogWhHistoryRepo.getBacklogHistoryList(packageCode)
+        val data = listBacklogHistoryResponse.first.map {
+            BacklogHistoryResponse(
+                locationCode = it.locationCode,
+                poNumber = it.poNumber,
+                inspectionDate = it.inspectionDate,
+                receivingDate = it.receivingDate,
+                backlogQty = it.backlogQty,
+                boxQty = it.boxQty,
+                transactionType = when (it.transactionType) {
+                    "IN_ONLY"   -> "Nhập"
+                    "OUT_ONLY"  -> "Xuất"
+                    "IN" -> "Nhập chuyển"
+                    "OUT"   -> "Xuất chuyển"
+                    else        -> "Không xác định"
+                }
+
+            )
+        }
+        return BasePagingResponse(data, listBacklogHistoryResponse.second)
     }
 }

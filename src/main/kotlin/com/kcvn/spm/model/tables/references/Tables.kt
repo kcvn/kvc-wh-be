@@ -5,6 +5,7 @@ package com.kcvn.spm.model.tables.references
 
 
 import com.kcvn.spm.model.tables.Amoeba
+import com.kcvn.spm.model.tables.ApkVersion
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
 import com.kcvn.spm.model.tables.AuthRoleClaim
@@ -38,6 +39,11 @@ import com.kcvn.spm.model.tables.WestFactoryLayout
  * The table <code>public.amoeba</code>.
  */
 val AMOEBA: Amoeba = Amoeba.AMOEBA
+
+/**
+ * The table <code>public.apk_version</code>.
+ */
+val APK_VERSION: ApkVersion = ApkVersion.APK_VERSION
 
 /**
  * The table <code>public.auth_password_reset_token</code>.

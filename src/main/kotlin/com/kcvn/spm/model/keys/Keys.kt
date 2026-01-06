@@ -5,6 +5,7 @@ package com.kcvn.spm.model.keys
 
 
 import com.kcvn.spm.model.tables.Amoeba
+import com.kcvn.spm.model.tables.ApkVersion
 import com.kcvn.spm.model.tables.AuthPasswordResetToken
 import com.kcvn.spm.model.tables.AuthRole
 import com.kcvn.spm.model.tables.AuthRoleClaim
@@ -32,6 +33,7 @@ import com.kcvn.spm.model.tables.TempSendingImported
 import com.kcvn.spm.model.tables.TempSendingTransactions
 import com.kcvn.spm.model.tables.WestFactoryLayout
 import com.kcvn.spm.model.tables.records.AmoebaRecord
+import com.kcvn.spm.model.tables.records.ApkVersionRecord
 import com.kcvn.spm.model.tables.records.AuthPasswordResetTokenRecord
 import com.kcvn.spm.model.tables.records.AuthRoleClaimRecord
 import com.kcvn.spm.model.tables.records.AuthRoleRecord
@@ -71,6 +73,8 @@ import org.jooq.impl.Internal
 // -------------------------------------------------------------------------
 
 val AMOEBA_PKEY: UniqueKey<AmoebaRecord> = Internal.createUniqueKey(Amoeba.AMOEBA, DSL.name("amoeba_pkey"), arrayOf(Amoeba.AMOEBA.ID), true)
+val LOCATIONS_KEY_1: UniqueKey<ApkVersionRecord> = Internal.createUniqueKey(ApkVersion.APK_VERSION, DSL.name("locations_key_1"), arrayOf(ApkVersion.APK_VERSION.IP_ADD), true)
+val LOCATIONS_PKEY_1: UniqueKey<ApkVersionRecord> = Internal.createUniqueKey(ApkVersion.APK_VERSION, DSL.name("locations_pkey_1"), arrayOf(ApkVersion.APK_VERSION.ID), true)
 val AUTH_PASSWORD_RESET_TOKEN_PKEY: UniqueKey<AuthPasswordResetTokenRecord> = Internal.createUniqueKey(AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN, DSL.name("auth_password_reset_token_pkey"), arrayOf(AuthPasswordResetToken.AUTH_PASSWORD_RESET_TOKEN.ID), true)
 val AUTH_ROLE_PKEY: UniqueKey<AuthRoleRecord> = Internal.createUniqueKey(AuthRole.AUTH_ROLE, DSL.name("auth_role_pkey"), arrayOf(AuthRole.AUTH_ROLE.ID), true)
 val AUTH_ROLE_CLAIM_PKEY: UniqueKey<AuthRoleClaimRecord> = Internal.createUniqueKey(AuthRoleClaim.AUTH_ROLE_CLAIM, DSL.name("auth_role_claim_pkey"), arrayOf(AuthRoleClaim.AUTH_ROLE_CLAIM.ID), true)

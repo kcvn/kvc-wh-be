@@ -112,7 +112,7 @@ open class BacklogWhHistory(
     /**
      * The column <code>public.backlog_wh_history.created_date</code>.
      */
-    val CREATED_DATE: TableField<BacklogWhHistoryRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
+    val CREATED_DATE: TableField<BacklogWhHistoryRecord, OffsetDateTime?> = createField(DSL.name("created_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("clock_timestamp()"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.backlog_wh_history.created_by</code>.

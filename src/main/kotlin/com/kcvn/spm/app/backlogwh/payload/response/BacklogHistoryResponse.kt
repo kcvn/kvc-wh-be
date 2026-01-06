@@ -11,5 +11,6 @@ data class BacklogHistoryResponse(
     var boxQty: Int? = null,
     var receivingDate: LocalDate? = null,
     var inspectionDate: LocalDate? = null,
-    var transactionType: String? = null
+    var transactionType: String? = null,
+    var createDate: LocalDate? = null
 )

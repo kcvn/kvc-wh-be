@@ -320,9 +320,9 @@ class BacklogWhService(
     fun getBacklogHistoryList(packageCode: String): BasePagingResponse<BacklogHistoryResponse>{
         val listBacklogHistoryResponse = backlogWhHistoryRepo.getBacklogHistoryList(packageCode)
         val data = listBacklogHistoryResponse.first.map {
-            val receiving = receivingTransRepo.findOneRecordById(it.id)
-            val moving = movingTransRepo.findOneRecordById(it.id)
-            val sending = sendingTransRepo.findOneRecordById(it.id)
+            val receiving = receivingTransRepo.findOneRecordById(it.refId)
+            val moving = movingTransRepo.findOneRecordById(it.refId)
+            val sending = sendingTransRepo.findOneRecordById(it.refId)
             BacklogHistoryResponse(
                 locationCode = it.locationCode,
                 poNumber = it.poNumber,
@@ -334,10 +334,11 @@ class BacklogWhService(
                 transactionType = when (it.transactionType) {
                     "IN_ONLY"   -> "Nhập"
                     "OUT_ONLY"  -> "Xuất"
-                    "IN" -> "Nhập chuyển"
-                    "OUT"   -> "Xuất chuyển"
+                    "IN" -> "N. Chuyển"
+                    "OUT"   -> "X. Chuyển"
                     else        -> "Không xác định"
-                }
+                },
+                createDate = it.createdDate?.toLocalDate()
 
             )
         }

@@ -6,6 +6,7 @@ import java.time.LocalDate
 data class BacklogHistoryResponse(
     var locationCode: String? = null,
     var poNumber: String? = null,
+    var transactionQty: BigDecimal? = null,
     var backlogQty: BigDecimal? = null,
     var boxQty: Int? = null,
     var receivingDate: LocalDate? = null,

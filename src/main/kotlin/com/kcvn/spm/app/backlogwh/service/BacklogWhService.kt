@@ -15,9 +15,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.BacklogWhHistory
-import com.kcvn.spm.repository.BacklogWhHistoryRepository
-import com.kcvn.spm.repository.BacklogWhRepository
-import com.kcvn.spm.repository.SplittingRepository
+import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
@@ -30,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -38,6 +37,9 @@ import java.time.format.DateTimeFormatter
 class BacklogWhService(
     private val backlogWhRepo: BacklogWhRepository,
     private val backlogWhHistoryRepo: BacklogWhHistoryRepository,
+    private val receivingTransRepo: ReceivingTransactionsRepository,
+    private val movingTransRepo: MovingRepository,
+    private val sendingTransRepo: SendingTransactionsRepository
 
 ) {
     fun downloadTemplate(): BaseResponse<FileContentModel> {
@@ -318,11 +320,15 @@ class BacklogWhService(
     fun getBacklogHistoryList(packageCode: String): BasePagingResponse<BacklogHistoryResponse>{
         val listBacklogHistoryResponse = backlogWhHistoryRepo.getBacklogHistoryList(packageCode)
         val data = listBacklogHistoryResponse.first.map {
+            val receiving = receivingTransRepo.findOneRecordById(it.id)
+            val moving = movingTransRepo.findOneRecordById(it.id)
+            val sending = sendingTransRepo.findOneRecordById(it.id)
             BacklogHistoryResponse(
                 locationCode = it.locationCode,
                 poNumber = it.poNumber,
                 inspectionDate = it.inspectionDate,
                 receivingDate = it.receivingDate,
+                transactionQty = if (receiving != null) receiving.qty else if (moving != null) moving.qty else if (sending != null) sending.qty else BigDecimal.ZERO,
                 backlogQty = it.backlogQty,
                 boxQty = it.boxQty,
                 transactionType = when (it.transactionType) {

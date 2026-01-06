@@ -5,7 +5,9 @@ import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
+import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
@@ -213,6 +215,15 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 )
                 .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode))
         ).execute()
+    }
+
+    fun findOneRecordById(id: String?): SendingTransactions?{
+        return context.selectFrom(SENDING_TRANSACTIONS)
+            .where(
+                SENDING_TRANSACTIONS.ID.eq(id)
+            )
+            .fetchInto(SendingTransactions::class.java)
+            .firstOrNull()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

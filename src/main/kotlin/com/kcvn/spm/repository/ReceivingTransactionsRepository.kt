@@ -109,6 +109,14 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
             .returningResult(RECEIVING_TRANSACTIONS.ID)
             .fetchOne()?.value1()
 
+    fun findOneRecordById(id: String?): ReceivingTransactions?{
+        return context.selectFrom(RECEIVING_TRANSACTIONS)
+            .where(RECEIVING_TRANSACTIONS.ID.eq(id)
+            )
+            .fetchInto(ReceivingTransactions::class.java)
+            .firstOrNull()
+    }
+
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {

@@ -4,7 +4,9 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Moving
+import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.references.MOVING
+import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.SortOrder
 import org.jooq.TableField
@@ -47,6 +49,15 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
                     .and(MOVING.CREATED_DATE.cast(LocalDate::class.java).eq(todayUtc))
             )
             .orderBy(MOVING.SEQ_NO.sort(SortOrder.DESC))
+            .fetchInto(Moving::class.java)
+            .firstOrNull()
+    }
+
+    fun findOneRecordById(id: String?): Moving?{
+        return context.selectFrom(MOVING)
+            .where(
+                MOVING.ID.eq(id)
+            )
             .fetchInto(Moving::class.java)
             .firstOrNull()
     }

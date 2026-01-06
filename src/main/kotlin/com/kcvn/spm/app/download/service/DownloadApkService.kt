@@ -44,6 +44,7 @@ class DownloadApkService(
             val headers = HttpHeaders()
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"app-release.apk\"")
 
+            println("Đã gửi file ${System.getProperty("user.dir")}/log/${apk?.newVersion}.apk")
             return ResponseEntity.ok()
                 .headers(headers)
                 .contentLength(apkFile.length())

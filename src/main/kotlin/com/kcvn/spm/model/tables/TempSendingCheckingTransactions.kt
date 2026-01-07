@@ -11,22 +11,26 @@ import com.kcvn.spm.model.tables.records.TempSendingCheckingTransactionsRecord
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.function.Function
 
+import kotlin.collections.Collection
+
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row18
+import org.jooq.SQL
 import org.jooq.Schema
-import org.jooq.SelectField
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
-import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
@@ -37,19 +41,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class TempSendingCheckingTransactions(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, TempSendingCheckingTransactionsRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, TempSendingCheckingTransactionsRecord>?,
+    parentPath: InverseForeignKey<out Record, TempSendingCheckingTransactionsRecord>?,
     aliased: Table<TempSendingCheckingTransactionsRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<TempSendingCheckingTransactionsRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -170,8 +178,9 @@ open class TempSendingCheckingTransactions(
      */
     val IS_CANCELED: TableField<TempSendingCheckingTransactionsRecord, Boolean?> = createField(DSL.name("is_canceled"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
-    private constructor(alias: Name, aliased: Table<TempSendingCheckingTransactionsRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<TempSendingCheckingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<TempSendingCheckingTransactionsRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<TempSendingCheckingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<TempSendingCheckingTransactionsRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.temp_sending_checking_transactions</code>
@@ -190,13 +199,11 @@ open class TempSendingCheckingTransactions(
      * reference
      */
     constructor(): this(DSL.name("temp_sending_checking_transactions"), null)
-
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, TempSendingCheckingTransactionsRecord>): this(Internal.createPathAlias(child, key), child, key, TEMP_SENDING_CHECKING_TRANSACTIONS, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<TempSendingCheckingTransactionsRecord> = TEMP_SENDING_TRANSACTIONS_PKEY_1
     override fun `as`(alias: String): TempSendingCheckingTransactions = TempSendingCheckingTransactions(DSL.name(alias), this)
     override fun `as`(alias: Name): TempSendingCheckingTransactions = TempSendingCheckingTransactions(alias, this)
-    override fun `as`(alias: Table<*>): TempSendingCheckingTransactions = TempSendingCheckingTransactions(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): TempSendingCheckingTransactions = TempSendingCheckingTransactions(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -211,21 +218,55 @@ open class TempSendingCheckingTransactions(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): TempSendingCheckingTransactions = TempSendingCheckingTransactions(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row18 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row18<String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, LocalDate?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row18<String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, LocalDate?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun rename(name: Table<*>): TempSendingCheckingTransactions = TempSendingCheckingTransactions(name.qualifiedName, null)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, LocalDate?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    override fun where(condition: Condition?): TempSendingCheckingTransactions = TempSendingCheckingTransactions(qualifiedName, if (aliased()) this else null, condition)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, LocalDate?, Boolean?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    override fun where(conditions: Collection<Condition>): TempSendingCheckingTransactions = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): TempSendingCheckingTransactions = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): TempSendingCheckingTransactions = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): TempSendingCheckingTransactions = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): TempSendingCheckingTransactions = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): TempSendingCheckingTransactions = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): TempSendingCheckingTransactions = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): TempSendingCheckingTransactions = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): TempSendingCheckingTransactions = where(DSL.notExists(select))
 }

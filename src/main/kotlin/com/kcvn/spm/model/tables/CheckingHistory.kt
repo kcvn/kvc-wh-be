@@ -11,22 +11,26 @@ import com.kcvn.spm.model.tables.records.CheckingHistoryRecord
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.function.Function
 
+import kotlin.collections.Collection
+
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row11
+import org.jooq.SQL
 import org.jooq.Schema
-import org.jooq.SelectField
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
-import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
@@ -37,19 +41,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class CheckingHistory(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, CheckingHistoryRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, CheckingHistoryRecord>?,
+    parentPath: InverseForeignKey<out Record, CheckingHistoryRecord>?,
     aliased: Table<CheckingHistoryRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<CheckingHistoryRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -119,8 +127,9 @@ open class CheckingHistory(
      */
     val FORM_CODE: TableField<CheckingHistoryRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(200), this, "")
 
-    private constructor(alias: Name, aliased: Table<CheckingHistoryRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<CheckingHistoryRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<CheckingHistoryRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<CheckingHistoryRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<CheckingHistoryRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.checking_history</code> table reference
@@ -136,13 +145,11 @@ open class CheckingHistory(
      * Create a <code>public.checking_history</code> table reference
      */
     constructor(): this(DSL.name("checking_history"), null)
-
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, CheckingHistoryRecord>): this(Internal.createPathAlias(child, key), child, key, CHECKING_HISTORY, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<CheckingHistoryRecord> = CHECKING_HISTORY_PKEY
     override fun `as`(alias: String): CheckingHistory = CheckingHistory(DSL.name(alias), this)
     override fun `as`(alias: Name): CheckingHistory = CheckingHistory(alias, this)
-    override fun `as`(alias: Table<*>): CheckingHistory = CheckingHistory(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): CheckingHistory = CheckingHistory(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -157,21 +164,55 @@ open class CheckingHistory(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): CheckingHistory = CheckingHistory(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row11 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row11<String?, LocalDate?, String?, BigDecimal?, BigDecimal?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?> = super.fieldsRow() as Row11<String?, LocalDate?, String?, BigDecimal?, BigDecimal?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?>
+    override fun rename(name: Table<*>): CheckingHistory = CheckingHistory(name.qualifiedName, null)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(from: (String?, LocalDate?, String?, BigDecimal?, BigDecimal?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    override fun where(condition: Condition?): CheckingHistory = CheckingHistory(qualifiedName, if (aliased()) this else null, condition)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, LocalDate?, String?, BigDecimal?, BigDecimal?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    override fun where(conditions: Collection<Condition>): CheckingHistory = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): CheckingHistory = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): CheckingHistory = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): CheckingHistory = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): CheckingHistory = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): CheckingHistory = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): CheckingHistory = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): CheckingHistory = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): CheckingHistory = where(DSL.notExists(select))
 }

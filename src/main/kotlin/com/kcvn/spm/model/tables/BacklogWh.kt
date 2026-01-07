@@ -11,22 +11,26 @@ import com.kcvn.spm.model.tables.records.BacklogWhRecord
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.function.Function
 
+import kotlin.collections.Collection
+
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row14
+import org.jooq.SQL
 import org.jooq.Schema
-import org.jooq.SelectField
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
-import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
@@ -37,19 +41,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class BacklogWh(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, BacklogWhRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, BacklogWhRecord>?,
+    parentPath: InverseForeignKey<out Record, BacklogWhRecord>?,
     aliased: Table<BacklogWhRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<BacklogWhRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -134,8 +142,9 @@ open class BacklogWh(
      */
     val ITEM_NAME: TableField<BacklogWhRecord, String?> = createField(DSL.name("item_name"), SQLDataType.VARCHAR(100), this, "")
 
-    private constructor(alias: Name, aliased: Table<BacklogWhRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<BacklogWhRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<BacklogWhRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<BacklogWhRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<BacklogWhRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.backlog_wh</code> table reference
@@ -151,13 +160,11 @@ open class BacklogWh(
      * Create a <code>public.backlog_wh</code> table reference
      */
     constructor(): this(DSL.name("backlog_wh"), null)
-
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, BacklogWhRecord>): this(Internal.createPathAlias(child, key), child, key, BACKLOG_WH, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<BacklogWhRecord> = BACKLOG_WH_PKEY
     override fun `as`(alias: String): BacklogWh = BacklogWh(DSL.name(alias), this)
     override fun `as`(alias: Name): BacklogWh = BacklogWh(alias, this)
-    override fun `as`(alias: Table<*>): BacklogWh = BacklogWh(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): BacklogWh = BacklogWh(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -172,21 +179,55 @@ open class BacklogWh(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): BacklogWh = BacklogWh(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row14 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row14<String?, String?, String?, String?, BigDecimal?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?> = super.fieldsRow() as Row14<String?, String?, String?, String?, BigDecimal?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?>
+    override fun rename(name: Table<*>): BacklogWh = BacklogWh(name.qualifiedName, null)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, BigDecimal?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    override fun where(condition: Condition?): BacklogWh = BacklogWh(qualifiedName, if (aliased()) this else null, condition)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, BigDecimal?, Int?, LocalDate?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    override fun where(conditions: Collection<Condition>): BacklogWh = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): BacklogWh = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): BacklogWh = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): BacklogWh = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): BacklogWh = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): BacklogWh = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): BacklogWh = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): BacklogWh = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): BacklogWh = where(DSL.notExists(select))
 }

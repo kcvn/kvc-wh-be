@@ -9,22 +9,26 @@ import com.kcvn.spm.model.keys.STOCK_TAKING_STATUS_PKEY
 import com.kcvn.spm.model.tables.records.StockTakingStatusRecord
 
 import java.time.OffsetDateTime
-import java.util.function.Function
 
+import kotlin.collections.Collection
+
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row8
+import org.jooq.SQL
 import org.jooq.Schema
-import org.jooq.SelectField
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
-import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
@@ -35,19 +39,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class StockTakingStatus(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, StockTakingStatusRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, StockTakingStatusRecord>?,
+    parentPath: InverseForeignKey<out Record, StockTakingStatusRecord>?,
     aliased: Table<StockTakingStatusRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<StockTakingStatusRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -102,8 +110,9 @@ open class StockTakingStatus(
      */
     val UPDATED_BY: TableField<StockTakingStatusRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
-    private constructor(alias: Name, aliased: Table<StockTakingStatusRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<StockTakingStatusRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<StockTakingStatusRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<StockTakingStatusRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<StockTakingStatusRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.stock_taking_status</code> table reference
@@ -119,13 +128,11 @@ open class StockTakingStatus(
      * Create a <code>public.stock_taking_status</code> table reference
      */
     constructor(): this(DSL.name("stock_taking_status"), null)
-
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, StockTakingStatusRecord>): this(Internal.createPathAlias(child, key), child, key, STOCK_TAKING_STATUS, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<StockTakingStatusRecord> = STOCK_TAKING_STATUS_PKEY
     override fun `as`(alias: String): StockTakingStatus = StockTakingStatus(DSL.name(alias), this)
     override fun `as`(alias: Name): StockTakingStatus = StockTakingStatus(alias, this)
-    override fun `as`(alias: Table<*>): StockTakingStatus = StockTakingStatus(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): StockTakingStatus = StockTakingStatus(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -140,21 +147,55 @@ open class StockTakingStatus(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): StockTakingStatus = StockTakingStatus(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row8 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row8<String?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row8<String?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun rename(name: Table<*>): StockTakingStatus = StockTakingStatus(name.qualifiedName, null)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(from: (String?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    override fun where(condition: Condition?): StockTakingStatus = StockTakingStatus(qualifiedName, if (aliased()) this else null, condition)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, Int?, Int?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    override fun where(conditions: Collection<Condition>): StockTakingStatus = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): StockTakingStatus = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): StockTakingStatus = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): StockTakingStatus = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): StockTakingStatus = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): StockTakingStatus = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): StockTakingStatus = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): StockTakingStatus = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): StockTakingStatus = where(DSL.notExists(select))
 }

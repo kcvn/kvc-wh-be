@@ -10,22 +10,26 @@ import com.kcvn.spm.model.tables.records.TempCheckingImportedRecord
 
 import java.math.BigDecimal
 import java.time.OffsetDateTime
-import java.util.function.Function
 
+import kotlin.collections.Collection
+
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row8
+import org.jooq.SQL
 import org.jooq.Schema
-import org.jooq.SelectField
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
-import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
@@ -36,19 +40,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class TempCheckingImported(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, TempCheckingImportedRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, TempCheckingImportedRecord>?,
+    parentPath: InverseForeignKey<out Record, TempCheckingImportedRecord>?,
     aliased: Table<TempCheckingImportedRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<TempCheckingImportedRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -103,8 +111,9 @@ open class TempCheckingImported(
      */
     val FORM_CODE: TableField<TempCheckingImportedRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(200), this, "")
 
-    private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<TempCheckingImportedRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.temp_checking_imported</code> table
@@ -122,13 +131,11 @@ open class TempCheckingImported(
      * Create a <code>public.temp_checking_imported</code> table reference
      */
     constructor(): this(DSL.name("temp_checking_imported"), null)
-
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, TempCheckingImportedRecord>): this(Internal.createPathAlias(child, key), child, key, TEMP_CHECKING_IMPORTED, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<TempCheckingImportedRecord> = TEMP_CHECKING_IMPORTED_DATE_PKEY
     override fun `as`(alias: String): TempCheckingImported = TempCheckingImported(DSL.name(alias), this)
     override fun `as`(alias: Name): TempCheckingImported = TempCheckingImported(alias, this)
-    override fun `as`(alias: Table<*>): TempCheckingImported = TempCheckingImported(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): TempCheckingImported = TempCheckingImported(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -143,21 +150,55 @@ open class TempCheckingImported(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): TempCheckingImported = TempCheckingImported(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row8 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row8<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?> = super.fieldsRow() as Row8<String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?>
+    override fun rename(name: Table<*>): TempCheckingImported = TempCheckingImported(name.qualifiedName, null)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    override fun where(condition: Condition?): TempCheckingImported = TempCheckingImported(qualifiedName, if (aliased()) this else null, condition)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, BigDecimal?, OffsetDateTime?, String?, OffsetDateTime?, String?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    override fun where(conditions: Collection<Condition>): TempCheckingImported = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): TempCheckingImported = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): TempCheckingImported = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): TempCheckingImported = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): TempCheckingImported = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): TempCheckingImported = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): TempCheckingImported = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): TempCheckingImported = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): TempCheckingImported = where(DSL.notExists(select))
 }

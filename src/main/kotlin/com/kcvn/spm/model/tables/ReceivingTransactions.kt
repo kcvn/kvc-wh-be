@@ -11,22 +11,26 @@ import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.function.Function
 
+import kotlin.collections.Collection
+
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row15
+import org.jooq.SQL
 import org.jooq.Schema
-import org.jooq.SelectField
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
-import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
@@ -37,19 +41,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class ReceivingTransactions(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, ReceivingTransactionsRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, ReceivingTransactionsRecord>?,
+    parentPath: InverseForeignKey<out Record, ReceivingTransactionsRecord>?,
     aliased: Table<ReceivingTransactionsRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<ReceivingTransactionsRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -141,8 +149,9 @@ open class ReceivingTransactions(
      */
     val IS_CANCELED: TableField<ReceivingTransactionsRecord, Boolean?> = createField(DSL.name("is_canceled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
-    private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.receiving_transactions</code> table
@@ -160,13 +169,11 @@ open class ReceivingTransactions(
      * Create a <code>public.receiving_transactions</code> table reference
      */
     constructor(): this(DSL.name("receiving_transactions"), null)
-
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, ReceivingTransactionsRecord>): this(Internal.createPathAlias(child, key), child, key, RECEIVING_TRANSACTIONS, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<ReceivingTransactionsRecord> = RECEIVING_TRANSACTIONS_PKEY
     override fun `as`(alias: String): ReceivingTransactions = ReceivingTransactions(DSL.name(alias), this)
     override fun `as`(alias: Name): ReceivingTransactions = ReceivingTransactions(alias, this)
-    override fun `as`(alias: Table<*>): ReceivingTransactions = ReceivingTransactions(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): ReceivingTransactions = ReceivingTransactions(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -181,21 +188,55 @@ open class ReceivingTransactions(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): ReceivingTransactions = ReceivingTransactions(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row15 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row15<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row15<String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun rename(name: Table<*>): ReceivingTransactions = ReceivingTransactions(name.qualifiedName, null)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    override fun where(condition: Condition?): ReceivingTransactions = ReceivingTransactions(qualifiedName, if (aliased()) this else null, condition)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, String?, String?, String?, BigDecimal?, Int?, String?, LocalDate?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    override fun where(conditions: Collection<Condition>): ReceivingTransactions = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): ReceivingTransactions = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): ReceivingTransactions = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): ReceivingTransactions = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): ReceivingTransactions = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): ReceivingTransactions = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): ReceivingTransactions = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): ReceivingTransactions = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): ReceivingTransactions = where(DSL.notExists(select))
 }

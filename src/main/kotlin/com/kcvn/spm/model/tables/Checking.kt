@@ -10,22 +10,26 @@ import com.kcvn.spm.model.tables.records.CheckingRecord
 
 import java.math.BigDecimal
 import java.time.OffsetDateTime
-import java.util.function.Function
 
+import kotlin.collections.Collection
+
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row9
+import org.jooq.SQL
 import org.jooq.Schema
-import org.jooq.SelectField
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
-import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
@@ -36,19 +40,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class Checking(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, CheckingRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, CheckingRecord>?,
+    parentPath: InverseForeignKey<out Record, CheckingRecord>?,
     aliased: Table<CheckingRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<CheckingRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -108,8 +116,9 @@ open class Checking(
      */
     val UPDATED_BY: TableField<CheckingRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
-    private constructor(alias: Name, aliased: Table<CheckingRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<CheckingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<CheckingRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<CheckingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<CheckingRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.checking</code> table reference
@@ -125,13 +134,11 @@ open class Checking(
      * Create a <code>public.checking</code> table reference
      */
     constructor(): this(DSL.name("checking"), null)
-
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, CheckingRecord>): this(Internal.createPathAlias(child, key), child, key, CHECKING, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<CheckingRecord> = CHECKING_PKEY
     override fun `as`(alias: String): Checking = Checking(DSL.name(alias), this)
     override fun `as`(alias: Name): Checking = Checking(alias, this)
-    override fun `as`(alias: Table<*>): Checking = Checking(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): Checking = Checking(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -146,21 +153,55 @@ open class Checking(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): Checking = Checking(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row9 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row9<String?, String?, String?, BigDecimal?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?> = super.fieldsRow() as Row9<String?, String?, String?, BigDecimal?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?>
+    override fun rename(name: Table<*>): Checking = Checking(name.qualifiedName, null)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(from: (String?, String?, String?, BigDecimal?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    override fun where(condition: Condition?): Checking = Checking(qualifiedName, if (aliased()) this else null, condition)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, String?, BigDecimal?, Int?, OffsetDateTime?, String?, OffsetDateTime?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    override fun where(conditions: Collection<Condition>): Checking = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): Checking = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): Checking = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): Checking = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): Checking = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): Checking = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): Checking = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): Checking = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): Checking = where(DSL.notExists(select))
 }

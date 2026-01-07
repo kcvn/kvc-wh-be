@@ -8,17 +8,25 @@ import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.WEST_FACTORY_LAYOUT_PKEY
 import com.kcvn.spm.model.tables.records.WestFactoryLayoutRecord
 
+import kotlin.collections.Collection
+
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
+import org.jooq.SQL
 import org.jooq.Schema
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
-import org.jooq.impl.Internal
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
@@ -29,19 +37,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class WestFactoryLayout(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, WestFactoryLayoutRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, WestFactoryLayoutRecord>?,
+    parentPath: InverseForeignKey<out Record, WestFactoryLayoutRecord>?,
     aliased: Table<WestFactoryLayoutRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<WestFactoryLayoutRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -231,8 +243,9 @@ open class WestFactoryLayout(
      */
     val COLUMN33: TableField<WestFactoryLayoutRecord, String?> = createField(DSL.name("column33"), SQLDataType.VARCHAR(6).nullable(false), this, "")
 
-    private constructor(alias: Name, aliased: Table<WestFactoryLayoutRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<WestFactoryLayoutRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<WestFactoryLayoutRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<WestFactoryLayoutRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<WestFactoryLayoutRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.west_factory_layout</code> table reference
@@ -248,13 +261,11 @@ open class WestFactoryLayout(
      * Create a <code>public.west_factory_layout</code> table reference
      */
     constructor(): this(DSL.name("west_factory_layout"), null)
-
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, WestFactoryLayoutRecord>): this(Internal.createPathAlias(child, key), child, key, WEST_FACTORY_LAYOUT, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<WestFactoryLayoutRecord> = WEST_FACTORY_LAYOUT_PKEY
     override fun `as`(alias: String): WestFactoryLayout = WestFactoryLayout(DSL.name(alias), this)
     override fun `as`(alias: Name): WestFactoryLayout = WestFactoryLayout(alias, this)
-    override fun `as`(alias: Table<*>): WestFactoryLayout = WestFactoryLayout(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): WestFactoryLayout = WestFactoryLayout(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -269,5 +280,55 @@ open class WestFactoryLayout(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): WestFactoryLayout = WestFactoryLayout(name.getQualifiedName(), null)
+    override fun rename(name: Table<*>): WestFactoryLayout = WestFactoryLayout(name.qualifiedName, null)
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Condition?): WestFactoryLayout = WestFactoryLayout(qualifiedName, if (aliased()) this else null, condition)
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(conditions: Collection<Condition>): WestFactoryLayout = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): WestFactoryLayout = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): WestFactoryLayout = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): WestFactoryLayout = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): WestFactoryLayout = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): WestFactoryLayout = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): WestFactoryLayout = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): WestFactoryLayout = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): WestFactoryLayout = where(DSL.notExists(select))
 }

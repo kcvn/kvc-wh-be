@@ -8,21 +8,28 @@ import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.AUTH_USER_ROLE_PKEY
 import com.kcvn.spm.model.keys.AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_ROLE_ID_FK
 import com.kcvn.spm.model.keys.AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_USER_ID_FK
+import com.kcvn.spm.model.tables.AuthRole.AuthRolePath
+import com.kcvn.spm.model.tables.AuthUser.AuthUserPath
 import com.kcvn.spm.model.tables.records.AuthUserRoleRecord
 
 import java.time.OffsetDateTime
-import java.util.function.Function
 
+import kotlin.collections.Collection
 import kotlin.collections.List
 
+import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
+import org.jooq.InverseForeignKey
 import org.jooq.Name
+import org.jooq.Path
+import org.jooq.PlainSQL
+import org.jooq.QueryPart
 import org.jooq.Record
-import org.jooq.Records
-import org.jooq.Row7
+import org.jooq.SQL
 import org.jooq.Schema
-import org.jooq.SelectField
+import org.jooq.Select
+import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
@@ -39,19 +46,23 @@ import org.jooq.impl.TableImpl
 @Suppress("UNCHECKED_CAST")
 open class AuthUserRole(
     alias: Name,
-    child: Table<out Record>?,
-    path: ForeignKey<out Record, AuthUserRoleRecord>?,
+    path: Table<out Record>?,
+    childPath: ForeignKey<out Record, AuthUserRoleRecord>?,
+    parentPath: InverseForeignKey<out Record, AuthUserRoleRecord>?,
     aliased: Table<AuthUserRoleRecord>?,
-    parameters: Array<Field<*>?>?
+    parameters: Array<Field<*>?>?,
+    where: Condition?
 ): TableImpl<AuthUserRoleRecord>(
     alias,
     Public.PUBLIC,
-    child,
     path,
+    childPath,
+    parentPath,
     aliased,
     parameters,
     DSL.comment(""),
-    TableOptions.table()
+    TableOptions.table(),
+    where,
 ) {
     companion object {
 
@@ -101,8 +112,9 @@ open class AuthUserRole(
      */
     val IS_DELETED: TableField<AuthUserRoleRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
-    private constructor(alias: Name, aliased: Table<AuthUserRoleRecord>?): this(alias, null, null, aliased, null)
-    private constructor(alias: Name, aliased: Table<AuthUserRoleRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
+    private constructor(alias: Name, aliased: Table<AuthUserRoleRecord>?): this(alias, null, null, null, aliased, null, null)
+    private constructor(alias: Name, aliased: Table<AuthUserRoleRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
+    private constructor(alias: Name, aliased: Table<AuthUserRoleRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
 
     /**
      * Create an aliased <code>public.auth_user_role</code> table reference
@@ -119,42 +131,54 @@ open class AuthUserRole(
      */
     constructor(): this(DSL.name("auth_user_role"), null)
 
-    constructor(child: Table<out Record>, key: ForeignKey<out Record, AuthUserRoleRecord>): this(Internal.createPathAlias(child, key), child, key, AUTH_USER_ROLE, null)
-    override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getPrimaryKey(): UniqueKey<AuthUserRoleRecord> = AUTH_USER_ROLE_PKEY
-    override fun getReferences(): List<ForeignKey<AuthUserRoleRecord, *>> = listOf(AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_USER_ID_FK, AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_ROLE_ID_FK)
-
-    private lateinit var _authUser: AuthUser
-    private lateinit var _authRole: AuthRole
+    constructor(path: Table<out Record>, childPath: ForeignKey<out Record, AuthUserRoleRecord>?, parentPath: InverseForeignKey<out Record, AuthUserRoleRecord>?): this(Internal.createPathAlias(path, childPath, parentPath), path, childPath, parentPath, AUTH_USER_ROLE, null, null)
 
     /**
-     * Get the implicit join path to the <code>public.auth_user</code> table.
+     * A subtype implementing {@link Path} for simplified path-based joins.
      */
-    fun authUser(): AuthUser {
-        if (!this::_authUser.isInitialized)
-            _authUser = AuthUser(this, AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_USER_ID_FK)
-
-        return _authUser;
+    open class AuthUserRolePath : AuthUserRole, Path<AuthUserRoleRecord> {
+        constructor(path: Table<out Record>, childPath: ForeignKey<out Record, AuthUserRoleRecord>?, parentPath: InverseForeignKey<out Record, AuthUserRoleRecord>?): super(path, childPath, parentPath)
+        private constructor(alias: Name, aliased: Table<AuthUserRoleRecord>): super(alias, aliased)
+        override fun `as`(alias: String): AuthUserRolePath = AuthUserRolePath(DSL.name(alias), this)
+        override fun `as`(alias: Name): AuthUserRolePath = AuthUserRolePath(alias, this)
+        override fun `as`(alias: Table<*>): AuthUserRolePath = AuthUserRolePath(alias.qualifiedName, this)
     }
+    override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
+    override fun getPrimaryKey(): UniqueKey<AuthUserRoleRecord> = AUTH_USER_ROLE_PKEY
+    override fun getReferences(): List<ForeignKey<AuthUserRoleRecord, *>> = listOf(AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_ROLE_ID_FK, AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_USER_ID_FK)
 
-    val authUser: AuthUser
-        get(): AuthUser = authUser()
+    private lateinit var _authRole: AuthRolePath
 
     /**
      * Get the implicit join path to the <code>public.auth_role</code> table.
      */
-    fun authRole(): AuthRole {
+    fun authRole(): AuthRolePath {
         if (!this::_authRole.isInitialized)
-            _authRole = AuthRole(this, AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_ROLE_ID_FK)
+            _authRole = AuthRolePath(this, AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_ROLE_ID_FK, null)
 
         return _authRole;
     }
 
-    val authRole: AuthRole
-        get(): AuthRole = authRole()
+    val authRole: AuthRolePath
+        get(): AuthRolePath = authRole()
+
+    private lateinit var _authUser: AuthUserPath
+
+    /**
+     * Get the implicit join path to the <code>public.auth_user</code> table.
+     */
+    fun authUser(): AuthUserPath {
+        if (!this::_authUser.isInitialized)
+            _authUser = AuthUserPath(this, AUTH_USER_ROLE__AUTH_USER_ROLE_AUTH_USER_ID_FK, null)
+
+        return _authUser;
+    }
+
+    val authUser: AuthUserPath
+        get(): AuthUserPath = authUser()
     override fun `as`(alias: String): AuthUserRole = AuthUserRole(DSL.name(alias), this)
     override fun `as`(alias: Name): AuthUserRole = AuthUserRole(alias, this)
-    override fun `as`(alias: Table<*>): AuthUserRole = AuthUserRole(alias.getQualifiedName(), this)
+    override fun `as`(alias: Table<*>): AuthUserRole = AuthUserRole(alias.qualifiedName, this)
 
     /**
      * Rename this table
@@ -169,21 +193,55 @@ open class AuthUserRole(
     /**
      * Rename this table
      */
-    override fun rename(name: Table<*>): AuthUserRole = AuthUserRole(name.getQualifiedName(), null)
-
-    // -------------------------------------------------------------------------
-    // Row7 type methods
-    // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row7<String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?> = super.fieldsRow() as Row7<String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?>
+    override fun rename(name: Table<*>): AuthUserRole = AuthUserRole(name.qualifiedName, null)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(from: (String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    override fun where(condition: Condition?): AuthUserRole = AuthUserRole(qualifiedName, if (aliased()) this else null, condition)
 
     /**
-     * Convenience mapping calling {@link SelectField#convertFrom(Class,
-     * Function)}.
+     * Create an inline derived table from this table
      */
-    fun <U> mapping(toType: Class<U>, from: (String?, String?, OffsetDateTime?, String?, OffsetDateTime?, String?, Boolean?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    override fun where(conditions: Collection<Condition>): AuthUserRole = where(DSL.and(conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(vararg conditions: Condition?): AuthUserRole = where(DSL.and(*conditions))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun where(condition: Field<Boolean?>?): AuthUserRole = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(condition: SQL): AuthUserRole = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String): AuthUserRole = where(DSL.condition(condition))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg binds: Any?): AuthUserRole = where(DSL.condition(condition, *binds))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    @PlainSQL override fun where(@Stringly.SQL condition: String, vararg parts: QueryPart): AuthUserRole = where(DSL.condition(condition, *parts))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereExists(select: Select<*>): AuthUserRole = where(DSL.exists(select))
+
+    /**
+     * Create an inline derived table from this table
+     */
+    override fun whereNotExists(select: Select<*>): AuthUserRole = where(DSL.notExists(select))
 }

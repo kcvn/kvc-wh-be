@@ -148,7 +148,7 @@ FULL OUTER JOIN (
                         poNumber = record.poNumber,
                         itemName = record.itemName,
                         requestQty = record.requestQty,
-                        actualQty = record.actualQty,
+                        actualQty = tempActualQty,
                         doubleCheckQty = record.doubleCheckQty,
                         isApproved = record.isApproved
                     )
@@ -193,7 +193,7 @@ FULL OUTER JOIN (
                         poNumber = record.poNumber,
                         itemName = record.itemName,
                         requestQty = record.requestQty,
-                        actualQty = record.requestQty,
+                        actualQty = record.actualQty,
                         doubleCheckQty = if (record === records.last()) tempDoubleCheckQty else record.requestQty,
                         isApproved = record.isApproved
                     )
@@ -208,7 +208,7 @@ FULL OUTER JOIN (
                         itemName = record.itemName,
                         requestQty = record.requestQty,
                         actualQty = record.actualQty,
-                        doubleCheckQty = record.doubleCheckQty,
+                        doubleCheckQty = tempDoubleCheckQty,
                         isApproved = record.isApproved
                     )
                     finalData.add(a)

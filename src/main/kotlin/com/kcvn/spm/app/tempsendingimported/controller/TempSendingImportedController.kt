@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/api/temp-sending-imported")
 class TempSendingImportedController(private val tempSendingImportedService: TempSendingImportedService) {
     @GetMapping("form-code-dropdown")
-    fun getListFormCodeDropdown(@RequestParam formStatus: String? = "NOT_APPROVED", isIncludeGe3Days: Boolean? = true): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+    fun getListFormCodeDropdown(@RequestParam formStatus: String? = "NOT_APPROVED", isIncludeGe3Days: Boolean?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
         val data = tempSendingImportedService.getListFormCodeDropdown(formStatus ?: "NOT_APPROVED", isIncludeGe3Days ?: false)
         return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }

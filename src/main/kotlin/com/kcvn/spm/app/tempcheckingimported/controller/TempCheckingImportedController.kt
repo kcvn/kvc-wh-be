@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/api/temp-checking-imported")
 class TempCheckingImportedController(private val tempCheckingImportedService: TempCheckingImportedService) {
     @GetMapping("form-code-dropdown")
-    fun getListFormCodeDropdown(@RequestParam formStatus: String? = "ALL", isIncludeGe3Days: Boolean? = true): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+    fun getListFormCodeDropdown(@RequestParam formStatus: String? = "ALL", isIncludeGe3Days: Boolean?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
         val data = tempCheckingImportedService.getListFormCodeDropdown(formStatus ?: "ALL", isIncludeGe3Days ?: false)
         return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }

@@ -319,29 +319,47 @@ class BacklogWhService(
 
     fun getBacklogHistoryList(packageCode: String): BasePagingResponse<BacklogHistoryResponse>{
         val listBacklogHistoryResponse = backlogWhHistoryRepo.getBacklogHistoryList(packageCode)
-        val data = listBacklogHistoryResponse.first.map {
+        val data = mutableListOf(BacklogHistoryResponse())
+        val tempData = listBacklogHistoryResponse.first.map {
             val receiving = receivingTransRepo.findOneRecordById(it.refId)
             val moving = movingTransRepo.findOneRecordById(it.refId)
             val sending = sendingTransRepo.findOneRecordById(it.refId)
-            BacklogHistoryResponse(
-                locationCode = it.locationCode,
-                poNumber = it.poNumber,
-                inspectionDate = it.inspectionDate,
-                receivingDate = it.receivingDate,
-                transactionQty = if (receiving != null) receiving.qty else if (moving != null) moving.qty else if (sending != null) sending.qty else BigDecimal.ZERO,
-                backlogQty = it.backlogQty,
-                boxQty = it.boxQty,
-                transactionType = when (it.transactionType) {
-                    "IN_ONLY"   -> "Nhập"
-                    "OUT_ONLY"  -> "Xuất"
-                    "IN" -> "N. Chuyển"
-                    "OUT"   -> "X. Chuyển"
-                    else        -> "Không xác định"
-                },
-                createDate = it.createdDate?.toLocalDate()
+            if (data.last().transactionType == it.transactionType && data.last().createDate == it.createdDate?.toLocalDate())
+            {
+                data.last().backlogQty = it.backlogQty
+                data.last().boxQty = it.boxQty
 
-            )
+                if (receiving != null)
+                    data.last().transactionQty = data.last().transactionQty?.plus(receiving.qty!!)
+                else if (sending != null)
+                    data.last().transactionQty = data.last().transactionQty?.plus(sending.qty!!) else TODO()
+            }
+            else
+            {
+                val new = BacklogHistoryResponse(
+                    locationCode = it.locationCode,
+                    poNumber = it.poNumber,
+                    inspectionDate = it.inspectionDate,
+                    receivingDate = it.receivingDate,
+                    transactionQty = if (receiving != null) receiving.qty else if (sending != null) sending.qty else BigDecimal.ZERO,
+                    backlogQty = it.backlogQty,
+                    boxQty = it.boxQty,
+                    transactionType = it.transactionType
+//                {
+//                    "IN_ONLY"   -> "Nhập"
+//                    "OUT_ONLY"  -> "Xuất"
+//                    "IN" -> "N. Chuyển"
+//                    "OUT"   -> "X. Chuyển"
+//                    else        -> "Không xác định"
+//                }
+                    ,
+                    createDate = it.createdDate?.toLocalDate()
+                )
+                data.add(new)
+            }
+
         }
-        return BasePagingResponse(data, listBacklogHistoryResponse.second)
+        data.removeFirst()
+        return BasePagingResponse(data, data.size)
     }
 }

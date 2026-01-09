@@ -56,6 +56,19 @@ class MovingService(
 //            if (it.destPackageCode == "") {
 //                splittingRepo.updateLocationCode(it.sourceLocationCode!!, it.destLocationCode!!, it.sourcePackageCode!!)
 //            }
+            // minus backlog sourceLocation
+            val backlogSourceData = BacklogWh(
+                null,
+                it.sourceLocationCode,
+                it.poNumber,
+                it.sourcePackageCode,
+                it.qty,
+                it.boxQty,
+                recDateSource,
+                isEntried = sourceBacklog.isEntried,
+                inspectionDate = sourceBacklog.inspectionDate
+            )
+            backlogWhService.minusBacklog(backlogSourceData, "OUT", refId)
             // plus backlog destLocation
             val backlogDestData = BacklogWh(
                 null,
@@ -66,23 +79,10 @@ class MovingService(
                 it.boxQty,
                 recDateSource,
                 isEntried = false,
-                inspectionDate = sourceBacklog?.inspectionDate
+                inspectionDate = sourceBacklog.inspectionDate
             )
             backlogWhService.plusBacklog(backlogDestData, "IN", refId)
-            // minus backlog sourceLocation
-            val backlogSourceData = BacklogWh(
-                null,
-                it.sourceLocationCode,
-                it.poNumber,
-                it.sourcePackageCode,
-                it.qty,
-                it.boxQty,
-                recDateSource,
-                isEntried = sourceBacklog?.isEntried,
-                inspectionDate = sourceBacklog?.inspectionDate
-            )
-            backlogWhService.minusBacklog(backlogSourceData, "OUT", refId)
-            backlogWhRepo.updateIsEntried(false, sourceBacklog?.poNumber!!, recDateSource!!, sourceBacklog.inspectionDate)
+            backlogWhRepo.updateIsEntried(false, sourceBacklog.poNumber!!, recDateSource!!, sourceBacklog.inspectionDate)
         }
     }
 

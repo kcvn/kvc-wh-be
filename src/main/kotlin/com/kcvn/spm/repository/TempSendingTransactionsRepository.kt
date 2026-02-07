@@ -1,10 +1,10 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.CheckingHistory
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
@@ -251,15 +251,15 @@ FULL OUTER JOIN (
             .execute()
     }
 
-//    fun deleteSendingTrans(formCode: String?, poNumber: String?, inspectionDate: LocalDate?) {
-//        context.deleteFrom(TEMP_SENDING_TRANSACTIONS)
-//            .where(
-//                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode)
-//                    .and(TEMP_SENDING_TRANSACTIONS.PO_NUMBER.eq(poNumber))
-//                    .and(TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE.eq(inspectionDate))
-//            )
-//            .execute()
-//    }
+    fun deleteTempSendingTrans(formCode: String?, packageCode: String?, seqNo: Int?) {
+        context.deleteFrom(TEMP_SENDING_TRANSACTIONS)
+            .where(
+                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode)
+                    .and(TEMP_SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE.eq(packageCode))
+                    .and(TEMP_SENDING_TRANSACTIONS.SEQ_NO.eq(seqNo))
+            )
+            .execute()
+    }
 
     fun getListByFormCode(formCode: String): List<TempSendingTransactions>? {
         return context.selectFrom(TEMP_SENDING_TRANSACTIONS)
@@ -267,6 +267,18 @@ FULL OUTER JOIN (
                 TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode)
             )
             .fetchInto(TempSendingTransactions::class.java)
+    }
+
+    fun getOneTransaction(request: SendingRequest): TempSendingTransactions? {
+        return context.selectFrom(TEMP_SENDING_TRANSACTIONS)
+            .where(
+                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(request.formCode)
+                    .and(TEMP_SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE.eq(request.packageCode))
+                    .and(TEMP_SENDING_TRANSACTIONS.QTY.eq(request.qty))
+            )
+            .orderBy(TEMP_SENDING_TRANSACTIONS.SEQ_NO.desc())
+            .limit(1)
+            .fetchOneInto(TempSendingTransactions::class.java)
     }
 
 

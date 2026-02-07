@@ -14,6 +14,7 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
+import com.kcvn.spm.model.tables.pojos.CancelSendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.repository.*
@@ -39,6 +40,7 @@ import java.time.format.DateTimeFormatter
 class SendingTransactionsService(
     private val sendingRepo: SendingTransactionsRepository,
     private val tempSendingRepo: TempSendingTransactionsRepository,
+    private val cancelTempSendingRepo: CancelSendingTransactionsRepository,
     private val tempSendingImportedRepo: TempSendingImportedRepository,
     private val tempSendingCheckingRepo: TempSendingCheckingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
@@ -269,6 +271,44 @@ class SendingTransactionsService(
                 minBinCode = it.minBinCode
             )
             tempSendingRepo.saveTempSendingTrans(tempSendTran)
+        }
+    }
+
+    fun cancelSendTrans(request: List<SendingRequest>) {
+//        val removeList = request
+//            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
+//            .distinct()
+//        removeList.forEach { (formCode, poNumber, inspectionDate) ->
+//            tempSendingRepo.deleteSendingTrans(formCode, poNumber, inspectionDate)
+//        }
+
+
+        request.forEach {
+            val tempSendingTrans = tempSendingRepo.getOneTransaction(it)
+                ?: throw BusinessExceptionDetail(
+                    "Xuất hàng không tồn tại", "formCode = ${it.formCode}, packageCode = ${it.packageCode}, qty = ${it.qty}"
+                )
+            val cancelTempSendingTrans = CancelSendingTransactions (
+                sourceLocationCode = it.locationCode,
+                destLocationCode = "KVC",
+                sourcePackageCode = it.packageCode,
+                destPackageCode = it.packageCode,
+                poNumber = it.poNumber,
+                qty = it.qty,
+                seqNo = tempSendingTrans.seqNo
+            )
+            cancelTempSendingRepo.save(cancelTempSendingTrans)
+            tempSendingRepo.deleteTempSendingTrans(tempSendingTrans.formCode, tempSendingTrans.sourcePackageCode, tempSendingTrans.seqNo)
+//            val backlog = backlogWhRepository.findByLocationAndPackageAndPO(
+//                it.locationCode.toString(),
+//                it.packageCode.toString(),
+//                it.poNumber.toString()
+//            )?: throw BusinessExceptionDetail(
+//                "Tồn kho không tồn tại", "formCode = ${it.formCode}, packageCode = ${it.packageCode}, qty = ${it.qty}"
+//            )
+//            backlog.backlogQty = backlog.backlogQty!!.plus(it.qty!!)
+//            backlog.boxQty = if (tempSendingList.first().notMinusBoxQty == true) backlog.boxQty else backlog.boxQty?.plus(1)
+//            backlogWhRepository.save(backlog)
         }
     }
 

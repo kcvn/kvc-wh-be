@@ -66,6 +66,20 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         }
     }
 
+    @PostMapping("/cancel/sending-trans")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    fun cancelSendTrans(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
+        )
+        sendingService.cancelSendTrans(request)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
+    }
+
     @PostMapping("/create/sending-checking-trans")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
     fun createSendCheckingTrans(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {

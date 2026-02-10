@@ -265,25 +265,19 @@ FULL OUTER JOIN (
     fun getListByFormCode(formCode: String?): List<TempSendingTransactions> {
         val formCodeCondition = "%$formCode%"
 
-        val imported = context
-            .selectDistinct(TEMP_SENDING_IMPORTED.FORM_CODE)
-            .from(TEMP_SENDING_IMPORTED)
-            .where(TEMP_SENDING_IMPORTED.IS_APPROVED.eq(false))
-            .asTable("imported")
-
         return context
-            .select(*TEMP_SENDING_TRANSACTIONS.fields())
-            .from(TEMP_SENDING_TRANSACTIONS)
-            .leftJoin(imported)
-            .on(
-                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(
-                    imported.field(TEMP_SENDING_IMPORTED.FORM_CODE)
-                )
-            )
+            .selectFrom(TEMP_SENDING_TRANSACTIONS)
             .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.like(formCodeCondition))
+            .andExists(
+                context.selectOne()
+                    .from(TEMP_SENDING_IMPORTED)
+                    .where(
+                        TEMP_SENDING_IMPORTED.FORM_CODE.eq(TEMP_SENDING_TRANSACTIONS.FORM_CODE)
+                            .and(TEMP_SENDING_IMPORTED.IS_APPROVED.eq(false))
+                    )
+            )
             .fetchInto(TempSendingTransactions::class.java)
     }
-
 
 
 

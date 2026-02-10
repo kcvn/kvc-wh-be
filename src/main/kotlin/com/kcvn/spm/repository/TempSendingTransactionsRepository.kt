@@ -7,6 +7,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
+import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -261,13 +262,24 @@ FULL OUTER JOIN (
             .execute()
     }
 
-    fun getListByFormCode(formCode: String): List<TempSendingTransactions>? {
-        return context.selectFrom(TEMP_SENDING_TRANSACTIONS)
-            .where(
-                TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode)
+    fun getListByFormCode(formCode: String?): List<TempSendingTransactions> {
+        val formCodeCondition = "%$formCode%"
+
+        return context
+            .selectFrom(TEMP_SENDING_TRANSACTIONS)
+            .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.like(formCodeCondition))
+            .andExists(
+                context.selectOne()
+                    .from(TEMP_SENDING_IMPORTED)
+                    .where(
+                        TEMP_SENDING_IMPORTED.FORM_CODE.eq(TEMP_SENDING_TRANSACTIONS.FORM_CODE)
+                            .and(TEMP_SENDING_IMPORTED.IS_APPROVED.eq(false))
+                    )
             )
             .fetchInto(TempSendingTransactions::class.java)
     }
+
+
 
     fun getOneTransaction(request: SendingRequest): TempSendingTransactions? {
         return context.selectFrom(TEMP_SENDING_TRANSACTIONS)

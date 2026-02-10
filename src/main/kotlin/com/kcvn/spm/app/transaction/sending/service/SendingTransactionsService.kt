@@ -72,7 +72,7 @@ class SendingTransactionsService(
         )
     }
 
-    fun getScannedTempSendingList(formCode: String): List<TempSendingTransactions>? {
+    fun getScannedTempSendingList(formCode: String?): List<TempSendingTransactions>? {
         val data = tempSendingRepo.getListByFormCode(formCode)
 
         return data

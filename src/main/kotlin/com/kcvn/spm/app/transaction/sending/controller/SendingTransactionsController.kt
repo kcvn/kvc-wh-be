@@ -113,7 +113,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     @GetMapping("/get-scanned-temp-sending")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
     fun getScannedTempSendingList(
-        @RequestParam(required = false) formCode: String
+        @RequestParam(required = false) formCode: String?
     ): ResponseEntity<List<TempSendingTransactions>> {
         val result = sendingService.getScannedTempSendingList(formCode)
         return ResponseEntity(result, HttpStatus.OK)

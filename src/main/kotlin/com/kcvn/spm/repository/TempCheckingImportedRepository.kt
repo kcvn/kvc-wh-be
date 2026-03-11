@@ -26,7 +26,7 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
 
     fun getListFormCode(formStatus: String, isIncludeGe1Days: Boolean): List<String> {
         val offset = OffsetDateTime.now().offset
-        val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(0), LocalTime.MIDNIGHT, offset)
+        val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(1), LocalTime.MIDNIGHT, offset)
         val tomorrow = OffsetDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT, offset)
         return context.selectDistinct(TEMP_CHECKING_IMPORTED.FORM_CODE, TEMP_CHECKING_IMPORTED.CREATED_DATE)
             .from(TEMP_CHECKING_IMPORTED)

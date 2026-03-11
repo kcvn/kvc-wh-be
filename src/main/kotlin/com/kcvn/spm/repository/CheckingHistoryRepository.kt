@@ -23,8 +23,10 @@ import java.time.ZoneOffset
 class CheckingHistoryRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: CheckingHistorySearchRequest, pageable: Pageable) : Pair<List<CheckingHistory>, Int> {
         val keywordPoNumber = request.poNumber?.let { "%$it%" } ?: "%"
+        val keywordFormCode = request.formCode?.let { "%$it%" } ?: "%"
 
-        val sql = """
+
+        var sql = """
             SELECT 
                 ch.scan_date,
                 COALESCE(tci.form_code, ch.form_code) AS form_code,
@@ -36,11 +38,14 @@ class CheckingHistoryRepository(private val context: DSLContext) : SortingReposi
             FULL OUTER JOIN checking_history ch
                 ON tci.form_code = ch.form_code
                AND tci.po_number = ch.po_number
-            WHERE (tci.form_code = ? OR ch.form_code = ?)
+            WHERE (tci.form_code ilike ? OR ch.form_code ilike ?)
             AND (tci.po_number ilike ? OR ch.po_number ilike ?)
         """.trimIndent()
+        if (request.fromDate != null && request.toDate != null) {
+            sql += "AND (ch.scan_date between '${request.fromDate?.toLocalDate()}' and '${request.toDate?.toLocalDate()}')"
+        }
         val result = context
-            .resultQuery(sql, request.formCode, request.formCode, keywordPoNumber, keywordPoNumber)
+            .resultQuery(sql, keywordFormCode, keywordFormCode, keywordPoNumber, keywordPoNumber)
             .fetch()
             .map {
                 CheckingHistory(

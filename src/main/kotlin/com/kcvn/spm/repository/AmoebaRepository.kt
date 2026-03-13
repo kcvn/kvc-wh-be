@@ -93,6 +93,7 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
     GROUP BY 
       b.po_number, 
       b.receiving_date,
+      b.inspection_date,
       b.item_name
     ORDER BY 
       b.receiving_date ASC

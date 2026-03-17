@@ -27,12 +27,13 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
         val listFormCode = tempCheckingImportedRepo.getListFormCode(formStatus, isIncludeGe3Days)
 
         // Map DropDownResponse
-        val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->
+        val dropDownList= listFormCode.map { formCode ->
             DropdownResponse(
                 formCode,
                 formCode
             )
-        }
+        }.toMutableList()
+        if (!isIncludeGe3Days) dropDownList.add(DropdownResponse("File lam tem goi", "File lam tem goi"))
 
         return BaseResponse(data = dropDownList)
     }

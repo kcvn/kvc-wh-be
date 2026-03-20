@@ -30,7 +30,9 @@ data class BacklogWh(
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsEntried")
     var isEntried: Boolean? = null,
-    var itemName: String? = null
+    var itemName: String? = null,
+    var lotNo: String? = null,
+    var issueDate: String? = null
 ): Serializable {
 
 
@@ -126,6 +128,18 @@ data class BacklogWh(
         }
         else if (this.itemName != o.itemName)
             return false
+        if (this.lotNo == null) {
+            if (o.lotNo != null)
+                return false
+        }
+        else if (this.lotNo != o.lotNo)
+            return false
+        if (this.issueDate == null) {
+            if (o.issueDate != null)
+                return false
+        }
+        else if (this.issueDate != o.issueDate)
+            return false
         return true
     }
 
@@ -146,6 +160,8 @@ data class BacklogWh(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isEntried == null) 0 else this.isEntried.hashCode())
         result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
+        result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
+        result = prime * result + (if (this.issueDate == null) 0 else this.issueDate.hashCode())
         return result
     }
 
@@ -166,6 +182,8 @@ data class BacklogWh(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isEntried)
         sb.append(", ").append(itemName)
+        sb.append(", ").append(lotNo)
+        sb.append(", ").append(issueDate)
 
         sb.append(")")
         return sb.toString()

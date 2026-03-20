@@ -22,7 +22,9 @@ data class Checking(
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
-    var updatedBy: String? = null
+    var updatedBy: String? = null,
+    var lotNo: String? = null,
+    var issueDate: String? = null
 ): Serializable {
 
 
@@ -88,6 +90,18 @@ data class Checking(
         }
         else if (this.updatedBy != o.updatedBy)
             return false
+        if (this.lotNo == null) {
+            if (o.lotNo != null)
+                return false
+        }
+        else if (this.lotNo != o.lotNo)
+            return false
+        if (this.issueDate == null) {
+            if (o.issueDate != null)
+                return false
+        }
+        else if (this.issueDate != o.issueDate)
+            return false
         return true
     }
 
@@ -103,6 +117,8 @@ data class Checking(
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
+        result = prime * result + (if (this.issueDate == null) 0 else this.issueDate.hashCode())
         return result
     }
 
@@ -118,6 +134,8 @@ data class Checking(
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
+        sb.append(", ").append(lotNo)
+        sb.append(", ").append(issueDate)
 
         sb.append(")")
         return sb.toString()

@@ -22,8 +22,8 @@ class CheckingRepository(private val context: DSLContext) : SortingRepository() 
 
     fun save(data: Checking): Int? =
         context.insertInto(
-            CHECKING, CHECKING.PO_NUMBER, CHECKING.PACKAGE_CODE, CHECKING.QTY, CHECKING.SEQ_NO, CHECKING.CREATED_BY)
-            .values(data.poNumber, data.packageCode, data.qty, data.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            CHECKING, CHECKING.PO_NUMBER, CHECKING.PACKAGE_CODE, CHECKING.QTY, CHECKING.SEQ_NO, CHECKING.CREATED_BY, CHECKING.LOT_NO, CHECKING.ISSUE_DATE)
+            .values(data.poNumber, data.packageCode, data.qty, data.seqNo, CommonUtils.loggedInUser() ?: Constants.SYSTEM, data.lotNo, data.issueDate)
             .returningResult(CHECKING.SEQ_NO)
             .fetchOne()?.value1()
 

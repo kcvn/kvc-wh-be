@@ -43,7 +43,9 @@ class SplittingService(
                     locationCode = it.locationCode,
                     packageCode = it.packageCode,
                     poNumber = ck.poNumber,
-                    qty = ck.qty
+                    qty = ck.qty,
+                    lotNo = ck.lotNo,
+                    issueDate = ck.issueDate
                 )
                 recTransRequestList.add(recTrans)
             }

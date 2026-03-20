@@ -11,5 +11,7 @@ data class BacklogWhResponse(
     var boxQty: Int? = null,
     var receivingDate: LocalDate? = null,
     var inspectionDate: LocalDate? = null,
-    var itemName: String? = null
+    var itemName: String? = null,
+    var lotNo: String? = null,
+    var issueDate: String? = null,
 )

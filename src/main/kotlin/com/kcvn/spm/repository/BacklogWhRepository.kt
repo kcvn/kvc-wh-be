@@ -138,11 +138,13 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
     fun save(data: BacklogWh): Int? =
         context.insertInto(
             BACKLOG_WH, BACKLOG_WH.LOCATION_CODE, BACKLOG_WH.PO_NUMBER, BACKLOG_WH.PACKAGE_CODE, BACKLOG_WH.BACKLOG_QTY,
-            BACKLOG_WH.BOX_QTY, BACKLOG_WH.RECEIVING_DATE, BACKLOG_WH.CREATED_BY, BACKLOG_WH.IS_ENTRIED, BACKLOG_WH.INSPECTION_DATE
+            BACKLOG_WH.BOX_QTY, BACKLOG_WH.RECEIVING_DATE, BACKLOG_WH.CREATED_BY, BACKLOG_WH.IS_ENTRIED, BACKLOG_WH.INSPECTION_DATE,
+            BACKLOG_WH.LOT_NO, BACKLOG_WH.ISSUE_DATE
         )
             .values(
                 data.locationCode, data.poNumber, data.packageCode, data.backlogQty,
-                data.boxQty, data.receivingDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM, data.isEntried, data.inspectionDate
+                data.boxQty, data.receivingDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM, data.isEntried, data.inspectionDate,
+                data.lotNo, data.issueDate
             )
             .execute()
 
@@ -174,6 +176,8 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 .set(BACKLOG_WH.IS_ENTRIED, data.isEntried)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(BACKLOG_WH.LOT_NO, data.lotNo)
+                .set(BACKLOG_WH.ISSUE_DATE, data.issueDate)
                 .where(
                     BACKLOG_WH.LOCATION_CODE.eq(data.locationCode)
                         .and(BACKLOG_WH.PACKAGE_CODE.eq(data.packageCode))

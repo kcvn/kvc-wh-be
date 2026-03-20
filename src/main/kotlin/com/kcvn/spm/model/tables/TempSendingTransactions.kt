@@ -185,6 +185,16 @@ open class TempSendingTransactions(
      */
     val REQUEST_DATE: TableField<TempSendingTransactionsRecord, LocalDate?> = createField(DSL.name("request_date"), SQLDataType.LOCALDATE, this, "")
 
+    /**
+     * The column <code>public.temp_sending_transactions.lot_no</code>.
+     */
+    val LOT_NO: TableField<TempSendingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(30), this, "")
+
+    /**
+     * The column <code>public.temp_sending_transactions.issue_date</code>.
+     */
+    val ISSUE_DATE: TableField<TempSendingTransactionsRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(100), this, "")
+
     private constructor(alias: Name, aliased: Table<TempSendingTransactionsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<TempSendingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<TempSendingTransactionsRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

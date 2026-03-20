@@ -192,7 +192,9 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             SENDING_TRANSACTIONS.RECEIVING_DATE,
             SENDING_TRANSACTIONS.INSPECTION_DATE,
             SENDING_TRANSACTIONS.CREATED_BY,
-            SENDING_TRANSACTIONS.REQUEST_DATE
+            SENDING_TRANSACTIONS.REQUEST_DATE,
+            SENDING_TRANSACTIONS.LOT_NO,
+            SENDING_TRANSACTIONS.ISSUE_DATE
         ).select(
             context.select(
                 TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE,
@@ -206,7 +208,9 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 TEMP_SENDING_TRANSACTIONS.RECEIVING_DATE,
                 TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE,
                 TEMP_SENDING_TRANSACTIONS.CREATED_BY,
-                TEMP_SENDING_IMPORTED.REQUEST_DATE
+                TEMP_SENDING_IMPORTED.REQUEST_DATE,
+                TEMP_SENDING_TRANSACTIONS.LOT_NO,
+                TEMP_SENDING_TRANSACTIONS.ISSUE_DATE
             ).from(TEMP_SENDING_TRANSACTIONS)
                 .join(TEMP_SENDING_IMPORTED)
                 .on(TEMP_SENDING_IMPORTED.FORM_CODE.eq(TEMP_SENDING_TRANSACTIONS.FORM_CODE)

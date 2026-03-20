@@ -149,6 +149,16 @@ open class ReceivingTransactions(
      */
     val IS_CANCELED: TableField<ReceivingTransactionsRecord, Boolean?> = createField(DSL.name("is_canceled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.receiving_transactions.lot_no</code>.
+     */
+    val LOT_NO: TableField<ReceivingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(30), this, "")
+
+    /**
+     * The column <code>public.receiving_transactions.issue_date</code>.
+     */
+    val ISSUE_DATE: TableField<ReceivingTransactionsRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(100), this, "")
+
     private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

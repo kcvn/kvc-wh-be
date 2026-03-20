@@ -5,5 +5,7 @@ import java.math.BigDecimal
 data class CheckingRequest(
     var poNumber: String? = null,
     var packageCode: String? = null,
-    var qty : BigDecimal? = BigDecimal.ZERO
+    var qty : BigDecimal? = BigDecimal.ZERO,
+    var lotNo: String? = null,
+    var issueDate: String? = null,
 )

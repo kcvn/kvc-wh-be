@@ -116,6 +116,16 @@ open class Checking(
      */
     val UPDATED_BY: TableField<CheckingRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
+    /**
+     * The column <code>public.checking.lot_no</code>.
+     */
+    val LOT_NO: TableField<CheckingRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(30), this, "")
+
+    /**
+     * The column <code>public.checking.issue_date</code>.
+     */
+    val ISSUE_DATE: TableField<CheckingRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(30), this, "")
+
     private constructor(alias: Name, aliased: Table<CheckingRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<CheckingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<CheckingRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

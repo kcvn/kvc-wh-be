@@ -55,6 +55,14 @@ open class CheckingRecord() : UpdatableRecordImpl<CheckingRecord>(Checking.CHECK
         set(value): Unit = set(8, value)
         get(): String? = get(8) as String?
 
+    open var lotNo: String?
+        set(value): Unit = set(9, value)
+        get(): String? = get(9) as String?
+
+    open var issueDate: String?
+        set(value): Unit = set(10, value)
+        get(): String? = get(10) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -64,7 +72,7 @@ open class CheckingRecord() : UpdatableRecordImpl<CheckingRecord>(Checking.CHECK
     /**
      * Create a detached, initialised CheckingRecord
      */
-    constructor(id: String? = null, poNumber: String? = null, packageCode: String? = null, qty: BigDecimal? = null, seqNo: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
+    constructor(id: String? = null, poNumber: String? = null, packageCode: String? = null, qty: BigDecimal? = null, seqNo: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, lotNo: String? = null, issueDate: String? = null): this() {
         this.id = id
         this.poNumber = poNumber
         this.packageCode = packageCode
@@ -74,6 +82,8 @@ open class CheckingRecord() : UpdatableRecordImpl<CheckingRecord>(Checking.CHECK
         this.createdBy = createdBy
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
+        this.lotNo = lotNo
+        this.issueDate = issueDate
         resetChangedOnNotNull()
     }
 
@@ -91,6 +101,8 @@ open class CheckingRecord() : UpdatableRecordImpl<CheckingRecord>(Checking.CHECK
             this.createdBy = value.createdBy
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
+            this.lotNo = value.lotNo
+            this.issueDate = value.issueDate
             resetChangedOnNotNull()
         }
     }

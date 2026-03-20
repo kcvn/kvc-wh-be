@@ -20,7 +20,9 @@ class CheckingService(
                 it.poNumber,
                 it.packageCode,
                 it.qty,
-                it.seqNo
+                it.seqNo,
+                lotNo = it.lotNo,
+                issueDate = it.issueDate
             )
             // save checking
             checkingRepo.save(data)
@@ -38,7 +40,9 @@ class CheckingService(
                         poNumber = checkingRequest.poNumber,
                         packageCode = checkingRequest.packageCode,
                         qty = checkingRequest.qty,
-                        seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
+                        seqNo = latestSeqNo + index + 1, // Bắt đầu từ latestSeqNo + 1, tăng dần
+                        lotNo = checkingRequest.lotNo,
+                        issueDate = checkingRequest.issueDate,
                     )
                 }
             }

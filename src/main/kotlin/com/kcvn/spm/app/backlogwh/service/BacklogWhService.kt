@@ -133,9 +133,11 @@ class BacklogWhService(
             ExcelHelper.setCellValue(row, 2, style, item.packageCode)
             ExcelHelper.setCellValue(row, 3, style, item.poNumber)
             ExcelHelper.setCellValue(row, 4, style, item.itemName)
-            ExcelHelper.setCellValue(row, 5, style, item.locationCode)
-            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.boxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 5, style, item.lotNo)
+            ExcelHelper.setCellValue(row, 6, style, item.issueDate)
+            ExcelHelper.setCellValue(row, 7, style, item.locationCode)
+            ExcelHelper.setCellValueInt(row, 8, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 9, numberStyle, item.boxQty ?: 0, numberFormat)
         }
 
         //sheet.createFreezePane(4, 1)
@@ -222,15 +224,37 @@ class BacklogWhService(
 
         val receivingDate = data.receivingDate
         if (backlog == null) {
-            val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, isEntried = data.isEntried, inspectionDate = data.inspectionDate)
+            val entityBacklog = BacklogWh(
+                null,
+                data.locationCode,
+                data.poNumber,
+                data.packageCode,
+                data.backlogQty,
+                data.boxQty,
+                receivingDate,
+                isEntried = data.isEntried,
+                inspectionDate = data.inspectionDate,
+                lotNo = data.lotNo,
+                issueDate = data.issueDate
+            )
             backlogWhRepo.save(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(
-                null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, data.inspectionDate, transactionType
+                null,
+                data.locationCode,
+                data.poNumber,
+                data.packageCode,
+                data.backlogQty,
+                data.boxQty,
+                receivingDate,
+                data.inspectionDate,
+                transactionType
             )
             backlogWhHistoryRepo.save(entityBacklogHistory, refId)
         } else {
+            val newLotNo = if (backlog.lotNo?.contains(data.lotNo?: "") == true) backlog.lotNo else backlog.lotNo + ";" + data.lotNo
+            val newIssueDate = if (backlog.issueDate?.contains(data.issueDate?: "") == true) backlog.issueDate else backlog.issueDate + ";" + data.issueDate
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!),
-                data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried,
+                data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried, lotNo = newLotNo, issueDate = newIssueDate
             )
             backlogWhRepo.update(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(
@@ -291,7 +315,9 @@ class BacklogWhService(
                 boxQty = it.boxQty,
                 receivingDate = it.receivingDate,
                 inspectionDate = it.inspectionDate,
-                itemName = it.itemName
+                itemName = it.itemName,
+                lotNo = it.lotNo,
+                issueDate = it.issueDate
             )
         }
         return BasePagingResponse(

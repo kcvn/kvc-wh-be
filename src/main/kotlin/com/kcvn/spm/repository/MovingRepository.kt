@@ -20,7 +20,7 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
             MOVING, MOVING.SOURCE_LOCATION_CODE, MOVING.DEST_LOCATION_CODE,
             MOVING.SOURCE_PACKAGE_CODE, MOVING.DEST_PACKAGE_CODE, MOVING.PO_NUMBER,
             MOVING.QTY, MOVING.SEQ_NO, MOVING.TRANSACTION_TYPE,
-            MOVING.RECEIVING_DATE, MOVING.CREATED_BY
+            MOVING.RECEIVING_DATE, MOVING.CREATED_BY, MOVING.LOT_NO, MOVING.ISSUE_DATE
         )
             .values(
                 moving.sourceLocationCode,
@@ -32,7 +32,9 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
                 moving.seqNo,
                 moving.transactionType,
                 moving.receivingDate,
-                CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+                moving.lotNo,
+                moving.issueDate
             )
             .returning(MOVING.ID)
             .fetchOne()!!

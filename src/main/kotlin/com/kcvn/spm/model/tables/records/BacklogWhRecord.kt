@@ -78,6 +78,14 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
         set(value): Unit = set(13, value)
         get(): String? = get(13) as String?
 
+    open var lotNo: String?
+        set(value): Unit = set(14, value)
+        get(): String? = get(14) as String?
+
+    open var issueDate: String?
+        set(value): Unit = set(15, value)
+        get(): String? = get(15) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -87,7 +95,7 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
     /**
      * Create a detached, initialised BacklogWhRecord
      */
-    constructor(id: String? = null, locationCode: String? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, receivingDate: LocalDate? = null, inspectionDate: LocalDate? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isEntried: Boolean? = null, itemName: String? = null): this() {
+    constructor(id: String? = null, locationCode: String? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, receivingDate: LocalDate? = null, inspectionDate: LocalDate? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isEntried: Boolean? = null, itemName: String? = null, lotNo: String? = null, issueDate: String? = null): this() {
         this.id = id
         this.locationCode = locationCode
         this.poNumber = poNumber
@@ -102,6 +110,8 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
         this.updatedBy = updatedBy
         this.isEntried = isEntried
         this.itemName = itemName
+        this.lotNo = lotNo
+        this.issueDate = issueDate
         resetChangedOnNotNull()
     }
 
@@ -124,6 +134,8 @@ open class BacklogWhRecord() : UpdatableRecordImpl<BacklogWhRecord>(BacklogWh.BA
             this.updatedBy = value.updatedBy
             this.isEntried = value.isEntried
             this.itemName = value.itemName
+            this.lotNo = value.lotNo
+            this.issueDate = value.issueDate
             resetChangedOnNotNull()
         }
     }

@@ -36,7 +36,9 @@ data class SendingTransactions(
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsCanceled")
     var isCanceled: Boolean? = null,
-    var requestDate: LocalDate? = null
+    var requestDate: LocalDate? = null,
+    var lotNo: String? = null,
+    var issueDate: String? = null
 ): Serializable {
 
 
@@ -156,6 +158,18 @@ data class SendingTransactions(
         }
         else if (this.requestDate != o.requestDate)
             return false
+        if (this.lotNo == null) {
+            if (o.lotNo != null)
+                return false
+        }
+        else if (this.lotNo != o.lotNo)
+            return false
+        if (this.issueDate == null) {
+            if (o.issueDate != null)
+                return false
+        }
+        else if (this.issueDate != o.issueDate)
+            return false
         return true
     }
 
@@ -180,6 +194,8 @@ data class SendingTransactions(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isCanceled == null) 0 else this.isCanceled.hashCode())
         result = prime * result + (if (this.requestDate == null) 0 else this.requestDate.hashCode())
+        result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
+        result = prime * result + (if (this.issueDate == null) 0 else this.issueDate.hashCode())
         return result
     }
 
@@ -204,6 +220,8 @@ data class SendingTransactions(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isCanceled)
         sb.append(", ").append(requestDate)
+        sb.append(", ").append(lotNo)
+        sb.append(", ").append(issueDate)
 
         sb.append(")")
         return sb.toString()

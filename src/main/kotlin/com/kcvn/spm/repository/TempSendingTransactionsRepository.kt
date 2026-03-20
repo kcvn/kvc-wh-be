@@ -237,17 +237,32 @@ FULL OUTER JOIN (
 
     fun saveTempSendingTrans(record: TempSendingTransactions) {
         context.insertInto(
-            TEMP_SENDING_TRANSACTIONS, TEMP_SENDING_TRANSACTIONS.FORM_CODE, TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE, TEMP_SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
-            TEMP_SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE, TEMP_SENDING_TRANSACTIONS.DEST_PACKAGE_CODE, TEMP_SENDING_TRANSACTIONS.PO_NUMBER,
-            TEMP_SENDING_TRANSACTIONS.QTY, TEMP_SENDING_TRANSACTIONS.SEQ_NO, TEMP_SENDING_TRANSACTIONS.TRANSACTION_TYPE,
-            TEMP_SENDING_TRANSACTIONS.RECEIVING_DATE, TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE, TEMP_SENDING_TRANSACTIONS.CREATED_BY, TEMP_SENDING_TRANSACTIONS.NOT_MINUS_BOX_QTY, TEMP_SENDING_TRANSACTIONS.MIN_BIN_CODE
+            TEMP_SENDING_TRANSACTIONS,
+            TEMP_SENDING_TRANSACTIONS.FORM_CODE,
+            TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE,
+            TEMP_SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
+            TEMP_SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE,
+            TEMP_SENDING_TRANSACTIONS.DEST_PACKAGE_CODE,
+            TEMP_SENDING_TRANSACTIONS.PO_NUMBER,
+            TEMP_SENDING_TRANSACTIONS.QTY,
+            TEMP_SENDING_TRANSACTIONS.SEQ_NO,
+            TEMP_SENDING_TRANSACTIONS.TRANSACTION_TYPE,
+            TEMP_SENDING_TRANSACTIONS.RECEIVING_DATE,
+            TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE,
+            TEMP_SENDING_TRANSACTIONS.CREATED_BY,
+            TEMP_SENDING_TRANSACTIONS.NOT_MINUS_BOX_QTY,
+            TEMP_SENDING_TRANSACTIONS.MIN_BIN_CODE,
+            TEMP_SENDING_TRANSACTIONS.LOT_NO,
+            TEMP_SENDING_TRANSACTIONS.ISSUE_DATE
         )
             .values(
                 record.formCode,
                 record.sourceLocationCode, record.destLocationCode,
                 record.sourcePackageCode, record.destPackageCode, record.poNumber,
                 record.qty, record.seqNo, record.transactionType,
-                record.receivingDate, record.inspectionDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM, record.notMinusBoxQty, record.minBinCode
+                record.receivingDate, record.inspectionDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM, record.notMinusBoxQty, record.minBinCode,
+                record.lotNo,
+                record.issueDate
             )
             .execute()
     }

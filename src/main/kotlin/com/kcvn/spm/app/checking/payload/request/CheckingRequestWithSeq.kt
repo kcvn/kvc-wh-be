@@ -6,5 +6,7 @@ data class CheckingRequestWithSeq(
     var poNumber: String? = null,
     var packageCode: String? = null,
     var qty : BigDecimal? = BigDecimal.ZERO,
-    var seqNo : Int? = 1
+    var seqNo : Int? = 1,
+    var lotNo: String? = null,
+    var issueDate: String? = null,
 )

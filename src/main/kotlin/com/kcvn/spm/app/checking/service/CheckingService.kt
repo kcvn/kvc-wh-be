@@ -21,8 +21,8 @@ class CheckingService(
                 it.packageCode,
                 it.qty,
                 it.seqNo,
-                it.lotNo,
-                it.issueDate
+                lotNo = it.lotNo,
+                issueDate = it.issueDate
             )
             // save checking
             checkingRepo.save(data)

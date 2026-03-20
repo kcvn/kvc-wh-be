@@ -222,15 +222,37 @@ class BacklogWhService(
 
         val receivingDate = data.receivingDate
         if (backlog == null) {
-            val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, isEntried = data.isEntried, inspectionDate = data.inspectionDate)
+            val entityBacklog = BacklogWh(
+                null,
+                data.locationCode,
+                data.poNumber,
+                data.packageCode,
+                data.backlogQty,
+                data.boxQty,
+                receivingDate,
+                isEntried = data.isEntried,
+                inspectionDate = data.inspectionDate,
+                lotNo = data.lotNo,
+                issueDate = data.issueDate
+            )
             backlogWhRepo.save(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(
-                null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty, data.boxQty, receivingDate, data.inspectionDate, transactionType
+                null,
+                data.locationCode,
+                data.poNumber,
+                data.packageCode,
+                data.backlogQty,
+                data.boxQty,
+                receivingDate,
+                data.inspectionDate,
+                transactionType
             )
             backlogWhHistoryRepo.save(entityBacklogHistory, refId)
         } else {
+            val newLotNo = backlog.lotNo + ";" + data.lotNo
+            val newIssueDate = backlog.issueDate + ";" + data.issueDate
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!),
-                data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried,
+                data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried, lotNo = newLotNo, issueDate = newIssueDate
             )
             backlogWhRepo.update(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(

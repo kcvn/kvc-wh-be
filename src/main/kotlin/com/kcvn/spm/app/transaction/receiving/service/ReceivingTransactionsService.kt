@@ -56,7 +56,8 @@ class ReceivingTransactionsService(
                 it.poNumber,
                 it.qty,
                 it.seqNo,
-                "IN_ONLY"
+                "IN_ONLY",
+
             )
             /*val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)
                 ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.locationCode}, packageCode = ${it.packageCode}")*/
@@ -64,7 +65,7 @@ class ReceivingTransactionsService(
             val refId = receivingRepo.save(recTransaction)
             // save backlog and backlog history
             val backlogData = BacklogWh(
-                null, it.locationCode, it.poNumber, it.packageCode, it.qty, 1, receivingDate, isEntried = false
+                null, it.locationCode, it.poNumber, it.packageCode, it.qty, 1, receivingDate, isEntried = false, lotNo = it.lotNo, issueDate = it.issueDate
             )
             backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId)
         }
@@ -84,7 +85,9 @@ class ReceivingTransactionsService(
                         packageCode = recTransRequest.packageCode,
                         poNumber = recTransRequest.poNumber,
                         qty = recTransRequest.qty,
-                        seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
+                        seqNo = latestSeqNo + index + 1, // Bắt đầu từ latestSeqNo + 1, tăng dần
+                        lotNo = recTransRequest.lotNo,
+                        issueDate = recTransRequest.issueDate
                     )
                 }
             }

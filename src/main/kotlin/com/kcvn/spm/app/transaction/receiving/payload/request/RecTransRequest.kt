@@ -6,5 +6,7 @@ data class RecTransRequest(
     var locationCode: String? = null,
     var packageCode: String? = null,
     var poNumber: String? = null,
-    var qty : BigDecimal? = BigDecimal.ZERO
+    var qty : BigDecimal? = BigDecimal.ZERO,
+    var lotNo: String? = null,
+    var issueDate: String? = null,
 )

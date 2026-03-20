@@ -12,5 +12,7 @@ data class InquiryResponse(
     var qty: BigDecimal? = BigDecimal.ZERO,
     var seq: Int? = null,
     var transactionType: String? = null,
-    val createdDate: OffsetDateTime? = null
+    val createdDate: OffsetDateTime? = null,
+    var lotNo: String? = null,
+    var issueDate: String? = null,
 )

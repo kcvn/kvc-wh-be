@@ -28,7 +28,9 @@ class InquiryTransactionsRepository(private val context: DSLContext) : SortingRe
             RECEIVING_TRANSACTIONS.QTY.`as`("qty"),
             RECEIVING_TRANSACTIONS.SEQ_NO.`as`("seqNo"),
             RECEIVING_TRANSACTIONS.TRANSACTION_TYPE.`as`("transactionType"),
-            RECEIVING_TRANSACTIONS.CREATED_DATE.`as`("createdDate")
+            RECEIVING_TRANSACTIONS.CREATED_DATE.`as`("createdDate"),
+            RECEIVING_TRANSACTIONS.LOT_NO.`as`("lotNo"),
+            RECEIVING_TRANSACTIONS.ISSUE_DATE.`as`("issueDate")
         ).from(RECEIVING_TRANSACTIONS)
             .where(conditionReceiving.and(RECEIVING_TRANSACTIONS.IS_CANCELED.eq(false)))
             .unionAll(
@@ -41,7 +43,9 @@ class InquiryTransactionsRepository(private val context: DSLContext) : SortingRe
                     SENDING_TRANSACTIONS.QTY.`as`("qty"),
                     SENDING_TRANSACTIONS.SEQ_NO.`as`("seqNo"),
                     SENDING_TRANSACTIONS.TRANSACTION_TYPE.`as`("transactionType"),
-                    SENDING_TRANSACTIONS.CREATED_DATE.`as`("createdDate")
+                    SENDING_TRANSACTIONS.CREATED_DATE.`as`("createdDate"),
+                    SENDING_TRANSACTIONS.LOT_NO.`as`("lotNo"),
+                    SENDING_TRANSACTIONS.ISSUE_DATE.`as`("issueDate")
                 ).from(SENDING_TRANSACTIONS)
                     .where(conditionSending.and(SENDING_TRANSACTIONS.IS_CANCELED.eq(false)))
             )
@@ -55,7 +59,9 @@ class InquiryTransactionsRepository(private val context: DSLContext) : SortingRe
                     MOVING.QTY.`as`("qty"),
                     MOVING.SEQ_NO.`as`("seqNo"),
                     MOVING.TRANSACTION_TYPE.`as`("transactionType"),
-                    MOVING.CREATED_DATE.`as`("createdDate")
+                    MOVING.CREATED_DATE.`as`("createdDate"),
+                    MOVING.LOT_NO.`as`("lotNo"),
+                    MOVING.ISSUE_DATE.`as`("issueDate")
                 ).from(MOVING)
                     .where(conditionMoving.and(MOVING.IS_CANCELED.eq(false)))
             )
@@ -74,7 +80,9 @@ class InquiryTransactionsRepository(private val context: DSLContext) : SortingRe
             aliasTable.field("qty"),
             aliasTable.field("seqNo"),
             aliasTable.field("transactionType"),
-            createdDateField
+            createdDateField,
+            aliasTable.field("lotNo"),
+            aliasTable.field("issueDate")
         ).from(aliasTable)
             .orderBy(createdDateField.sort(SortOrder.DESC))
             .limit(pageable.pageSize)

@@ -25,7 +25,9 @@ class InquiryTransactionsService(
                 qty = it.qty,
                 seq = it.seqNo,
                 transactionType = it.transactionType,
-                createdDate = it.createdDate
+                createdDate = it.createdDate,
+                lotNo = it.lotNo,
+                issueDate = it.issueDate
             )
         }
         return BasePagingResponse(

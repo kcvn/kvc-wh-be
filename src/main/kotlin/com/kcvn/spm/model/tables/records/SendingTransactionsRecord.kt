@@ -96,6 +96,14 @@ open class SendingTransactionsRecord() : UpdatableRecordImpl<SendingTransactions
         set(value): Unit = set(17, value)
         get(): LocalDate? = get(17) as LocalDate?
 
+    open var lotNo: String?
+        set(value): Unit = set(18, value)
+        get(): String? = get(18) as String?
+
+    open var issueDate: String?
+        set(value): Unit = set(19, value)
+        get(): String? = get(19) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -105,7 +113,7 @@ open class SendingTransactionsRecord() : UpdatableRecordImpl<SendingTransactions
     /**
      * Create a detached, initialised SendingTransactionsRecord
      */
-    constructor(id: String? = null, sourceLocationCode: String? = null, destLocationCode: String? = null, sourcePackageCode: String? = null, destPackageCode: String? = null, poNumber: String? = null, qty: BigDecimal? = null, seqNo: Int? = null, transactionType: String? = null, receivingDate: LocalDate? = null, inspectionDate: LocalDate? = null, isUpdatedAmoeba: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isCanceled: Boolean? = null, requestDate: LocalDate? = null): this() {
+    constructor(id: String? = null, sourceLocationCode: String? = null, destLocationCode: String? = null, sourcePackageCode: String? = null, destPackageCode: String? = null, poNumber: String? = null, qty: BigDecimal? = null, seqNo: Int? = null, transactionType: String? = null, receivingDate: LocalDate? = null, inspectionDate: LocalDate? = null, isUpdatedAmoeba: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isCanceled: Boolean? = null, requestDate: LocalDate? = null, lotNo: String? = null, issueDate: String? = null): this() {
         this.id = id
         this.sourceLocationCode = sourceLocationCode
         this.destLocationCode = destLocationCode
@@ -124,6 +132,8 @@ open class SendingTransactionsRecord() : UpdatableRecordImpl<SendingTransactions
         this.updatedBy = updatedBy
         this.isCanceled = isCanceled
         this.requestDate = requestDate
+        this.lotNo = lotNo
+        this.issueDate = issueDate
         resetChangedOnNotNull()
     }
 
@@ -150,6 +160,8 @@ open class SendingTransactionsRecord() : UpdatableRecordImpl<SendingTransactions
             this.updatedBy = value.updatedBy
             this.isCanceled = value.isCanceled
             this.requestDate = value.requestDate
+            this.lotNo = value.lotNo
+            this.issueDate = value.issueDate
             resetChangedOnNotNull()
         }
     }

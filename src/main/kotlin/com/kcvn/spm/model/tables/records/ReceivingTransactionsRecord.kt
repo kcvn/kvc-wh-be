@@ -82,6 +82,14 @@ open class ReceivingTransactionsRecord() : UpdatableRecordImpl<ReceivingTransact
         set(value): Unit = set(14, value)
         get(): Boolean? = get(14) as Boolean?
 
+    open var lotNo: String?
+        set(value): Unit = set(15, value)
+        get(): String? = get(15) as String?
+
+    open var issueDate: String?
+        set(value): Unit = set(16, value)
+        get(): String? = get(16) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -91,7 +99,7 @@ open class ReceivingTransactionsRecord() : UpdatableRecordImpl<ReceivingTransact
     /**
      * Create a detached, initialised ReceivingTransactionsRecord
      */
-    constructor(id: String? = null, sourceLocationCode: String? = null, destLocationCode: String? = null, sourcePackageCode: String? = null, destPackageCode: String? = null, poNumber: String? = null, qty: BigDecimal? = null, seqNo: Int? = null, transactionType: String? = null, receivingDate: LocalDate? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isCanceled: Boolean? = null): this() {
+    constructor(id: String? = null, sourceLocationCode: String? = null, destLocationCode: String? = null, sourcePackageCode: String? = null, destPackageCode: String? = null, poNumber: String? = null, qty: BigDecimal? = null, seqNo: Int? = null, transactionType: String? = null, receivingDate: LocalDate? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isCanceled: Boolean? = null, lotNo: String? = null, issueDate: String? = null): this() {
         this.id = id
         this.sourceLocationCode = sourceLocationCode
         this.destLocationCode = destLocationCode
@@ -107,6 +115,8 @@ open class ReceivingTransactionsRecord() : UpdatableRecordImpl<ReceivingTransact
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
         this.isCanceled = isCanceled
+        this.lotNo = lotNo
+        this.issueDate = issueDate
         resetChangedOnNotNull()
     }
 
@@ -130,6 +140,8 @@ open class ReceivingTransactionsRecord() : UpdatableRecordImpl<ReceivingTransact
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
             this.isCanceled = value.isCanceled
+            this.lotNo = value.lotNo
+            this.issueDate = value.issueDate
             resetChangedOnNotNull()
         }
     }

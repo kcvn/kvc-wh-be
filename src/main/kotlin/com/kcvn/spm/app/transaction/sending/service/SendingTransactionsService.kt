@@ -268,7 +268,9 @@ class SendingTransactionsService(
                 receivingDate,
                 it.inspectionDate,
                 notMinusBoxQty = it.notMinusBoxQty,
-                minBinCode = it.minBinCode
+                minBinCode = it.minBinCode,
+                lotNo = backlog.lotNo,
+                issueDate = backlog.issueDate
             )
             tempSendingRepo.saveTempSendingTrans(tempSendTran)
         }

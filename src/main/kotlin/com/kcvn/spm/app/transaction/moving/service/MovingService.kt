@@ -49,7 +49,9 @@ class MovingService(
                 it.qty,
                 it.seqNo,
                 "TRANSFER",
-                recDateSource
+                recDateSource,
+                lotNo = sourceBacklog.lotNo,
+                issueDate = sourceBacklog.issueDate
             )
             val refId = movingRepo.saveMoving(moving)
             // update location for package when destPackageCode == ""

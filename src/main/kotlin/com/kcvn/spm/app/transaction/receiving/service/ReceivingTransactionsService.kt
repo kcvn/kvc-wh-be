@@ -57,6 +57,8 @@ class ReceivingTransactionsService(
                 it.qty,
                 it.seqNo,
                 "IN_ONLY",
+                lotNo = it.lotNo,
+                issueDate = it.issueDate
 
             )
             /*val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)

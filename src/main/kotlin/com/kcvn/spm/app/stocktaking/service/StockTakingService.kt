@@ -224,7 +224,9 @@ class StockTakingService(
                 systemLocationCode = it.systemLocationCode,
                 amoebaQty = it.amoebaQty,
                 systemQty = it.systemQty,
-                result = resolveResult(it.resultQty, it.resultLocationCode)
+                result = resolveResult(it.resultQty, it.resultLocationCode),
+                lotNo = it.lotNo,
+                issueDate = it.issueDate,
             )
         }
     }
@@ -306,11 +308,13 @@ class StockTakingService(
             ExcelHelper.setCellValue(row, 0, style, formattedInspectionDate)
             ExcelHelper.setCellValue(row, 1, style, item.poNumber)
             ExcelHelper.setCellValue(row, 2, style, item.itemName)
-            ExcelHelper.setCellValue(row, 3, style, item.amoebaLocationCode)
-            ExcelHelper.setCellValue(row, 4, style, item.systemLocationCode)
-            ExcelHelper.setCellValueInt(row, 5, numberStyle, item.amoebaQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValue(row, 7, style, item.result)
+            ExcelHelper.setCellValue(row, 3, style, item.lotNo)
+            ExcelHelper.setCellValue(row, 4, style, item.issueDate)
+            ExcelHelper.setCellValue(row, 5, style, item.amoebaLocationCode)
+            ExcelHelper.setCellValue(row, 6, style, item.systemLocationCode)
+            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.amoebaQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 8, numberStyle, item.systemQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 9, style, item.result)
         }
 
         sheet.createFreezePane(2, 1)

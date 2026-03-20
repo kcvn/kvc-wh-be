@@ -42,6 +42,8 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
                     systemQty = it.get("system_qty", BigDecimal::class.java),
                     resultQty = it.get("result_qty", String::class.java),
                     resultLocationCode = it.get("result_location_code", String::class.java),
+                    lotNo = it.get("lot_no", String::class.java),
+                    issueDate = it.get("issue_date", String::class.java),
                 )
             }
 
@@ -69,6 +71,8 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
                     systemQty = it.get("system_qty", BigDecimal::class.java),
                     resultQty = it.get("result_qty", String::class.java),
                     resultLocationCode = it.get("result_location_code", String::class.java),
+                    lotNo = it.get("lot_no", String::class.java),
+                    issueDate = it.get("issue_date", String::class.java),
                 )
             }
 
@@ -85,7 +89,9 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
       SUM(b.backlog_qty) AS SUM_BACKLOG_QTY,
       b.receiving_date,
       MAX(b.inspection_date) AS INSPECTION_DATE,
-      b.item_name
+      b.item_name,
+      b.lot_no,
+      b.issue_date
     FROM 
       public.backlog_wh b
     WHERE 
@@ -94,7 +100,9 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
       b.po_number, 
       b.receiving_date,
       b.inspection_date,
-      b.item_name
+      b.item_name,
+      b.lot_no,
+      b.issue_date
     ORDER BY 
       b.receiving_date ASC
   )
@@ -109,6 +117,8 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
     temp1.MIN_LOCATION_CODE AS system_location_code,
     temp1.SUM_BACKLOG_QTY AS system_qty,
     temp1.item_name,
+    temp1.lot_no,
+    temp1.issue_date,
     
     CASE 
       WHEN CAST(NULLIF(a.location_code, '') AS INTEGER) = temp1.MIN_LOCATION_CODE THEN 'SAME'

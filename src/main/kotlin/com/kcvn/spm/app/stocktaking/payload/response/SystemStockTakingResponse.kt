@@ -11,5 +11,7 @@ data class SystemStockTakingResponse(
     var systemLocationCode: String? = null,
     var amoebaQty: BigDecimal? = null,
     var systemQty: BigDecimal? = null,
-    var result: String? = null
+    var result: String? = null,
+    var lotNo: String? = null,
+    var issueDate: String? = null,
 )

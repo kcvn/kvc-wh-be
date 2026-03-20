@@ -12,5 +12,7 @@ data class StockTakingDailyResponse(
     var amoebaQty: BigDecimal? = null,
     var systemQty: BigDecimal? = null,
     var resultQty: String? = null,
-    var resultLocationCode: String? = null
+    var resultLocationCode: String? = null,
+    var lotNo: String? = null,
+    var issueDate: String? = null,
 )

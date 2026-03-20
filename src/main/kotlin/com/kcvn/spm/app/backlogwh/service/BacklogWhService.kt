@@ -133,9 +133,11 @@ class BacklogWhService(
             ExcelHelper.setCellValue(row, 2, style, item.packageCode)
             ExcelHelper.setCellValue(row, 3, style, item.poNumber)
             ExcelHelper.setCellValue(row, 4, style, item.itemName)
-            ExcelHelper.setCellValue(row, 5, style, item.locationCode)
-            ExcelHelper.setCellValueInt(row, 6, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.boxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 5, style, item.lotNo)
+            ExcelHelper.setCellValue(row, 6, style, item.issueDate)
+            ExcelHelper.setCellValue(row, 7, style, item.locationCode)
+            ExcelHelper.setCellValueInt(row, 8, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 9, numberStyle, item.boxQty ?: 0, numberFormat)
         }
 
         //sheet.createFreezePane(4, 1)

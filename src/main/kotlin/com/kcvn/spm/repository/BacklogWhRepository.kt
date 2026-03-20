@@ -176,6 +176,8 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 .set(BACKLOG_WH.IS_ENTRIED, data.isEntried)
                 .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
                 .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(BACKLOG_WH.LOT_NO, data.lotNo)
+                .set(BACKLOG_WH.ISSUE_DATE, data.issueDate)
                 .where(
                     BACKLOG_WH.LOCATION_CODE.eq(data.locationCode)
                         .and(BACKLOG_WH.PACKAGE_CODE.eq(data.packageCode))

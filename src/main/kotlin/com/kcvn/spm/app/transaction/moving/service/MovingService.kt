@@ -66,7 +66,9 @@ class MovingService(
                 it.boxQty,
                 recDateSource,
                 isEntried = sourceBacklog.isEntried,
-                inspectionDate = sourceBacklog.inspectionDate
+                inspectionDate = sourceBacklog.inspectionDate,
+                lotNo = sourceBacklog.lotNo,
+                issueDate = sourceBacklog.issueDate
             )
             backlogWhService.minusBacklog(backlogSourceData, "OUT", refId)
             // plus backlog destLocation
@@ -79,7 +81,9 @@ class MovingService(
                 it.boxQty,
                 recDateSource,
                 isEntried = false,
-                inspectionDate = sourceBacklog.inspectionDate
+                inspectionDate = sourceBacklog.inspectionDate,
+                lotNo = sourceBacklog.lotNo,
+                issueDate = sourceBacklog.issueDate
             )
             backlogWhService.plusBacklog(backlogDestData, "IN", refId)
             backlogWhRepo.updateIsEntried(false, sourceBacklog.poNumber!!, recDateSource!!, sourceBacklog.inspectionDate)

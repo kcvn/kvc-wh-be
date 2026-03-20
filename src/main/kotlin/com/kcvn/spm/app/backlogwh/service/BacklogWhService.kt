@@ -249,8 +249,8 @@ class BacklogWhService(
             )
             backlogWhHistoryRepo.save(entityBacklogHistory, refId)
         } else {
-            val newLotNo = backlog.lotNo + ";" + data.lotNo
-            val newIssueDate = backlog.issueDate + ";" + data.issueDate
+            val newLotNo = if (backlog.lotNo?.contains(data.lotNo?: "") == true) backlog.lotNo else backlog.lotNo + ";" + data.lotNo
+            val newIssueDate = if (backlog.issueDate?.contains(data.issueDate?: "") == true) backlog.issueDate else backlog.issueDate + ";" + data.issueDate
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!),
                 data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried, lotNo = newLotNo, issueDate = newIssueDate
             )
@@ -313,7 +313,9 @@ class BacklogWhService(
                 boxQty = it.boxQty,
                 receivingDate = it.receivingDate,
                 inspectionDate = it.inspectionDate,
-                itemName = it.itemName
+                itemName = it.itemName,
+                lotNo = it.lotNo,
+                issueDate = it.issueDate
             )
         }
         return BasePagingResponse(

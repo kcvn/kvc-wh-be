@@ -99,7 +99,7 @@ class BacklogWhService(
         }
     }
 
-    fun exportBacklogWhExcel(request: BacklogWhSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
+    fun exportBacklogWhExcel(request: BacklogWhSearchRequest, pageable: Pageable?): BaseResponse<FileContentModel> {
         val listBacklogResponse = backlogWhRepo.getList(request, pageable)
 
 //        val inputStream = this::class.java.classLoader.getResourceAsStream("assets/template/ExportBacklogWhTemplate.xlsx")

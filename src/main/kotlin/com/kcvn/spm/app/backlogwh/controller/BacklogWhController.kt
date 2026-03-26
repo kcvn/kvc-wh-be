@@ -105,10 +105,10 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: BacklogWhSearchRequest,
-        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
-        pageable: Pageable
+//        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
+//        pageable: Pageable
     ): ResponseEntity<BaseResponse<FileContentModel>> {
-        val data = backlogWhService.exportBacklogWhExcel(request, pageable)
+        val data = backlogWhService.exportBacklogWhExcel(request, null)
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

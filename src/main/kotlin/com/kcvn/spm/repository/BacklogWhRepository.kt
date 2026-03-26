@@ -22,7 +22,7 @@ import java.time.ZoneOffset
 
 @Repository
 class BacklogWhRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(request: BacklogWhSearchRequest, pageable: Pageable) : Pair<List<BacklogWh>, Int> {
+    fun getList(request: BacklogWhSearchRequest, pageable: Pageable?) : Pair<List<BacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
         val receivingDate = BACKLOG_WH.field("receiving_date", java.time.OffsetDateTime::class.java)
         if(!request.listLocationCode.isNullOrEmpty()){
@@ -54,6 +54,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         }
             val query = context.selectFrom(BACKLOG_WH).where(condition.and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
             val count = query.count()
+        if (pageable != null){
             val data = query
                 .orderBy(getSortFields(pageable.sort, BACKLOG_WH.CREATED_DATE))
                 .limit(pageable.pageSize)
@@ -61,6 +62,15 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 .fetchInto(BacklogWh::class.java)
 
             return Pair(data, count)
+        }
+        else {
+            val data = query
+                .orderBy(BACKLOG_WH.CREATED_DATE)
+                .fetchInto(BacklogWh::class.java)
+
+            return Pair(data, count)
+        }
+
     }
 
     fun getListForAndroid(request: BacklogWhSearchRequest, pageable: Pageable) : Pair<List<BacklogWh>, Int> {

@@ -85,7 +85,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     fun createSendCheckingTrans(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
-            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-checking-trans" + ", REQUEST: " + request
         )
         sendingService.saveSendCheckingTrans(request)
         return ResponseEntity<MessageResponse>(

@@ -188,7 +188,7 @@ open class TempSendingTransactions(
     /**
      * The column <code>public.temp_sending_transactions.lot_no</code>.
      */
-    val LOT_NO: TableField<TempSendingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(30), this, "")
+    val LOT_NO: TableField<TempSendingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10000), this, "")
 
     /**
      * The column <code>public.temp_sending_transactions.issue_date</code>.

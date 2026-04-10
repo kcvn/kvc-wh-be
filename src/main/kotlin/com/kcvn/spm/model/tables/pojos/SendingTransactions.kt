@@ -38,7 +38,8 @@ data class SendingTransactions(
     var isCanceled: Boolean? = null,
     var requestDate: LocalDate? = null,
     var lotNo: String? = null,
-    var issueDate: String? = null
+    var issueDate: String? = null,
+    var formCode: String? = null
 ): Serializable {
 
 
@@ -170,6 +171,12 @@ data class SendingTransactions(
         }
         else if (this.issueDate != o.issueDate)
             return false
+        if (this.formCode == null) {
+            if (o.formCode != null)
+                return false
+        }
+        else if (this.formCode != o.formCode)
+            return false
         return true
     }
 
@@ -196,6 +203,7 @@ data class SendingTransactions(
         result = prime * result + (if (this.requestDate == null) 0 else this.requestDate.hashCode())
         result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
         result = prime * result + (if (this.issueDate == null) 0 else this.issueDate.hashCode())
+        result = prime * result + (if (this.formCode == null) 0 else this.formCode.hashCode())
         return result
     }
 
@@ -222,6 +230,7 @@ data class SendingTransactions(
         sb.append(", ").append(requestDate)
         sb.append(", ").append(lotNo)
         sb.append(", ").append(issueDate)
+        sb.append(", ").append(formCode)
 
         sb.append(")")
         return sb.toString()

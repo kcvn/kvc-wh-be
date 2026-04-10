@@ -152,12 +152,12 @@ open class ReceivingTransactions(
     /**
      * The column <code>public.receiving_transactions.lot_no</code>.
      */
-    val LOT_NO: TableField<ReceivingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(30), this, "")
+    val LOT_NO: TableField<ReceivingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10000), this, "")
 
     /**
      * The column <code>public.receiving_transactions.issue_date</code>.
      */
-    val ISSUE_DATE: TableField<ReceivingTransactionsRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(100), this, "")
+    val ISSUE_DATE: TableField<ReceivingTransactionsRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(1000), this, "")
 
     private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<ReceivingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

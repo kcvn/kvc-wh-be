@@ -165,12 +165,17 @@ open class SendingTransactions(
     /**
      * The column <code>public.sending_transactions.lot_no</code>.
      */
-    val LOT_NO: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(30), this, "")
+    val LOT_NO: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10000), this, "")
 
     /**
      * The column <code>public.sending_transactions.issue_date</code>.
      */
-    val ISSUE_DATE: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(100), this, "")
+    val ISSUE_DATE: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(1000), this, "")
+
+    /**
+     * The column <code>public.sending_transactions.form_code</code>.
+     */
+    val FORM_CODE: TableField<SendingTransactionsRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(200), this, "")
 
     private constructor(alias: Name, aliased: Table<SendingTransactionsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SendingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

@@ -150,12 +150,12 @@ open class Moving(
     /**
      * The column <code>public.moving.lot_no</code>.
      */
-    val LOT_NO: TableField<MovingRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(30), this, "")
+    val LOT_NO: TableField<MovingRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10000), this, "")
 
     /**
      * The column <code>public.moving.issue_date</code>.
      */
-    val ISSUE_DATE: TableField<MovingRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(100), this, "")
+    val ISSUE_DATE: TableField<MovingRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(1000), this, "")
 
     private constructor(alias: Name, aliased: Table<MovingRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<MovingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

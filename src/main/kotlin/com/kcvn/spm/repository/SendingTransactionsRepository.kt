@@ -82,7 +82,7 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
         )
             .from(SENDING_TRANSACTIONS)
             .where(condition)
-            .groupBy(SENDING_TRANSACTIONS.PO_NUMBER, SENDING_TRANSACTIONS.INSPECTION_DATE, SENDING_TRANSACTIONS.REQUEST_DATE)
+            .groupBy(SENDING_TRANSACTIONS.FORM_CODE, SENDING_TRANSACTIONS.PO_NUMBER, SENDING_TRANSACTIONS.INSPECTION_DATE, SENDING_TRANSACTIONS.REQUEST_DATE)
             .orderBy(getSortFields(pageable.sort, SENDING_TRANSACTIONS.INSPECTION_DATE))
 
         val data = query.fetch { record ->
@@ -179,46 +179,47 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
     }
 
     fun copyToSendingTable(formCode: String) {
-        context.insertInto(
-            SENDING_TRANSACTIONS,
-            SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE,
-            SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
-            SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE,
-            SENDING_TRANSACTIONS.DEST_PACKAGE_CODE,
-            SENDING_TRANSACTIONS.PO_NUMBER,
-            SENDING_TRANSACTIONS.QTY,
-            SENDING_TRANSACTIONS.SEQ_NO,
-            SENDING_TRANSACTIONS.TRANSACTION_TYPE,
-            SENDING_TRANSACTIONS.RECEIVING_DATE,
-            SENDING_TRANSACTIONS.INSPECTION_DATE,
-            SENDING_TRANSACTIONS.CREATED_BY,
-            SENDING_TRANSACTIONS.REQUEST_DATE,
-            SENDING_TRANSACTIONS.LOT_NO,
-            SENDING_TRANSACTIONS.ISSUE_DATE
-        ).select(
-            context.select(
-                TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE,
-                TEMP_SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
-                TEMP_SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE,
-                TEMP_SENDING_TRANSACTIONS.DEST_PACKAGE_CODE,
-                TEMP_SENDING_TRANSACTIONS.PO_NUMBER,
-                TEMP_SENDING_TRANSACTIONS.QTY,
-                TEMP_SENDING_TRANSACTIONS.SEQ_NO,
-                TEMP_SENDING_TRANSACTIONS.TRANSACTION_TYPE,
-                TEMP_SENDING_TRANSACTIONS.RECEIVING_DATE,
-                TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE,
-                TEMP_SENDING_TRANSACTIONS.CREATED_BY,
-                TEMP_SENDING_IMPORTED.REQUEST_DATE,
-                TEMP_SENDING_TRANSACTIONS.LOT_NO,
-                TEMP_SENDING_TRANSACTIONS.ISSUE_DATE
-            ).from(TEMP_SENDING_TRANSACTIONS)
-                .join(TEMP_SENDING_IMPORTED)
-                .on(TEMP_SENDING_IMPORTED.FORM_CODE.eq(TEMP_SENDING_TRANSACTIONS.FORM_CODE)
-                    .and(TEMP_SENDING_IMPORTED.PO_NUMBER.eq(TEMP_SENDING_TRANSACTIONS.PO_NUMBER))
-                    .and(TEMP_SENDING_IMPORTED.INSPECTION_DATE.eq(TEMP_SENDING_TRANSACTIONS.INSPECTION_DATE))
-                )
-                .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode))
-        ).execute()
+        val sql = """
+        INSERT INTO sending_transactions (
+            source_location_code,
+            dest_location_code,
+            source_package_code,
+            dest_package_code,
+            po_number,
+            qty,
+            seq_no,
+            transaction_type,
+            receiving_date,
+            inspection_date,
+            created_by,
+            request_date,
+            lot_no,
+            issue_date
+        )
+        SELECT
+            t.source_location_code,
+            t.dest_location_code,
+            t.source_package_code,
+            t.dest_package_code,
+            t.po_number,
+            t.qty,
+            t.seq_no,
+            t.transaction_type,
+            t.receiving_date,
+            t.inspection_date,
+            t.created_by,
+            (
+                SELECT MAX(i.request_date)
+                FROM temp_sending_imported i
+                WHERE i.form_code = t.form_code
+            ),
+            t.lot_no,
+            t.issue_date
+        FROM temp_sending_transactions t
+        WHERE t.form_code = ?
+    """.trimIndent()
+
+        context.execute(sql, formCode)
     }
 
     fun findOneRecordById(id: String?): SendingTransactions?{

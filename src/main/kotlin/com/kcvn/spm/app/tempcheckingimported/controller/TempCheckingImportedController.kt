@@ -33,6 +33,15 @@ class TempCheckingImportedController(private val tempCheckingImportedService: Te
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @GetMapping("/get-list-by-time-range")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    fun getListByTimeRange(
+        @RequestParam(required = false) formCode: String
+    ): ResponseEntity<BasePagingResponse<TempCheckingImportedResponse>> {
+        val result = tempCheckingImportedService.getList(formCode)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
     fun importExcelChecking(

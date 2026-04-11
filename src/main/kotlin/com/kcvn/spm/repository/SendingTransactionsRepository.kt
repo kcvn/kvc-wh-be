@@ -194,7 +194,8 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             created_by,
             request_date,
             lot_no,
-            issue_date
+            issue_date,
+            form_code
         )
         SELECT
             t.source_location_code,
@@ -214,7 +215,8 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 WHERE i.form_code = t.form_code
             ),
             t.lot_no,
-            t.issue_date
+            t.issue_date,
+            form_code
         FROM temp_sending_transactions t
         WHERE t.form_code = ?
     """.trimIndent()

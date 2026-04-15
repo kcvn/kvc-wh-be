@@ -209,19 +209,28 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             t.receiving_date,
             t.inspection_date,
             t.created_by,
-            (
-                SELECT MAX(i.request_date)
-                FROM temp_sending_imported i
-                WHERE i.form_code = t.form_code
-            ),
+            i.request_date,
             t.lot_no,
             t.issue_date,
-            form_code
+            t.form_code
         FROM temp_sending_transactions t
+        JOIN (
+            SELECT
+                form_code,
+                po_number,
+                inspection_date,
+                MIN(request_date) AS request_date
+            FROM temp_sending_imported
+            WHERE form_code = ?
+            GROUP BY form_code, po_number, inspection_date
+        ) i
+        ON i.form_code = t.form_code
+        AND i.po_number = t.po_number
+        AND i.inspection_date = t.inspection_date
         WHERE t.form_code = ?
     """.trimIndent()
 
-        context.execute(sql, formCode)
+        context.execute(sql, formCode, formCode)
     }
 
     fun findOneRecordById(id: String?): SendingTransactions?{

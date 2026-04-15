@@ -42,6 +42,21 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
             .filterNotNull()
     }
 
+    fun getListFormCodeByTimeRange(fromDate: OffsetDateTime, toDate: OffsetDateTime): List<String> {
+        return context.selectDistinct(TEMP_CHECKING_IMPORTED.FORM_CODE, TEMP_CHECKING_IMPORTED.CREATED_DATE)
+            .from(TEMP_CHECKING_IMPORTED)
+            .where(
+                TEMP_CHECKING_IMPORTED.FORM_CODE.isNotNull
+                    //.and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
+                    //.and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(true) else TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(false))
+                    .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.lt(toDate))
+                    .and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(fromDate))
+            )
+            .orderBy(TEMP_CHECKING_IMPORTED.CREATED_DATE.desc())
+            .fetch(TEMP_CHECKING_IMPORTED.FORM_CODE)
+            .filterNotNull()
+    }
+
     fun getList(formCode: String) : Pair<List<TempCheckingImported>, Int> {
         val query = context.selectFrom(TEMP_CHECKING_IMPORTED)
             .where(TEMP_CHECKING_IMPORTED.FORM_CODE.eq(formCode))

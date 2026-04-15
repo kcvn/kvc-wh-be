@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.time.OffsetDateTime
 
 @RestController
 @RequestMapping("/api/temp-checking-imported")
@@ -33,13 +34,11 @@ class TempCheckingImportedController(private val tempCheckingImportedService: Te
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @GetMapping("/get-list-by-time-range")
+    @GetMapping("/get-form-code-list-by-time-range")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
-    fun getListByTimeRange(
-        @RequestParam(required = false) formCode: String
-    ): ResponseEntity<BasePagingResponse<TempCheckingImportedResponse>> {
-        val result = tempCheckingImportedService.getList(formCode)
-        return ResponseEntity(result, HttpStatus.OK)
+    fun getListByTimeRange(@RequestParam fromDate: OffsetDateTime, toDate: OffsetDateTime): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = tempCheckingImportedService.getListFormCodeDropdownByTimeRange(fromDate, toDate)
+        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])

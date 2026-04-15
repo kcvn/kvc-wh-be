@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.OffsetDateTime
 
 @Service
 @Transactional
@@ -34,6 +35,20 @@ class TempCheckingImportedService(private val tempCheckingImportedRepo: TempChec
             )
         }.toMutableList()
         if (!isIncludeGe3Days) dropDownList.add(DropdownResponse("File lam tem goi", "File lam tem goi"))
+
+        return BaseResponse(data = dropDownList)
+    }
+
+    fun getListFormCodeDropdownByTimeRange(fromDate: OffsetDateTime, toDate: OffsetDateTime): BaseResponse<List<DropdownResponse>> {
+        val listFormCode = tempCheckingImportedRepo.getListFormCodeByTimeRange(fromDate, toDate)
+
+        // Map DropDownResponse
+        val dropDownList= listFormCode.map { formCode ->
+            DropdownResponse(
+                formCode,
+                formCode
+            )
+        }.toMutableList()
 
         return BaseResponse(data = dropDownList)
     }

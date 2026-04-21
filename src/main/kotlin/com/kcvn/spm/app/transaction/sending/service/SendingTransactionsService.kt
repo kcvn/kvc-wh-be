@@ -87,7 +87,10 @@ class SendingTransactionsService(
 
     fun approveSendingForm(formCode: String){
         val sendingList = tempSendingRepo.getListByFormCode(formCode)
-        sendingList?.forEach {
+        if (sendingList.isEmpty()) throw BusinessExceptionDetail(
+            CommonUtils.getMessage("form.code.approved"), "formCode = $formCode"
+        )
+        sendingList.forEach {
             val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
             if (backlog == null || backlog.backlogQty!! < it.qty) throw BusinessExceptionDetail(
                 CommonUtils.getMessage("not.enough.backlog ${it.sourcePackageCode} - ${it.sourceLocationCode}"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"

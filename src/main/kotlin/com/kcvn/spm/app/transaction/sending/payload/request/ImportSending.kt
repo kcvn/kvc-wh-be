@@ -7,4 +7,5 @@ data class ImportSending(
     var inspectionDate: LocalDate? = null,
     var poNumber: String? = null,
     var qty: BigDecimal? = BigDecimal.ZERO,
+    var formCode: String? = null
 )

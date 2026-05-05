@@ -146,6 +146,7 @@ class SendingTransactionsService(
             ExcelHelper.setCellValue(row, 1, style, item.poNumber)
             ExcelHelper.setCellValueInt(row, 2, numberStyle, item.qty?.toInt() ?: 0, numberFormat)
             ExcelHelper.setCellValue(row, 3, style, formattedRequestDate)
+            ExcelHelper.setCellValue(row, 4, style, item.formCode)
         }
 
 //        for (i in 1 until rowNumberFill) {
@@ -196,6 +197,7 @@ class SendingTransactionsService(
                     inspectionDate = ExcelHelper.getCellValueDateAmoeba(row, 0),
                     poNumber = ExcelHelper.getCellValueAmoeba(row, 1),
                     qty = ExcelHelper.getCellValueAmoeba(row, 2).toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    formCode = ExcelHelper.getCellValueAmoeba(row, 4)
                 )
 
                 val isSuccess = sendingRepo.updateIsUpdatedAmoeba(importSendingData)

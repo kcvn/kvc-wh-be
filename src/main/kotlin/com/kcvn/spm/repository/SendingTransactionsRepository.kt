@@ -78,7 +78,8 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             SENDING_TRANSACTIONS.PO_NUMBER,
             SENDING_TRANSACTIONS.INSPECTION_DATE,
             DSL.sum(SENDING_TRANSACTIONS.QTY).`as`("SUM_SENDING_QTY"),
-            SENDING_TRANSACTIONS.REQUEST_DATE
+            SENDING_TRANSACTIONS.REQUEST_DATE,
+            SENDING_TRANSACTIONS.FORM_CODE
         )
             .from(SENDING_TRANSACTIONS)
             .where(condition)
@@ -90,7 +91,8 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 poNumber = record[SENDING_TRANSACTIONS.PO_NUMBER],
                 inspectionDate = record[SENDING_TRANSACTIONS.INSPECTION_DATE],
                 qty = record.get("SUM_SENDING_QTY", BigDecimal::class.java) ?: BigDecimal.ZERO,
-                requestDate = record.get(SENDING_TRANSACTIONS.REQUEST_DATE)
+                requestDate = record.get(SENDING_TRANSACTIONS.REQUEST_DATE),
+                formCode = record.get(SENDING_TRANSACTIONS.FORM_CODE)
             )
         }
         return Pair(data, data.size)
@@ -106,7 +108,8 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
                 .set(SENDING_TRANSACTIONS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(
                     SENDING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber)
-                        .and(SENDING_TRANSACTIONS.INSPECTION_DATE.eq(data.inspectionDate))
+                        .and(SENDING_TRANSACTIONS.INSPECTION_DATE.eq(data.inspectionDate)
+                            .and(SENDING_TRANSACTIONS.FORM_CODE.eq(data.formCode)))
                 )
                 .execute()
             affectedRows > 0 // Trả về true nếu có ít nhất 1 dòng bị cập nhật

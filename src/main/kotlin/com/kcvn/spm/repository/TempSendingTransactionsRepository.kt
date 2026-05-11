@@ -45,7 +45,6 @@ class TempSendingTransactionsRepository(private val context: DSLContext) : Sorti
                         ON tsi.form_code = tst_summary.form_code
                         AND tsi.po_number = tst_summary.po_number
                         AND tsi.inspection_date = tst_summary.inspection_date
-                        AND tsi.location_code = tst_summary.location_code
                         WHERE (tsi.form_code = ? OR tst_summary.form_code = ?) )
                         
 SELECT COALESCE (temp1.form_code, tsct_summary.form_code) AS form_code,

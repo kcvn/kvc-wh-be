@@ -178,6 +178,16 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .firstOrNull()
     }
 
+    fun findExistBacklogByPackageCode(packageCode: String): BacklogWh? {
+        return context.selectFrom(BACKLOG_WH)
+            .where(
+                BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
+                    .and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
+            )
+            .fetchInto(BacklogWh::class.java)
+            .firstOrNull()
+    }
+
     fun update(data: BacklogWh) {
             context.update(BACKLOG_WH)
                 .set(BACKLOG_WH.BACKLOG_QTY, data.backlogQty)

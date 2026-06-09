@@ -91,7 +91,7 @@ class SendingTransactionsService(
             CommonUtils.getMessage("form.code.approved"), "formCode = $formCode"
         )
         sendingList.forEach {
-            val backlog = backlogWhRepository.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
+            val backlog = backlogWhRepository.findExistBacklogByPackageCode(it.sourcePackageCode!!)
             if (backlog == null || backlog.backlogQty!! < it.qty) throw BusinessExceptionDetail(
                 CommonUtils.getMessage("not.enough.backlog ${it.sourcePackageCode} - ${it.sourceLocationCode}"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
             )

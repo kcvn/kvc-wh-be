@@ -300,7 +300,7 @@
 						<configuration>
 							<jdbc>
 								<driver>org.postgresql.Driver</driver>
-								<url>jdbc:postgresql://localhost:5432/postgres</url>
+								<url>jdbc:postgresql://host.docker.internal:5432/postgres</url>
 								<user>postgres</user>
 								<password>postgres</password>
 							</jdbc>

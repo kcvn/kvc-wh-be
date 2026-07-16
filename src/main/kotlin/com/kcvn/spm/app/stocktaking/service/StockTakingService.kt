@@ -434,7 +434,6 @@ class StockTakingService(
                         code.startsWith("7") ||
                         code.startsWith("8") ||
                         code.startsWith("9") ||
-                        code.startsWith("50") ||
                         code == "33333")
             }
             val totalRecord = amoebaRepo.saveAll(finalData)

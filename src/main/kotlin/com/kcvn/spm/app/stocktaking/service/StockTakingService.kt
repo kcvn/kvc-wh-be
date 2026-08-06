@@ -430,10 +430,7 @@ class StockTakingService(
             // save amoeba
             val finalData = amoebaList.filter { p ->
                 val code = p.locationCode
-                !(code!!.startsWith("4") ||
-                        code.startsWith("7") ||
-                        code.startsWith("8") ||
-                        code.startsWith("9") ||
+                !(code!!.startsWith("9") ||
                         code == "33333")
             }
             val totalRecord = amoebaRepo.saveAll(finalData)

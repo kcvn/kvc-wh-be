@@ -102,7 +102,7 @@ class SendingTransactionsService(
             }
             val backlogData = BacklogWh(
                 null,
-                it.sourceLocationCode,
+                backlog.locationCode,
                 it.poNumber,
                 it.sourcePackageCode,
                 it.qty,

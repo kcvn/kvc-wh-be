@@ -272,7 +272,7 @@ class BacklogWhService(
         if (backlog.backlogQty!! < data.backlogQty) throw BusinessExceptionDetail(
             CommonUtils.getMessage("not.enough.backlog ${data.locationCode} - ${data.packageCode} - ${data.poNumber}"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}")
         val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, backlog.backlogQty?.minus(data.backlogQty!!),
-            backlog.boxQty?.minus(data.boxQty!!), data.receivingDate, data.inspectionDate, isEntried = data.isEntried
+            backlog.boxQty?.minus(data.boxQty!!), data.receivingDate, data.inspectionDate, isEntried = data.isEntried, lotNo = backlog.lotNo, issueDate = backlog.issueDate
         )
         backlogWhRepo.update(entityBacklog)
         // insert backlog history

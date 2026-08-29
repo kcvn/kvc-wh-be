@@ -99,21 +99,17 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
     }
 
     fun updateIsUpdatedAmoeba(data: ImportSending): Boolean {
-        return context.transactionResult { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            val affectedRows = transactionalContext.update(SENDING_TRANSACTIONS)
-                .set(SENDING_TRANSACTIONS.IS_UPDATED_AMOEBA, true)
-                .set(SENDING_TRANSACTIONS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(SENDING_TRANSACTIONS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .where(
-                    SENDING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber)
-                        .and(SENDING_TRANSACTIONS.INSPECTION_DATE.eq(data.inspectionDate)
-                            .and(SENDING_TRANSACTIONS.FORM_CODE.eq(data.formCode)))
-                )
-                .execute()
-            affectedRows > 0 // Trả về true nếu có ít nhất 1 dòng bị cập nhật
-        }
+        val affectedRows = context.update(SENDING_TRANSACTIONS)
+            .set(SENDING_TRANSACTIONS.IS_UPDATED_AMOEBA, true)
+            .set(SENDING_TRANSACTIONS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(SENDING_TRANSACTIONS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                SENDING_TRANSACTIONS.PO_NUMBER.eq(data.poNumber)
+                    .and(SENDING_TRANSACTIONS.INSPECTION_DATE.eq(data.inspectionDate)
+                        .and(SENDING_TRANSACTIONS.FORM_CODE.eq(data.formCode)))
+            )
+            .execute()
+        return affectedRows > 0 // Trả về true nếu có ít nhất 1 dòng bị cập nhật
     }
 
     fun updateIsCanceled(data: SendingTransactions) {

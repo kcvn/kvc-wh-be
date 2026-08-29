@@ -57,10 +57,7 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
     fun saveAll(dataList: List<TempSendingImported>): Int {
         if (dataList.isEmpty()) return 0
 
-        return context.transactionResult { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            val result = transactionalContext.batchInsert(
+        return context.batchInsert(
                 dataList.map { data ->
                     TEMP_SENDING_IMPORTED.newRecord().apply {
                         this.inspectionDate = data.inspectionDate
@@ -75,10 +72,7 @@ class TempSendingImportedRepository(private val context: DSLContext) : SortingRe
                         this.isApproved = data.isApproved
                     }
                 }
-            ).execute()
-
-            result.sum()
-        }
+            ).execute().sum()
     }
 
     fun delete(userName: String) {

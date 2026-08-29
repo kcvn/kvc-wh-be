@@ -13,10 +13,7 @@ class WestFactoryRepository(private val context: DSLContext) : SortingRepository
     fun saveAll(dataList: List<WestFactoryLayout>): Int {
         if (dataList.isEmpty()) return 0
 
-        return context.transactionResult { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            val result = transactionalContext.batchInsert(
+        return context.batchInsert(
                 dataList.map { data ->
                     WEST_FACTORY_LAYOUT.newRecord().apply {
                         this.rowNum = data.rowNum
@@ -55,10 +52,7 @@ class WestFactoryRepository(private val context: DSLContext) : SortingRepository
                         this.column33 = data.column33
                     }
                 }
-            ).execute()
-
-            result.sum()
-        }
+            ).execute().sum()
     }
 
     fun delete() {

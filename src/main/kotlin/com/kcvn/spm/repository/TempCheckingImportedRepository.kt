@@ -71,10 +71,7 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
     fun saveAll(dataList: List<TempCheckingImported>): Int {
         if (dataList.isEmpty()) return 0
 
-        return context.transactionResult { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            val result = transactionalContext.batchInsert(
+        return context.batchInsert(
                 dataList.map { data ->
                     TEMP_CHECKING_IMPORTED.newRecord().apply {
                         this.poNumber = data.poNumber
@@ -83,10 +80,7 @@ class TempCheckingImportedRepository(private val context: DSLContext) : SortingR
                         this.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                     }
                 }
-            ).execute()
-
-            result.sum()
-        }
+            ).execute().sum()
     }
 
     fun delete(userName: String) {

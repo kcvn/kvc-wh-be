@@ -165,10 +165,7 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
     fun saveAll(dataList: List<Amoeba>): Int {
         if (dataList.isEmpty()) return 0
 
-        return context.transactionResult { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            val result = transactionalContext.batchInsert(
+        return context.batchInsert(
                 dataList.map { data ->
                     AMOEBA.newRecord().apply {
                         this.inspectionDate = data.inspectionDate
@@ -178,10 +175,7 @@ class AmoebaRepository(private val context: DSLContext) : SortingRepository() {
                         this.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                     }
                 }
-            ).execute()
-
-            result.sum()
-        }
+            ).execute().sum()
     }
 
     fun delete() {

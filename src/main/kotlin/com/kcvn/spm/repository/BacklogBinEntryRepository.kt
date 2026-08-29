@@ -48,10 +48,7 @@ class BacklogBinEntryRepository(private val context: DSLContext) : SortingReposi
     fun saveAll(dataList: List<BacklogBinEntry>): Int {
         if (dataList.isEmpty()) return 0
 
-        return context.transactionResult { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            val result = transactionalContext.batchInsert(
+        return context.batchInsert(
                 dataList.map { data ->
                     BACKLOG_BIN_ENTRY.newRecord().apply {
                         this.locationCode = data.locationCode
@@ -62,10 +59,7 @@ class BacklogBinEntryRepository(private val context: DSLContext) : SortingReposi
                         this.createdBy = CommonUtils.loggedInUser() ?: Constants.SYSTEM
                     }
                 }
-            ).execute()
-
-            result.sum()
-        }
+            ).execute().sum()
     }
 
     fun delete() {

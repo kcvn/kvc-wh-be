@@ -16,71 +16,7 @@ enum class EPermission(val value: String) {
     // log
     VIEW_LOG("l.v"),
 
-    // products
-    V_PRODUCT("product.v"),
-    I_PRODUCT("product.i"),
-    E_PRODUCT("product.e"),
-    U_PRODUCT("product.u"),
-
-    // process
-    V_PROCESS("process.v"),
-    I_PROCESS("process.i"),
-    E_PROCESS("process.e"),
-    SY_PROCESS_CATALOG("process.sy_catalog"),
-    SY_PROCESS_PRODUCT("process.sy_product"),
-
-    // completion - rate
-    V_COMPLETION_RATE("com_rate.v"),
-    I_COMPLETION_RATE("com_rate.i"),
-    E_COMPLETION_RATE("com_rate.e"),
-
-    // work results
-    V_WORK_RESULT("work_result.v"),
-    E_WORK_RESULT("work_result.e"),
-    SY_WORK_RESULT("work_result.sy"),
-
-    // order
-    V_ORDER("order.v"),
-    I_ORDER("order.i"),
-    E_ORDER("order.e"),
-    C_WORK_PLAN_ORDER("order.c"),
-
-    //production result
-    V_PRODUCTION_RESULT("product_result.v"),
-
     // inventory
     V_INVENTORY("inventory.v"),
-    E_INVENTORY("inventory.e"),
-    I_INVENTORY("inventory.i"),
-
-    // sync data
-    V_SYNC_PROCESS_PROCEDURE_STRUCTURE("sync.ppst.v"),
-
-    //report
-    V_REPORT_QUANTITY("rp_quantity.v"),
-    E_REPORT_QUANTITY ("rp_quantity.e"),
-    CA_REPORT_QUANTITY("rp_quantity.ca"),
-    LOCK_REPORT_QUANTITY("rp_quantity.lock"),
-
-    V_REPORT_EXPORT_ITEM("rp_export_item.v"),
-    E_REPORT_EXPORT_ITEM("rp_export_item.e"),
-    I_REPORT_EXPORT_ITEM("rp_export_item.i"),
-
-    V_REPORT_EXTERNAL_QUALITY("rp_external_quality.v"),
-    E_REPORT_EXTERNAL_QUALITY("rp_external_quality.e"),
-    I_REPORT_EXTERNAL_QUALITY("rp_external_quality.i"),
-
-    E_REPORT_COST_MATERIAL("cost_material.e"),
-    V_REPORT_COST_MATERIAL("cost_material.v"),
-    I_REPORT_COST_MATERIAL("cost_material.i"),
-
-//work plan
-
-    V_INFO_WORK_PLAN("work_plan_info.v"),
-    E_INFO_WORK_PLAN("work_plan_info.e"),
-    AP_INFO_WORK_PLAN("work_plan_info.ap"),
-
-    V_HISTORY_WORK_PLAN("work_plan_history.v"),
-    E_HISTORY_WORK_PLAN("work_plan_history.e"),
-    D_HISTORY_WORK_PLAN("work_plan_history.d"),
+    WH("wh"),
 }

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/receiving")
 class ReceivingTransactionsController(private val receivingService: ReceivingTransactionsService) {
     @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
         request: RecTransSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)

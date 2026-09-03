@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/splitting")
 class SplittingController(private val splittingService: SplittingService) {
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun createSplitting(@Valid @RequestBody request: List<SplittingRequest>?): ResponseEntity<*> {
         val data = splittingService.saveSplitting(request!!)
         val logger = KotlinLogging.logger {}

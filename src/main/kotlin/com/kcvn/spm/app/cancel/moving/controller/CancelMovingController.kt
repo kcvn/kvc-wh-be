@@ -19,7 +19,7 @@ class CancelMovingController(
     private val cancelMovingService: CancelMovingService
 ) {
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun createCancelMoving(@Valid @RequestBody request: CancelMovingRequest?): ResponseEntity<*> {
         val cancelMoving = cancelMovingService.createCancelMoving(request!!)
         return if (cancelMoving == null) {

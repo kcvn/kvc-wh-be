@@ -21,7 +21,7 @@ class TempSendingImportedController(private val tempSendingImportedService: Temp
     }
 
     @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
         @RequestParam(required = false) formCode: String
     ): ResponseEntity<BasePagingResponse<TempSendingImportedResponse>> {
@@ -30,7 +30,7 @@ class TempSendingImportedController(private val tempSendingImportedService: Temp
     }
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun importTxtSending(
         @RequestParam("formCode") formCode: String,
         @RequestPart("file") file: MultipartFile

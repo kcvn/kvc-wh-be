@@ -19,7 +19,7 @@ class CancelReceivingTransactionsController(
     private val cancelReceivingService: CancelReceivingTransactionsService
 ) {
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun createCancelReceiving(@Valid @RequestBody request: CancelRecTransRequest?): ResponseEntity<*> {
         val cancelRec = cancelReceivingService.createCancelReceiving(request!!)
         return if (cancelRec == null) {

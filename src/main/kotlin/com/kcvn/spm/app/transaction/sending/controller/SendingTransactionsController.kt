@@ -30,7 +30,7 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/api/sending")
 class SendingTransactionsController(private val sendingService: SendingTransactionsService) {
     @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
         request: SendingSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
@@ -44,7 +44,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @PostMapping("/create/sending-trans")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun createSendTrans(@Valid @RequestBody request: List<SendingRequest>?): ResponseEntity<*> {
         val response = sendingService.validateSourceBacklogFromSending(request!!)
         val logger = KotlinLogging.logger {}
@@ -67,7 +67,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @PostMapping("/cancel/sending-trans")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun cancelSendTrans(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
@@ -81,7 +81,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @PostMapping("/create/sending-checking-trans")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun createSendCheckingTrans(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
@@ -96,7 +96,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @GetMapping("/get-temp-sending-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
         formCode: String,
         poNumber: String?,
@@ -111,7 +111,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @GetMapping("/get-scanned-temp-sending")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getScannedTempSendingList(
         @RequestParam(required = false) formCode: String?
     ): ResponseEntity<List<TempSendingTransactions>> {
@@ -120,7 +120,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @GetMapping("/get-scanned-temp-sending-checking")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getScannedTempSendingCheckingList(
         @RequestParam(required = false) formCode: String
     ): ResponseEntity<List<TempSendingCheckingTransactions>> {
@@ -129,7 +129,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @PostMapping("/approve/sending-trans")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun approveSendingForm(@RequestParam formCode: String): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
@@ -143,7 +143,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @GetMapping("/export-excel")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun exportExcel(
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         pageable: Pageable
@@ -153,7 +153,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun importExcel(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<List<ImportSending>>> {

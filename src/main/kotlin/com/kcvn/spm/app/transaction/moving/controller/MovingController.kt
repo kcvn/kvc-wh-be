@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/moving")
 class MovingController(private val movingService: MovingService) {
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun createMoving(@Valid @RequestBody request: List<MovingRequest>): ResponseEntity<*> {
         movingService.saveMoving(request)
         val logger = KotlinLogging.logger {}

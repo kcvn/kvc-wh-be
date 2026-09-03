@@ -14,14 +14,14 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/api/layout/west-factory")
 class WestFactoryController(private val westFactoryService: WestFactoryService) {
     @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(): ResponseEntity<BasePagingResponse<WestFactoryResponse>> {
         val result = westFactoryService.getList()
         return ResponseEntity(result, HttpStatus.OK)
     }
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun importExcel(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<Int>> {

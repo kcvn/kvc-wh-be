@@ -26,7 +26,7 @@ class TempCheckingImportedController(private val tempCheckingImportedService: Te
     }
 
     @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
         @RequestParam(required = false) formCode: String
     ): ResponseEntity<BasePagingResponse<TempCheckingImportedResponse>> {
@@ -35,14 +35,14 @@ class TempCheckingImportedController(private val tempCheckingImportedService: Te
     }
 
     @GetMapping("/get-form-code-list-by-time-range")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getListByTimeRange(@RequestParam fromDate: OffsetDateTime, toDate: OffsetDateTime): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
         val data = tempCheckingImportedService.getListFormCodeDropdownByTimeRange(fromDate, toDate)
         return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun importExcelChecking(
         @RequestParam("formCode") formCode: String,
         @RequestPart("file") file: MultipartFile
@@ -52,7 +52,7 @@ class TempCheckingImportedController(private val tempCheckingImportedService: Te
     }
 
     @GetMapping("/download-template")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun downloadTemplate(): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = tempCheckingImportedService.downloadTemplate()
         return ResponseEntity(data, HttpStatus.OK)

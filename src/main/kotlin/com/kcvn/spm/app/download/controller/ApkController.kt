@@ -32,7 +32,7 @@ import java.time.format.DateTimeFormatter
 @RequestMapping("/api/download")
 class ApkController(private val downloadApkService: DownloadApkService) {
     @GetMapping("/download-apk")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
         @RequestParam("version") version: String,
         @RequestParam("deviceName") deviceName: String,

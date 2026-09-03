@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/inquiry")
 class InquiryTransactionsController(private val inquiryService: InquiryTransactionsService) {
     @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
         request: InquirySearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)

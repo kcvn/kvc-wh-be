@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/api/stock-taking")
 class StockTakingController(private val stockTakingService: StockTakingService) {
     @GetMapping("/system-stock-taking")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getListSystemStock(
         request: StockTakingDailyRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
@@ -41,7 +41,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @GetMapping("/export/system-stock-taking")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun exportSystemStockTaking(
         request: StockTakingDailyRequest
     ): ResponseEntity<BaseResponse<FileContentModel>> {
@@ -50,7 +50,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @GetMapping("/actual-stock-taking")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getListActualStock(
         request: StockTakingMonthlyRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
@@ -64,7 +64,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @GetMapping("/export/actual-stock-taking")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun exportActualStockTaking(
         request: StockTakingMonthlyRequest
     ): ResponseEntity<BaseResponse<FileContentModel>> {
@@ -73,7 +73,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @GetMapping("/actual-stock-taking/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getListForAndroid(
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
         @SortDefault.SortDefaults(
@@ -86,7 +86,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @GetMapping("/actual-stock-taking/checking-start")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun checkingStartActual(request: StartActualRequest): ResponseEntity<*> {
         val response = stockTakingService.checkingStartActual(request)
         val logger = KotlinLogging.logger {}
@@ -100,7 +100,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @PostMapping("/actual-stock-taking/start")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun startActual(@Valid @RequestBody request: StartActualRequest): ResponseEntity<*> {
         val response = stockTakingService.startActual(request)
         val logger = KotlinLogging.logger {}
@@ -114,7 +114,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @PostMapping("/actual-stock-taking/scan")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun scan(@Valid @RequestBody request: List<ScanRequest>): ResponseEntity<*> {
         stockTakingService.scan(request)
         val logger = KotlinLogging.logger {}
@@ -128,7 +128,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @PostMapping("/actual-stock-taking-checking/scan")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun checkingScan(@Valid @RequestBody request: List<ScanRequest>): ResponseEntity<*> {
         stockTakingService.checkingScan(request)
         val logger = KotlinLogging.logger {}
@@ -142,7 +142,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @PostMapping("/actual-stock-taking/stop")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun stopActual(@Valid @RequestBody request: StopActualRequest): ResponseEntity<*> {
         stockTakingService.stopActual(request)
         val logger = KotlinLogging.logger {}
@@ -156,7 +156,7 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
     }
 
     @PostMapping(value = ["import-excel"], consumes = ["multipart/form-data"])
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun importTxtAmoeba(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<Int>> {

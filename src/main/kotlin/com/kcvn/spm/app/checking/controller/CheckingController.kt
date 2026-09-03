@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 class CheckingController(private val checkingService: CheckingService) {
     private val logger = LoggerFactory.getLogger(javaClass)
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun createChecking(@Valid @RequestBody request: List<CheckingRequest>?): ResponseEntity<*> {
         logger.info("📥 [POST] checking/create with params: $request")
         checkingService.saveChecking(request!!)

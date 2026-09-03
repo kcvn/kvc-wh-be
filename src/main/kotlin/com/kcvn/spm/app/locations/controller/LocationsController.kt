@@ -27,7 +27,7 @@ class LocationsController(private val locationsService: LocationsService) {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).VIEW_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getAllLocations(
         @RequestParam(required = false) search: String?,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE) pageable: Pageable?
@@ -40,7 +40,7 @@ class LocationsController(private val locationsService: LocationsService) {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun createLocation(@Valid @RequestBody request: LocationsRequest?): ResponseEntity<*> {
         val location = locationsService.createLocation(request!!)
         val logger = KotlinLogging.logger {}

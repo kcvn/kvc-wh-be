@@ -30,7 +30,7 @@ import java.time.format.DateTimeFormatter
 @RequestMapping("/api/checking-history")
 class CheckingHistoryController(private val checkingHistoryService: CheckingHistoryService) {
     @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
         request: CheckingHistorySearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
@@ -44,7 +44,7 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).CREATE_ROLE.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun create(@Valid @RequestBody request: List<CheckingHistoryRequest>): ResponseEntity<*> {
         checkingHistoryService.save(request)
         val logger = KotlinLogging.logger {}
@@ -58,7 +58,7 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
     }
 
     @GetMapping("/export-csv")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun exportCsv(
         request: CheckingHistorySearchRequest,
         response: HttpServletResponse,

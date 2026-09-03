@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/api/backlog-wh")
 class BacklogWhController(private val backlogWhService: BacklogWhService) {
     @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun getList(
         request: BacklogWhSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
@@ -41,7 +41,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     }
 
     @GetMapping("/get-list-for-android")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getListForAndroid(
         request: BacklogWhSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
@@ -55,7 +55,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     }
 
     @GetMapping("/get-backlog-history")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getBacklogHistory(
         packageCode: String,
     ): ResponseEntity<BasePagingResponse<BacklogHistoryResponse>> {
@@ -64,7 +64,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_PRODUCT.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun update(
         @Valid @RequestBody request: List<BacklogWhUpdateRequest>
     ): ResponseEntity<*> {
@@ -76,14 +76,14 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     }
 
     @GetMapping("/download-template-bin-entry")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun downloadTemplateBinEntry(): ResponseEntity<BaseResponse<FileContentModel>> {
         val data = backlogWhService.downloadTemplate()
         return ResponseEntity(data, HttpStatus.OK)
     }
 
     @PostMapping(value = ["import-bin-entry"], consumes = ["multipart/form-data"])
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).I_INVENTORY.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun importBinEntry(
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<List<ImportBacklogWh>>> {
@@ -92,7 +92,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     }
 
     @GetMapping("/export-bin-entry")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun exportBinEntry(
         @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)
         pageable: Pageable
@@ -102,7 +102,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     }
 
     @GetMapping("/export-excel")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).E_ORDER.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun exportExcel(
         request: BacklogWhSearchRequest,
 //        @PageableDefault(size = PagingDefault.EXPORT_SIZE, page = PagingDefault.PAGE)

@@ -6,6 +6,7 @@ package com.kcvn.spm.model.tables
 
 import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.BACKLOG_WH_PKEY
+import com.kcvn.spm.model.keys.BACKLOG_WH_UN
 import com.kcvn.spm.model.tables.records.BacklogWhRecord
 
 import java.math.BigDecimal
@@ -13,6 +14,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 
 import kotlin.collections.Collection
+import kotlin.collections.List
 
 import org.jooq.Condition
 import org.jooq.Field
@@ -172,6 +174,7 @@ open class BacklogWh(
     constructor(): this(DSL.name("backlog_wh"), null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<BacklogWhRecord> = BACKLOG_WH_PKEY
+    override fun getUniqueKeys(): List<UniqueKey<BacklogWhRecord>> = listOf(BACKLOG_WH_UN)
     override fun `as`(alias: String): BacklogWh = BacklogWh(DSL.name(alias), this)
     override fun `as`(alias: Name): BacklogWh = BacklogWh(alias, this)
     override fun `as`(alias: Table<*>): BacklogWh = BacklogWh(alias.qualifiedName, this)

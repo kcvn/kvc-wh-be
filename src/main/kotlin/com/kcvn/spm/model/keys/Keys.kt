@@ -21,6 +21,7 @@ import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
+import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
@@ -49,6 +50,7 @@ import com.kcvn.spm.model.tables.records.CheckingHistoryRecord
 import com.kcvn.spm.model.tables.records.CheckingRecord
 import com.kcvn.spm.model.tables.records.LocationsRecord
 import com.kcvn.spm.model.tables.records.MovingRecord
+import com.kcvn.spm.model.tables.records.PurchaseOrderBacklogRecord
 import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SplittingRecord
@@ -83,6 +85,7 @@ val AUTH_USER_CLAIM_PKEY: UniqueKey<AuthUserClaimRecord> = Internal.createUnique
 val AUTH_USER_ROLE_PKEY: UniqueKey<AuthUserRoleRecord> = Internal.createUniqueKey(AuthUserRole.AUTH_USER_ROLE, DSL.name("auth_user_role_pkey"), arrayOf(AuthUserRole.AUTH_USER_ROLE.USER_ID, AuthUserRole.AUTH_USER_ROLE.ROLE_ID), true)
 val BACKLOG_BIN_ENTRY_PKEY: UniqueKey<BacklogBinEntryRecord> = Internal.createUniqueKey(BacklogBinEntry.BACKLOG_BIN_ENTRY, DSL.name("backlog_bin_entry_pkey"), arrayOf(BacklogBinEntry.BACKLOG_BIN_ENTRY.ID), true)
 val BACKLOG_WH_PKEY: UniqueKey<BacklogWhRecord> = Internal.createUniqueKey(BacklogWh.BACKLOG_WH, DSL.name("backlog_wh_pkey"), arrayOf(BacklogWh.BACKLOG_WH.ID), true)
+val BACKLOG_WH_UN: UniqueKey<BacklogWhRecord> = Internal.createUniqueKey(BacklogWh.BACKLOG_WH, DSL.name("backlog_wh_un"), arrayOf(BacklogWh.BACKLOG_WH.LOCATION_CODE, BacklogWh.BACKLOG_WH.PACKAGE_CODE), true)
 val BACKLOG_WH_HISTORY_PKEY: UniqueKey<BacklogWhHistoryRecord> = Internal.createUniqueKey(BacklogWhHistory.BACKLOG_WH_HISTORY, DSL.name("backlog_wh_history_pkey"), arrayOf(BacklogWhHistory.BACKLOG_WH_HISTORY.ID), true)
 val CANCEL_RECEIVING_TRANSACTIONS_PKEY: UniqueKey<CancelReceivingTransactionsRecord> = Internal.createUniqueKey(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS, DSL.name("cancel_receiving_transactions_pkey"), arrayOf(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS.ID), true)
 val CANCEL_SENDING_TRANSACTIONS_PKEY: UniqueKey<CancelSendingTransactionsRecord> = Internal.createUniqueKey(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS, DSL.name("cancel_sending_transactions_pkey"), arrayOf(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS.ID), true)
@@ -90,6 +93,7 @@ val CHECKING_PKEY: UniqueKey<CheckingRecord> = Internal.createUniqueKey(Checking
 val CHECKING_HISTORY_PKEY: UniqueKey<CheckingHistoryRecord> = Internal.createUniqueKey(CheckingHistory.CHECKING_HISTORY, DSL.name("checking_history_pkey"), arrayOf(CheckingHistory.CHECKING_HISTORY.ID), true)
 val LOCATIONS_PK: UniqueKey<LocationsRecord> = Internal.createUniqueKey(Locations.LOCATIONS, DSL.name("locations_pk"), arrayOf(Locations.LOCATIONS.LOCATION_CODE), true)
 val MOVING_PKEY: UniqueKey<MovingRecord> = Internal.createUniqueKey(Moving.MOVING, DSL.name("moving_pkey"), arrayOf(Moving.MOVING.ID), true)
+val AMOEBA_PKEY_1: UniqueKey<PurchaseOrderBacklogRecord> = Internal.createUniqueKey(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG, DSL.name("amoeba_pkey_1"), arrayOf(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG.ID), true)
 val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)
 val SENDING_TRANSACTIONS_PKEY: UniqueKey<SendingTransactionsRecord> = Internal.createUniqueKey(SendingTransactions.SENDING_TRANSACTIONS, DSL.name("sending_transactions_pkey"), arrayOf(SendingTransactions.SENDING_TRANSACTIONS.ID), true)
 val SPLITTING_PKEY: UniqueKey<SplittingRecord> = Internal.createUniqueKey(Splitting.SPLITTING, DSL.name("splitting_pkey"), arrayOf(Splitting.SPLITTING.ID), true)

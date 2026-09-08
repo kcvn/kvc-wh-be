@@ -4,7 +4,7 @@ import java.time.OffsetDateTime
 
 class CheckingHistorySearchRequest {
     var poNumber: String? = null
-    var invoiceNo: String? = null
+    var invoiceNumber: String? = null
     var fromDate: OffsetDateTime? = null
     var toDate: OffsetDateTime? = null
     var status: String? = null

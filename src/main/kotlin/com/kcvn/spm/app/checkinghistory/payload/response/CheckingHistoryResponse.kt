@@ -6,7 +6,7 @@ import java.time.LocalDate
 data class CheckingHistoryResponse(
     var lotNo: String? = null,
     var poNumber: String? = null,
-    var invoiceNo: String? = null,
+    var invoiceNumber: String? = null,
     var orderDate: LocalDate? = null,
     var itemCd: String? = null,
     var itemName: String? = null,

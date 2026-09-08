@@ -72,7 +72,7 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         val writer = response.writer
         writer.append("scanned_date,form_code,po_no,imported_qty,scanned_qty,seq_no,result\n")
         productsList.forEach { item ->
-            writer.append("${item.scannedDate},${item.invoiceNo},${item.poNumber},${item.orderQty},${item.scanQty},${item.seqNo},${item.result}\n")
+            writer.append("${item.scannedDate},${item.invoiceNumber},${item.poNumber},${item.orderQty},${item.scanQty},${item.seqNo},${item.result}\n")
         }
         writer.flush()
     }

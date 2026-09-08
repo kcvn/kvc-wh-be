@@ -23,7 +23,7 @@ import java.time.ZoneOffset
 class CheckingHistoryRepository(private val context: DSLContext) : SortingRepository() {
     fun getList(request: CheckingHistorySearchRequest, pageable: Pageable) : Pair<List<CheckingHistoryResponse>, Int> {
         val keywordPoNumber = request.poNumber?.let { "%$it%" } ?: "%"
-        val keywordInvoice = request.invoiceNo?.let { "%$it%" } ?: "%"
+        val keywordInvoice = request.invoiceNumber?.let { "%$it%" } ?: "%"
 
         var sql = """
             select *,
@@ -66,7 +66,7 @@ on
             AND final_data.po_no ilike ?
         """.trimIndent()
         if (request.fromDate != null && request.toDate != null) {
-            sql += "\nAND (final_data.scan_date between '${request.fromDate?.toLocalDate()}' and '${request.toDate?.toLocalDate()}')"
+            sql += "\nAND (final_data.created_date between '${request.fromDate?.toLocalDate()}' and '${request.toDate?.toLocalDate()}')"
         }
         if (request.storageLocation != null) {
             sql += "\nAND final_data.storage_location = '${request.storageLocation}'"
@@ -84,7 +84,7 @@ on
             .map {
                 CheckingHistoryResponse(
                     poNumber = it.get("po_no", String::class.java),
-                    invoiceNo = it.get("invoice", String::class.java),
+                    invoiceNumber = it.get("invoice", String::class.java),
                     lotNo = it.get("lot_no", String::class.java),
                     orderDate = it.get("order_date", LocalDate::class.java),
                     scannedDate = it.get("created_date", LocalDate::class.java),

@@ -4,11 +4,20 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class CheckingHistoryResponse(
-    var scanDate: LocalDate? = null,
     var poNumber: String? = null,
+    var invoiceNo: String? = null,
+    var orderDate: LocalDate? = null,
+    var itemCd: String? = null,
+    var itemName: String? = null,
+    var department: String? = null,
+    var storageLocation: String? = null,
+    var unit: String? = null,
+    var itemType: String? = null,
+    var seqNo: Int? = null,
     var importQty: BigDecimal? = null,
     var scanQty: BigDecimal? = null,
-    var seqNo: Int? = null,
-    var formCode: String? = null,
-    var result: String? = null
+    var scannedDate: LocalDate? = null,
+    var scannedBy: String? = null,
+    var result: String? = null,
+    var status: String? = null
 )

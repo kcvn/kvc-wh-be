@@ -22,13 +22,13 @@ class CheckingHistoryService(
         val checkingHistoryData = checkingHistoryRepo.getList(request, pageable)
         val data = checkingHistoryData.first.map {
             CheckingHistoryResponse(
-                scanDate = it.scanDate,
+                scannedDate = it.scannedDate,
                 poNumber = it.poNumber,
                 importQty = it.importQty,
                 scanQty = it.scanQty,
                 seqNo = it.seqNo,
-                formCode = it.formCode,
-                result = getResult(it)
+                invoiceNo = it.invoiceNo,
+                result = it.result,
             )
         }
         return BasePagingResponse(

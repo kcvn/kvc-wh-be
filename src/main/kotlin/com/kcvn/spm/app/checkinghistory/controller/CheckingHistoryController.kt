@@ -4,13 +4,10 @@ import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.app.checkinghistory.service.CheckingHistoryService
-import com.kcvn.spm.app.tempcheckingimported.payload.response.TempCheckingImportedResponse
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.util.CommonUtils
-import com.opencsv.CSVWriter
-import com.opencsv.bean.StatefulBeanToCsvBuilder
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import mu.KotlinLogging
@@ -22,7 +19,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -76,7 +72,7 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         val writer = response.writer
         writer.append("scanned_date,form_code,po_no,imported_qty,scanned_qty,seq_no,result\n")
         productsList.forEach { item ->
-            writer.append("${item.scanDate},${item.formCode},${item.poNumber},${item.importQty},${item.scanQty},${item.seqNo},${item.result}\n")
+            writer.append("${item.scannedDate},${item.invoiceNo},${item.poNumber},${item.importQty},${item.scanQty},${item.seqNo},${item.result}\n")
         }
         writer.flush()
     }

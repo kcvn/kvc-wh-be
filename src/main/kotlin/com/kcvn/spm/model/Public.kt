@@ -22,6 +22,7 @@ import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
+import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
@@ -145,6 +146,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val PURCHASE_ORDER_BACKLOG: PurchaseOrderBacklog get() = PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG
 
     /**
+     * The table <code>public.receiving_checking</code>.
+     */
+    val RECEIVING_CHECKING: ReceivingChecking get() = ReceivingChecking.RECEIVING_CHECKING
+
+    /**
      * The table <code>public.receiving_transactions</code>.
      */
     val RECEIVING_TRANSACTIONS: ReceivingTransactions get() = ReceivingTransactions.RECEIVING_TRANSACTIONS
@@ -220,6 +226,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         Locations.LOCATIONS,
         Moving.MOVING,
         PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG,
+        ReceivingChecking.RECEIVING_CHECKING,
         ReceivingTransactions.RECEIVING_TRANSACTIONS,
         SendingTransactions.SENDING_TRANSACTIONS,
         Splitting.SPLITTING,

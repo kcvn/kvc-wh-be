@@ -20,29 +20,11 @@ class CheckingHistoryService(
 ) {
     fun getList(request: CheckingHistorySearchRequest, pageable: Pageable): BasePagingResponse<CheckingHistoryResponse> {
         val checkingHistoryData = checkingHistoryRepo.getList(request, pageable)
-        val data = checkingHistoryData.first.map {
-            CheckingHistoryResponse(
-                scannedDate = it.scannedDate,
-                poNumber = it.poNumber,
-                importQty = it.importQty,
-                scanQty = it.scanQty,
-                seqNo = it.seqNo,
-                invoiceNo = it.invoiceNo,
-                result = it.result,
-            )
-        }
+        val data = checkingHistoryData.first
         return BasePagingResponse(
             data,
             checkingHistoryData.second
         )
-    }
-
-    private fun getResult(data: CheckingHistory): String {
-        return when {
-            data.importQty!! < data.scanQty -> "Thua"
-            data.importQty == data.scanQty -> "Du"
-            else -> "Thieu"
-        }
     }
 
     fun save(requestList: List<CheckingHistoryRequest>) {

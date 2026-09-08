@@ -44,13 +44,18 @@ from (select
 	pob.item_type,
 	pob.order_qty,
 	coalesce(rc.scan_qty,0) as scan_qty,
-	pob.approved
+	pob.approved,
+    pob.lot_no,
+	rc.created_date,
+    coalesce(rc.seq_no,0) as seq_no
 from
 	purchase_order_backlog pob
 left join (
 	select
 		rc.order_backlog_id,
-		sum(rc.scan_qty) as scan_qty
+		sum(rc.scan_qty) as scan_qty,
+		max(rc.created_date) as created_date,
+        max(seq_no) as seq_no
 	from
 		receiving_checking rc
 	group by
@@ -80,9 +85,20 @@ on
                 CheckingHistoryResponse(
                     poNumber = it.get("po_no", String::class.java),
                     invoiceNo = it.get("invoice", String::class.java),
-                    importQty = it.get("order_qty", BigDecimal::class.java),
+                    lotNo = it.get("lot_no", String::class.java),
+                    orderDate = it.get("order_date", LocalDate::class.java),
+                    scannedDate = it.get("created_date", LocalDate::class.java),
+                    itemCd = it.get("item_code", String::class.java),
+                    itemName = it.get("item_name", String::class.java),
+                    department = it.get("prod_group", String::class.java),
+                    storageLocation = it.get("storage_location", String::class.java),
+                    unit = it.get("unit", String::class.java),
+                    itemType = it.get("item_type", String::class.java),
+                    orderQty = it.get("order_qty", BigDecimal::class.java),
                     scanQty = it.get("scan_qty", BigDecimal::class.java),
-                    seqNo = it.get("scan_qty", Int::class.java),
+                    status = it.get("approved", Boolean::class.java),
+                    result = it.get("result", Int::class.java),
+                    seqNo = it.get("seq_no", Int::class.java),
                 )
             }
         return Pair(result, result.size)

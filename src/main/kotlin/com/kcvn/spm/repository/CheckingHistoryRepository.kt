@@ -1,11 +1,13 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CheckingHistory
+import com.kcvn.spm.model.tables.pojos.ReceivingChecking
 import com.kcvn.spm.model.tables.references.CHECKING_HISTORY
 import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
 import org.jooq.DSLContext
@@ -99,6 +101,30 @@ on
                     status = it.get("approved", Boolean::class.java),
                     result = it.get("result", Int::class.java),
                     seqNo = it.get("seq_no", Int::class.java),
+                )
+            }
+        return Pair(result, result.size)
+    }
+
+    fun getListDetail(lotNo: String, pageable: Pageable) : Pair<List<CheckingHistoryDetailResponse>, Int> {
+
+        var sql = """
+            select
+		rc.lot_no,
+		rc.scan_qty
+	from
+		receiving_checking rc
+	inner join purchase_order_backlog pob 
+	on rc.order_backlog_id = pob.id 
+	where pob.lot_no = ?
+        """.trimIndent()
+        val result = context
+            .resultQuery(sql, lotNo)
+            .fetch()
+            .map {
+                CheckingHistoryDetailResponse(
+                    lotNo = it.get("lot_no", String::class.java),
+                    scanQty = it.get("scan_qty", BigDecimal::class.java),
                 )
             }
         return Pair(result, result.size)

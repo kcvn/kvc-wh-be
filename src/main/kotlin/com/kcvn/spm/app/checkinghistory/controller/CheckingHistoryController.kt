@@ -2,6 +2,7 @@ package com.kcvn.spm.app.checkinghistory.controller
 
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.app.checkinghistory.service.CheckingHistoryService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -36,6 +37,20 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {
         val result = checkingHistoryService.getList(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-list-detail")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getListDetail(
+        lotNo: String,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<CheckingHistoryDetailResponse>> {
+        val result = checkingHistoryService.getListDetail(lotNo, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

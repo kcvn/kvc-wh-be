@@ -2,7 +2,9 @@ package com.kcvn.spm.app.purchaseOrderBacklog.controller
 
 import com.kcvn.spm.app.purchaseOrderBacklog.service.PurchaseOrderBacklogService
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
+import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -20,6 +22,12 @@ class PurchaseOrderBacklogController(private val purchaseOrderBacklogService: Pu
     ): ResponseEntity<BaseResponse<Int>> {
         val data = purchaseOrderBacklogService.importPurchaseOrderBacklog(file)
         return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @GetMapping("get-list-for-dropdown")
+    fun getOrderList(@RequestParam status: String? = "ALL", isIncludeGe3Days: Boolean?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = purchaseOrderBacklogService.getListForDropDown(status ?: "ALL", isIncludeGe3Days ?: false)
+        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 
     @GetMapping("/download-template")

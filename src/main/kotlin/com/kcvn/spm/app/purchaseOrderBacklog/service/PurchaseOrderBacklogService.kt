@@ -4,6 +4,7 @@ import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
@@ -116,5 +117,16 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
         )
 
         return BaseResponse(response)
+    }
+
+    fun getListForDropDown(status: String, isIncludeGe1Days: Boolean): BaseResponse<List<DropdownResponse>> {
+        val listOrder = purchaseOrderBacklogRepo.getListForDropDown(status, isIncludeGe1Days)
+        val dropDownList= listOrder.map { order ->
+            DropdownResponse(
+                "${order.invoice} - ${order.createdDate?.toLocalDate()?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
+                "${order.invoice} - ${order.createdDate?.toLocalDate()?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
+            )
+        }.toMutableList()
+        return BaseResponse(data = dropDownList)
     }
 }

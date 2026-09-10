@@ -32,7 +32,9 @@ data class PurchaseOrderBacklog(
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
-    var lotNo: String? = null
+    var lotNo: String? = null,
+    var approved: Boolean? = null,
+    var synced: Boolean? = null
 ): Serializable {
 
 
@@ -152,6 +154,18 @@ data class PurchaseOrderBacklog(
         }
         else if (this.lotNo != o.lotNo)
             return false
+        if (this.approved == null) {
+            if (o.approved != null)
+                return false
+        }
+        else if (this.approved != o.approved)
+            return false
+        if (this.synced == null) {
+            if (o.synced != null)
+                return false
+        }
+        else if (this.synced != o.synced)
+            return false
         return true
     }
 
@@ -176,6 +190,8 @@ data class PurchaseOrderBacklog(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
+        result = prime * result + (if (this.approved == null) 0 else this.approved.hashCode())
+        result = prime * result + (if (this.synced == null) 0 else this.synced.hashCode())
         return result
     }
 
@@ -200,6 +216,8 @@ data class PurchaseOrderBacklog(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(lotNo)
+        sb.append(", ").append(approved)
+        sb.append(", ").append(synced)
 
         sb.append(")")
         return sb.toString()

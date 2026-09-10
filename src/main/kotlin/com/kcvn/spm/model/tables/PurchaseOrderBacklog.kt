@@ -13,6 +13,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 
 import kotlin.collections.Collection
+import kotlin.collections.List
 
 import org.jooq.Condition
 import org.jooq.Field
@@ -150,17 +151,27 @@ open class PurchaseOrderBacklog(
     /**
      * The column <code>public.purchase_order_backlog.updated_date</code>.
      */
-    val UPDATED_DATE: TableField<PurchaseOrderBacklogRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
+    val UPDATED_DATE: TableField<PurchaseOrderBacklogRecord, OffsetDateTime?> = createField(DSL.name("updated_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "")
 
     /**
      * The column <code>public.purchase_order_backlog.updated_by</code>.
      */
-    val UPDATED_BY: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100).nullable(false), this, "")
+    val UPDATED_BY: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.purchase_order_backlog.lot_no</code>.
      */
-    val LOT_NO: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10), this, "")
+    val LOT_NO: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10).nullable(false), this, "")
+
+    /**
+     * The column <code>public.purchase_order_backlog.approved</code>.
+     */
+    val APPROVED: TableField<PurchaseOrderBacklogRecord, Boolean?> = createField(DSL.name("approved"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
+    /**
+     * The column <code>public.purchase_order_backlog.synced</code>.
+     */
+    val SYNCED: TableField<PurchaseOrderBacklogRecord, Boolean?> = createField(DSL.name("synced"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     private constructor(alias: Name, aliased: Table<PurchaseOrderBacklogRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<PurchaseOrderBacklogRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

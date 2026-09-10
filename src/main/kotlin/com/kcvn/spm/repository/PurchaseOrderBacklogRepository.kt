@@ -10,6 +10,7 @@ import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -19,11 +20,12 @@ import java.time.ZoneOffset
 @Repository
 class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingRepository() {
 
-    fun findLotOfPoInvoiceOnDay(poNo: String, invoice: String, day: String): PurchaseOrderBacklog? {
+    fun findLotOfPoInvoiceOnDay(seqNo: BigDecimal, poNo: String, invoice: String, day: String): PurchaseOrderBacklog? {
         return context.selectFrom(PURCHASE_ORDER_BACKLOG)
             .where(
                 PURCHASE_ORDER_BACKLOG.PO_NO.eq(poNo)
                     .and (PURCHASE_ORDER_BACKLOG.INVOICE.eq(invoice))
+                    .and (PURCHASE_ORDER_BACKLOG.SEQ_NO.eq(seqNo))
                     .and (PURCHASE_ORDER_BACKLOG.LOT_NO.contains(day))
             )
             .fetchInto(PurchaseOrderBacklog::class.java)
@@ -53,6 +55,25 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
                     PURCHASE_ORDER_BACKLOG.CREATED_DATE.lt(tomorrow)
                     .and(if (isIncludeGe1Days) DSL.noCondition() else PURCHASE_ORDER_BACKLOG.CREATED_DATE.ge(threeDaysAgo))
                         .and (if (status == "ALL") DSL.noCondition() else PURCHASE_ORDER_BACKLOG.APPROVED.eq(status.toBoolean()))
+            )
+            .orderBy(PURCHASE_ORDER_BACKLOG.CREATED_DATE.desc())
+            .fetchInto(PurchaseOrderBacklog::class.java)
+            .filterNotNull()
+    }
+
+    fun getListByInvoiceSeqNoAndDate(invoiceNumber: String, createdDate: LocalDate, status: String): List<PurchaseOrderBacklog> {
+        val offset = OffsetDateTime.now().offset
+        val startOfDay = OffsetDateTime.of(createdDate, LocalTime.MIDNIGHT, offset)
+        val nextDate = startOfDay.plusDays(1)
+        return context.select(PURCHASE_ORDER_BACKLOG)
+            .from(PURCHASE_ORDER_BACKLOG)
+            .where(
+                //.and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
+                //.and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(true) else TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(false))
+                PURCHASE_ORDER_BACKLOG.INVOICE.eq(invoiceNumber)
+                    .and(PURCHASE_ORDER_BACKLOG.CREATED_DATE.ge(startOfDay))
+                    .and(PURCHASE_ORDER_BACKLOG.CREATED_DATE.lt(nextDate))
+                    .and (if (status == "ALL") DSL.noCondition() else PURCHASE_ORDER_BACKLOG.APPROVED.eq(status.toBoolean()))
             )
             .orderBy(PURCHASE_ORDER_BACKLOG.CREATED_DATE.desc())
             .fetchInto(PurchaseOrderBacklog::class.java)

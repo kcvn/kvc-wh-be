@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.purchaseOrderBacklog.service
 
+import com.kcvn.spm.app.purchaseOrderBacklog.payload.response.PurchaseOrderBacklogResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.helper.ExcelHelper
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -38,6 +40,7 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
             var count = 0
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val seqNo = ExcelHelper.getCellValueAmoeba(row, 0).toBigDecimal()
                 val poNo = ExcelHelper.getCellValueAmoeba(row, 28)
                 val invoice = ExcelHelper.getCellValueAmoeba(row, 1)
                 val productionGroup = ExcelHelper.getCellValueAmoeba(row, 12)
@@ -53,10 +56,10 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
                     else -> "Z"
                 }
 
-                val lotNo = generateLotNo(invoice, poNo, productionGroupCode)
+                val lotNo = generateLotNo(seqNo, invoice, poNo, productionGroupCode)
 
                 val data = PurchaseOrderBacklog(
-                    seqNo = ExcelHelper.getCellValueAmoeba(row, 0).toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    seqNo = seqNo,
                     orderDate = ExcelHelper.getCellValueDate(row, 5),
                     itemCode = ExcelHelper.getCellValueAmoeba(row, 6),
                     itemName = ExcelHelper.getCellValueAmoeba(row, 7),
@@ -87,11 +90,11 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
         }
     }
 
-    fun generateLotNo(invoice: String, poNo: String, productionGroup: String): Pair<String,String> {
+    fun generateLotNo(seqNo: BigDecimal, invoice: String, poNo: String, productionGroup: String): Pair<String,String> {
         val currentDate = OffsetDateTime.now().toLocalDate()
             .format(DateTimeFormatter.ofPattern("yyMMdd"))
         val latestLot = purchaseOrderBacklogRepo.findLatestLotOfDay(currentDate, productionGroup)
-        val existedLot = purchaseOrderBacklogRepo.findLotOfPoInvoiceOnDay(poNo, invoice, currentDate)
+        val existedLot = purchaseOrderBacklogRepo.findLotOfPoInvoiceOnDay(seqNo, poNo, invoice, currentDate)
 
         if (latestLot == null) //neu la lot dau cua ngay cua 1 bo phan thi mac dinh la 000
              return "Insert" to "$productionGroup${currentDate}000"
@@ -123,10 +126,31 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
         val listOrder = purchaseOrderBacklogRepo.getListForDropDown(status, isIncludeGe1Days)
         val dropDownList= listOrder.map { order ->
             DropdownResponse(
-                "${order.invoice} - ${order.createdDate?.toLocalDate()?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
-                "${order.invoice} - ${order.createdDate?.toLocalDate()?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
+                "${order.invoice} ~ ${
+                    order.createdDate?.toLocalDate()}",
+                "${order.invoice} ~ ${
+                    order.createdDate?.toLocalDate()?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
             )
         }.toMutableList()
         return BaseResponse(data = dropDownList)
+    }
+
+    fun getListByInvoiceSeqNoAndDate(invoiceNumber: String, createdDate: LocalDate, status: String): List<PurchaseOrderBacklogResponse> {
+        val listOrder = purchaseOrderBacklogRepo.getListByInvoiceSeqNoAndDate(invoiceNumber, createdDate, status)
+        return listOrder.map { PurchaseOrderBacklogResponse(
+            seqNo = it.seqNo?.toInt() ?: 0,
+            orderDate = it.orderDate ?: LocalDate.MIN,
+            itemCode = it.itemCode.orEmpty(),
+            itemName = it.itemName.orEmpty(),
+            prodGroup = it.prodGroup.orEmpty(),
+            storageLocation = it.storageLocation.orEmpty(),
+            orderQty = it.orderQty ?: BigDecimal.ZERO,
+            unit = it.unit.orEmpty(),
+            poNumber = it.poNo.orEmpty(),
+            invoiceNumber = it.invoice.orEmpty(),
+            detail = it.detail.orEmpty(),
+            itemType = it.itemType.orEmpty(),
+            lotNo = it.lotNo.orEmpty(),
+        ) }
     }
 }

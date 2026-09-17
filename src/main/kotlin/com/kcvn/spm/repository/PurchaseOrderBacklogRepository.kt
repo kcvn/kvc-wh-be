@@ -23,8 +23,8 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
     fun findLotOfPoInvoiceOnDay(seqNo: BigDecimal, poNo: String, invoice: String, day: String): PurchaseOrderBacklog? {
         return context.selectFrom(PURCHASE_ORDER_BACKLOG)
             .where(
-                PURCHASE_ORDER_BACKLOG.PO_NO.eq(poNo)
-                    .and (PURCHASE_ORDER_BACKLOG.INVOICE.eq(invoice))
+                PURCHASE_ORDER_BACKLOG.PO_NUMBER.eq(poNo)
+                    .and (PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER.eq(invoice))
                     .and (PURCHASE_ORDER_BACKLOG.SEQ_NO.eq(seqNo))
                     .and (PURCHASE_ORDER_BACKLOG.LOT_NO.contains(day))
             )
@@ -70,7 +70,7 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
             .where(
                 //.and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
                 //.and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(true) else TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(false))
-                PURCHASE_ORDER_BACKLOG.INVOICE.eq(invoiceNumber)
+                PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER.eq(invoiceNumber)
                     .and(PURCHASE_ORDER_BACKLOG.CREATED_DATE.ge(startOfDay))
                     .and(PURCHASE_ORDER_BACKLOG.CREATED_DATE.lt(nextDate))
                     .and (if (status == "ALL") DSL.noCondition() else PURCHASE_ORDER_BACKLOG.APPROVED.eq(status.toBoolean()))

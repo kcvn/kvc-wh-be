@@ -56,11 +56,11 @@ open class PurchaseOrderBacklogRecord() : UpdatableRecordImpl<PurchaseOrderBackl
         set(value): Unit = set(8, value)
         get(): String? = get(8) as String?
 
-    open var poNo: String?
+    open var poNumber: String?
         set(value): Unit = set(9, value)
         get(): String? = get(9) as String?
 
-    open var invoice: String?
+    open var invoiceNumber: String?
         set(value): Unit = set(10, value)
         get(): String? = get(10) as String?
 
@@ -109,7 +109,7 @@ open class PurchaseOrderBacklogRecord() : UpdatableRecordImpl<PurchaseOrderBackl
     /**
      * Create a detached, initialised PurchaseOrderBacklogRecord
      */
-    constructor(id: String? = null, seqNo: BigDecimal? = null, orderDate: LocalDate? = null, itemCode: String? = null, itemName: String? = null, prodGroup: String? = null, storageLocation: String? = null, orderQty: BigDecimal? = null, unit: String? = null, poNo: String? = null, invoice: String? = null, detail: String? = null, itemType: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, lotNo: String? = null, approved: Boolean? = null, synced: Boolean? = null): this() {
+    constructor(id: String? = null, seqNo: BigDecimal? = null, orderDate: LocalDate? = null, itemCode: String? = null, itemName: String? = null, prodGroup: String? = null, storageLocation: String? = null, orderQty: BigDecimal? = null, unit: String? = null, poNumber: String? = null, invoiceNumber: String? = null, detail: String? = null, itemType: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, lotNo: String? = null, approved: Boolean? = null, synced: Boolean? = null): this() {
         this.id = id
         this.seqNo = seqNo
         this.orderDate = orderDate
@@ -119,8 +119,8 @@ open class PurchaseOrderBacklogRecord() : UpdatableRecordImpl<PurchaseOrderBackl
         this.storageLocation = storageLocation
         this.orderQty = orderQty
         this.unit = unit
-        this.poNo = poNo
-        this.invoice = invoice
+        this.poNumber = poNumber
+        this.invoiceNumber = invoiceNumber
         this.detail = detail
         this.itemType = itemType
         this.createdDate = createdDate
@@ -147,8 +147,8 @@ open class PurchaseOrderBacklogRecord() : UpdatableRecordImpl<PurchaseOrderBackl
             this.storageLocation = value.storageLocation
             this.orderQty = value.orderQty
             this.unit = value.unit
-            this.poNo = value.poNo
-            this.invoice = value.invoice
+            this.poNumber = value.poNumber
+            this.invoiceNumber = value.invoiceNumber
             this.detail = value.detail
             this.itemType = value.itemType
             this.createdDate = value.createdDate

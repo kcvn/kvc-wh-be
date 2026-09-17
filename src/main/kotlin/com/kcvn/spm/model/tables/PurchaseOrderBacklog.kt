@@ -6,6 +6,7 @@ package com.kcvn.spm.model.tables
 
 import com.kcvn.spm.model.Public
 import com.kcvn.spm.model.keys.AMOEBA_PKEY_1
+import com.kcvn.spm.model.keys.PURCHASE_ORDER_BACKLOG_UN
 import com.kcvn.spm.model.tables.records.PurchaseOrderBacklogRecord
 
 import java.math.BigDecimal
@@ -119,14 +120,14 @@ open class PurchaseOrderBacklog(
     val UNIT: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("unit"), SQLDataType.VARCHAR(5).nullable(false), this, "")
 
     /**
-     * The column <code>public.purchase_order_backlog.po_no</code>.
+     * The column <code>public.purchase_order_backlog.po_number</code>.
      */
-    val PO_NO: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("po_no"), SQLDataType.VARCHAR(11).nullable(false), this, "")
+    val PO_NUMBER: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("po_number"), SQLDataType.VARCHAR(11).nullable(false), this, "")
 
     /**
-     * The column <code>public.purchase_order_backlog.invoice</code>.
+     * The column <code>public.purchase_order_backlog.invoice_number</code>.
      */
-    val INVOICE: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("invoice"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+    val INVOICE_NUMBER: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("invoice_number"), SQLDataType.VARCHAR(30).nullable(false), this, "")
 
     /**
      * The column <code>public.purchase_order_backlog.detail</code>.
@@ -195,6 +196,7 @@ open class PurchaseOrderBacklog(
     constructor(): this(DSL.name("purchase_order_backlog"), null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<PurchaseOrderBacklogRecord> = AMOEBA_PKEY_1
+    override fun getUniqueKeys(): List<UniqueKey<PurchaseOrderBacklogRecord>> = listOf(PURCHASE_ORDER_BACKLOG_UN)
     override fun `as`(alias: String): PurchaseOrderBacklog = PurchaseOrderBacklog(DSL.name(alias), this)
     override fun `as`(alias: Name): PurchaseOrderBacklog = PurchaseOrderBacklog(alias, this)
     override fun `as`(alias: Table<*>): PurchaseOrderBacklog = PurchaseOrderBacklog(alias.qualifiedName, this)

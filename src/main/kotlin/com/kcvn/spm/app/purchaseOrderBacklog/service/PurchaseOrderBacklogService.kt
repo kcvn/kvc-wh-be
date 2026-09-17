@@ -67,8 +67,8 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
                     storageLocation = ExcelHelper.getCellValueAmoeba(row, 13),
                     orderQty = ExcelHelper.getCellValueAmoeba(row, 14).toBigDecimalOrNull() ?: BigDecimal.ZERO,
                     unit = ExcelHelper.getCellValueAmoeba(row, 15),
-                    poNo = poNo,
-                    invoice = invoice,
+                    poNumber = poNo,
+                    invoiceNumber = invoice,
                     detail = ExcelHelper.getCellValueAmoeba(row, 29),
                     itemType = ExcelHelper.getCellValueAmoeba(row, 63),
                     lotNo = lotNo.second
@@ -126,9 +126,9 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
         val listOrder = purchaseOrderBacklogRepo.getListForDropDown(status, isIncludeGe1Days)
         val dropDownList= listOrder.map { order ->
             DropdownResponse(
-                "${order.invoice} ~ ${
+                "${order.invoiceNumber} ~ ${
                     order.createdDate?.toLocalDate()}",
-                "${order.invoice} ~ ${
+                "${order.invoiceNumber} ~ ${
                     order.createdDate?.toLocalDate()?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
             )
         }.toMutableList()
@@ -146,8 +146,8 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
             storageLocation = it.storageLocation.orEmpty(),
             orderQty = it.orderQty ?: BigDecimal.ZERO,
             unit = it.unit.orEmpty(),
-            poNumber = it.poNo.orEmpty(),
-            invoiceNumber = it.invoice.orEmpty(),
+            poNumber = it.poNumber.orEmpty(),
+            invoiceNumber = it.invoiceNumber.orEmpty(),
             detail = it.detail.orEmpty(),
             itemType = it.itemType.orEmpty(),
             lotNo = it.lotNo.orEmpty(),

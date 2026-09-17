@@ -24,8 +24,8 @@ data class PurchaseOrderBacklog(
     var storageLocation: String? = null,
     var orderQty: BigDecimal? = null,
     var unit: String? = null,
-    var poNo: String? = null,
-    var invoice: String? = null,
+    var poNumber: String? = null,
+    var invoiceNumber: String? = null,
     var detail: String? = null,
     var itemType: String? = null,
     var createdDate: OffsetDateTime? = null,
@@ -100,17 +100,17 @@ data class PurchaseOrderBacklog(
         }
         else if (this.unit != o.unit)
             return false
-        if (this.poNo == null) {
-            if (o.poNo != null)
+        if (this.poNumber == null) {
+            if (o.poNumber != null)
                 return false
         }
-        else if (this.poNo != o.poNo)
+        else if (this.poNumber != o.poNumber)
             return false
-        if (this.invoice == null) {
-            if (o.invoice != null)
+        if (this.invoiceNumber == null) {
+            if (o.invoiceNumber != null)
                 return false
         }
-        else if (this.invoice != o.invoice)
+        else if (this.invoiceNumber != o.invoiceNumber)
             return false
         if (this.detail == null) {
             if (o.detail != null)
@@ -181,8 +181,8 @@ data class PurchaseOrderBacklog(
         result = prime * result + (if (this.storageLocation == null) 0 else this.storageLocation.hashCode())
         result = prime * result + (if (this.orderQty == null) 0 else this.orderQty.hashCode())
         result = prime * result + (if (this.unit == null) 0 else this.unit.hashCode())
-        result = prime * result + (if (this.poNo == null) 0 else this.poNo.hashCode())
-        result = prime * result + (if (this.invoice == null) 0 else this.invoice.hashCode())
+        result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
+        result = prime * result + (if (this.invoiceNumber == null) 0 else this.invoiceNumber.hashCode())
         result = prime * result + (if (this.detail == null) 0 else this.detail.hashCode())
         result = prime * result + (if (this.itemType == null) 0 else this.itemType.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
@@ -207,8 +207,8 @@ data class PurchaseOrderBacklog(
         sb.append(", ").append(storageLocation)
         sb.append(", ").append(orderQty)
         sb.append(", ").append(unit)
-        sb.append(", ").append(poNo)
-        sb.append(", ").append(invoice)
+        sb.append(", ").append(poNumber)
+        sb.append(", ").append(invoiceNumber)
         sb.append(", ").append(detail)
         sb.append(", ").append(itemType)
         sb.append(", ").append(createdDate)

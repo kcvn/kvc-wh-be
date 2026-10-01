@@ -26,19 +26,19 @@ import java.time.format.DateTimeFormatter
 @RestController
 @RequestMapping("/api/checking-history")
 class CheckingHistoryController(private val checkingHistoryService: CheckingHistoryService) {
-//    @GetMapping("/get-list")
-//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-//    fun getList(
-//        request: CheckingHistorySearchRequest,
-//        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
-//        @SortDefault.SortDefaults(
-//            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
-//        )
-//        pageable: Pageable
-//    ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {
-//        val result = checkingHistoryService.getList(request, pageable)
-//        return ResponseEntity(result, HttpStatus.OK)
-//    }
+    @GetMapping("/get-list")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getList(
+        request: CheckingHistorySearchRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {
+        val result = checkingHistoryService.getList(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
 //
 //    @GetMapping("/get-list-detail")
 //    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")

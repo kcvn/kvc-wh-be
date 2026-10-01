@@ -4,7 +4,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class CheckingHistoryResponse(
-    var lotNo: String? = null,
     var poNumber: String? = null,
     var invoiceNumber: String? = null,
     var orderDate: LocalDate? = null,

@@ -87,7 +87,6 @@ on
                 CheckingHistoryResponse(
                     poNumber = it.get("po_no", String::class.java),
                     invoiceNumber = it.get("invoice", String::class.java),
-                    lotNo = it.get("lot_no", String::class.java),
                     orderDate = it.get("order_date", LocalDate::class.java),
                     scannedDate = it.get("created_date", LocalDate::class.java),
                     itemCd = it.get("item_code", String::class.java),

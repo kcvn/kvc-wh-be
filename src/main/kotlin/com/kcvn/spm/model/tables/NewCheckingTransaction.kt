@@ -89,9 +89,19 @@ open class NewCheckingTransaction(
     val PO_NUMBER: TableField<NewCheckingTransactionRecord, String?> = createField(DSL.name("po_number"), SQLDataType.VARCHAR(30).nullable(false), this, "")
 
     /**
-     * The column <code>public.new_checking_transaction.scan_qty</code>.
+     * The column <code>public.new_checking_transaction.department</code>.
      */
-    val SCAN_QTY: TableField<NewCheckingTransactionRecord, BigDecimal?> = createField(DSL.name("scan_qty"), SQLDataType.NUMERIC, this, "")
+    val DEPARTMENT: TableField<NewCheckingTransactionRecord, String?> = createField(DSL.name("department"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+
+    /**
+     * The column <code>public.new_checking_transaction.storage_location</code>.
+     */
+    val STORAGE_LOCATION: TableField<NewCheckingTransactionRecord, String?> = createField(DSL.name("storage_location"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+
+    /**
+     * The column <code>public.new_checking_transaction.item_type</code>.
+     */
+    val ITEM_TYPE: TableField<NewCheckingTransactionRecord, String?> = createField(DSL.name("item_type"), SQLDataType.VARCHAR(30).nullable(false), this, "")
 
     /**
      * The column <code>public.new_checking_transaction.lot_no</code>.
@@ -99,19 +109,34 @@ open class NewCheckingTransaction(
     val LOT_NO: TableField<NewCheckingTransactionRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10).nullable(false), this, "")
 
     /**
-     * The column <code>public.new_checking_transaction.check_times</code>.
-     */
-    val CHECK_TIMES: TableField<NewCheckingTransactionRecord, Int?> = createField(DSL.name("check_times"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("1"), SQLDataType.INTEGER)), this, "")
-
-    /**
      * The column <code>public.new_checking_transaction.receiving_date</code>.
      */
     val RECEIVING_DATE: TableField<NewCheckingTransactionRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
 
     /**
+     * The column <code>public.new_checking_transaction.scan_qty</code>.
+     */
+    val SCAN_QTY: TableField<NewCheckingTransactionRecord, BigDecimal?> = createField(DSL.name("scan_qty"), SQLDataType.NUMERIC, this, "")
+
+    /**
+     * The column <code>public.new_checking_transaction.check_times</code>.
+     */
+    val CHECK_TIMES: TableField<NewCheckingTransactionRecord, Int?> = createField(DSL.name("check_times"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("1"), SQLDataType.INTEGER)), this, "")
+
+    /**
      * The column <code>public.new_checking_transaction.specify_invoice</code>.
      */
     val SPECIFY_INVOICE: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("specify_invoice"), SQLDataType.BOOLEAN, this, "")
+
+    /**
+     * The column <code>public.new_checking_transaction.is_approve</code>.
+     */
+    val IS_APPROVE: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("is_approve"), SQLDataType.BOOLEAN, this, "")
+
+    /**
+     * The column <code>public.new_checking_transaction.is_synced_sap</code>.
+     */
+    val IS_SYNCED_SAP: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("is_synced_sap"), SQLDataType.BOOLEAN, this, "")
 
     /**
      * The column <code>public.new_checking_transaction.created_date</code>.

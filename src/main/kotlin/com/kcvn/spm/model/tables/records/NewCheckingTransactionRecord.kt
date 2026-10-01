@@ -32,45 +32,69 @@ open class NewCheckingTransactionRecord() : UpdatableRecordImpl<NewCheckingTrans
         set(value): Unit = set(2, value)
         get(): String? = get(2) as String?
 
-    open var scanQty: BigDecimal?
+    open var department: String?
         set(value): Unit = set(3, value)
-        get(): BigDecimal? = get(3) as BigDecimal?
+        get(): String? = get(3) as String?
 
-    open var lotNo: String?
+    open var storageLocation: String?
         set(value): Unit = set(4, value)
         get(): String? = get(4) as String?
 
-    open var checkTimes: Int?
+    open var itemType: String?
         set(value): Unit = set(5, value)
-        get(): Int? = get(5) as Int?
+        get(): String? = get(5) as String?
+
+    open var lotNo: String?
+        set(value): Unit = set(6, value)
+        get(): String? = get(6) as String?
 
     open var receivingDate: LocalDate?
-        set(value): Unit = set(6, value)
-        get(): LocalDate? = get(6) as LocalDate?
+        set(value): Unit = set(7, value)
+        get(): LocalDate? = get(7) as LocalDate?
+
+    open var scanQty: BigDecimal?
+        set(value): Unit = set(8, value)
+        get(): BigDecimal? = get(8) as BigDecimal?
+
+    open var checkTimes: Int?
+        set(value): Unit = set(9, value)
+        get(): Int? = get(9) as Int?
 
     open var specifyInvoice: Boolean?
-        set(value): Unit = set(7, value)
-        get(): Boolean? = get(7) as Boolean?
+        set(value): Unit = set(10, value)
+        get(): Boolean? = get(10) as Boolean?
+
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsApprove")
+    open var isApprove: Boolean?
+        set(value): Unit = set(11, value)
+        get(): Boolean? = get(11) as Boolean?
+
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsSyncedSap")
+    open var isSyncedSap: Boolean?
+        set(value): Unit = set(12, value)
+        get(): Boolean? = get(12) as Boolean?
 
     open var createdDate: OffsetDateTime?
-        set(value): Unit = set(8, value)
-        get(): OffsetDateTime? = get(8) as OffsetDateTime?
+        set(value): Unit = set(13, value)
+        get(): OffsetDateTime? = get(13) as OffsetDateTime?
 
     open var createdBy: String?
-        set(value): Unit = set(9, value)
-        get(): String? = get(9) as String?
+        set(value): Unit = set(14, value)
+        get(): String? = get(14) as String?
 
     open var updatedDate: OffsetDateTime?
-        set(value): Unit = set(10, value)
-        get(): OffsetDateTime? = get(10) as OffsetDateTime?
+        set(value): Unit = set(15, value)
+        get(): OffsetDateTime? = get(15) as OffsetDateTime?
 
     open var updatedBy: String?
-        set(value): Unit = set(11, value)
-        get(): String? = get(11) as String?
+        set(value): Unit = set(16, value)
+        get(): String? = get(16) as String?
 
     open var formCode: String?
-        set(value): Unit = set(12, value)
-        get(): String? = get(12) as String?
+        set(value): Unit = set(17, value)
+        get(): String? = get(17) as String?
 
     // -------------------------------------------------------------------------
     // Primary key information
@@ -81,15 +105,20 @@ open class NewCheckingTransactionRecord() : UpdatableRecordImpl<NewCheckingTrans
     /**
      * Create a detached, initialised NewCheckingTransactionRecord
      */
-    constructor(id: String? = null, invoiceNumber: String? = null, poNumber: String? = null, scanQty: BigDecimal? = null, lotNo: String? = null, checkTimes: Int? = null, receivingDate: LocalDate? = null, specifyInvoice: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, formCode: String? = null): this() {
+    constructor(id: String? = null, invoiceNumber: String? = null, poNumber: String? = null, department: String? = null, storageLocation: String? = null, itemType: String? = null, lotNo: String? = null, receivingDate: LocalDate? = null, scanQty: BigDecimal? = null, checkTimes: Int? = null, specifyInvoice: Boolean? = null, isApprove: Boolean? = null, isSyncedSap: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, formCode: String? = null): this() {
         this.id = id
         this.invoiceNumber = invoiceNumber
         this.poNumber = poNumber
-        this.scanQty = scanQty
+        this.department = department
+        this.storageLocation = storageLocation
+        this.itemType = itemType
         this.lotNo = lotNo
-        this.checkTimes = checkTimes
         this.receivingDate = receivingDate
+        this.scanQty = scanQty
+        this.checkTimes = checkTimes
         this.specifyInvoice = specifyInvoice
+        this.isApprove = isApprove
+        this.isSyncedSap = isSyncedSap
         this.createdDate = createdDate
         this.createdBy = createdBy
         this.updatedDate = updatedDate
@@ -106,11 +135,16 @@ open class NewCheckingTransactionRecord() : UpdatableRecordImpl<NewCheckingTrans
             this.id = value.id
             this.invoiceNumber = value.invoiceNumber
             this.poNumber = value.poNumber
-            this.scanQty = value.scanQty
+            this.department = value.department
+            this.storageLocation = value.storageLocation
+            this.itemType = value.itemType
             this.lotNo = value.lotNo
-            this.checkTimes = value.checkTimes
             this.receivingDate = value.receivingDate
+            this.scanQty = value.scanQty
+            this.checkTimes = value.checkTimes
             this.specifyInvoice = value.specifyInvoice
+            this.isApprove = value.isApprove
+            this.isSyncedSap = value.isSyncedSap
             this.createdDate = value.createdDate
             this.createdBy = value.createdBy
             this.updatedDate = value.updatedDate

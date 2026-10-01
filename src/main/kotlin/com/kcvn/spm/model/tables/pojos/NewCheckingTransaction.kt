@@ -18,11 +18,20 @@ data class NewCheckingTransaction(
     var id: String? = null,
     var invoiceNumber: String? = null,
     var poNumber: String? = null,
-    var scanQty: BigDecimal? = null,
+    var department: String? = null,
+    var storageLocation: String? = null,
+    var itemType: String? = null,
     var lotNo: String? = null,
-    var checkTimes: Int? = null,
     var receivingDate: LocalDate? = null,
+    var scanQty: BigDecimal? = null,
+    var checkTimes: Int? = null,
     var specifyInvoice: Boolean? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsApprove")
+    var isApprove: Boolean? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsSyncedSap")
+    var isSyncedSap: Boolean? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
@@ -57,11 +66,23 @@ data class NewCheckingTransaction(
         }
         else if (this.poNumber != o.poNumber)
             return false
-        if (this.scanQty == null) {
-            if (o.scanQty != null)
+        if (this.department == null) {
+            if (o.department != null)
                 return false
         }
-        else if (this.scanQty != o.scanQty)
+        else if (this.department != o.department)
+            return false
+        if (this.storageLocation == null) {
+            if (o.storageLocation != null)
+                return false
+        }
+        else if (this.storageLocation != o.storageLocation)
+            return false
+        if (this.itemType == null) {
+            if (o.itemType != null)
+                return false
+        }
+        else if (this.itemType != o.itemType)
             return false
         if (this.lotNo == null) {
             if (o.lotNo != null)
@@ -69,23 +90,41 @@ data class NewCheckingTransaction(
         }
         else if (this.lotNo != o.lotNo)
             return false
-        if (this.checkTimes == null) {
-            if (o.checkTimes != null)
-                return false
-        }
-        else if (this.checkTimes != o.checkTimes)
-            return false
         if (this.receivingDate == null) {
             if (o.receivingDate != null)
                 return false
         }
         else if (this.receivingDate != o.receivingDate)
             return false
+        if (this.scanQty == null) {
+            if (o.scanQty != null)
+                return false
+        }
+        else if (this.scanQty != o.scanQty)
+            return false
+        if (this.checkTimes == null) {
+            if (o.checkTimes != null)
+                return false
+        }
+        else if (this.checkTimes != o.checkTimes)
+            return false
         if (this.specifyInvoice == null) {
             if (o.specifyInvoice != null)
                 return false
         }
         else if (this.specifyInvoice != o.specifyInvoice)
+            return false
+        if (this.isApprove == null) {
+            if (o.isApprove != null)
+                return false
+        }
+        else if (this.isApprove != o.isApprove)
+            return false
+        if (this.isSyncedSap == null) {
+            if (o.isSyncedSap != null)
+                return false
+        }
+        else if (this.isSyncedSap != o.isSyncedSap)
             return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
@@ -126,11 +165,16 @@ data class NewCheckingTransaction(
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.invoiceNumber == null) 0 else this.invoiceNumber.hashCode())
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
-        result = prime * result + (if (this.scanQty == null) 0 else this.scanQty.hashCode())
+        result = prime * result + (if (this.department == null) 0 else this.department.hashCode())
+        result = prime * result + (if (this.storageLocation == null) 0 else this.storageLocation.hashCode())
+        result = prime * result + (if (this.itemType == null) 0 else this.itemType.hashCode())
         result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
-        result = prime * result + (if (this.checkTimes == null) 0 else this.checkTimes.hashCode())
         result = prime * result + (if (this.receivingDate == null) 0 else this.receivingDate.hashCode())
+        result = prime * result + (if (this.scanQty == null) 0 else this.scanQty.hashCode())
+        result = prime * result + (if (this.checkTimes == null) 0 else this.checkTimes.hashCode())
         result = prime * result + (if (this.specifyInvoice == null) 0 else this.specifyInvoice.hashCode())
+        result = prime * result + (if (this.isApprove == null) 0 else this.isApprove.hashCode())
+        result = prime * result + (if (this.isSyncedSap == null) 0 else this.isSyncedSap.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
@@ -145,11 +189,16 @@ data class NewCheckingTransaction(
         sb.append(id)
         sb.append(", ").append(invoiceNumber)
         sb.append(", ").append(poNumber)
-        sb.append(", ").append(scanQty)
+        sb.append(", ").append(department)
+        sb.append(", ").append(storageLocation)
+        sb.append(", ").append(itemType)
         sb.append(", ").append(lotNo)
-        sb.append(", ").append(checkTimes)
         sb.append(", ").append(receivingDate)
+        sb.append(", ").append(scanQty)
+        sb.append(", ").append(checkTimes)
         sb.append(", ").append(specifyInvoice)
+        sb.append(", ").append(isApprove)
+        sb.append(", ").append(isSyncedSap)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)

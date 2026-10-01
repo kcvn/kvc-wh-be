@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.math.BigDecimal
 import java.time.LocalDate
 
 @RestController
@@ -27,8 +26,8 @@ class PurchaseOrderBacklogController(private val purchaseOrderBacklogService: Pu
     }
 
     @GetMapping("get-list-for-dropdown")
-    fun getInvoiceListForDropDown(@RequestParam status: String? = "ALL", isIncludeGe3Days: Boolean?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
-        val data = purchaseOrderBacklogService.getListForDropDown(status ?: "ALL", isIncludeGe3Days ?: false)
+    fun getInvoiceListForDropDown(@RequestParam status: String? = "ALL", isIncludeGe7Days: Boolean?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = purchaseOrderBacklogService.getListForDropDown(status ?: "ALL", isIncludeGe7Days ?: false)
         return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 

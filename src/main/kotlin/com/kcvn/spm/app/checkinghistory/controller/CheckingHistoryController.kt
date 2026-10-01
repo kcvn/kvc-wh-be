@@ -26,33 +26,33 @@ import java.time.format.DateTimeFormatter
 @RestController
 @RequestMapping("/api/checking-history")
 class CheckingHistoryController(private val checkingHistoryService: CheckingHistoryService) {
-    @GetMapping("/get-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun getList(
-        request: CheckingHistorySearchRequest,
-        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
-        @SortDefault.SortDefaults(
-            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
-        )
-        pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {
-        val result = checkingHistoryService.getList(request, pageable)
-        return ResponseEntity(result, HttpStatus.OK)
-    }
-
-    @GetMapping("/get-list-detail")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun getListDetail(
-        lotNo: String,
-        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
-        @SortDefault.SortDefaults(
-            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
-        )
-        pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<CheckingHistoryDetailResponse>> {
-        val result = checkingHistoryService.getListDetail(lotNo, pageable)
-        return ResponseEntity(result, HttpStatus.OK)
-    }
+//    @GetMapping("/get-list")
+//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+//    fun getList(
+//        request: CheckingHistorySearchRequest,
+//        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+//        @SortDefault.SortDefaults(
+//            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
+//        )
+//        pageable: Pageable
+//    ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {
+//        val result = checkingHistoryService.getList(request, pageable)
+//        return ResponseEntity(result, HttpStatus.OK)
+//    }
+//
+//    @GetMapping("/get-list-detail")
+//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+//    fun getListDetail(
+//        lotNo: String,
+//        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+//        @SortDefault.SortDefaults(
+//            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
+//        )
+//        pageable: Pageable
+//    ): ResponseEntity<BasePagingResponse<CheckingHistoryDetailResponse>> {
+//        val result = checkingHistoryService.getListDetail(lotNo, pageable)
+//        return ResponseEntity(result, HttpStatus.OK)
+//    }
 
     @PostMapping("/create")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
@@ -68,27 +68,27 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         )
     }
 
-    @GetMapping("/export-csv")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun exportCsv(
-        request: CheckingHistorySearchRequest,
-        response: HttpServletResponse,
-    ) {
-        response.contentType = "text/csv"
-        val fileName = "receive_checking_result_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))}.csv"
-        response.setHeader("Content-Disposition", "attachment; filename=$fileName")
-        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition")
-
-        val pagingResponse: BasePagingResponse<CheckingHistoryResponse> =
-            checkingHistoryService.getList(request, Pageable.unpaged())
-
-        val productsList: List<CheckingHistoryResponse> = pagingResponse.data ?: emptyList()
-
-        val writer = response.writer
-        writer.append("scanned_date,form_code,po_no,imported_qty,scanned_qty,seq_no,result\n")
-        productsList.forEach { item ->
-            writer.append("${item.scannedDate},${item.invoiceNumber},${item.poNumber},${item.orderQty},${item.scanQty},${item.seqNo},${item.result}\n")
-        }
-        writer.flush()
-    }
+//    @GetMapping("/export-csv")
+//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+//    fun exportCsv(
+//        request: CheckingHistorySearchRequest,
+//        response: HttpServletResponse,
+//    ) {
+//        response.contentType = "text/csv"
+//        val fileName = "receive_checking_result_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))}.csv"
+//        response.setHeader("Content-Disposition", "attachment; filename=$fileName")
+//        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition")
+//
+//        val pagingResponse: BasePagingResponse<CheckingHistoryResponse> =
+//            checkingHistoryService.getList(request, Pageable.unpaged())
+//
+//        val productsList: List<CheckingHistoryResponse> = pagingResponse.data ?: emptyList()
+//
+//        val writer = response.writer
+//        writer.append("scanned_date,form_code,po_no,imported_qty,scanned_qty,seq_no,result\n")
+//        productsList.forEach { item ->
+//            writer.append("${item.scannedDate},${item.invoiceNumber},${item.poNumber},${item.orderQty},${item.scanQty},${item.seqNo},${item.result}\n")
+//        }
+//        writer.flush()
+//    }
 }

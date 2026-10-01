@@ -5,8 +5,8 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
-import com.kcvn.spm.model.keys.AMOEBA_PKEY_1
-import com.kcvn.spm.model.keys.PURCHASE_ORDER_BACKLOG_UN
+import com.kcvn.spm.model.keys.AMOEBA_PKEY_1_1
+import com.kcvn.spm.model.keys.PURCHASE_ORDER_BACKLOG_UN_1
 import com.kcvn.spm.model.tables.records.PurchaseOrderBacklogRecord
 
 import java.math.BigDecimal
@@ -195,8 +195,8 @@ open class PurchaseOrderBacklog(
      */
     constructor(): this(DSL.name("purchase_order_backlog"), null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getPrimaryKey(): UniqueKey<PurchaseOrderBacklogRecord> = AMOEBA_PKEY_1
-    override fun getUniqueKeys(): List<UniqueKey<PurchaseOrderBacklogRecord>> = listOf(PURCHASE_ORDER_BACKLOG_UN)
+    override fun getPrimaryKey(): UniqueKey<PurchaseOrderBacklogRecord> = AMOEBA_PKEY_1_1
+    override fun getUniqueKeys(): List<UniqueKey<PurchaseOrderBacklogRecord>> = listOf(PURCHASE_ORDER_BACKLOG_UN_1)
     override fun `as`(alias: String): PurchaseOrderBacklog = PurchaseOrderBacklog(DSL.name(alias), this)
     override fun `as`(alias: Name): PurchaseOrderBacklog = PurchaseOrderBacklog(alias, this)
     override fun `as`(alias: Table<*>): PurchaseOrderBacklog = PurchaseOrderBacklog(alias.qualifiedName, this)

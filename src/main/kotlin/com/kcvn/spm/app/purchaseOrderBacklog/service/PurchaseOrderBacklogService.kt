@@ -122,8 +122,8 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
         return BaseResponse(response)
     }
 
-    fun getListForDropDown(status: String, isIncludeGe1Days: Boolean): BaseResponse<List<DropdownResponse>> {
-        val listOrder = purchaseOrderBacklogRepo.getListForDropDown(status, isIncludeGe1Days)
+    fun getListForDropDown(status: String, isIncludeGe7Days: Boolean): BaseResponse<List<DropdownResponse>> {
+        val listOrder = purchaseOrderBacklogRepo.getListForDropDown(status, isIncludeGe7Days)
         val dropDownList= listOrder.map { order ->
             DropdownResponse(
                 "${order.invoiceNumber} ~ ${

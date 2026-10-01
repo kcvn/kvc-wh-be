@@ -43,9 +43,9 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
             .firstOrNull()
     }
 
-    fun getListForDropDown(status: String, isIncludeGe1Days: Boolean): List<PurchaseOrderBacklog> {
+    fun getListForDropDown(status: String, isIncludeGe7Days: Boolean): List<PurchaseOrderBacklog> {
         val offset = OffsetDateTime.now().offset
-        val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(1), LocalTime.MIDNIGHT, offset)
+        val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(7), LocalTime.MIDNIGHT, offset)
         val tomorrow = OffsetDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT, offset)
         return context.select(PURCHASE_ORDER_BACKLOG)
             .from(PURCHASE_ORDER_BACKLOG)
@@ -53,7 +53,7 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
                     //.and(TEMP_CHECKING_IMPORTED.CREATED_DATE.ge(threeDaysAgo))
                     //.and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(true) else TEMP_CHECKING_IMPORTED.IS_APPROVED.eq(false))
                     PURCHASE_ORDER_BACKLOG.CREATED_DATE.lt(tomorrow)
-                    .and(if (isIncludeGe1Days) DSL.noCondition() else PURCHASE_ORDER_BACKLOG.CREATED_DATE.ge(threeDaysAgo))
+                    .and(if (isIncludeGe7Days) DSL.noCondition() else PURCHASE_ORDER_BACKLOG.CREATED_DATE.ge(threeDaysAgo))
                         .and (if (status == "ALL") DSL.noCondition() else PURCHASE_ORDER_BACKLOG.APPROVED.eq(status.toBoolean()))
             )
             .orderBy(PURCHASE_ORDER_BACKLOG.CREATED_DATE.desc())

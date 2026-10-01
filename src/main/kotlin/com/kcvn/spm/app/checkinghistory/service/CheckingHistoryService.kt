@@ -1,15 +1,11 @@
 package com.kcvn.spm.app.checkinghistory.service
 
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
-import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
-import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
-import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
-import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CheckingHistory
-import com.kcvn.spm.repository.CheckingHistoryRepository
-import org.springframework.data.domain.Pageable
+import com.kcvn.spm.model.tables.pojos.NewCheckingTransaction
+import com.kcvn.spm.repository.NewCheckingTransactionRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -17,56 +13,60 @@ import java.time.LocalDate
 @Service
 @Transactional
 class CheckingHistoryService(
-    private val checkingHistoryRepo: CheckingHistoryRepository
+    private val checkingTransRepo: NewCheckingTransactionRepository,
 ) {
-    fun getList(request: CheckingHistorySearchRequest, pageable: Pageable): BasePagingResponse<CheckingHistoryResponse> {
-        val checkingHistoryData = checkingHistoryRepo.getList(request, pageable)
-        val data = checkingHistoryData.first
-        return BasePagingResponse(
-            data,
-            checkingHistoryData.second
-        )
-    }
-
-    fun getListDetail(lotNo: String, pageable: Pageable): BasePagingResponse<CheckingHistoryDetailResponse> {
-        val checkingHistoryDataDetail = checkingHistoryRepo.getListDetail(lotNo, pageable)
-        val data = checkingHistoryDataDetail.first
-        return BasePagingResponse(
-            data,
-            checkingHistoryDataDetail.second
-        )
-    }
+//    fun getList(request: CheckingHistorySearchRequest, pageable: Pageable): BasePagingResponse<CheckingHistoryResponse> {
+//        val checkingHistoryData = checkingHistoryRepo.getList(request, pageable)
+//        val data = checkingHistoryData.first
+//        return BasePagingResponse(
+//            data,
+//            checkingHistoryData.second
+//        )
+//    }
+//
+//    fun getListDetail(lotNo: String, pageable: Pageable): BasePagingResponse<CheckingHistoryDetailResponse> {
+//        val checkingHistoryDataDetail = checkingHistoryRepo.getListDetail(lotNo, pageable)
+//        val data = checkingHistoryDataDetail.first
+//        return BasePagingResponse(
+//            data,
+//            checkingHistoryDataDetail.second
+//        )
+//    }
 
     fun save(requestList: List<CheckingHistoryRequest>) {
         val scanDate = LocalDate.now()
         requestList.forEach { request ->
             if (!request.reChecking) {
-                val data = checkingHistoryRepo.findByScanDateAndPOAndSeqNoAndFormCode(scanDate, request.poNumber, 1, request.formCode)
+                val data = checkingTransRepo.findByLotAndSeq(request, 1)
                 if (data == null) {
-                    val domain = CheckingHistory(
+                    val domain = NewCheckingTransaction(
+                        invoiceNumber = request.invoiceNumber,
                         poNumber = request.poNumber,
-                        importQty = request.importQty,
-                        scanQty = request.scanQty,
-                        seqNo = 1,
-                        formCode = request.formCode
+                        scanQty = request.qty,
+                        lotNo = request.lotNo,
+                        checkTimes = 1,
+                        receivingDate = request.receivingDate,
+                        specifyInvoice = request.specifyInvoice,
                     )
-                    checkingHistoryRepo.save(domain)
+                    checkingTransRepo.save(domain)
                 } else {
-                    val newScanQty = data.scanQty?.plus(request.scanQty)
-                    checkingHistoryRepo.update(newScanQty!!, scanDate, data.poNumber!!, 1, data.formCode!!)
+                    val newScanQty = data.scanQty?.plus(request.qty)
+                    checkingTransRepo.update(newScanQty!!, scanDate, data.poNumber!!, 1, data.formCode!!)
                 }
             } else {
-                val data = checkingHistoryRepo.findLatestByScanDateAndPOAndFormCode(scanDate, request.poNumber, request.formCode)
+                val data = checkingTransRepo.findLatestSeqOfLot(request)
                     ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.checkingHistory"), "scanDate = ${scanDate}, poNumber = ${request.poNumber}")
-                val seqNo = data.seqNo?.plus(1)
-                val domain = CheckingHistory(
+                val seqNo = data.checkTimes?.plus(1)
+                val domain = NewCheckingTransaction(
+                    invoiceNumber = request.invoiceNumber,
                     poNumber = request.poNumber,
-                    importQty = request.importQty,
-                    scanQty = request.scanQty,
-                    seqNo = seqNo,
-                    formCode = request.formCode
+                    scanQty = request.qty,
+                    lotNo = request.lotNo,
+                    checkTimes = seqNo,
+                    receivingDate = request.receivingDate,
+                    specifyInvoice = request.specifyInvoice,
                 )
-                checkingHistoryRepo.save(domain)
+                checkingTransRepo.save(domain)
             }
         }
     }

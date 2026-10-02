@@ -35,12 +35,11 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
             .firstOrNull()
     }
 
-    fun findLatestSeqOfLot(input: CheckingHistoryRequest): NewCheckingTransaction? {
+    fun findLatestSeqOfOrder(poNumber: String, invoiceNumber: String): NewCheckingTransaction? {
         return context.selectFrom(NEW_CHECKING_TRANSACTION)
             .where(
-                NEW_CHECKING_TRANSACTION.INVOICE_NUMBER.eq(input.invoiceNumber)
-                    .and(NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(input.poNumber))
-                    .and(NEW_CHECKING_TRANSACTION.LOT_NO.eq(input.lotNo))
+                NEW_CHECKING_TRANSACTION.INVOICE_NUMBER.eq(invoiceNumber)
+                    .and(NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(poNumber))
             )
             .orderBy(NEW_CHECKING_TRANSACTION.CHECK_TIMES.sort(SortOrder.DESC))
             .fetchInto(NewCheckingTransaction::class.java)
@@ -59,22 +58,13 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
         }.insert()
     }
 
-    fun update(scanQty: BigDecimal, scanDate: LocalDate, poNumber: String, seqNo: Int, formCode: String) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            transactionalContext.update(CHECKING_HISTORY)
-                .set(CHECKING_HISTORY.SCAN_QTY, scanQty)
-                .set(CHECKING_HISTORY.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(CHECKING_HISTORY.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .where(
-                    CHECKING_HISTORY.SCAN_DATE.eq(scanDate)
-                        .and(CHECKING_HISTORY.PO_NUMBER.eq(poNumber))
-                        .and(CHECKING_HISTORY.SEQ_NO.eq(seqNo))
-                        .and(CHECKING_HISTORY.FORM_CODE.eq(formCode))
-                )
-                .execute()
-        }
+    fun update(rec: NewCheckingTransaction) {
+        context.update(NEW_CHECKING_TRANSACTION)
+            .set(NEW_CHECKING_TRANSACTION.SCAN_QTY, rec.scanQty)
+            .set(NEW_CHECKING_TRANSACTION.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(NEW_CHECKING_TRANSACTION.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(NEW_CHECKING_TRANSACTION.ID.eq(rec.id))
+            .execute()
     }
 
     fun searchCheckingHistory(request: CheckingHistorySearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<CheckingHistoryResponse>, Int> {

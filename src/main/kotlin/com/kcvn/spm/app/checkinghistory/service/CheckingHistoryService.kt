@@ -46,6 +46,13 @@ class CheckingHistoryService(
         val notSpecifyInvoiceNotReCheck = requestList.filter { !it.specifyInvoice && !it.reChecking }.groupBy { it.poNumber }
         val notSpecifyInvoiceReCheck = requestList.filter { !it.specifyInvoice && it.reChecking }.groupBy { it.poNumber }
 
+        // Khóa tất cả order liên quan trước khi đọc scanQty / seqNo, theo thứ tự PO-invoice cố định để tránh deadlock.
+        // Request khác cùng order sẽ phải chờ transaction này commit rồi mới đọc được dữ liệu mới.
+        requestList.map { it.poNumber to it.invoiceNumber }
+            .distinct()
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (poNumber, invoiceNumber) -> orderBacklogRepo.lockOrderByPoInvoice(poNumber, invoiceNumber) }
+
         specifyInvoice.forEach { request ->
             if (request.key.second == "File lam tem goi") return@forEach
             val order = orderBacklogRepo.findOrderByPoInvoice(request.key.first, request.key.second)

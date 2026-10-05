@@ -30,6 +30,21 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
             .firstOrNull()
     }
 
+    /**
+     * Khóa (SELECT ... FOR UPDATE) các dòng order của PO-invoice đến hết transaction hiện tại.
+     * Gọi theo thứ tự cố định để tránh deadlock giữa các transaction.
+     */
+    fun lockOrderByPoInvoice(poNo: String, invoice: String) {
+        context.select(PURCHASE_ORDER_BACKLOG.PO_NUMBER)
+            .from(PURCHASE_ORDER_BACKLOG)
+            .where(
+                PURCHASE_ORDER_BACKLOG.PO_NUMBER.eq(poNo)
+                    .and(PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER.eq(invoice))
+            )
+            .forUpdate()
+            .fetch()
+    }
+
     fun findLotOfPoInvoiceOnDay(seqNo: BigDecimal, poNo: String, invoice: String, day: String): PurchaseOrderBacklog? {
         return context.selectFrom(PURCHASE_ORDER_BACKLOG)
             .where(

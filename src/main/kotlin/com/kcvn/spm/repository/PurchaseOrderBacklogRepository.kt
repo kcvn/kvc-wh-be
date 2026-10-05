@@ -20,7 +20,7 @@ import java.time.ZoneOffset
 @Repository
 class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingRepository() {
 
-    fun findLotOfPoInvoice(poNo: String, invoice: String): PurchaseOrderBacklog? {
+    fun findOrderByPoInvoice(poNo: String, invoice: String): PurchaseOrderBacklog? {
         return context.selectFrom(PURCHASE_ORDER_BACKLOG)
             .where(
                 PURCHASE_ORDER_BACKLOG.PO_NUMBER.eq(poNo)

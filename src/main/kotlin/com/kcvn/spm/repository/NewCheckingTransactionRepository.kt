@@ -12,7 +12,6 @@ import com.kcvn.spm.model.tables.references.NEW_CHECKING_TRANSACTION
 import org.jooq.DSLContext
 import org.jooq.SortOrder
 import org.jooq.TableField
-import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -23,16 +22,26 @@ import java.time.ZoneOffset
 
 @Repository
 class NewCheckingTransactionRepository(private val context: DSLContext) : SortingRepository() {
-        fun findByLotAndSeq(input: CheckingHistoryRequest, seqNo: Int): NewCheckingTransaction? {
+    fun findByPoInvoiceLotAndSeq(invoiceNumber: String, poNumber: String, lotNo: String, seqNo: Int): NewCheckingTransaction? {
         return context.selectFrom(NEW_CHECKING_TRANSACTION)
             .where(
-                NEW_CHECKING_TRANSACTION.INVOICE_NUMBER.eq(input.invoiceNumber)
-                    .and(NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(input.poNumber))
-                    .and(NEW_CHECKING_TRANSACTION.LOT_NO.eq(input.lotNo))
+                NEW_CHECKING_TRANSACTION.INVOICE_NUMBER.eq(invoiceNumber)
+                    .and(NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(poNumber))
+                    .and(NEW_CHECKING_TRANSACTION.LOT_NO.eq(lotNo))
                     .and(NEW_CHECKING_TRANSACTION.CHECK_TIMES.eq(seqNo))
             )
             .fetchInto(NewCheckingTransaction::class.java)
             .firstOrNull()
+    }
+
+    fun findByPoInvoiceAndSeq(poNumber: String, invoiceNumber: String, seqNo: Int): List<NewCheckingTransaction>? {
+        return context.selectFrom(NEW_CHECKING_TRANSACTION)
+            .where(
+                NEW_CHECKING_TRANSACTION.INVOICE_NUMBER.eq(invoiceNumber)
+                    .and(NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(poNumber))
+                    .and(NEW_CHECKING_TRANSACTION.CHECK_TIMES.eq(seqNo))
+            )
+            .fetchInto(NewCheckingTransaction::class.java)
     }
 
     fun findLatestSeqOfOrder(poNumber: String, invoiceNumber: String): NewCheckingTransaction? {

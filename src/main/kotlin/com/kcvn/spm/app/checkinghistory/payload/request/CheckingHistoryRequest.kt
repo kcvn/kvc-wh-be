@@ -8,7 +8,7 @@ data class CheckingHistoryRequest(
     var invoiceNumber: String,
     var poNumber: String,
     var qty : BigDecimal,
-    var lotNo: String,
-    var receivingDate: LocalDate,
+    var lotNo: String?,
+    var receivingDate: LocalDate?,
     var specifyInvoice: Boolean,
 )

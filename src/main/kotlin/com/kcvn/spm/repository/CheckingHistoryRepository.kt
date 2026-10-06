@@ -1,13 +1,15 @@
 package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.CheckingHistory
+import com.kcvn.spm.model.tables.pojos.ReceivingChecking
 import com.kcvn.spm.model.tables.references.CHECKING_HISTORY
 import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SortOrder
 import org.jooq.TableField
@@ -21,98 +23,110 @@ import java.time.ZoneOffset
 
 @Repository
 class CheckingHistoryRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(request: CheckingHistorySearchRequest, pageable: Pageable) : Pair<List<CheckingHistory>, Int> {
+    fun getList(request: CheckingHistorySearchRequest, pageable: Pageable) : Pair<List<CheckingHistoryResponse>, Int> {
         val keywordPoNumber = request.poNumber?.let { "%$it%" } ?: "%"
-        val keywordFormCode = request.formCode?.let { "%$it%" } ?: "%"
-
+        val keywordInvoice = request.invoiceNumber?.let { "%$it%" } ?: "%"
 
         var sql = """
-            SELECT 
-                ch.scan_date,
-                COALESCE(tci.form_code, ch.form_code) AS form_code,
-                COALESCE(tci.po_number, ch.po_number) AS po_number,
-                COALESCE(tci.qty, 0) AS imported_qty,
-                COALESCE(ch.scan_qty, 0) AS scanned_qty,
-                ch.seq_no
-            FROM temp_checking_imported tci
-            FULL OUTER JOIN checking_history ch
-                ON tci.form_code = ch.form_code
-               AND tci.po_number = ch.po_number
-            WHERE (tci.form_code ilike ? OR ch.form_code ilike ?)
-            AND (tci.po_number ilike ? OR ch.po_number ilike ?)
+            select *,
+	case
+		when final_data.order_qty > final_data.scan_qty then 1
+		when final_data.order_qty = final_data.scan_qty then 2
+		when final_data.order_qty < final_data.scan_qty then 3
+	end as result
+from (select
+	pob.po_no,
+	pob.invoice,
+	pob.order_date,
+	pob.item_code,
+	pob.item_name,
+	pob.prod_group,
+	pob.storage_location,
+	pob.unit,
+	pob.item_type,
+	pob.order_qty,
+	coalesce(rc.scan_qty,0) as scan_qty,
+	pob.approved,
+    pob.lot_no,
+	rc.created_date,
+    coalesce(rc.seq_no,0) as seq_no
+from
+	purchase_order_backlog pob
+left join (
+	select
+		rc.order_backlog_id,
+		sum(rc.scan_qty) as scan_qty,
+		max(rc.created_date) as created_date,
+        max(seq_no) as seq_no
+	from
+		receiving_checking rc
+	group by
+		rc.order_backlog_id) rc
+on
+	pob.id = rc.order_backlog_id) final_data
+            WHERE final_data.invoice ilike ?
+            AND final_data.po_no ilike ?
         """.trimIndent()
         if (request.fromDate != null && request.toDate != null) {
-            sql += "AND (ch.scan_date between '${request.fromDate?.toLocalDate()}' and '${request.toDate?.toLocalDate()}')"
+            sql += "\nAND (final_data.created_date between '${request.fromDate?.toLocalDate()}' and '${request.toDate?.toLocalDate()}')"
         }
+        if (request.storageLocation != null) {
+            sql += "\nAND final_data.storage_location = '${request.storageLocation}'"
+        }
+        if (request.itemType != null) {
+            sql += "\nAND final_data.item_type = '${request.itemType}'"
+        }
+        if (request.status == "APPROVED")
+            sql += "\nAND final_data.approved = true"
+        else if (request.status == "NOT_APPROVED")
+            sql += "\nAND final_data.approved = false"
         val result = context
-            .resultQuery(sql, keywordFormCode, keywordFormCode, keywordPoNumber, keywordPoNumber)
+            .resultQuery(sql, keywordInvoice, keywordPoNumber)
             .fetch()
             .map {
-                CheckingHistory(
-                    scanDate = it.get("scan_date", LocalDate::class.java),
-                    formCode = it.get("form_code", String::class.java),
-                    poNumber = it.get("po_number", String::class.java),
-                    importQty = it.get("imported_qty", BigDecimal::class.java),
-                    scanQty = it.get("scanned_qty", BigDecimal::class.java),
+                CheckingHistoryResponse(
+                    poNumber = it.get("po_no", String::class.java),
+                    invoiceNumber = it.get("invoice", String::class.java),
+                    orderDate = it.get("order_date", LocalDate::class.java),
+                    scannedDate = it.get("created_date", LocalDate::class.java),
+                    itemCd = it.get("item_code", String::class.java),
+                    itemName = it.get("item_name", String::class.java),
+                    department = it.get("prod_group", String::class.java),
+                    storageLocation = it.get("storage_location", String::class.java),
+                    unit = it.get("unit", String::class.java),
+                    itemType = it.get("item_type", String::class.java),
+                    orderQty = it.get("order_qty", BigDecimal::class.java),
+                    scanQty = it.get("scan_qty", BigDecimal::class.java),
+                    status = it.get("approved", Boolean::class.java),
+                    result = it.get("result", Int::class.java),
                     seqNo = it.get("seq_no", Int::class.java),
                 )
             }
+        return Pair(result, result.size)
+    }
 
-        val notDuplicate = result.groupBy { it.poNumber to it.seqNo }
-            .filter { it.value.size == 1 }
+    fun getListDetail(lotNo: String, pageable: Pageable) : Pair<List<CheckingHistoryDetailResponse>, Int> {
 
-        val duplicates = result.groupBy { it.poNumber to it.seqNo }
-            .filter { it.value.size > 1 }
-
-        val finalData = mutableListOf<CheckingHistory>()
-
-        notDuplicate.forEach { (key, records) ->
-            records.forEach { record ->
-                val a = CheckingHistory(
-                    scanDate = record.scanDate,
-                    formCode = record.formCode,
-                    poNumber = record.poNumber,
-                    importQty = record.importQty,
-                    scanQty = record.scanQty,
-                    seqNo = record.seqNo
+        var sql = """
+            select
+		rc.lot_no,
+		rc.scan_qty
+	from
+		receiving_checking rc
+	inner join purchase_order_backlog pob 
+	on rc.order_backlog_id = pob.id 
+	where pob.lot_no = ?
+        """.trimIndent()
+        val result = context
+            .resultQuery(sql, lotNo)
+            .fetch()
+            .map {
+                CheckingHistoryDetailResponse(
+                    lotNo = it.get("lot_no", String::class.java),
+                    scanQty = it.get("scan_qty", BigDecimal::class.java),
                 )
-                finalData.add(a)
             }
-        }
-
-        duplicates.forEach { (key, records) ->
-            val (poNumber, seqNo) = key
-
-            var totalScannedQty = records[0].scanQty
-
-            for (record in records) {
-                if (record.importQty!! <= totalScannedQty) {
-                    val a = CheckingHistory(
-                        scanDate = record.scanDate,
-                        formCode = record.formCode,
-                        poNumber = record.poNumber,
-                        importQty = record.importQty,
-                        scanQty = record.importQty,
-                        seqNo = record.seqNo
-                    )
-                    finalData.add(a)
-                    totalScannedQty = totalScannedQty?.minus(record.importQty!!)
-                } else {
-                    val a = CheckingHistory(
-                        scanDate = record.scanDate,
-                        formCode = record.formCode,
-                        poNumber = record.poNumber,
-                        importQty = record.importQty,
-                        scanQty = totalScannedQty,
-                        seqNo = record.seqNo
-                    )
-                    finalData.add(a)
-                    totalScannedQty = BigDecimal.ZERO
-                }
-            }
-        }
-        finalData.sortWith(compareBy<CheckingHistory> { it.poNumber }.thenBy { it.seqNo })
-        return Pair(finalData, finalData.size)
+        return Pair(result, result.size)
     }
 
     fun findByScanDateAndPOAndSeqNoAndFormCode(scanDate: LocalDate, poNumber: String, seqNo: Int, formCode: String): CheckingHistory? {

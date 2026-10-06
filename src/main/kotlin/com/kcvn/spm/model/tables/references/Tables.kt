@@ -21,6 +21,9 @@ import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
+import com.kcvn.spm.model.tables.NewCheckingTransaction
+import com.kcvn.spm.model.tables.PurchaseOrderBacklog
+import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
@@ -119,6 +122,21 @@ val LOCATIONS: Locations = Locations.LOCATIONS
  * The table <code>public.moving</code>.
  */
 val MOVING: Moving = Moving.MOVING
+
+/**
+ * The table <code>public.new_checking_transaction</code>.
+ */
+val NEW_CHECKING_TRANSACTION: NewCheckingTransaction = NewCheckingTransaction.NEW_CHECKING_TRANSACTION
+
+/**
+ * The table <code>public.purchase_order_backlog</code>.
+ */
+val PURCHASE_ORDER_BACKLOG: PurchaseOrderBacklog = PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG
+
+/**
+ * The table <code>public.receiving_checking</code>.
+ */
+val RECEIVING_CHECKING: ReceivingChecking = ReceivingChecking.RECEIVING_CHECKING
 
 /**
  * The table <code>public.receiving_transactions</code>.

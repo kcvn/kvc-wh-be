@@ -333,6 +333,7 @@ class BacklogWhService(
                 backlogQty = it.backlogQty,
                 boxQty = it.boxQty,
                 receivingDate = it.receivingDate,
+                lotNo = it.lotNo
             )
         }
         return BasePagingResponse(

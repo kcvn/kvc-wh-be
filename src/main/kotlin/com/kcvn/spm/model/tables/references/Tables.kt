@@ -21,6 +21,7 @@ import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
+import com.kcvn.spm.model.tables.NewBacklogWh
 import com.kcvn.spm.model.tables.NewCheckingTransaction
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
@@ -122,6 +123,11 @@ val LOCATIONS: Locations = Locations.LOCATIONS
  * The table <code>public.moving</code>.
  */
 val MOVING: Moving = Moving.MOVING
+
+/**
+ * The table <code>public.new_backlog_wh</code>.
+ */
+val NEW_BACKLOG_WH: NewBacklogWh = NewBacklogWh.NEW_BACKLOG_WH
 
 /**
  * The table <code>public.new_checking_transaction</code>.

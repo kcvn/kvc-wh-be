@@ -6,6 +6,7 @@ class BacklogWhSearchRequest {
     var listLocationCode: String? = null
     var listPoNumber: String? = null
     var listPackageCode: String? = null
+    var lotNo: String? = null
     var fromDate: OffsetDateTime? = null
     var toDate: OffsetDateTime? = null
 }

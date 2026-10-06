@@ -6,7 +6,9 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
+import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
+import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -22,14 +24,14 @@ import java.time.ZoneOffset
 
 @Repository
 class BacklogWhRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(request: BacklogWhSearchRequest, pageable: Pageable?) : Pair<List<BacklogWh>, Int> {
+    fun getList(request: BacklogWhSearchRequest, pageable: Pageable?) : Pair<List<NewBacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
-        val receivingDate = BACKLOG_WH.field("receiving_date", java.time.OffsetDateTime::class.java)
+        val receivingDate = NEW_BACKLOG_WH.field("receiving_date", java.time.OffsetDateTime::class.java)
         if(!request.listLocationCode.isNullOrEmpty()){
             val locationCodes = request.listLocationCode!!.split(",")
             var condition1 : Condition = DSL.noCondition()
             locationCodes.forEach { lc ->
-                condition1 = condition1.or(BACKLOG_WH.LOCATION_CODE.eq(lc.trim()))
+                condition1 = condition1.or(NEW_BACKLOG_WH.LOCATION_CODE.eq(lc.trim()))
             }
             condition = condition.and(condition1)
         }
@@ -37,7 +39,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             val poNumbers = request.listPoNumber!!.split(",")
             var condition1 : Condition = DSL.noCondition()
             poNumbers.forEach { pn ->
-                condition1 = condition1.or(BACKLOG_WH.PO_NUMBER.containsIgnoreCase(pn))
+                condition1 = condition1.or(NEW_BACKLOG_WH.PO_NUMBER.containsIgnoreCase(pn))
             }
             condition = condition.and(condition1)
         }
@@ -45,28 +47,36 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             val packageCodes = request.listPackageCode!!.split(",")
             var condition1 : Condition = DSL.noCondition()
             packageCodes.forEach { pc ->
-                condition1 = condition1.or(BACKLOG_WH.PACKAGE_CODE.containsIgnoreCase(pc))
+                condition1 = condition1.or(NEW_BACKLOG_WH.PACKAGE_CODE.containsIgnoreCase(pc))
+            }
+            condition = condition.and(condition1)
+        }
+        if(!request.lotNo.isNullOrEmpty()){
+            val lotNo = request.lotNo!!.split(",")
+            var condition1 : Condition = DSL.noCondition()
+            lotNo.forEach { pc ->
+                condition1 = condition1.or(NEW_BACKLOG_WH.LOT_NO.containsIgnoreCase(pc))
             }
             condition = condition.and(condition1)
         }
         if (request.fromDate != null && request.toDate != null) {
             condition = condition.and(receivingDate?.between(request.fromDate, request.toDate))
         }
-            val query = context.selectFrom(BACKLOG_WH).where(condition.and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
+            val query = context.selectFrom(NEW_BACKLOG_WH).where(condition.and(NEW_BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
             val count = query.count()
         if (pageable != null){
             val data = query
-                .orderBy(getSortFields(pageable.sort, BACKLOG_WH.CREATED_DATE))
+                .orderBy(getSortFields(pageable.sort, NEW_BACKLOG_WH.CREATED_DATE))
                 .limit(pageable.pageSize)
                 .offset(pageable.offset)
-                .fetchInto(BacklogWh::class.java)
+                .fetchInto(NewBacklogWh::class.java)
 
             return Pair(data, count)
         }
         else {
             val data = query
-                .orderBy(BACKLOG_WH.CREATED_DATE)
-                .fetchInto(BacklogWh::class.java)
+                .orderBy(NEW_BACKLOG_WH.CREATED_DATE)
+                .fetchInto(NewBacklogWh::class.java)
 
             return Pair(data, count)
         }
@@ -255,8 +265,8 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {
-            "createdDate" -> BACKLOG_WH.CREATED_DATE
-            else -> BACKLOG_WH.CREATED_DATE
+            "createdDate" -> NEW_BACKLOG_WH.CREATED_DATE
+            else -> NEW_BACKLOG_WH.CREATED_DATE
         }
         return sortField
     }

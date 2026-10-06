@@ -96,7 +96,7 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                     poNumber = it.get("po_number", String::class.java),
                     invoiceNumber = it.get("invoice_number", String::class.java),
                     orderDate = it.get("order_date", LocalDate::class.java),
-                    seqNo = it.get("seq_no", Int::class.java),
+                    seqNo = it.get("check_times", Int::class.java),
                     itemCd = it.get("item_code", String::class.java),
                     itemName = it.get("item_name", String::class.java),
                     department = it.get("prod_group", String::class.java),
@@ -118,10 +118,13 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
         val params = mutableListOf<Any>()
         val conditions = mutableListOf<String>()
 
+        val statusCondition = if (request.status == "APPROVED") true else if (request.status == "NOT_APPROVED") false else null
+
         request.invoiceNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.invoice_number = ?"; params += it }
         request.poNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.po_number = ?"; params += it }
         request.storageLocation?.takeIf { it.isNotBlank() }?.let { conditions += "pob.storage_location = ?"; params += it }
         request.itemType?.takeIf { it.isNotBlank() }?.let { conditions += "pob.item_type = ?"; params += it }
+        statusCondition?.let { conditions += "pob.approved = ?"; params += it }
         request.fromDate?.let { conditions += "pob.created_date >= ?"; params += it }
         request.toDate?.let { conditions += "pob.created_date < ?"; params += it }
 

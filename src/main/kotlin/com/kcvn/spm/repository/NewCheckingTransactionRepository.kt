@@ -2,6 +2,7 @@ package com.kcvn.spm.repository
 
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
@@ -108,6 +109,64 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                     scannedDate = it.get("scan_date", OffsetDateTime::class.java)?.toLocalDate(),
                     result = it.get("result", Int::class.java),
                     status = it.get("approved", Boolean::class.java)
+                )
+            }
+
+        return result to totalCount
+    }
+
+    fun getListDetail(lotNo: String, pageable: Pageable) : Pair<List<CheckingHistoryDetailResponse>, Int> {
+
+        var sql = """
+            select
+		rc.lot_no,
+		rc.scan_qty
+	from
+		receiving_checking rc
+	inner join purchase_order_backlog pob 
+	on rc.order_backlog_id = pob.id 
+	where pob.lot_no = ?
+        """.trimIndent()
+        val result = context
+            .resultQuery(sql, lotNo)
+            .fetch()
+            .map {
+                CheckingHistoryDetailResponse(
+                    lotNo = it.get("lot_no", String::class.java),
+                    scanQty = it.get("scan_qty", BigDecimal::class.java),
+                )
+            }
+        return Pair(result, result.size)
+    }
+
+    fun searchCheckingHistoryDetail(poNumber: String, invoiceNumber: String, seqNo: Int, pageable: Pageable, isExport: Boolean = false) : Pair<List<CheckingHistoryDetailResponse>, Int> {
+        val sql = """
+            select
+                nct.lot_no,
+                nct.scan_qty,
+                count(*) over() as total_count
+            from new_checking_transaction nct
+            where nct.po_number = ?
+            and nct.invoice_number = ?
+            and nct.check_times = ?
+        """.trimIndent()
+        val params = mutableListOf<Any>(poNumber, invoiceNumber, seqNo)
+
+        var paginatedSql = "$sql order by nct.id"
+        if (!isExport) {
+            paginatedSql = "$paginatedSql limit ? offset ?"
+            params += pageable.pageSize
+            params += pageable.offset
+        }
+
+        val records = context.fetch(paginatedSql, *params.toTypedArray())
+        val totalCount = records.firstOrNull()?.get("total_count", Int::class.java) ?: 0
+
+        val result = records
+            .map {
+                CheckingHistoryDetailResponse(
+                    lotNo = it.get("lot_no", String::class.java),
+                    scanQty = it.get("scan_qty", BigDecimal::class.java),
                 )
             }
 

@@ -2,6 +2,7 @@ package com.kcvn.spm.app.checkinghistory.service
 
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
@@ -31,15 +32,15 @@ class CheckingHistoryService(
             checkingHistoryData.second
         )
     }
-//
-//    fun getListDetail(lotNo: String, pageable: Pageable): BasePagingResponse<CheckingHistoryDetailResponse> {
-//        val checkingHistoryDataDetail = checkingHistoryRepo.getListDetail(lotNo, pageable)
-//        val data = checkingHistoryDataDetail.first
-//        return BasePagingResponse(
-//            data,
-//            checkingHistoryDataDetail.second
-//        )
-//    }
+
+    fun searchCheckingHistoryDetail(poNumber: String, invoiceNumber: String, seqNo: Int, pageable: Pageable): BasePagingResponse<CheckingHistoryDetailResponse> {
+        val checkingHistoryDataDetail = checkingTransRepo.searchCheckingHistoryDetail(poNumber, invoiceNumber, seqNo, pageable)
+        val data = checkingHistoryDataDetail.first
+        return BasePagingResponse(
+            data,
+            checkingHistoryDataDetail.second
+        )
+    }
 
     fun saveCheckingTransaction(requestList: List<CheckingHistoryRequest>) {
         val specifyInvoice = requestList.filter { it.specifyInvoice }.groupBy { it.poNumber to it.invoiceNumber }

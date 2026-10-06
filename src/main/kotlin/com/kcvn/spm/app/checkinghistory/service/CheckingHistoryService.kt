@@ -1,11 +1,11 @@
 package com.kcvn.spm.app.checkinghistory.service
 
+import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryApproveRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.util.CommonUtils
 import org.springframework.data.domain.Pageable
@@ -141,4 +141,55 @@ class CheckingHistoryService(
             checkingTransRepo.update(existing)
         }
     }
+
+    fun approveCheckingTransaction(requestList: List<CheckingHistoryApproveRequest>) {
+        requestList.map { it.poNumber to it.invoiceNumber }
+            .distinct()
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (poNumber, invoiceNumber) -> orderBacklogRepo.lockOrderByPoInvoice(poNumber, invoiceNumber) }
+
+        validateSelectAllPoInInvoice(requestList)
+        requestList.forEach { processEachPOInvoice(it) }
+    }
+
+    fun validateSelectAllPoInInvoice(requestList: List<CheckingHistoryApproveRequest>) {
+        requestList.groupBy { it.invoiceNumber }.forEach { (invoiceNumber, requests) ->
+            val duplicatedPO = requests.groupBy { it.poNumber }.filterValues { it.size > 1 }.keys
+            if (duplicatedPO.isNotEmpty())
+                throw BusinessException(CommonUtils.getMessage("Invoice $invoiceNumber có PO bị chọn nhiều lần: ${duplicatedPO.joinToString()}"))
+
+            val allOrderPO = orderBacklogRepo.findOrderByInvoice(invoiceNumber)
+                ?.mapNotNull { it.poNumber }?.toSet().orEmpty()
+            val allRequestPO = requests.map { it.poNumber }.toSet()
+
+            val missingPO = allOrderPO - allRequestPO
+            if (missingPO.isNotEmpty())
+                throw BusinessException(CommonUtils.getMessage("Invoice $invoiceNumber chưa chọn đủ PO, thiếu: ${missingPO.joinToString()}"))
+
+            val unknownPO = allRequestPO - allOrderPO
+            if (unknownPO.isNotEmpty())
+                throw BusinessException(CommonUtils.getMessage("Không tìm thấy order ${unknownPO.joinToString { "$it-$invoiceNumber" }}"))
+        }
+    }
+
+    fun processEachPOInvoice(request: CheckingHistoryApproveRequest){
+        //validate order is enough
+        val order = orderBacklogRepo.findOrderByPoInvoice(request.poNumber, request.invoiceNumber)
+            ?: throw BusinessException(CommonUtils.getMessage("Không tìm thấy order ${request.poNumber}-${request.invoiceNumber}"))
+        if (order.approved == true)
+            throw BusinessException(CommonUtils.getMessage("Order đã được duyệt, không thể duyệt thêm ${request.poNumber}-${request.invoiceNumber}"))
+        val orderQty = order.orderQty
+
+        val scanned = checkingTransRepo.findByPoInvoiceAndSeq(request.poNumber, request.invoiceNumber, request.seqNo)
+        val scannedQty = scanned?.sumOf { it.scanQty?: BigDecimal.ZERO } ?: BigDecimal.ZERO
+        if (scannedQty.compareTo(orderQty ?: BigDecimal.ZERO) != 0)
+            throw BusinessException(CommonUtils.getMessage("Chưa check đủ số lượng order ${request.poNumber}-${request.invoiceNumber}, orderQty=${order.orderQty}, scannedQty=${scannedQty} "))
+        order.approved = true
+        orderBacklogRepo.update(order)
+        scanned?.forEach { it.isApprove = true
+        checkingTransRepo.update(it)
+        }
+    }
+
+
 }

@@ -68,9 +68,13 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
         }.insert()
     }
 
+    // Chỉ update các cột có thể thay đổi sau khi insert.
+    // Cột định danh (po/invoice/lot/check_times) và thông tin copy từ order lúc insert thì giữ nguyên.
     fun update(rec: NewCheckingTransaction) {
         context.update(NEW_CHECKING_TRANSACTION)
             .set(NEW_CHECKING_TRANSACTION.SCAN_QTY, rec.scanQty)
+            .set(NEW_CHECKING_TRANSACTION.IS_APPROVE, rec.isApprove)
+            .set(NEW_CHECKING_TRANSACTION.IS_SYNCED_SAP, rec.isSyncedSap)
             .set(NEW_CHECKING_TRANSACTION.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
             .set(NEW_CHECKING_TRANSACTION.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .where(NEW_CHECKING_TRANSACTION.ID.eq(rec.id))

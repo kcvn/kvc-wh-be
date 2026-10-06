@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.checkinghistory.controller
 
+import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryApproveRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
@@ -23,6 +24,20 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/checking-history")
 class CheckingHistoryController(private val checkingHistoryService: CheckingHistoryService) {
+    @PostMapping("/create")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun create(@Valid @RequestBody request: List<CheckingHistoryRequest>): ResponseEntity<*> {
+        checkingHistoryService.saveCheckingTransaction(request)
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post checking-history/create" + ", REQUEST: " + request
+        )
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
+    }
+
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
@@ -53,10 +68,10 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @PostMapping("/create")
+    @PostMapping("/approve")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun create(@Valid @RequestBody request: List<CheckingHistoryRequest>): ResponseEntity<*> {
-        checkingHistoryService.saveCheckingTransaction(request)
+    fun approve(@Valid @RequestBody request: List<CheckingHistoryApproveRequest>): ResponseEntity<*> {
+        checkingHistoryService.approveCheckingTransaction(request)
         val logger = KotlinLogging.logger {}
         logger.info(
             "USER: " + CommonUtils.loggedInUser() + ", API: post checking-history/create" + ", REQUEST: " + request

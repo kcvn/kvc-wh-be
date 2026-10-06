@@ -30,6 +30,14 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
             .firstOrNull()
     }
 
+    fun findOrderByInvoice(invoice: String): List<PurchaseOrderBacklog>? {
+        return context.selectFrom(PURCHASE_ORDER_BACKLOG)
+            .where(
+                (PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER.eq(invoice))
+            )
+            .fetchInto(PurchaseOrderBacklog::class.java)
+    }
+
     /**
      * Khóa (SELECT ... FOR UPDATE) các dòng order của PO-invoice đến hết transaction hiện tại.
      * Gọi theo thứ tự cố định để tránh deadlock giữa các transaction.

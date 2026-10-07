@@ -2,6 +2,7 @@ package com.kcvn.spm.app.transaction.sending.controller
 
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
@@ -29,6 +30,22 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 @RequestMapping("/api/sending")
 class SendingTransactionsController(private val sendingService: SendingTransactionsService) {
+    @PostMapping("/create/sending-request")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun createSendRequest(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
+
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-request" + ", REQUEST: " + request
+        )
+
+        sendingService.saveSendingRequest(request)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
+    }
+
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
@@ -45,7 +62,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
 
     @PostMapping("/create/sending-trans")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun createSendTrans(@Valid @RequestBody request: List<SendingRequest>?): ResponseEntity<*> {
+    fun createSendTrans(@Valid @RequestBody request: List<SendingTransactionRequest>?): ResponseEntity<*> {
         val response = sendingService.validateSourceBacklogFromSending(request!!)
         val logger = KotlinLogging.logger {}
         logger.info(
@@ -68,7 +85,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
 
     @PostMapping("/cancel/sending-trans")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun cancelSendTrans(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
+    fun cancelSendTrans(@Valid @RequestBody request: List<SendingTransactionRequest>): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
             "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
@@ -82,7 +99,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
 
     @PostMapping("/create/sending-checking-trans")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun createSendCheckingTrans(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
+    fun createSendCheckingTrans(@Valid @RequestBody request: List<SendingTransactionRequest>): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
             "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-checking-trans" + ", REQUEST: " + request

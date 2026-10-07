@@ -15,6 +15,8 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.CancelSendingTransactions
+import com.kcvn.spm.model.tables.pojos.SendingRequestList
+import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.repository.*
@@ -44,8 +46,58 @@ class SendingTransactionsService(
     private val tempSendingImportedRepo: TempSendingImportedRepository,
     private val tempSendingCheckingRepo: TempSendingCheckingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
-    private val backlogWhRepository: BacklogWhRepository
+    private val backlogWhRepository: BacklogWhRepository,
+    private val sendingRequestListRepository: SendingRequestListRepository,
+    private val sendingRequestListDetailRepository: SendingRequestListDetailRepository
 ) {
+    fun saveSendingRequest(requestList: List<SendingRequest>){
+        requestList.firstOrNull { it.requestQty <= BigDecimal.ZERO }?.let {
+            throw BusinessExceptionDetail(
+                "Số lượng yêu cầu phải lớn hơn 0", "${it.receivingDate} - ${it.poNumber} - ${it.lotNo}"
+            )
+        }
+
+        val requestListGrouped = requestList.groupBy { it.receivingDate to it.poNumber }
+
+        requestListGrouped.keys
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (receivingDate, poNumber) -> backlogWhRepository.lockBacklogByRecDatePo(receivingDate, poNumber) }
+
+        requestListGrouped.forEach { (key, requests) ->
+            val (receivingDate, poNumber) = key
+            val existedRequest = sendingRequestListRepository.findByReceivingDatePO(poNumber, receivingDate)
+            val sendingRequestRec = SendingRequestList(
+                receivingDate = receivingDate,
+                poNumber = poNumber,
+                requestQty = requests.sumOf { it.requestQty },
+                seqNo = (existedRequest?.seqNo ?: 0) + 1,
+                status = 1
+            )
+            val requestListId = sendingRequestListRepository.save(sendingRequestRec)
+
+            requests.forEach { request ->
+                // Một lot có thể nằm ở nhiều package nên cộng tất cả dòng backlog
+                val backlogQty = backlogWhRepository.findBacklogByRecDatePoAndLotNo(request.receivingDate, request.poNumber, request.lotNo)
+                    .orEmpty().sumOf { it.backlogQty ?: BigDecimal.ZERO }
+                val processingQty = sendingRequestListDetailRepository
+                    .findProcessingRequestByReceivingDatePOAndLot(request.receivingDate, request.poNumber, request.lotNo)
+                    .orEmpty().sumOf { it.requestQty ?: BigDecimal.ZERO }
+                if (processingQty + request.requestQty > backlogQty)
+                    throw BusinessExceptionDetail(
+                        "Không đủ tồn kho", "${request.receivingDate} - ${request.poNumber} - ${request.lotNo}"
+                    )
+
+                val sendingRequestDetailRec = SendingRequestListDetail(
+                    receivingDate = request.receivingDate,
+                    poNumber = request.poNumber,
+                    lotNo = request.lotNo,
+                    requestQty = request.requestQty,
+                    sendingRequestId = requestListId
+                )
+                sendingRequestListDetailRepository.save(sendingRequestDetailRec)
+            }
+        }
+    }
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
         val moving = sendingRepo.getList(request, pageable)
         val data = moving.first.map {
@@ -213,7 +265,7 @@ class SendingTransactionsService(
         }
     }
 
-    fun validateSourceBacklogFromSending(request: List<SendingRequest>): List<ValidateSendTransResponse> {
+    fun validateSourceBacklogFromSending(request: List<SendingTransactionRequest>): List<ValidateSendTransResponse> {
         val list = aggregateSendingRequests(request)
         val response = mutableListOf<ValidateSendTransResponse>()
         list.forEach {
@@ -230,8 +282,8 @@ class SendingTransactionsService(
         return response
     }
 
-    fun aggregateSendingRequests(sendingRequests: List<SendingRequest>): List<ValidateSendTransRequest> {
-        return sendingRequests
+    fun aggregateSendingRequests(sendingTransactionRequests: List<SendingTransactionRequest>): List<ValidateSendTransRequest> {
+        return sendingTransactionRequests
             .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
             .map { (key, group) ->
                 ValidateSendTransRequest(
@@ -243,7 +295,7 @@ class SendingTransactionsService(
             }
     }
 
-    fun saveSendTrans(request: List<SendingRequest>) {
+    fun saveSendTrans(request: List<SendingTransactionRequest>) {
 //        val removeList = request
 //            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
 //            .distinct()
@@ -281,7 +333,7 @@ class SendingTransactionsService(
         }
     }
 
-    fun cancelSendTrans(request: List<SendingRequest>) {
+    fun cancelSendTrans(request: List<SendingTransactionRequest>) {
 //        val removeList = request
 //            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
 //            .distinct()
@@ -319,7 +371,7 @@ class SendingTransactionsService(
         }
     }
 
-    fun saveSendCheckingTrans(request: List<SendingRequest>) {
+    fun saveSendCheckingTrans(request: List<SendingTransactionRequest>) {
         val removeList = request
             .map { Pair(it.formCode, it.poNumber) }
             .distinct()
@@ -343,7 +395,7 @@ class SendingTransactionsService(
         }
     }
 
-    fun createSendTransRequestWithSeq(requests: List<SendingRequest>): List<SendTransRequestWithSeq> {
+    fun createSendTransRequestWithSeq(requests: List<SendingTransactionRequest>): List<SendTransRequestWithSeq> {
         val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         return requests
             .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
@@ -368,7 +420,7 @@ class SendingTransactionsService(
             }
     }
 
-    fun createSendCheckingTransRequestWithSeq(requests: List<SendingRequest>): List<SendTransRequestWithSeq> {
+    fun createSendCheckingTransRequestWithSeq(requests: List<SendingTransactionRequest>): List<SendTransRequestWithSeq> {
         val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         return requests
             .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }

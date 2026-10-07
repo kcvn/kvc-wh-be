@@ -332,7 +332,7 @@ class BacklogWhService(
                 itemName = it.itemName,
                 lotNo = it.lotNo,
                 backlogQty = it.backlogQty,
-                availableBacklogQty = it.backlogQty,
+                availableBacklogQty = it.availableBacklogQty,
             )
         }
         return BasePagingResponse(

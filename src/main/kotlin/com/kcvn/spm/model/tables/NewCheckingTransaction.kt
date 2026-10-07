@@ -111,12 +111,12 @@ open class NewCheckingTransaction(
     /**
      * The column <code>public.new_checking_transaction.receiving_date</code>.
      */
-    val RECEIVING_DATE: TableField<NewCheckingTransactionRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
+    val RECEIVING_DATE: TableField<NewCheckingTransactionRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false), this, "")
 
     /**
      * The column <code>public.new_checking_transaction.scan_qty</code>.
      */
-    val SCAN_QTY: TableField<NewCheckingTransactionRecord, BigDecimal?> = createField(DSL.name("scan_qty"), SQLDataType.NUMERIC, this, "")
+    val SCAN_QTY: TableField<NewCheckingTransactionRecord, BigDecimal?> = createField(DSL.name("scan_qty"), SQLDataType.NUMERIC.nullable(false), this, "")
 
     /**
      * The column <code>public.new_checking_transaction.check_times</code>.
@@ -126,17 +126,17 @@ open class NewCheckingTransaction(
     /**
      * The column <code>public.new_checking_transaction.specify_invoice</code>.
      */
-    val SPECIFY_INVOICE: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("specify_invoice"), SQLDataType.BOOLEAN, this, "")
+    val SPECIFY_INVOICE: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("specify_invoice"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     /**
      * The column <code>public.new_checking_transaction.is_approve</code>.
      */
-    val IS_APPROVE: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("is_approve"), SQLDataType.BOOLEAN, this, "")
+    val IS_APPROVE: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("is_approve"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     /**
      * The column <code>public.new_checking_transaction.is_synced_sap</code>.
      */
-    val IS_SYNCED_SAP: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("is_synced_sap"), SQLDataType.BOOLEAN, this, "")
+    val IS_SYNCED_SAP: TableField<NewCheckingTransactionRecord, Boolean?> = createField(DSL.name("is_synced_sap"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     /**
      * The column <code>public.new_checking_transaction.created_date</code>.

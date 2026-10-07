@@ -21,7 +21,10 @@ data class Splitting(
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
-    var updatedBy: String? = null
+    var updatedBy: String? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsDeleted")
+    var isDeleted: Boolean? = null
 ): Serializable {
 
 
@@ -81,6 +84,12 @@ data class Splitting(
         }
         else if (this.updatedBy != o.updatedBy)
             return false
+        if (this.isDeleted == null) {
+            if (o.isDeleted != null)
+                return false
+        }
+        else if (this.isDeleted != o.isDeleted)
+            return false
         return true
     }
 
@@ -95,6 +104,7 @@ data class Splitting(
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         return result
     }
 
@@ -109,6 +119,7 @@ data class Splitting(
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
+        sb.append(", ").append(isDeleted)
 
         sb.append(")")
         return sb.toString()

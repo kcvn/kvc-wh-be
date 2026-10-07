@@ -1,9 +1,11 @@
 package com.kcvn.spm.app.backlogwh.service
 
+import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchForSendingRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogHistoryResponse
+import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhForSendingResponse
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -128,16 +130,14 @@ class BacklogWhService(
 
             val formattedReceivingDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
             ExcelHelper.setCellValue(row, 0, style, formattedReceivingDate)
-            val formattedInspectionDate = item.inspectionDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: ""
-            ExcelHelper.setCellValue(row, 1, style, formattedInspectionDate)
-            ExcelHelper.setCellValue(row, 2, style, item.packageCode)
-            ExcelHelper.setCellValue(row, 3, style, item.poNumber)
-            ExcelHelper.setCellValue(row, 4, style, item.itemName)
-            ExcelHelper.setCellValue(row, 5, style, item.lotNo)
-            ExcelHelper.setCellValue(row, 6, style, item.issueDate)
-            ExcelHelper.setCellValue(row, 7, style, item.locationCode)
-            ExcelHelper.setCellValueInt(row, 8, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
-            ExcelHelper.setCellValueInt(row, 9, numberStyle, item.boxQty ?: 0, numberFormat)
+            ExcelHelper.setCellValue(row, 1, style, item.packageCode)
+            ExcelHelper.setCellValue(row, 2, style, item.poNumber)
+            ExcelHelper.setCellValue(row, 3, style, item.itemName)
+            ExcelHelper.setCellValue(row, 4, style, item.lotNo)
+            ExcelHelper.setCellValue(row, 5, style, item.issueDate)
+            ExcelHelper.setCellValue(row, 6, style, item.locationCode)
+            ExcelHelper.setCellValueInt(row, 7, numberStyle, item.backlogQty?.toInt() ?: 0, numberFormat)
+            ExcelHelper.setCellValueInt(row, 8, numberStyle, item.boxQty ?: 0, numberFormat)
         }
 
         //sheet.createFreezePane(4, 1)
@@ -306,20 +306,7 @@ class BacklogWhService(
 
     fun getList(request: BacklogWhSearchRequest, pageable: Pageable): BasePagingResponse<BacklogWhResponse> {
         val backlogData = backlogWhRepo.getList(request, pageable)
-        val data = backlogData.first.map {
-            BacklogWhResponse(
-                locationCode = it.locationCode,
-                poNumber = it.poNumber,
-                packageCode = it.packageCode,
-                backlogQty = it.backlogQty,
-                boxQty = it.boxQty,
-                receivingDate = it.receivingDate,
-                inspectionDate = it.inspectionDate,
-                itemName = it.itemName,
-                lotNo = it.lotNo,
-                issueDate = it.issueDate
-            )
-        }
+        val data = backlogData.first
         return BasePagingResponse(
             data,
             backlogData.second
@@ -327,20 +314,29 @@ class BacklogWhService(
     }
 
     fun getListForAndroid(request: BacklogWhSearchRequest, pageable: Pageable): BasePagingResponse<BacklogWhResponse> {
-        val backlogData = backlogWhRepo.getListForAndroid(request, pageable)
-        val data = backlogData.first.map {
-            BacklogWhResponse(
-                locationCode = it.locationCode,
+        val backlogData = backlogWhRepo.getList(request, pageable, fetchAll = true, exactMatch = true)
+        return BasePagingResponse(
+            backlogData.first,
+            backlogData.second
+        )
+    }
+
+    fun getListForSendingRequest(request: BacklogWhSearchForSendingRequest, pageable: Pageable): BasePagingResponse<BacklogWhForSendingResponse> {
+        val backlogData = backlogWhRepo.getListForSendingRequest(request, pageable, fetchAll = true, exactMatch = true)
+        val responseData = backlogData.first.map {
+            BacklogWhForSendingResponse(
                 poNumber = it.poNumber,
-                packageCode = it.packageCode,
-                backlogQty = it.backlogQty,
-                boxQty = it.boxQty,
+                itemCode = it.itemCode,
+                productionGroup = it.productionGroup,
                 receivingDate = it.receivingDate,
-                inspectionDate = it.inspectionDate
+                itemName = it.itemName,
+                lotNo = it.lotNo,
+                backlogQty = it.backlogQty,
+                availableBacklogQty = it.backlogQty,
             )
         }
         return BasePagingResponse(
-            data,
+            responseData,
             backlogData.second
         )
     }

@@ -1,9 +1,11 @@
 package com.kcvn.spm.app.backlogwh.service
 
+import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchForSendingRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogHistoryResponse
+import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhForSendingResponse
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -304,19 +306,7 @@ class BacklogWhService(
 
     fun getList(request: BacklogWhSearchRequest, pageable: Pageable): BasePagingResponse<BacklogWhResponse> {
         val backlogData = backlogWhRepo.getList(request, pageable)
-        val data = backlogData.first.map {
-            BacklogWhResponse(
-                locationCode = it.locationCode,
-                poNumber = it.poNumber,
-                packageCode = it.packageCode,
-                backlogQty = it.backlogQty,
-                boxQty = it.boxQty,
-                receivingDate = it.receivingDate,
-                itemName = it.itemName,
-                lotNo = it.lotNo,
-                issueDate = it.issueDate
-            )
-        }
+        val data = backlogData.first
         return BasePagingResponse(
             data,
             backlogData.second
@@ -324,20 +314,22 @@ class BacklogWhService(
     }
 
     fun getListForAndroid(request: BacklogWhSearchRequest, pageable: Pageable): BasePagingResponse<BacklogWhResponse> {
-        val backlogData = backlogWhRepo.getListForAndroid(request, pageable)
-        val data = backlogData.first.map {
-            BacklogWhResponse(
-                locationCode = it.locationCode,
-                poNumber = it.poNumber,
-                packageCode = it.packageCode,
-                backlogQty = it.backlogQty,
-                boxQty = it.boxQty,
-                receivingDate = it.receivingDate,
-                lotNo = it.lotNo
+        val backlogData = backlogWhRepo.getList(request, pageable, fetchAll = true, exactMatch = true)
+        return BasePagingResponse(
+            backlogData.first,
+            backlogData.second
+        )
+    }
+
+    fun getListForSendingRequest(request: BacklogWhSearchForSendingRequest, pageable: Pageable): BasePagingResponse<BacklogWhForSendingResponse> {
+        val backlogData = backlogWhRepo.getListForSendingRequest(request, pageable, fetchAll = true, exactMatch = true)
+        val responseData = backlogData.first.map {
+            BacklogWhForSendingResponse(
+
             )
         }
         return BasePagingResponse(
-            data,
+            responseData,
             backlogData.second
         )
     }

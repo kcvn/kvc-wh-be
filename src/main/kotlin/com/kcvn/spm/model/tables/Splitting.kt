@@ -111,6 +111,11 @@ open class Splitting(
      */
     val UPDATED_BY: TableField<SplittingRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
+    /**
+     * The column <code>public.splitting.is_deleted</code>.
+     */
+    val IS_DELETED: TableField<SplittingRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
     private constructor(alias: Name, aliased: Table<SplittingRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SplittingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<SplittingRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

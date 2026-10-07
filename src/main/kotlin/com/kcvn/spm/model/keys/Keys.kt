@@ -21,6 +21,7 @@ import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
+import com.kcvn.spm.model.tables.NewBacklogWh
 import com.kcvn.spm.model.tables.NewCheckingTransaction
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
@@ -52,6 +53,7 @@ import com.kcvn.spm.model.tables.records.CheckingHistoryRecord
 import com.kcvn.spm.model.tables.records.CheckingRecord
 import com.kcvn.spm.model.tables.records.LocationsRecord
 import com.kcvn.spm.model.tables.records.MovingRecord
+import com.kcvn.spm.model.tables.records.NewBacklogWhRecord
 import com.kcvn.spm.model.tables.records.NewCheckingTransactionRecord
 import com.kcvn.spm.model.tables.records.PurchaseOrderBacklogRecord
 import com.kcvn.spm.model.tables.records.ReceivingCheckingRecord
@@ -97,6 +99,8 @@ val CHECKING_PKEY: UniqueKey<CheckingRecord> = Internal.createUniqueKey(Checking
 val CHECKING_HISTORY_PKEY: UniqueKey<CheckingHistoryRecord> = Internal.createUniqueKey(CheckingHistory.CHECKING_HISTORY, DSL.name("checking_history_pkey"), arrayOf(CheckingHistory.CHECKING_HISTORY.ID), true)
 val LOCATIONS_PK: UniqueKey<LocationsRecord> = Internal.createUniqueKey(Locations.LOCATIONS, DSL.name("locations_pk"), arrayOf(Locations.LOCATIONS.LOCATION_CODE), true)
 val MOVING_PKEY: UniqueKey<MovingRecord> = Internal.createUniqueKey(Moving.MOVING, DSL.name("moving_pkey"), arrayOf(Moving.MOVING.ID), true)
+val NEW_BACKLOG_WH_PK: UniqueKey<NewBacklogWhRecord> = Internal.createUniqueKey(NewBacklogWh.NEW_BACKLOG_WH, DSL.name("new_backlog_wh_pk"), arrayOf(NewBacklogWh.NEW_BACKLOG_WH.ID), true)
+val NEW_BACKLOG_WH_UNIQUE: UniqueKey<NewBacklogWhRecord> = Internal.createUniqueKey(NewBacklogWh.NEW_BACKLOG_WH, DSL.name("new_backlog_wh_unique"), arrayOf(NewBacklogWh.NEW_BACKLOG_WH.PO_NUMBER, NewBacklogWh.NEW_BACKLOG_WH.PACKAGE_CODE, NewBacklogWh.NEW_BACKLOG_WH.RECEIVING_DATE, NewBacklogWh.NEW_BACKLOG_WH.LOT_NO), true)
 val CHECKING_HISTORY_PKEY_2: UniqueKey<NewCheckingTransactionRecord> = Internal.createUniqueKey(NewCheckingTransaction.NEW_CHECKING_TRANSACTION, DSL.name("checking_history_pkey_2"), arrayOf(NewCheckingTransaction.NEW_CHECKING_TRANSACTION.ID), true)
 val AMOEBA_PKEY_1_1: UniqueKey<PurchaseOrderBacklogRecord> = Internal.createUniqueKey(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG, DSL.name("amoeba_pkey_1_1"), arrayOf(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG.ID), true)
 val PURCHASE_ORDER_BACKLOG_UN_1: UniqueKey<PurchaseOrderBacklogRecord> = Internal.createUniqueKey(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG, DSL.name("purchase_order_backlog_un_1"), arrayOf(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG.LOT_NO), true)

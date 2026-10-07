@@ -17,12 +17,13 @@ import java.time.OffsetDateTime
 data class NewBacklogWh(
     var id: String? = null,
     var receivingDate: LocalDate? = null,
-    var locationCode: String? = null,
     var poNumber: String? = null,
     var packageCode: String? = null,
     var backlogQty: BigDecimal? = null,
     var boxQty: Int? = null,
+    var itemCode: String? = null,
     var itemName: String? = null,
+    var productionGroup: String? = null,
     var lotNo: String? = null,
     var issueDate: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
@@ -55,12 +56,6 @@ data class NewBacklogWh(
         }
         else if (this.receivingDate != o.receivingDate)
             return false
-        if (this.locationCode == null) {
-            if (o.locationCode != null)
-                return false
-        }
-        else if (this.locationCode != o.locationCode)
-            return false
         if (this.poNumber == null) {
             if (o.poNumber != null)
                 return false
@@ -85,11 +80,23 @@ data class NewBacklogWh(
         }
         else if (this.boxQty != o.boxQty)
             return false
+        if (this.itemCode == null) {
+            if (o.itemCode != null)
+                return false
+        }
+        else if (this.itemCode != o.itemCode)
+            return false
         if (this.itemName == null) {
             if (o.itemName != null)
                 return false
         }
         else if (this.itemName != o.itemName)
+            return false
+        if (this.productionGroup == null) {
+            if (o.productionGroup != null)
+                return false
+        }
+        else if (this.productionGroup != o.productionGroup)
             return false
         if (this.lotNo == null) {
             if (o.lotNo != null)
@@ -141,12 +148,13 @@ data class NewBacklogWh(
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
         result = prime * result + (if (this.receivingDate == null) 0 else this.receivingDate.hashCode())
-        result = prime * result + (if (this.locationCode == null) 0 else this.locationCode.hashCode())
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
         result = prime * result + (if (this.packageCode == null) 0 else this.packageCode.hashCode())
         result = prime * result + (if (this.backlogQty == null) 0 else this.backlogQty.hashCode())
         result = prime * result + (if (this.boxQty == null) 0 else this.boxQty.hashCode())
+        result = prime * result + (if (this.itemCode == null) 0 else this.itemCode.hashCode())
         result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
+        result = prime * result + (if (this.productionGroup == null) 0 else this.productionGroup.hashCode())
         result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
         result = prime * result + (if (this.issueDate == null) 0 else this.issueDate.hashCode())
         result = prime * result + (if (this.isSynced == null) 0 else this.isSynced.hashCode())
@@ -162,12 +170,13 @@ data class NewBacklogWh(
 
         sb.append(id)
         sb.append(", ").append(receivingDate)
-        sb.append(", ").append(locationCode)
         sb.append(", ").append(poNumber)
         sb.append(", ").append(packageCode)
         sb.append(", ").append(backlogQty)
         sb.append(", ").append(boxQty)
+        sb.append(", ").append(itemCode)
         sb.append(", ").append(itemName)
+        sb.append(", ").append(productionGroup)
         sb.append(", ").append(lotNo)
         sb.append(", ").append(issueDate)
         sb.append(", ").append(isSynced)

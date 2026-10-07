@@ -5,6 +5,8 @@ package com.kcvn.spm.model.tables
 
 
 import com.kcvn.spm.model.Public
+import com.kcvn.spm.model.keys.NEW_BACKLOG_WH_PK
+import com.kcvn.spm.model.keys.NEW_BACKLOG_WH_UNIQUE
 import com.kcvn.spm.model.tables.records.NewBacklogWhRecord
 
 import java.math.BigDecimal
@@ -12,6 +14,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 
 import kotlin.collections.Collection
+import kotlin.collections.List
 
 import org.jooq.Condition
 import org.jooq.Field
@@ -28,6 +31,7 @@ import org.jooq.Stringly
 import org.jooq.Table
 import org.jooq.TableField
 import org.jooq.TableOptions
+import org.jooq.UniqueKey
 import org.jooq.impl.DSL
 import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
@@ -81,11 +85,6 @@ open class NewBacklogWh(
     val RECEIVING_DATE: TableField<NewBacklogWhRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
 
     /**
-     * The column <code>public.new_backlog_wh.location_code</code>.
-     */
-    val LOCATION_CODE: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("location_code"), SQLDataType.VARCHAR(6).nullable(false), this, "")
-
-    /**
      * The column <code>public.new_backlog_wh.po_number</code>.
      */
     val PO_NUMBER: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("po_number"), SQLDataType.VARCHAR(30).nullable(false), this, "")
@@ -106,9 +105,19 @@ open class NewBacklogWh(
     val BOX_QTY: TableField<NewBacklogWhRecord, Int?> = createField(DSL.name("box_qty"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
 
     /**
+     * The column <code>public.new_backlog_wh.item_code</code>.
+     */
+    val ITEM_CODE: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("item_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+
+    /**
      * The column <code>public.new_backlog_wh.item_name</code>.
      */
     val ITEM_NAME: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("item_name"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.new_backlog_wh.production_group</code>.
+     */
+    val PRODUCTION_GROUP: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("production_group"), SQLDataType.VARCHAR(30).nullable(false), this, "")
 
     /**
      * The column <code>public.new_backlog_wh.lot_no</code>.
@@ -164,6 +173,8 @@ open class NewBacklogWh(
      */
     constructor(): this(DSL.name("new_backlog_wh"), null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
+    override fun getPrimaryKey(): UniqueKey<NewBacklogWhRecord> = NEW_BACKLOG_WH_PK
+    override fun getUniqueKeys(): List<UniqueKey<NewBacklogWhRecord>> = listOf(NEW_BACKLOG_WH_UNIQUE)
     override fun `as`(alias: String): NewBacklogWh = NewBacklogWh(DSL.name(alias), this)
     override fun `as`(alias: Name): NewBacklogWh = NewBacklogWh(alias, this)
     override fun `as`(alias: Table<*>): NewBacklogWh = NewBacklogWh(alias.qualifiedName, this)

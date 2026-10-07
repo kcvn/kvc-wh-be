@@ -1,9 +1,11 @@
 package com.kcvn.spm.app.backlogwh.controller
 
+import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchForSendingRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogHistoryResponse
+import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhForSendingResponse
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -51,6 +53,20 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<BacklogWhResponse>> {
         val result = backlogWhService.getListForAndroid(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-list-sending_request")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getListForSendingRequest(
+        request: BacklogWhSearchForSendingRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<BacklogWhForSendingResponse>> {
+        val result = backlogWhService.getListForSendingRequest(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

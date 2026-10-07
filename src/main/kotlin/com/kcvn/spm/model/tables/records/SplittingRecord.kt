@@ -51,6 +51,12 @@ open class SplittingRecord() : UpdatableRecordImpl<SplittingRecord>(Splitting.SP
         set(value): Unit = set(7, value)
         get(): String? = get(7) as String?
 
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsDeleted")
+    open var isDeleted: Boolean?
+        set(value): Unit = set(8, value)
+        get(): Boolean? = get(8) as Boolean?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -60,7 +66,7 @@ open class SplittingRecord() : UpdatableRecordImpl<SplittingRecord>(Splitting.SP
     /**
      * Create a detached, initialised SplittingRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, packageCode: String? = null, locationCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, packageCode: String? = null, locationCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.packageCode = packageCode
@@ -69,6 +75,7 @@ open class SplittingRecord() : UpdatableRecordImpl<SplittingRecord>(Splitting.SP
         this.createdBy = createdBy
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
+        this.isDeleted = isDeleted
         resetChangedOnNotNull()
     }
 
@@ -85,6 +92,7 @@ open class SplittingRecord() : UpdatableRecordImpl<SplittingRecord>(Splitting.SP
             this.createdBy = value.createdBy
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
+            this.isDeleted = value.isDeleted
             resetChangedOnNotNull()
         }
     }

@@ -1,7 +1,9 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchForSendingRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
+import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -9,6 +11,7 @@ import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
+import com.kcvn.spm.model.tables.references.SPLITTING
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -24,102 +27,158 @@ import java.time.ZoneOffset
 
 @Repository
 class BacklogWhRepository(private val context: DSLContext) : SortingRepository() {
-    fun getList(request: BacklogWhSearchRequest, pageable: Pageable?) : Pair<List<NewBacklogWh>, Int> {
-        var condition: Condition = DSL.noCondition()
-        val receivingDate = NEW_BACKLOG_WH.field("receiving_date", java.time.OffsetDateTime::class.java)
-        if(!request.listLocationCode.isNullOrEmpty()){
-            val locationCodes = request.listLocationCode!!.split(",")
-            var condition1 : Condition = DSL.noCondition()
-            locationCodes.forEach { lc ->
-                condition1 = condition1.or(NEW_BACKLOG_WH.LOCATION_CODE.eq(lc.trim()))
-            }
-            condition = condition.and(condition1)
-        }
-        if(!request.listPoNumber.isNullOrEmpty()){
-            val poNumbers = request.listPoNumber!!.split(",")
-            var condition1 : Condition = DSL.noCondition()
-            poNumbers.forEach { pn ->
-                condition1 = condition1.or(NEW_BACKLOG_WH.PO_NUMBER.containsIgnoreCase(pn))
-            }
-            condition = condition.and(condition1)
-        }
-        if(!request.listPackageCode.isNullOrEmpty()){
-            val packageCodes = request.listPackageCode!!.split(",")
-            var condition1 : Condition = DSL.noCondition()
-            packageCodes.forEach { pc ->
-                condition1 = condition1.or(NEW_BACKLOG_WH.PACKAGE_CODE.containsIgnoreCase(pc))
-            }
-            condition = condition.and(condition1)
-        }
-        if(!request.lotNo.isNullOrEmpty()){
-            val lotNo = request.lotNo!!.split(",")
-            var condition1 : Condition = DSL.noCondition()
-            lotNo.forEach { pc ->
-                condition1 = condition1.or(NEW_BACKLOG_WH.LOT_NO.containsIgnoreCase(pc))
-            }
-            condition = condition.and(condition1)
-        }
-        if (request.fromDate != null && request.toDate != null) {
-            condition = condition.and(receivingDate?.between(request.fromDate, request.toDate))
-        }
-            val query = context.selectFrom(NEW_BACKLOG_WH).where(condition.and(NEW_BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
-            val count = query.count()
-        if (pageable != null){
-            val data = query
-                .orderBy(getSortFields(pageable.sort, NEW_BACKLOG_WH.CREATED_DATE))
-                .limit(pageable.pageSize)
-                .offset(pageable.offset)
-                .fetchInto(NewBacklogWh::class.java)
+    fun getList(
+        request: BacklogWhSearchRequest,
+        pageable: Pageable?,
+        fetchAll: Boolean = false,
+        exactMatch: Boolean = false,
+    ) : Pair<List<BacklogWhResponse>, Int> {
+        val (sql, params) = createGetListSqlQuery(request, exactMatch)
 
-            return Pair(data, count)
-        }
-        else {
-            val data = query
-                .orderBy(NEW_BACKLOG_WH.CREATED_DATE)
-                .fetchInto(NewBacklogWh::class.java)
-
-            return Pair(data, count)
+        var paginatedSql = "$sql order by ${createGetListOrderBy(pageable)}"
+        val paginatedParams = params.toMutableList()
+        if (pageable != null && !fetchAll) {
+            paginatedSql = "$paginatedSql limit ? offset ?"
+            paginatedParams += pageable.pageSize
+            paginatedParams += pageable.offset
         }
 
+        val records = context.fetch(paginatedSql, *paginatedParams.toTypedArray())
+        val totalCount = records.firstOrNull()?.get("total_count", Int::class.java) ?: 0
+
+        return records.into(BacklogWhResponse::class.java) to totalCount
     }
 
-    fun getListForAndroid(request: BacklogWhSearchRequest, pageable: Pageable) : Pair<List<NewBacklogWh>, Int> {
-        var condition: Condition = DSL.noCondition()
-        val receivingDate = NEW_BACKLOG_WH.field("receiving_date", java.time.OffsetDateTime::class.java)
-        if(!request.listLocationCode.isNullOrEmpty()){
-            val locationCodes = request.listLocationCode!!.split(",")
-            var condition1 : Condition = DSL.noCondition()
-            locationCodes.forEach { lc ->
-                condition1 = condition1.or(NEW_BACKLOG_WH.LOCATION_CODE.eq(lc.trim()))
-            }
-            condition = condition.and(condition1)
-        }
-        if(!request.listPoNumber.isNullOrEmpty()){
-            val poNumbers = request.listPoNumber!!.split(",")
-            var condition1 : Condition = DSL.noCondition()
-            poNumbers.forEach { pn ->
-                condition1 = condition1.or(NEW_BACKLOG_WH.PO_NUMBER.eq(pn.trim()))
-            }
-            condition = condition.and(condition1)
-        }
-        if(!request.listPackageCode.isNullOrEmpty()){
-            val packageCodes = request.listPackageCode!!.split(",")
-            var condition1 : Condition = DSL.noCondition()
-            packageCodes.forEach { pc ->
-                condition1 = condition1.or(NEW_BACKLOG_WH.PACKAGE_CODE.eq(pc.trim()))
-            }
-            condition = condition.and(condition1)
-        }
-        if (request.fromDate != null && request.toDate != null) {
-            condition = condition.and(receivingDate?.between(request.fromDate, request.toDate))
-        }
-        val query = context.selectFrom(NEW_BACKLOG_WH).where(condition.and(NEW_BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO)))
-        val count = query.count()
-        val data = query
-            .orderBy(getSortFields(pageable.sort, NEW_BACKLOG_WH.CREATED_DATE))
-            .fetchInto(NewBacklogWh::class.java)
+    private fun createGetListSqlQuery(request: BacklogWhSearchRequest, exactMatch: Boolean): Pair<String, List<Any>> {
+        val params = mutableListOf<Any>()
+        val conditions = mutableListOf("nbw.backlog_qty > 0 and s.is_deleted = false")
 
-        return Pair(data, count)
+        fun addCondition(column: String, values: List<String>, exact: Boolean) {
+            conditions += if (exact) "$column in (${values.joinToString(", ") { "?" }})"
+                else values.joinToString(" or ", "(", ")") { "$column ilike '%' || ? || '%'" }
+            params.add(values.map { it.trim() })
+        }
+
+        request.listLocationCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("s.location_code", it, false) }
+        request.listPoNumber?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.po_number", it, exactMatch) }
+        request.listPackageCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.package_code", it, exactMatch) }
+        request.lotNo?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.lot_no", it, false) }
+        if (request.fromDate != null && request.toDate != null) {
+            conditions += "nbw.receiving_date between ? and ?"
+            params += request.fromDate!!
+            params += request.toDate!!
+        }
+
+        val sql = """
+            select
+                s.location_code,
+                nbw.*,
+                count(*) over() as total_count
+            from new_backlog_wh nbw
+            inner join splitting s
+            on nbw.package_code = s.package_code
+            where ${conditions.joinToString(" and ")}
+        """.trimIndent()
+
+        return sql to params
+    }
+
+    private fun createGetListOrderBy(pageable: Pageable?): String {
+        val sortColumns = mapOf(
+            "createdDate" to "nbw.created_date",
+            "receivingDate" to "nbw.receiving_date",
+            "poNumber" to "nbw.po_number",
+            "packageCode" to "nbw.package_code",
+            "lotNo" to "nbw.lot_no",
+        )
+        val orderBy = pageable?.sort
+            ?.mapNotNull { order -> sortColumns[order.property]?.let { "$it ${if (order.isAscending) "asc" else "desc"}" } }
+            ?.toList()
+            .orEmpty()
+        return orderBy.ifEmpty { listOf("nbw.created_date desc") }.joinToString(", ")
+    }
+
+    fun getListForSendingRequest(
+        request: BacklogWhSearchForSendingRequest,
+        pageable: Pageable?,
+        fetchAll: Boolean = false,
+        exactMatch: Boolean = false,
+    ) : Pair<List<BacklogWhResponse>, Int> {
+        val (sql, params) = createGetListForSendingRequestSqlQuery(request, exactMatch)
+
+        var paginatedSql = "$sql order by ${createGetListForSendingRequestOrderBy(pageable)}"
+        val paginatedParams = params.toMutableList()
+        if (pageable != null && !fetchAll) {
+            paginatedSql = "$paginatedSql limit ? offset ?"
+            paginatedParams += pageable.pageSize
+            paginatedParams += pageable.offset
+        }
+
+        val records = context.fetch(paginatedSql, *paginatedParams.toTypedArray())
+        val totalCount = records.firstOrNull()?.get("total_count", Int::class.java) ?: 0
+
+        return records.into(BacklogWhResponse::class.java) to totalCount
+    }
+
+    private fun createGetListForSendingRequestSqlQuery(request: BacklogWhSearchForSendingRequest, exactMatch: Boolean): Pair<String, List<Any>> {
+        val params = mutableListOf<Any>()
+        val conditions = mutableListOf("nbw.backlog_qty > 0")
+
+        fun addCondition(column: String, values: List<String>, exact: Boolean) {
+            conditions += if (exact) "$column in (${values.joinToString(", ") { "?" }})"
+            else values.joinToString(" or ", "(", ")") { "$column ilike '%' || ? || '%'" }
+            params.add(values.map { it.trim() })
+        }
+
+        request.itemCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.item_code", it, false) }
+        request.poNumber?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.po_number", it, exactMatch) }
+        request.productionGroup?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.production_group", it, exactMatch) }
+        request.itemName?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.item_name", it, exactMatch) }
+        request.lotNo?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.lot_no", it, false) }
+        if (request.fromDate != null && request.toDate != null) {
+            conditions += "nbw.receiving_date between ? and ?"
+            params += request.fromDate!!
+            params += request.toDate!!
+        }
+
+        val sql = """
+            select
+		nbw.po_number,
+		nbw.item_code,
+		nbw.production_group,
+		nbw.receiving_date,
+		nbw.item_name,
+		nbw.lot_no,
+		sum(nbw.backlog_qty) as backlog_qty,
+		count(*) over() as total_count
+	from
+		new_backlog_wh nbw
+    where ${conditions.joinToString(" and ")}
+    group by
+		nbw.po_number,
+		nbw.item_code,
+		nbw.production_group,
+		nbw.receiving_date,
+		nbw.item_name,
+		nbw.lot_no
+        """.trimIndent()
+
+        return sql to params
+    }
+
+    private fun createGetListForSendingRequestOrderBy(pageable: Pageable?): String {
+        val sortColumns = mapOf(
+            "createdDate" to "nbw.created_date",
+            "receivingDate" to "nbw.receiving_date",
+            "poNumber" to "nbw.po_number",
+            "packageCode" to "nbw.package_code",
+            "lotNo" to "nbw.lot_no",
+        )
+        val orderBy = pageable?.sort
+            ?.mapNotNull { order -> sortColumns[order.property]?.let { "$it ${if (order.isAscending) "asc" else "desc"}" } }
+            ?.toList()
+            .orEmpty()
+        return orderBy.ifEmpty { listOf("nbw.created_date desc") }.joinToString(", ")
     }
 
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {

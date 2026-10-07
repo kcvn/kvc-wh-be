@@ -56,7 +56,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         fun addCondition(column: String, values: List<String>, exact: Boolean) {
             conditions += if (exact) "$column in (${values.joinToString(", ") { "?" }})"
                 else values.joinToString(" or ", "(", ")") { "$column ilike '%' || ? || '%'" }
-            params.add(values.map { it.trim() })
+            params.addAll(values.map { it.trim() })
         }
 
         request.listLocationCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("s.location_code", it, false) }
@@ -127,7 +127,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         fun addCondition(column: String, values: List<String>, exact: Boolean) {
             conditions += if (exact) "$column in (${values.joinToString(", ") { "?" }})"
             else values.joinToString(" or ", "(", ")") { "$column ilike '%' || ? || '%'" }
-            params.add(values.map { it.trim() })
+            params.addAll(values.map { it.trim() })
         }
 
         request.itemCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.item_code", it, false) }
@@ -168,17 +168,15 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
 
     private fun createGetListForSendingRequestOrderBy(pageable: Pageable?): String {
         val sortColumns = mapOf(
-            "createdDate" to "nbw.created_date",
             "receivingDate" to "nbw.receiving_date",
             "poNumber" to "nbw.po_number",
-            "packageCode" to "nbw.package_code",
             "lotNo" to "nbw.lot_no",
         )
         val orderBy = pageable?.sort
             ?.mapNotNull { order -> sortColumns[order.property]?.let { "$it ${if (order.isAscending) "asc" else "desc"}" } }
             ?.toList()
             .orEmpty()
-        return orderBy.ifEmpty { listOf("nbw.created_date desc") }.joinToString(", ")
+        return orderBy.ifEmpty { listOf("nbw.receiving_date") }.joinToString(", ")
     }
 
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {

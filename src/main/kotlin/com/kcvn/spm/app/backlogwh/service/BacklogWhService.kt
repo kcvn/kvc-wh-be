@@ -325,7 +325,14 @@ class BacklogWhService(
         val backlogData = backlogWhRepo.getListForSendingRequest(request, pageable, fetchAll = true, exactMatch = true)
         val responseData = backlogData.first.map {
             BacklogWhForSendingResponse(
-
+                poNumber = it.poNumber,
+                itemCode = it.itemCode,
+                productionGroup = it.productionGroup,
+                receivingDate = it.receivingDate,
+                itemName = it.itemName,
+                lotNo = it.lotNo,
+                backlogQty = it.backlogQty,
+                availableBacklogQty = it.backlogQty,
             )
         }
         return BasePagingResponse(

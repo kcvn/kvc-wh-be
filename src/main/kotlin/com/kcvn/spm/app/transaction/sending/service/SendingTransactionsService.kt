@@ -2,6 +2,7 @@ package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
+import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestListResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
@@ -66,9 +67,15 @@ class SendingTransactionsService(
         requestListGrouped.forEach { (key, requests) ->
             val (receivingDate, poNumber) = key
             val existedRequest = sendingRequestListRepository.findByReceivingDatePO(poNumber, receivingDate)
+            val itemCode = requests[0].itemCode
+            val itemName = requests[0].itemName
+            val productionGroup = requests[0].productionGroup
             val sendingRequestRec = SendingRequestList(
                 receivingDate = receivingDate,
                 poNumber = poNumber,
+                itemCode = itemCode,
+                itemName = itemName,
+                productionGroup = productionGroup,
                 requestQty = requests.sumOf { it.requestQty },
                 seqNo = (existedRequest?.seqNo ?: 0) + 1,
                 status = 1
@@ -97,6 +104,14 @@ class SendingTransactionsService(
                 sendingRequestListDetailRepository.save(sendingRequestDetailRec)
             }
         }
+    }
+
+    fun getSendingRequestList(request: SendingRequestListSearchRequest, pageable: Pageable): BasePagingResponse<SendingRequestListResponse>{
+        val data = sendingRequestListRepository.getList(request, pageable)
+        return BasePagingResponse(
+            data.first,
+            data.second
+        )
     }
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
         val moving = sendingRepo.getList(request, pageable)

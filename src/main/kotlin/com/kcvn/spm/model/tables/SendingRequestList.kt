@@ -125,6 +125,21 @@ open class SendingRequestList(
      */
     val COMMENT: TableField<SendingRequestListRecord, String?> = createField(DSL.name("comment"), SQLDataType.VARCHAR(1000), this, "")
 
+    /**
+     * The column <code>public.sending_request_list.item_code</code>.
+     */
+    val ITEM_CODE: TableField<SendingRequestListRecord, String?> = createField(DSL.name("item_code"), SQLDataType.VARCHAR(30), this, "")
+
+    /**
+     * The column <code>public.sending_request_list.item_name</code>.
+     */
+    val ITEM_NAME: TableField<SendingRequestListRecord, String?> = createField(DSL.name("item_name"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.sending_request_list.production_group</code>.
+     */
+    val PRODUCTION_GROUP: TableField<SendingRequestListRecord, String?> = createField(DSL.name("production_group"), SQLDataType.VARCHAR(5), this, "")
+
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

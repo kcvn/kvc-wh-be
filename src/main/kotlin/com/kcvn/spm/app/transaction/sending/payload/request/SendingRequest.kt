@@ -5,6 +5,9 @@ import java.time.LocalDate
 
 data class SendingRequest(
     var poNumber: String,
+    var itemCode: String,
+    var itemName: String? = null,
+    var productionGroup: String? = null,
     var receivingDate: LocalDate,
     var lotNo: String,
     var requestQty: BigDecimal,

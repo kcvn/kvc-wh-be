@@ -63,10 +63,22 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
         set(value): Unit = set(10, value)
         get(): String? = get(10) as String?
 
+    open var itemCode: String?
+        set(value): Unit = set(11, value)
+        get(): String? = get(11) as String?
+
+    open var itemName: String?
+        set(value): Unit = set(12, value)
+        get(): String? = get(12) as String?
+
+    open var productionGroup: String?
+        set(value): Unit = set(13, value)
+        get(): String? = get(13) as String?
+
     /**
      * Create a detached, initialised SendingRequestListRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, requestQty: BigDecimal? = null, seqNo: Int? = null, status: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, comment: String? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, requestQty: BigDecimal? = null, seqNo: Int? = null, status: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, comment: String? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.poNumber = poNumber
@@ -78,6 +90,9 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
         this.comment = comment
+        this.itemCode = itemCode
+        this.itemName = itemName
+        this.productionGroup = productionGroup
         resetChangedOnNotNull()
     }
 
@@ -97,6 +112,9 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
             this.comment = value.comment
+            this.itemCode = value.itemCode
+            this.itemName = value.itemName
+            this.productionGroup = value.productionGroup
             resetChangedOnNotNull()
         }
     }

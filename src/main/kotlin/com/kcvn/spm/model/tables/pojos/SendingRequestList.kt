@@ -25,7 +25,10 @@ data class SendingRequestList(
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
-    var comment: String? = null
+    var comment: String? = null,
+    var itemCode: String? = null,
+    var itemName: String? = null,
+    var productionGroup: String? = null
 ): Serializable {
 
 
@@ -103,6 +106,24 @@ data class SendingRequestList(
         }
         else if (this.comment != o.comment)
             return false
+        if (this.itemCode == null) {
+            if (o.itemCode != null)
+                return false
+        }
+        else if (this.itemCode != o.itemCode)
+            return false
+        if (this.itemName == null) {
+            if (o.itemName != null)
+                return false
+        }
+        else if (this.itemName != o.itemName)
+            return false
+        if (this.productionGroup == null) {
+            if (o.productionGroup != null)
+                return false
+        }
+        else if (this.productionGroup != o.productionGroup)
+            return false
         return true
     }
 
@@ -120,6 +141,9 @@ data class SendingRequestList(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.comment == null) 0 else this.comment.hashCode())
+        result = prime * result + (if (this.itemCode == null) 0 else this.itemCode.hashCode())
+        result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
+        result = prime * result + (if (this.productionGroup == null) 0 else this.productionGroup.hashCode())
         return result
     }
 
@@ -137,6 +161,9 @@ data class SendingRequestList(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(comment)
+        sb.append(", ").append(itemCode)
+        sb.append(", ").append(itemName)
+        sb.append(", ").append(productionGroup)
 
         sb.append(")")
         return sb.toString()

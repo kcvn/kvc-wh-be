@@ -8,6 +8,7 @@ import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST_DETAIL
 import org.jooq.DSLContext
 import org.jooq.TableField
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -28,6 +29,16 @@ class SendingRequestListDetailRepository(private val context: DSLContext) : Sort
                     .and (SENDING_REQUEST_LIST_DETAIL.LOT_NO.eq(lotNo))
                     .and (SENDING_REQUEST_LIST.STATUS.notIn(3, 4))
             )
+            .fetchInto(SendingRequestListDetail::class.java)
+    }
+
+    fun getListDetailById(requestId: String, pageable: Pageable): List<SendingRequestListDetail>?{
+        return context.selectFrom(SENDING_REQUEST_LIST_DETAIL)
+            .where(
+                SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID.eq(requestId)
+            )
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
             .fetchInto(SendingRequestListDetail::class.java)
     }
 

@@ -2,6 +2,7 @@ package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
+import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestDetailResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestListResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
@@ -113,6 +114,34 @@ class SendingTransactionsService(
             data.second
         )
     }
+
+    fun getSendingRequestDetail(request: SendingRequestDetailSearchRequest, pageable: Pageable): BasePagingResponse<SendingRequestDetailResponse>{
+        val sendingRequest = sendingRequestListRepository.findByReceivingDatePOAndSeqNo(request.poNumber, request.receivingDate, request.seqNo)
+            ?: throw BusinessExceptionDetail(
+                "Không tìm thấy yêu cầu", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}"
+            )
+        val detailData = sendingRequestListDetailRepository.getListDetailById(sendingRequest.id!!, pageable)
+        val responseData = detailData!!.map {
+            SendingRequestDetailResponse(
+                poNumber = sendingRequest.poNumber,
+                itemCode = sendingRequest.itemCode,
+                itemName = sendingRequest.itemName,
+                productionGroup = sendingRequest.productionGroup,
+                receivingDate = sendingRequest.receivingDate,
+                seqNo = sendingRequest.seqNo,
+                lotNo = it.lotNo,
+                requestQty = it.requestQty,
+                status = sendingRequest.status,
+                comment = sendingRequest.comment
+            )
+
+        }
+        return BasePagingResponse(
+            responseData,
+            detailData!!.size
+        )
+    }
+
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
         val moving = sendingRepo.getList(request, pageable)
         val data = moving.first.map {

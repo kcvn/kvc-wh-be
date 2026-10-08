@@ -13,10 +13,12 @@ import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.pojos.SendingRequestList
+import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
 import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST
+import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST_DETAIL
 import com.kcvn.spm.model.tables.references.SPLITTING
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -40,6 +42,18 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
             .where(
                 SENDING_REQUEST_LIST.PO_NUMBER.eq(poNumber)
                     .and (SENDING_REQUEST_LIST.RECEIVING_DATE.eq(receivingDate))
+            )
+            .orderBy(SENDING_REQUEST_LIST.SEQ_NO.desc())
+            .fetchInto(SendingRequestList::class.java)
+            .firstOrNull()
+    }
+
+    fun findByReceivingDatePOAndSeqNo(poNumber: String, receivingDate: LocalDate, seqNo: Int): SendingRequestList? {
+        return context.selectFrom(SENDING_REQUEST_LIST)
+            .where(
+                SENDING_REQUEST_LIST.PO_NUMBER.eq(poNumber)
+                    .and (SENDING_REQUEST_LIST.RECEIVING_DATE.eq(receivingDate))
+                    .and (SENDING_REQUEST_LIST.SEQ_NO.eq(seqNo))
             )
             .orderBy(SENDING_REQUEST_LIST.SEQ_NO.desc())
             .fetchInto(SendingRequestList::class.java)
@@ -141,6 +155,8 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
         return orderBy.ifEmpty { listOf("srl.created_date desc") }.joinToString(", ")
     }
     ///
+
+
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {

@@ -3,6 +3,7 @@ package com.kcvn.spm.app.transaction.sending.controller
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestDetailSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestForDeny
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestListSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
@@ -77,20 +78,33 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         val result = sendingService.getSendingRequestDetail(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
-
-    @GetMapping("/get-sending-request-list-detail")
+    @PostMapping("/decline-sending-request-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun getSendingRequestListDetail(
-        request: SendingSearchRequest,
-        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
-        @SortDefault.SortDefaults(
-            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
+    fun declineSendingRequestList(@Valid @RequestBody request: List<SendingRequestForDeny>): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
         )
-        pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<SendingResponse>> {
-        val result = sendingService.getList(request, pageable)
-        return ResponseEntity(result, HttpStatus.OK)
+            sendingService.declineSendingRequestList(request)
+            return ResponseEntity<MessageResponse>(
+                MessageResponse(CommonUtils.getMessage("action.succeeded")),
+                HttpStatus.CREATED
+            )
     }
+
+//    @GetMapping("/get-sending-request-list-detail")
+//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+//    fun getSendingRequestListDetail(
+//        request: SendingSearchRequest,
+//        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+//        @SortDefault.SortDefaults(
+//            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
+//        )
+//        pageable: Pageable
+//    ): ResponseEntity<BasePagingResponse<SendingResponse>> {
+//        val result = sendingService.getList(request, pageable)
+//        return ResponseEntity(result, HttpStatus.OK)
+//    }
 
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")

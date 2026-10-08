@@ -138,8 +138,20 @@ class SendingTransactionsService(
         }
         return BasePagingResponse(
             responseData,
-            detailData!!.size
+            detailData.size
         )
+    }
+
+    fun declineSendingRequestList(request: List<SendingRequestForDeny>){
+        request.forEach { request ->
+            val rec = sendingRequestListRepository.findByReceivingDatePOAndSeqNo(request.poNumber, request.receivingDate, request.seqNo)
+                ?: throw BusinessExceptionDetail(
+            "Không tìm thấy yêu cầu", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}"
+        )
+            rec.status = 3
+            rec.comment = request.comment
+            sendingRequestListRepository.update(rec)
+        }
     }
 
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {

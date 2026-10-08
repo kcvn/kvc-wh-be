@@ -15,7 +15,9 @@ import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.pojos.SendingRequestList
 import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
+import com.kcvn.spm.model.tables.references.CHECKING_HISTORY
 import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
+import com.kcvn.spm.model.tables.references.NEW_CHECKING_TRANSACTION
 import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST_DETAIL
@@ -74,6 +76,16 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
             .set(record)
             .returning(SENDING_REQUEST_LIST.ID)
             .fetchOne()!!.id!!
+    }
+
+    fun update(data: SendingRequestList) {
+        context.update(SENDING_REQUEST_LIST)
+            .set(SENDING_REQUEST_LIST.STATUS, data.status)
+            .set(SENDING_REQUEST_LIST.COMMENT, data.comment)
+            .set(CHECKING_HISTORY.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(CHECKING_HISTORY.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(SENDING_REQUEST_LIST.ID.eq(data.id))
+            .execute()
     }
 
     ///

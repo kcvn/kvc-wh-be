@@ -81,6 +81,7 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
 
     fun update(data: SendingRequestList) {
         context.update(SENDING_REQUEST_LIST)
+            .set(SENDING_REQUEST_LIST.SENDING_FORM_ID, data.sendingFormId)
             .set(SENDING_REQUEST_LIST.STATUS, data.status)
             .set(SENDING_REQUEST_LIST.COMMENT, data.comment)
             .set(SENDING_REQUEST_LIST.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)

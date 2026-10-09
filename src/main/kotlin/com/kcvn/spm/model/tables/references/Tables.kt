@@ -26,6 +26,7 @@ import com.kcvn.spm.model.tables.NewCheckingTransaction
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SendingFormList
 import com.kcvn.spm.model.tables.SendingPickingList
 import com.kcvn.spm.model.tables.SendingRequestList
 import com.kcvn.spm.model.tables.SendingRequestListDetail
@@ -151,6 +152,11 @@ val RECEIVING_CHECKING: ReceivingChecking = ReceivingChecking.RECEIVING_CHECKING
  * The table <code>public.receiving_transactions</code>.
  */
 val RECEIVING_TRANSACTIONS: ReceivingTransactions = ReceivingTransactions.RECEIVING_TRANSACTIONS
+
+/**
+ * The table <code>public.sending_form_list</code>.
+ */
+val SENDING_FORM_LIST: SendingFormList = SendingFormList.SENDING_FORM_LIST
 
 /**
  * The table <code>public.sending_picking_list</code>.

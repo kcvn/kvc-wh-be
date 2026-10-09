@@ -26,6 +26,7 @@ import com.kcvn.spm.model.tables.NewCheckingTransaction
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SendingFormList
 import com.kcvn.spm.model.tables.SendingPickingList
 import com.kcvn.spm.model.tables.SendingRequestList
 import com.kcvn.spm.model.tables.SendingRequestListDetail
@@ -171,6 +172,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val RECEIVING_TRANSACTIONS: ReceivingTransactions get() = ReceivingTransactions.RECEIVING_TRANSACTIONS
 
     /**
+     * The table <code>public.sending_form_list</code>.
+     */
+    val SENDING_FORM_LIST: SendingFormList get() = SendingFormList.SENDING_FORM_LIST
+
+    /**
      * The table <code>public.sending_picking_list</code>.
      */
     val SENDING_PICKING_LIST: SendingPickingList get() = SendingPickingList.SENDING_PICKING_LIST
@@ -260,6 +266,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG,
         ReceivingChecking.RECEIVING_CHECKING,
         ReceivingTransactions.RECEIVING_TRANSACTIONS,
+        SendingFormList.SENDING_FORM_LIST,
         SendingPickingList.SENDING_PICKING_LIST,
         SendingRequestList.SENDING_REQUEST_LIST,
         SendingRequestListDetail.SENDING_REQUEST_LIST_DETAIL,

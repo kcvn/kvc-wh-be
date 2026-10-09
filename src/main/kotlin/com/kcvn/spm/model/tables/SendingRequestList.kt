@@ -140,6 +140,11 @@ open class SendingRequestList(
      */
     val PRODUCTION_GROUP: TableField<SendingRequestListRecord, String?> = createField(DSL.name("production_group"), SQLDataType.VARCHAR(5), this, "")
 
+    /**
+     * The column <code>public.sending_request_list.sending_form_id</code>.
+     */
+    val SENDING_FORM_ID: TableField<SendingRequestListRecord, String?> = createField(DSL.name("sending_form_id"), SQLDataType.VARCHAR(50), this, "")
+
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

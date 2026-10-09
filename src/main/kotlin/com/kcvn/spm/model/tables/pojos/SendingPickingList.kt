@@ -16,9 +16,8 @@ import java.time.OffsetDateTime
 @Suppress("UNCHECKED_CAST")
 data class SendingPickingList(
     var id: String? = null,
-    var sendingRequestId: String? = null,
+    var sendingRequestDetailId: String? = null,
     var receivingDate: LocalDate? = null,
-    var formCode: String? = null,
     var poNumber: String? = null,
     var packageCode: String? = null,
     var requestQty: BigDecimal? = null,
@@ -51,23 +50,17 @@ data class SendingPickingList(
         }
         else if (this.id != o.id)
             return false
-        if (this.sendingRequestId == null) {
-            if (o.sendingRequestId != null)
+        if (this.sendingRequestDetailId == null) {
+            if (o.sendingRequestDetailId != null)
                 return false
         }
-        else if (this.sendingRequestId != o.sendingRequestId)
+        else if (this.sendingRequestDetailId != o.sendingRequestDetailId)
             return false
         if (this.receivingDate == null) {
             if (o.receivingDate != null)
                 return false
         }
         else if (this.receivingDate != o.receivingDate)
-            return false
-        if (this.formCode == null) {
-            if (o.formCode != null)
-                return false
-        }
-        else if (this.formCode != o.formCode)
             return false
         if (this.poNumber == null) {
             if (o.poNumber != null)
@@ -154,9 +147,8 @@ data class SendingPickingList(
         val prime = 31
         var result = 1
         result = prime * result + (if (this.id == null) 0 else this.id.hashCode())
-        result = prime * result + (if (this.sendingRequestId == null) 0 else this.sendingRequestId.hashCode())
+        result = prime * result + (if (this.sendingRequestDetailId == null) 0 else this.sendingRequestDetailId.hashCode())
         result = prime * result + (if (this.receivingDate == null) 0 else this.receivingDate.hashCode())
-        result = prime * result + (if (this.formCode == null) 0 else this.formCode.hashCode())
         result = prime * result + (if (this.poNumber == null) 0 else this.poNumber.hashCode())
         result = prime * result + (if (this.packageCode == null) 0 else this.packageCode.hashCode())
         result = prime * result + (if (this.requestQty == null) 0 else this.requestQty.hashCode())
@@ -177,9 +169,8 @@ data class SendingPickingList(
         val sb = StringBuilder("SendingPickingList (")
 
         sb.append(id)
-        sb.append(", ").append(sendingRequestId)
+        sb.append(", ").append(sendingRequestDetailId)
         sb.append(", ").append(receivingDate)
-        sb.append(", ").append(formCode)
         sb.append(", ").append(poNumber)
         sb.append(", ").append(packageCode)
         sb.append(", ").append(requestQty)

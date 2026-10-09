@@ -28,7 +28,8 @@ data class SendingRequestList(
     var comment: String? = null,
     var itemCode: String? = null,
     var itemName: String? = null,
-    var productionGroup: String? = null
+    var productionGroup: String? = null,
+    var sendingFormId: String? = null
 ): Serializable {
 
 
@@ -124,6 +125,12 @@ data class SendingRequestList(
         }
         else if (this.productionGroup != o.productionGroup)
             return false
+        if (this.sendingFormId == null) {
+            if (o.sendingFormId != null)
+                return false
+        }
+        else if (this.sendingFormId != o.sendingFormId)
+            return false
         return true
     }
 
@@ -144,6 +151,7 @@ data class SendingRequestList(
         result = prime * result + (if (this.itemCode == null) 0 else this.itemCode.hashCode())
         result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
         result = prime * result + (if (this.productionGroup == null) 0 else this.productionGroup.hashCode())
+        result = prime * result + (if (this.sendingFormId == null) 0 else this.sendingFormId.hashCode())
         return result
     }
 
@@ -164,6 +172,7 @@ data class SendingRequestList(
         sb.append(", ").append(itemCode)
         sb.append(", ").append(itemName)
         sb.append(", ").append(productionGroup)
+        sb.append(", ").append(sendingFormId)
 
         sb.append(")")
         return sb.toString()

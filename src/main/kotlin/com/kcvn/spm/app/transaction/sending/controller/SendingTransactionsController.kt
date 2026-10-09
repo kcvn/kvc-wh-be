@@ -17,6 +17,7 @@ import com.kcvn.spm.app.transaction.sending.service.SendingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.MessageResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
@@ -94,6 +95,22 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         val result = sendingService.getSendingRequestDetail(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
+
+    @PostMapping("/confirm-sending-request-list")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun confirmSendingRequestList(@Valid @RequestBody request: SendingRequestForConfirm): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
+        )
+        sendingService.confirmSendingRequestList(request)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
+    }
+
+
     @PostMapping("/decline-sending-request-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun declineSendingRequestList(@Valid @RequestBody request: List<SendingRequestForDeny>): ResponseEntity<*> {
@@ -108,32 +125,12 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
             )
     }
 
-    @PostMapping("/confirm-sending-request-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun confirmSendingRequestList(@Valid @RequestBody request: List<SendingRequestForConfirm>): ResponseEntity<*> {
-        val logger = KotlinLogging.logger {}
-        logger.info(
-            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
-        )
-        sendingService.confirmSendingRequestList(request)
-        return ResponseEntity<MessageResponse>(
-            MessageResponse(CommonUtils.getMessage("action.succeeded")),
-            HttpStatus.CREATED
-        )
-    }
 
-//    @GetMapping("/get-sending-request-list-detail")
-//    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-//    fun getSendingRequestListDetail(
-//        request: SendingSearchRequest,
-//        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
-//        @SortDefault.SortDefaults(
-//            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
-//        )
-//        pageable: Pageable
-//    ): ResponseEntity<BasePagingResponse<SendingResponse>> {
-//        val result = sendingService.getList(request, pageable)
-//        return ResponseEntity(result, HttpStatus.OK)
+
+//    @GetMapping("/form-code-dropdown")
+//    fun getListFormCodeDropdown(@RequestParam formStatus: String? = "NOT_APPROVED", isIncludeGe3Days: Boolean?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+//        val data = tempSendingImportedService.getListFormCodeDropdown(formStatus ?: "NOT_APPROVED", isIncludeGe3Days ?: false)
+//        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
 //    }
 
     @GetMapping("/get-list")
@@ -207,6 +204,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     fun getList(
         formCode: String,
         poNumber: String?,
+        lotNo: String?,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
 //        @SortDefault.SortDefaults(
 //            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),

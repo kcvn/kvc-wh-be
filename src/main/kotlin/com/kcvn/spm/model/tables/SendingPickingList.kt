@@ -76,19 +76,15 @@ open class SendingPickingList(
     val ID: TableField<SendingPickingListRecord, String?> = createField(DSL.name("id"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("gen_random_uuid()"), SQLDataType.VARCHAR)), this, "")
 
     /**
-     * The column <code>public.sending_picking_list.sending_request_id</code>.
+     * The column
+     * <code>public.sending_picking_list.sending_request_detail_id</code>.
      */
-    val SENDING_REQUEST_ID: TableField<SendingPickingListRecord, String?> = createField(DSL.name("sending_request_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
+    val SENDING_REQUEST_DETAIL_ID: TableField<SendingPickingListRecord, String?> = createField(DSL.name("sending_request_detail_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
 
     /**
      * The column <code>public.sending_picking_list.receiving_date</code>.
      */
     val RECEIVING_DATE: TableField<SendingPickingListRecord, LocalDate?> = createField(DSL.name("receiving_date"), SQLDataType.LOCALDATE.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_DATE"), SQLDataType.LOCALDATE)), this, "")
-
-    /**
-     * The column <code>public.sending_picking_list.form_code</code>.
-     */
-    val FORM_CODE: TableField<SendingPickingListRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
 
     /**
      * The column <code>public.sending_picking_list.po_number</code>.

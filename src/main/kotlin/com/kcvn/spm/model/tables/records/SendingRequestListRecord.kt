@@ -75,10 +75,14 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
         set(value): Unit = set(13, value)
         get(): String? = get(13) as String?
 
+    open var sendingFormId: String?
+        set(value): Unit = set(14, value)
+        get(): String? = get(14) as String?
+
     /**
      * Create a detached, initialised SendingRequestListRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, requestQty: BigDecimal? = null, seqNo: Int? = null, status: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, comment: String? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, requestQty: BigDecimal? = null, seqNo: Int? = null, status: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, comment: String? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, sendingFormId: String? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.poNumber = poNumber
@@ -93,6 +97,7 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
         this.itemCode = itemCode
         this.itemName = itemName
         this.productionGroup = productionGroup
+        this.sendingFormId = sendingFormId
         resetChangedOnNotNull()
     }
 
@@ -115,6 +120,7 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
             this.itemCode = value.itemCode
             this.itemName = value.itemName
             this.productionGroup = value.productionGroup
+            this.sendingFormId = value.sendingFormId
             resetChangedOnNotNull()
         }
     }

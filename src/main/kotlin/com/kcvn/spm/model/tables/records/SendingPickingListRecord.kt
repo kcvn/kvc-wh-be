@@ -23,7 +23,7 @@ open class SendingPickingListRecord() : TableRecordImpl<SendingPickingListRecord
         set(value): Unit = set(0, value)
         get(): String? = get(0) as String?
 
-    open var sendingRequestId: String?
+    open var sendingRequestDetailId: String?
         set(value): Unit = set(1, value)
         get(): String? = get(1) as String?
 
@@ -31,72 +31,67 @@ open class SendingPickingListRecord() : TableRecordImpl<SendingPickingListRecord
         set(value): Unit = set(2, value)
         get(): LocalDate? = get(2) as LocalDate?
 
-    open var formCode: String?
+    open var poNumber: String?
         set(value): Unit = set(3, value)
         get(): String? = get(3) as String?
 
-    open var poNumber: String?
+    open var packageCode: String?
         set(value): Unit = set(4, value)
         get(): String? = get(4) as String?
 
-    open var packageCode: String?
-        set(value): Unit = set(5, value)
-        get(): String? = get(5) as String?
-
     open var requestQty: BigDecimal?
-        set(value): Unit = set(6, value)
-        get(): BigDecimal? = get(6) as BigDecimal?
+        set(value): Unit = set(5, value)
+        get(): BigDecimal? = get(5) as BigDecimal?
 
     open var itemCode: String?
+        set(value): Unit = set(6, value)
+        get(): String? = get(6) as String?
+
+    open var itemName: String?
         set(value): Unit = set(7, value)
         get(): String? = get(7) as String?
 
-    open var itemName: String?
+    open var productionGroup: String?
         set(value): Unit = set(8, value)
         get(): String? = get(8) as String?
 
-    open var productionGroup: String?
+    open var lotNo: String?
         set(value): Unit = set(9, value)
         get(): String? = get(9) as String?
 
-    open var lotNo: String?
+    open var issueDate: String?
         set(value): Unit = set(10, value)
         get(): String? = get(10) as String?
-
-    open var issueDate: String?
-        set(value): Unit = set(11, value)
-        get(): String? = get(11) as String?
 
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
     open var isDeleted: Boolean?
-        set(value): Unit = set(12, value)
-        get(): Boolean? = get(12) as Boolean?
+        set(value): Unit = set(11, value)
+        get(): Boolean? = get(11) as Boolean?
 
     open var createdDate: OffsetDateTime?
-        set(value): Unit = set(13, value)
-        get(): OffsetDateTime? = get(13) as OffsetDateTime?
+        set(value): Unit = set(12, value)
+        get(): OffsetDateTime? = get(12) as OffsetDateTime?
 
     open var createdBy: String?
-        set(value): Unit = set(14, value)
-        get(): String? = get(14) as String?
+        set(value): Unit = set(13, value)
+        get(): String? = get(13) as String?
 
     open var updatedDate: OffsetDateTime?
-        set(value): Unit = set(15, value)
-        get(): OffsetDateTime? = get(15) as OffsetDateTime?
+        set(value): Unit = set(14, value)
+        get(): OffsetDateTime? = get(14) as OffsetDateTime?
 
     open var updatedBy: String?
-        set(value): Unit = set(16, value)
-        get(): String? = get(16) as String?
+        set(value): Unit = set(15, value)
+        get(): String? = get(15) as String?
 
     /**
      * Create a detached, initialised SendingPickingListRecord
      */
-    constructor(id: String? = null, sendingRequestId: String? = null, receivingDate: LocalDate? = null, formCode: String? = null, poNumber: String? = null, packageCode: String? = null, requestQty: BigDecimal? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, lotNo: String? = null, issueDate: String? = null, isDeleted: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
+    constructor(id: String? = null, sendingRequestDetailId: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, packageCode: String? = null, requestQty: BigDecimal? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, lotNo: String? = null, issueDate: String? = null, isDeleted: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
         this.id = id
-        this.sendingRequestId = sendingRequestId
+        this.sendingRequestDetailId = sendingRequestDetailId
         this.receivingDate = receivingDate
-        this.formCode = formCode
         this.poNumber = poNumber
         this.packageCode = packageCode
         this.requestQty = requestQty
@@ -119,9 +114,8 @@ open class SendingPickingListRecord() : TableRecordImpl<SendingPickingListRecord
     constructor(value: com.kcvn.spm.model.tables.pojos.SendingPickingList?): this() {
         if (value != null) {
             this.id = value.id
-            this.sendingRequestId = value.sendingRequestId
+            this.sendingRequestDetailId = value.sendingRequestDetailId
             this.receivingDate = value.receivingDate
-            this.formCode = value.formCode
             this.poNumber = value.poNumber
             this.packageCode = value.packageCode
             this.requestQty = value.requestQty

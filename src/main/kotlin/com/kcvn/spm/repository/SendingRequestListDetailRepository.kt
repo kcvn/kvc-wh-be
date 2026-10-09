@@ -32,14 +32,22 @@ class SendingRequestListDetailRepository(private val context: DSLContext) : Sort
             .fetchInto(SendingRequestListDetail::class.java)
     }
 
-    fun getListDetailById(requestId: String, pageable: Pageable): List<SendingRequestListDetail>?{
-        return context.selectFrom(SENDING_REQUEST_LIST_DETAIL)
+    fun getListDetailByRequestId(requestId: String, pageable: Pageable? = null): List<SendingRequestListDetail> {
+        val query = context.selectFrom(SENDING_REQUEST_LIST_DETAIL)
             .where(
                 SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID.eq(requestId)
             )
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .fetchInto(SendingRequestListDetail::class.java)
+            .orderBy(SENDING_REQUEST_LIST_DETAIL.LOT_NO)
+
+        return if (pageable == null) query.fetchInto(SendingRequestListDetail::class.java)
+        else query.limit(pageable.pageSize).offset(pageable.offset).fetchInto(SendingRequestListDetail::class.java)
+    }
+
+    fun countDetailByRequestId(requestId: String): Int {
+        return context.fetchCount(
+            SENDING_REQUEST_LIST_DETAIL,
+            SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID.eq(requestId)
+        )
     }
 
     fun save(data: SendingRequestListDetail) {

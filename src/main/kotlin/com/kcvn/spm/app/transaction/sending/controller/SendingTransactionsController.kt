@@ -4,6 +4,7 @@ import com.kcvn.spm.app.transaction.sending.payload.request.ExportPDFSendingRequ
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestDetailSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestForConfirm
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestForDeny
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestListSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingTransactionRequest
@@ -105,6 +106,20 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
                 MessageResponse(CommonUtils.getMessage("action.succeeded")),
                 HttpStatus.CREATED
             )
+    }
+
+    @PostMapping("/confirm-sending-request-list")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun confirmSendingRequestList(@Valid @RequestBody request: List<SendingRequestForConfirm>): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
+        )
+        sendingService.confirmSendingRequestList(request)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
     }
 
 //    @GetMapping("/get-sending-request-list-detail")

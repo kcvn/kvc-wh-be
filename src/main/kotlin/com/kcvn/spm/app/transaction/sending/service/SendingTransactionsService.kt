@@ -20,6 +20,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.CancelSendingTransactions
+import com.kcvn.spm.model.tables.pojos.SendingPickingList
 import com.kcvn.spm.model.tables.pojos.SendingRequestList
 import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
@@ -55,7 +56,8 @@ class SendingTransactionsService(
     private val backlogWhRepository: BacklogWhRepository,
     private val sendingRequestListRepository: SendingRequestListRepository,
     private val sendingRequestListDetailRepository: SendingRequestListDetailRepository,
-    private val pdfHelper: PdfHelper
+    private val pdfHelper: PdfHelper,
+    private val sendingPickingListRepository: SendingPickingListRepository,
 ) {
     fun saveSendingRequest(requestList: List<SendingRequest>){
         requestList.firstOrNull { it.requestQty <= BigDecimal.ZERO }?.let {
@@ -159,8 +161,8 @@ class SendingTransactionsService(
             ?: throw BusinessExceptionDetail(
                 "Không tìm thấy yêu cầu", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}"
             )
-        val detailData = sendingRequestListDetailRepository.getListDetailById(sendingRequest.id!!, pageable)
-        val responseData = detailData!!.map {
+        val detailData = sendingRequestListDetailRepository.getListDetailByRequestId(sendingRequest.id!!, pageable)
+        val responseData = detailData.map {
             SendingRequestDetailResponse(
                 poNumber = sendingRequest.poNumber,
                 itemCode = sendingRequest.itemCode,
@@ -177,7 +179,7 @@ class SendingTransactionsService(
         }
         return BasePagingResponse(
             responseData,
-            detailData.size
+            sendingRequestListDetailRepository.countDetailByRequestId(sendingRequest.id!!)
         )
     }
 
@@ -190,6 +192,67 @@ class SendingTransactionsService(
             rec.status = 3
             rec.comment = request.comment
             sendingRequestListRepository.update(rec)
+            sendingPickingListRepository.deleteAllBySendingRequestId(rec.id!!)
+        }
+    }
+
+    fun confirmSendingRequestList(request: List<SendingRequestForConfirm>){
+        request.forEach { request ->
+            val rec = sendingRequestListRepository.findByReceivingDatePOAndSeqNo(request.poNumber, request.receivingDate, request.seqNo)
+                ?: throw BusinessExceptionDetail(
+                    "Không tìm thấy yêu cầu", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}"
+                )
+            rec.status = 2
+            sendingRequestListRepository.update(rec)
+            val requestLotList = sendingRequestListDetailRepository.getListDetailByRequestId(rec.id!!)
+            requestLotList.forEach{ detail ->
+                val backlog = backlogWhRepository
+                    .findBacklogByRecDatePoAndLotNo(detail.receivingDate!!, detail.poNumber!!, detail.lotNo!!)
+                    .orEmpty().sortedBy { it.createdDate }
+                val existedPickingList = sendingPickingListRepository
+                    .findAllByPORecDateAndLot(detail.poNumber!!, detail.receivingDate!!, detail.lotNo!!)
+                    .orEmpty()
+
+                // availableBacklog = backlog - existedPickingList, ghép theo PO + receiving date + lot no + package
+                // (1 package chứa nhiều PO/lot nên không được trừ theo mỗi package)
+                val pickedQtyByKey = existedPickingList
+                    .groupBy { listOf(it.poNumber, it.receivingDate, it.lotNo, it.packageCode) }
+                    .mapValues { (_, list) -> list.sumOf { it.requestQty ?: BigDecimal.ZERO } }
+                val availableBacklog = backlog
+                    .map {
+                        val key = listOf(it.poNumber, it.receivingDate, it.lotNo, it.packageCode)
+                        it to it.backlogQty!! - (pickedQtyByKey[key] ?: BigDecimal.ZERO)
+                    }
+                    .filter { (_, availableQty) -> availableQty > BigDecimal.ZERO }
+
+                if (availableBacklog.sumOf { it.second } < detail.requestQty!!) throw BusinessExceptionDetail(
+                    "Không đủ tồn kho", "${detail.receivingDate} - ${detail.poNumber} - ${detail.lotNo}"
+                )
+
+                // Lấy lần lượt từng package còn khả dụng cho tới khi đủ requestQty
+                var remainQty = detail.requestQty!!
+                val newPickingList = mutableListOf<SendingPickingList>()
+                for ((current, availableQty) in availableBacklog) {
+                    if (remainQty <= BigDecimal.ZERO) break
+                    val pickQty = minOf(availableQty, remainQty)
+                    newPickingList += SendingPickingList(
+                        sendingRequestId = detail.sendingRequestId,
+                        receivingDate = detail.receivingDate,
+                        formCode = request.formCode,
+                        poNumber = detail.poNumber,
+                        packageCode = current.packageCode,
+                        requestQty = pickQty,
+                        itemCode = current.itemCode,
+                        itemName = current.itemName,
+                        productionGroup = current.productionGroup,
+                        lotNo = detail.lotNo,
+                        issueDate = current.issueDate,
+                        isDeleted = false
+                    )
+                    remainQty -= pickQty
+                }
+                sendingPickingListRepository.saveAll(newPickingList)
+            }
         }
     }
 

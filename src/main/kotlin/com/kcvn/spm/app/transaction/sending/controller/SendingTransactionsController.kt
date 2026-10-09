@@ -37,7 +37,7 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/api/sending")
 class SendingTransactionsController(private val sendingService: SendingTransactionsService) {
     @PostMapping("/create/sending-request")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).DEPARTMENT.value) || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun createSendRequest(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
 
         val logger = KotlinLogging.logger {}
@@ -53,7 +53,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @GetMapping("/get-sending-request-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun getSendingRequestList(
         request: SendingRequestListSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
@@ -68,7 +68,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
 
     // Mặc định sort createdDate tăng dần để dòng cuối là request mới nhất (issue time của phiếu)
     @PostMapping("/export-sending-request-list-pdf")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).DEPARTMENT.value) || hasRole('ADMIN')")
     fun exportSendingRequestListPdf(
         @RequestBody requestList: List<ExportPDFSendingRequestListRequest>,
         @SortDefault.SortDefaults(
@@ -81,7 +81,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     }
 
     @GetMapping("/get-sending-request-detail")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun getSendingRequestDetail(
         request: SendingRequestDetailSearchRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)

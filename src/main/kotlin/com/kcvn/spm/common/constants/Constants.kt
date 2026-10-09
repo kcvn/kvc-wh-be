@@ -96,6 +96,14 @@ class ExcelConstant {
         const val FONT_TIMES_NEW_ROMAN = "Times New Roman"
     }
 }
+
+class PdfConstant {
+    companion object {
+        const val PDF_CONTENT_TYPE = "application/pdf"
+        const val TEMPLATE_PURCHASING_OUTGOING = "pdf/purchasing-outgoing"
+        const val PURCHASING_OUTGOING_ROWS_PER_PAGE = 10
+    }
+}
 class GrpProcessCode {
     companion object {
         const val XERANH = "21400"

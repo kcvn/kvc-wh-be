@@ -4,6 +4,7 @@ import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchForSendingReque
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.ImportBacklogWh
 import com.kcvn.spm.app.backlogwh.payload.response.BacklogWhResponse
+import com.kcvn.spm.app.transaction.sending.payload.request.ExportPDFSendingRequestListRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestListSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestListResponse
 import com.kcvn.spm.common.constants.Constants
@@ -82,8 +83,8 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
         context.update(SENDING_REQUEST_LIST)
             .set(SENDING_REQUEST_LIST.STATUS, data.status)
             .set(SENDING_REQUEST_LIST.COMMENT, data.comment)
-            .set(CHECKING_HISTORY.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-            .set(CHECKING_HISTORY.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .set(SENDING_REQUEST_LIST.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(SENDING_REQUEST_LIST.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
             .where(SENDING_REQUEST_LIST.ID.eq(data.id))
             .execute()
     }
@@ -110,6 +111,21 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
         return records.into(SendingRequestListResponse::class.java) to totalCount
     }
 
+    // Lấy theo danh sách đã chọn trên màn hình, mỗi key = receiving_date + po_number + seq_no
+    fun getListByKeys(
+        keys: List<ExportPDFSendingRequestListRequest>,
+        pageable: Pageable?,
+    ) : List<SendingRequestListResponse> {
+        if (keys.isEmpty()) return emptyList()
+
+        val whereClause = "where (srl.receiving_date, srl.po_number, srl.seq_no) in " +
+                keys.joinToString(", ", "(", ")") { "(?, ?, ?)" }
+        val params = keys.flatMap { listOf(it.receivingDate, it.poNumber, it.seqNo) }
+
+        val sql = "${createGetListBaseSql(whereClause)} order by ${createGetListOrderBy(pageable)}"
+        return context.fetch(sql, *params.toTypedArray()).into(SendingRequestListResponse::class.java)
+    }
+
     private fun createGetListSqlQuery(request: SendingRequestListSearchRequest): Pair<String, List<Any>> {
         val params = mutableListOf<Any>()
         val conditions = mutableListOf<String>()
@@ -128,11 +144,17 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
 
         val whereClause = if (conditions.isNotEmpty()) "where " + conditions.joinToString(" and ") else ""
 
-        // backlog được gộp theo receiving_date + po_number trong subquery trước khi join, tránh nhân dòng
-        val sql = """
+        return createGetListBaseSql(whereClause) to params
+    }
+
+    // backlog và processing được gộp theo receiving_date + po_number trong subquery trước khi join, tránh nhân dòng
+    // available = backlog - tổng request đang xử lý (status not in 3, 4), giống available_backlog_qty bên BacklogWhRepository
+    private fun createGetListBaseSql(whereClause: String): String {
+        return """
             select
                 srl.*,
                 coalesce(backlog.backlog_qty, 0) as backlog_qty,
+                coalesce(backlog.backlog_qty, 0) - coalesce(processing.processing_qty, 0) as available_qty,
                 count(*) over() as total_count
             from sending_request_list srl
                 left join (
@@ -145,10 +167,19 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
                 ) as backlog
                     on backlog.receiving_date = srl.receiving_date
                     and backlog.po_number = srl.po_number
+                left join (
+                    select
+                        p.receiving_date,
+                        p.po_number,
+                        sum(p.request_qty) as processing_qty
+                    from sending_request_list p
+                    where p.status not in (3, 4)
+                    group by p.receiving_date, p.po_number
+                ) as processing
+                    on processing.receiving_date = srl.receiving_date
+                    and processing.po_number = srl.po_number
             $whereClause
         """.trimIndent()
-
-        return sql to params
     }
 
     // Chỉ sort theo cột trong whitelist để tránh SQL injection, mặc định created_date desc

@@ -13,6 +13,7 @@ data class SendingRequestListResponse(
     var receivingDate: LocalDate? = null,
     var seqNo: Int? = null,
     var backlogQty: BigDecimal? = null,
+    var availableQty: BigDecimal? = null,
     var requestQty: BigDecimal? = null,
     var status: Int? = null,
     var createdBy: String? = null,

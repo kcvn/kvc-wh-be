@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.transaction.sending.controller
 
+import com.kcvn.spm.app.transaction.sending.payload.request.ExportPDFSendingRequestListRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestDetailSearchRequest
@@ -63,6 +64,20 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     ): ResponseEntity<BasePagingResponse<SendingRequestListResponse>> {
         val result = sendingService.getSendingRequestList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    // Mặc định sort createdDate tăng dần để dòng cuối là request mới nhất (issue time của phiếu)
+    @PostMapping("/export-sending-request-list-pdf")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun exportSendingRequestListPdf(
+        @RequestBody requestList: List<ExportPDFSendingRequestListRequest>,
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.ASC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = sendingService.exportSendingRequestListPdf(requestList, pageable)
+        return ResponseEntity(data, HttpStatus.OK)
     }
 
     @GetMapping("/get-sending-request-detail")

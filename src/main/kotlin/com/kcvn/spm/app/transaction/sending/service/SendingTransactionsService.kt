@@ -7,10 +7,13 @@ import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestListR
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.PdfConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.PdfHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
@@ -36,6 +39,7 @@ import java.io.FileInputStream
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -50,7 +54,8 @@ class SendingTransactionsService(
     private val backlogWhService: BacklogWhService,
     private val backlogWhRepository: BacklogWhRepository,
     private val sendingRequestListRepository: SendingRequestListRepository,
-    private val sendingRequestListDetailRepository: SendingRequestListDetailRepository
+    private val sendingRequestListDetailRepository: SendingRequestListDetailRepository,
+    private val pdfHelper: PdfHelper
 ) {
     fun saveSendingRequest(requestList: List<SendingRequest>){
         requestList.firstOrNull { it.requestQty <= BigDecimal.ZERO }?.let {
@@ -113,6 +118,40 @@ class SendingTransactionsService(
             data.first,
             data.second
         )
+    }
+
+    fun exportSendingRequestListPdf(requestList: List<ExportPDFSendingRequestListRequest>, pageable: Pageable): BaseResponse<FileContentModel> {
+        if (requestList.isEmpty()) throw BusinessException("Chưa chọn yêu cầu để xuất")
+
+        val vnZone = ZoneId.of("Asia/Ho_Chi_Minh")
+        // created_date lưu theo UTC, đổi sang giờ VN trước khi in
+        val items = sendingRequestListRepository.getListByKeys(requestList, pageable)
+            .map { it.copy(createdDate = it.createdDate?.atZoneSameInstant(vnZone)?.toOffsetDateTime()) }
+
+        // Mỗi trang tối đa ROWS_PER_PAGE dòng, trang cuối bù null để luôn vẽ đủ dòng trống
+        val rowsPerPage = PdfConstant.PURCHASING_OUTGOING_ROWS_PER_PAGE
+        val pages = items.chunked(rowsPerPage)
+            .ifEmpty { listOf(emptyList()) }
+            .map { page -> page + List(rowsPerPage - page.size) { null } }
+
+        val now = LocalDateTime.now(vnZone)
+        val pdfBytes = pdfHelper.render(
+            PdfConstant.TEMPLATE_PURCHASING_OUTGOING,
+            mapOf(
+                "items" to items,
+                "pages" to pages,
+                "rowsPerPage" to rowsPerPage,
+                "printedDate" to now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                "printedBy" to (CommonUtils.loggedInUser() ?: Constants.SYSTEM),
+            )
+        )
+
+        val response = FileContentModel(
+            fileName = "PurchasingOutgoing_${now.format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))}.pdf",
+            contentType = PdfConstant.PDF_CONTENT_TYPE,
+            content = pdfBytes
+        )
+        return BaseResponse(response)
     }
 
     fun getSendingRequestDetail(request: SendingRequestDetailSearchRequest, pageable: Pageable): BasePagingResponse<SendingRequestDetailResponse>{

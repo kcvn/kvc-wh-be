@@ -2,6 +2,7 @@ package com.kcvn.spm.app.transaction.sending.controller
 
 import com.kcvn.spm.app.transaction.sending.payload.request.ExportPDFSendingRequestListRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
+import com.kcvn.spm.app.transaction.sending.payload.request.NewTempSendingSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestDetailSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestForConfirm
@@ -9,6 +10,7 @@ import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestForDen
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestListSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.response.NewTempSendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestDetailResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestListResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
@@ -101,7 +103,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     fun confirmSendingRequestList(@Valid @RequestBody request: SendingRequestForConfirm): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
-            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/confirm-sending-request-list" + ", REQUEST: " + request
         )
         sendingService.confirmSendingRequestList(request)
         return ResponseEntity<MessageResponse>(
@@ -116,7 +118,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     fun declineSendingRequestList(@Valid @RequestBody request: List<SendingRequestForDeny>): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
-            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/create/sending-trans" + ", REQUEST: " + request
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/decline-sending-request-list" + ", REQUEST: " + request
         )
             sendingService.declineSendingRequestList(request)
             return ResponseEntity<MessageResponse>(
@@ -125,13 +127,38 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
             )
     }
 
+    @GetMapping("form-code-dropdown")
+    fun getListFormCodeDropdown(@RequestParam formStatus: String? = "NOT_APPROVED", isIncludeGe3Days: Boolean?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = sendingService.getListFormCodeDropdown(formStatus ?: "NOT_APPROVED", isIncludeGe3Days ?: false)
+        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
+    }
 
+    @GetMapping("/get-temp-sending-result")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getTempSendingResult(
+        request: NewTempSendingSearchRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<NewTempSendingResponse>> {
+        val result = sendingService.getTempSendingResult(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
 
-//    @GetMapping("/form-code-dropdown")
-//    fun getListFormCodeDropdown(@RequestParam formStatus: String? = "NOT_APPROVED", isIncludeGe3Days: Boolean?): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
-//        val data = tempSendingImportedService.getListFormCodeDropdown(formStatus ?: "NOT_APPROVED", isIncludeGe3Days ?: false)
-//        return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
-//    }
+    @GetMapping("/get-temp-sending-list")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getList(
+        formCode: String,
+        poNumber: String?,
+        lotNo: String?,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+//        @SortDefault.SortDefaults(
+//            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
+//        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<TempSendingResultInquiryResponse>> {
+        val result = sendingService.getTempSendingList(formCode, poNumber, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
 
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
@@ -199,21 +226,7 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
 
     }
 
-    @GetMapping("/get-temp-sending-list")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun getList(
-        formCode: String,
-        poNumber: String?,
-        lotNo: String?,
-        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
-//        @SortDefault.SortDefaults(
-//            SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
-//        )
-        pageable: Pageable
-    ): ResponseEntity<BasePagingResponse<TempSendingResultInquiryResponse>> {
-        val result = sendingService.getTempSendingList(formCode, poNumber, pageable)
-        return ResponseEntity(result, HttpStatus.OK)
-    }
+
 
     @GetMapping("/get-scanned-temp-sending")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")

@@ -23,6 +23,7 @@ import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.NewBacklogWh
 import com.kcvn.spm.model.tables.NewCheckingTransaction
+import com.kcvn.spm.model.tables.NewTempSendingTransactions
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
@@ -137,6 +138,11 @@ val NEW_BACKLOG_WH: NewBacklogWh = NewBacklogWh.NEW_BACKLOG_WH
  * The table <code>public.new_checking_transaction</code>.
  */
 val NEW_CHECKING_TRANSACTION: NewCheckingTransaction = NewCheckingTransaction.NEW_CHECKING_TRANSACTION
+
+/**
+ * The table <code>public.new_temp_sending_transactions</code>.
+ */
+val NEW_TEMP_SENDING_TRANSACTIONS: NewTempSendingTransactions = NewTempSendingTransactions.NEW_TEMP_SENDING_TRANSACTIONS
 
 /**
  * The table <code>public.purchase_order_backlog</code>.

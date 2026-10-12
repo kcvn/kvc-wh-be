@@ -2,6 +2,7 @@ package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
+import com.kcvn.spm.app.transaction.sending.payload.response.NewTempSendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestDetailResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestListResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
@@ -61,6 +62,7 @@ class SendingTransactionsService(
     private val sendingRequestListDetailRepository: SendingRequestListDetailRepository,
     private val pdfHelper: PdfHelper,
     private val sendingPickingListRepository: SendingPickingListRepository,
+    private val newTempSendingTransactionRepository: NewTempSendingTransactionRepository,
 ) {
     fun saveSendingRequest(requestList: List<SendingRequest>){
         requestList.firstOrNull { it.requestQty <= BigDecimal.ZERO }?.let {
@@ -293,7 +295,7 @@ class SendingTransactionsService(
     }
 
     fun getListFormCodeDropdown(formStatus: String, isIncludeGe3Days: Boolean): BaseResponse<List<DropdownResponse>> {
-        val listFormCode = tempSendingImportedRepo.getListFormCode(formStatus, isIncludeGe3Days)
+        val listFormCode = sendingRequestFormListRepository.getListFormCode(formStatus, isIncludeGe3Days)
 
         // Map DropDownResponse
         val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->
@@ -304,6 +306,13 @@ class SendingTransactionsService(
         }
 
         return BaseResponse(data = dropDownList)
+    }
+
+    fun getTempSendingResult(request: NewTempSendingSearchRequest, pageable: Pageable): BasePagingResponse<NewTempSendingResponse> {
+        val listFormCode = newTempSendingTransactionRepository.getList(request, pageable)
+
+
+        return BasePagingResponse(data = listFormCode.first, listFormCode.second)
     }
 
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {

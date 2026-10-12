@@ -76,10 +76,18 @@ open class NewTempSendingTransactionsRecord() : TableRecordImpl<NewTempSendingTr
         set(value): Unit = set(12, value)
         get(): String? = get(12) as String?
 
+    open var packageCode: String?
+        set(value): Unit = set(13, value)
+        get(): String? = get(13) as String?
+
+    open var lotNo: String?
+        set(value): Unit = set(14, value)
+        get(): String? = get(14) as String?
+
     /**
      * Create a detached, initialised NewTempSendingTransactionsRecord
      */
-    constructor(id: String? = null, clientScanId: String? = null, sendingPickingListId: String? = null, scannedQty: BigDecimal? = null, seqNo: BigDecimal? = null, notMinusBoxQty: Boolean? = null, isDeleted: Boolean? = null, isSyncedSap: Boolean? = null, isSyncedAmoeba: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
+    constructor(id: String? = null, clientScanId: String? = null, sendingPickingListId: String? = null, scannedQty: BigDecimal? = null, seqNo: BigDecimal? = null, notMinusBoxQty: Boolean? = null, isDeleted: Boolean? = null, isSyncedSap: Boolean? = null, isSyncedAmoeba: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, packageCode: String? = null, lotNo: String? = null): this() {
         this.id = id
         this.clientScanId = clientScanId
         this.sendingPickingListId = sendingPickingListId
@@ -93,6 +101,8 @@ open class NewTempSendingTransactionsRecord() : TableRecordImpl<NewTempSendingTr
         this.createdBy = createdBy
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
+        this.packageCode = packageCode
+        this.lotNo = lotNo
         resetChangedOnNotNull()
     }
 
@@ -114,6 +124,8 @@ open class NewTempSendingTransactionsRecord() : TableRecordImpl<NewTempSendingTr
             this.createdBy = value.createdBy
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
+            this.packageCode = value.packageCode
+            this.lotNo = value.lotNo
             resetChangedOnNotNull()
         }
     }

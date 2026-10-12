@@ -45,13 +45,13 @@ class SendingRequestFormListRepository(private val context: DSLContext) : Sortin
 
     fun getListFormCode(formStatus: String, isIncludeGe3Days: Boolean): List<String> {
         val offset = OffsetDateTime.now().offset
-        val threeDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(2), LocalTime.MIDNIGHT, offset)
+        val sevenDaysAgo = OffsetDateTime.of(LocalDate.now().minusDays(7), LocalTime.MIDNIGHT, offset)
         val tomorrow = OffsetDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT, offset)
 
         val condition = SENDING_FORM_LIST.FORM_CODE.isNotNull
             .and(SENDING_FORM_LIST.CREATED_DATE.lt(tomorrow))
             .and(if (formStatus == "ALL") DSL.noCondition() else if (formStatus == "APPROVED") SENDING_FORM_LIST.IS_APPROVED.eq(true) else SENDING_FORM_LIST.IS_APPROVED.eq(false))
-            .and(if (isIncludeGe3Days) DSL.noCondition() else SENDING_FORM_LIST.CREATED_DATE.ge(threeDaysAgo))
+            .and(if (isIncludeGe3Days) DSL.noCondition() else SENDING_FORM_LIST.CREATED_DATE.ge(sevenDaysAgo))
 
         return context.selectDistinct(SENDING_FORM_LIST.FORM_CODE, SENDING_FORM_LIST.CREATED_DATE)
             .from(SENDING_FORM_LIST)

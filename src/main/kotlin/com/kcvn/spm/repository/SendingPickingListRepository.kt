@@ -40,6 +40,28 @@ class SendingPickingListRepository(private val context: DSLContext) : SortingRep
             .fetchInto(SendingPickingList::class.java)
     }
 
+    /**
+     * Khoá (SELECT ... FOR UPDATE) các dòng picking còn hiệu lực đến hết transaction:
+     * chưa xoá và thuộc request đã gom phiếu (status 2). Dòng không thoả sẽ không có trong kết quả.
+     */
+    fun lockActiveByIds(ids: List<String>): List<SendingPickingList> {
+        if (ids.isEmpty()) return emptyList()
+        return context.select(SENDING_PICKING_LIST.asterisk())
+            .from(SENDING_PICKING_LIST)
+            .innerJoin(SENDING_REQUEST_LIST_DETAIL)
+            .on(SENDING_REQUEST_LIST_DETAIL.ID.eq(SENDING_PICKING_LIST.SENDING_REQUEST_DETAIL_ID))
+            .innerJoin(SENDING_REQUEST_LIST)
+            .on(SENDING_REQUEST_LIST.ID.eq(SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID))
+            .where(
+                SENDING_PICKING_LIST.ID.`in`(ids)
+                    .and (SENDING_PICKING_LIST.IS_DELETED.eq(false))
+                    .and (SENDING_REQUEST_LIST.STATUS.eq(2))
+            )
+            .orderBy(SENDING_PICKING_LIST.ID)
+            .forUpdate().of(SENDING_PICKING_LIST)
+            .fetchInto(SendingPickingList::class.java)
+    }
+
     fun saveAll(dataList: List<SendingPickingList>) {
         if (dataList.isEmpty()) return
         val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)

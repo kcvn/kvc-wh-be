@@ -10,6 +10,7 @@ import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestForDen
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestListSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.TempSendingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.NewTempSendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestDetailResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestListResponse
@@ -133,6 +134,20 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 
+    @PostMapping("/save-temp-sending-transaction")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun saveTempSendingTransaction(@Valid @RequestBody request: List<TempSendingTransactionRequest>): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/decline-sending-request-list" + ", REQUEST: " + request
+        )
+        sendingService.saveTempSendingTransaction(request)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
+    }
+
     @GetMapping("/get-temp-sending-result")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getTempSendingResult(
@@ -143,6 +158,16 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         val result = sendingService.getTempSendingResult(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
+
+    @GetMapping("/get-all-temp-sending-result")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getTempSendingResult(
+        request: NewTempSendingSearchRequest,
+    ): ResponseEntity<BasePagingResponse<NewTempSendingResponse>> {
+        val result = sendingService.getTempSendingResult(request)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
 
     @GetMapping("/get-temp-sending-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")

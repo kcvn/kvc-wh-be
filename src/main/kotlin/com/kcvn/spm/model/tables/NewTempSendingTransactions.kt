@@ -145,6 +145,17 @@ open class NewTempSendingTransactions(
      */
     val UPDATED_BY: TableField<NewTempSendingTransactionsRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
+    /**
+     * The column
+     * <code>public.new_temp_sending_transactions.package_code</code>.
+     */
+    val PACKAGE_CODE: TableField<NewTempSendingTransactionsRecord, String?> = createField(DSL.name("package_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+
+    /**
+     * The column <code>public.new_temp_sending_transactions.lot_no</code>.
+     */
+    val LOT_NO: TableField<NewTempSendingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10000).nullable(false), this, "")
+
     private constructor(alias: Name, aliased: Table<NewTempSendingTransactionsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<NewTempSendingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<NewTempSendingTransactionsRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

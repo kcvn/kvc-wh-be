@@ -23,6 +23,7 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.CancelSendingTransactions
 import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactions
+import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactionsChecking
 import com.kcvn.spm.model.tables.pojos.SendingFormList
 import com.kcvn.spm.model.tables.pojos.SendingPickingList
 import com.kcvn.spm.model.tables.pojos.SendingRequestList
@@ -65,6 +66,7 @@ class SendingTransactionsService(
     private val pdfHelper: PdfHelper,
     private val sendingPickingListRepository: SendingPickingListRepository,
     private val newTempSendingTransactionRepository: NewTempSendingTransactionRepository,
+    private val newTempSendingCheckingTransactionRepository: NewTempSendingCheckingTransactionRepository,
 ) {
     fun saveSendingRequest(requestList: List<SendingRequest>){
         requestList.firstOrNull { it.requestQty <= BigDecimal.ZERO }?.let {
@@ -325,27 +327,28 @@ class SendingTransactionsService(
         request.mapNotNull { it.clientScanId }.groupingBy { it }.eachCount()
             .filterValues { it > 1 }.keys
             .forEach { errors += "clientScanId $it bị gửi trùng trong lần này" }
-        if (errors.isNotEmpty()) throw BusinessExceptionDetail("Dữ liệu scan không hợp lệ", errors.joinToString("; "))
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
 
-        // lientScanId đã được lưu trước đó thì báo lỗi và dừng, không lưu dòng nào
+        // clientScanId đã được lưu trước đó thì báo lỗi và dừng, không lưu dòng nào
         request.filter { newTempSendingTransactionRepository.findByClientScanId(it.clientScanId!!) != null }
             .forEach { errors += " ${it.packageCode} - ${it.lotNo} đã được lưu trước đó" }
-        if (errors.isNotEmpty()) throw BusinessExceptionDetail("Lần scan đã được lưu trước đó", errors.joinToString("; "))
-        val newScans = request
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
 
         // Khoá dòng picking còn hiệu lực rồi kiểm tra tồn tại + không vượt request_qty
-        val pickingIds = newScans.map { it.sendingPickingListId!! }.distinct()
+        val pickingIds = request.map { it.sendingPickingListId!! }.distinct()
         val pickingById = sendingPickingListRepository.lockActiveByIds(pickingIds).associateBy { it.id!! }
         val scannedQtyById = newTempSendingTransactionRepository.sumScannedQtyByPickingIds(pickingIds).toMutableMap()
 
-        newScans.forEach { scan ->
-            val picking = pickingById[scan.sendingPickingListId]
+        val requestGroupedByPickingId = request.groupBy { it.sendingPickingListId!! }
+        requestGroupedByPickingId.forEach { scan ->
+            val picking = pickingById[scan.key]
             if (picking == null) {
-                errors += "${scan.packageCode} - ${scan.lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
+                errors += "${scan.value[0].packageCode} - ${scan.value[0].lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
                 return@forEach
             }
             // cộng dồn cả các lần scan cùng dòng picking trong lô này
-            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + scan.scannedQty!!
+            val addedQty = scan.value.sumOf { it.scannedQty!! }
+            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + addedQty
             scannedQtyById[picking.id!!] = scannedQty
             if (scannedQty > picking.requestQty!!)
                 errors += "${picking.packageCode} - ${picking.lotNo}: số lượng scan ($scannedQty) vượt số lượng cần lấy (${picking.requestQty})"
@@ -353,16 +356,17 @@ class SendingTransactionsService(
         if (errors.isNotEmpty()) throw BusinessExceptionDetail("Không thể lưu kết quả scan", errors.distinct().joinToString("; "))
 
         val today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"))
-        newScans.map { pickingById[it.sendingPickingListId]!! }
+        request.map { pickingById[it.sendingPickingListId]!! }
             .map { it.packageCode!! to it.lotNo!! }
             .distinct()
             .sortedWith(compareBy({ it.first }, { it.second }))
             .forEach { (packageCode, lotNo) -> newTempSendingTransactionRepository.lockSeqNo(packageCode, lotNo, today) }
 
-        newScans.forEach { scan ->
+        request.forEach { scan ->
             val picking = pickingById[scan.sendingPickingListId]!!
-            val latestSeqNo = newTempSendingTransactionRepository.findMaxSeqNo(picking.packageCode!!, picking.lotNo!!, today)
-                ?: BigDecimal.ZERO
+            val latestSeqNo =
+                newTempSendingTransactionRepository.findMaxSeqNo(picking.packageCode!!, picking.lotNo!!, today)
+                    ?: BigDecimal.ZERO
             newTempSendingTransactionRepository.save(
                 NewTempSendingTransactions(
                     clientScanId = scan.clientScanId,
@@ -372,6 +376,67 @@ class SendingTransactionsService(
                     seqNo = latestSeqNo + BigDecimal.ONE,
                     notMinusBoxQty = scan.notMinusBoxQty,
                     scannedQty = scan.scannedQty
+                )
+            )
+        }
+    }
+
+    fun saveTempSendingCheckingTransaction(request: List<TempSendingCheckingTransactionRequest>){
+        if (request.isEmpty()) throw BusinessException("Chưa có dữ liệu scan")
+        val errors = mutableListOf<String>()
+
+        //kiem tra co trung clientScanId trong request khong
+        request.mapNotNull { it.clientScanId }.groupingBy { it }.eachCount()
+            .filterValues { it > 1 }.keys
+            .forEach { errors += "clientScanId $it bị gửi trùng trong lần này" }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
+
+        // clientScanId đã được lưu trước đó thì báo lỗi và dừng, không lưu dòng nào
+        request.filter { newTempSendingCheckingTransactionRepository.findByClientScanId(it.clientScanId!!) != null }
+            .forEach { errors += " ${it.poNumber} - ${it.lotNo} đã được lưu trước đó" }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
+
+        // Khoá dòng picking còn hiệu lực rồi kiểm tra tồn tại + không vượt request_qty
+        val pickingIds = request.map { it.sendingPickingListId!! }.distinct()
+        val pickingById = sendingPickingListRepository.lockActiveByIds(pickingIds).associateBy { it.id!! }
+        val scannedQtyById = newTempSendingCheckingTransactionRepository.sumScannedQtyByPickingIds(pickingIds).toMutableMap()
+
+        val requestGroupedByPickingId = request.groupBy { it.sendingPickingListId!! }
+        requestGroupedByPickingId.forEach { scan ->
+            val picking = pickingById[scan.key]
+            if (picking == null) {
+                errors += "${scan.value[0].poNumber} - ${scan.value[0].lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
+                return@forEach
+            }
+            // cộng dồn cả các lần scan cùng dòng picking trong lô này
+            val addedQty = scan.value.sumOf { it.checkedQty!! }
+            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + addedQty
+            scannedQtyById[picking.id!!] = scannedQty
+            if (scannedQty > picking.requestQty!!)
+                errors += "${picking.packageCode} - ${picking.lotNo}: số lượng scan ($scannedQty) vượt số lượng cần lấy (${picking.requestQty})"
+        }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("Không thể lưu kết quả scan", errors.distinct().joinToString("; "))
+
+        val today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"))
+        request.map { pickingById[it.sendingPickingListId]!! }
+            .map { it.packageCode!! to it.lotNo!! }
+            .distinct()
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (packageCode, lotNo) -> newTempSendingCheckingTransactionRepository.lockSeqNo(packageCode, lotNo, today) }
+
+        request.forEach { scan ->
+            val picking = pickingById[scan.sendingPickingListId]!!
+            val latestSeqNo =
+                newTempSendingCheckingTransactionRepository.findMaxSeqNo(picking.lotNo!!, today)
+                    ?: BigDecimal.ZERO
+            newTempSendingCheckingTransactionRepository.save(
+                NewTempSendingTransactionsChecking(
+                    clientScanId = scan.clientScanId,
+                    sendingPickingListId = picking.id,
+                    checkedQty = scan.checkedQty,
+                    lotNo = picking.lotNo,
+                    seqNo = latestSeqNo + BigDecimal.ONE,
+                    notMinusBoxQty = scan.notMinusBoxQty,
                 )
             )
         }

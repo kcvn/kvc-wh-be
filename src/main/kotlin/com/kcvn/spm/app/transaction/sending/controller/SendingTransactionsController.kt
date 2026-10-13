@@ -10,6 +10,7 @@ import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestForDen
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequestListSearchRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.SendingSearchRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.TempSendingCheckingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.TempSendingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.NewTempSendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestDetailResponse
@@ -142,6 +143,20 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
             "USER: " + CommonUtils.loggedInUser() + ", API: post sending/decline-sending-request-list" + ", REQUEST: " + request
         )
         sendingService.saveTempSendingTransaction(request)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
+    }
+
+    @PostMapping("/save-temp-sending-transaction-checking")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun saveTempSendingTransactionChecking(@Valid @RequestBody request: List<TempSendingCheckingTransactionRequest>): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post sending/decline-sending-request-list" + ", REQUEST: " + request
+        )
+        sendingService.saveTempSendingCheckingTransaction(request)
         return ResponseEntity<MessageResponse>(
             MessageResponse(CommonUtils.getMessage("action.succeeded")),
             HttpStatus.CREATED

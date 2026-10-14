@@ -98,7 +98,7 @@ open class NewTempSendingTransactions(
     /**
      * The column <code>public.new_temp_sending_transactions.seq_no</code>.
      */
-    val SEQ_NO: TableField<NewTempSendingTransactionsRecord, BigDecimal?> = createField(DSL.name("seq_no"), SQLDataType.NUMERIC.nullable(false), this, "")
+    val SEQ_NO: TableField<NewTempSendingTransactionsRecord, Int?> = createField(DSL.name("seq_no"), SQLDataType.INTEGER.nullable(false), this, "")
 
     /**
      * The column

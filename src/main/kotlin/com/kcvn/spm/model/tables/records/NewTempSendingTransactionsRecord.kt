@@ -34,9 +34,9 @@ open class NewTempSendingTransactionsRecord() : TableRecordImpl<NewTempSendingTr
         set(value): Unit = set(3, value)
         get(): BigDecimal? = get(3) as BigDecimal?
 
-    open var seqNo: BigDecimal?
+    open var seqNo: Int?
         set(value): Unit = set(4, value)
-        get(): BigDecimal? = get(4) as BigDecimal?
+        get(): Int? = get(4) as Int?
 
     open var notMinusBoxQty: Boolean?
         set(value): Unit = set(5, value)
@@ -87,7 +87,7 @@ open class NewTempSendingTransactionsRecord() : TableRecordImpl<NewTempSendingTr
     /**
      * Create a detached, initialised NewTempSendingTransactionsRecord
      */
-    constructor(id: String? = null, clientScanId: String? = null, sendingPickingListId: String? = null, scannedQty: BigDecimal? = null, seqNo: BigDecimal? = null, notMinusBoxQty: Boolean? = null, isDeleted: Boolean? = null, isSyncedSap: Boolean? = null, isSyncedAmoeba: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, packageCode: String? = null, lotNo: String? = null): this() {
+    constructor(id: String? = null, clientScanId: String? = null, sendingPickingListId: String? = null, scannedQty: BigDecimal? = null, seqNo: Int? = null, notMinusBoxQty: Boolean? = null, isDeleted: Boolean? = null, isSyncedSap: Boolean? = null, isSyncedAmoeba: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, packageCode: String? = null, lotNo: String? = null): this() {
         this.id = id
         this.clientScanId = clientScanId
         this.sendingPickingListId = sendingPickingListId

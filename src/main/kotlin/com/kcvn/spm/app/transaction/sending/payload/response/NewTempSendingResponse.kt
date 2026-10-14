@@ -16,4 +16,5 @@ data class NewTempSendingResponse(
     var scannedQty: BigDecimal? = null,
     var checkedQty: BigDecimal? = null,
     var status: String? = null,
+    var isApproved: Boolean? = null,
 )

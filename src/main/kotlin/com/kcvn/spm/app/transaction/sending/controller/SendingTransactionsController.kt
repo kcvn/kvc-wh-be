@@ -183,7 +183,21 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @PostMapping("/approve-sending-form")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun approveSendingForm(@RequestParam formCode: String): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post approve/sending-trans" + ", REQUEST: " + formCode
+        )
+        sendingService.approveSendingForm(formCode)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.CREATED
+        )
+    }
 
+//////////////////
     @GetMapping("/get-temp-sending-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun getList(
@@ -288,12 +302,12 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
 
     @PostMapping("/approve/sending-trans")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun approveSendingForm(@RequestParam formCode: String): ResponseEntity<*> {
+    fun approveSendingFormOld(@RequestParam formCode: String): ResponseEntity<*> {
         val logger = KotlinLogging.logger {}
         logger.info(
             "USER: " + CommonUtils.loggedInUser() + ", API: post approve/sending-trans" + ", REQUEST: " + formCode
         )
-        sendingService.approveSendingForm(formCode)
+        sendingService.approveSendingFormOld(formCode)
         return ResponseEntity<MessageResponse>(
             MessageResponse(CommonUtils.getMessage("action.succeeded")),
             HttpStatus.CREATED

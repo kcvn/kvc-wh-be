@@ -3,7 +3,10 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.pojos.SendingFormList
+import com.kcvn.spm.model.tables.references.BACKLOG_WH
+import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
 import com.kcvn.spm.model.tables.references.SENDING_FORM_LIST
 import com.kcvn.spm.model.tables.references.SENDING_PICKING_LIST
 import org.jooq.DSLContext
@@ -41,6 +44,17 @@ class SendingRequestFormListRepository(private val context: DSLContext) : Sortin
             .set(record)
             .returning(SENDING_FORM_LIST.ID)
             .fetchOne()!!.id!!
+    }
+
+    fun update(data: SendingFormList) {
+        context.update(SENDING_FORM_LIST)
+            .set(SENDING_FORM_LIST.IS_APPROVED, data.isApproved)
+            .set(SENDING_FORM_LIST.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(SENDING_FORM_LIST.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                SENDING_FORM_LIST.ID.eq(data.id)
+            )
+            .execute()
     }
 
     fun getListFormCode(formStatus: String, isIncludeGe3Days: Boolean): List<String> {

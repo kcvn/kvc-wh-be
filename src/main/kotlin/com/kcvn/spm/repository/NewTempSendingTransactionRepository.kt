@@ -6,9 +6,11 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactions
-import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.references.NEW_TEMP_SENDING_TRANSACTIONS
-import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
+import com.kcvn.spm.model.tables.references.SENDING_FORM_LIST
+import com.kcvn.spm.model.tables.references.SENDING_PICKING_LIST
+import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST
+import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST_DETAIL
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
@@ -55,7 +57,7 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
     }
 
     // seq_no lớn nhất của package + lot trong ngày (giờ VN); tính cả bản ghi đã huỷ để không dùng lại số cũ
-    fun findMaxSeqNo(packageCode: String, lotNo: String, date: LocalDate): BigDecimal? {
+    fun findMaxSeqNo(packageCode: String, lotNo: String, date: LocalDate): Int? {
         val vnZone = ZoneId.of("Asia/Ho_Chi_Minh")
         val from = date.atStartOfDay(vnZone).toOffsetDateTime()
         val to = date.plusDays(1).atStartOfDay(vnZone).toOffsetDateTime()
@@ -67,7 +69,7 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
                     .and (NEW_TEMP_SENDING_TRANSACTIONS.CREATED_DATE.ge(from))
                     .and (NEW_TEMP_SENDING_TRANSACTIONS.CREATED_DATE.lt(to))
             )
-            .fetchOne(0, BigDecimal::class.java)
+            .fetchOne(0, Int::class.java)
     }
 
     fun findByPackageAndLot(packageCode: String, lotNo: String): NewTempSendingTransactions?{
@@ -93,8 +95,28 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
         }.insert()
     }
 
+    fun getTempSendingListByFormCode(formCode:String): List<NewTempSendingTransactions>?{
+        return context.select(SENDING_PICKING_LIST.PACKAGE_CODE,
+            SENDING_PICKING_LIST.LOT_NO,
+            NEW_TEMP_SENDING_TRANSACTIONS.SCANNED_QTY,
+            NEW_TEMP_SENDING_TRANSACTIONS.NOT_MINUS_BOX_QTY,
+            NEW_TEMP_SENDING_TRANSACTIONS.SEQ_NO)
+            .from(NEW_TEMP_SENDING_TRANSACTIONS)
+            .join(SENDING_PICKING_LIST).on(NEW_TEMP_SENDING_TRANSACTIONS.SENDING_PICKING_LIST_ID.eq(SENDING_PICKING_LIST.ID))
+            .join(SENDING_REQUEST_LIST_DETAIL).on(SENDING_PICKING_LIST.SENDING_REQUEST_DETAIL_ID.eq(SENDING_REQUEST_LIST_DETAIL.ID))
+            .join(SENDING_REQUEST_LIST).on(SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID.eq(SENDING_REQUEST_LIST.ID))
+            .join(SENDING_FORM_LIST).on(SENDING_REQUEST_LIST.SENDING_FORM_ID.eq(SENDING_FORM_LIST.ID))
+            .where(
+                SENDING_FORM_LIST.FORM_CODE.eq(formCode)
+            )
+            .orderBy(SENDING_PICKING_LIST.PACKAGE_CODE,
+                SENDING_PICKING_LIST.LOT_NO,
+                NEW_TEMP_SENDING_TRANSACTIONS.SEQ_NO)
+            .fetchInto(NewTempSendingTransactions::class.java)
+    }
+
     ///
-    fun getList(
+    fun getResult(
         request: NewTempSendingSearchRequest,
         pageable: Pageable?,
         fetchAll: Boolean = false,
@@ -118,7 +140,7 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
     private fun createGetListSqlQuery(request: NewTempSendingSearchRequest): Pair<String, List<Any>> {
         val params = mutableListOf<Any>()
         // Bỏ picking của request đã decline (3) / hoàn tất (4)
-        val conditions = mutableListOf("list.status not in (3, 4)", "picking.is_deleted = false")
+        val conditions = mutableListOf("list.status not in (3)", "picking.is_deleted = false")
 
         // (column ilike %?% or ...)
         fun addCondition(column: String, values: List<String>) {
@@ -149,7 +171,8 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
     CASE
                             WHEN COALESCE (picking.request_qty,0) = COALESCE(scanned.scanned_qty, 0) and COALESCE (scanned.scanned_qty,0) = COALESCE(checking.checked_qty, 0)  THEN 'SAME'
                             ELSE 'DIFFERENT'
-                             END AS status,
+                             END AS result,
+    form.is_approved,
 count(*) over() as total_count
 from
 	public.sending_form_list form

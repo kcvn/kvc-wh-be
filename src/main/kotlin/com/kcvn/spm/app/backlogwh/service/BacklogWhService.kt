@@ -256,7 +256,7 @@ class BacklogWhService(
             val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!),
                 data.boxQty?.plus(backlog.boxQty!!), isEntried = data.isEntried, lotNo = newLotNo, issueDate = newIssueDate
             )
-            backlogWhRepo.update(entityBacklog)
+            //backlogWhRepo.update(entityBacklog)
             val entityBacklogHistory = BacklogWhHistory(
                 null, data.locationCode, data.poNumber, data.packageCode, data.backlogQty?.plus(backlog.backlogQty!!), data.boxQty?.plus(backlog.boxQty!!), receivingDate, data.inspectionDate, transactionType
             )
@@ -274,7 +274,7 @@ class BacklogWhService(
         val entityBacklog = BacklogWh(null, data.locationCode, data.poNumber, data.packageCode, backlog.backlogQty?.minus(data.backlogQty!!),
             backlog.boxQty?.minus(data.boxQty!!), data.receivingDate, data.inspectionDate, isEntried = data.isEntried, lotNo = backlog.lotNo, issueDate = backlog.issueDate
         )
-        backlogWhRepo.update(entityBacklog)
+        //backlogWhRepo.update(entityBacklog)
         // insert backlog history
         val entityBacklogHistory = BacklogWhHistory(
             null, entityBacklog.locationCode, entityBacklog.poNumber, entityBacklog.packageCode, entityBacklog.backlogQty, entityBacklog.boxQty, data.receivingDate, data.inspectionDate, transactionType

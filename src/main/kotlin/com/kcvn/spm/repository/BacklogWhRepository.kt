@@ -220,6 +220,28 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .fetch()
     }
 
+    fun findByPackageCodeAndLotNo (packageCode: String, lotNo: String): NewBacklogWh?{
+        return context.selectFrom(NEW_BACKLOG_WH)
+            .where(
+                NEW_BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
+                    .and (NEW_BACKLOG_WH.LOT_NO.eq(lotNo))
+            )
+            .fetchOneInto(NewBacklogWh::class.java)
+    }
+
+    fun update(data: NewBacklogWh) {
+        context.update(NEW_BACKLOG_WH)
+            .set(NEW_BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
+            .set(NEW_BACKLOG_WH.BOX_QTY, data.boxQty)
+            .set(NEW_BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(NEW_BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                NEW_BACKLOG_WH.ID.eq(data.id)
+            )
+            .execute()
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// OLD
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
         condition = condition.and(BACKLOG_WH.IS_ENTRIED.eq(false)).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
@@ -294,24 +316,6 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             )
             .fetchInto(BacklogWh::class.java)
             .firstOrNull()
-    }
-
-    fun update(data: BacklogWh) {
-            context.update(BACKLOG_WH)
-                .set(BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
-                .set(BACKLOG_WH.BOX_QTY, data.boxQty)
-                //.set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
-                .set(BACKLOG_WH.IS_ENTRIED, data.isEntried)
-                .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .set(BACKLOG_WH.LOT_NO, data.lotNo)
-                .set(BACKLOG_WH.ISSUE_DATE, data.issueDate)
-                .where(
-                    BACKLOG_WH.LOCATION_CODE.eq(data.locationCode)
-                        .and(BACKLOG_WH.PACKAGE_CODE.eq(data.packageCode))
-                        .and(BACKLOG_WH.PO_NUMBER.eq(data.poNumber))
-                )
-                .execute()
     }
 
     fun updateQty(packageCode: String, backlogQty: BigDecimal, boxQty: Int) {

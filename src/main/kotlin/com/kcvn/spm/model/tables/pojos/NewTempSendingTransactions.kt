@@ -18,7 +18,7 @@ data class NewTempSendingTransactions(
     var clientScanId: String? = null,
     var sendingPickingListId: String? = null,
     var scannedQty: BigDecimal? = null,
-    var seqNo: BigDecimal? = null,
+    var seqNo: Int? = null,
     var notMinusBoxQty: Boolean? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")

@@ -28,6 +28,7 @@ import com.kcvn.spm.model.tables.pojos.SendingFormList
 import com.kcvn.spm.model.tables.pojos.SendingPickingList
 import com.kcvn.spm.model.tables.pojos.SendingRequestList
 import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
+import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.repository.*
@@ -67,6 +68,7 @@ class SendingTransactionsService(
     private val sendingPickingListRepository: SendingPickingListRepository,
     private val newTempSendingTransactionRepository: NewTempSendingTransactionRepository,
     private val newTempSendingCheckingTransactionRepository: NewTempSendingCheckingTransactionRepository,
+    private val splittingRepository: SplittingRepository,
 ) {
     fun saveSendingRequest(requestList: List<SendingRequest>){
         requestList.firstOrNull { it.requestQty <= BigDecimal.ZERO }?.let {
@@ -313,7 +315,7 @@ class SendingTransactionsService(
     }
 
     fun getTempSendingResult(request: NewTempSendingSearchRequest, pageable: Pageable? = null): BasePagingResponse<NewTempSendingResponse> {
-        val listFormCode = newTempSendingTransactionRepository.getList(request, pageable)
+        val listFormCode = newTempSendingTransactionRepository.getResult(request, pageable)
 
 
         return BasePagingResponse(data = listFormCode.first, listFormCode.second)
@@ -366,14 +368,14 @@ class SendingTransactionsService(
             val picking = pickingById[scan.sendingPickingListId]!!
             val latestSeqNo =
                 newTempSendingTransactionRepository.findMaxSeqNo(picking.packageCode!!, picking.lotNo!!, today)
-                    ?: BigDecimal.ZERO
+                    ?: 0
             newTempSendingTransactionRepository.save(
                 NewTempSendingTransactions(
                     clientScanId = scan.clientScanId,
                     sendingPickingListId = picking.id,
                     packageCode = picking.packageCode,
                     lotNo = picking.lotNo,
-                    seqNo = latestSeqNo + BigDecimal.ONE,
+                    seqNo = latestSeqNo + 1,
                     notMinusBoxQty = scan.notMinusBoxQty,
                     scannedQty = scan.scannedQty
                 )
@@ -442,6 +444,49 @@ class SendingTransactionsService(
         }
     }
 
+    fun approveSendingForm(formCode: String){
+        val sendingForm = sendingRequestFormListRepository.findByFormCode(formCode)
+        if (sendingForm == null || sendingForm.isApproved == true) throw BusinessExceptionDetail(
+            "Form $formCode đã được duyệt hoặc không tồn tại", "formCode = $formCode"
+        )
+        val tempSendingList = newTempSendingTransactionRepository.getTempSendingListByFormCode(formCode = formCode)
+        tempSendingList?.forEach {
+            val backlog = backlogWhRepository.findByPackageCodeAndLotNo(it.packageCode!!, it.lotNo!!)
+            if (backlog == null || backlog.backlogQty!! < it.scannedQty)
+                throw BusinessExceptionDetail(
+                    CommonUtils.getMessage("not.enough.backlog ${it.packageCode} - ${it.lotNo}"), ""
+                )
+            //minus backlog
+            backlog.backlogQty = backlog.backlogQty!! - it.scannedQty!!
+            if (it.notMinusBoxQty == false)
+                backlog.boxQty = backlog.boxQty!! - 1
+            backlogWhRepository.update(backlog)
+            //save sending trans
+            val locationCode = splittingRepository.findByPackage(it.packageCode!!) ?: throw BusinessExceptionDetail(
+                "Không tìm thấy BIN của package ${backlog.packageCode}",""
+            )
+            val sendingTrans = SendingTransactions(
+                sourceLocationCode = locationCode.locationCode,
+                destLocationCode = locationCode.locationCode,
+                sourcePackageCode = backlog.packageCode,
+                destPackageCode = backlog.packageCode,
+                poNumber = backlog.poNumber,
+                qty = it.scannedQty,
+                seqNo = it.seqNo,
+                transactionType = "OUT_ONLY",
+                receivingDate = backlog.receivingDate,
+                lotNo = backlog.lotNo,
+            )
+            sendingRepo.saveSendingTrans(sendingTrans)
+        }
+        sendingForm.isApproved = true
+        sendingRequestFormListRepository.update(sendingForm)
+
+
+//        tempSendingImportedRepo.updateAfterApprove(formCode)
+//        sendingRepo.copyToSendingTable(formCode)
+    }
+
     ////////////
 
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
@@ -483,7 +528,7 @@ class SendingTransactionsService(
     }
 
 
-    fun approveSendingForm(formCode: String){
+    fun approveSendingFormOld(formCode: String){
         val sendingList = tempSendingRepo.getListByFormCode(formCode)
         if (sendingList.isEmpty()) throw BusinessExceptionDetail(
             CommonUtils.getMessage("form.code.approved"), "formCode = $formCode"

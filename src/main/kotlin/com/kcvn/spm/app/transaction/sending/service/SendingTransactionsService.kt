@@ -408,12 +408,12 @@ class SendingTransactionsService(
                 errors += "${scan.value[0].poNumber} - ${scan.value[0].lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
                 return@forEach
             }
-            // cộng dồn cả các lần scan cùng dòng picking trong lô này
-            val addedQty = scan.value.sumOf { it.checkedQty!! }
-            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + addedQty
-            scannedQtyById[picking.id!!] = scannedQty
-            if (scannedQty > picking.requestQty!!)
-                errors += "${picking.packageCode} - ${picking.lotNo}: số lượng scan ($scannedQty) vượt số lượng cần lấy (${picking.requestQty})"
+            // nếu vượt qua số lương vẫn cho lưu
+//            val addedQty = scan.value.sumOf { it.checkedQty!! }
+//            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + addedQty
+//            scannedQtyById[picking.id!!] = scannedQty
+//            if (scannedQty > picking.requestQty!!)
+//                errors += "${picking.packageCode} - ${picking.lotNo}: số lượng scan ($scannedQty) vượt số lượng cần lấy (${picking.requestQty})"
         }
         if (errors.isNotEmpty()) throw BusinessExceptionDetail("Không thể lưu kết quả scan", errors.distinct().joinToString("; "))
 

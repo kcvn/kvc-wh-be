@@ -4,12 +4,11 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 data class SendingRequest(
-    var formCode: String? = null,
-    var inspectionDate: LocalDate? = null,
-    var locationCode: String? = null,
-    var packageCode: String? = null,
-    var poNumber: String? = null,
-    var qty : BigDecimal? = BigDecimal.ZERO,
-    var notMinusBoxQty : Boolean? = null,
-    var minBinCode: String? = null
+    var poNumber: String,
+    var itemCode: String,
+    var itemName: String? = null,
+    var productionGroup: String? = null,
+    var receivingDate: LocalDate,
+    var lotNo: String,
+    var requestQty: BigDecimal,
 )

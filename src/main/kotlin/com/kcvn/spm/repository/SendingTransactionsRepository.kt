@@ -6,8 +6,10 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
+import com.kcvn.spm.model.tables.pojos.SendingFormList
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
+import com.kcvn.spm.model.tables.references.SENDING_FORM_LIST
 import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -161,20 +164,20 @@ class SendingTransactionsRepository(private val context: DSLContext) : SortingRe
             .firstOrNull()
     }
 
-    fun saveSendingTrans(moving: SendingTransactions) {
-        context.insertInto(
-            SENDING_TRANSACTIONS, SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE, SENDING_TRANSACTIONS.DEST_LOCATION_CODE,
-            SENDING_TRANSACTIONS.SOURCE_PACKAGE_CODE, SENDING_TRANSACTIONS.DEST_PACKAGE_CODE, SENDING_TRANSACTIONS.PO_NUMBER,
-            SENDING_TRANSACTIONS.QTY, SENDING_TRANSACTIONS.SEQ_NO, SENDING_TRANSACTIONS.TRANSACTION_TYPE,
-            SENDING_TRANSACTIONS.RECEIVING_DATE, SENDING_TRANSACTIONS.INSPECTION_DATE, SENDING_TRANSACTIONS.CREATED_BY
-        )
-            .values(
-                moving.sourceLocationCode, moving.destLocationCode,
-                moving.sourcePackageCode, moving.destPackageCode, moving.poNumber,
-                moving.qty, moving.seqNo, moving.transactionType,
-                moving.receivingDate, moving.inspectionDate, CommonUtils.loggedInUser() ?: Constants.SYSTEM
-            )
-            .execute()
+    fun saveSendingTrans(data: SendingTransactions): String {
+        val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+        val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+        val record = context.newRecord(SENDING_TRANSACTIONS, data).apply {
+            createdBy = user
+            createdDate = currentTime
+            updatedBy = user
+            updatedDate = currentTime
+        }
+        return context.insertInto(SENDING_TRANSACTIONS)
+            .set(record)
+            .returning(SENDING_TRANSACTIONS.ID)
+            .fetchOne()!!.id!!
     }
 
     fun copyToSendingTable(formCode: String) {

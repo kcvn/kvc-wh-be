@@ -1,6 +1,6 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.app.transaction.sending.payload.request.SendingRequest
+import com.kcvn.spm.app.transaction.sending.payload.request.SendingTransactionRequest
 import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
@@ -295,7 +295,7 @@ FULL OUTER JOIN (
 
 
 
-    fun getOneTransaction(request: SendingRequest): TempSendingTransactions? {
+    fun getOneTransaction(request: SendingTransactionRequest): TempSendingTransactions? {
         return context.selectFrom(TEMP_SENDING_TRANSACTIONS)
             .where(
                 TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(request.formCode)

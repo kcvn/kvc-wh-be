@@ -2,19 +2,33 @@ package com.kcvn.spm.app.transaction.sending.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
+import com.kcvn.spm.app.transaction.sending.payload.response.NewTempSendingResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestDetailResponse
+import com.kcvn.spm.app.transaction.sending.payload.response.SendingRequestListResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.SendingResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.TempSendingResultInquiryResponse
 import com.kcvn.spm.app.transaction.sending.payload.response.ValidateSendTransResponse
+import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.constants.ExcelConstant
+import com.kcvn.spm.common.constants.PdfConstant
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.helper.ExcelHelper
+import com.kcvn.spm.common.helper.PdfHelper
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.payload.BaseResponse
+import com.kcvn.spm.common.payload.DropdownResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.CancelSendingTransactions
+import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactions
+import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactionsChecking
+import com.kcvn.spm.model.tables.pojos.SendingFormList
+import com.kcvn.spm.model.tables.pojos.SendingPickingList
+import com.kcvn.spm.model.tables.pojos.SendingRequestList
+import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
+import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
 import com.kcvn.spm.repository.*
@@ -30,8 +44,10 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -44,8 +60,435 @@ class SendingTransactionsService(
     private val tempSendingImportedRepo: TempSendingImportedRepository,
     private val tempSendingCheckingRepo: TempSendingCheckingTransactionsRepository,
     private val backlogWhService: BacklogWhService,
-    private val backlogWhRepository: BacklogWhRepository
+    private val backlogWhRepository: BacklogWhRepository,
+    private val sendingRequestFormListRepository: SendingRequestFormListRepository,
+    private val sendingRequestListRepository: SendingRequestListRepository,
+    private val sendingRequestListDetailRepository: SendingRequestListDetailRepository,
+    private val pdfHelper: PdfHelper,
+    private val sendingPickingListRepository: SendingPickingListRepository,
+    private val newTempSendingTransactionRepository: NewTempSendingTransactionRepository,
+    private val newTempSendingCheckingTransactionRepository: NewTempSendingCheckingTransactionRepository,
+    private val splittingRepository: SplittingRepository,
 ) {
+    fun saveSendingRequest(requestList: List<SendingRequest>){
+        requestList.firstOrNull { it.requestQty <= BigDecimal.ZERO }?.let {
+            throw BusinessExceptionDetail(
+                "Số lượng yêu cầu phải lớn hơn 0", "${it.receivingDate} - ${it.poNumber} - ${it.lotNo}"
+            )
+        }
+
+        val requestListGrouped = requestList.groupBy { it.receivingDate to it.poNumber }
+
+        requestListGrouped.keys
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (receivingDate, poNumber) -> backlogWhRepository.lockBacklogByRecDatePo(receivingDate, poNumber) }
+
+        requestListGrouped.forEach { (key, requests) ->
+            val (receivingDate, poNumber) = key
+            val existedRequest = sendingRequestListRepository.findByReceivingDatePO(poNumber, receivingDate)
+            val itemCode = requests[0].itemCode
+            val itemName = requests[0].itemName
+            val productionGroup = requests[0].productionGroup
+            val sendingRequestRec = SendingRequestList(
+                receivingDate = receivingDate,
+                poNumber = poNumber,
+                itemCode = itemCode,
+                itemName = itemName,
+                productionGroup = productionGroup,
+                requestQty = requests.sumOf { it.requestQty },
+                seqNo = (existedRequest?.seqNo ?: 0) + 1,
+                status = 1
+            )
+            val requestListId = sendingRequestListRepository.save(sendingRequestRec)
+
+            requests.forEach { request ->
+                // Một lot có thể nằm ở nhiều package nên cộng tất cả dòng backlog
+                val backlogQty = backlogWhRepository.findBacklogByRecDatePoAndLotNo(request.receivingDate, request.poNumber, request.lotNo)
+                    .orEmpty().sumOf { it.backlogQty ?: BigDecimal.ZERO }
+                val processingQty = sendingRequestListDetailRepository
+                    .findProcessingRequestByReceivingDatePOAndLot(request.receivingDate, request.poNumber, request.lotNo)
+                    .orEmpty().sumOf { it.requestQty ?: BigDecimal.ZERO }
+                if (processingQty + request.requestQty > backlogQty)
+                    throw BusinessExceptionDetail(
+                        "Không đủ tồn kho", "${request.receivingDate} - ${request.poNumber} - ${request.lotNo}"
+                    )
+
+                val sendingRequestDetailRec = SendingRequestListDetail(
+                    receivingDate = request.receivingDate,
+                    poNumber = request.poNumber,
+                    lotNo = request.lotNo,
+                    requestQty = request.requestQty,
+                    sendingRequestId = requestListId
+                )
+                sendingRequestListDetailRepository.save(sendingRequestDetailRec)
+            }
+        }
+    }
+
+    fun getSendingRequestList(request: SendingRequestListSearchRequest, pageable: Pageable): BasePagingResponse<SendingRequestListResponse>{
+        val data = sendingRequestListRepository.getList(request, pageable)
+        return BasePagingResponse(
+            data.first,
+            data.second
+        )
+    }
+
+    fun exportSendingRequestListPdf(requestList: List<ExportPDFSendingRequestListRequest>, pageable: Pageable): BaseResponse<FileContentModel> {
+        if (requestList.isEmpty()) throw BusinessException("Chưa chọn yêu cầu để xuất")
+
+        val vnZone = ZoneId.of("Asia/Ho_Chi_Minh")
+        // created_date lưu theo UTC, đổi sang giờ VN trước khi in
+        val items = sendingRequestListRepository.getListByKeys(requestList, pageable)
+            .map { it.copy(createdDate = it.createdDate?.atZoneSameInstant(vnZone)?.toOffsetDateTime()) }
+
+        // Mỗi trang tối đa ROWS_PER_PAGE dòng, trang cuối bù null để luôn vẽ đủ dòng trống
+        val rowsPerPage = PdfConstant.PURCHASING_OUTGOING_ROWS_PER_PAGE
+        val pages = items.chunked(rowsPerPage)
+            .ifEmpty { listOf(emptyList()) }
+            .map { page -> page + List(rowsPerPage - page.size) { null } }
+
+        val now = LocalDateTime.now(vnZone)
+        val pdfBytes = pdfHelper.render(
+            PdfConstant.TEMPLATE_PURCHASING_OUTGOING,
+            mapOf(
+                "items" to items,
+                "pages" to pages,
+                "rowsPerPage" to rowsPerPage,
+                "printedDate" to now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
+                "printedBy" to (CommonUtils.loggedInUser() ?: Constants.SYSTEM),
+            )
+        )
+
+        val response = FileContentModel(
+            fileName = "PurchasingOutgoing_${now.format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))}.pdf",
+            contentType = PdfConstant.PDF_CONTENT_TYPE,
+            content = pdfBytes
+        )
+        return BaseResponse(response)
+    }
+
+    fun getSendingRequestDetail(request: SendingRequestDetailSearchRequest, pageable: Pageable): BasePagingResponse<SendingRequestDetailResponse>{
+        val sendingRequest = sendingRequestListRepository.findByReceivingDatePOAndSeqNo(request.poNumber, request.receivingDate, request.seqNo)
+            ?: throw BusinessExceptionDetail(
+                "Không tìm thấy yêu cầu", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}"
+            )
+        val detailData = sendingRequestListDetailRepository.getListDetailByRequestId(sendingRequest.id!!, pageable)
+        val responseData = detailData.map {
+            SendingRequestDetailResponse(
+                poNumber = sendingRequest.poNumber,
+                itemCode = sendingRequest.itemCode,
+                itemName = sendingRequest.itemName,
+                productionGroup = sendingRequest.productionGroup,
+                receivingDate = sendingRequest.receivingDate,
+                seqNo = sendingRequest.seqNo,
+                lotNo = it.lotNo,
+                requestQty = it.requestQty,
+                status = sendingRequest.status,
+                comment = sendingRequest.comment
+            )
+
+        }
+        return BasePagingResponse(
+            responseData,
+            sendingRequestListDetailRepository.countDetailByRequestId(sendingRequest.id!!)
+        )
+    }
+
+    fun declineSendingRequestList(request: List<SendingRequestForDeny>){
+        request.forEach { request ->
+            val rec = sendingRequestListRepository.findByReceivingDatePOAndSeqNo(request.poNumber, request.receivingDate, request.seqNo)
+                ?: throw BusinessExceptionDetail(
+            "Không tìm thấy yêu cầu", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}"
+        )
+            // Chỉ decline được request đang chờ (1) hoặc đã gom phiếu (2); decline là trạng thái cuối
+            if (rec.status != 1 && rec.status != 2) throw BusinessExceptionDetail(
+                if (rec.status == 3) "Yêu cầu đã bị từ chối" else "Yêu cầu đã hoàn tất, không thể từ chối",
+                "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}"
+            )
+            rec.status = 3
+            rec.comment = request.comment
+            sendingRequestListRepository.update(rec)
+        }
+    }
+
+    fun confirmSendingRequestList(request: SendingRequestForConfirm){
+        //save Sending Form
+        val formCode = request.formCode
+        val existForm = sendingRequestFormListRepository.findByFormCode(formCode)
+        if (existForm != null) throw BusinessExceptionDetail(
+            "Mã phiếu đã tồn tại, hãy điền mã phiếu khác", formCode
+        )
+        val sendingForm = SendingFormList(
+            formCode = formCode,
+            isApproved = false
+        )
+        val sendingFormId = sendingRequestFormListRepository.save(sendingForm)
+
+        // Khoá backlog theo receivingDate-PO (thứ tự cố định) để 2 lần confirm đồng thời không phân bổ trùng hàng
+        request.requests
+            .map { it.receivingDate to it.poNumber }
+            .distinct()
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (receivingDate, poNumber) -> backlogWhRepository.lockBacklogByRecDatePo(receivingDate, poNumber) }
+
+        request.requests.forEach { request ->
+           //update Sending Request List Status and add Sending Form ID
+
+            val rec = sendingRequestListRepository.findByReceivingDatePOAndSeqNo(request.poNumber, request.receivingDate, request.seqNo)
+                ?: throw BusinessExceptionDetail(
+                    "Không tìm thấy yêu cầu", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}"
+                )
+            when (rec.status) {
+                1 -> {}
+                3 -> throw BusinessExceptionDetail("Yêu cầu đã bị từ chối, không thể xác nhận", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}")
+                else -> throw BusinessExceptionDetail("Yêu cầu đã được xác nhận, không thể xác nhận tiếp", "${request.poNumber} - ${request.receivingDate} - ${request.seqNo}")
+            }
+
+            rec.status = 2
+            rec.sendingFormId = sendingFormId
+            sendingRequestListRepository.update(rec)
+
+            //create Picking List
+            val requestLotList = sendingRequestListDetailRepository.getListDetailByRequestId(rec.id!!)
+            requestLotList.forEach{ detail ->
+                val backlog = backlogWhRepository
+                    .findBacklogByRecDatePoAndLotNo(detail.receivingDate!!, detail.poNumber!!, detail.lotNo!!)
+                    .orEmpty().sortedBy { it.createdDate }
+                val processingPickingList = sendingPickingListRepository
+                    .findAllByPORecDateAndLot(detail.poNumber!!, detail.receivingDate!!, detail.lotNo!!)
+                    .orEmpty()
+
+                // availableBacklog = backlog - existedPickingList, ghép theo PO + receiving date + lot no + package
+                // (1 package chứa nhiều PO/lot nên không được trừ theo mỗi package)
+                val processingQtyByKey = processingPickingList
+                    .groupBy { listOf(it.poNumber, it.receivingDate, it.lotNo, it.packageCode) }
+                    .mapValues { (_, list) -> list.sumOf { it.requestQty ?: BigDecimal.ZERO } }
+                val availableBacklog = backlog
+                    .map {
+                        val key = listOf(it.poNumber, it.receivingDate, it.lotNo, it.packageCode)
+                        it to it.backlogQty!! - (processingQtyByKey[key] ?: BigDecimal.ZERO)
+                    }
+                    .filter { (_, availableQty) -> availableQty > BigDecimal.ZERO }
+
+                if (availableBacklog.sumOf { it.second } < detail.requestQty!!) throw BusinessExceptionDetail(
+                    "Không đủ tồn kho", "${detail.receivingDate} - ${detail.poNumber} - ${detail.lotNo}"
+                )
+
+                // Lấy lần lượt từng package còn khả dụng cho tới khi đủ requestQty
+                var remainQty = detail.requestQty!!
+                val newPickingList = mutableListOf<SendingPickingList>()
+                for ((current, availableQty) in availableBacklog) {
+                    if (remainQty <= BigDecimal.ZERO) break
+                    val pickQty = minOf(availableQty, remainQty)
+                    newPickingList += SendingPickingList(
+                        sendingRequestDetailId = detail.id,
+                        receivingDate = detail.receivingDate,
+                        poNumber = detail.poNumber,
+                        packageCode = current.packageCode,
+                        requestQty = pickQty,
+                        itemCode = current.itemCode,
+                        itemName = current.itemName,
+                        productionGroup = current.productionGroup,
+                        lotNo = detail.lotNo,
+                        issueDate = current.issueDate,
+                        isDeleted = false
+                    )
+                    remainQty -= pickQty
+                }
+                sendingPickingListRepository.saveAll(newPickingList)
+            }
+        }
+    }
+
+    fun getListFormCodeDropdown(formStatus: String, isIncludeGe3Days: Boolean): BaseResponse<List<DropdownResponse>> {
+        val listFormCode = sendingRequestFormListRepository.getListFormCode(formStatus, isIncludeGe3Days)
+
+        // Map DropDownResponse
+        val dropDownList: List<DropdownResponse> = listFormCode.map { formCode ->
+            DropdownResponse(
+                formCode,
+                formCode
+            )
+        }
+
+        return BaseResponse(data = dropDownList)
+    }
+
+    fun getTempSendingResult(request: NewTempSendingSearchRequest, pageable: Pageable? = null): BasePagingResponse<NewTempSendingResponse> {
+        val listFormCode = newTempSendingTransactionRepository.getResult(request, pageable)
+
+
+        return BasePagingResponse(data = listFormCode.first, listFormCode.second)
+    }
+
+    fun saveTempSendingTransaction(request: List<TempSendingTransactionRequest>){
+        if (request.isEmpty()) throw BusinessException("Chưa có dữ liệu scan")
+        val errors = mutableListOf<String>()
+
+        //kiem tra co trung clientScanId trong request khong
+        request.mapNotNull { it.clientScanId }.groupingBy { it }.eachCount()
+            .filterValues { it > 1 }.keys
+            .forEach { errors += "clientScanId $it bị gửi trùng trong lần này" }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
+
+        // clientScanId đã được lưu trước đó thì báo lỗi và dừng, không lưu dòng nào
+        request.filter { newTempSendingTransactionRepository.findByClientScanId(it.clientScanId!!) != null }
+            .forEach { errors += " ${it.packageCode} - ${it.lotNo} đã được lưu trước đó" }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
+
+        // Khoá dòng picking còn hiệu lực rồi kiểm tra tồn tại + không vượt request_qty
+        val pickingIds = request.map { it.sendingPickingListId!! }.distinct()
+        val pickingById = sendingPickingListRepository.lockActiveByIds(pickingIds).associateBy { it.id!! }
+        val scannedQtyById = newTempSendingTransactionRepository.sumScannedQtyByPickingIds(pickingIds).toMutableMap()
+
+        val requestGroupedByPickingId = request.groupBy { it.sendingPickingListId!! }
+        requestGroupedByPickingId.forEach { scan ->
+            val picking = pickingById[scan.key]
+            if (picking == null) {
+                errors += "${scan.value[0].packageCode} - ${scan.value[0].lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
+                return@forEach
+            }
+            // cộng dồn cả các lần scan cùng dòng picking trong lô này
+            val addedQty = scan.value.sumOf { it.scannedQty!! }
+            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + addedQty
+            scannedQtyById[picking.id!!] = scannedQty
+            if (scannedQty > picking.requestQty!!)
+                errors += "${picking.packageCode} - ${picking.lotNo}: số lượng scan ($scannedQty) vượt số lượng cần lấy (${picking.requestQty})"
+        }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("Không thể lưu kết quả scan", errors.distinct().joinToString("; "))
+
+        val today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"))
+        request.map { pickingById[it.sendingPickingListId]!! }
+            .map { it.packageCode!! to it.lotNo!! }
+            .distinct()
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (packageCode, lotNo) -> newTempSendingTransactionRepository.lockSeqNo(packageCode, lotNo, today) }
+
+        request.forEach { scan ->
+            val picking = pickingById[scan.sendingPickingListId]!!
+            val latestSeqNo =
+                newTempSendingTransactionRepository.findMaxSeqNo(picking.packageCode!!, picking.lotNo!!, today)
+                    ?: 0
+            newTempSendingTransactionRepository.save(
+                NewTempSendingTransactions(
+                    clientScanId = scan.clientScanId,
+                    sendingPickingListId = picking.id,
+                    packageCode = picking.packageCode,
+                    lotNo = picking.lotNo,
+                    seqNo = latestSeqNo + 1,
+                    notMinusBoxQty = scan.notMinusBoxQty,
+                    scannedQty = scan.scannedQty
+                )
+            )
+        }
+    }
+
+    fun saveTempSendingCheckingTransaction(request: List<TempSendingCheckingTransactionRequest>){
+        if (request.isEmpty()) throw BusinessException("Chưa có dữ liệu scan")
+        val errors = mutableListOf<String>()
+
+        //kiem tra co trung clientScanId trong request khong
+        request.mapNotNull { it.clientScanId }.groupingBy { it }.eachCount()
+            .filterValues { it > 1 }.keys
+            .forEach { errors += "clientScanId $it bị gửi trùng trong lần này" }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
+
+        // clientScanId đã được lưu trước đó thì báo lỗi và dừng, không lưu dòng nào
+        request.filter { newTempSendingCheckingTransactionRepository.findByClientScanId(it.clientScanId!!) != null }
+            .forEach { errors += " ${it.poNumber} - ${it.lotNo} đã được lưu trước đó" }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
+
+        // Khoá dòng picking còn hiệu lực rồi kiểm tra tồn tại + không vượt request_qty
+        val pickingIds = request.map { it.sendingPickingListId!! }.distinct()
+        val pickingById = sendingPickingListRepository.lockActiveByIds(pickingIds).associateBy { it.id!! }
+        val scannedQtyById = newTempSendingCheckingTransactionRepository.sumScannedQtyByPickingIds(pickingIds).toMutableMap()
+
+        val requestGroupedByPickingId = request.groupBy { it.sendingPickingListId!! }
+        requestGroupedByPickingId.forEach { scan ->
+            val picking = pickingById[scan.key]
+            if (picking == null) {
+                errors += "${scan.value[0].poNumber} - ${scan.value[0].lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
+                return@forEach
+            }
+            // nếu vượt qua số lương vẫn cho lưu
+//            val addedQty = scan.value.sumOf { it.checkedQty!! }
+//            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + addedQty
+//            scannedQtyById[picking.id!!] = scannedQty
+//            if (scannedQty > picking.requestQty!!)
+//                errors += "${picking.packageCode} - ${picking.lotNo}: số lượng scan ($scannedQty) vượt số lượng cần lấy (${picking.requestQty})"
+        }
+        if (errors.isNotEmpty()) throw BusinessExceptionDetail("Không thể lưu kết quả scan", errors.distinct().joinToString("; "))
+
+        val today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"))
+        request.map { pickingById[it.sendingPickingListId]!! }
+            .map { it.packageCode!! to it.lotNo!! }
+            .distinct()
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (packageCode, lotNo) -> newTempSendingCheckingTransactionRepository.lockSeqNo(packageCode, lotNo, today) }
+
+        request.forEach { scan ->
+            val picking = pickingById[scan.sendingPickingListId]!!
+            val latestSeqNo =
+                newTempSendingCheckingTransactionRepository.findMaxSeqNo(picking.lotNo!!, today)
+                    ?: BigDecimal.ZERO
+            newTempSendingCheckingTransactionRepository.save(
+                NewTempSendingTransactionsChecking(
+                    clientScanId = scan.clientScanId,
+                    sendingPickingListId = picking.id,
+                    checkedQty = scan.checkedQty,
+                    lotNo = picking.lotNo,
+                    seqNo = latestSeqNo + BigDecimal.ONE,
+                    notMinusBoxQty = scan.notMinusBoxQty,
+                )
+            )
+        }
+    }
+
+    fun approveSendingForm(formCode: String){
+        val sendingForm = sendingRequestFormListRepository.findByFormCode(formCode)
+        if (sendingForm == null || sendingForm.isApproved == true) throw BusinessExceptionDetail(
+            "Form $formCode đã được duyệt hoặc không tồn tại", "formCode = $formCode"
+        )
+        val tempSendingList = newTempSendingTransactionRepository.getTempSendingListByFormCode(formCode = formCode)
+        tempSendingList?.forEach {
+            val backlog = backlogWhRepository.findByPackageCodeAndLotNo(it.packageCode!!, it.lotNo!!)
+            if (backlog == null || backlog.backlogQty!! < it.scannedQty)
+                throw BusinessExceptionDetail(
+                    CommonUtils.getMessage("not.enough.backlog ${it.packageCode} - ${it.lotNo}"), ""
+                )
+            //minus backlog
+            backlog.backlogQty = backlog.backlogQty!! - it.scannedQty!!
+            if (it.notMinusBoxQty == false)
+                backlog.boxQty = backlog.boxQty!! - 1
+            backlogWhRepository.update(backlog)
+            //save sending trans
+            val locationCode = splittingRepository.findByPackage(it.packageCode!!) ?: throw BusinessExceptionDetail(
+                "Không tìm thấy BIN của package ${backlog.packageCode}",""
+            )
+            val sendingTrans = SendingTransactions(
+                sourceLocationCode = locationCode.locationCode,
+                destLocationCode = locationCode.locationCode,
+                sourcePackageCode = backlog.packageCode,
+                destPackageCode = backlog.packageCode,
+                poNumber = backlog.poNumber,
+                qty = it.scannedQty,
+                seqNo = it.seqNo,
+                transactionType = "OUT_ONLY",
+                receivingDate = backlog.receivingDate,
+                lotNo = backlog.lotNo,
+            )
+            sendingRepo.saveSendingTrans(sendingTrans)
+        }
+        sendingForm.isApproved = true
+        sendingRequestFormListRepository.update(sendingForm)
+
+
+//        tempSendingImportedRepo.updateAfterApprove(formCode)
+//        sendingRepo.copyToSendingTable(formCode)
+    }
+
+    ////////////
+
     fun getList(request: SendingSearchRequest, pageable: Pageable): BasePagingResponse<SendingResponse> {
         val moving = sendingRepo.getList(request, pageable)
         val data = moving.first.map {
@@ -85,7 +528,7 @@ class SendingTransactionsService(
     }
 
 
-    fun approveSendingForm(formCode: String){
+    fun approveSendingFormOld(formCode: String){
         val sendingList = tempSendingRepo.getListByFormCode(formCode)
         if (sendingList.isEmpty()) throw BusinessExceptionDetail(
             CommonUtils.getMessage("form.code.approved"), "formCode = $formCode"
@@ -213,7 +656,7 @@ class SendingTransactionsService(
         }
     }
 
-    fun validateSourceBacklogFromSending(request: List<SendingRequest>): List<ValidateSendTransResponse> {
+    fun validateSourceBacklogFromSending(request: List<SendingTransactionRequest>): List<ValidateSendTransResponse> {
         val list = aggregateSendingRequests(request)
         val response = mutableListOf<ValidateSendTransResponse>()
         list.forEach {
@@ -230,8 +673,8 @@ class SendingTransactionsService(
         return response
     }
 
-    fun aggregateSendingRequests(sendingRequests: List<SendingRequest>): List<ValidateSendTransRequest> {
-        return sendingRequests
+    fun aggregateSendingRequests(sendingTransactionRequests: List<SendingTransactionRequest>): List<ValidateSendTransRequest> {
+        return sendingTransactionRequests
             .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
             .map { (key, group) ->
                 ValidateSendTransRequest(
@@ -243,7 +686,7 @@ class SendingTransactionsService(
             }
     }
 
-    fun saveSendTrans(request: List<SendingRequest>) {
+    fun saveSendTrans(request: List<SendingTransactionRequest>) {
 //        val removeList = request
 //            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
 //            .distinct()
@@ -281,7 +724,7 @@ class SendingTransactionsService(
         }
     }
 
-    fun cancelSendTrans(request: List<SendingRequest>) {
+    fun cancelSendTrans(request: List<SendingTransactionRequest>) {
 //        val removeList = request
 //            .map { Triple(it.formCode, it.poNumber, it.inspectionDate) }
 //            .distinct()
@@ -319,7 +762,7 @@ class SendingTransactionsService(
         }
     }
 
-    fun saveSendCheckingTrans(request: List<SendingRequest>) {
+    fun saveSendCheckingTrans(request: List<SendingTransactionRequest>) {
         val removeList = request
             .map { Pair(it.formCode, it.poNumber) }
             .distinct()
@@ -343,7 +786,7 @@ class SendingTransactionsService(
         }
     }
 
-    fun createSendTransRequestWithSeq(requests: List<SendingRequest>): List<SendTransRequestWithSeq> {
+    fun createSendTransRequestWithSeq(requests: List<SendingTransactionRequest>): List<SendTransRequestWithSeq> {
         val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         return requests
             .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }
@@ -368,7 +811,7 @@ class SendingTransactionsService(
             }
     }
 
-    fun createSendCheckingTransRequestWithSeq(requests: List<SendingRequest>): List<SendTransRequestWithSeq> {
+    fun createSendCheckingTransRequestWithSeq(requests: List<SendingTransactionRequest>): List<SendTransRequestWithSeq> {
         val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         return requests
             .groupBy { Triple(it.locationCode, it.packageCode, it.poNumber) }

@@ -23,9 +23,15 @@ import com.kcvn.spm.model.tables.Locations
 import com.kcvn.spm.model.tables.Moving
 import com.kcvn.spm.model.tables.NewBacklogWh
 import com.kcvn.spm.model.tables.NewCheckingTransaction
+import com.kcvn.spm.model.tables.NewTempSendingTransactions
+import com.kcvn.spm.model.tables.NewTempSendingTransactionsChecking
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SendingFormList
+import com.kcvn.spm.model.tables.SendingPickingList
+import com.kcvn.spm.model.tables.SendingRequestList
+import com.kcvn.spm.model.tables.SendingRequestListDetail
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
@@ -135,6 +141,16 @@ val NEW_BACKLOG_WH: NewBacklogWh = NewBacklogWh.NEW_BACKLOG_WH
 val NEW_CHECKING_TRANSACTION: NewCheckingTransaction = NewCheckingTransaction.NEW_CHECKING_TRANSACTION
 
 /**
+ * The table <code>public.new_temp_sending_transactions</code>.
+ */
+val NEW_TEMP_SENDING_TRANSACTIONS: NewTempSendingTransactions = NewTempSendingTransactions.NEW_TEMP_SENDING_TRANSACTIONS
+
+/**
+ * The table <code>public.new_temp_sending_transactions_checking</code>.
+ */
+val NEW_TEMP_SENDING_TRANSACTIONS_CHECKING: NewTempSendingTransactionsChecking = NewTempSendingTransactionsChecking.NEW_TEMP_SENDING_TRANSACTIONS_CHECKING
+
+/**
  * The table <code>public.purchase_order_backlog</code>.
  */
 val PURCHASE_ORDER_BACKLOG: PurchaseOrderBacklog = PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG
@@ -148,6 +164,26 @@ val RECEIVING_CHECKING: ReceivingChecking = ReceivingChecking.RECEIVING_CHECKING
  * The table <code>public.receiving_transactions</code>.
  */
 val RECEIVING_TRANSACTIONS: ReceivingTransactions = ReceivingTransactions.RECEIVING_TRANSACTIONS
+
+/**
+ * The table <code>public.sending_form_list</code>.
+ */
+val SENDING_FORM_LIST: SendingFormList = SendingFormList.SENDING_FORM_LIST
+
+/**
+ * The table <code>public.sending_picking_list</code>.
+ */
+val SENDING_PICKING_LIST: SendingPickingList = SendingPickingList.SENDING_PICKING_LIST
+
+/**
+ * The table <code>public.sending_request_list</code>.
+ */
+val SENDING_REQUEST_LIST: SendingRequestList = SendingRequestList.SENDING_REQUEST_LIST
+
+/**
+ * The table <code>public.sending_request_list_detail</code>.
+ */
+val SENDING_REQUEST_LIST_DETAIL: SendingRequestListDetail = SendingRequestListDetail.SENDING_REQUEST_LIST_DETAIL
 
 /**
  * The table <code>public.sending_transactions</code>.

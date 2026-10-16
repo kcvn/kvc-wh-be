@@ -15,4 +15,5 @@ data class BacklogWhResponse(
     var itemName: String? = null,
     var lotNo: String? = null,
     var issueDate: String? = null,
+    var availableBacklogQty: BigDecimal? = null,
 )

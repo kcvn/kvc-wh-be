@@ -57,7 +57,7 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
     }
 
     @GetMapping("/get-list-sending_request")
-    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun getListForSendingRequest(
         request: BacklogWhSearchForSendingRequest,
         @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)

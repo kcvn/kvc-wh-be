@@ -19,4 +19,5 @@ enum class EPermission(val value: String) {
     // inventory
     V_INVENTORY("inventory.v"),
     WH("wh"),
+    DEPARTMENT("department"),
 }

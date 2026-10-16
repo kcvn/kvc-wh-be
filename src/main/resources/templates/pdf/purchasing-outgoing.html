@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Purchasing Outgoing</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 14mm 10mm 14mm 10mm;
+
+            @bottom-left {
+                content: "Purchasing Outgoing";
+                font-family: 'NotoSans', sans-serif;
+                font-size: 8pt;
+                color: #666666;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " / " counter(pages);
+                font-family: 'NotoSans', sans-serif;
+                font-size: 8pt;
+                color: #666666;
+            }
+        }
+
+        body {
+            font-family: 'NotoSans', sans-serif;
+            font-size: 9pt;
+            color: #000000;
+            margin: 0;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4mm;
+        }
+        .header td {
+            vertical-align: bottom;
+            padding: 0;
+        }
+        .title {
+            font-size: 18pt;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .meta {
+            text-align: right;
+            font-size: 8.5pt;
+            line-height: 1.5;
+        }
+        .meta .label {
+            color: #555555;
+        }
+        .meta .issue-time {
+            font-weight: bold;
+        }
+        .divider {
+            border-bottom: 2px solid #000000;
+            margin-bottom: 4mm;
+        }
+
+        /* ===== Data table ===== */
+        .data {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            -fs-table-paginate: paginate;   /* OpenHTMLtoPDF: lặp thead khi sang trang */
+        }
+        .data thead {
+            display: table-header-group;
+        }
+        .data th {
+            background-color: #D9E1F2;
+            border: 0.75px solid #000000;
+            padding: 4px 3px;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .data th .sub {
+            display: block;
+            font-weight: normal;
+            font-size: 7.5pt;
+            color: #333333;
+        }
+        .data td {
+            height: 10mm;                   /* chiều cao cố định để dòng trống trông như dòng có dữ liệu */
+            border: 0.75px solid #000000;
+            padding: 0 4px;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+        .data tr {
+            page-break-inside: avoid;
+        }
+        .data tbody tr:nth-child(even) td {
+            background-color: #F5F7FB;
+        }
+        .center { text-align: center; }
+        .right  { text-align: right; }
+
+        /* ===== Ô đóng dấu ===== */
+        .stamp {
+            margin-top: 6mm;
+            margin-left: auto;              /* căn phải */
+            border-collapse: collapse;
+            table-layout: fixed;
+            page-break-inside: avoid;
+        }
+        .stamp th,
+        .stamp td {
+            width: 28mm;
+            border: 0.75px solid #000000;
+            text-align: center;
+        }
+        .stamp th {
+            height: 6mm;
+            background-color: #D9E1F2;
+            font-weight: bold;
+            font-size: 8.5pt;
+        }
+        .stamp td {
+            height: 22mm;
+        }
+
+        /* ===== Ngắt trang: mỗi .sheet là một trang, trang cuối không ngắt ===== */
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Mỗi trang tối đa rowsPerPage dòng; header + bảng + ô đóng dấu lặp lại trên từng trang -->
+<div class="sheet" th:each="page, pageStat : ${pages}" th:classappend="${!pageStat.last} ? 'page-break'">
+
+<!-- ===== Header ===== -->
+<table class="header">
+    <tr>
+        <td class="title">PURCHASING OUTGOING</td>
+        <!-- Issue time của phiếu = request date của dòng cuối cùng -->
+        <td class="meta"
+            th:with="lastItem=${#lists.isEmpty(items) ? null : items[#lists.size(items) - 1]}">
+            <span class="label">Issue time:</span>
+            <span class="issue-time"
+                  th:text="${lastItem != null and lastItem.createdDate != null ? #temporals.format(lastItem.createdDate, 'yyyy-MM-dd HH:mm') : ''}">2026-10-08 11:04</span><br />
+            <span class="label">Print time:</span>
+            <span th:text="${printedDate}">2026-10-08 14:30</span><br />
+            <span class="label">Printed by:</span>
+            <span th:text="${printedBy}">admin</span><br />
+            <span class="label">Total rows:</span>
+            <span th:text="${#lists.size(items)}">3</span>
+        </td>
+    </tr>
+</table>
+<div class="divider"></div>
+
+<!-- ===== Data ===== -->
+<table class="data">
+    <colgroup>
+        <col style="width: 5%" />
+        <col style="width: 13%" />
+        <col style="width: 11%" />
+        <col style="width: 15%" />
+        <col style="width: 12%" />
+        <col style="width: 11%" />
+        <col style="width: 11%" />
+        <col style="width: 11%" />
+        <col style="width: 11%" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>No.<span class="sub">STT</span></th>
+            <th>PO No.<span class="sub">Số PO</span></th>
+            <th>Receiving Date<span class="sub">Ngày nhận hàng</span></th>
+            <th>Item Code<span class="sub">Mã hàng</span></th>
+            <th>Department<span class="sub">Bộ phận</span></th>
+            <th>Stock Qty<span class="sub">SL tồn kho</span></th>
+            <th>Available Qty<span class="sub">SL khả dụng</span></th>
+            <th>Request Qty<span class="sub">SL yêu cầu</span></th>
+            <th>Request Time<span class="sub">Thời gian yêu cầu</span></th>
+        </tr>
+    </thead>
+    <!-- page luôn đủ rowsPerPage phần tử (service bù null ở trang cuối), phần tử null vẽ thành dòng trống.
+         STT đánh liên tục qua các trang. -->
+    <tbody>
+        <tr th:each="r, stat : ${page}">
+            <td class="center" th:text="${pageStat.index * rowsPerPage + stat.count}">1</td>
+            <td th:text="${r?.poNumber}">PO-2026-0001</td>
+            <td class="center" th:text="${r?.receivingDate != null ? #temporals.format(r.receivingDate, 'yyyy-MM-dd') : ''}">2026-09-30</td>
+            <td th:text="${r?.itemCode}">ITM-000123</td>
+            <td th:text="${r?.productionGroup}">Assembly</td>
+            <td class="right" th:text="${r?.backlogQty != null ? #numbers.formatDecimal(r.backlogQty, 1, 'COMMA', 0, 'POINT') : ''}">12,000</td>
+            <td class="right" th:text="${r?.availableQty != null ? #numbers.formatDecimal(r.availableQty, 1, 'COMMA', 0, 'POINT') : ''}">8,500</td>
+            <td class="right" th:text="${r?.requestQty != null ? #numbers.formatDecimal(r.requestQty, 1, 'COMMA', 0, 'POINT') : ''}">3,000</td>
+            <td class="center" th:text="${r?.createdDate != null ? #temporals.format(r.createdDate, 'yyyy-MM-dd HH:mm') : ''}">2026-10-07 11:02</td>
+        </tr>
+        <!-- Dữ liệu mẫu để xem trước trên trình duyệt; Thymeleaf sẽ xoá khi render -->
+        <tr th:remove="all">
+            <td class="center">2</td>
+            <td>PO-2026-0002</td>
+            <td class="center">2026-10-01</td>
+            <td>ITM-000456</td>
+            <td>Molding</td>
+            <td class="right">5,400</td>
+            <td class="right">5,400</td>
+            <td class="right">1,200</td>
+            <td class="center">2026-10-07 11:03</td>
+        </tr>
+        <tr th:remove="all">
+            <td class="center">3</td>
+            <td>PO-2026-0003</td>
+            <td class="center">2026-10-02</td>
+            <td>ITM-000789</td>
+            <td>Painting</td>
+            <td class="right">980</td>
+            <td class="right">700</td>
+            <td class="right">500</td>
+            <td class="center">2026-10-08 11:04</td>
+        </tr>
+
+        <!-- Dòng trống mẫu để xem trước trên trình duyệt (đủ 10 dòng); Thymeleaf sẽ xoá khi render -->
+        <tr th:remove="all"><td class="center">4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr th:remove="all"><td class="center">5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr th:remove="all"><td class="center">6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr th:remove="all"><td class="center">7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr th:remove="all"><td class="center">8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr th:remove="all"><td class="center">9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr th:remove="all"><td class="center">10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    </tbody>
+</table>
+
+<!-- ===== Ô đóng dấu ===== -->
+<table class="stamp">
+    <tr>
+        <th>CHECK</th>
+        <th>CHECK</th>
+        <th>PERSON</th>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+</table>
+
+</div>
+
+</body>
+</html>

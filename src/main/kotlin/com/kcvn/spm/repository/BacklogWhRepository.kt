@@ -9,8 +9,10 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.NewBacklogWh
+import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
+import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
 import com.kcvn.spm.model.tables.references.SPLITTING
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -143,24 +145,38 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
 
         val sql = """
             select
-		nbw.po_number,
-		nbw.item_code,
-		nbw.production_group,
-		nbw.receiving_date,
-		nbw.item_name,
-		nbw.lot_no,
-		sum(nbw.backlog_qty) as backlog_qty,
-		count(*) over() as total_count
-	from
-		new_backlog_wh nbw
-    where ${conditions.joinToString(" and ")}
-    group by
-		nbw.po_number,
-		nbw.item_code,
-		nbw.production_group,
-		nbw.receiving_date,
-		nbw.item_name,
-		nbw.lot_no
+                nbw.po_number,
+                nbw.item_code,
+                nbw.production_group,
+                nbw.receiving_date,
+                nbw.item_name,
+                nbw.lot_no,
+                sum(nbw.backlog_qty) as backlog_qty,
+                sum(nbw.backlog_qty) - coalesce(max(processing.processing_qty), 0) as available_backlog_qty,
+                count(*) over() as total_count
+            from new_backlog_wh nbw
+                left join (
+                    select
+                        srld.receiving_date,
+                        srld.po_number,
+                        srld.lot_no,
+                        sum(srld.request_qty) as processing_qty
+                    from sending_request_list_detail srld
+                        inner join sending_request_list srl on srl.id = srld.sending_request_id
+                    where srl.status not in (3, 4)
+                    group by srld.receiving_date, srld.po_number, srld.lot_no
+                ) as processing
+                    on processing.receiving_date = nbw.receiving_date
+                    and processing.po_number = nbw.po_number
+                    and processing.lot_no = nbw.lot_no
+            where ${conditions.joinToString(" and ")}
+            group by
+                nbw.po_number,
+                nbw.item_code,
+                nbw.production_group,
+                nbw.receiving_date,
+                nbw.item_name,
+                nbw.lot_no
         """.trimIndent()
 
         return sql to params
@@ -179,6 +195,53 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         return orderBy.ifEmpty { listOf("nbw.receiving_date") }.joinToString(", ")
     }
 
+    fun findBacklogByRecDatePoAndLotNo(receivingDate: LocalDate, poNumber: String, lotNo: String): List<NewBacklogWh>? {
+        return context.selectFrom(NEW_BACKLOG_WH)
+            .where(
+                NEW_BACKLOG_WH.PO_NUMBER.eq(poNumber)
+                    .and (NEW_BACKLOG_WH.LOT_NO.eq(lotNo))
+                    .and (NEW_BACKLOG_WH.RECEIVING_DATE.eq(receivingDate))
+            )
+            .fetchInto(NewBacklogWh::class.java)
+    }
+
+    /**
+     * Khóa (SELECT ... FOR UPDATE) các dòng backlog của receivingDate-PO đến hết transaction hiện tại.
+     * Gọi theo thứ tự cố định để tránh deadlock giữa các transaction.
+     */
+    fun lockBacklogByRecDatePo(receivingDate: LocalDate, poNumber: String) {
+        context.select(NEW_BACKLOG_WH.ID)
+            .from(NEW_BACKLOG_WH)
+            .where(
+                NEW_BACKLOG_WH.RECEIVING_DATE.eq(receivingDate)
+                    .and(NEW_BACKLOG_WH.PO_NUMBER.eq(poNumber))
+            )
+            .forUpdate()
+            .fetch()
+    }
+
+    fun findByPackageCodeAndLotNo (packageCode: String, lotNo: String): NewBacklogWh?{
+        return context.selectFrom(NEW_BACKLOG_WH)
+            .where(
+                NEW_BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
+                    .and (NEW_BACKLOG_WH.LOT_NO.eq(lotNo))
+            )
+            .fetchOneInto(NewBacklogWh::class.java)
+    }
+
+    fun update(data: NewBacklogWh) {
+        context.update(NEW_BACKLOG_WH)
+            .set(NEW_BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
+            .set(NEW_BACKLOG_WH.BOX_QTY, data.boxQty)
+            .set(NEW_BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(NEW_BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                NEW_BACKLOG_WH.ID.eq(data.id)
+            )
+            .execute()
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// OLD
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {
         var condition: Condition = DSL.noCondition()
         condition = condition.and(BACKLOG_WH.IS_ENTRIED.eq(false)).and(BACKLOG_WH.BACKLOG_QTY.gt(BigDecimal.ZERO))
@@ -253,24 +316,6 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             )
             .fetchInto(BacklogWh::class.java)
             .firstOrNull()
-    }
-
-    fun update(data: BacklogWh) {
-            context.update(BACKLOG_WH)
-                .set(BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
-                .set(BACKLOG_WH.BOX_QTY, data.boxQty)
-                //.set(BACKLOG_WH.INSPECTION_DATE, data.inspectionDate)
-                .set(BACKLOG_WH.IS_ENTRIED, data.isEntried)
-                .set(BACKLOG_WH.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(BACKLOG_WH.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .set(BACKLOG_WH.LOT_NO, data.lotNo)
-                .set(BACKLOG_WH.ISSUE_DATE, data.issueDate)
-                .where(
-                    BACKLOG_WH.LOCATION_CODE.eq(data.locationCode)
-                        .and(BACKLOG_WH.PACKAGE_CODE.eq(data.packageCode))
-                        .and(BACKLOG_WH.PO_NUMBER.eq(data.poNumber))
-                )
-                .execute()
     }
 
     fun updateQty(packageCode: String, backlogQty: BigDecimal, boxQty: Int) {

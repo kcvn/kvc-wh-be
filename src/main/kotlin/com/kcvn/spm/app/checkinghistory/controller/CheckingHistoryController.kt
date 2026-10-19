@@ -3,6 +3,7 @@ package com.kcvn.spm.app.checkinghistory.controller
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryApproveRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryByLotResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.app.checkinghistory.service.CheckingHistoryService
@@ -20,6 +21,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDate
 
 @RestController
 @RequestMapping("/api/checking-history")
@@ -46,9 +48,10 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         @SortDefault.SortDefaults(
             SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
         )
-        pageable: Pageable
+        pageable: Pageable,
+        isExport: Boolean = false,
     ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {
-        val result = checkingHistoryService.getList(request, pageable)
+        val result = checkingHistoryService.getList(request, pageable, isExport)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
@@ -65,6 +68,15 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<CheckingHistoryDetailResponse>> {
         val result = checkingHistoryService.searchCheckingHistoryDetail(poNumber, invoiceNumber, seqNo, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-list-approved")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getListApprove(
+        receivingDate: LocalDate,
+    ): ResponseEntity<List<CheckingHistoryByLotResponse>> {
+        val result = checkingHistoryService.getListApproved(receivingDate)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

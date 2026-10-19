@@ -56,6 +56,14 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
             .firstOrNull()
     }
 
+    fun findByRecDate(recDate: LocalDate): List<NewCheckingTransaction> {
+        return context.selectFrom(NEW_CHECKING_TRANSACTION)
+            .where(
+                NEW_CHECKING_TRANSACTION.RECEIVING_DATE.eq(recDate)
+            )
+            .fetchInto(NewCheckingTransaction::class.java)
+    }
+
     fun save(data: NewCheckingTransaction) {
         val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
         val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
@@ -98,6 +106,7 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
         val result = records
             .map {
                 CheckingHistoryResponse(
+                    receivingDate = it.get("receiving_date", LocalDate::class.java),
                     poNumber = it.get("po_number", String::class.java),
                     invoiceNumber = it.get("invoice_number", String::class.java),
                     orderDate = it.get("order_date", LocalDate::class.java),
@@ -188,6 +197,7 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
         request.storageLocation?.takeIf { it.isNotBlank() }?.let { conditions += "pob.storage_location = ?"; params += it }
         request.itemType?.takeIf { it.isNotBlank() }?.let { conditions += "pob.item_type = ?"; params += it }
         statusCondition?.let { conditions += "pob.approved = ?"; params += it }
+        request.receivingDate?.let { conditions += "scanned_data.receiving_date = ?"; params += it }
         request.fromDate?.let { conditions += "pob.created_date >= ?"; params += it }
         request.toDate?.let { conditions += "pob.created_date < ?"; params += it }
 
@@ -209,6 +219,7 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                 coalesce(scanned_data.check_times, 0) as check_times,
                 coalesce(scanned_data.scan_qty, 0) as scan_qty,
                 scanned_data.scan_date,
+                scanned_data.receiving_date,
                 case
                     when scanned_data.scan_qty is null then 4
                     when scanned_data.scan_qty < pob.order_qty then 1
@@ -222,7 +233,8 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                     select
                         nct.check_times,
                         sum(nct.scan_qty) as scan_qty,
-                        max(coalesce(nct.updated_date, nct.created_date)) as scan_date
+                        max(coalesce(nct.updated_date, nct.created_date)) as scan_date,
+                        max(nct.receiving_date) as receiving_date
                     from new_checking_transaction nct
                     where nct.invoice_number = pob.invoice_number
                         and nct.po_number = pob.po_number
@@ -232,6 +244,16 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
         """.trimIndent()
 
         return sql to params
+    }
+
+    fun getListApproved(receivingDate: LocalDate): List<NewCheckingTransaction>?{
+            return context.selectFrom(NEW_CHECKING_TRANSACTION)
+                .where(
+                    NEW_CHECKING_TRANSACTION.RECEIVING_DATE.eq(receivingDate)
+                        .and(NEW_CHECKING_TRANSACTION.IS_APPROVE.eq(true))
+                )
+                .orderBy(NEW_CHECKING_TRANSACTION.CHECK_TIMES.sort(SortOrder.DESC))
+                .fetchInto(NewCheckingTransaction::class.java)
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

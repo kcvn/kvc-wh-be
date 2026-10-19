@@ -3,6 +3,7 @@ package com.kcvn.spm.app.checkinghistory.service
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryApproveRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryByLotResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
 import com.kcvn.spm.common.exception.BusinessException
@@ -16,6 +17,7 @@ import com.kcvn.spm.repository.PurchaseOrderBacklogRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.LocalDate
 import kotlin.plus
 
 @Service
@@ -24,8 +26,8 @@ class CheckingHistoryService(
     private val checkingTransRepo: NewCheckingTransactionRepository,
     private val orderBacklogRepo: PurchaseOrderBacklogRepository,
 ) {
-    fun getList(request: CheckingHistorySearchRequest, pageable: Pageable): BasePagingResponse<CheckingHistoryResponse> {
-        val checkingHistoryData = checkingTransRepo.searchCheckingHistory(request, pageable)
+    fun getList(request: CheckingHistorySearchRequest, pageable: Pageable, isExport: Boolean): BasePagingResponse<CheckingHistoryResponse> {
+        val checkingHistoryData = checkingTransRepo.searchCheckingHistory(request, pageable, isExport)
         val data = checkingHistoryData.first
         return BasePagingResponse(
             data,
@@ -40,6 +42,26 @@ class CheckingHistoryService(
             data,
             checkingHistoryDataDetail.second
         )
+    }
+
+    fun getListApproved(recDate: LocalDate): List<CheckingHistoryByLotResponse> {
+        val checkingHistoryData = checkingTransRepo.findByRecDate(recDate).filter { it.isApprove == true }
+        if (checkingHistoryData.isEmpty()) throw BusinessException("Không có dữ liệu check hàng ngày $recDate")
+        val checkingHistoryByLotData = checkingHistoryData.map { CheckingHistoryByLotResponse(
+            receivingDate = it.receivingDate,
+            poNumber = it.poNumber,
+            invoiceNumber = it.invoiceNumber,
+            department = it.department,
+            storageLocation = it.storageLocation,
+            lotNo = it.lotNo,
+            itemType = it.itemType,
+            seqNo = it.checkTimes,
+            scanQty = it.scanQty,
+            status = it.isApprove,
+            scannedDate = it.createdDate?.toLocalDate(),
+            scannedBy = it.createdBy,
+        )}
+        return checkingHistoryByLotData
     }
 
     fun saveCheckingTransaction(requestList: List<CheckingHistoryRequest>) {
@@ -190,6 +212,4 @@ class CheckingHistoryService(
         checkingTransRepo.update(it)
         }
     }
-
-
 }

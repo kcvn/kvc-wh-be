@@ -92,12 +92,12 @@ open class PurchaseOrderBacklog(
     /**
      * The column <code>public.purchase_order_backlog.item_code</code>.
      */
-    val ITEM_CODE: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("item_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+    val ITEM_CODE: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("item_code"), SQLDataType.VARCHAR(30), this, "")
 
     /**
      * The column <code>public.purchase_order_backlog.item_name</code>.
      */
-    val ITEM_NAME: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("item_name"), SQLDataType.VARCHAR(100).nullable(false), this, "")
+    val ITEM_NAME: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("item_name"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.purchase_order_backlog.prod_group</code>.
@@ -173,6 +173,11 @@ open class PurchaseOrderBacklog(
      * The column <code>public.purchase_order_backlog.synced</code>.
      */
     val SYNCED: TableField<PurchaseOrderBacklogRecord, Boolean?> = createField(DSL.name("synced"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
+    /**
+     * The column <code>public.purchase_order_backlog.unit_price</code>.
+     */
+    val UNIT_PRICE: TableField<PurchaseOrderBacklogRecord, BigDecimal?> = createField(DSL.name("unit_price"), SQLDataType.NUMERIC, this, "")
 
     private constructor(alias: Name, aliased: Table<PurchaseOrderBacklogRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<PurchaseOrderBacklogRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

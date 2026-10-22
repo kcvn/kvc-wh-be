@@ -5,11 +5,10 @@ import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
 import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
-import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.BasePagingResponse
-import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.BacklogWh
+import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
+import com.kcvn.spm.repository.NewCheckingTransactionRepository
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
 import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.data.domain.Pageable
@@ -23,6 +22,7 @@ import java.time.ZoneOffset
 @Transactional
 class ReceivingTransactionsService(
     private val receivingRepo: ReceivingTransactionsRepository,
+    private val checkingTransactionRepo: NewCheckingTransactionRepository,
     private val backlogWhService: BacklogWhService,
     private val splittingRepo: SplittingRepository
 ) {
@@ -45,31 +45,46 @@ class ReceivingTransactionsService(
     }
 
     fun saveRecTrans(request: List<RecTransRequest>, receivingDate: LocalDate?) {
-        val list = createRecTransRequestWithSeq(request)
-        list.forEach {
-            val recTransaction = ReceivingTransactions(
-                null,
-                "KVC",
-                it.locationCode,
-                it.packageCode,
-                it.packageCode,
-                it.poNumber,
-                it.qty,
-                it.seqNo,
-                "IN_ONLY",
-                lotNo = it.lotNo,
-                issueDate = it.issueDate
+        val lotList = request.groupBy {it.lotNo}
+        lotList.forEach { lot ->
+            val list = createRecTransRequestWithSeq(lot.value)
+            list.forEach {
+                val recTransaction = ReceivingTransactions(
+                    null,
+                    "KVC",
+                    it.locationCode,
+                    it.packageCode,
+                    it.packageCode,
+                    it.poNumber,
+                    it.qty,
+                    it.seqNo,
+                    "IN_ONLY",
+                    receivingDate,
+                    lotNo = it.lotNo,
+                    issueDate = it.issueDate
 
-            )
-            /*val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)
+                )
+                /*val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)
                 ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.locationCode}, packageCode = ${it.packageCode}")*/
-            // save receiving transactions
-            val refId = receivingRepo.save(recTransaction)
-            // save backlog and backlog history
-            val backlogData = BacklogWh(
-                null, it.locationCode, it.poNumber, it.packageCode, it.qty, 1, receivingDate, isEntried = false, lotNo = it.lotNo, issueDate = it.issueDate
-            )
-            backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId)
+                // save receiving transactions
+                val refId = receivingRepo.save(recTransaction)
+                // save backlog and backlog history
+                val checkingRecord = checkingTransactionRepo.findByRecDatePoAndLot(receivingDate!!, it.poNumber!!, it.lotNo!!)
+                val backlogData = NewBacklogWh(
+                    receivingDate = receivingDate,
+                    poNumber = it.poNumber,
+                    packageCode = it.packageCode,
+                    backlogQty = it.qty,
+                    boxQty = 1,
+                    itemCode = checkingRecord?.itemCode,
+                    itemName = checkingRecord?.itemName,
+                    productionGroup = checkingRecord?.department,
+                    lotNo = it.lotNo,
+                    issueDate = it.issueDate,
+                    isSynced = false,
+                )
+                backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId, true)
+            }
         }
     }
 

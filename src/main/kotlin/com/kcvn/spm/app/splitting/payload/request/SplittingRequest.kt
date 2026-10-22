@@ -11,4 +11,5 @@ data class SplittingRequest(
     var lotNo: String,
     var quantity: BigDecimal,
     var autoPackage: Boolean,
+    var issueDate: LocalDate? = null,
 )

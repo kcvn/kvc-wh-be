@@ -55,6 +55,17 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
                     "2313" -> "J"
                     else -> "Z"
                 }
+                val convertedProductionGroup = when (productionGroup){
+                    "2317" -> "CMOS"
+                    "2311" -> "SMD"
+                    "2314" -> "META"
+                    "2315" -> "CPD"
+                    "2318" -> "RFD"
+                    "2316" -> "ITD"
+                    "2312" -> "PMD"
+                    "2313" -> "JMD"
+                    else -> "Z"
+                }
 
                 val lotNo = generateLotNo(seqNo, invoice, poNo, productionGroupCode)
 
@@ -63,7 +74,7 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
                     orderDate = ExcelHelper.getCellValueDate(row, 5),
                     itemCode = ExcelHelper.getCellValueAmoeba(row, 6),
                     itemName = ExcelHelper.getCellValueAmoeba(row, 7),
-                    prodGroup = productionGroup,
+                    prodGroup = convertedProductionGroup,
                     storageLocation = ExcelHelper.getCellValueAmoeba(row, 13),
                     orderQty = ExcelHelper.getCellValueAmoeba(row, 14).toBigDecimalOrNull() ?: BigDecimal.ZERO,
                     unit = ExcelHelper.getCellValueAmoeba(row, 15),
@@ -71,7 +82,8 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
                     invoiceNumber = invoice,
                     detail = ExcelHelper.getCellValueAmoeba(row, 29),
                     itemType = ExcelHelper.getCellValueAmoeba(row, 63),
-                    lotNo = lotNo.second
+                    lotNo = lotNo.second,
+                    unitPrice = ExcelHelper.getCellValueAmoeba(row, 14).toBigDecimalOrNull() ?: BigDecimal.ZERO,
                 )
                 if (lotNo.first == "Insert") {
                     purchaseOrderBacklogRepo.save(data)

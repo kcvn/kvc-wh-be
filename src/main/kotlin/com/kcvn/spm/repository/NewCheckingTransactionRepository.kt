@@ -1,6 +1,5 @@
 package com.kcvn.spm.repository
 
-import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
@@ -62,6 +61,16 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                 NEW_CHECKING_TRANSACTION.RECEIVING_DATE.eq(recDate)
             )
             .fetchInto(NewCheckingTransaction::class.java)
+    }
+
+    fun findByRecDatePoAndLot(recDate: LocalDate, poNumber: String, lotNo: String): NewCheckingTransaction? {
+        return context.selectFrom(NEW_CHECKING_TRANSACTION)
+            .where(
+                NEW_CHECKING_TRANSACTION.RECEIVING_DATE.eq(recDate)
+                    .and(NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(poNumber))
+                    .and(NEW_CHECKING_TRANSACTION.LOT_NO.eq(lotNo))
+            )
+            .fetchOneInto(NewCheckingTransaction::class.java)
     }
 
     fun save(data: NewCheckingTransaction) {

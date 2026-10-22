@@ -72,7 +72,7 @@ class MovingService(
                 lotNo = sourceBacklog.lotNo,
                 issueDate = sourceBacklog.issueDate
             )
-            backlogWhService.minusBacklog(backlogSourceData, "OUT", refId)
+            backlogWhService.oldMinusBacklog(backlogSourceData, "OUT", refId)
             // plus backlog destLocation
             val backlogDestData = BacklogWh(
                 null,
@@ -87,7 +87,7 @@ class MovingService(
                 lotNo = sourceBacklog.lotNo,
                 issueDate = sourceBacklog.issueDate
             )
-            backlogWhService.plusBacklog(backlogDestData, "IN", refId)
+            backlogWhService.oldPlusBacklog(backlogDestData, "IN", refId)
             backlogWhRepo.updateIsEntried(false, sourceBacklog.poNumber!!, recDateSource!!, sourceBacklog.inspectionDate)
         }
     }

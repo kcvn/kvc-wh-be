@@ -17,6 +17,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.BacklogWhHistory
+import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.HorizontalAlignment
@@ -33,6 +34,7 @@ import java.io.FileInputStream
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.plus
 
 @Service
 @Transactional
@@ -44,6 +46,31 @@ class BacklogWhService(
     private val sendingTransRepo: SendingTransactionsRepository
 
 ) {
+    fun plusBacklog(data: NewBacklogWh, transactionType: String, refId: String, plusBoxQty: Boolean) {
+        val existing = backlogWhRepo.findByPackageCodeAndLotNo(data.packageCode!!, data.lotNo!!)
+        if (existing == null) {
+            backlogWhRepo.save(data)
+        } else {
+            existing.backlogQty = existing.backlogQty!!.plus(data.backlogQty!!)
+            if (plusBoxQty)
+                existing.boxQty = existing.boxQty!!.plus(data.boxQty!!)
+            backlogWhRepo.update(existing)
+        }
+    }
+
+        fun minusBacklog(data: NewBacklogWh, transactionType: String, refId: String, minusBoxQty: Boolean) {
+            val existing = backlogWhRepo.findByPackageCodeAndLotNo(data.packageCode!!, data.lotNo!!)
+            if (existing == null || existing.backlogQty!! < data.backlogQty!!) {
+                throw BusinessException("Không đủ tồn kho ${data.packageCode} - ${data.lotNo}")
+            } else {
+                existing.backlogQty = existing.backlogQty!!.minus(data.backlogQty!!)
+                existing.boxQty = existing.boxQty!!.minus(data.boxQty!!)
+                backlogWhRepo.update(existing)
+            }
+        }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     fun downloadTemplate(): BaseResponse<FileContentModel> {
 //        val templateStream = this::class.java.classLoader.getResourceAsStream("assets/template/ImportBinEntryTemplate.xlsx")
 //            ?: throw FileNotFoundException("ImportBinEntryTemplate.xlsx file not found in resources.")
@@ -218,7 +245,7 @@ class BacklogWhService(
         return BaseResponse(response)
     }
 
-    fun plusBacklog(data: BacklogWh, transactionType: String, refId: String?) {
+    fun oldPlusBacklog(data: BacklogWh, transactionType: String, refId: String?) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
         // get receiving date
 
@@ -264,7 +291,7 @@ class BacklogWhService(
         }
     }
 
-    fun minusBacklog(data: BacklogWh, transactionType: String, refId: String?) {
+    fun oldMinusBacklog(data: BacklogWh, transactionType: String, refId: String?) {
         val backlog = backlogWhRepo.findByLocationAndPackageAndPO(data.locationCode!!, data.packageCode!!, data.poNumber!!)
             ?: throw BusinessExceptionDetail(
                 CommonUtils.getMessage("data.not.found.in.backlog ${data.locationCode} - ${data.packageCode} - ${data.poNumber}"), "locationCode = ${data.locationCode}, packageCode = ${data.packageCode}, poNumber = ${data.poNumber}"

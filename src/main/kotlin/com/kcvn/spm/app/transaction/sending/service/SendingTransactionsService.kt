@@ -22,6 +22,7 @@ import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.CancelSendingTransactions
+import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactions
 import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactionsChecking
 import com.kcvn.spm.model.tables.pojos.SendingFormList
@@ -451,33 +452,29 @@ class SendingTransactionsService(
         )
         val tempSendingList = newTempSendingTransactionRepository.getTempSendingListByFormCode(formCode = formCode)
         tempSendingList?.forEach {
-            val backlog = backlogWhRepository.findByPackageCodeAndLotNo(it.packageCode!!, it.lotNo!!)
-            if (backlog == null || backlog.backlogQty!! < it.scannedQty)
-                throw BusinessExceptionDetail(
-                    CommonUtils.getMessage("not.enough.backlog ${it.packageCode} - ${it.lotNo}"), ""
-                )
-            //minus backlog
-            backlog.backlogQty = backlog.backlogQty!! - it.scannedQty!!
-            if (it.notMinusBoxQty == false)
-                backlog.boxQty = backlog.boxQty!! - 1
-            backlogWhRepository.update(backlog)
+            val pickingList = sendingPickingListRepository.findById(it.sendingPickingListId!!)
             //save sending trans
             val locationCode = splittingRepository.findByPackage(it.packageCode!!) ?: throw BusinessExceptionDetail(
-                "Không tìm thấy BIN của package ${backlog.packageCode}",""
+                "Không tìm thấy BIN của package ${it.packageCode}",""
             )
             val sendingTrans = SendingTransactions(
                 sourceLocationCode = locationCode.locationCode,
-                destLocationCode = locationCode.locationCode,
-                sourcePackageCode = backlog.packageCode,
-                destPackageCode = backlog.packageCode,
-                poNumber = backlog.poNumber,
+                destLocationCode = "KVC",
+                sourcePackageCode = it.packageCode,
+                destPackageCode = it.packageCode,
+                poNumber = pickingList!!.poNumber,
                 qty = it.scannedQty,
                 seqNo = it.seqNo,
                 transactionType = "OUT_ONLY",
-                receivingDate = backlog.receivingDate,
-                lotNo = backlog.lotNo,
+                receivingDate = pickingList.receivingDate,
+                lotNo = it.lotNo,
             )
-            sendingRepo.saveSendingTrans(sendingTrans)
+            val sendingId = sendingRepo.saveSendingTrans(sendingTrans)
+            val backlog = NewBacklogWh(
+                packageCode = it.packageCode,
+                lotNo = it.lotNo,
+            )
+            backlogWhService.minusBacklog(backlog, "OUT_ONLY", sendingId, !it.notMinusBoxQty!!)
         }
         sendingForm.isApproved = true
         sendingRequestFormListRepository.update(sendingForm)
@@ -554,7 +551,7 @@ class SendingTransactionsService(
                 it.inspectionDate,
                 isEntried = true
             )
-            backlogWhService.minusBacklog(backlogData, "OUT_ONLY", it.id)
+            backlogWhService.oldMinusBacklog(backlogData, "OUT_ONLY", it.id)
         }
         tempSendingImportedRepo.updateAfterApprove(formCode)
         sendingRepo.copyToSendingTable(formCode)

@@ -48,6 +48,7 @@ class CheckingHistoryService(
         val checkingHistoryData = checkingTransRepo.findByRecDate(recDate).filter { it.isApprove == true }
         if (checkingHistoryData.isEmpty()) throw BusinessException("Không có dữ liệu check hàng ngày $recDate")
         val checkingHistoryByLotData = checkingHistoryData.map { CheckingHistoryByLotResponse(
+            checkingHistoryId = it.id,
             receivingDate = it.receivingDate,
             poNumber = it.poNumber,
             invoiceNumber = it.invoiceNumber,
@@ -155,7 +156,10 @@ class CheckingHistoryService(
                 receivingDate = request.receivingDate,
                 specifyInvoice = request.specifyInvoice,
                 isApprove = false,
-                isSyncedSap = false
+                isSyncedSap = false,
+                itemName = order.itemName,
+                itemCode = order.itemCode,
+                unitPrice = order.unitPrice,
             )
             checkingTransRepo.save(domain)
         } else {

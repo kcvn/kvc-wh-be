@@ -10,9 +10,11 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
+import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
 import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
+import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.SPLITTING
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -24,6 +26,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -229,6 +232,22 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .fetchOneInto(NewBacklogWh::class.java)
     }
 
+    fun save(rec: NewBacklogWh): String{
+        val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+        val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+        val record = context.newRecord(NEW_BACKLOG_WH, rec).apply {
+            createdBy = user
+            createdDate = currentTime
+            updatedBy = user
+            updatedDate = currentTime
+        }
+        return context.insertInto(NEW_BACKLOG_WH)
+            .set(record)
+            .returning(NEW_BACKLOG_WH.ID)
+            .fetchOne()!!.id!!
+    }
+
     fun update(data: NewBacklogWh) {
         context.update(NEW_BACKLOG_WH)
             .set(NEW_BACKLOG_WH.BACKLOG_QTY, data.backlogQty)
@@ -240,6 +259,8 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             )
             .execute()
     }
+
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// OLD
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {

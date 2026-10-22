@@ -96,6 +96,18 @@ open class NewCheckingTransactionRecord() : UpdatableRecordImpl<NewCheckingTrans
         set(value): Unit = set(17, value)
         get(): String? = get(17) as String?
 
+    open var itemCode: String?
+        set(value): Unit = set(18, value)
+        get(): String? = get(18) as String?
+
+    open var itemName: String?
+        set(value): Unit = set(19, value)
+        get(): String? = get(19) as String?
+
+    open var unitPrice: BigDecimal?
+        set(value): Unit = set(20, value)
+        get(): BigDecimal? = get(20) as BigDecimal?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -105,7 +117,7 @@ open class NewCheckingTransactionRecord() : UpdatableRecordImpl<NewCheckingTrans
     /**
      * Create a detached, initialised NewCheckingTransactionRecord
      */
-    constructor(id: String? = null, invoiceNumber: String? = null, poNumber: String? = null, department: String? = null, storageLocation: String? = null, itemType: String? = null, lotNo: String? = null, receivingDate: LocalDate? = null, scanQty: BigDecimal? = null, checkTimes: Int? = null, specifyInvoice: Boolean? = null, isApprove: Boolean? = null, isSyncedSap: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, formCode: String? = null): this() {
+    constructor(id: String? = null, invoiceNumber: String? = null, poNumber: String? = null, department: String? = null, storageLocation: String? = null, itemType: String? = null, lotNo: String? = null, receivingDate: LocalDate? = null, scanQty: BigDecimal? = null, checkTimes: Int? = null, specifyInvoice: Boolean? = null, isApprove: Boolean? = null, isSyncedSap: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, formCode: String? = null, itemCode: String? = null, itemName: String? = null, unitPrice: BigDecimal? = null): this() {
         this.id = id
         this.invoiceNumber = invoiceNumber
         this.poNumber = poNumber
@@ -124,6 +136,9 @@ open class NewCheckingTransactionRecord() : UpdatableRecordImpl<NewCheckingTrans
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
         this.formCode = formCode
+        this.itemCode = itemCode
+        this.itemName = itemName
+        this.unitPrice = unitPrice
         resetChangedOnNotNull()
     }
 
@@ -150,6 +165,9 @@ open class NewCheckingTransactionRecord() : UpdatableRecordImpl<NewCheckingTrans
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
             this.formCode = value.formCode
+            this.itemCode = value.itemCode
+            this.itemName = value.itemName
+            this.unitPrice = value.unitPrice
             resetChangedOnNotNull()
         }
     }

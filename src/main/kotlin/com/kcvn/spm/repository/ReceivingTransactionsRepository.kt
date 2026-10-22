@@ -6,6 +6,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
+import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -15,11 +16,19 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Repository
 class ReceivingTransactionsRepository(private val context: DSLContext) : SortingRepository() {
+    fun findByRecDate(recDate: LocalDate): List<ReceivingTransactions> {
+        return context.selectFrom(RECEIVING_TRANSACTIONS)
+            .where(RECEIVING_TRANSACTIONS.RECEIVING_DATE.eq(recDate)
+            )
+            .fetchInto(ReceivingTransactions::class.java)
+    }
+
     fun getList(request: RecTransSearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<ReceivingTransactions>, Int> {
         var condition: Condition = DSL.noCondition()
         if(!request.locationCode.isNullOrEmpty()){
@@ -99,28 +108,22 @@ class ReceivingTransactionsRepository(private val context: DSLContext) : Sorting
             .firstOrNull()
     }
 
-    fun save(rec: ReceivingTransactions): String? =
-        context.insertInto(
-            RECEIVING_TRANSACTIONS, RECEIVING_TRANSACTIONS.SOURCE_LOCATION_CODE, RECEIVING_TRANSACTIONS.DEST_LOCATION_CODE,
-            RECEIVING_TRANSACTIONS.SOURCE_PACKAGE_CODE, RECEIVING_TRANSACTIONS.DEST_PACKAGE_CODE, RECEIVING_TRANSACTIONS.PO_NUMBER,
-            RECEIVING_TRANSACTIONS.QTY, RECEIVING_TRANSACTIONS.SEQ_NO, RECEIVING_TRANSACTIONS.TRANSACTION_TYPE, RECEIVING_TRANSACTIONS.CREATED_BY,
-            RECEIVING_TRANSACTIONS.LOT_NO, RECEIVING_TRANSACTIONS.ISSUE_DATE
-        )
-            .values(
-                rec.sourceLocationCode,
-                rec.destLocationCode,
-                rec.sourcePackageCode,
-                rec.destPackageCode,
-                rec.poNumber,
-                rec.qty,
-                rec.seqNo,
-                rec.transactionType,
-                CommonUtils.loggedInUser() ?: Constants.SYSTEM,
-                rec.lotNo,
-                rec.issueDate
-            )
-            .returningResult(RECEIVING_TRANSACTIONS.ID)
-            .fetchOne()?.value1()
+    fun save(rec: ReceivingTransactions): String{
+        val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+        val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+        val record = context.newRecord(RECEIVING_TRANSACTIONS, rec).apply {
+            createdBy = user
+            createdDate = currentTime
+            updatedBy = user
+            updatedDate = currentTime
+        }
+        return context.insertInto(RECEIVING_TRANSACTIONS)
+            .set(record)
+            .returning(RECEIVING_TRANSACTIONS.ID)
+            .fetchOne()!!.id!!
+    }
+
 
     fun findOneRecordById(id: String?): ReceivingTransactions?{
         return context.selectFrom(RECEIVING_TRANSACTIONS)

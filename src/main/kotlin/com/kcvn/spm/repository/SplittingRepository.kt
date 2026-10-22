@@ -21,9 +21,9 @@ class SplittingRepository(private val context: DSLContext) : SortingRepository()
         return context.selectFrom(SPLITTING)
             .where(
                 SPLITTING.PACKAGE_CODE.eq(packageCode)
+                    .and(SPLITTING.IS_DELETED.eq(false))
             )
-            .fetchInto(Splitting::class.java)
-            .firstOrNull()
+            .fetchOneInto(Splitting::class.java)
     }
 
     fun findByLocationAndPackage(locationCode: String, packageCode: String): Splitting? {

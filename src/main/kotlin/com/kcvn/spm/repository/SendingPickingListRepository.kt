@@ -3,8 +3,10 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.NewCheckingTransaction
 import com.kcvn.spm.model.tables.pojos.SendingPickingList
 import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
+import com.kcvn.spm.model.tables.references.NEW_CHECKING_TRANSACTION
 import com.kcvn.spm.model.tables.references.SENDING_PICKING_LIST
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST_DETAIL
@@ -38,6 +40,14 @@ class SendingPickingListRepository(private val context: DSLContext) : SortingRep
                     .and (SENDING_REQUEST_LIST.STATUS.notIn(3, 4))
             )
             .fetchInto(SendingPickingList::class.java)
+    }
+
+    fun findById(id: String): SendingPickingList? {
+        return context.selectFrom(SENDING_REQUEST_LIST)
+            .where(
+                SENDING_REQUEST_LIST.ID.eq(id)
+            )
+            .fetchOneInto(SendingPickingList::class.java)
     }
 
     /**

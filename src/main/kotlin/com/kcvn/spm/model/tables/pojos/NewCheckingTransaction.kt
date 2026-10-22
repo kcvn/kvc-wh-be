@@ -36,7 +36,10 @@ data class NewCheckingTransaction(
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
-    var formCode: String? = null
+    var formCode: String? = null,
+    var itemCode: String? = null,
+    var itemName: String? = null,
+    var unitPrice: BigDecimal? = null
 ): Serializable {
 
 
@@ -156,6 +159,24 @@ data class NewCheckingTransaction(
         }
         else if (this.formCode != o.formCode)
             return false
+        if (this.itemCode == null) {
+            if (o.itemCode != null)
+                return false
+        }
+        else if (this.itemCode != o.itemCode)
+            return false
+        if (this.itemName == null) {
+            if (o.itemName != null)
+                return false
+        }
+        else if (this.itemName != o.itemName)
+            return false
+        if (this.unitPrice == null) {
+            if (o.unitPrice != null)
+                return false
+        }
+        else if (this.unitPrice != o.unitPrice)
+            return false
         return true
     }
 
@@ -180,6 +201,9 @@ data class NewCheckingTransaction(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.formCode == null) 0 else this.formCode.hashCode())
+        result = prime * result + (if (this.itemCode == null) 0 else this.itemCode.hashCode())
+        result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
+        result = prime * result + (if (this.unitPrice == null) 0 else this.unitPrice.hashCode())
         return result
     }
 
@@ -204,6 +228,9 @@ data class NewCheckingTransaction(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(formCode)
+        sb.append(", ").append(itemCode)
+        sb.append(", ").append(itemName)
+        sb.append(", ").append(unitPrice)
 
         sb.append(")")
         return sb.toString()

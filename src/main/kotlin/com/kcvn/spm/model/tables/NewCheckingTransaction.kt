@@ -163,6 +163,21 @@ open class NewCheckingTransaction(
      */
     val FORM_CODE: TableField<NewCheckingTransactionRecord, String?> = createField(DSL.name("form_code"), SQLDataType.VARCHAR(200), this, "")
 
+    /**
+     * The column <code>public.new_checking_transaction.item_code</code>.
+     */
+    val ITEM_CODE: TableField<NewCheckingTransactionRecord, String?> = createField(DSL.name("item_code"), SQLDataType.VARCHAR(30), this, "")
+
+    /**
+     * The column <code>public.new_checking_transaction.item_name</code>.
+     */
+    val ITEM_NAME: TableField<NewCheckingTransactionRecord, String?> = createField(DSL.name("item_name"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.new_checking_transaction.unit_price</code>.
+     */
+    val UNIT_PRICE: TableField<NewCheckingTransactionRecord, BigDecimal?> = createField(DSL.name("unit_price"), SQLDataType.NUMERIC, this, "")
+
     private constructor(alias: Name, aliased: Table<NewCheckingTransactionRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<NewCheckingTransactionRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<NewCheckingTransactionRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

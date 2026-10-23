@@ -473,6 +473,8 @@ class SendingTransactionsService(
             val backlog = NewBacklogWh(
                 packageCode = it.packageCode,
                 lotNo = it.lotNo,
+                backlogQty = it.scannedQty,
+                boxQty = if(it.notMinusBoxQty!!) 0 else 1
             )
             backlogWhService.minusBacklog(backlog, "OUT_ONLY", sendingId, !it.notMinusBoxQty!!)
         }

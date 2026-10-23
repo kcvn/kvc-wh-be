@@ -44,7 +44,7 @@ class SplittingService(
         val invalidPoSet = mutableSetOf<Pair<LocalDate, String>>()
         ///kiem tra so luong chia hang co khop voi so luong nhap khong
         receivingDateList.forEach{ date ->
-            val checkedList = newCheckTransactionRepo.findByRecDate(date).filter { it.isApprove == true }
+            val checkedList = newCheckTransactionRepo.findByRecDate(date).filter { it.isApprove == true }.filter { it.storageLocation in listOf("L000","L001") }
             val receivedList = receivingTransactionRepo.findByRecDate(date)
             val requestOnThisDate = newPackageRequest.filter { it.receivingDate == date }
             val requestOnThisDateByPo = requestOnThisDate.groupBy { it.poNumber}

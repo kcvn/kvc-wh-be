@@ -107,7 +107,7 @@ open class NewBacklogWh(
     /**
      * The column <code>public.new_backlog_wh.item_code</code>.
      */
-    val ITEM_CODE: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("item_code"), SQLDataType.VARCHAR(30).nullable(false), this, "")
+    val ITEM_CODE: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("item_code"), SQLDataType.VARCHAR(30), this, "")
 
     /**
      * The column <code>public.new_backlog_wh.item_name</code>.
@@ -130,9 +130,9 @@ open class NewBacklogWh(
     val ISSUE_DATE: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("issue_date"), SQLDataType.VARCHAR(1000), this, "")
 
     /**
-     * The column <code>public.new_backlog_wh.is_synced</code>.
+     * The column <code>public.new_backlog_wh.is_synced_sap</code>.
      */
-    val IS_SYNCED: TableField<NewBacklogWhRecord, Boolean?> = createField(DSL.name("is_synced"), SQLDataType.BOOLEAN, this, "")
+    val IS_SYNCED_SAP: TableField<NewBacklogWhRecord, Boolean?> = createField(DSL.name("is_synced_sap"), SQLDataType.BOOLEAN.nullable(false), this, "")
 
     /**
      * The column <code>public.new_backlog_wh.created_date</code>.
@@ -153,6 +153,11 @@ open class NewBacklogWh(
      * The column <code>public.new_backlog_wh.updated_by</code>.
      */
     val UPDATED_BY: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
+
+    /**
+     * The column <code>public.new_backlog_wh.is_synced_amoeba</code>.
+     */
+    val IS_SYNCED_AMOEBA: TableField<NewBacklogWhRecord, Boolean?> = createField(DSL.name("is_synced_amoeba"), SQLDataType.BOOLEAN.nullable(false), this, "")
 
     private constructor(alias: Name, aliased: Table<NewBacklogWhRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<NewBacklogWhRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

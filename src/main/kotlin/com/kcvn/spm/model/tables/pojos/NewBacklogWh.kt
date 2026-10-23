@@ -27,12 +27,15 @@ data class NewBacklogWh(
     var lotNo: String? = null,
     var issueDate: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
-    @set:JvmName("setIsSynced")
-    var isSynced: Boolean? = null,
+    @set:JvmName("setIsSyncedSap")
+    var isSyncedSap: Boolean? = null,
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
-    var updatedBy: String? = null
+    var updatedBy: String? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsSyncedAmoeba")
+    var isSyncedAmoeba: Boolean? = null
 ): Serializable {
 
 
@@ -110,11 +113,11 @@ data class NewBacklogWh(
         }
         else if (this.issueDate != o.issueDate)
             return false
-        if (this.isSynced == null) {
-            if (o.isSynced != null)
+        if (this.isSyncedSap == null) {
+            if (o.isSyncedSap != null)
                 return false
         }
-        else if (this.isSynced != o.isSynced)
+        else if (this.isSyncedSap != o.isSyncedSap)
             return false
         if (this.createdDate == null) {
             if (o.createdDate != null)
@@ -140,6 +143,12 @@ data class NewBacklogWh(
         }
         else if (this.updatedBy != o.updatedBy)
             return false
+        if (this.isSyncedAmoeba == null) {
+            if (o.isSyncedAmoeba != null)
+                return false
+        }
+        else if (this.isSyncedAmoeba != o.isSyncedAmoeba)
+            return false
         return true
     }
 
@@ -157,11 +166,12 @@ data class NewBacklogWh(
         result = prime * result + (if (this.productionGroup == null) 0 else this.productionGroup.hashCode())
         result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
         result = prime * result + (if (this.issueDate == null) 0 else this.issueDate.hashCode())
-        result = prime * result + (if (this.isSynced == null) 0 else this.isSynced.hashCode())
+        result = prime * result + (if (this.isSyncedSap == null) 0 else this.isSyncedSap.hashCode())
         result = prime * result + (if (this.createdDate == null) 0 else this.createdDate.hashCode())
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.isSyncedAmoeba == null) 0 else this.isSyncedAmoeba.hashCode())
         return result
     }
 
@@ -179,11 +189,12 @@ data class NewBacklogWh(
         sb.append(", ").append(productionGroup)
         sb.append(", ").append(lotNo)
         sb.append(", ").append(issueDate)
-        sb.append(", ").append(isSynced)
+        sb.append(", ").append(isSyncedSap)
         sb.append(", ").append(createdDate)
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
+        sb.append(", ").append(isSyncedAmoeba)
 
         sb.append(")")
         return sb.toString()

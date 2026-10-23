@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
+import com.kcvn.spm.model.tables.CenterMaster
 import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
@@ -109,6 +110,11 @@ val CANCEL_RECEIVING_TRANSACTIONS: CancelReceivingTransactions = CancelReceiving
  * The table <code>public.cancel_sending_transactions</code>.
  */
 val CANCEL_SENDING_TRANSACTIONS: CancelSendingTransactions = CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS
+
+/**
+ * The table <code>public.center_master</code>.
+ */
+val CENTER_MASTER: CenterMaster = CenterMaster.CENTER_MASTER
 
 /**
  * The table <code>public.checking</code>.

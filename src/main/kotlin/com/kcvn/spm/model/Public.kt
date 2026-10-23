@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
+import com.kcvn.spm.model.tables.CenterMaster
 import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
@@ -127,6 +128,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.cancel_sending_transactions</code>.
      */
     val CANCEL_SENDING_TRANSACTIONS: CancelSendingTransactions get() = CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS
+
+    /**
+     * The table <code>public.center_master</code>.
+     */
+    val CENTER_MASTER: CenterMaster get() = CenterMaster.CENTER_MASTER
 
     /**
      * The table <code>public.checking</code>.
@@ -269,6 +275,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         BacklogWhHistory.BACKLOG_WH_HISTORY,
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
         CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS,
+        CenterMaster.CENTER_MASTER,
         Checking.CHECKING,
         CheckingHistory.CHECKING_HISTORY,
         Locations.LOCATIONS,

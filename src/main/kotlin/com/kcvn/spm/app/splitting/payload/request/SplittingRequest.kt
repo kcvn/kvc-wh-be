@@ -10,6 +10,5 @@ data class SplittingRequest(
     var poNumber: String,
     var lotNo: String,
     var quantity: BigDecimal,
-    var autoPackage: Boolean,
     var issueDate: LocalDate? = null,
 )

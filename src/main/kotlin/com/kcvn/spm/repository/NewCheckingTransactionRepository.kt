@@ -69,6 +69,7 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                 NEW_CHECKING_TRANSACTION.RECEIVING_DATE.eq(recDate)
                     .and(NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(poNumber))
                     .and(NEW_CHECKING_TRANSACTION.LOT_NO.eq(lotNo))
+                    .and(NEW_CHECKING_TRANSACTION.IS_APPROVE.eq(true))
             )
             .fetchOneInto(NewCheckingTransaction::class.java)
     }

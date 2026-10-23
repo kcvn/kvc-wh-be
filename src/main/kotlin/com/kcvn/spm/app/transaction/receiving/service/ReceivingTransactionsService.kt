@@ -44,7 +44,8 @@ class ReceivingTransactionsService(
         )
     }
 
-    fun saveRecTrans(request: List<RecTransRequest>, receivingDate: LocalDate?) {
+    // checkingLotByPackage = true: lot no ben checking chinh la packageCode (chuyen lot)
+    fun saveRecTrans(request: List<RecTransRequest>, receivingDate: LocalDate?, isTransferLot: Boolean = false) {
         val lotList = request.groupBy {it.lotNo}
         lotList.forEach { lot ->
             val list = createRecTransRequestWithSeq(lot.value)
@@ -69,7 +70,8 @@ class ReceivingTransactionsService(
                 // save receiving transactions
                 val refId = receivingRepo.save(recTransaction)
                 // save backlog and backlog history
-                val checkingRecord = checkingTransactionRepo.findByRecDatePoAndLot(receivingDate!!, it.poNumber!!, it.lotNo!!)
+                val checkingLotNo = if (isTransferLot) it.packageCode!! else it.lotNo!!
+                val checkingRecord = checkingTransactionRepo.findByRecDatePoAndLot(receivingDate!!, it.poNumber!!, checkingLotNo)
                 val backlogData = NewBacklogWh(
                     receivingDate = receivingDate,
                     poNumber = it.poNumber,
@@ -81,7 +83,8 @@ class ReceivingTransactionsService(
                     productionGroup = checkingRecord?.department,
                     lotNo = it.lotNo,
                     issueDate = it.issueDate,
-                    isSynced = false,
+                    isSyncedSap = !isTransferLot,
+                    isSyncedAmoeba = false,
                 )
                 backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId, true)
             }

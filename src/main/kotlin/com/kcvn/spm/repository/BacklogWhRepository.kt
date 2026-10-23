@@ -127,7 +127,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
 
     private fun createGetListForSendingRequestSqlQuery(request: BacklogWhSearchForSendingRequest, exactMatch: Boolean): Pair<String, List<Any>> {
         val params = mutableListOf<Any>()
-        val conditions = mutableListOf("nbw.backlog_qty > 0")
+        val conditions = mutableListOf("nbw.backlog_qty > 0 and nbw.is_synced_sap = true and nbw.is_synced_amoeba = true")
 
         fun addCondition(column: String, values: List<String>, exact: Boolean) {
             conditions += if (exact) "$column in (${values.joinToString(", ") { "?" }})"

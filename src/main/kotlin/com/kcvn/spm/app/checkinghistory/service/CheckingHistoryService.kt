@@ -44,8 +44,8 @@ class CheckingHistoryService(
         )
     }
 
-    fun getListApproved(recDate: LocalDate): List<CheckingHistoryByLotResponse> {
-        val checkingHistoryData = checkingTransRepo.findByRecDate(recDate).filter { it.isApprove == true }
+    fun getListApproved(recDate: LocalDate, storageLocationList: List<String>): List<CheckingHistoryByLotResponse> {
+        val checkingHistoryData = checkingTransRepo.findByRecDate(recDate).filter { it.isApprove == true }.filter { it.storageLocation in storageLocationList }
         if (checkingHistoryData.isEmpty()) throw BusinessException("Không có dữ liệu check hàng ngày $recDate")
         val checkingHistoryByLotData = checkingHistoryData.map { CheckingHistoryByLotResponse(
             checkingHistoryId = it.id,

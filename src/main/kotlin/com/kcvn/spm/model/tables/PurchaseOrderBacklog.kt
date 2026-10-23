@@ -179,6 +179,11 @@ open class PurchaseOrderBacklog(
      */
     val UNIT_PRICE: TableField<PurchaseOrderBacklogRecord, BigDecimal?> = createField(DSL.name("unit_price"), SQLDataType.NUMERIC, this, "")
 
+    /**
+     * The column <code>public.purchase_order_backlog.cost_center</code>.
+     */
+    val COST_CENTER: TableField<PurchaseOrderBacklogRecord, String?> = createField(DSL.name("cost_center"), SQLDataType.VARCHAR(30), this, "")
+
     private constructor(alias: Name, aliased: Table<PurchaseOrderBacklogRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<PurchaseOrderBacklogRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<PurchaseOrderBacklogRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

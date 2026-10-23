@@ -43,9 +43,9 @@ class SendingPickingListRepository(private val context: DSLContext) : SortingRep
     }
 
     fun findById(id: String): SendingPickingList? {
-        return context.selectFrom(SENDING_REQUEST_LIST)
+        return context.selectFrom(SENDING_PICKING_LIST)
             .where(
-                SENDING_REQUEST_LIST.ID.eq(id)
+                SENDING_PICKING_LIST.ID.eq(id)
             )
             .fetchOneInto(SendingPickingList::class.java)
     }

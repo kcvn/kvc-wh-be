@@ -76,7 +76,7 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
     fun getListApprove(
         receivingDate: LocalDate,
     ): ResponseEntity<List<CheckingHistoryByLotResponse>> {
-        val result = checkingHistoryService.getListApproved(receivingDate)
+        val result = checkingHistoryService.getListApproved(receivingDate, listOf("L000","L001"))
         return ResponseEntity(result, HttpStatus.OK)
     }
 

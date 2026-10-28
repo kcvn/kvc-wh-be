@@ -4,7 +4,7 @@ import java.math.BigDecimal
 
 class TempSendingCheckingTransactionRequest {
     var clientScanId: String? = null
-    var sendingPickingListId: String? = null
+    var formCode: String? = null
     var checkedQty: BigDecimal? = null
     var notMinusBoxQty: Boolean? = null
     var poNumber: String? = null

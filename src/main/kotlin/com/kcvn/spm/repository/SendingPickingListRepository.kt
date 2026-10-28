@@ -7,10 +7,12 @@ import com.kcvn.spm.model.tables.pojos.NewCheckingTransaction
 import com.kcvn.spm.model.tables.pojos.SendingPickingList
 import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
 import com.kcvn.spm.model.tables.references.NEW_CHECKING_TRANSACTION
+import com.kcvn.spm.model.tables.references.SENDING_FORM_LIST
 import com.kcvn.spm.model.tables.references.SENDING_PICKING_LIST
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST_DETAIL
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.TableField
 import org.jooq.impl.DSL
@@ -64,6 +66,41 @@ class SendingPickingListRepository(private val context: DSLContext) : SortingRep
             .on(SENDING_REQUEST_LIST.ID.eq(SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID))
             .where(
                 SENDING_PICKING_LIST.ID.`in`(ids)
+                    .and (SENDING_PICKING_LIST.IS_DELETED.eq(false))
+                    .and (SENDING_REQUEST_LIST.STATUS.eq(2))
+            )
+            .orderBy(SENDING_PICKING_LIST.ID)
+            .forUpdate().of(SENDING_PICKING_LIST)
+            .fetchInto(SendingPickingList::class.java)
+    }
+
+    /**
+     * Khoá (SELECT ... FOR UPDATE) các dòng picking còn hiệu lực của 1 form code theo các package:
+     * chưa xoá và thuộc request đã gom phiếu (status 2).
+     */
+    fun lockActiveByFormCodeAndPackages(formCode: String, packageCodes: List<String>): List<SendingPickingList> {
+        if (packageCodes.isEmpty()) return emptyList()
+        return lockActiveByFormCode(formCode, SENDING_PICKING_LIST.PACKAGE_CODE.`in`(packageCodes))
+    }
+
+    // Giống lockActiveByFormCodeAndPackages nhưng lọc theo PO (dùng cho checking)
+    fun lockActiveByFormCodeAndPoNumbers(formCode: String, poNumbers: List<String>): List<SendingPickingList> {
+        if (poNumbers.isEmpty()) return emptyList()
+        return lockActiveByFormCode(formCode, SENDING_PICKING_LIST.PO_NUMBER.`in`(poNumbers))
+    }
+
+    private fun lockActiveByFormCode(formCode: String, condition: Condition): List<SendingPickingList> {
+        return context.select(SENDING_PICKING_LIST.asterisk())
+            .from(SENDING_PICKING_LIST)
+            .innerJoin(SENDING_REQUEST_LIST_DETAIL)
+            .on(SENDING_REQUEST_LIST_DETAIL.ID.eq(SENDING_PICKING_LIST.SENDING_REQUEST_DETAIL_ID))
+            .innerJoin(SENDING_REQUEST_LIST)
+            .on(SENDING_REQUEST_LIST.ID.eq(SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID))
+            .innerJoin(SENDING_FORM_LIST)
+            .on(SENDING_FORM_LIST.ID.eq(SENDING_REQUEST_LIST.SENDING_FORM_ID))
+            .where(
+                SENDING_FORM_LIST.FORM_CODE.eq(formCode)
+                    .and (condition)
                     .and (SENDING_PICKING_LIST.IS_DELETED.eq(false))
                     .and (SENDING_REQUEST_LIST.STATUS.eq(2))
             )

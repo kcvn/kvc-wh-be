@@ -187,7 +187,7 @@ on
 inner join public.sending_picking_list picking
 on
 	detail.id = picking.sending_request_detail_id
-inner join public.splitting locations
+inner join (select * from public.splitting where is_deleted = false) locations
 on picking.package_code = locations.package_code
 left join (
 	select
@@ -216,6 +216,8 @@ on
     }
 
     // Chỉ sort theo cột trong whitelist để tránh SQL injection, mặc định po_number, lot_no, package_code
+    // Luôn thêm picking.created_date, picking.id cuối cùng để các dòng picking cùng package + lot
+    // hiển thị đúng thứ tự phân bổ scan trong saveTempSendingTransaction
     private fun createGetListOrderBy(pageable: Pageable?): String {
         val sortColumns = mapOf(
             "createdDate" to "list.created_date",
@@ -228,7 +230,8 @@ on
             ?.mapNotNull { order -> sortColumns[order.property]?.let { "$it ${if (order.isAscending) "asc" else "desc"}" } }
             ?.toList()
             .orEmpty()
-        return orderBy.ifEmpty { listOf("list.po_number asc", "picking.lot_no asc", "picking.package_code asc") }.joinToString(", ")
+        return (orderBy.ifEmpty { listOf("list.po_number asc", "picking.lot_no asc", "picking.package_code asc") } +
+                listOf("picking.created_date asc", "picking.id asc")).joinToString(", ")
     }
     ///
 

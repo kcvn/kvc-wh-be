@@ -337,50 +337,65 @@ class SendingTransactionsService(
             .forEach { errors += " ${it.packageCode} - ${it.lotNo} đã được lưu trước đó" }
         if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
 
-        // Khoá dòng picking còn hiệu lực rồi kiểm tra tồn tại + không vượt request_qty
-        val pickingIds = request.map { it.sendingPickingListId!! }.distinct()
-        val pickingById = sendingPickingListRepository.lockActiveByIds(pickingIds).associateBy { it.id!! }
-        val scannedQtyById = newTempSendingTransactionRepository.sumScannedQtyByPickingIds(pickingIds).toMutableMap()
+        // 1 form code có thể có nhiều dòng picking cùng package + lot (nhiều request),
+        // nên khoá các dòng picking của form rồi phân bổ số lượng scan lần lượt cho từng dòng
+        // theo số lượng còn thiếu = request_qty - đã scan (đã lưu trước đó + đã phân bổ trong lần này)
+        val allocationsByScan = linkedMapOf<TempSendingTransactionRequest, MutableList<Pair<SendingPickingList, BigDecimal>>>()
+        request.groupBy { it.formCode!! }.toSortedMap().forEach { (formCode, scans) ->
+            val pickings = sendingPickingListRepository.lockActiveByFormCodeAndPackages(formCode, scans.map { it.packageCode!! }.distinct())
+            val scannedQtyById = newTempSendingTransactionRepository.sumScannedQtyByPickingIds(pickings.map { it.id!! }).toMutableMap()
+            val pickingsByPackageLot = pickings
+                .sortedWith(compareBy({ it.createdDate }, { it.id }))
+                .groupBy { it.packageCode!! to it.lotNo!! }
 
-        val requestGroupedByPickingId = request.groupBy { it.sendingPickingListId!! }
-        requestGroupedByPickingId.forEach { scan ->
-            val picking = pickingById[scan.key]
-            if (picking == null) {
-                errors += "${scan.value[0].packageCode} - ${scan.value[0].lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
-                return@forEach
+            scans.forEach { scan ->
+                val candidates = pickingsByPackageLot[scan.packageCode!! to scan.lotNo!!]
+                if (candidates.isNullOrEmpty()) {
+                    errors += "$formCode - ${scan.packageCode} - ${scan.lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
+                    return@forEach
+                }
+                var remainingQty = scan.scannedQty!!
+                for (picking in candidates) {
+                    if (remainingQty <= BigDecimal.ZERO) break
+                    val scannedQty = scannedQtyById[picking.id] ?: BigDecimal.ZERO
+                    val availableQty = picking.requestQty!! - scannedQty
+                    if (availableQty <= BigDecimal.ZERO) continue
+                    val allocatedQty = remainingQty.min(availableQty)
+                    allocationsByScan.getOrPut(scan) { mutableListOf() } += picking to allocatedQty
+                    scannedQtyById[picking.id!!] = scannedQty + allocatedQty
+                    remainingQty -= allocatedQty
+                }
+                if (remainingQty > BigDecimal.ZERO)
+                    errors += "$formCode - ${scan.packageCode} - ${scan.lotNo}: số lượng scan vượt số lượng cần lấy (${candidates.sumOf { it.requestQty!! }}), dư $remainingQty"
             }
-            // cộng dồn cả các lần scan cùng dòng picking trong lô này
-            val addedQty = scan.value.sumOf { it.scannedQty!! }
-            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + addedQty
-            scannedQtyById[picking.id!!] = scannedQty
-            if (scannedQty > picking.requestQty!!)
-                errors += "${picking.packageCode} - ${picking.lotNo}: số lượng scan ($scannedQty) vượt số lượng cần lấy (${picking.requestQty})"
         }
         if (errors.isNotEmpty()) throw BusinessExceptionDetail("Không thể lưu kết quả scan", errors.distinct().joinToString("; "))
 
         val today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"))
-        request.map { pickingById[it.sendingPickingListId]!! }
-            .map { it.packageCode!! to it.lotNo!! }
+        request.map { it.packageCode!! to it.lotNo!! }
             .distinct()
             .sortedWith(compareBy({ it.first }, { it.second }))
             .forEach { (packageCode, lotNo) -> newTempSendingTransactionRepository.lockSeqNo(packageCode, lotNo, today) }
 
-        request.forEach { scan ->
-            val picking = pickingById[scan.sendingPickingListId]!!
+        // 1 lần scan bị tách ra nhiều dòng picking thì các dòng dùng chung clientScanId và seqNo,
+        // chỉ dòng đầu giữ notMinusBoxQty của request, các dòng sau = true để không trừ box 2 lần
+        allocationsByScan.forEach { (scan, allocations) ->
             val latestSeqNo =
-                newTempSendingTransactionRepository.findMaxSeqNo(picking.packageCode!!, picking.lotNo!!, today)
+                newTempSendingTransactionRepository.findMaxSeqNo(scan.packageCode!!, scan.lotNo!!, today)
                     ?: 0
-            newTempSendingTransactionRepository.save(
-                NewTempSendingTransactions(
-                    clientScanId = scan.clientScanId,
-                    sendingPickingListId = picking.id,
-                    packageCode = picking.packageCode,
-                    lotNo = picking.lotNo,
-                    seqNo = latestSeqNo + 1,
-                    notMinusBoxQty = scan.notMinusBoxQty,
-                    scannedQty = scan.scannedQty
+            allocations.forEachIndexed { index, (picking, allocatedQty) ->
+                newTempSendingTransactionRepository.save(
+                    NewTempSendingTransactions(
+                        clientScanId = scan.clientScanId,
+                        sendingPickingListId = picking.id,
+                        packageCode = picking.packageCode,
+                        lotNo = picking.lotNo,
+                        seqNo = latestSeqNo + 1,
+                        notMinusBoxQty = if (index == 0) scan.notMinusBoxQty else true,
+                        scannedQty = allocatedQty
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -399,49 +414,71 @@ class SendingTransactionsService(
             .forEach { errors += " ${it.poNumber} - ${it.lotNo} đã được lưu trước đó" }
         if (errors.isNotEmpty()) throw BusinessExceptionDetail("", errors.joinToString("; "))
 
-        // Khoá dòng picking còn hiệu lực rồi kiểm tra tồn tại + không vượt request_qty
-        val pickingIds = request.map { it.sendingPickingListId!! }.distinct()
-        val pickingById = sendingPickingListRepository.lockActiveByIds(pickingIds).associateBy { it.id!! }
-        val scannedQtyById = newTempSendingCheckingTransactionRepository.sumScannedQtyByPickingIds(pickingIds).toMutableMap()
+        // Giống saveTempSendingTransaction: khoá các dòng picking của form theo PO + lot rồi phân bổ số lượng check
+        // lần lượt cho từng dòng theo số lượng còn thiếu = request_qty - đã check (đã lưu + đã phân bổ trong lần này)
+        val allocationsByScan = linkedMapOf<TempSendingCheckingTransactionRequest, MutableList<Pair<SendingPickingList, BigDecimal>>>()
+        request.groupBy { it.formCode!! }.toSortedMap().forEach { (formCode, scans) ->
+            val pickings = sendingPickingListRepository.lockActiveByFormCodeAndPoNumbers(formCode, scans.map { it.poNumber!! }.distinct())
+            val checkedQtyById = newTempSendingCheckingTransactionRepository.sumScannedQtyByPickingIds(pickings.map { it.id!! }).toMutableMap()
+            val pickingsByPoLot = pickings
+                .sortedWith(compareBy({ it.createdDate }, { it.id }))
+                .groupBy { it.poNumber!! to it.lotNo!! }
 
-        val requestGroupedByPickingId = request.groupBy { it.sendingPickingListId!! }
-        requestGroupedByPickingId.forEach { scan ->
-            val picking = pickingById[scan.key]
-            if (picking == null) {
-                errors += "${scan.value[0].poNumber} - ${scan.value[0].lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
-                return@forEach
+            scans.forEach { scan ->
+                val candidates = pickingsByPoLot[scan.poNumber!! to scan.lotNo!!]
+                if (candidates.isNullOrEmpty()) {
+                    errors += "$formCode - ${scan.poNumber} - ${scan.lotNo}: yêu cầu không tồn tại hoặc không còn hiệu lực"
+                    return@forEach
+                }
+                var remainingQty = scan.checkedQty!!
+                for (picking in candidates) {
+                    if (remainingQty <= BigDecimal.ZERO) break
+                    val checkedQty = checkedQtyById[picking.id] ?: BigDecimal.ZERO
+                    val availableQty = picking.requestQty!! - checkedQty
+                    if (availableQty <= BigDecimal.ZERO) continue
+                    val allocatedQty = remainingQty.min(availableQty)
+                    allocationsByScan.getOrPut(scan) { mutableListOf() } += picking to allocatedQty
+                    checkedQtyById[picking.id!!] = checkedQty + allocatedQty
+                    remainingQty -= allocatedQty
+                }
+                // nếu vượt qua số lượng vẫn cho lưu: phần dư cộng vào dòng picking cuối
+                if (remainingQty > BigDecimal.ZERO) {
+                    val allocations = allocationsByScan.getOrPut(scan) { mutableListOf() }
+                    val lastPicking = candidates.last()
+                    if (allocations.lastOrNull()?.first == lastPicking)
+                        allocations[allocations.lastIndex] = lastPicking to allocations.last().second + remainingQty
+                    else
+                        allocations += lastPicking to remainingQty
+                    checkedQtyById[lastPicking.id!!] = (checkedQtyById[lastPicking.id] ?: BigDecimal.ZERO) + remainingQty
+                }
             }
-            // nếu vượt qua số lương vẫn cho lưu
-//            val addedQty = scan.value.sumOf { it.checkedQty!! }
-//            val scannedQty = (scannedQtyById[picking.id] ?: BigDecimal.ZERO) + addedQty
-//            scannedQtyById[picking.id!!] = scannedQty
-//            if (scannedQty > picking.requestQty!!)
-//                errors += "${picking.packageCode} - ${picking.lotNo}: số lượng scan ($scannedQty) vượt số lượng cần lấy (${picking.requestQty})"
         }
         if (errors.isNotEmpty()) throw BusinessExceptionDetail("Không thể lưu kết quả scan", errors.distinct().joinToString("; "))
 
         val today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"))
-        request.map { pickingById[it.sendingPickingListId]!! }
-            .map { it.packageCode!! to it.lotNo!! }
+        allocationsByScan.keys.map { it.lotNo!! }
             .distinct()
-            .sortedWith(compareBy({ it.first }, { it.second }))
-            .forEach { (packageCode, lotNo) -> newTempSendingCheckingTransactionRepository.lockSeqNo(packageCode, lotNo, today) }
+            .sorted()
+            .forEach { lotNo -> newTempSendingCheckingTransactionRepository.lockSeqNo(lotNo, today) }
 
-        request.forEach { scan ->
-            val picking = pickingById[scan.sendingPickingListId]!!
+        // 1 lần check bị tách ra nhiều dòng picking thì các dòng dùng chung clientScanId và seqNo,
+        // chỉ dòng đầu giữ notMinusBoxQty của request, các dòng sau = true để không trừ box 2 lần
+        allocationsByScan.forEach { (scan, allocations) ->
             val latestSeqNo =
-                newTempSendingCheckingTransactionRepository.findMaxSeqNo(picking.lotNo!!, today)
+                newTempSendingCheckingTransactionRepository.findMaxSeqNo(scan.lotNo!!, today)
                     ?: BigDecimal.ZERO
-            newTempSendingCheckingTransactionRepository.save(
-                NewTempSendingTransactionsChecking(
-                    clientScanId = scan.clientScanId,
-                    sendingPickingListId = picking.id,
-                    checkedQty = scan.checkedQty,
-                    lotNo = picking.lotNo,
-                    seqNo = latestSeqNo + BigDecimal.ONE,
-                    notMinusBoxQty = scan.notMinusBoxQty,
+            allocations.forEachIndexed { index, (picking, allocatedQty) ->
+                newTempSendingCheckingTransactionRepository.save(
+                    NewTempSendingTransactionsChecking(
+                        clientScanId = scan.clientScanId,
+                        sendingPickingListId = picking.id,
+                        checkedQty = allocatedQty,
+                        lotNo = picking.lotNo,
+                        seqNo = latestSeqNo + BigDecimal.ONE,
+                        notMinusBoxQty = if (index == 0) scan.notMinusBoxQty else true,
+                    )
                 )
-            )
+            }
         }
     }
 

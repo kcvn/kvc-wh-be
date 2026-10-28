@@ -79,7 +79,9 @@ class SplittingService(
             Splitting(
                 receivingDate =  it.receivingDate,
                 packageCode = it.packageCode,
-                locationCode = it.binCode
+                locationCode = it.binCode,
+                isSyncedSap = true,
+                isSyncedAmoeba = false
             )
         }.distinct()
 

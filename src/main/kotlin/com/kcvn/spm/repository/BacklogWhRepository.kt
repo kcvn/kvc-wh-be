@@ -127,7 +127,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
 
     private fun createGetListForSendingRequestSqlQuery(request: BacklogWhSearchForSendingRequest, exactMatch: Boolean): Pair<String, List<Any>> {
         val params = mutableListOf<Any>()
-        val conditions = mutableListOf("nbw.backlog_qty > 0 and nbw.is_synced_sap = true and nbw.is_synced_amoeba = true")
+        val conditions = mutableListOf("nbw.backlog_qty > 0 and s.is_synced_sap = true and s.is_synced_amoeba = true")
 
         fun addCondition(column: String, values: List<String>, exact: Boolean) {
             conditions += if (exact) "$column in (${values.joinToString(", ") { "?" }})"
@@ -158,6 +158,8 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 sum(nbw.backlog_qty) - coalesce(max(processing.processing_qty), 0) as available_backlog_qty,
                 count(*) over() as total_count
             from new_backlog_wh nbw
+            inner join (select * from splitting s where s.is_deleted = false) s 
+            on s.package_code = nbw.package_code 
                 left join (
                     select
                         srld.receiving_date,
@@ -232,6 +234,15 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .fetchOneInto(NewBacklogWh::class.java)
     }
 
+    fun findByPackageCode(packageCode: String): BacklogWh? {
+        return context.selectFrom(NEW_BACKLOG_WH)
+            .where(
+                NEW_BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
+            )
+            .fetchInto(BacklogWh::class.java)
+            .firstOrNull()
+    }
+
     fun save(rec: NewBacklogWh): String{
         val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
         val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
@@ -259,8 +270,6 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             )
             .execute()
     }
-
-
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// OLD
     fun getBinEntryList(pageable: Pageable) : Pair<List<BacklogWh>, Int> {
@@ -320,14 +329,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .firstOrNull()
     }
 
-    fun findByPackageCode(packageCode: String): BacklogWh? {
-        return context.selectFrom(BACKLOG_WH)
-            .where(
-                BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
-            )
-            .fetchInto(BacklogWh::class.java)
-            .firstOrNull()
-    }
+
 
     fun findExistBacklogByPackageCode(packageCode: String): BacklogWh? {
         return context.selectFrom(BACKLOG_WH)

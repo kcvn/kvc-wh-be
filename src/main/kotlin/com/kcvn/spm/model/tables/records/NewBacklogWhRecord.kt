@@ -64,33 +64,21 @@ open class NewBacklogWhRecord() : UpdatableRecordImpl<NewBacklogWhRecord>(NewBac
         set(value): Unit = set(10, value)
         get(): String? = get(10) as String?
 
-    @Suppress("INAPPLICABLE_JVM_NAME")
-    @set:JvmName("setIsSyncedSap")
-    open var isSyncedSap: Boolean?
-        set(value): Unit = set(11, value)
-        get(): Boolean? = get(11) as Boolean?
-
     open var createdDate: OffsetDateTime?
-        set(value): Unit = set(12, value)
-        get(): OffsetDateTime? = get(12) as OffsetDateTime?
+        set(value): Unit = set(11, value)
+        get(): OffsetDateTime? = get(11) as OffsetDateTime?
 
     open var createdBy: String?
-        set(value): Unit = set(13, value)
-        get(): String? = get(13) as String?
+        set(value): Unit = set(12, value)
+        get(): String? = get(12) as String?
 
     open var updatedDate: OffsetDateTime?
-        set(value): Unit = set(14, value)
-        get(): OffsetDateTime? = get(14) as OffsetDateTime?
+        set(value): Unit = set(13, value)
+        get(): OffsetDateTime? = get(13) as OffsetDateTime?
 
     open var updatedBy: String?
-        set(value): Unit = set(15, value)
-        get(): String? = get(15) as String?
-
-    @Suppress("INAPPLICABLE_JVM_NAME")
-    @set:JvmName("setIsSyncedAmoeba")
-    open var isSyncedAmoeba: Boolean?
-        set(value): Unit = set(16, value)
-        get(): Boolean? = get(16) as Boolean?
+        set(value): Unit = set(14, value)
+        get(): String? = get(14) as String?
 
     // -------------------------------------------------------------------------
     // Primary key information
@@ -101,7 +89,7 @@ open class NewBacklogWhRecord() : UpdatableRecordImpl<NewBacklogWhRecord>(NewBac
     /**
      * Create a detached, initialised NewBacklogWhRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, lotNo: String? = null, issueDate: String? = null, isSyncedSap: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isSyncedAmoeba: Boolean? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, lotNo: String? = null, issueDate: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.poNumber = poNumber
@@ -113,12 +101,10 @@ open class NewBacklogWhRecord() : UpdatableRecordImpl<NewBacklogWhRecord>(NewBac
         this.productionGroup = productionGroup
         this.lotNo = lotNo
         this.issueDate = issueDate
-        this.isSyncedSap = isSyncedSap
         this.createdDate = createdDate
         this.createdBy = createdBy
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
-        this.isSyncedAmoeba = isSyncedAmoeba
         resetChangedOnNotNull()
     }
 
@@ -138,12 +124,10 @@ open class NewBacklogWhRecord() : UpdatableRecordImpl<NewBacklogWhRecord>(NewBac
             this.productionGroup = value.productionGroup
             this.lotNo = value.lotNo
             this.issueDate = value.issueDate
-            this.isSyncedSap = value.isSyncedSap
             this.createdDate = value.createdDate
             this.createdBy = value.createdBy
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
-            this.isSyncedAmoeba = value.isSyncedAmoeba
             resetChangedOnNotNull()
         }
     }

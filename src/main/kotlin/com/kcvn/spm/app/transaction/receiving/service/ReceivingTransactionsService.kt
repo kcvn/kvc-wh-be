@@ -82,9 +82,7 @@ class ReceivingTransactionsService(
                     itemName = checkingRecord?.itemName,
                     productionGroup = checkingRecord?.department,
                     lotNo = it.lotNo,
-                    issueDate = it.issueDate,
-                    isSyncedSap = !isTransferLot,
-                    isSyncedAmoeba = false,
+                    issueDate = it.issueDate
                 )
                 backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId, true)
             }

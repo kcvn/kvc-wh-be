@@ -116,6 +116,16 @@ open class Splitting(
      */
     val IS_DELETED: TableField<SplittingRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.splitting.is_synced_sap</code>.
+     */
+    val IS_SYNCED_SAP: TableField<SplittingRecord, Boolean?> = createField(DSL.name("is_synced_sap"), SQLDataType.BOOLEAN, this, "")
+
+    /**
+     * The column <code>public.splitting.is_synced_amoeba</code>.
+     */
+    val IS_SYNCED_AMOEBA: TableField<SplittingRecord, Boolean?> = createField(DSL.name("is_synced_amoeba"), SQLDataType.BOOLEAN, this, "")
+
     private constructor(alias: Name, aliased: Table<SplittingRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SplittingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<SplittingRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

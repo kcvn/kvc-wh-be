@@ -24,7 +24,13 @@ data class Splitting(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsSyncedSap")
+    var isSyncedSap: Boolean? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsSyncedAmoeba")
+    var isSyncedAmoeba: Boolean? = null
 ): Serializable {
 
 
@@ -90,6 +96,18 @@ data class Splitting(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.isSyncedSap == null) {
+            if (o.isSyncedSap != null)
+                return false
+        }
+        else if (this.isSyncedSap != o.isSyncedSap)
+            return false
+        if (this.isSyncedAmoeba == null) {
+            if (o.isSyncedAmoeba != null)
+                return false
+        }
+        else if (this.isSyncedAmoeba != o.isSyncedAmoeba)
+            return false
         return true
     }
 
@@ -105,6 +123,8 @@ data class Splitting(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.isSyncedSap == null) 0 else this.isSyncedSap.hashCode())
+        result = prime * result + (if (this.isSyncedAmoeba == null) 0 else this.isSyncedAmoeba.hashCode())
         return result
     }
 
@@ -120,6 +140,8 @@ data class Splitting(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(isSyncedSap)
+        sb.append(", ").append(isSyncedAmoeba)
 
         sb.append(")")
         return sb.toString()

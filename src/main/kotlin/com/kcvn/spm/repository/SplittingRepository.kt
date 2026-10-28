@@ -48,20 +48,13 @@ class SplittingRepository(private val context: DSLContext) : SortingRepository()
         }.insert()
     }
 
-    fun updateLocationCode(oldLocationCode: String, newLocationCode: String, packageCode: String) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            transactionalContext.update(SPLITTING)
-                .set(SPLITTING.LOCATION_CODE, newLocationCode)
-                .set(SPLITTING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(SPLITTING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .where(
-                    SPLITTING.PACKAGE_CODE.eq(packageCode)
-                    .and(SPLITTING.LOCATION_CODE.eq(oldLocationCode))
-                )
-                .execute()
-        }
+    fun delete(data: Splitting) {
+        context.update(SPLITTING)
+            .set(SPLITTING.IS_DELETED, true)
+            .set(SPLITTING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(SPLITTING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(SPLITTING.ID.eq(data.id))
+            .execute()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

@@ -3,10 +3,12 @@ package com.kcvn.spm.app.transaction.moving.service
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.moving.payload.request.MovingRequest
 import com.kcvn.spm.app.transaction.moving.payload.request.MovingRequestWithSeq
+import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.Moving
+import com.kcvn.spm.model.tables.pojos.Splitting
 import com.kcvn.spm.repository.BacklogWhRepository
 import com.kcvn.spm.repository.MovingRepository
 import com.kcvn.spm.repository.SplittingRepository
@@ -29,10 +31,22 @@ class MovingService(
         val list = createMovingRequestWithSeq(request, todayUtc)
 
         list.forEach {
+            val sourceData = splittingRepo.findByPackage(it.sourcePackageCode!!)
+            if (sourceData != null) {
+                splittingRepo.delete(sourceData)
+                val destData = sourceData.copy(
+                    id = null,
+                    locationCode = it.destLocationCode,
+                    isSyncedAmoeba = false,
+                    isDeleted = false,
+                )
+                splittingRepo.save(destData)
+            }
+            else throw BusinessException("${it.sourcePackageCode} không tồn tại")
             // get receivingDate from source
-            val sourceBacklog = backlogWhRepo.findByLocationAndPackageAndPO(it.sourceLocationCode!!, it.sourcePackageCode!!, it.poNumber!!)
+            val sourceBacklog = backlogWhRepo.findByPackageCode(it.sourcePackageCode!!)
                 ?: throw BusinessExceptionDetail(
-                    CommonUtils.getMessage("data.not.found.in.backlog"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}")
+                    CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = ${it.sourcePackageCode}")
             /*val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
                 ?: throw BusinessExceptionDetail(
                     CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
@@ -41,11 +55,11 @@ class MovingService(
             // save moving
             val moving = Moving(
                 null,
-                it.sourceLocationCode,
+                sourceData.locationCode,
                 it.destLocationCode,
                 it.sourcePackageCode,
-                it.destPackageCode,
-                it.poNumber,
+                it.sourcePackageCode,
+                sourceBacklog.poNumber,
                 sourceBacklog.backlogQty,
                 it.seqNo,
                 "TRANSFER",
@@ -54,60 +68,20 @@ class MovingService(
                 issueDate = sourceBacklog.issueDate
             )
             val refId = movingRepo.saveMoving(moving)
-            // update location for package when destPackageCode == ""
-//            if (it.destPackageCode == "") {
-//                splittingRepo.updateLocationCode(it.sourceLocationCode!!, it.destLocationCode!!, it.sourcePackageCode!!)
-//            }
-            // minus backlog sourceLocation
-            val backlogSourceData = BacklogWh(
-                null,
-                it.sourceLocationCode,
-                it.poNumber,
-                it.sourcePackageCode,
-                sourceBacklog.backlogQty,
-                sourceBacklog.boxQty,
-                recDateSource,
-                isEntried = sourceBacklog.isEntried,
-                inspectionDate = sourceBacklog.inspectionDate,
-                lotNo = sourceBacklog.lotNo,
-                issueDate = sourceBacklog.issueDate
-            )
-            backlogWhService.oldMinusBacklog(backlogSourceData, "OUT", refId)
-            // plus backlog destLocation
-            val backlogDestData = BacklogWh(
-                null,
-                it.destLocationCode,
-                it.poNumber,
-                if (it.destPackageCode?.isNotEmpty() == true) it.destPackageCode else it.sourcePackageCode,
-                sourceBacklog.backlogQty,
-                sourceBacklog.boxQty,
-                recDateSource,
-                isEntried = false,
-                inspectionDate = sourceBacklog.inspectionDate,
-                lotNo = sourceBacklog.lotNo,
-                issueDate = sourceBacklog.issueDate
-            )
-            backlogWhService.oldPlusBacklog(backlogDestData, "IN", refId)
-            backlogWhRepo.updateIsEntried(false, sourceBacklog.poNumber!!, recDateSource!!, sourceBacklog.inspectionDate)
         }
     }
 
     fun createMovingRequestWithSeq(requests: List<MovingRequest>, todayUtc: LocalDate): List<MovingRequestWithSeq> {
         return requests
-            .groupBy { Triple(it.sourceLocationCode, it.sourcePackageCode, it.poNumber) }
+            .groupBy { (it.sourcePackageCode) }
             .flatMap { (key, group) ->
-                val (sourceLocationCode, sourcePackageCode, poNumber) = key
-                val latestSeqNo = movingRepo.findLatestMoving(sourceLocationCode!!, sourcePackageCode!!, poNumber!!, todayUtc)?.seqNo ?: 0
+                val sourcePackageCode = key
+                val latestSeqNo = movingRepo.findLatestMoving(sourcePackageCode!!, todayUtc)?.seqNo ?: 0
 
                 group.mapIndexed { index, movingRequest ->
                     MovingRequestWithSeq(
                         destLocationCode = movingRequest.destLocationCode,
-                        destPackageCode = movingRequest.destPackageCode,
-                        sourceLocationCode = movingRequest.sourceLocationCode,
                         sourcePackageCode = movingRequest.sourcePackageCode,
-                        poNumber = movingRequest.poNumber,
-                        qty = movingRequest.qty,
-                        boxQty = movingRequest.boxQty,
                         seqNo = latestSeqNo + index + 1 // Bắt đầu từ latestSeqNo + 1, tăng dần
                     )
                 }

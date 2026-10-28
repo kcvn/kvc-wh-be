@@ -60,7 +60,9 @@ class TransferLotService(
             Splitting(
                 receivingDate =  it.receivingDate,
                 packageCode = it.packageCode,
-                locationCode = it.binCode
+                locationCode = it.binCode,
+                isSyncedSap = false,
+                isSyncedAmoeba = false
             )
         }.distinct()
 
@@ -73,7 +75,7 @@ class TransferLotService(
                 poNumber = it.poNumber,
                 qty = it.quantity,
                 lotNo = it.lotNo,
-                issueDate = it.issueDate?.toString()
+                issueDate = it.issueDate?.toString(),
             ) }
             receivingService.saveRecTrans(receivingData, split.receivingDate, isTransferLot = true)
         }

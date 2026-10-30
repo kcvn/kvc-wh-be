@@ -183,6 +183,15 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @GetMapping("/export-temp-sending-result")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun exportTempSendingResult(
+        request: NewTempSendingSearchRequest,
+    ): ResponseEntity<BaseResponse<FileContentModel>> {
+        val result = sendingService.exportTempSendingResult(request)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
     @PostMapping("/approve-sending-form")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun approveSendingForm(@RequestParam formCode: String): ResponseEntity<*> {

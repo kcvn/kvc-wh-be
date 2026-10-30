@@ -316,10 +316,69 @@ class SendingTransactionsService(
     }
 
     fun getTempSendingResult(request: NewTempSendingSearchRequest, pageable: Pageable? = null): BasePagingResponse<NewTempSendingResponse> {
-        val listFormCode = newTempSendingTransactionRepository.getResult(request, pageable)
+        val data = newTempSendingTransactionRepository.getResult(request, pageable)
 
 
-        return BasePagingResponse(data = listFormCode.first, listFormCode.second)
+        return BasePagingResponse(data = data.first, data.second)
+    }
+
+    fun exportTempSendingResult(request: NewTempSendingSearchRequest, pageable: Pageable? = null): BaseResponse<FileContentModel> {
+        val data = newTempSendingTransactionRepository.getResult(request, pageable)
+
+
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportTempSendingTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        val rowNumber = 0
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        style.alignment = HorizontalAlignment.CENTER
+
+        val numberStyle = workbook.createCellStyle()
+        numberStyle.cloneStyleFrom(style)
+        numberStyle.alignment = HorizontalAlignment.RIGHT
+
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
+        val tempSendingResultList = data.first
+
+        var rowNumberFill = 1
+        for (item in tempSendingResultList) {
+            val status = if (item.requestQty == item.scannedQty && item.requestQty == item.checkedQty) "KHỚP" else "LỆCH"
+            val row: Row = sheet.createRow(rowNumberFill++)
+
+            val formattedReceivingDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
+            ExcelHelper.setCellValue(row, 0, style, formattedReceivingDate)
+            ExcelHelper.setCellValue(row, 1, style, item.locationCode)
+            ExcelHelper.setCellValue(row, 2, style, item.poNumber)
+            ExcelHelper.setCellValue(row, 3, style, item.itemName)
+            ExcelHelper.setCellValue(row, 4, style, item.packageCode)
+            ExcelHelper.setCellValue(row, 5, style, item.lotNo)
+            ExcelHelper.setCellValueDouble(row, 6, numberStyle, item.requestQty?.toDouble(), numberFormat)
+            ExcelHelper.setCellValueDouble(row, 7, numberStyle, item.scannedQty?.toDouble(), numberFormat)
+            ExcelHelper.setCellValueDouble(row, 8, numberStyle, item.checkedQty?.toDouble(), numberFormat)
+            ExcelHelper.setCellValue(row, 9, style, status)
+        }
+
+        sheet.forceFormulaRecalculation = true
+
+        sheet.createFreezePane(5, 1)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("temp_sending_result_${request.formCode}.xlsx", arrayOf(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+            )),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
     }
 
     fun saveTempSendingTransaction(request: List<TempSendingTransactionRequest>){

@@ -344,7 +344,7 @@ class SendingTransactionsService(
 
         var rowNumberFill = 1
         for (item in tempSendingResultList) {
-            val status = if (item.requestQty == item.scannedQty && item.requestQty == item.checkedQty) "KHỚP" else "LỆCH"
+            val status = if (item.result == "SAME") "KHỚP" else "LỆCH"
             val row: Row = sheet.createRow(rowNumberFill++)
 
             val formattedReceivingDate = item.receivingDate?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
@@ -577,7 +577,11 @@ class SendingTransactionsService(
         sendingForm.isApproved = true
         sendingRequestFormListRepository.update(sendingForm)
 
-
+        val requestList = sendingRequestListRepository.findByFormId(sendingForm.id!!)
+        requestList.forEach {
+            it.status = 4
+            sendingRequestListRepository.update(it)
+        }
 //        tempSendingImportedRepo.updateAfterApprove(formCode)
 //        sendingRepo.copyToSendingTable(formCode)
     }

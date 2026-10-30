@@ -63,6 +63,15 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
             .firstOrNull()
     }
 
+    fun findByFormId(formId: String): List<SendingRequestList> {
+        return context.selectFrom(SENDING_REQUEST_LIST)
+            .where(
+                SENDING_REQUEST_LIST.SENDING_FORM_ID.eq(formId)
+            )
+            .orderBy(SENDING_REQUEST_LIST.SEQ_NO.desc())
+            .fetchInto(SendingRequestList::class.java)
+    }
+
     fun save(data: SendingRequestList): String {
         val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
         val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM

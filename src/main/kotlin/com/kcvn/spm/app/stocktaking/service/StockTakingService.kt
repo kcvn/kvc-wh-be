@@ -1,5 +1,8 @@
 package com.kcvn.spm.app.stocktaking.service
 
+import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
+import com.kcvn.spm.app.purchaseOrderBacklog.payload.response.PurchaseOrderBacklogResponse
 import com.kcvn.spm.app.stocktaking.payload.request.*
 import com.kcvn.spm.app.stocktaking.payload.response.*
 import com.kcvn.spm.common.constants.ExcelConstant
@@ -21,6 +24,7 @@ import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -28,6 +32,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -41,6 +46,7 @@ class StockTakingService(
     private val backlogBinEntryRepo: BacklogBinEntryRepository,
     private val backlogWhRepo: BacklogWhRepository,
     private val sapBacklogRepo: SapBacklogRepository,
+    private val sapStockTakingRepo: SapStockTakingRepository,
 ) {
     fun getListForAndroid(pageable: Pageable): BasePagingResponse<StockTakingForAndroid> {
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
@@ -469,6 +475,7 @@ class StockTakingService(
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
                 val storageLocation = ExcelHelper.getCellValueAmoeba(row, 2)
                 val itemType = ExcelHelper.getCellValueAmoeba(row, 25)
+                if (storageLocation.contains("M")) continue
                 val lotNo = ExcelHelper.getCellValueAmoeba(row, 7)
                 if (lotNo == "") continue
                 val productionGroup = ExcelHelper.getCellValueAmoeba(row, 1)
@@ -501,5 +508,68 @@ class StockTakingService(
         } finally {
             workbook.close()
         }
+    }
+
+    fun getSapStockTakingList(request: SapStockTakingSearchRequest, pageable: Pageable): BasePagingResponse<SapStockTakingResponse> {
+        val sapStockTakingData = sapStockTakingRepo.searchSapStockTaking(request, pageable)
+        return BasePagingResponse(
+            sapStockTakingData.first,
+            sapStockTakingData.second
+        )
+    }
+
+    fun exportSapStockTakingList(request: SapStockTakingSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportSAPStockTakingTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        val rowNumber = 0
+        val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        style.alignment = HorizontalAlignment.CENTER
+
+        val numberStyle = workbook.createCellStyle()
+        numberStyle.cloneStyleFrom(style)
+        numberStyle.alignment = HorizontalAlignment.RIGHT
+
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
+        val listActualStockTaking = sapStockTakingRepo.searchSapStockTaking(request, pageable, true)
+
+        if (listActualStockTaking.first.isEmpty()) {
+            throw BusinessException(CommonUtils.getMessage("data.notFound"))
+        }
+
+        var rowNumberFill = 1
+        for (item in listActualStockTaking.first) {
+            val row: Row = sheet.createRow(rowNumberFill++)
+
+            ExcelHelper.setCellValue(row, 0, style, item.lotNo)
+            ExcelHelper.setCellValue(row, 1, style, item.itemCode)
+            ExcelHelper.setCellValue(row, 2, style, item.productionGroup)
+            ExcelHelper.setCellValue(row, 3, style, item.storageLocation)
+            ExcelHelper.setCellValue(row, 4, style, item.itemType)
+            ExcelHelper.setCellValueDouble(row, 5, numberStyle, item.sapQty.toDouble(), numberFormat)
+            ExcelHelper.setCellValueDouble(row, 6, numberStyle, item.systemQty.toDouble(), numberFormat)
+            ExcelHelper.setCellValue(row, 7, style, item.result)
+        }
+
+        sheet.createFreezePane(0, 1)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("ExportSAPStockTaking.xlsx", arrayOf(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+            )),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
     }
 }

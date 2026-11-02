@@ -2,6 +2,7 @@ package com.kcvn.spm.app.stocktaking.controller
 
 import com.kcvn.spm.app.stocktaking.payload.request.*
 import com.kcvn.spm.app.stocktaking.payload.response.ActualStockTakingResponse
+import com.kcvn.spm.app.stocktaking.payload.response.SapStockTakingResponse
 import com.kcvn.spm.app.stocktaking.payload.response.StockTakingForAndroid
 import com.kcvn.spm.app.stocktaking.payload.response.SystemStockTakingResponse
 import com.kcvn.spm.app.stocktaking.service.StockTakingService
@@ -170,6 +171,34 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         @RequestPart("file") file: MultipartFile
     ): ResponseEntity<BaseResponse<Int>> {
         val data = stockTakingService.importSAPBacklog(file)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @GetMapping("/sap-stock-taking")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getListSapStock(
+        request: SapStockTakingSearchRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
+        )
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<SapStockTakingResponse>> {
+        val result = stockTakingService.getSapStockTakingList(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/export-sap-stock-taking")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun exportListSapStock(
+        request: SapStockTakingSearchRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        @SortDefault.SortDefaults(
+            SortDefault(sort = ["createdDate"], direction = Sort.Direction.DESC),
+        )
+        pageable: Pageable
+    ):  ResponseEntity<BaseResponse<FileContentModel>> {
+        val data = stockTakingService.exportSapStockTakingList(request, pageable)
         return ResponseEntity(data, HttpStatus.OK)
     }
 }

@@ -1,8 +1,5 @@
 package com.kcvn.spm.app.stocktaking.service
 
-import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
-import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
-import com.kcvn.spm.app.purchaseOrderBacklog.payload.response.PurchaseOrderBacklogResponse
 import com.kcvn.spm.app.stocktaking.payload.request.*
 import com.kcvn.spm.app.stocktaking.payload.response.*
 import com.kcvn.spm.common.constants.ExcelConstant
@@ -14,7 +11,6 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
-import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.pojos.SapBacklog
 import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.pojos.StockTakingStatus
@@ -24,7 +20,6 @@ import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -32,7 +27,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -93,7 +87,7 @@ class StockTakingService(
         if (stt != null) {
             // stock taking again
             stockTakingRepo.deleteByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
-            stockTakingRepo.copyFromBacklogWhToStockTaking(request)
+//            stockTakingRepo.copyFromBacklogWhToStockTaking(request)
             return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
         } else {
             // stock taking new
@@ -104,7 +98,7 @@ class StockTakingService(
             )
             stockTakingStatusRepo.save(sttDomain)
             // copy data from backlog_wh to stock_taking
-            stockTakingRepo.copyFromBacklogWhToStockTaking(request)
+            //stockTakingRepo.copyFromBacklogWhToStockTaking(request)
             return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
         }
     }
@@ -127,12 +121,16 @@ class StockTakingService(
                 null,
                 element.actualQty,
                 null,
-                element.actualBoxQty
+                element.actualBoxQty,
+                lotNo = element.lotNo
             )
 
-            val stockTaking = stockTakingRepo.findByPackageCode(element.packageCode!!)
+            val stockTaking = stockTakingRepo.findByPackageCodeAndPoAndLot(sTT.yearNumber!!, sTT.monthNumber!!, element.packageCode!!, element.poNumber!!, element.lotNo!!)
             if (stockTaking != null) {
-                stockTakingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
+                stockTaking.actualQty = element.actualQty
+                stockTaking.actualBoxQty = element.actualBoxQty
+                stockTaking.actualLocationCode = element.actualLocationCode
+                stockTakingRepo.update(stockTaking)
             } else {
                 stockTakingRepo.save(domain)
             }
@@ -157,10 +155,11 @@ class StockTakingService(
                 null,
                 element.actualQty,
                 null,
-                element.actualBoxQty
+                element.actualBoxQty,
+                lotNo = element.lotNo
             )
 
-            val stockTakingChecking = stockTakingCheckingRepo.findByPackageCode(element.packageCode!!)
+            val stockTakingChecking = stockTakingCheckingRepo.findByPackageCodeAndLot(sTT.yearNumber!!, sTT.monthNumber!!, element.packageCode!!, element.lotNo)
             if (stockTakingChecking != null) {
                 stockTakingCheckingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
             } else {
@@ -246,6 +245,7 @@ class StockTakingService(
             ActualStockTakingResponse(
                 poNumber = it.poNumber,
                 packageCode = it.packageCode,
+                lotNo = it.lotNo,
                 itemName = it.itemName,
                 systemLocationCode = it.systemLocationCode,
                 actualLocationCode = it.actualLocationCode,
@@ -370,6 +370,12 @@ class StockTakingService(
             throw BusinessException(CommonUtils.getMessage("data.notFound"))
         }
 
+        // template has no lot column yet, append header after RESULT
+        val lotHeaderCell = dataRow.createCell(13)
+        lotHeaderCell.setCellValue("LOT NO")
+        dataRow.getCell(12)?.let { lotHeaderCell.cellStyle = it.cellStyle }
+        sheet.setColumnWidth(13, sheet.getColumnWidth(12))
+
         var rowNumberFill = 1
         for (item in listActualStockTaking) {
             val row: Row = sheet.createRow(rowNumberFill++)
@@ -387,6 +393,7 @@ class StockTakingService(
             ExcelHelper.setCellValueInt(row, 10, numberStyle, item.actualBoxQty ?: 0, numberFormat)
             ExcelHelper.setCellValueInt(row, 11, numberStyle, item.checkingBoxQty ?: 0, numberFormat)
             ExcelHelper.setCellValue(row, 12, style, item.result)
+            ExcelHelper.setCellValue(row, 13, style, item.lotNo)
         }
 
         sheet.createFreezePane(0, 1)

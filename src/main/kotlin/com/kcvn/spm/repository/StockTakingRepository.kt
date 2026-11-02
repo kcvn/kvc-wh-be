@@ -7,8 +7,12 @@ import com.kcvn.spm.app.stocktaking.payload.response.StockTakingMonthlyResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
+import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
+import com.kcvn.spm.model.tables.pojos.Splitting
 import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
+import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
+import com.kcvn.spm.model.tables.references.SPLITTING
 import com.kcvn.spm.model.tables.references.STOCK_TAKING
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -16,6 +20,7 @@ import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -48,6 +53,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 StockTakingMonthlyResponse(
                     poNumber = it.get("po_number", String::class.java),
                     packageCode = it.get("package_code", String::class.java),
+                    lotNo = it.get("lot_no", String::class.java),
                     itemName = it.get("item_name", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
@@ -93,6 +99,8 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 StockTakingMonthlyResponse(
                     poNumber = it.get("po_number", String::class.java),
                     packageCode = it.get("package_code", String::class.java),
+                    lotNo = it.get("lot_no", String::class.java),
+                    itemName = it.get("item_name", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
                     systemQty = it.get("system_qty", BigDecimal::class.java),
@@ -119,6 +127,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 StockTakingMonthlyResponse(
                     poNumber = it.get("po_number", String::class.java),
                     packageCode = it.get("package_code", String::class.java),
+                    lotNo = it.get("lot_no", String::class.java),
                     itemName = it.get("item_name", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
@@ -149,6 +158,7 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 StockTakingMonthlyResponse(
                     poNumber = it.get("po_number", String::class.java),
                     packageCode = it.get("package_code", String::class.java),
+                    lotNo = it.get("lot_no", String::class.java),
                     itemName = it.get("item_name", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
@@ -166,124 +176,155 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
     }
 
     fun createSqlQuery(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
-        val sql = """
-        SELECT * FROM (
-SELECT
-	COALESCE(temp_data.po_number,checking_stock_data.po_number) AS po_number,
-	COALESCE (temp_data.package_code,checking_stock_data.package_code) AS package_code,
-	temp_data.system_location_code,
-	temp_data.system_qty,
-	temp_data.system_box_qty,
-	temp_data.actual_location_code,
-	temp_data.actual_qty,
-	temp_data.actual_box_qty,
-	temp_data.item_name,
-	COALESCE(temp_data.year_number,checking_stock_data.year_number) AS year_number,
-	COALESCE(temp_data.month_number,checking_stock_data.month_number) AS month_number,
-	checking_stock_data.actual_location_code AS checking_location_code,
-	checking_stock_data.actual_qty AS checking_qty,
-	checking_stock_data.actual_box_qty AS checking_box_qty,
-	CASE 
-	    WHEN temp_data.actual_location_code = temp_data.system_location_code
-	         AND (
-	              checking_stock_data.actual_location_code IS NULL
-	              OR checking_stock_data.actual_location_code = temp_data.actual_location_code
-	         )
-	    THEN 'SAME'
-	    ELSE 'DIFFERENT'
-	END AS result_location_code,
-	CASE 
-	    WHEN temp_data.actual_qty = temp_data.system_qty
-	         AND (
-	              checking_stock_data.actual_qty IS NULL
-	              OR checking_stock_data.actual_qty = temp_data.actual_qty
-	         )
-	    THEN 'SAME'
-	    ELSE 'DIFFERENT'
-	END AS result_qty,
-	CASE 
-	    WHEN temp_data.actual_box_qty = temp_data.system_box_qty
-	         AND (
-	              checking_stock_data.actual_box_qty IS NULL
-	              OR checking_stock_data.actual_box_qty = temp_data.actual_box_qty
-	         )
-	    THEN 'SAME'
-	    ELSE 'DIFFERENT'
-	END AS result_box_qty
+        val params = mutableListOf<Any>()
 
-FROM
-	(
-		SELECT
-			COALESCE(
-				stock_data.po_number
-				, bw.po_number
-			) AS po_number
-			,
-                COALESCE(
-				stock_data.package_code
-				, bw.package_code
-			) AS package_code
-			,
-                bw.location_code AS system_location_code
-			,
-                bw.backlog_qty AS system_qty
-			,
-                bw.box_qty AS system_box_qty
-			,
-                stock_data.actual_location_code
-   ,             stock_data.actual_qty
-   ,             stock_data.actual_box_qty
-			,
-                stock_data.year_number
-			,
-                stock_data.month_number
-                , bw.item_name
-            FROM (
-                SELECT
-                    st.po_number,
-                    st.package_code,
-                    st.actual_location_code,
-                    st.actual_qty,
-                    st.actual_box_qty,
-                    st.year_number,
-                    st.month_number
-                FROM stock_taking st
-                WHERE 1 = 1  ) stock_data
-            FULL OUTER JOIN (
-                SELECT * FROM backlog_wh bw WHERE bw.backlog_qty > 0
-            ) bw ON stock_data.package_code = bw.package_code
-        ) temp_data
-         FULL OUTER JOIN (
+        // filter month before joining, otherwise backlog-only rows (no year/month) are dropped
+        val periodWhere = mutableListOf<String>()
+        val periodParams = mutableListOf<Any>()
+        if (request.yearNumber != null) {
+            periodWhere.add("year_number = ?")
+            periodParams.add(request.yearNumber!!)
+        }
+        if (request.monthNumber != null) {
+            periodWhere.add("month_number = ?")
+            periodParams.add(request.monthNumber!!)
+        }
+        val periodWhereClause = if (periodWhere.isNotEmpty()) "WHERE ${periodWhere.joinToString(" AND ")}" else ""
+        // once for stock_data, once for checking_data
+        params.addAll(periodParams)
+        params.addAll(periodParams)
+
+        val sql = """
+        WITH stock_data AS (
             SELECT
-                    st.po_number,
-                    st.package_code,
-                    st.actual_location_code,
-                    st.actual_qty,
-                    st.actual_box_qty,
-                    st.year_number,
-                    st.month_number
-                FROM stock_taking_checking st
-                WHERE 1 = 1  ) checking_stock_data
-            ON temp_data.package_code = checking_stock_data.package_code 
-            AND temp_data.year_number = checking_stock_data.year_number
-            AND temp_data.month_number = checking_stock_data.month_number
-            ) final_data 
+                st.po_number,
+                st.package_code,
+                st.lot_no,
+                st.actual_location_code,
+                st.actual_qty,
+                st.actual_box_qty,
+                st.year_number,
+                st.month_number
+            FROM stock_taking st
+            $periodWhereClause
+        ),
+        system_data AS (
+            SELECT
+                nbw.po_number,
+                nbw.package_code,
+                nbw.lot_no,
+                MAX(nbw.item_name) AS item_name,
+                MAX(s.location_code) AS location_code,
+                SUM(nbw.backlog_qty) AS backlog_qty,
+                SUM(nbw.box_qty) AS box_qty
+            FROM new_backlog_wh nbw
+            LEFT JOIN (
+                SELECT package_code, MAX(location_code) AS location_code
+                FROM splitting
+                WHERE is_deleted = false
+                GROUP BY package_code
+            ) s ON s.package_code = nbw.package_code
+            WHERE nbw.backlog_qty > 0
+            GROUP BY nbw.po_number, nbw.package_code, nbw.lot_no
+        ),
+        temp_data AS (
+            SELECT
+                COALESCE(sd.po_number, bw.po_number) AS po_number,
+                COALESCE(sd.package_code, bw.package_code) AS package_code,
+                COALESCE(sd.lot_no, bw.lot_no) AS lot_no,
+                bw.item_name,
+                bw.location_code AS system_location_code,
+                bw.backlog_qty AS system_qty,
+                bw.box_qty AS system_box_qty,
+                sd.actual_location_code,
+                sd.actual_qty,
+                sd.actual_box_qty,
+                sd.year_number,
+                sd.month_number
+            FROM stock_data sd
+            FULL OUTER JOIN system_data bw
+                ON sd.package_code = bw.package_code
+                AND COALESCE(sd.lot_no, '') = COALESCE(bw.lot_no, '')
+        ),
+        checking_data AS (
+            SELECT
+                stc.po_number,
+                stc.package_code,
+                stc.lot_no,
+                stc.actual_location_code,
+                stc.actual_qty,
+                stc.actual_box_qty,
+                stc.year_number,
+                stc.month_number
+            FROM stock_taking_checking stc
+            $periodWhereClause
+        )
+        SELECT * FROM (
+            SELECT
+                COALESCE(td.po_number, cd.po_number) AS po_number,
+                COALESCE(td.package_code, cd.package_code) AS package_code,
+                COALESCE(td.lot_no, cd.lot_no) AS lot_no,
+                td.item_name,
+                td.system_location_code,
+                td.system_qty,
+                td.system_box_qty,
+                td.actual_location_code,
+                td.actual_qty,
+                td.actual_box_qty,
+                COALESCE(td.year_number, cd.year_number) AS year_number,
+                COALESCE(td.month_number, cd.month_number) AS month_number,
+                cd.actual_location_code AS checking_location_code,
+                cd.actual_qty AS checking_qty,
+                cd.actual_box_qty AS checking_box_qty,
+                CASE
+                    WHEN td.actual_location_code = td.system_location_code
+                        AND (cd.actual_location_code IS NULL OR cd.actual_location_code = td.actual_location_code)
+                    THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_location_code,
+                CASE
+                    WHEN td.actual_qty = td.system_qty
+                        AND (cd.actual_qty IS NULL OR cd.actual_qty = td.actual_qty)
+                    THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_qty,
+                CASE
+                    WHEN td.actual_box_qty = td.system_box_qty
+                        AND (cd.actual_box_qty IS NULL OR cd.actual_box_qty = td.actual_box_qty)
+                    THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_box_qty
+            FROM temp_data td
+            FULL OUTER JOIN checking_data cd
+                ON td.package_code = cd.package_code
+                AND COALESCE(td.lot_no, '') = COALESCE(cd.lot_no, '')
+        ) final_data
     """.trimIndent()
 
-        val params = mutableListOf<Any>()
         val sqlBuilder = StringBuilder(sql)
+        sqlBuilder.appendLine()
 
         val finalWhere = mutableListOf<String>()
 
         if (!request.poNumber.isNullOrBlank()) {
-            finalWhere.add("final_data.po_number = ?")
-            params.add(request.poNumber!!)
+            finalWhere.add("final_data.po_number ilike '%' || ? || '%'")
+            params.add(request.poNumber!!.trim())
+        }
+
+        if (!request.lotNo.isNullOrBlank()) {
+            finalWhere.add("final_data.lot_no ilike '%' || ? || '%'")
+            params.add(request.lotNo!!.trim())
+        }
+
+        if (!request.packageCode.isNullOrBlank()) {
+            finalWhere.add("final_data.package_code ilike '%' || ? || '%'")
+            params.add(request.packageCode!!.trim())
         }
 
         if (request.conditionQuery == "DIFFERENT") {
             finalWhere.add("""
             (
-                final_data.result_location_code = 'DIFFERENT' OR 
+                final_data.result_location_code = 'DIFFERENT' OR
                 final_data.result_qty = 'DIFFERENT' OR 
                 final_data.result_box_qty = 'DIFFERENT'
             )
@@ -314,16 +355,6 @@ FROM
         """.trimIndent())
         }
 
-        if (request.yearNumber != null) {
-            finalWhere.add("final_data.year_number = ?")
-            params.add(request.yearNumber!!)
-        }
-
-        if (request.monthNumber != null) {
-            finalWhere.add("final_data.month_number = ?")
-            params.add(request.monthNumber!!)
-        }
-
         if (finalWhere.isNotEmpty()) {
             sqlBuilder.appendLine("WHERE ${finalWhere.joinToString(" AND ")}")
         }
@@ -332,75 +363,127 @@ FROM
     }
 
     fun createSqlQueryCompleted(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
-        val sql = """
-    SELECT 
-        po_number,
-        package_code,
-        item_name
-        system_location_code,
-        system_qty,
-        system_box_qty,
-        actual_location_code,
-        actual_qty,
-        actual_box_qty,
-        year_number,
-        month_number,
-        CASE 
-            WHEN actual_location_code = system_location_code THEN 'SAME'
-            ELSE 'DIFFERENT'
-        END AS result_location_code,
-        CASE 
-            WHEN actual_qty = system_qty THEN 'SAME'
-            ELSE 'DIFFERENT'
-        END AS result_qty,
-        CASE 
-            WHEN actual_box_qty = system_box_qty THEN 'SAME'
-            ELSE 'DIFFERENT'
-        END AS result_box_qty
-    FROM stock_taking st
-    WHERE 1 = 1 
-""".trimIndent()
-
         val params = mutableListOf<Any>()
-        val whereConditions = mutableListOf<String>()
 
+        // filter month before joining, otherwise backlog-only rows (no year/month) are dropped
+        val stockWhere = mutableListOf<String>()
         if (request.yearNumber != null) {
-            whereConditions.add("st.year_number = ?")
+            stockWhere.add("st.year_number = ?")
             params.add(request.yearNumber!!)
         }
-
         if (request.monthNumber != null) {
-            whereConditions.add("st.month_number = ?")
+            stockWhere.add("st.month_number = ?")
             params.add(request.monthNumber!!)
         }
+        val stockWhereClause = if (stockWhere.isNotEmpty()) "WHERE ${stockWhere.joinToString(" AND ")}" else ""
+
+        // counted rows keep the system snapshot saved at stop time, backlog-only rows use current backlog
+        val sql = """
+        WITH stock_data AS (
+            SELECT
+                st.po_number,
+                st.package_code,
+                st.lot_no,
+                st.item_name,
+                st.system_location_code,
+                st.system_qty,
+                st.system_box_qty,
+                st.actual_location_code,
+                st.actual_qty,
+                st.actual_box_qty,
+                st.year_number,
+                st.month_number
+            FROM stock_taking st
+            $stockWhereClause
+        ),
+        system_data AS (
+            SELECT
+                nbw.po_number,
+                nbw.package_code,
+                nbw.lot_no,
+                MAX(nbw.item_name) AS item_name,
+                MAX(s.location_code) AS location_code,
+                SUM(nbw.backlog_qty) AS backlog_qty,
+                SUM(nbw.box_qty) AS box_qty
+            FROM new_backlog_wh nbw
+            LEFT JOIN (
+                SELECT package_code, MAX(location_code) AS location_code
+                FROM splitting
+                WHERE is_deleted = false
+                GROUP BY package_code
+            ) s ON s.package_code = nbw.package_code
+            WHERE nbw.backlog_qty > 0
+            GROUP BY nbw.po_number, nbw.package_code, nbw.lot_no
+        ),
+        temp_data AS (
+            SELECT
+                COALESCE(sd.po_number, bw.po_number) AS po_number,
+                COALESCE(sd.package_code, bw.package_code) AS package_code,
+                COALESCE(sd.lot_no, bw.lot_no) AS lot_no,
+                COALESCE(sd.item_name, bw.item_name) AS item_name,
+                CASE WHEN sd.package_code IS NOT NULL THEN sd.system_location_code ELSE bw.location_code END AS system_location_code,
+                CASE WHEN sd.package_code IS NOT NULL THEN sd.system_qty ELSE bw.backlog_qty END AS system_qty,
+                CASE WHEN sd.package_code IS NOT NULL THEN sd.system_box_qty ELSE bw.box_qty END AS system_box_qty,
+                sd.actual_location_code,
+                sd.actual_qty,
+                sd.actual_box_qty,
+                sd.year_number,
+                sd.month_number
+            FROM stock_data sd
+            FULL OUTER JOIN system_data bw
+                ON sd.package_code = bw.package_code
+                AND COALESCE(sd.lot_no, '') = COALESCE(bw.lot_no, '')
+        )
+        SELECT * FROM (
+            SELECT
+                td.*,
+                CASE WHEN td.actual_location_code = td.system_location_code THEN 'SAME' ELSE 'DIFFERENT' END AS result_location_code,
+                CASE WHEN td.actual_qty = td.system_qty THEN 'SAME' ELSE 'DIFFERENT' END AS result_qty,
+                CASE WHEN td.actual_box_qty = td.system_box_qty THEN 'SAME' ELSE 'DIFFERENT' END AS result_box_qty
+            FROM temp_data td
+        ) final_data
+    """.trimIndent()
+
+        val finalWhere = mutableListOf<String>()
 
         if (!request.poNumber.isNullOrBlank()) {
-            whereConditions.add("st.po_number = ?")
-            params.add(request.poNumber!!)
+            finalWhere.add("final_data.po_number ilike '%' || ? || '%'")
+            params.add(request.poNumber!!.trim())
+        }
+
+        if (!request.lotNo.isNullOrBlank()) {
+            finalWhere.add("final_data.lot_no ilike '%' || ? || '%'")
+            params.add(request.lotNo!!.trim())
+        }
+
+        if (!request.packageCode.isNullOrBlank()) {
+            finalWhere.add("final_data.package_code ilike '%' || ? || '%'")
+            params.add(request.packageCode!!.trim())
         }
 
         if (request.conditionQuery == "DIFFERENT") {
-            whereConditions.add("""
-        (
-            actual_location_code != system_location_code OR 
-            actual_qty != system_qty OR 
-            actual_box_qty != system_box_qty
-        )
-    """.trimIndent())
+            finalWhere.add("""
+            (
+                final_data.result_location_code = 'DIFFERENT' OR
+                final_data.result_qty = 'DIFFERENT' OR
+                final_data.result_box_qty = 'DIFFERENT'
+            )
+        """.trimIndent())
         }
 
         if (request.conditionQuery == "SAME") {
-            whereConditions.add("""
-        actual_location_code = system_location_code AND 
-        actual_qty = system_qty AND 
-        actual_box_qty = system_box_qty
-    """.trimIndent())
+            finalWhere.add("""
+            final_data.result_location_code = 'SAME' AND
+            final_data.result_qty = 'SAME' AND
+            final_data.result_box_qty = 'SAME'
+        """.trimIndent())
         }
 
         val sqlBuilder = StringBuilder(sql)
 
-        if (whereConditions.isNotEmpty()) {
-            sqlBuilder.appendLine("AND ${whereConditions.joinToString(" AND ")}")
+        if (finalWhere.isNotEmpty()) {
+            sqlBuilder.appendLine()
+            sqlBuilder.appendLine("WHERE ${finalWhere.joinToString(" AND ")}")
         }
 
         return sqlBuilder.toString() to params
@@ -418,32 +501,28 @@ FROM
         return Pair(data, count)
     }
 
-    fun findByPackageCode(packageCode: String): StockTaking? {
+    fun findByPackageCodeAndPoAndLot(yearNumber: Int, monthNumber: Int, packageCode: String, poNumber: String, lotNo: String): StockTaking? {
         return context.selectFrom(STOCK_TAKING)
             .where(
-                STOCK_TAKING.PACKAGE_CODE.eq(packageCode)
+                STOCK_TAKING.YEAR_NUMBER.eq(yearNumber)
+                    .and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
+                    .and(STOCK_TAKING.PACKAGE_CODE.eq(packageCode))
+                    .and(STOCK_TAKING.PO_NUMBER.eq(poNumber))
+                    .and(STOCK_TAKING.LOT_NO.eq(lotNo))
             )
-            .fetchInto(StockTaking::class.java)
-            .firstOrNull()
+            .fetchOneInto(StockTaking::class.java)
     }
 
-    fun update(yearNumber: Int, monthNumber: Int, request: ScanRequest) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
+    fun update(data: StockTaking) {
+        val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+        val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
 
-            transactionalContext.update(STOCK_TAKING)
-                .set(STOCK_TAKING.ACTUAL_LOCATION_CODE, request.actualLocationCode)
-                .set(STOCK_TAKING.ACTUAL_QTY, request.actualQty)
-                .set(STOCK_TAKING.ACTUAL_BOX_QTY, request.actualBoxQty)
-                .set(STOCK_TAKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(STOCK_TAKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .where(
-                    STOCK_TAKING.YEAR_NUMBER.eq(yearNumber)
-                        .and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
-                        .and(STOCK_TAKING.PACKAGE_CODE.eq(request.packageCode))
-                )
-                .execute()
-        }
+        context.newRecord(STOCK_TAKING, data).apply {
+            updatedBy = user
+            updatedDate = currentTime
+            changed(PURCHASE_ORDER_BACKLOG.CREATED_BY, false)
+            changed(PURCHASE_ORDER_BACKLOG.CREATED_DATE, false)
+        }.update()
     }
 
     fun updateSystem(yearNumber: Int, monthNumber: Int, request: StockTakingMonthlyResponse) {
@@ -457,25 +536,23 @@ FROM
                     STOCK_TAKING.YEAR_NUMBER.eq(yearNumber)
                         .and(STOCK_TAKING.MONTH_NUMBER.eq(monthNumber))
                         .and(STOCK_TAKING.PACKAGE_CODE.eq(request.packageCode))
+                        .and(STOCK_TAKING.LOT_NO.isNotDistinctFrom(request.lotNo))
                 )
                 .execute()
 
     }
 
-    fun save(domain: StockTaking) {
-        context.insertInto(
-            STOCK_TAKING, STOCK_TAKING.YEAR_NUMBER, STOCK_TAKING.MONTH_NUMBER, STOCK_TAKING.PO_NUMBER,
-            STOCK_TAKING.PACKAGE_CODE, STOCK_TAKING.ACTUAL_LOCATION_CODE, STOCK_TAKING.ACTUAL_QTY,
-            STOCK_TAKING.ACTUAL_BOX_QTY, STOCK_TAKING.CREATED_BY
-        )
-            .values(
-                domain.yearNumber, domain.monthNumber, domain.poNumber,
-                domain.packageCode, domain.actualLocationCode, domain.actualQty,
-                domain.actualBoxQty, CommonUtils.loggedInUser() ?: Constants.SYSTEM
-            )
-            .execute()
-    }
+    fun save(data: StockTaking) {
+        val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+        val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
 
+        context.newRecord(STOCK_TAKING, data).apply {
+            createdBy = user
+            createdDate = currentTime
+            updatedBy = user
+            updatedDate = currentTime
+        }.insert()
+    }
     fun deleteByYearAndMonth(yearNumber: Int, monthNumber: Int) {
         context.transaction { configuration ->
             val transactionalContext = DSL.using(configuration)

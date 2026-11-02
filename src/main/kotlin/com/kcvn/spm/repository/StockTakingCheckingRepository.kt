@@ -332,10 +332,13 @@ class StockTakingCheckingRepository(private val context: DSLContext) : SortingRe
         return Pair(data, count)
     }
 
-    fun findByPackageCode(packageCode: String): StockTaking? {
+    fun findByPackageCodeAndLot(yearNumber: Int, monthNumber: Int, packageCode: String, lotNo: String?): StockTaking? {
         return context.selectFrom(STOCK_TAKING_CHECKING)
             .where(
-                STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(packageCode)
+                STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
+                    .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
+                    .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(packageCode))
+                    .and(STOCK_TAKING_CHECKING.LOT_NO.isNotDistinctFrom(lotNo))
             )
             .fetchInto(StockTaking::class.java)
             .firstOrNull()
@@ -355,6 +358,7 @@ class StockTakingCheckingRepository(private val context: DSLContext) : SortingRe
                     STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
                         .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
                         .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
+                        .and(STOCK_TAKING_CHECKING.LOT_NO.isNotDistinctFrom(request.lotNo))
                 )
                 .execute()
         }
@@ -371,6 +375,7 @@ class StockTakingCheckingRepository(private val context: DSLContext) : SortingRe
                     STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
                         .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
                         .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
+                        .and(STOCK_TAKING_CHECKING.LOT_NO.isNotDistinctFrom(request.lotNo))
                 )
                 .execute()
 
@@ -379,13 +384,13 @@ class StockTakingCheckingRepository(private val context: DSLContext) : SortingRe
     fun save(domain: StockTaking) {
         context.insertInto(
             STOCK_TAKING_CHECKING, STOCK_TAKING_CHECKING.YEAR_NUMBER, STOCK_TAKING_CHECKING.MONTH_NUMBER, STOCK_TAKING_CHECKING.PO_NUMBER,
-            STOCK_TAKING_CHECKING.PACKAGE_CODE, STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE, STOCK_TAKING_CHECKING.ACTUAL_QTY,
-            STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, STOCK_TAKING_CHECKING.CREATED_BY
+            STOCK_TAKING_CHECKING.PACKAGE_CODE, STOCK_TAKING_CHECKING.LOT_NO, STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE,
+            STOCK_TAKING_CHECKING.ACTUAL_QTY, STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, STOCK_TAKING_CHECKING.CREATED_BY
         )
             .values(
                 domain.yearNumber, domain.monthNumber, domain.poNumber,
-                domain.packageCode, domain.actualLocationCode, domain.actualQty,
-                domain.actualBoxQty, CommonUtils.loggedInUser() ?: Constants.SYSTEM
+                domain.packageCode, domain.lotNo, domain.actualLocationCode,
+                domain.actualQty, domain.actualBoxQty, CommonUtils.loggedInUser() ?: Constants.SYSTEM
             )
             .execute()
     }

@@ -148,6 +148,11 @@ open class StockTakingChecking(
      */
     val UPDATED_BY: TableField<StockTakingCheckingRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
+    /**
+     * The column <code>public.stock_taking_checking.lot_no</code>.
+     */
+    val LOT_NO: TableField<StockTakingCheckingRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(30), this, "")
+
     private constructor(alias: Name, aliased: Table<StockTakingCheckingRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<StockTakingCheckingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<StockTakingCheckingRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

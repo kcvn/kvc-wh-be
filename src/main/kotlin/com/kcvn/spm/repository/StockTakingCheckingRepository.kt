@@ -344,24 +344,21 @@ class StockTakingCheckingRepository(private val context: DSLContext) : SortingRe
             .firstOrNull()
     }
 
+    // runs inside the caller's Spring transaction; context.transaction{} would commit early and release the status share lock
     fun update(yearNumber: Int, monthNumber: Int, request: ScanRequest) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            transactionalContext.update(STOCK_TAKING_CHECKING)
-                .set(STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE, request.actualLocationCode)
-                .set(STOCK_TAKING_CHECKING.ACTUAL_QTY, request.actualQty)
-                .set(STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, request.actualBoxQty)
-                .set(STOCK_TAKING_CHECKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(STOCK_TAKING_CHECKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .where(
-                    STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
-                        .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
-                        .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
-                        .and(STOCK_TAKING_CHECKING.LOT_NO.isNotDistinctFrom(request.lotNo))
-                )
-                .execute()
-        }
+        context.update(STOCK_TAKING_CHECKING)
+            .set(STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE, request.actualLocationCode)
+            .set(STOCK_TAKING_CHECKING.ACTUAL_QTY, request.actualQty)
+            .set(STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, request.actualBoxQty)
+            .set(STOCK_TAKING_CHECKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(STOCK_TAKING_CHECKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
+                    .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
+                    .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
+                    .and(STOCK_TAKING_CHECKING.LOT_NO.isNotDistinctFrom(request.lotNo))
+            )
+            .execute()
     }
 
     fun updateSystem(yearNumber: Int, monthNumber: Int, request: StockTakingMonthlyResponse) {

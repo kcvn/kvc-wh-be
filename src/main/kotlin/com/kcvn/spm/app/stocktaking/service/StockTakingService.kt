@@ -104,7 +104,7 @@ class StockTakingService(
     }
 
     fun scan(request: List<ScanRequest>) {
-        val sTT = stockTakingStatusRepo.findByStatus("on-going")
+        val sTT = stockTakingStatusRepo.findByStatusForShare("on-going")
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
         request.forEach { element ->
 //            val backlog = backlogWhRepo.findByPackageCode(element.packageCode!!)
@@ -138,7 +138,7 @@ class StockTakingService(
     }
 
     fun checkingScan(request: List<ScanRequest>) {
-        val sTT = stockTakingStatusRepo.findByStatus("on-going")
+        val sTT = stockTakingStatusRepo.findByStatusForShare("on-going")
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
         request.forEach { element ->
 //            val backlog = backlogWhRepo.findByPackageCode(element.packageCode!!)
@@ -169,14 +169,42 @@ class StockTakingService(
     }
 
     fun stopActual(request: StopActualRequest) {
+        val yearNumber = request.yearNumber!!
+        val monthNumber = request.monthNumber!!
+
+        // lock the month status first: scans take FOR SHARE on it, so no scan can run until this stop commits
+        val stt = stockTakingStatusRepo.findByYearAndMonthForUpdate(yearNumber, monthNumber)
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("stock.taking.not.start.yet"), arrayOf(""))
+        if (stt.status != "on-going") {
+            throw BusinessExceptionDetail("$monthNumber/$yearNumber " + CommonUtils.getMessage("closed.inventory"), arrayOf(""))
+        }
+        stockTakingRepo.lockByYearAndMonth(yearNumber, monthNumber)
+
         val newRequest = StockTakingMonthlyRequest(
-            yearNumber = request.yearNumber,
-            monthNumber = request.monthNumber
+            yearNumber = yearNumber,
+            monthNumber = monthNumber
         )
         val stockTakingList = stockTakingRepo.getListOnGoingForStopByRawSql(newRequest)
-        stockTakingList.forEach{p ->
-        stockTakingRepo.updateSystem(newRequest.yearNumber!!, newRequest.monthNumber!!, p)}
-        stockTakingStatusRepo.updateStatus(request.yearNumber!!, request.monthNumber!!)
+        stockTakingList.forEach { p ->
+            val updated = stockTakingRepo.updateSystem(yearNumber, monthNumber, p)
+            // in backlog but never scanned: snapshot it so the closed month no longer depends on live backlog
+            if (updated == 0 && p.systemQty != null) {
+                stockTakingRepo.save(
+                    StockTaking(
+                        yearNumber = yearNumber,
+                        monthNumber = monthNumber,
+                        poNumber = p.poNumber,
+                        packageCode = p.packageCode,
+                        lotNo = p.lotNo,
+                        itemName = p.itemName,
+                        systemLocationCode = p.systemLocationCode,
+                        systemQty = p.systemQty,
+                        systemBoxQty = p.systemBoxQty
+                    )
+                )
+            }
+        }
+        stockTakingStatusRepo.updateStatus(yearNumber, monthNumber)
     }
 
     fun getListSystemStockByRawSql(request: StockTakingDailyRequest, pageable: Pageable): BasePagingResponse<SystemStockTakingResponse> {

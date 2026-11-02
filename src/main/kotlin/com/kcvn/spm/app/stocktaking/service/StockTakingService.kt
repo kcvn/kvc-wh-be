@@ -11,11 +11,14 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
+import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
+import com.kcvn.spm.model.tables.pojos.SapBacklog
 import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.pojos.StockTakingStatus
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -37,6 +40,7 @@ class StockTakingService(
     private val stockTakingCheckingRepo: StockTakingCheckingRepository,
     private val backlogBinEntryRepo: BacklogBinEntryRepository,
     private val backlogWhRepo: BacklogWhRepository,
+    private val sapBacklogRepo: SapBacklogRepository,
 ) {
     fun getListForAndroid(pageable: Pageable): BasePagingResponse<StockTakingForAndroid> {
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
@@ -443,6 +447,59 @@ class StockTakingService(
             return BaseResponse(totalRecord, CommonUtils.getMessage("action.succeeded"))
         } catch (e: Exception) {
             throw e
+        }
+    }
+
+    fun importSAPBacklog(file: MultipartFile): BaseResponse<Int> {
+        //val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/TempCheckingImportedTemplate.xlsx"
+        val workbook = WorkbookFactory.create(file.inputStream)
+        try {
+            val sheet = workbook.getSheetAt(0)
+            val rowIndex = 1
+//            val headerRow = sheet.getRow(4)
+//            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 4, 4))
+//                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
+                throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+            val errorList = mutableListOf<SapBacklog>()
+            var count = 0
+            sapBacklogRepo.deleteAll()
+            val validData = mutableListOf<SapBacklog>()
+            for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val storageLocation = ExcelHelper.getCellValueAmoeba(row, 2)
+                val itemType = ExcelHelper.getCellValueAmoeba(row, 25)
+                val lotNo = ExcelHelper.getCellValueAmoeba(row, 7)
+                if (lotNo == "") continue
+                val productionGroup = ExcelHelper.getCellValueAmoeba(row, 1)
+                val convertedProductionGroup = when (productionGroup){
+                    "2317" -> "CMOS"
+                    "2311" -> "SMD"
+                    "2314" -> "META"
+                    "2315" -> "CPD"
+                    "2318" -> "RFD"
+                    "2316" -> "ITD"
+                    "2312" -> "PMD"
+                    "2313" -> "JMD"
+                    else -> "ADM"
+                }
+
+                val data = SapBacklog(
+                    itemCode = ExcelHelper.getCellValueAmoeba(row, 0),
+                    productionGroup = convertedProductionGroup,
+                    storageLocation = storageLocation,
+                    lotNo = lotNo,
+                    backlogQty = ExcelHelper.getCellValueAmoeba(row, 9).toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    itemType = itemType,
+                )
+                validData.add(data)
+            }
+            sapBacklogRepo.saveAll(validData)
+            return BaseResponse(count, CommonUtils.getMessage("action.succeeded"))
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            workbook.close()
         }
     }
 }

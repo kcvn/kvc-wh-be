@@ -39,7 +39,9 @@ data class NewCheckingTransaction(
     var formCode: String? = null,
     var itemCode: String? = null,
     var itemName: String? = null,
-    var unitPrice: BigDecimal? = null
+    var unitPrice: BigDecimal? = null,
+    var costCenter: String? = null,
+    var unit: String? = null
 ): Serializable {
 
 
@@ -177,6 +179,18 @@ data class NewCheckingTransaction(
         }
         else if (this.unitPrice != o.unitPrice)
             return false
+        if (this.costCenter == null) {
+            if (o.costCenter != null)
+                return false
+        }
+        else if (this.costCenter != o.costCenter)
+            return false
+        if (this.unit == null) {
+            if (o.unit != null)
+                return false
+        }
+        else if (this.unit != o.unit)
+            return false
         return true
     }
 
@@ -204,6 +218,8 @@ data class NewCheckingTransaction(
         result = prime * result + (if (this.itemCode == null) 0 else this.itemCode.hashCode())
         result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
         result = prime * result + (if (this.unitPrice == null) 0 else this.unitPrice.hashCode())
+        result = prime * result + (if (this.costCenter == null) 0 else this.costCenter.hashCode())
+        result = prime * result + (if (this.unit == null) 0 else this.unit.hashCode())
         return result
     }
 
@@ -231,6 +247,8 @@ data class NewCheckingTransaction(
         sb.append(", ").append(itemCode)
         sb.append(", ").append(itemName)
         sb.append(", ").append(unitPrice)
+        sb.append(", ").append(costCenter)
+        sb.append(", ").append(unit)
 
         sb.append(")")
         return sb.toString()

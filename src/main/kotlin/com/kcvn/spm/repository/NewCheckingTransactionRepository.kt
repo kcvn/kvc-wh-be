@@ -63,7 +63,7 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
             .fetchInto(NewCheckingTransaction::class.java)
     }
 
-    fun findByRecDatePoAndLot(recDate: LocalDate, poNumber: String, lotNo: String): NewCheckingTransaction? {
+    fun findByRecDatePoAndLot(recDate: LocalDate, poNumber: String, lotNo: String): List<NewCheckingTransaction> {
         return context.selectFrom(NEW_CHECKING_TRANSACTION)
             .where(
                 NEW_CHECKING_TRANSACTION.RECEIVING_DATE.eq(recDate)
@@ -71,7 +71,7 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                     .and(NEW_CHECKING_TRANSACTION.LOT_NO.eq(lotNo))
                     .and(NEW_CHECKING_TRANSACTION.IS_APPROVE.eq(true))
             )
-            .fetchOneInto(NewCheckingTransaction::class.java)
+            .fetchInto(NewCheckingTransaction::class.java)
     }
 
     fun save(data: NewCheckingTransaction) {

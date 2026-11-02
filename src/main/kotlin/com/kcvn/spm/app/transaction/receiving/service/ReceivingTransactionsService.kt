@@ -71,7 +71,10 @@ class ReceivingTransactionsService(
                 val refId = receivingRepo.save(recTransaction)
                 // save backlog and backlog history
                 val checkingLotNo = if (isTransferLot) it.packageCode!! else it.lotNo!!
-                val checkingRecord = checkingTransactionRepo.findByRecDatePoAndLot(receivingDate!!, it.poNumber!!, checkingLotNo)
+                val checkingRecord = checkingTransactionRepo.findByRecDatePoAndLot(
+                    receivingDate!!,
+                    it.poNumber!!,
+                    checkingLotNo).firstOrNull() //vi 1 lot, 1 PO co the thuoc nhieu invoice, nhung phai trung cac thong tin khac, nen lay dong dau tien
                 val backlogData = NewBacklogWh(
                     receivingDate = receivingDate,
                     poNumber = it.poNumber,
@@ -82,7 +85,12 @@ class ReceivingTransactionsService(
                     itemName = checkingRecord?.itemName,
                     productionGroup = checkingRecord?.department,
                     lotNo = it.lotNo,
-                    issueDate = it.issueDate
+                    issueDate = it.issueDate,
+                    storageLocation = checkingRecord?.storageLocation,
+                    itemType = checkingRecord?.itemType,
+                    unit = checkingRecord?.unit,
+                    unitPrice = checkingRecord?.unitPrice,
+                    costCenter = checkingRecord?.costCenter,
                 )
                 backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId, true)
             }

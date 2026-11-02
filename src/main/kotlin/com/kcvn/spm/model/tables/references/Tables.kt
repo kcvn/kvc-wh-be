@@ -29,6 +29,7 @@ import com.kcvn.spm.model.tables.NewTempSendingTransactionsChecking
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SapBacklog
 import com.kcvn.spm.model.tables.SendingFormList
 import com.kcvn.spm.model.tables.SendingPickingList
 import com.kcvn.spm.model.tables.SendingRequestList
@@ -170,6 +171,11 @@ val RECEIVING_CHECKING: ReceivingChecking = ReceivingChecking.RECEIVING_CHECKING
  * The table <code>public.receiving_transactions</code>.
  */
 val RECEIVING_TRANSACTIONS: ReceivingTransactions = ReceivingTransactions.RECEIVING_TRANSACTIONS
+
+/**
+ * The table <code>public.sap_backlog</code>.
+ */
+val SAP_BACKLOG: SapBacklog = SapBacklog.SAP_BACKLOG
 
 /**
  * The table <code>public.sending_form_list</code>.

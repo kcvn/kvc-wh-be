@@ -149,6 +149,31 @@ open class NewBacklogWh(
      */
     val UPDATED_BY: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
+    /**
+     * The column <code>public.new_backlog_wh.storage_location</code>.
+     */
+    val STORAGE_LOCATION: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("storage_location"), SQLDataType.VARCHAR(30), this, "")
+
+    /**
+     * The column <code>public.new_backlog_wh.item_type</code>.
+     */
+    val ITEM_TYPE: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("item_type"), SQLDataType.VARCHAR(5), this, "")
+
+    /**
+     * The column <code>public.new_backlog_wh.unit_price</code>.
+     */
+    val UNIT_PRICE: TableField<NewBacklogWhRecord, BigDecimal?> = createField(DSL.name("unit_price"), SQLDataType.NUMERIC, this, "")
+
+    /**
+     * The column <code>public.new_backlog_wh.cost_center</code>.
+     */
+    val COST_CENTER: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("cost_center"), SQLDataType.VARCHAR(30), this, "")
+
+    /**
+     * The column <code>public.new_backlog_wh.unit</code>.
+     */
+    val UNIT: TableField<NewBacklogWhRecord, String?> = createField(DSL.name("unit"), SQLDataType.VARCHAR(5), this, "")
+
     private constructor(alias: Name, aliased: Table<NewBacklogWhRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<NewBacklogWhRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<NewBacklogWhRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

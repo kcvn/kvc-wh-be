@@ -80,6 +80,26 @@ open class NewBacklogWhRecord() : UpdatableRecordImpl<NewBacklogWhRecord>(NewBac
         set(value): Unit = set(14, value)
         get(): String? = get(14) as String?
 
+    open var storageLocation: String?
+        set(value): Unit = set(15, value)
+        get(): String? = get(15) as String?
+
+    open var itemType: String?
+        set(value): Unit = set(16, value)
+        get(): String? = get(16) as String?
+
+    open var unitPrice: BigDecimal?
+        set(value): Unit = set(17, value)
+        get(): BigDecimal? = get(17) as BigDecimal?
+
+    open var costCenter: String?
+        set(value): Unit = set(18, value)
+        get(): String? = get(18) as String?
+
+    open var unit: String?
+        set(value): Unit = set(19, value)
+        get(): String? = get(19) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -89,7 +109,7 @@ open class NewBacklogWhRecord() : UpdatableRecordImpl<NewBacklogWhRecord>(NewBac
     /**
      * Create a detached, initialised NewBacklogWhRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, lotNo: String? = null, issueDate: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, lotNo: String? = null, issueDate: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, storageLocation: String? = null, itemType: String? = null, unitPrice: BigDecimal? = null, costCenter: String? = null, unit: String? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.poNumber = poNumber
@@ -105,6 +125,11 @@ open class NewBacklogWhRecord() : UpdatableRecordImpl<NewBacklogWhRecord>(NewBac
         this.createdBy = createdBy
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
+        this.storageLocation = storageLocation
+        this.itemType = itemType
+        this.unitPrice = unitPrice
+        this.costCenter = costCenter
+        this.unit = unit
         resetChangedOnNotNull()
     }
 
@@ -128,6 +153,11 @@ open class NewBacklogWhRecord() : UpdatableRecordImpl<NewBacklogWhRecord>(NewBac
             this.createdBy = value.createdBy
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
+            this.storageLocation = value.storageLocation
+            this.itemType = value.itemType
+            this.unitPrice = value.unitPrice
+            this.costCenter = value.costCenter
+            this.unit = value.unit
             resetChangedOnNotNull()
         }
     }

@@ -29,6 +29,7 @@ import com.kcvn.spm.model.tables.NewTempSendingTransactionsChecking
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SapBacklog
 import com.kcvn.spm.model.tables.SendingFormList
 import com.kcvn.spm.model.tables.SendingPickingList
 import com.kcvn.spm.model.tables.SendingRequestList
@@ -190,6 +191,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val RECEIVING_TRANSACTIONS: ReceivingTransactions get() = ReceivingTransactions.RECEIVING_TRANSACTIONS
 
     /**
+     * The table <code>public.sap_backlog</code>.
+     */
+    val SAP_BACKLOG: SapBacklog get() = SapBacklog.SAP_BACKLOG
+
+    /**
      * The table <code>public.sending_form_list</code>.
      */
     val SENDING_FORM_LIST: SendingFormList get() = SendingFormList.SENDING_FORM_LIST
@@ -287,6 +293,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG,
         ReceivingChecking.RECEIVING_CHECKING,
         ReceivingTransactions.RECEIVING_TRANSACTIONS,
+        SapBacklog.SAP_BACKLOG,
         SendingFormList.SENDING_FORM_LIST,
         SendingPickingList.SENDING_PICKING_LIST,
         SendingRequestList.SENDING_REQUEST_LIST,

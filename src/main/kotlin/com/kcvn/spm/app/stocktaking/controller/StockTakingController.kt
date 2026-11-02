@@ -163,4 +163,13 @@ class StockTakingController(private val stockTakingService: StockTakingService) 
         val data = stockTakingService.importTXTAmoeba(file)
         return ResponseEntity(data, HttpStatus.OK)
     }
+
+    @PostMapping(value = ["import-sap-backlog"], consumes = ["multipart/form-data"])
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun importSapBacklog(
+        @RequestPart("file") file: MultipartFile
+    ): ResponseEntity<BaseResponse<Int>> {
+        val data = stockTakingService.importSAPBacklog(file)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
 }

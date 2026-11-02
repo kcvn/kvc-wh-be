@@ -155,11 +155,13 @@ class CheckingHistoryService(
                 checkTimes = seqNo,
                 receivingDate = request.receivingDate,
                 specifyInvoice = request.specifyInvoice,
-                isApprove = false,
-                isSyncedSap = false,
                 itemName = order.itemName,
                 itemCode = order.itemCode,
+                unit = order.unit,
                 unitPrice = order.unitPrice,
+                costCenter = order.costCenter,
+                isApprove = false,
+                isSyncedSap = false,
             )
             checkingTransRepo.save(domain)
         } else {

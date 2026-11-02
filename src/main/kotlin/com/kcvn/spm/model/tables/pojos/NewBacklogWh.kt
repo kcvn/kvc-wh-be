@@ -29,7 +29,12 @@ data class NewBacklogWh(
     var createdDate: OffsetDateTime? = null,
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
-    var updatedBy: String? = null
+    var updatedBy: String? = null,
+    var storageLocation: String? = null,
+    var itemType: String? = null,
+    var unitPrice: BigDecimal? = null,
+    var costCenter: String? = null,
+    var unit: String? = null
 ): Serializable {
 
 
@@ -131,6 +136,36 @@ data class NewBacklogWh(
         }
         else if (this.updatedBy != o.updatedBy)
             return false
+        if (this.storageLocation == null) {
+            if (o.storageLocation != null)
+                return false
+        }
+        else if (this.storageLocation != o.storageLocation)
+            return false
+        if (this.itemType == null) {
+            if (o.itemType != null)
+                return false
+        }
+        else if (this.itemType != o.itemType)
+            return false
+        if (this.unitPrice == null) {
+            if (o.unitPrice != null)
+                return false
+        }
+        else if (this.unitPrice != o.unitPrice)
+            return false
+        if (this.costCenter == null) {
+            if (o.costCenter != null)
+                return false
+        }
+        else if (this.costCenter != o.costCenter)
+            return false
+        if (this.unit == null) {
+            if (o.unit != null)
+                return false
+        }
+        else if (this.unit != o.unit)
+            return false
         return true
     }
 
@@ -152,6 +187,11 @@ data class NewBacklogWh(
         result = prime * result + (if (this.createdBy == null) 0 else this.createdBy.hashCode())
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
+        result = prime * result + (if (this.storageLocation == null) 0 else this.storageLocation.hashCode())
+        result = prime * result + (if (this.itemType == null) 0 else this.itemType.hashCode())
+        result = prime * result + (if (this.unitPrice == null) 0 else this.unitPrice.hashCode())
+        result = prime * result + (if (this.costCenter == null) 0 else this.costCenter.hashCode())
+        result = prime * result + (if (this.unit == null) 0 else this.unit.hashCode())
         return result
     }
 
@@ -173,6 +213,11 @@ data class NewBacklogWh(
         sb.append(", ").append(createdBy)
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
+        sb.append(", ").append(storageLocation)
+        sb.append(", ").append(itemType)
+        sb.append(", ").append(unitPrice)
+        sb.append(", ").append(costCenter)
+        sb.append(", ").append(unit)
 
         sb.append(")")
         return sb.toString()

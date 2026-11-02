@@ -27,6 +27,7 @@ import com.kcvn.spm.model.tables.NewCheckingTransaction
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SapBacklog
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
@@ -60,6 +61,7 @@ import com.kcvn.spm.model.tables.records.NewCheckingTransactionRecord
 import com.kcvn.spm.model.tables.records.PurchaseOrderBacklogRecord
 import com.kcvn.spm.model.tables.records.ReceivingCheckingRecord
 import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
+import com.kcvn.spm.model.tables.records.SapBacklogRecord
 import com.kcvn.spm.model.tables.records.SendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SplittingRecord
 import com.kcvn.spm.model.tables.records.StockTakingCheckingRecord
@@ -109,6 +111,7 @@ val AMOEBA_PKEY_1_1: UniqueKey<PurchaseOrderBacklogRecord> = Internal.createUniq
 val PURCHASE_ORDER_BACKLOG_UN_1: UniqueKey<PurchaseOrderBacklogRecord> = Internal.createUniqueKey(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG, DSL.name("purchase_order_backlog_un_1"), arrayOf(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG.LOT_NO), true)
 val CHECKING_HISTORY_PKEY_1: UniqueKey<ReceivingCheckingRecord> = Internal.createUniqueKey(ReceivingChecking.RECEIVING_CHECKING, DSL.name("checking_history_pkey_1"), arrayOf(ReceivingChecking.RECEIVING_CHECKING.ID), true)
 val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)
+val AMOEBA_PKEY_2: UniqueKey<SapBacklogRecord> = Internal.createUniqueKey(SapBacklog.SAP_BACKLOG, DSL.name("amoeba_pkey_2"), arrayOf(SapBacklog.SAP_BACKLOG.ID), true)
 val SENDING_TRANSACTIONS_PKEY: UniqueKey<SendingTransactionsRecord> = Internal.createUniqueKey(SendingTransactions.SENDING_TRANSACTIONS, DSL.name("sending_transactions_pkey"), arrayOf(SendingTransactions.SENDING_TRANSACTIONS.ID), true)
 val SPLITTING_PKEY: UniqueKey<SplittingRecord> = Internal.createUniqueKey(Splitting.SPLITTING, DSL.name("splitting_pkey"), arrayOf(Splitting.SPLITTING.ID), true)
 val STOCK_TAKING_PKEY_1: UniqueKey<StockTakingRecord> = Internal.createUniqueKey(StockTaking.STOCK_TAKING, DSL.name("stock_taking_pkey_1"), arrayOf(StockTaking.STOCK_TAKING.ID), true)

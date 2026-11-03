@@ -428,12 +428,7 @@ class StockTakingService(
             // xóa record amoeba
             amoebaRepo.delete()
             // save amoeba
-            val finalData = amoebaList.filter { p ->
-                val code = p.locationCode
-                !(code!!.startsWith("9") ||
-                        code == "33333")
-            }
-            val totalRecord = amoebaRepo.saveAll(finalData)
+            val totalRecord = amoebaRepo.saveAll(amoebaList)
             // xóa record backlog bin entry
             backlogBinEntryRepo.delete()
             // save backlog bin entry

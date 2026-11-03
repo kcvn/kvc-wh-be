@@ -277,11 +277,10 @@ FULL OUTER JOIN (
     }
 
     fun getListByFormCode(formCode: String?): List<TempSendingTransactions> {
-        val formCodeCondition = "%$formCode%"
 
         return context
             .selectFrom(TEMP_SENDING_TRANSACTIONS)
-            .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.like(formCodeCondition))
+            .where(TEMP_SENDING_TRANSACTIONS.FORM_CODE.eq(formCode))
             .andExists(
                 context.selectOne()
                     .from(TEMP_SENDING_IMPORTED)

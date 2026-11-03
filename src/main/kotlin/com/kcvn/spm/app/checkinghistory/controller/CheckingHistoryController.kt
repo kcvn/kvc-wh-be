@@ -6,6 +6,7 @@ import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchReq
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryByLotResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistorySummaryResponse
 import com.kcvn.spm.app.checkinghistory.service.CheckingHistoryService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -52,6 +53,15 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         isExport: Boolean = false,
     ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {
         val result = checkingHistoryService.getList(request, pageable, isExport)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-summary")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getSummary(
+        request: CheckingHistorySearchRequest,
+    ): ResponseEntity<CheckingHistorySummaryResponse> {
+        val result = checkingHistoryService.getSummary(request)
         return ResponseEntity(result, HttpStatus.OK)
     }
 

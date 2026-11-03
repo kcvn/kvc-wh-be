@@ -6,6 +6,7 @@ import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchReq
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryByLotResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistorySummaryResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.util.CommonUtils
@@ -33,6 +34,10 @@ class CheckingHistoryService(
             data,
             checkingHistoryData.second
         )
+    }
+
+    fun getSummary(request: CheckingHistorySearchRequest): CheckingHistorySummaryResponse {
+        return checkingTransRepo.summaryCheckingHistory(request)
     }
 
     fun searchCheckingHistoryDetail(poNumber: String, invoiceNumber: String, seqNo: Int, pageable: Pageable): BasePagingResponse<CheckingHistoryDetailResponse> {

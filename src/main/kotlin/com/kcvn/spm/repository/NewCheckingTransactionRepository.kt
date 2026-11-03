@@ -3,6 +3,7 @@ package com.kcvn.spm.repository
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistorySummaryResponse
 import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
@@ -136,6 +137,54 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
             }
 
         return result to totalCount
+    }
+
+    // same filters as createSqlQuery, but reads purchase_order_backlog directly so each backlog row counts once
+    fun summaryCheckingHistory(request: CheckingHistorySearchRequest): CheckingHistorySummaryResponse {
+        val params = mutableListOf<Any>()
+        val conditions = mutableListOf<String>()
+
+        val statusCondition = if (request.status == "APPROVED") true else if (request.status == "NOT_APPROVED") false else null
+
+        request.invoiceNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.invoice_number = ?"; params += it }
+        request.poNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.po_number = ?"; params += it }
+        request.storageLocation?.takeIf { it.isNotBlank() }?.let { conditions += "pob.storage_location = ?"; params += it }
+        request.itemType?.takeIf { it.isNotBlank() }?.let { conditions += "pob.item_type = ?"; params += it }
+        statusCondition?.let { conditions += "pob.approved = ?"; params += it }
+        request.receivingDate?.let {
+            conditions += """
+                exists (
+                    select 1
+                    from new_checking_transaction nct
+                    where nct.invoice_number = pob.invoice_number
+                        and nct.po_number = pob.po_number
+                    group by nct.check_times
+                    having max(nct.receiving_date) = ?
+                )
+            """.trimIndent()
+            params += it
+        }
+        request.fromDate?.let { conditions += "pob.created_date >= ?"; params += it }
+        request.toDate?.let { conditions += "pob.created_date < ?"; params += it }
+
+        val whereClause = if (conditions.isNotEmpty()) "where " + conditions.joinToString(" and ") else ""
+
+        val sql = """
+            select
+                count(distinct pob.po_number) as total_po,
+                count(distinct pob.invoice_number) as total_invoice,
+                coalesce(sum(pob.order_qty), 0) as total_order_qty
+            from purchase_order_backlog pob
+            $whereClause
+        """.trimIndent()
+
+        val record = context.fetchOne(sql, *params.toTypedArray())
+
+        return CheckingHistorySummaryResponse(
+            totalPo = record?.get("total_po", Int::class.java) ?: 0,
+            totalInvoice = record?.get("total_invoice", Int::class.java) ?: 0,
+            totalOrderQty = record?.get("total_order_qty", BigDecimal::class.java) ?: BigDecimal.ZERO,
+        )
     }
 
     fun getListDetail(lotNo: String, pageable: Pageable) : Pair<List<CheckingHistoryDetailResponse>, Int> {

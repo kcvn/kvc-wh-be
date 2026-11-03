@@ -35,6 +35,13 @@ class TempNewBacklogWhRepository(private val context: DSLContext) : SortingRepos
             .fetchInto(TempNewBacklogWh::class.java)
     }
 
+    fun findByTempSplittingId(tempSplittingId: String): List<TempNewBacklogWh> {
+        return context.selectFrom(TEMP_NEW_BACKLOG_WH)
+            .where(TEMP_NEW_BACKLOG_WH.TEMP_SPLITTING_ID.eq(tempSplittingId))
+            .orderBy(TEMP_NEW_BACKLOG_WH.LOT_NO, TEMP_NEW_BACKLOG_WH.CREATED_DATE, TEMP_NEW_BACKLOG_WH.ID)
+            .fetchInto(TempNewBacklogWh::class.java)
+    }
+
     /** Chi tiet cac dong backlog tam cua 1 package (temp_splitting) */
     fun findDetailByTempSplittingId(tempSplittingId: String, pageable: Pageable?): Pair<List<TempBacklogWhResponse>, Int> {
         var sql = """

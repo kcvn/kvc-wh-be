@@ -5,7 +5,10 @@ import com.kcvn.spm.app.splitting.payload.respone.SplittingResponse
 import com.kcvn.spm.app.splitting.payload.request.TempBacklogWhSearchRequest
 import com.kcvn.spm.app.splitting.payload.respone.TempBacklogWhResponse
 import com.kcvn.spm.app.splitting.payload.respone.TempSplittingResponse
+import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
+import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.common.exception.BusinessException
+import com.kcvn.spm.model.tables.pojos.Splitting
 import com.kcvn.spm.common.payload.BasePagingResponse
 import org.springframework.data.domain.Pageable
 import com.kcvn.spm.model.tables.pojos.TempNewBacklogWh
@@ -30,6 +33,7 @@ class SplittingService(
     private val backlogWhRepo: BacklogWhRepository,
     private val tempSplittingRepo: TempSplittingRepository,
     private val tempNewBacklogWhRepo: TempNewBacklogWhRepository,
+    private val receivingService: ReceivingTransactionsService,
 ) {
 
     fun getTempPackageList(request: TempBacklogWhSearchRequest, pageable: Pageable): BasePagingResponse<TempSplittingResponse> {
@@ -58,6 +62,79 @@ class SplittingService(
             if (existing.isApproved == true)
                 throw BusinessException("Package ${existing.packageCode} đã được duyệt, không thể xóa")
             throw BusinessException("Không thể xóa package ${existing.packageCode}")
+        }
+    }
+
+    fun approveTempPackages(tempSplittingIds: List<String>) {
+        val ids = tempSplittingIds.filter { it.isNotBlank() }.distinct()
+        if (ids.isEmpty()) throw BusinessException("Chưa chọn package cần duyệt")
+
+        ids.forEach { id ->
+            //1. danh dau da duyet truoc (update co dieu kien + row lock) => chan duyet trung / vua xoa vua duyet
+            if (tempSplittingRepo.approvePending(id) == 0) {
+                val existing = tempSplittingRepo.findById(id)
+                    ?: throw BusinessException("Không tìm thấy package chia hàng: $id")
+                if (existing.isApproved == true)
+                    throw BusinessException("Package ${existing.packageCode} đã được duyệt")
+                throw BusinessException("Không thể duyệt package ${existing.packageCode}")
+            }
+            val split = tempSplittingRepo.findById(id)!!
+            val packageCode = split.packageCode!!
+            val receivingDate = split.receivingDate!!
+            val rows = tempNewBacklogWhRepo.findByTempSplittingId(id)
+            if (rows.isEmpty()) throw BusinessException("Package $packageCode không có dữ liệu chia hàng")
+
+            //2. kiem tra lai truoc khi ghi
+            if (splittingRepo.findByPackage(packageCode) != null)
+                throw BusinessException("Package $packageCode đã tồn tại")
+            validateApproveQty(packageCode, receivingDate, rows)
+
+            //3. ghi vao bang chinh
+            splittingRepo.save(
+                Splitting(
+                    receivingDate = receivingDate,
+                    packageCode = packageCode,
+                    locationCode = split.locationCode,
+                    isSyncedSap = true,
+                    isSyncedAmoeba = false
+                )
+            )
+            val receivingData = rows.map {
+                RecTransRequest(
+                    locationCode = split.locationCode,
+                    packageCode = it.packageCode,
+                    poNumber = it.poNumber,
+                    qty = it.backlogQty,
+                    lotNo = it.lotNo,
+                    issueDate = it.issueDate
+                )
+            }
+            //ghi receiving_transactions + cong new_backlog_wh (dung chung voi luong chuyen lot)
+            receivingService.saveRecTrans(receivingData, receivingDate)
+        }
+    }
+
+    private fun validateApproveQty(packageCode: String, receivingDate: LocalDate, rows: List<TempNewBacklogWh>) {
+        val checkedList = newCheckTransactionRepo.findByRecDate(receivingDate).filter { it.isApprove == true }.filter { it.storageLocation in listOf("L000","L001") }
+        val receivedList = receivingTransactionRepo.findByRecDate(receivingDate)
+        val pendingList = tempNewBacklogWhRepo.findPendingByRecDate(receivingDate)
+
+        rows.groupBy { it.poNumber }.forEach { (poNumber, poRows) ->
+            val thisPoQty = poRows.sumOf { it.backlogQty ?: BigDecimal.ZERO }
+            val receivedPoQty = receivedList.filter { it.poNumber == poNumber }.sumOf { it.qty ?: BigDecimal.ZERO } +
+                    pendingList.filter { it.poNumber == poNumber }.sumOf { it.backlogQty ?: BigDecimal.ZERO }
+            val checkedPoQty = checkedList.filter { it.poNumber == poNumber }.sumOf { it.scanQty!! }
+            if (checkedPoQty compareTo (thisPoQty + receivedPoQty) != 0)
+                throw BusinessException("Package $packageCode: PO $poNumber không khớp số lượng đã nhập")
+
+            poRows.groupBy { it.lotNo }.forEach { (lotNo, lotRows) ->
+                val thisLotQty = lotRows.sumOf { it.backlogQty ?: BigDecimal.ZERO }
+                val receivedLotQty = receivedList.filter { it.poNumber == poNumber && it.lotNo == lotNo }.sumOf { it.qty ?: BigDecimal.ZERO } +
+                        pendingList.filter { it.poNumber == poNumber && it.lotNo == lotNo }.sumOf { it.backlogQty ?: BigDecimal.ZERO }
+                val checkedLotQty = checkedList.filter { it.poNumber == poNumber && it.lotNo == lotNo }.sumOf { it.scanQty!! }
+                if (checkedLotQty compareTo (thisLotQty + receivedLotQty) != 0)
+                    throw BusinessException("Package $packageCode: PO $poNumber - $lotNo không khớp số lượng đã nhập")
+            }
         }
     }
 

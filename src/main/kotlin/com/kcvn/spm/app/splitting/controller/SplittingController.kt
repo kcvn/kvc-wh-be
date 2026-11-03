@@ -56,6 +56,20 @@ class SplittingController(private val splittingService: SplittingService) {
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @PostMapping("/temp/approve")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun approveTempPackages(@RequestBody tempSplittingIds: List<String>): ResponseEntity<*> {
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post splitting/temp/approve" + ", REQUEST: " + tempSplittingIds
+        )
+        splittingService.approveTempPackages(tempSplittingIds)
+        return ResponseEntity<MessageResponse>(
+            MessageResponse(CommonUtils.getMessage("action.succeeded")),
+            HttpStatus.OK
+        )
+    }
+
     @DeleteMapping("/temp/delete/{id}")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun deleteTempPackage(@PathVariable("id") id: String): ResponseEntity<*> {

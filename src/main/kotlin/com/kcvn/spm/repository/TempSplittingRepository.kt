@@ -55,6 +55,23 @@ class TempSplittingRepository(private val context: DSLContext) : SortingReposito
             .execute()
     }
 
+    /**
+     * Danh dau da duyet cho package dang cho duyet (giu row lock den het transaction).
+     * @return so dong bi anh huong; 0 = khong ton tai / da xoa / da duyet
+     */
+    fun approvePending(id: String): Int {
+        return context.update(TEMP_SPLITTING)
+            .set(TEMP_SPLITTING.IS_APPROVED, true)
+            .set(TEMP_SPLITTING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(TEMP_SPLITTING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                TEMP_SPLITTING.ID.eq(id)
+                    .and(TEMP_SPLITTING.IS_DELETED.eq(false))
+                    .and(TEMP_SPLITTING.IS_APPROVED.eq(false))
+            )
+            .execute()
+    }
+
     fun getPackageList(request: TempBacklogWhSearchRequest, pageable: Pageable?): Pair<List<TempSplittingResponse>, Int> {
         val (sql, params) = createGetPackageListSqlQuery(request)
 

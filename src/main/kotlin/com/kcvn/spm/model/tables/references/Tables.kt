@@ -40,9 +40,11 @@ import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingChecking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
+import com.kcvn.spm.model.tables.TempNewBacklogWh
 import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.TempSendingImported
 import com.kcvn.spm.model.tables.TempSendingTransactions
+import com.kcvn.spm.model.tables.TempSplitting
 import com.kcvn.spm.model.tables.WestFactoryLayout
 
 
@@ -228,6 +230,11 @@ val STOCK_TAKING_STATUS: StockTakingStatus = StockTakingStatus.STOCK_TAKING_STAT
 val TEMP_CHECKING_IMPORTED: TempCheckingImported = TempCheckingImported.TEMP_CHECKING_IMPORTED
 
 /**
+ * The table <code>public.temp_new_backlog_wh</code>.
+ */
+val TEMP_NEW_BACKLOG_WH: TempNewBacklogWh = TempNewBacklogWh.TEMP_NEW_BACKLOG_WH
+
+/**
  * The table <code>public.temp_sending_checking_transactions</code>.
  */
 val TEMP_SENDING_CHECKING_TRANSACTIONS: TempSendingCheckingTransactions = TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS
@@ -241,6 +248,11 @@ val TEMP_SENDING_IMPORTED: TempSendingImported = TempSendingImported.TEMP_SENDIN
  * The table <code>public.temp_sending_transactions</code>.
  */
 val TEMP_SENDING_TRANSACTIONS: TempSendingTransactions = TempSendingTransactions.TEMP_SENDING_TRANSACTIONS
+
+/**
+ * The table <code>public.temp_splitting</code>.
+ */
+val TEMP_SPLITTING: TempSplitting = TempSplitting.TEMP_SPLITTING
 
 /**
  * The table <code>public.west_factory_layout</code>.

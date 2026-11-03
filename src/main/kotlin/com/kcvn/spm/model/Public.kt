@@ -40,9 +40,11 @@ import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingChecking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
+import com.kcvn.spm.model.tables.TempNewBacklogWh
 import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.TempSendingImported
 import com.kcvn.spm.model.tables.TempSendingTransactions
+import com.kcvn.spm.model.tables.TempSplitting
 import com.kcvn.spm.model.tables.WestFactoryLayout
 
 import kotlin.collections.List
@@ -246,6 +248,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val TEMP_CHECKING_IMPORTED: TempCheckingImported get() = TempCheckingImported.TEMP_CHECKING_IMPORTED
 
     /**
+     * The table <code>public.temp_new_backlog_wh</code>.
+     */
+    val TEMP_NEW_BACKLOG_WH: TempNewBacklogWh get() = TempNewBacklogWh.TEMP_NEW_BACKLOG_WH
+
+    /**
      * The table <code>public.temp_sending_checking_transactions</code>.
      */
     val TEMP_SENDING_CHECKING_TRANSACTIONS: TempSendingCheckingTransactions get() = TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS
@@ -259,6 +266,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.temp_sending_transactions</code>.
      */
     val TEMP_SENDING_TRANSACTIONS: TempSendingTransactions get() = TempSendingTransactions.TEMP_SENDING_TRANSACTIONS
+
+    /**
+     * The table <code>public.temp_splitting</code>.
+     */
+    val TEMP_SPLITTING: TempSplitting get() = TempSplitting.TEMP_SPLITTING
 
     /**
      * The table <code>public.west_factory_layout</code>.
@@ -304,9 +316,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         StockTakingChecking.STOCK_TAKING_CHECKING,
         StockTakingStatus.STOCK_TAKING_STATUS,
         TempCheckingImported.TEMP_CHECKING_IMPORTED,
+        TempNewBacklogWh.TEMP_NEW_BACKLOG_WH,
         TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS,
         TempSendingImported.TEMP_SENDING_IMPORTED,
         TempSendingTransactions.TEMP_SENDING_TRANSACTIONS,
+        TempSplitting.TEMP_SPLITTING,
         WestFactoryLayout.WEST_FACTORY_LAYOUT
     )
 }

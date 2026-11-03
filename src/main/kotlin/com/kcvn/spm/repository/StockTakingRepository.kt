@@ -103,10 +103,13 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                     itemName = it.get("item_name", String::class.java),
                     systemLocationCode = it.get("system_location_code", String::class.java),
                     actualLocationCode = it.get("actual_location_code", String::class.java),
+                    checkingLocationCode = it.get("checking_location_code", String::class.java),
                     systemQty = it.get("system_qty", BigDecimal::class.java),
                     actualQty = it.get("actual_qty", BigDecimal::class.java),
+                    checkingQty = it.get("checking_qty", BigDecimal::class.java),
                     systemBoxQty = it.get("system_box_qty", Int::class.java),
                     actualBoxQty = it.get("actual_box_qty", Int::class.java),
+                    checkingBoxQty = it.get("checking_box_qty", Int::class.java),
                     resultLocationCode = it.get("result_location_code", String::class.java),
                     resultQty = it.get("result_qty", String::class.java),
                     resultBoxQty = it.get("result_box_qty", String::class.java)
@@ -365,9 +368,25 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
     fun createSqlQueryCompleted(request: StockTakingMonthlyRequest): Pair<String, List<Any>> {
         val params = mutableListOf<Any>()
 
-        // completed month reads only the snapshot saved in stock_taking at stop time
+        // filter month inside each side before the full join, same as the on-going query
+        val periodWhere = mutableListOf<String>()
+        val periodParams = mutableListOf<Any>()
+        if (request.yearNumber != null) {
+            periodWhere.add("year_number = ?")
+            periodParams.add(request.yearNumber!!)
+        }
+        if (request.monthNumber != null) {
+            periodWhere.add("month_number = ?")
+            periodParams.add(request.monthNumber!!)
+        }
+        val periodWhereClause = if (periodWhere.isNotEmpty()) "WHERE ${periodWhere.joinToString(" AND ")}" else ""
+        // once for stock_data, once for checking_data
+        params.addAll(periodParams)
+        params.addAll(periodParams)
+
+        // completed month reads the snapshot saved in stock_taking at stop time, plus checking results
         val sql = """
-        SELECT * FROM (
+        WITH stock_data AS (
             SELECT
                 st.po_number,
                 st.package_code,
@@ -380,24 +399,81 @@ class StockTakingRepository(private val context: DSLContext) : SortingRepository
                 st.actual_qty,
                 st.actual_box_qty,
                 st.year_number,
-                st.month_number,
-                CASE WHEN st.actual_location_code = st.system_location_code THEN 'SAME' ELSE 'DIFFERENT' END AS result_location_code,
-                CASE WHEN st.actual_qty = st.system_qty THEN 'SAME' ELSE 'DIFFERENT' END AS result_qty,
-                CASE WHEN st.actual_box_qty = st.system_box_qty THEN 'SAME' ELSE 'DIFFERENT' END AS result_box_qty
+                st.month_number
             FROM stock_taking st
+            $periodWhereClause
+        ),
+        checking_data AS (
+            SELECT
+                stc.po_number,
+                stc.package_code,
+                stc.lot_no,
+                stc.actual_location_code,
+                stc.actual_qty,
+                stc.actual_box_qty,
+                stc.year_number,
+                stc.month_number
+            FROM stock_taking_checking stc
+            $periodWhereClause
+        )
+        SELECT * FROM (
+            SELECT
+                COALESCE(sd.po_number, cd.po_number) AS po_number,
+                COALESCE(sd.package_code, cd.package_code) AS package_code,
+                COALESCE(sd.lot_no, cd.lot_no) AS lot_no,
+                sd.item_name,
+                sd.system_location_code,
+                sd.system_qty,
+                sd.system_box_qty,
+                sd.actual_location_code,
+                sd.actual_qty,
+                sd.actual_box_qty,
+                COALESCE(sd.year_number, cd.year_number) AS year_number,
+                COALESCE(sd.month_number, cd.month_number) AS month_number,
+                cd.actual_location_code AS checking_location_code,
+                cd.actual_qty AS checking_qty,
+                cd.actual_box_qty AS checking_box_qty,
+                CASE
+                    WHEN sd.actual_location_code = sd.system_location_code
+                        AND (cd.actual_location_code IS NULL OR cd.actual_location_code = sd.actual_location_code)
+                    THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_location_code,
+                CASE
+                    WHEN sd.actual_qty = sd.system_qty
+                        AND (cd.actual_qty IS NULL OR cd.actual_qty = sd.actual_qty)
+                    THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_qty,
+                CASE
+                    WHEN sd.actual_box_qty = sd.system_box_qty
+                        AND (cd.actual_box_qty IS NULL OR cd.actual_box_qty = sd.actual_box_qty)
+                    THEN 'SAME'
+                    ELSE 'DIFFERENT'
+                END AS result_box_qty
+            FROM stock_data sd
+            FULL OUTER JOIN checking_data cd
+                ON sd.package_code = cd.package_code
+                AND COALESCE(sd.lot_no, '') = COALESCE(cd.lot_no, '')
         ) final_data
     """.trimIndent()
 
         val finalWhere = mutableListOf<String>()
 
-        if (request.yearNumber != null) {
-            finalWhere.add("final_data.year_number = ?")
-            params.add(request.yearNumber!!)
+        if (request.isChecked == "CHECKED") {
+            finalWhere.add("""
+            final_data.checking_location_code IS NOT NULL
+            AND final_data.checking_qty IS NOT NULL
+            AND final_data.checking_box_qty IS NOT NULL
+        """.trimIndent())
         }
 
-        if (request.monthNumber != null) {
-            finalWhere.add("final_data.month_number = ?")
-            params.add(request.monthNumber!!)
+        if (request.isChecked == "UNCHECKED") {
+            finalWhere.add("""
+            final_data.checking_location_code IS NULL
+            AND final_data.checking_qty IS NULL
+            AND final_data.checking_box_qty IS NULL
+        """.trimIndent())
         }
 
         if (!request.poNumber.isNullOrBlank()) {

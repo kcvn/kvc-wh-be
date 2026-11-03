@@ -9,6 +9,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
+import com.kcvn.spm.model.tables.references.STOCK_TAKING
 import com.kcvn.spm.model.tables.references.STOCK_TAKING_CHECKING
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -16,6 +17,7 @@ import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -378,18 +380,16 @@ class StockTakingCheckingRepository(private val context: DSLContext) : SortingRe
 
     }
 
-    fun save(domain: StockTaking) {
-        context.insertInto(
-            STOCK_TAKING_CHECKING, STOCK_TAKING_CHECKING.YEAR_NUMBER, STOCK_TAKING_CHECKING.MONTH_NUMBER, STOCK_TAKING_CHECKING.PO_NUMBER,
-            STOCK_TAKING_CHECKING.PACKAGE_CODE, STOCK_TAKING_CHECKING.LOT_NO, STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE,
-            STOCK_TAKING_CHECKING.ACTUAL_QTY, STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, STOCK_TAKING_CHECKING.CREATED_BY
-        )
-            .values(
-                domain.yearNumber, domain.monthNumber, domain.poNumber,
-                domain.packageCode, domain.lotNo, domain.actualLocationCode,
-                domain.actualQty, domain.actualBoxQty, CommonUtils.loggedInUser() ?: Constants.SYSTEM
-            )
-            .execute()
+    fun save(data: StockTaking) {
+        val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+        val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+        context.newRecord(STOCK_TAKING_CHECKING, data).apply {
+            createdBy = user
+            createdDate = currentTime
+            updatedBy = user
+            updatedDate = currentTime
+        }.insert()
     }
 
     fun deleteByYearAndMonth(yearNumber: Int, monthNumber: Int) {

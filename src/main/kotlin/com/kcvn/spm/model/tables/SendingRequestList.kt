@@ -145,6 +145,16 @@ open class SendingRequestList(
      */
     val SENDING_FORM_ID: TableField<SendingRequestListRecord, String?> = createField(DSL.name("sending_form_id"), SQLDataType.VARCHAR(50), this, "")
 
+    /**
+     * The column <code>public.sending_request_list.backlog_qty</code>.
+     */
+    val BACKLOG_QTY: TableField<SendingRequestListRecord, BigDecimal?> = createField(DSL.name("backlog_qty"), SQLDataType.NUMERIC, this, "")
+
+    /**
+     * The column <code>public.sending_request_list.available_qty</code>.
+     */
+    val AVAILABLE_QTY: TableField<SendingRequestListRecord, BigDecimal?> = createField(DSL.name("available_qty"), SQLDataType.NUMERIC, this, "")
+
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<SendingRequestListRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

@@ -165,6 +165,11 @@ open class AuthUser(
      */
     val IS_DELETED: TableField<AuthUserRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.auth_user.department</code>.
+     */
+    val DEPARTMENT: TableField<AuthUserRecord, String?> = createField(DSL.name("department"), SQLDataType.VARCHAR(20), this, "")
+
     private constructor(alias: Name, aliased: Table<AuthUserRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<AuthUserRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<AuthUserRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

@@ -79,10 +79,18 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
         set(value): Unit = set(14, value)
         get(): String? = get(14) as String?
 
+    open var backlogQty: BigDecimal?
+        set(value): Unit = set(15, value)
+        get(): BigDecimal? = get(15) as BigDecimal?
+
+    open var availableQty: BigDecimal?
+        set(value): Unit = set(16, value)
+        get(): BigDecimal? = get(16) as BigDecimal?
+
     /**
      * Create a detached, initialised SendingRequestListRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, requestQty: BigDecimal? = null, seqNo: Int? = null, status: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, comment: String? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, sendingFormId: String? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, requestQty: BigDecimal? = null, seqNo: Int? = null, status: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, comment: String? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, sendingFormId: String? = null, backlogQty: BigDecimal? = null, availableQty: BigDecimal? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.poNumber = poNumber
@@ -98,6 +106,8 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
         this.itemName = itemName
         this.productionGroup = productionGroup
         this.sendingFormId = sendingFormId
+        this.backlogQty = backlogQty
+        this.availableQty = availableQty
         resetChangedOnNotNull()
     }
 
@@ -121,6 +131,8 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
             this.itemName = value.itemName
             this.productionGroup = value.productionGroup
             this.sendingFormId = value.sendingFormId
+            this.backlogQty = value.backlogQty
+            this.availableQty = value.availableQty
             resetChangedOnNotNull()
         }
     }

@@ -34,7 +34,8 @@ data class AuthUser(
     var updatedBy: String? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
-    var isDeleted: Boolean? = null
+    var isDeleted: Boolean? = null,
+    var department: String? = null
 ): Serializable {
 
 
@@ -148,6 +149,12 @@ data class AuthUser(
         }
         else if (this.isDeleted != o.isDeleted)
             return false
+        if (this.department == null) {
+            if (o.department != null)
+                return false
+        }
+        else if (this.department != o.department)
+            return false
         return true
     }
 
@@ -171,6 +178,7 @@ data class AuthUser(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
+        result = prime * result + (if (this.department == null) 0 else this.department.hashCode())
         return result
     }
 
@@ -194,6 +202,7 @@ data class AuthUser(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
+        sb.append(", ").append(department)
 
         sb.append(")")
         return sb.toString()

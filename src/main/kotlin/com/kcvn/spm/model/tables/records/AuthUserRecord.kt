@@ -91,6 +91,10 @@ open class AuthUserRecord() : UpdatableRecordImpl<AuthUserRecord>(AuthUser.AUTH_
         set(value): Unit = set(16, value)
         get(): Boolean? = get(16) as Boolean?
 
+    open var department: String?
+        set(value): Unit = set(17, value)
+        get(): String? = get(17) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -100,7 +104,7 @@ open class AuthUserRecord() : UpdatableRecordImpl<AuthUserRecord>(AuthUser.AUTH_
     /**
      * Create a detached, initialised AuthUserRecord
      */
-    constructor(id: String? = null, username: String? = null, password: String? = null, employeeCode: String? = null, email: String? = null, phoneNumber: String? = null, fullName: String? = null, fullNameUnsigned: String? = null, dateOfBirth: LocalDate? = null, avatar: String? = null, status: Short? = null, isSuperAdmin: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null): this() {
+    constructor(id: String? = null, username: String? = null, password: String? = null, employeeCode: String? = null, email: String? = null, phoneNumber: String? = null, fullName: String? = null, fullNameUnsigned: String? = null, dateOfBirth: LocalDate? = null, avatar: String? = null, status: Short? = null, isSuperAdmin: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, department: String? = null): this() {
         this.id = id
         this.username = username
         this.password = password
@@ -118,6 +122,7 @@ open class AuthUserRecord() : UpdatableRecordImpl<AuthUserRecord>(AuthUser.AUTH_
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
         this.isDeleted = isDeleted
+        this.department = department
         resetChangedOnNotNull()
     }
 
@@ -143,6 +148,7 @@ open class AuthUserRecord() : UpdatableRecordImpl<AuthUserRecord>(AuthUser.AUTH_
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
             this.isDeleted = value.isDeleted
+            this.department = value.department
             resetChangedOnNotNull()
         }
     }

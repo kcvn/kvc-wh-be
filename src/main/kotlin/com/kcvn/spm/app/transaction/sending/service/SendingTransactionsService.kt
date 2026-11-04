@@ -90,6 +90,10 @@ class SendingTransactionsService(
             val itemCode = requests[0].itemCode
             val itemName = requests[0].itemName
             val productionGroup = requests[0].productionGroup
+            // Snapshot tai thoi diem tao yeu cau (da lock backlog theo receivingDate-PO o tren):
+            // backlogQty = ton cua PO, availableQty = ton - cac yeu cau dang xu ly khac (chua tru yeu cau nay)
+            val backlogQty = backlogWhRepository.sumBacklogQtyByRecDatePo(receivingDate, poNumber)
+            val availableQty = backlogQty - sendingRequestListRepository.sumProcessingQtyByReceivingDatePO(receivingDate, poNumber)
             val sendingRequestRec = SendingRequestList(
                 receivingDate = receivingDate,
                 poNumber = poNumber,
@@ -98,7 +102,9 @@ class SendingTransactionsService(
                 productionGroup = productionGroup,
                 requestQty = requests.sumOf { it.requestQty },
                 seqNo = (existedRequest?.seqNo ?: 0) + 1,
-                status = 1
+                status = 1,
+                backlogQty = backlogQty,
+                availableQty = availableQty,
             )
             val requestListId = sendingRequestListRepository.save(sendingRequestRec)
 

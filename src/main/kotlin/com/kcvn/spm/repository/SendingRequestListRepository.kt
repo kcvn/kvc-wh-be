@@ -51,6 +51,18 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
             .firstOrNull()
     }
 
+    /** Tong so dang yeu cau (status khac 3: tu choi, 4: da xuat) theo ngay nhan hang + PO */
+    fun sumProcessingQtyByReceivingDatePO(receivingDate: LocalDate, poNumber: String): BigDecimal {
+        return context.select(DSL.coalesce(DSL.sum(SENDING_REQUEST_LIST.REQUEST_QTY), BigDecimal.ZERO))
+            .from(SENDING_REQUEST_LIST)
+            .where(
+                SENDING_REQUEST_LIST.RECEIVING_DATE.eq(receivingDate)
+                    .and(SENDING_REQUEST_LIST.PO_NUMBER.eq(poNumber))
+                    .and(SENDING_REQUEST_LIST.STATUS.notIn(3, 4))
+            )
+            .fetchOne(0, BigDecimal::class.java) ?: BigDecimal.ZERO
+    }
+
     fun findByReceivingDatePOAndSeqNo(poNumber: String, receivingDate: LocalDate, seqNo: Int): SendingRequestList? {
         return context.selectFrom(SENDING_REQUEST_LIST)
             .where(
@@ -157,37 +169,13 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
         return createGetListBaseSql(whereClause) to params
     }
 
-    // backlog và processing được gộp theo receiving_date + po_number trong subquery trước khi join, tránh nhân dòng
-    // available = backlog - tổng request đang xử lý (status not in 3, 4), giống available_backlog_qty bên BacklogWhRepository
+    // backlog_qty / available_qty lấy từ snapshot lưu lúc tạo yêu cầu (saveSendingRequest), không tính realtime
     private fun createGetListBaseSql(whereClause: String): String {
         return """
             select
                 srl.*,
-                coalesce(backlog.backlog_qty, 0) as backlog_qty,
-                coalesce(backlog.backlog_qty, 0) - coalesce(processing.processing_qty, 0) as available_qty,
                 count(*) over() as total_count
             from sending_request_list srl
-                left join (
-                    select
-                        nbw.receiving_date,
-                        nbw.po_number,
-                        sum(nbw.backlog_qty) as backlog_qty
-                    from new_backlog_wh nbw
-                    group by nbw.receiving_date, nbw.po_number
-                ) as backlog
-                    on backlog.receiving_date = srl.receiving_date
-                    and backlog.po_number = srl.po_number
-                left join (
-                    select
-                        p.receiving_date,
-                        p.po_number,
-                        sum(p.request_qty) as processing_qty
-                    from sending_request_list p
-                    where p.status not in (3, 4)
-                    group by p.receiving_date, p.po_number
-                ) as processing
-                    on processing.receiving_date = srl.receiving_date
-                    and processing.po_number = srl.po_number
             $whereClause
         """.trimIndent()
     }

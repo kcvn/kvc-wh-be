@@ -214,6 +214,17 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
      * Khóa (SELECT ... FOR UPDATE) các dòng backlog của receivingDate-PO đến hết transaction hiện tại.
      * Gọi theo thứ tự cố định để tránh deadlock giữa các transaction.
      */
+    /** Tong ton theo ngay nhan hang + PO (tat ca package/lot) */
+    fun sumBacklogQtyByRecDatePo(receivingDate: LocalDate, poNumber: String): BigDecimal {
+        return context.select(DSL.coalesce(DSL.sum(NEW_BACKLOG_WH.BACKLOG_QTY), BigDecimal.ZERO))
+            .from(NEW_BACKLOG_WH)
+            .where(
+                NEW_BACKLOG_WH.RECEIVING_DATE.eq(receivingDate)
+                    .and(NEW_BACKLOG_WH.PO_NUMBER.eq(poNumber))
+            )
+            .fetchOne(0, BigDecimal::class.java) ?: BigDecimal.ZERO
+    }
+
     fun lockBacklogByRecDatePo(receivingDate: LocalDate, poNumber: String) {
         context.select(NEW_BACKLOG_WH.ID)
             .from(NEW_BACKLOG_WH)

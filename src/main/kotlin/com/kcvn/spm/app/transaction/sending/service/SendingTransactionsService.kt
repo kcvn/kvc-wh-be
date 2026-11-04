@@ -87,9 +87,10 @@ class SendingTransactionsService(
 
     fun approveSendingForm(formCode: String){
         val sendingList = tempSendingRepo.getListByFormCode(formCode)
-        if (sendingList.isEmpty()) throw BusinessExceptionDetail(
-            CommonUtils.getMessage("form.code.approved"), "formCode = $formCode"
-        )
+        if (sendingList.isEmpty()) {
+            tempSendingImportedRepo.updateAfterApprove(formCode)
+            return
+        }
         sendingList.forEach {
             val backlog = backlogWhRepository.findExistBacklogByPackageCode(it.sourcePackageCode!!)
             if (backlog == null || backlog.backlogQty!! < it.qty) throw BusinessExceptionDetail(

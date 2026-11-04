@@ -15,7 +15,8 @@ class UserDetailsImpl(
     private val authorities: Collection<GrantedAuthority>,
     private val isActive: Boolean,
     private val position: String?,
-    private val employeeCode: String?
+    private val employeeCode: String?,
+    private val department: String? = null
 ) : UserDetails {
     companion object {
         private const val serialVersionUID = 1L
@@ -33,7 +34,8 @@ class UserDetailsImpl(
                 authorities,
                 user.status == EUserStatus.ACTIVE.value,
                 position,
-                user.employeeCode
+                user.employeeCode,
+                user.department
             )
         }
     }

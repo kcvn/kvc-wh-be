@@ -20,4 +20,5 @@ data class UpdateUserRequest (
     var status: Short? = null,
     var roleIds: Set<String>? = null,
     var positions: Set<String>? = null,
+    var department: String? = null,
 )

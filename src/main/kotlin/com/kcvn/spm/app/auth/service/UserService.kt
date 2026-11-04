@@ -47,7 +47,8 @@ class UserService(
                     user.avatar,
                     user.status,
                     user.isSuperAdmin!!,
-                    positionsByUser.getOrDefault(user.id!!, listOf())
+                    positionsByUser.getOrDefault(user.id!!, listOf()),
+                    department = user.department
                 )
             },
             result.second
@@ -73,7 +74,8 @@ class UserService(
                 user.isSuperAdmin!!,
                 positionsByUser.getOrDefault(user.id!!, listOf()),
                 roles.map { it.id!! },
-                roleRep.findPermissionsByRoleIds(roles.map { it.id!! }).map { p -> EPermission.valueOf(p.name).value }
+                roleRep.findPermissionsByRoleIds(roles.map { it.id!! }).map { p -> EPermission.valueOf(p.name).value },
+                department = user.department
             )
         }
     }
@@ -99,7 +101,8 @@ class UserService(
             CommonUtils.removeAccent(request.fullName),
             request.dateOfBirth,
             request.avatar,
-            if (request.status == null || request.status == EUserStatus.ACTIVE.value) EUserStatus.ACTIVE.value else EUserStatus.INACTIVE.value
+            if (request.status == null || request.status == EUserStatus.ACTIVE.value) EUserStatus.ACTIVE.value else EUserStatus.INACTIVE.value,
+            department = request.department
         )
         val roleIds: Set<String> = request.roleIds ?: setOf()
         val allRoles = roleRep.findAll()
@@ -129,6 +132,7 @@ class UserService(
         user.dateOfBirth = request.dateOfBirth
         user.avatar = request.avatar
         user.status = request.status
+        user.department = request.department
 
         val roleIds: Set<String> = request.roleIds ?: setOf()
         val allRoles = roleRep.findAll()

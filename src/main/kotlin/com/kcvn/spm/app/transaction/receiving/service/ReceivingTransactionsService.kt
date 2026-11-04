@@ -1,7 +1,9 @@
 package com.kcvn.spm.app.transaction.receiving.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
+import com.kcvn.spm.app.transaction.receiving.payload.request.CheckingReceivingCompareRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
+import com.kcvn.spm.app.transaction.receiving.payload.response.CheckingReceivingCompareResponse
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
 import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
@@ -14,6 +16,7 @@ import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -42,6 +45,81 @@ class ReceivingTransactionsService(
             data,
             recTrans.second
         )
+    }
+
+    /** So sanh so da check voi so da nhan theo ngay nhan hang / PO / lot, chia theo invoice (chi inquiry) */
+    fun compareWithChecking(request: CheckingReceivingCompareRequest, pageable: Pageable): BasePagingResponse<CheckingReceivingCompareResponse> {
+        val checkedList = receivingRepo.sumCheckedByInvoice(request)
+        val receivedMap = receivingRepo.sumReceivedByLot(request)
+
+        val checkedByKey = checkedList.groupBy { Triple(it.receivingDate, it.poNumber, it.lotNo) }
+        //hop key 2 ben: co check ma chua nhan, va nhan ma khong co check
+        val allKeys = checkedByKey.keys + receivedMap.keys
+
+        val result = allKeys.flatMap { key ->
+            allocateReceivedToInvoices(key, receivedMap[key] ?: BigDecimal.ZERO, checkedByKey[key].orEmpty())
+        }
+            //loc theo invoice / dong lech SAU khi phan bo => khong lam thay doi so phan bo
+            .filter { row -> request.invoiceNumber.isNullOrBlank() || row.invoiceNumber?.contains(request.invoiceNumber!!.trim(), ignoreCase = true) == true }
+            .filter { row ->
+                when (request.result) {
+                    "SAME" -> row.diffQty!!.signum() == 0
+                    "DIFFERENT" -> row.diffQty!!.signum() != 0
+                    else -> true
+                }
+            }
+            .sortedWith(
+                compareByDescending<CheckingReceivingCompareResponse> { it.receivingDate }
+                    .thenBy { it.poNumber }
+                    .thenBy { it.lotNo }
+                    .thenBy(nullsLast()) { it.invoiceNumber }
+            )
+
+        val pageData = result.drop(pageable.offset.toInt()).take(pageable.pageSize)
+        return BasePagingResponse(pageData, result.size)
+    }
+
+    /**
+     * Phan bo dan tong so da nhan cho tung invoice (theo thu tu invoiceNumber):
+     * moi invoice nhan toi da bang so da check cua no, con du chuyen sang invoice sau.
+     * Neu nhan vuot tong so check (hoac khong co check) => them 1 dong invoiceNumber = null cho phan vuot.
+     * Chi dung de inquiry, thuc te receiving khong chia theo invoice.
+     */
+    fun allocateReceivedToInvoices(
+        key: Triple<LocalDate?, String?, String?>,
+        totalReceived: BigDecimal,
+        invoices: List<CheckingReceivingCompareResponse>,
+    ): List<CheckingReceivingCompareResponse> {
+        var remaining = totalReceived
+        val rows = invoices.sortedWith(compareBy(nullsLast()) { it.invoiceNumber }).map { inv ->
+            val checked = inv.checkedQty ?: BigDecimal.ZERO
+            val allocated = remaining.min(checked).max(BigDecimal.ZERO)
+            remaining -= allocated
+            inv.copy(checkedQty = checked, receivedQty = allocated)
+        }.toMutableList()
+
+        if (remaining.signum() > 0) {
+            rows += CheckingReceivingCompareResponse(
+                receivingDate = key.first,
+                poNumber = key.second,
+                lotNo = key.third,
+                invoiceNumber = null,
+                checkedQty = BigDecimal.ZERO,
+                receivedQty = remaining,
+            )
+        }
+
+        return rows.map { row ->
+            val checked = row.checkedQty!!
+            val received = row.receivedQty!!
+            row.copy(
+                diffQty = checked - received,
+                result = when {
+                    checked.compareTo(received) == 0 -> "SAME"
+                    else -> "DIFFERENT"
+                }
+            )
+        }
     }
 
     // checkingLotByPackage = true: lot no ben checking chinh la packageCode (chuyen lot)

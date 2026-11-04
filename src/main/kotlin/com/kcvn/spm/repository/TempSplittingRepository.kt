@@ -126,6 +126,11 @@ class TempSplittingRepository(private val context: DSLContext) : SortingReposito
             conditions += "ts.is_approved = ?"
             params += it
         }
+        //loai package: chia hang / chuyen lot
+        request.isTransferLot?.let {
+            conditions += "ts.is_transfer_lot = ?"
+            params += it
+        }
 
         val sql = """
             select
@@ -134,6 +139,7 @@ class TempSplittingRepository(private val context: DSLContext) : SortingReposito
                 ts.package_code,
                 ts.receiving_date,
                 ts.is_approved,
+                ts.is_transfer_lot,
                 ts.created_by,
                 ts.created_date,
                 string_agg(distinct tnbw.po_number, ',') as po_number,
@@ -143,7 +149,7 @@ class TempSplittingRepository(private val context: DSLContext) : SortingReposito
             inner join temp_new_backlog_wh tnbw
             on tnbw.temp_splitting_id = ts.id
             where ${conditions.joinToString(" and ")}
-            group by ts.id, ts.location_code, ts.package_code, ts.receiving_date, ts.is_approved, ts.created_by, ts.created_date
+            group by ts.id, ts.location_code, ts.package_code, ts.receiving_date, ts.is_approved, ts.is_transfer_lot, ts.created_by, ts.created_date
         """.trimIndent()
 
         return sql to params

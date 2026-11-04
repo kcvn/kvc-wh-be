@@ -19,6 +19,7 @@ data class TempBacklogWhResponse(
     var lotNo: String? = null,
     var issueDate: String? = null,
     var isApproved: Boolean? = null,
+    var isTransferLot: Boolean? = null,
     var createdBy: String? = null,
     var createdDate: OffsetDateTime? = null,
 )

@@ -12,6 +12,7 @@ data class TempSplittingResponse(
     var poNumber: String? = null,
     var totalQty: BigDecimal? = null,
     var isApproved: Boolean? = null,
+    var isTransferLot: Boolean? = null,
     var createdBy: String? = null,
     var createdDate: OffsetDateTime? = null,
 )

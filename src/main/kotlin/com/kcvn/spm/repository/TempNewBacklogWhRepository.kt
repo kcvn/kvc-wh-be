@@ -48,6 +48,7 @@ class TempNewBacklogWhRepository(private val context: DSLContext) : SortingRepos
             select
                 ts.location_code,
                 ts.is_approved,
+                ts.is_transfer_lot,
                 tnbw.*,
                 count(*) over() as total_count
             from temp_new_backlog_wh tnbw

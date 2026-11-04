@@ -121,6 +121,11 @@ open class TempSplitting(
      */
     val IS_APPROVED: TableField<TempSplittingRecord, Boolean?> = createField(DSL.name("is_approved"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
+    /**
+     * The column <code>public.temp_splitting.is_transfer_lot</code>.
+     */
+    val IS_TRANSFER_LOT: TableField<TempSplittingRecord, Boolean?> = createField(DSL.name("is_transfer_lot"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
     private constructor(alias: Name, aliased: Table<TempSplittingRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<TempSplittingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<TempSplittingRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

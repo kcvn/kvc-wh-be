@@ -1,14 +1,11 @@
 package com.kcvn.spm.app.TransferLot.service
 
 import com.kcvn.spm.app.TransferLot.payload.request.TransferLotRequest
-import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
-import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
+import com.kcvn.spm.app.splitting.payload.request.SplittingRequest
+import com.kcvn.spm.app.splitting.service.SplittingService
 import com.kcvn.spm.common.exception.BusinessException
-import com.kcvn.spm.model.tables.pojos.Splitting
-import com.kcvn.spm.repository.BacklogWhRepository
 import com.kcvn.spm.repository.NewCheckingTransactionRepository
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
-import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -16,11 +13,9 @@ import java.math.BigDecimal
 @Service
 @Transactional
 class TransferLotService(
-    private val splittingRepo: SplittingRepository,
     private val newCheckTransactionRepo: NewCheckingTransactionRepository,
     private val receivingTransactionRepo: ReceivingTransactionsRepository,
-    private val backlogWhRepo: BacklogWhRepository,
-    private val receivingService: ReceivingTransactionsService,
+    private val splittingService: SplittingService,
 ) {
     fun saveTransfer(request: List<TransferLotRequest>): List<String> {
         //kiem tra package code xuat hien nhieu lan (tren toan bo request)
@@ -30,17 +25,24 @@ class TransferLotService(
             throw BusinessException("Có nhiều ngày nhập/BIN/PO: ${duplicatePackageSet.joinToString(", ")}")
 
         val packageInvalidList = mutableListOf<Pair<String, String>>()
-        //kiem tra package da ton tai truoc, bo ra khoi request de khong anh huong kiem tra so luong
+        //kiem tra package da ton tai truoc (da duyet hoac dang cho duyet), bo ra khoi request de khong anh huong kiem tra so luong
         val existPackageSet = request.map { it.packageCode }.distinct()
-            .filter { splittingRepo.findByPackage(it) != null }.toSet()
+            .filter { splittingService.isPackageExisted(it) }.toSet()
         existPackageSet.forEach { packageInvalidList.add(Pair(it, "Package $it đã tồn tại")) }
-        val newPackageRequest = request.filter { it.packageCode !in existPackageSet }
+        //kiem tra lot (= packageCode) da duoc chia hang thuong (da duyet hoac dang cho duyet) => khong cho chuyen lot
+        val splittedLotSet = request.filter { it.packageCode !in existPackageSet }
+            .map { Triple(it.receivingDate, it.poNumber, it.packageCode) }.distinct()
+            .filter { (date, po, lot) -> splittingService.isLotSplitted(date, po, lot) }
+            .map { it.third }.toSet()
+        splittedLotSet.forEach { packageInvalidList.add(Pair(it, "Lot $it đã được chia hàng, không thể chuyển lot")) }
+        val newPackageRequest = request.filter { it.packageCode !in existPackageSet && it.packageCode !in splittedLotSet }
 
         val receivingDateList = newPackageRequest.map { it.receivingDate }.distinct()
 
         //package khong khop so luong
         val invalidPackageSet = mutableSetOf<String>()
         ///kiem tra so luong theo package: da check (lot no = package code) = da nhap + lan nay
+        //(package dang cho duyet da bi chan o tren nen khong can cong them so cho duyet)
         receivingDateList.forEach{ date ->
             val checkedList = newCheckTransactionRepo.findByRecDate(date).filter { it.isApprove == true }
             val receivedList = receivingTransactionRepo.findByRecDate(date)
@@ -56,29 +58,22 @@ class TransferLotService(
             }
         }
         val validQtyList = newPackageRequest.filter { it.packageCode !in invalidPackageSet }
-        val splitingData = validQtyList.map {
-            Splitting(
-                receivingDate =  it.receivingDate,
-                packageCode = it.packageCode,
-                locationCode = it.binCode,
-                isSyncedSap = false,
-                isSyncedAmoeba = false
-            )
-        }.distinct()
 
-        splitingData.forEach { split ->
-            splittingRepo.save(split)
-            val lotData = validQtyList.filter { it.packageCode == split.packageCode }
-            val receivingData = lotData.map { RecTransRequest(
-                locationCode = it.binCode,
-                packageCode = it.packageCode,
-                poNumber = it.poNumber,
-                qty = it.quantity,
-                lotNo = it.lotNo,
-                issueDate = it.issueDate?.toString(),
-            ) }
-            receivingService.saveRecTrans(receivingData, split.receivingDate, isTransferLot = true)
-        }
+        //luu vao bang tam giong chia hang, cho duyet (approve dung chung API /api/splitting/temp/approve)
+        splittingService.saveTempPackages(
+            validQtyList.map {
+                SplittingRequest(
+                    receivingDate = it.receivingDate,
+                    binCode = it.binCode,
+                    packageCode = it.packageCode,
+                    poNumber = it.poNumber,
+                    lotNo = it.lotNo,
+                    quantity = it.quantity,
+                    issueDate = it.issueDate,
+                )
+            },
+            isTransferLot = true
+        )
         return packageInvalidList.map { it.second}
     }
 }

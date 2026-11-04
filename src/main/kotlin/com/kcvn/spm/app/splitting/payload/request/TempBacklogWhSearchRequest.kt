@@ -10,4 +10,6 @@ class TempBacklogWhSearchRequest {
     var fromDate: LocalDate? = null
     var toDate: LocalDate? = null
     var isApproved: Boolean? = null
+    /** null = lay tat ca; false = chia hang; true = chuyen lot */
+    var isTransferLot: Boolean? = null
 }

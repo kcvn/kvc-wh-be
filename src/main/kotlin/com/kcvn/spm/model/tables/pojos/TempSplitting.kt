@@ -27,7 +27,10 @@ data class TempSplitting(
     var isDeleted: Boolean? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsApproved")
-    var isApproved: Boolean? = null
+    var isApproved: Boolean? = null,
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsTransferLot")
+    var isTransferLot: Boolean? = null
 ): Serializable {
 
 
@@ -99,6 +102,12 @@ data class TempSplitting(
         }
         else if (this.isApproved != o.isApproved)
             return false
+        if (this.isTransferLot == null) {
+            if (o.isTransferLot != null)
+                return false
+        }
+        else if (this.isTransferLot != o.isTransferLot)
+            return false
         return true
     }
 
@@ -115,6 +124,7 @@ data class TempSplitting(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         result = prime * result + (if (this.isApproved == null) 0 else this.isApproved.hashCode())
+        result = prime * result + (if (this.isTransferLot == null) 0 else this.isTransferLot.hashCode())
         return result
     }
 
@@ -131,6 +141,7 @@ data class TempSplitting(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(isDeleted)
         sb.append(", ").append(isApproved)
+        sb.append(", ").append(isTransferLot)
 
         sb.append(")")
         return sb.toString()

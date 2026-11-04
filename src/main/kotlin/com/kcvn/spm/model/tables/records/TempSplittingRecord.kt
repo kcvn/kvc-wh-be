@@ -63,6 +63,12 @@ open class TempSplittingRecord() : UpdatableRecordImpl<TempSplittingRecord>(Temp
         set(value): Unit = set(9, value)
         get(): Boolean? = get(9) as Boolean?
 
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsTransferLot")
+    open var isTransferLot: Boolean?
+        set(value): Unit = set(10, value)
+        get(): Boolean? = get(10) as Boolean?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -72,7 +78,7 @@ open class TempSplittingRecord() : UpdatableRecordImpl<TempSplittingRecord>(Temp
     /**
      * Create a detached, initialised TempSplittingRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, packageCode: String? = null, locationCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, isApproved: Boolean? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, packageCode: String? = null, locationCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, isApproved: Boolean? = null, isTransferLot: Boolean? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.packageCode = packageCode
@@ -83,6 +89,7 @@ open class TempSplittingRecord() : UpdatableRecordImpl<TempSplittingRecord>(Temp
         this.updatedBy = updatedBy
         this.isDeleted = isDeleted
         this.isApproved = isApproved
+        this.isTransferLot = isTransferLot
         resetChangedOnNotNull()
     }
 
@@ -101,6 +108,7 @@ open class TempSplittingRecord() : UpdatableRecordImpl<TempSplittingRecord>(Temp
             this.updatedBy = value.updatedBy
             this.isDeleted = value.isDeleted
             this.isApproved = value.isApproved
+            this.isTransferLot = value.isTransferLot
             resetChangedOnNotNull()
         }
     }

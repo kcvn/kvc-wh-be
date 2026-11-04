@@ -83,11 +83,16 @@ class SplittingService(
             val receivingDate = split.receivingDate!!
             val rows = tempNewBacklogWhRepo.findByTempSplittingId(id)
             if (rows.isEmpty()) throw BusinessException("Package $packageCode không có dữ liệu chia hàng")
+            //loai package: chia hang hay chuyen lot
+            val isTransferLot = split.isTransferLot == true
 
             //2. kiem tra lai truoc khi ghi
             if (splittingRepo.findByPackage(packageCode) != null)
                 throw BusinessException("Package $packageCode đã tồn tại")
-            validateApproveQty(packageCode, receivingDate, rows)
+            if (isTransferLot && rows.map { it.poNumber }.distinct().any { isLotSplitted(receivingDate, it, packageCode) })
+                throw BusinessException("Lot $packageCode đã được chia hàng, không thể chuyển lot")
+            if (isTransferLot) validateTransferApproveQty(packageCode, receivingDate, rows)
+            else validateApproveQty(packageCode, receivingDate, rows)
 
             //3. ghi vao bang chinh
             splittingRepo.save(
@@ -95,7 +100,7 @@ class SplittingService(
                     receivingDate = receivingDate,
                     packageCode = packageCode,
                     locationCode = split.locationCode,
-                    isSyncedSap = true,
+                    isSyncedSap = !isTransferLot,
                     isSyncedAmoeba = false
                 )
             )
@@ -109,9 +114,23 @@ class SplittingService(
                     issueDate = it.issueDate
                 )
             }
-            //ghi receiving_transactions + cong new_backlog_wh (dung chung voi luong chuyen lot)
-            receivingService.saveRecTrans(receivingData, receivingDate)
+            //ghi receiving_transactions + cong new_backlog_wh
+            receivingService.saveRecTrans(receivingData, receivingDate, isTransferLot = isTransferLot)
         }
+    }
+
+    /**
+     * Chuyen lot: kiem tra theo package.
+     * So da check (approve, lot no = packageCode) = da nhap (dest_package_code = packageCode) + package nay.
+     */
+    private fun validateTransferApproveQty(packageCode: String, receivingDate: LocalDate, rows: List<TempNewBacklogWh>) {
+        val checkedQty = newCheckTransactionRepo.findByRecDate(receivingDate)
+            .filter { it.isApprove == true && it.lotNo == packageCode }.sumOf { it.scanQty!! }
+        val receivedQty = receivingTransactionRepo.findByRecDate(receivingDate)
+            .filter { it.destPackageCode == packageCode }.sumOf { it.qty ?: BigDecimal.ZERO }
+        val thisQty = rows.sumOf { it.backlogQty ?: BigDecimal.ZERO }
+        if (checkedQty compareTo (thisQty + receivedQty) != 0)
+            throw BusinessException("Package $packageCode không khớp số lượng đã nhập")
     }
 
     private fun validateApproveQty(packageCode: String, receivingDate: LocalDate, rows: List<TempNewBacklogWh>) {
@@ -148,7 +167,7 @@ class SplittingService(
         val packageInvalidList = mutableListOf<Pair<String, String>>()
         //kiem tra package da ton tai truoc, bo ra khoi request de khong anh huong kiem tra so luong
         val existPackageSet = request.map { it.packageCode }.distinct()
-            .filter { splittingRepo.findByPackage(it) != null || tempSplittingRepo.findPendingByPackage(it) != null }.toSet()
+            .filter { isPackageExisted(it) }.toSet()
         existPackageSet.forEach { packageInvalidList.add(Pair(it, "Package $it đã tồn tại")) }
         val newPackageRequest = request.filter { it.packageCode !in existPackageSet }
 
@@ -193,24 +212,35 @@ class SplittingService(
             .map { it.packageCode }.toSet()
         invalidPackageSet.forEach { packageInvalidList.add(Pair(it, "Package $it có PO không khớp số lượng đã nhập")) }
         val validQtyList = newPackageRequest.filter { it.packageCode !in invalidPackageSet }
-        val splitingData = validQtyList.map {
+        saveTempPackages(validQtyList, isTransferLot = false)
+        return packageInvalidList.map { it.second}
+    }
+
+    /**
+     * Luu vao bang tam (temp_splitting + temp_new_backlog_wh), cho duyet moi chuyen sang splitting / receiving_transactions / new_backlog_wh.
+     * Dung chung cho chia hang va chuyen lot. Request da duoc validate truoc khi goi.
+     * @param isTransferLot true: chuyen lot (lot no ben checking chinh la packageCode)
+     */
+    fun saveTempPackages(validList: List<SplittingRequest>, isTransferLot: Boolean) {
+        val splitingData = validList.map {
             TempSplitting(
                 receivingDate =  it.receivingDate,
                 packageCode = it.packageCode,
                 locationCode = it.binCode,
+                isTransferLot = isTransferLot,
             )
         }.distinct()
 
-        //luu vao bang tam, cho duyet moi chuyen sang splitting / new_backlog_wh
         splitingData.forEach { split ->
             val tempSplittingId = tempSplittingRepo.save(split)
             //moi dong request = 1 dong tam (khong gop), khi approve map 1-1 sang saveRecTrans
-            validQtyList.filter { it.packageCode == split.packageCode }
+            validList.filter { it.packageCode == split.packageCode }
                 .forEach { row ->
+                    val checkingLotNo = if (isTransferLot) row.packageCode else row.lotNo
                     val checkingRecord = newCheckTransactionRepo.findByRecDatePoAndLot(
                         row.receivingDate,
                         row.poNumber,
-                        row.lotNo
+                        checkingLotNo
                     ).firstOrNull() //vi 1 lot, 1 PO co the thuoc nhieu invoice, nhung phai trung cac thong tin khac, nen lay dong dau tien
                     tempNewBacklogWhRepo.save(
                         TempNewBacklogWh(
@@ -234,6 +264,19 @@ class SplittingService(
                     )
                 }
         }
-        return packageInvalidList.map { it.second}
     }
+
+    /**
+     * Chuyen lot: lot ben checking (= packageCode chuyen lot) da duoc chia hang thuong chua (da duyet hoac dang cho duyet).
+     * Chia hang thuong ghi lot_no = lot do nhung package khac, nen loai tru dong cua chinh package chuyen lot.
+     */
+    fun isLotSplitted(receivingDate: LocalDate, poNumber: String?, checkingLotNo: String): Boolean =
+        receivingTransactionRepo.findByRecDate(receivingDate)
+            .any { it.poNumber == poNumber && it.lotNo == checkingLotNo && it.destPackageCode != checkingLotNo } ||
+        tempNewBacklogWhRepo.findPendingByRecDate(receivingDate)
+            .any { it.poNumber == poNumber && it.lotNo == checkingLotNo && it.packageCode != checkingLotNo }
+
+    /** Package da ton tai: da duyet (splitting) hoac dang cho duyet (temp_splitting) */
+    fun isPackageExisted(packageCode: String): Boolean =
+        splittingRepo.findByPackage(packageCode) != null || tempSplittingRepo.findPendingByPackage(packageCode) != null
 }

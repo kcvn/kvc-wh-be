@@ -84,10 +84,14 @@ open class NewTempSendingTransactionsRecord() : TableRecordImpl<NewTempSendingTr
         set(value): Unit = set(14, value)
         get(): String? = get(14) as String?
 
+    open var sourceLocationCode: String?
+        set(value): Unit = set(15, value)
+        get(): String? = get(15) as String?
+
     /**
      * Create a detached, initialised NewTempSendingTransactionsRecord
      */
-    constructor(id: String? = null, clientScanId: String? = null, sendingPickingListId: String? = null, scannedQty: BigDecimal? = null, seqNo: Int? = null, notMinusBoxQty: Boolean? = null, isDeleted: Boolean? = null, isSyncedSap: Boolean? = null, isSyncedAmoeba: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, packageCode: String? = null, lotNo: String? = null): this() {
+    constructor(id: String? = null, clientScanId: String? = null, sendingPickingListId: String? = null, scannedQty: BigDecimal? = null, seqNo: Int? = null, notMinusBoxQty: Boolean? = null, isDeleted: Boolean? = null, isSyncedSap: Boolean? = null, isSyncedAmoeba: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, packageCode: String? = null, lotNo: String? = null, sourceLocationCode: String? = null): this() {
         this.id = id
         this.clientScanId = clientScanId
         this.sendingPickingListId = sendingPickingListId
@@ -103,6 +107,7 @@ open class NewTempSendingTransactionsRecord() : TableRecordImpl<NewTempSendingTr
         this.updatedBy = updatedBy
         this.packageCode = packageCode
         this.lotNo = lotNo
+        this.sourceLocationCode = sourceLocationCode
         resetChangedOnNotNull()
     }
 
@@ -126,6 +131,7 @@ open class NewTempSendingTransactionsRecord() : TableRecordImpl<NewTempSendingTr
             this.updatedBy = value.updatedBy
             this.packageCode = value.packageCode
             this.lotNo = value.lotNo
+            this.sourceLocationCode = value.sourceLocationCode
             resetChangedOnNotNull()
         }
     }

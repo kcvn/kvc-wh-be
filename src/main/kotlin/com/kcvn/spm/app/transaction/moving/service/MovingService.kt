@@ -30,44 +30,47 @@ class MovingService(
         val todayUtc = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate()
         val list = createMovingRequestWithSeq(request, todayUtc)
 
-        list.forEach {
-            val sourceData = splittingRepo.findByPackage(it.sourcePackageCode!!)
+        list.forEach { request ->
+            val sourceData = splittingRepo.findByPackage(request.sourcePackageCode!!)
             if (sourceData != null) {
                 splittingRepo.delete(sourceData)
                 val destData = sourceData.copy(
                     id = null,
-                    locationCode = it.destLocationCode,
+                    locationCode = request.destLocationCode,
                     isSyncedAmoeba = false,
                     isDeleted = false,
                 )
                 splittingRepo.save(destData)
             }
-            else throw BusinessException("${it.sourcePackageCode} không tồn tại")
+            else throw BusinessException("${request.sourcePackageCode} không tồn tại")
             // get receivingDate from source
-            val sourceBacklog = backlogWhRepo.findByPackageCode(it.sourcePackageCode!!)
+            val sourceBacklog = backlogWhRepo.findByPackageCode(request.sourcePackageCode!!)
                 ?: throw BusinessExceptionDetail(
-                    CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = ${it.sourcePackageCode}")
+                    CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = ${request.sourcePackageCode}")
             /*val splittingSource = splittingRepo.findByLocationAndPackage(it.sourceLocationCode!!, it.sourcePackageCode!!)
                 ?: throw BusinessExceptionDetail(
                     CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
                 )*/
-            val recDateSource = sourceBacklog.receivingDate
-            // save moving
-            val moving = Moving(
-                null,
-                sourceData.locationCode,
-                it.destLocationCode,
-                it.sourcePackageCode,
-                it.sourcePackageCode,
-                sourceBacklog.poNumber,
-                sourceBacklog.backlogQty,
-                it.seqNo,
-                "TRANSFER",
-                recDateSource,
-                lotNo = sourceBacklog.lotNo,
-                issueDate = sourceBacklog.issueDate
-            )
-            val refId = movingRepo.saveMoving(moving)
+            sourceBacklog.forEach { moving ->
+                val recDateSource = moving.receivingDate
+                // save moving
+                val moving = Moving(
+                    null,
+                    sourceData.locationCode,
+                    request.destLocationCode,
+                    request.sourcePackageCode,
+                    request.sourcePackageCode,
+                    moving.poNumber,
+                    moving.backlogQty,
+                    request.seqNo,
+                    "TRANSFER",
+                    recDateSource,
+                    lotNo = moving.lotNo,
+                    issueDate = moving.issueDate
+                )
+                val refId = movingRepo.saveMoving(moving)
+            }
+
         }
     }
 

@@ -312,15 +312,18 @@ class BacklogWhService(
     fun update(request: List<BacklogWhUpdateRequest>) {
         request.forEach {
             val backlog = backlogWhRepo.findByPackageCode(it.packageCode!!)
+                backlog.forEach {
+                    backlogWhRepo.updateQty(it.packageCode!!, it.backlogQty!!, it.boxQty!!)
+                    // insert backlog history
+                    val entityBacklogHistory = BacklogWhHistory(
+                        null, it.locationCode, it.poNumber, it.packageCode, it.backlogQty, it.boxQty, it.receivingDate, it.inspectionDate, "UPDATE"
+                    )
+                    backlogWhHistoryRepo.save(entityBacklogHistory, it.id)
+                }
                 ?: throw BusinessExceptionDetail(
                     CommonUtils.getMessage("data.not.found.in.backlog"), "packageCode = $it.packageCode"
                 )
-            backlogWhRepo.updateQty(it.packageCode!!, it.backlogQty!!, it.boxQty!!)
-            // insert backlog history
-            val entityBacklogHistory = BacklogWhHistory(
-                null, backlog.locationCode, backlog.poNumber, it.packageCode, it.backlogQty, it.boxQty, backlog.receivingDate, backlog.inspectionDate, "UPDATE"
-            )
-            backlogWhHistoryRepo.save(entityBacklogHistory, backlog.id)
+
         }
     }
 

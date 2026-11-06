@@ -559,6 +559,7 @@ class SendingTransactionsService(
             val locationCode = splittingRepository.findByPackage(it.packageCode!!) ?: throw BusinessExceptionDetail(
                 "Không tìm thấy BIN của package ${it.packageCode}",""
             )
+            newTempSendingTransactionRepository.updateSourceLocationCode(it.id!!, locationCode.locationCode!!)
             val sendingTrans = SendingTransactions(
                 sourceLocationCode = locationCode.locationCode,
                 destLocationCode = "KVC",
@@ -584,7 +585,8 @@ class SendingTransactionsService(
         sendingRequestFormListRepository.update(sendingForm)
 
         val requestList = sendingRequestListRepository.findByFormId(sendingForm.id!!)
-        requestList.forEach {
+        // Request đã decline (3) giữ nguyên trạng thái, không chuyển sang hoàn tất
+        requestList.filter { it.status != 3 }.forEach {
             it.status = 4
             sendingRequestListRepository.update(it)
         }

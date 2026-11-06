@@ -245,13 +245,12 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .fetchOneInto(NewBacklogWh::class.java)
     }
 
-    fun findByPackageCode(packageCode: String): BacklogWh? {
+    fun findByPackageCode(packageCode: String): List<BacklogWh> {
         return context.selectFrom(NEW_BACKLOG_WH)
             .where(
                 NEW_BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
             )
             .fetchInto(BacklogWh::class.java)
-            .firstOrNull()
     }
 
     fun save(rec: NewBacklogWh): String{

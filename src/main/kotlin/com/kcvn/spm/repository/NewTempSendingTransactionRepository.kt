@@ -95,8 +95,20 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
         }.insert()
     }
 
+    // Cố định BIN xuất tại thời điểm duyệt, để sau đó package có move thì vẫn hiện đúng BIN đã xuất
+    fun updateSourceLocationCode(id: String, locationCode: String) {
+        context.update(NEW_TEMP_SENDING_TRANSACTIONS)
+            .set(NEW_TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE, locationCode)
+            .set(NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_DATE, LocalDateTime.now().atOffset(ZoneOffset.UTC))
+            .where(NEW_TEMP_SENDING_TRANSACTIONS.ID.eq(id))
+            .execute()
+    }
+
+    // Bỏ scan đã huỷ và request đã decline (3) để không trừ backlog cho chúng khi duyệt
     fun getTempSendingListByFormCode(formCode:String): List<NewTempSendingTransactions>?{
         return context.select(
+            NEW_TEMP_SENDING_TRANSACTIONS.ID,
             SENDING_PICKING_LIST.PACKAGE_CODE,
             SENDING_PICKING_LIST.LOT_NO,
             NEW_TEMP_SENDING_TRANSACTIONS.SCANNED_QTY,
@@ -110,6 +122,8 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
             .join(SENDING_FORM_LIST).on(SENDING_REQUEST_LIST.SENDING_FORM_ID.eq(SENDING_FORM_LIST.ID))
             .where(
                 SENDING_FORM_LIST.FORM_CODE.eq(formCode)
+                    .and(NEW_TEMP_SENDING_TRANSACTIONS.IS_DELETED.eq(false))
+                    .and(SENDING_REQUEST_LIST.STATUS.ne(3))
             )
             .orderBy(SENDING_PICKING_LIST.PACKAGE_CODE,
                 SENDING_PICKING_LIST.LOT_NO,
@@ -162,7 +176,8 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
 	list.po_number,
 	list.item_name,
 	list.production_group,
-	locations.location_code,
+	-- Đã duyệt thì lấy BIN cố định lúc duyệt, chưa duyệt thì lấy BIN hiện tại ở splitting
+	coalesce(scanned.source_location_code, locations.location_code) as location_code,
 	picking.package_code,
     picking.lot_no,
 	picking.request_qty,
@@ -187,12 +202,15 @@ on
 inner join public.sending_picking_list picking
 on
 	detail.id = picking.sending_request_detail_id
-inner join (select * from public.splitting where is_deleted = false) locations
+-- left join: sau khi duyệt splitting của package có thể đã bị xoá, vẫn phải hiện dòng picking
+left join (select * from public.splitting where is_deleted = false) locations
 on picking.package_code = locations.package_code
 left join (
 	select
 		sending_picking_list_id,
-		SUM(scanned_qty) as scanned_qty
+		SUM(scanned_qty) as scanned_qty,
+		-- 1 package chỉ có 1 BIN khi duyệt, max chỉ để gom về 1 dòng/picking
+		MAX(source_location_code) as source_location_code
 	from
 		public.new_temp_sending_transactions
 where is_deleted = false

@@ -51,8 +51,8 @@ class MovingService(
                 ?: throw BusinessExceptionDetail(
                     CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.sourceLocationCode}, packageCode = ${it.sourcePackageCode}"
                 )*/
-            sourceBacklog.forEach { moving ->
-                val recDateSource = moving.receivingDate
+            sourceBacklog.forEach { backlog ->
+                val recDateSource = backlog.receivingDate
                 // save moving
                 val moving = Moving(
                     null,
@@ -60,15 +60,16 @@ class MovingService(
                     request.destLocationCode,
                     request.sourcePackageCode,
                     request.sourcePackageCode,
-                    moving.poNumber,
-                    moving.backlogQty,
+                    backlog.poNumber,
+                    backlog.backlogQty,
                     request.seqNo,
                     "TRANSFER",
                     recDateSource,
-                    lotNo = moving.lotNo,
-                    issueDate = moving.issueDate
+                    lotNo = backlog.lotNo,
+                    issueDate = backlog.issueDate
                 )
                 val refId = movingRepo.saveMoving(moving)
+                backlogWhService.saveMovingHistory(request.destLocationCode, backlog, refId)
             }
 
         }

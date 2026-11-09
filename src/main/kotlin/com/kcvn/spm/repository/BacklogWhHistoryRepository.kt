@@ -26,12 +26,14 @@ class BacklogWhHistoryRepository(private val context: DSLContext) : SortingRepos
         context.insertInto(
             BACKLOG_WH_HISTORY, BACKLOG_WH_HISTORY.LOCATION_CODE, BACKLOG_WH_HISTORY.PO_NUMBER, BACKLOG_WH_HISTORY.PACKAGE_CODE,
             BACKLOG_WH_HISTORY.BACKLOG_QTY, BACKLOG_WH_HISTORY.BOX_QTY, BACKLOG_WH_HISTORY.RECEIVING_DATE,
-            BACKLOG_WH_HISTORY.INSPECTION_DATE, BACKLOG_WH_HISTORY.TRANSACTION_TYPE, BACKLOG_WH_HISTORY.CREATED_BY, BACKLOG_WH_HISTORY.REF_ID
+            BACKLOG_WH_HISTORY.INSPECTION_DATE, BACKLOG_WH_HISTORY.TRANSACTION_TYPE, BACKLOG_WH_HISTORY.CREATED_BY, BACKLOG_WH_HISTORY.REF_ID,
+            BACKLOG_WH_HISTORY.LOT_NO
         )
             .values(
                 data.locationCode, data.poNumber, data.packageCode,
                 data.backlogQty, data.boxQty, data.receivingDate,
-                data.inspectionDate, data.transactionType, CommonUtils.loggedInUser() ?: Constants.SYSTEM, refId
+                data.inspectionDate, data.transactionType, CommonUtils.loggedInUser() ?: Constants.SYSTEM, refId,
+                data.lotNo
             )
             .execute()
     }
@@ -49,7 +51,8 @@ class BacklogWhHistoryRepository(private val context: DSLContext) : SortingRepos
             BACKLOG_WH_HISTORY.BOX_QTY,
             BACKLOG_WH_HISTORY.TRANSACTION_TYPE,
             BACKLOG_WH_HISTORY.REF_ID,
-            BACKLOG_WH_HISTORY.CREATED_DATE
+            BACKLOG_WH_HISTORY.CREATED_DATE,
+            BACKLOG_WH_HISTORY.LOT_NO
         )
             .from(BACKLOG_WH_HISTORY)
             .where(condition)
@@ -65,7 +68,8 @@ class BacklogWhHistoryRepository(private val context: DSLContext) : SortingRepos
                 boxQty = record[BACKLOG_WH_HISTORY.BOX_QTY],
                 transactionType = record[BACKLOG_WH_HISTORY.TRANSACTION_TYPE],
                 refId = record[BACKLOG_WH_HISTORY.REF_ID],
-                createdDate = record[BACKLOG_WH_HISTORY.CREATED_DATE]
+                createdDate = record[BACKLOG_WH_HISTORY.CREATED_DATE],
+                lotNo = record[BACKLOG_WH_HISTORY.LOT_NO]
             )
         }
         return Pair(data, data.size)

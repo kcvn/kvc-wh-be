@@ -32,6 +32,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.plus
@@ -46,19 +47,21 @@ class BacklogWhService(
     private val sendingTransRepo: SendingTransactionsRepository
 
 ) {
-    fun plusBacklog(data: NewBacklogWh, transactionType: String, refId: String, plusBoxQty: Boolean) {
+    fun plusBacklog(locationCode: String, data: NewBacklogWh, transactionType: String, refId: String, plusBoxQty: Boolean) {
         val existing = backlogWhRepo.findByPackageCodeAndLotNo(data.packageCode!!, data.lotNo!!)
         if (existing == null) {
             backlogWhRepo.save(data)
+            saveHistory(locationCode, data.poNumber, data.packageCode, data.lotNo, data.backlogQty, data.boxQty, data.receivingDate, transactionType, refId)
         } else {
             existing.backlogQty = existing.backlogQty!!.plus(data.backlogQty!!)
             if (plusBoxQty)
                 existing.boxQty = existing.boxQty!!.plus(data.boxQty!!)
             backlogWhRepo.update(existing)
+            saveHistory(locationCode, existing.poNumber, existing.packageCode, existing.lotNo, existing.backlogQty, existing.boxQty, existing.receivingDate, transactionType, refId)
         }
     }
 
-        fun minusBacklog(data: NewBacklogWh, transactionType: String, refId: String, minusBoxQty: Boolean) {
+        fun minusBacklog(locationCode: String, data: NewBacklogWh, transactionType: String, refId: String, minusBoxQty: Boolean) {
             val existing = backlogWhRepo.findByPackageCodeAndLotNo(data.packageCode!!, data.lotNo!!)
             if (existing == null || existing.backlogQty!! < data.backlogQty!!) {
                 throw BusinessException("Không đủ tồn kho ${data.packageCode} - ${data.lotNo}")
@@ -66,8 +69,34 @@ class BacklogWhService(
                 existing.backlogQty = existing.backlogQty!!.minus(data.backlogQty!!)
                 existing.boxQty = existing.boxQty!!.minus(data.boxQty!!)
                 backlogWhRepo.update(existing)
+                saveHistory(locationCode, existing.poNumber, existing.packageCode, existing.lotNo, existing.backlogQty, existing.boxQty, existing.receivingDate, transactionType, refId)
             }
         }
+
+    /** moving khong doi so luong ton, chi doi BIN => ghi history voi ton hien tai, locationCode = BIN dich */
+    fun saveMovingHistory(destLocationCode: String?, backlog: BacklogWh, refId: String?) {
+        saveHistory(destLocationCode, backlog.poNumber, backlog.packageCode, backlog.lotNo, backlog.backlogQty, backlog.boxQty, backlog.receivingDate, "TRANSFER", refId)
+    }
+
+    // backlogQty/boxQty: ton kho sau khi thay doi
+    private fun saveHistory(
+        locationCode: String?, poNumber: String?, packageCode: String?, lotNo: String?,
+        backlogQty: BigDecimal?, boxQty: Int?, receivingDate: LocalDate?, transactionType: String, refId: String?,
+    ) {
+        backlogWhHistoryRepo.save(
+            BacklogWhHistory(
+                locationCode = locationCode,
+                poNumber = poNumber,
+                packageCode = packageCode,
+                lotNo = lotNo,
+                backlogQty = backlogQty,
+                boxQty = boxQty,
+                receivingDate = receivingDate,
+                transactionType = transactionType,
+            ),
+            refId
+        )
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -373,47 +402,37 @@ class BacklogWhService(
 
     fun getBacklogHistoryList(packageCode: String): BasePagingResponse<BacklogHistoryResponse>{
         val listBacklogHistoryResponse = backlogWhHistoryRepo.getBacklogHistoryList(packageCode)
-        val data = mutableListOf(BacklogHistoryResponse())
-        val tempData = listBacklogHistoryResponse.first.map {
-            val receiving = receivingTransRepo.findOneRecordById(it.refId)
-            val moving = movingTransRepo.findOneRecordById(it.refId)
-            val sending = sendingTransRepo.findOneRecordById(it.refId)
-            if (data.last().transactionType == it.transactionType && data.last().createDate == it.createdDate?.toLocalDate())
-            {
-                data.last().backlogQty = it.backlogQty
-                data.last().boxQty = it.boxQty
-
-                if (receiving != null)
-                    data.last().transactionQty = data.last().transactionQty?.plus(receiving.qty!!)
-                else if (sending != null)
-                    data.last().transactionQty = data.last().transactionQty?.plus(sending.qty!!) else TODO()
+        // backlogQty luu theo lot => nhom theo lot, trong moi lot gop cac dong cung loai + cung ngay (giu thu tu thoi gian)
+        val data = listBacklogHistoryResponse.first
+            .groupBy { it.lotNo }
+            .flatMap { (lotNo, histories) ->
+                val lotData = mutableListOf<BacklogHistoryResponse>()
+                histories.forEach {
+                    val receiving = receivingTransRepo.findOneRecordById(it.refId)
+                    val sending = sendingTransRepo.findOneRecordById(it.refId)
+                    val transactionQty = receiving?.qty ?: sending?.qty ?: BigDecimal.ZERO
+                    val last = lotData.lastOrNull()
+                    if (last != null && last.transactionType == it.transactionType && last.createDate == it.createdDate?.toLocalDate()) {
+                        last.backlogQty = it.backlogQty
+                        last.boxQty = it.boxQty
+                        last.transactionQty = (last.transactionQty ?: BigDecimal.ZERO).plus(transactionQty)
+                    } else {
+                        lotData += BacklogHistoryResponse(
+                            locationCode = it.locationCode,
+                            poNumber = it.poNumber,
+                            lotNo = lotNo,
+                            inspectionDate = it.inspectionDate,
+                            receivingDate = it.receivingDate,
+                            transactionQty = transactionQty,
+                            backlogQty = it.backlogQty,
+                            boxQty = it.boxQty,
+                            transactionType = it.transactionType,
+                            createDate = it.createdDate?.toLocalDate()
+                        )
+                    }
+                }
+                lotData
             }
-            else
-            {
-                val new = BacklogHistoryResponse(
-                    locationCode = it.locationCode,
-                    poNumber = it.poNumber,
-                    inspectionDate = it.inspectionDate,
-                    receivingDate = it.receivingDate,
-                    transactionQty = if (receiving != null) receiving.qty else if (sending != null) sending.qty else BigDecimal.ZERO,
-                    backlogQty = it.backlogQty,
-                    boxQty = it.boxQty,
-                    transactionType = it.transactionType
-//                {
-//                    "IN_ONLY"   -> "Nhập"
-//                    "OUT_ONLY"  -> "Xuất"
-//                    "IN" -> "N. Chuyển"
-//                    "OUT"   -> "X. Chuyển"
-//                    else        -> "Không xác định"
-//                }
-                    ,
-                    createDate = it.createdDate?.toLocalDate()
-                )
-                data.add(new)
-            }
-
-        }
-        data.removeFirst()
         return BasePagingResponse(data, data.size)
     }
 }

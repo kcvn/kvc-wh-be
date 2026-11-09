@@ -170,7 +170,7 @@ class ReceivingTransactionsService(
                     unitPrice = checkingRecord?.unitPrice,
                     costCenter = checkingRecord?.costCenter,
                 )
-                backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId, true)
+                backlogWhService.plusBacklog(it.locationCode!!, backlogData, "IN_ONLY", refId, true)
             }
         }
     }

@@ -76,6 +76,10 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
         set(value): Unit = set(13, value)
         get(): String? = get(13) as String?
 
+    open var lotNo: String?
+        set(value): Unit = set(14, value)
+        get(): String? = get(14) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -85,7 +89,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
     /**
      * Create a detached, initialised BacklogWhHistoryRecord
      */
-    constructor(id: String? = null, locationCode: String? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, receivingDate: LocalDate? = null, inspectionDate: LocalDate? = null, transactionType: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, refId: String? = null): this() {
+    constructor(id: String? = null, locationCode: String? = null, poNumber: String? = null, packageCode: String? = null, backlogQty: BigDecimal? = null, boxQty: Int? = null, receivingDate: LocalDate? = null, inspectionDate: LocalDate? = null, transactionType: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, refId: String? = null, lotNo: String? = null): this() {
         this.id = id
         this.locationCode = locationCode
         this.poNumber = poNumber
@@ -100,6 +104,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
         this.refId = refId
+        this.lotNo = lotNo
         resetChangedOnNotNull()
     }
 
@@ -122,6 +127,7 @@ open class BacklogWhHistoryRecord() : UpdatableRecordImpl<BacklogWhHistoryRecord
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
             this.refId = value.refId
+            this.lotNo = value.lotNo
             resetChangedOnNotNull()
         }
     }

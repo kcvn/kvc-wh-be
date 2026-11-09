@@ -315,6 +315,22 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                 .fetchInto(NewCheckingTransaction::class.java)
     }
 
+    // các lot đã approve nhưng chưa sync SAP
+    fun getApprovedNotSyncedSapLots(): List<NewCheckingTransaction> {
+        return context.selectFrom(NEW_CHECKING_TRANSACTION)
+            .where(
+                NEW_CHECKING_TRANSACTION.IS_APPROVE.eq(true)
+                    .and(NEW_CHECKING_TRANSACTION.IS_SYNCED_SAP.eq(false))
+            )
+            .orderBy(
+                NEW_CHECKING_TRANSACTION.RECEIVING_DATE,
+                NEW_CHECKING_TRANSACTION.INVOICE_NUMBER,
+                NEW_CHECKING_TRANSACTION.PO_NUMBER,
+                NEW_CHECKING_TRANSACTION.LOT_NO,
+            )
+            .fetchInto(NewCheckingTransaction::class.java)
+    }
+
     override fun getTableField(sortFieldName: String): TableField<*, *> {
         val fieldName = sortFieldName.lowercase()
         val sortField: TableField<*, *> = when (fieldName) {

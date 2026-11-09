@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.plus
 
 @Service
@@ -173,6 +174,25 @@ class CheckingHistoryService(
             existing.scanQty = (existing.scanQty ?: BigDecimal.ZERO) + request.qty
             checkingTransRepo.update(existing)
         }
+    }
+
+    // file txt (tab-separated, không header): receivingDate, invoice, po, 1, storageLocation, lotNo, receiveQty, unit
+    @Transactional(readOnly = true)
+    fun exportApprovedNotSyncedSapTxt(): ByteArray {
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+        val content = checkingTransRepo.getApprovedNotSyncedSapLots().joinToString(separator = "\r\n") {
+            listOf(
+                it.receivingDate?.format(dateFormatter).orEmpty(),
+                it.invoiceNumber.orEmpty(),
+                it.poNumber.orEmpty(),
+                "00001",
+                it.storageLocation.orEmpty(),
+                it.lotNo.orEmpty(),
+                (it.scanQty ?: BigDecimal.ZERO).stripTrailingZeros().toPlainString(),
+                it.unit.orEmpty(),
+            ).joinToString("\t")
+        }
+        return content.toByteArray(Charsets.UTF_8)
     }
 
     fun approveCheckingTransaction(requestList: List<CheckingHistoryApproveRequest>) {

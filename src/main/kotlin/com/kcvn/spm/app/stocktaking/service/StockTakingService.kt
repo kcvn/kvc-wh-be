@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.stocktaking.service
 
+import com.kcvn.spm.common.enums.EProductionGroup
 import com.kcvn.spm.app.stocktaking.payload.request.*
 import com.kcvn.spm.app.stocktaking.payload.response.*
 import com.kcvn.spm.common.constants.ExcelConstant
@@ -514,17 +515,7 @@ class StockTakingService(
                 val lotNo = ExcelHelper.getCellValueAmoeba(row, 7)
                 if (lotNo == "") continue
                 val productionGroup = ExcelHelper.getCellValueAmoeba(row, 1)
-                val convertedProductionGroup = when (productionGroup){
-                    "2317" -> "CMOS"
-                    "2311" -> "SMD"
-                    "2314" -> "META"
-                    "2315" -> "CPD"
-                    "2318" -> "RFD"
-                    "2316" -> "ITD"
-                    "2312" -> "PMD"
-                    "2313" -> "JMD"
-                    else -> "ADM"
-                }
+                val convertedProductionGroup = EProductionGroup.nameOfSapCode(productionGroup)
 
                 val data = SapBacklog(
                     itemCode = ExcelHelper.getCellValueAmoeba(row, 0),

@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.purchaseOrderBacklog.service
 
+import com.kcvn.spm.common.enums.EProductionGroup
 import com.kcvn.spm.app.purchaseOrderBacklog.payload.response.PurchaseOrderBacklogResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -45,28 +46,8 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
                 val invoice = ExcelHelper.getCellValueAmoeba(row, 1)
                 val itemType = ExcelHelper.getCellValueAmoeba(row, 62)
                 val productionGroup = ExcelHelper.getCellValueAmoeba(row, 11)
-                val productionGroupCode = when (productionGroup) {
-                    "2317" -> "C"
-                    "2311" -> "D"
-                    "2314" -> "E"
-                    "2315" -> "F"
-                    "2318" -> "G"
-                    "2316" -> "H"
-                    "2312" -> "I"
-                    "2313" -> "J"
-                    else -> "Z"
-                }
-                val convertedProductionGroup = when (productionGroup){
-                    "2317" -> "CMOS"
-                    "2311" -> "SMD"
-                    "2314" -> "META"
-                    "2315" -> "CPD"
-                    "2318" -> "RFD"
-                    "2316" -> "ITD"
-                    "2312" -> "PMD"
-                    "2313" -> "JMD"
-                    else -> "ADM"
-                }
+                val productionGroupCode = EProductionGroup.lotPrefixOfSapCode(productionGroup)
+                val convertedProductionGroup = EProductionGroup.nameOfSapCode(productionGroup)
 
                 val lotNo = generateLotNo(seqNo, invoice, poNo, productionGroupCode)
 

@@ -30,7 +30,8 @@ data class Splitting(
     var isSyncedSap: Boolean? = null,
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsSyncedAmoeba")
-    var isSyncedAmoeba: Boolean? = null
+    var isSyncedAmoeba: Boolean? = null,
+    var tempSplittingId: String? = null
 ): Serializable {
 
 
@@ -108,6 +109,12 @@ data class Splitting(
         }
         else if (this.isSyncedAmoeba != o.isSyncedAmoeba)
             return false
+        if (this.tempSplittingId == null) {
+            if (o.tempSplittingId != null)
+                return false
+        }
+        else if (this.tempSplittingId != o.tempSplittingId)
+            return false
         return true
     }
 
@@ -125,6 +132,7 @@ data class Splitting(
         result = prime * result + (if (this.isDeleted == null) 0 else this.isDeleted.hashCode())
         result = prime * result + (if (this.isSyncedSap == null) 0 else this.isSyncedSap.hashCode())
         result = prime * result + (if (this.isSyncedAmoeba == null) 0 else this.isSyncedAmoeba.hashCode())
+        result = prime * result + (if (this.tempSplittingId == null) 0 else this.tempSplittingId.hashCode())
         return result
     }
 
@@ -142,6 +150,7 @@ data class Splitting(
         sb.append(", ").append(isDeleted)
         sb.append(", ").append(isSyncedSap)
         sb.append(", ").append(isSyncedAmoeba)
+        sb.append(", ").append(tempSplittingId)
 
         sb.append(")")
         return sb.toString()

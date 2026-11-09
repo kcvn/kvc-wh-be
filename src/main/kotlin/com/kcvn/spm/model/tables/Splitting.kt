@@ -126,6 +126,11 @@ open class Splitting(
      */
     val IS_SYNCED_AMOEBA: TableField<SplittingRecord, Boolean?> = createField(DSL.name("is_synced_amoeba"), SQLDataType.BOOLEAN, this, "")
 
+    /**
+     * The column <code>public.splitting.temp_splitting_id</code>.
+     */
+    val TEMP_SPLITTING_ID: TableField<SplittingRecord, String?> = createField(DSL.name("temp_splitting_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
+
     private constructor(alias: Name, aliased: Table<SplittingRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SplittingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<SplittingRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

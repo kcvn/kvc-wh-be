@@ -15,7 +15,9 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -26,6 +28,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/api/splitting")
@@ -96,5 +100,18 @@ class SplittingController(private val splittingService: SplittingService) {
             MessageResponse(CommonUtils.getMessage("action.succeeded"), data),
             HttpStatus.CREATED
         )
+    }
+
+    @GetMapping("/export-sap-txt")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun exportSapTxt(): ResponseEntity<ByteArray> {
+        val data = splittingService.exportNotSyncedSapTxt()
+        val fileName = "splitting_sap_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))}.txt"
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$fileName\"")
+            .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+            .contentType(MediaType("text", "plain", Charsets.UTF_8))
+            .contentLength(data.size.toLong())
+            .body(data)
     }
 }

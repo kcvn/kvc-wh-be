@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.splitting.service
 
+import com.kcvn.spm.common.enums.EProductionGroup
 import com.kcvn.spm.app.splitting.payload.request.SplittingRequest
 import com.kcvn.spm.app.splitting.payload.respone.SplittingResponse
 import com.kcvn.spm.app.splitting.payload.request.TempBacklogWhSearchRequest
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Service
 @Transactional
@@ -101,7 +104,8 @@ class SplittingService(
                     packageCode = packageCode,
                     locationCode = split.locationCode,
                     isSyncedSap = !isTransferLot,
-                    isSyncedAmoeba = false
+                    isSyncedAmoeba = false,
+                    tempSplittingId = id,
                 )
             )
             val receivingData = rows.map {
@@ -275,6 +279,27 @@ class SplittingService(
             .any { it.poNumber == poNumber && it.lotNo == checkingLotNo && it.destPackageCode != checkingLotNo } ||
         tempNewBacklogWhRepo.findPendingByRecDate(receivingDate)
             .any { it.poNumber == poNumber && it.lotNo == checkingLotNo && it.packageCode != checkingLotNo }
+
+    // file txt (tab-separated, khong header): 00001, itemCode, packageCode, lotNo, updatedDate, productionGroup, storageLocation, storageLocation, quantity, unit
+    @Transactional(readOnly = true)
+    fun exportNotSyncedSapTxt(): ByteArray {
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+        val content = splittingRepo.getNotSyncedSapForExport().joinToString(separator = "\r\n") {
+            listOf(
+                "1",
+                it.itemCode.orEmpty(),
+                it.packageCode.orEmpty(),
+                it.lotNo.orEmpty(),
+                it.updatedDate?.atZoneSameInstant(ZoneId.systemDefault())?.format(dateFormatter).orEmpty(),
+                EProductionGroup.sapCodeOfName(it.productionGroup),
+                it.storageLocation.orEmpty(),
+                it.storageLocation.orEmpty(),
+                (it.quantity ?: BigDecimal.ZERO).stripTrailingZeros().toPlainString(),
+                it.unit.orEmpty(),
+            ).joinToString("\t")
+        }
+        return content.toByteArray(Charsets.UTF_8)
+    }
 
     /** Package da ton tai: da duyet (splitting) hoac dang cho duyet (temp_splitting) */
     fun isPackageExisted(packageCode: String): Boolean =

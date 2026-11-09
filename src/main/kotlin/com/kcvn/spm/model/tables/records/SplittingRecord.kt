@@ -69,6 +69,10 @@ open class SplittingRecord() : UpdatableRecordImpl<SplittingRecord>(Splitting.SP
         set(value): Unit = set(10, value)
         get(): Boolean? = get(10) as Boolean?
 
+    open var tempSplittingId: String?
+        set(value): Unit = set(11, value)
+        get(): String? = get(11) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -78,7 +82,7 @@ open class SplittingRecord() : UpdatableRecordImpl<SplittingRecord>(Splitting.SP
     /**
      * Create a detached, initialised SplittingRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, packageCode: String? = null, locationCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, isSyncedSap: Boolean? = null, isSyncedAmoeba: Boolean? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, packageCode: String? = null, locationCode: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, isDeleted: Boolean? = null, isSyncedSap: Boolean? = null, isSyncedAmoeba: Boolean? = null, tempSplittingId: String? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.packageCode = packageCode
@@ -90,6 +94,7 @@ open class SplittingRecord() : UpdatableRecordImpl<SplittingRecord>(Splitting.SP
         this.isDeleted = isDeleted
         this.isSyncedSap = isSyncedSap
         this.isSyncedAmoeba = isSyncedAmoeba
+        this.tempSplittingId = tempSplittingId
         resetChangedOnNotNull()
     }
 
@@ -109,6 +114,7 @@ open class SplittingRecord() : UpdatableRecordImpl<SplittingRecord>(Splitting.SP
             this.isDeleted = value.isDeleted
             this.isSyncedSap = value.isSyncedSap
             this.isSyncedAmoeba = value.isSyncedAmoeba
+            this.tempSplittingId = value.tempSplittingId
             resetChangedOnNotNull()
         }
     }

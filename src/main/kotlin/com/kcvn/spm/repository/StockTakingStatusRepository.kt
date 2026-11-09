@@ -28,6 +28,23 @@ class StockTakingStatusRepository(private val context: DSLContext) : SortingRepo
             .firstOrNull()
     }
 
+    // FOR SHARE: scans run in parallel but wait while a stop holds FOR UPDATE on the same month
+    fun findByStatusForShare(status: String): StockTakingStatus? {
+        return context.selectFrom(STOCK_TAKING_STATUS)
+            .where(STOCK_TAKING_STATUS.STATUS.eq(status))
+            .forShare()
+            .fetchInto(StockTakingStatus::class.java)
+            .firstOrNull()
+    }
+
+    fun findByYearAndMonthForUpdate(yearNumber: Int, monthNumber: Int): StockTakingStatus? {
+        return context.selectFrom(STOCK_TAKING_STATUS)
+            .where(STOCK_TAKING_STATUS.YEAR_NUMBER.eq(yearNumber).and(STOCK_TAKING_STATUS.MONTH_NUMBER.eq(monthNumber)))
+            .forUpdate()
+            .fetchInto(StockTakingStatus::class.java)
+            .firstOrNull()
+    }
+
     fun save(domain: StockTakingStatus) {
         context.insertInto(
             STOCK_TAKING_STATUS, STOCK_TAKING_STATUS.YEAR_NUMBER, STOCK_TAKING_STATUS.MONTH_NUMBER,
@@ -36,20 +53,17 @@ class StockTakingStatusRepository(private val context: DSLContext) : SortingRepo
             .execute()
     }
 
+    // runs inside the caller's Spring transaction; context.transaction{} would commit early and release stop locks
     fun updateStatus(yearNumber: Int, monthNumber: Int) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            transactionalContext.update(STOCK_TAKING_STATUS)
-                .set(STOCK_TAKING_STATUS.STATUS, "completed")
-                .set(STOCK_TAKING_STATUS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(STOCK_TAKING_STATUS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .where(
-                    STOCK_TAKING_STATUS.YEAR_NUMBER.eq(yearNumber)
-                        .and(STOCK_TAKING_STATUS.MONTH_NUMBER.eq(monthNumber))
-                )
-                .execute()
-        }
+        context.update(STOCK_TAKING_STATUS)
+            .set(STOCK_TAKING_STATUS.STATUS, "completed")
+            .set(STOCK_TAKING_STATUS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(STOCK_TAKING_STATUS.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                STOCK_TAKING_STATUS.YEAR_NUMBER.eq(yearNumber)
+                    .and(STOCK_TAKING_STATUS.MONTH_NUMBER.eq(monthNumber))
+            )
+            .execute()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

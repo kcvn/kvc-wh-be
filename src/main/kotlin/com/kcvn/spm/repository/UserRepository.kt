@@ -72,7 +72,8 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
             AUTH_USER,
             AUTH_USER.USERNAME, AUTH_USER.PASSWORD, AUTH_USER.EMPLOYEE_CODE, AUTH_USER.EMAIL,
             AUTH_USER.PHONE_NUMBER, AUTH_USER.FULL_NAME, AUTH_USER.FULL_NAME_UNSIGNED,
-            AUTH_USER.DATE_OF_BIRTH, AUTH_USER.AVATAR, AUTH_USER.STATUS, AUTH_USER.CREATED_BY
+            AUTH_USER.DATE_OF_BIRTH, AUTH_USER.AVATAR, AUTH_USER.STATUS, AUTH_USER.CREATED_BY,
+            AUTH_USER.DEPARTMENT
         )
         .values(
             user.username,
@@ -85,7 +86,8 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
             user.dateOfBirth,
             user.avatar,
             user.status,
-            CommonUtils.loggedInUser() ?: Constants.SYSTEM
+            CommonUtils.loggedInUser() ?: Constants.SYSTEM,
+            user.department
         )
         .returningResult(AUTH_USER)
         .fetchInto(AuthUser::class.java).firstOrNull()
@@ -99,6 +101,7 @@ class UserRepository(private val context: DSLContext) : SortingRepository() {
         .set(AUTH_USER.DATE_OF_BIRTH, user.dateOfBirth)
         .set(AUTH_USER.AVATAR, user.avatar)
         .set(AUTH_USER.STATUS, user.status)
+        .set(AUTH_USER.DEPARTMENT, user.department)
         .set(AUTH_USER.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
         .where(AUTH_USER.ID.eq(user.id))
         .returningResult(AUTH_USER)

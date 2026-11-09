@@ -6,6 +6,7 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactions
+import com.kcvn.spm.app.transaction.sending.payload.response.SendingSapExportResponse
 import com.kcvn.spm.model.tables.references.NEW_TEMP_SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.SENDING_FORM_LIST
 import com.kcvn.spm.model.tables.references.SENDING_PICKING_LIST
@@ -95,12 +96,69 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
         }.insert()
     }
 
+    // Cố định BIN xuất tại thời điểm duyệt, để sau đó package có move thì vẫn hiện đúng BIN đã xuất
+    fun updateSourceLocationCode(id: String, locationCode: String) {
+        context.update(NEW_TEMP_SENDING_TRANSACTIONS)
+            .set(NEW_TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE, locationCode)
+            .set(NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_DATE, LocalDateTime.now().atOffset(ZoneOffset.UTC))
+            .where(NEW_TEMP_SENDING_TRANSACTIONS.ID.eq(id))
+            .execute()
+    }
+
+    // Bỏ scan đã huỷ và request đã decline (3) để không trừ backlog cho chúng khi duyệt
+    /**
+     * Dong xuat hang chua sync SAP cua cac form da duyet (bo request da decline).
+     * storage location + unit lay tu picking list (copy tu backlog luc tao picking).
+     */
+    fun getNotSyncedSapForExport(): List<SendingSapExportResponse> {
+        return context.select(
+            SENDING_PICKING_LIST.ITEM_CODE,
+            SENDING_PICKING_LIST.LOT_NO,
+            NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_DATE,
+            SENDING_PICKING_LIST.PRODUCTION_GROUP,
+            SENDING_PICKING_LIST.STORAGE_LOCATION,
+            NEW_TEMP_SENDING_TRANSACTIONS.SCANNED_QTY,
+            SENDING_PICKING_LIST.UNIT,
+        )
+            .from(NEW_TEMP_SENDING_TRANSACTIONS)
+            .join(SENDING_PICKING_LIST).on(NEW_TEMP_SENDING_TRANSACTIONS.SENDING_PICKING_LIST_ID.eq(SENDING_PICKING_LIST.ID))
+            .join(SENDING_REQUEST_LIST_DETAIL).on(SENDING_PICKING_LIST.SENDING_REQUEST_DETAIL_ID.eq(SENDING_REQUEST_LIST_DETAIL.ID))
+            .join(SENDING_REQUEST_LIST).on(SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID.eq(SENDING_REQUEST_LIST.ID))
+            .join(SENDING_FORM_LIST).on(SENDING_REQUEST_LIST.SENDING_FORM_ID.eq(SENDING_FORM_LIST.ID))
+            .where(
+                SENDING_FORM_LIST.IS_APPROVED.eq(true)
+                    .and(NEW_TEMP_SENDING_TRANSACTIONS.IS_DELETED.eq(false))
+                    .and(NEW_TEMP_SENDING_TRANSACTIONS.IS_SYNCED_SAP.eq(false))
+                    .and(SENDING_REQUEST_LIST.STATUS.ne(3))
+            )
+            .orderBy(
+                NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_DATE,
+                SENDING_PICKING_LIST.LOT_NO,
+                NEW_TEMP_SENDING_TRANSACTIONS.SEQ_NO,
+            )
+            .fetch {
+                SendingSapExportResponse(
+                    itemCode = it.get(SENDING_PICKING_LIST.ITEM_CODE),
+                    lotNo = it.get(SENDING_PICKING_LIST.LOT_NO),
+                    updatedDate = it.get(NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_DATE),
+                    productionGroup = it.get(SENDING_PICKING_LIST.PRODUCTION_GROUP),
+                    storageLocation = it.get(SENDING_PICKING_LIST.STORAGE_LOCATION),
+                    quantity = it.get(NEW_TEMP_SENDING_TRANSACTIONS.SCANNED_QTY),
+                    unit = it.get(SENDING_PICKING_LIST.UNIT),
+                )
+            }
+    }
+
     fun getTempSendingListByFormCode(formCode:String): List<NewTempSendingTransactions>?{
-        return context.select(SENDING_PICKING_LIST.PACKAGE_CODE,
+        return context.select(
+            NEW_TEMP_SENDING_TRANSACTIONS.ID,
+            SENDING_PICKING_LIST.PACKAGE_CODE,
             SENDING_PICKING_LIST.LOT_NO,
             NEW_TEMP_SENDING_TRANSACTIONS.SCANNED_QTY,
             NEW_TEMP_SENDING_TRANSACTIONS.NOT_MINUS_BOX_QTY,
-            NEW_TEMP_SENDING_TRANSACTIONS.SEQ_NO)
+            NEW_TEMP_SENDING_TRANSACTIONS.SEQ_NO,
+            NEW_TEMP_SENDING_TRANSACTIONS.SENDING_PICKING_LIST_ID)
             .from(NEW_TEMP_SENDING_TRANSACTIONS)
             .join(SENDING_PICKING_LIST).on(NEW_TEMP_SENDING_TRANSACTIONS.SENDING_PICKING_LIST_ID.eq(SENDING_PICKING_LIST.ID))
             .join(SENDING_REQUEST_LIST_DETAIL).on(SENDING_PICKING_LIST.SENDING_REQUEST_DETAIL_ID.eq(SENDING_REQUEST_LIST_DETAIL.ID))
@@ -108,6 +166,8 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
             .join(SENDING_FORM_LIST).on(SENDING_REQUEST_LIST.SENDING_FORM_ID.eq(SENDING_FORM_LIST.ID))
             .where(
                 SENDING_FORM_LIST.FORM_CODE.eq(formCode)
+                    .and(NEW_TEMP_SENDING_TRANSACTIONS.IS_DELETED.eq(false))
+                    .and(SENDING_REQUEST_LIST.STATUS.ne(3))
             )
             .orderBy(SENDING_PICKING_LIST.PACKAGE_CODE,
                 SENDING_PICKING_LIST.LOT_NO,
@@ -160,7 +220,8 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
 	list.po_number,
 	list.item_name,
 	list.production_group,
-	locations.location_code,
+	-- Đã duyệt thì lấy BIN cố định lúc duyệt, chưa duyệt thì lấy BIN hiện tại ở splitting
+	coalesce(scanned.source_location_code, locations.location_code) as location_code,
 	picking.package_code,
     picking.lot_no,
 	picking.request_qty,
@@ -185,12 +246,15 @@ on
 inner join public.sending_picking_list picking
 on
 	detail.id = picking.sending_request_detail_id
-inner join public.splitting locations
+-- left join: sau khi duyệt splitting của package có thể đã bị xoá, vẫn phải hiện dòng picking
+left join (select * from public.splitting where is_deleted = false) locations
 on picking.package_code = locations.package_code
 left join (
 	select
 		sending_picking_list_id,
-		SUM(scanned_qty) as scanned_qty
+		SUM(scanned_qty) as scanned_qty,
+		-- 1 package chỉ có 1 BIN khi duyệt, max chỉ để gom về 1 dòng/picking
+		MAX(source_location_code) as source_location_code
 	from
 		public.new_temp_sending_transactions
 where is_deleted = false
@@ -214,6 +278,8 @@ on
     }
 
     // Chỉ sort theo cột trong whitelist để tránh SQL injection, mặc định po_number, lot_no, package_code
+    // Luôn thêm picking.created_date, picking.id cuối cùng để các dòng picking cùng package + lot
+    // hiển thị đúng thứ tự phân bổ scan trong saveTempSendingTransaction
     private fun createGetListOrderBy(pageable: Pageable?): String {
         val sortColumns = mapOf(
             "createdDate" to "list.created_date",
@@ -226,7 +292,8 @@ on
             ?.mapNotNull { order -> sortColumns[order.property]?.let { "$it ${if (order.isAscending) "asc" else "desc"}" } }
             ?.toList()
             .orEmpty()
-        return orderBy.ifEmpty { listOf("list.po_number asc", "picking.lot_no asc", "picking.package_code asc") }.joinToString(", ")
+        return (orderBy.ifEmpty { listOf("list.po_number asc", "picking.lot_no asc", "picking.package_code asc") } +
+                listOf("picking.created_date asc", "picking.id asc")).joinToString(", ")
     }
     ///
 

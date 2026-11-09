@@ -3,8 +3,10 @@ package com.kcvn.spm.app.checkinghistory.controller
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryApproveRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryByLotResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistorySummaryResponse
 import com.kcvn.spm.app.checkinghistory.service.CheckingHistoryService
 import com.kcvn.spm.common.constants.PagingDefault
 import com.kcvn.spm.common.payload.BasePagingResponse
@@ -16,10 +18,15 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/api/checking-history")
@@ -46,9 +53,19 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         @SortDefault.SortDefaults(
             SortDefault(sort = ["updatedDate"], direction = Sort.Direction.DESC),
         )
-        pageable: Pageable
+        pageable: Pageable,
+        isExport: Boolean = false,
     ): ResponseEntity<BasePagingResponse<CheckingHistoryResponse>> {
-        val result = checkingHistoryService.getList(request, pageable)
+        val result = checkingHistoryService.getList(request, pageable, isExport)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @GetMapping("/get-summary")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getSummary(
+        request: CheckingHistorySearchRequest,
+    ): ResponseEntity<CheckingHistorySummaryResponse> {
+        val result = checkingHistoryService.getSummary(request)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
@@ -68,6 +85,15 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @GetMapping("/get-list-approved")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getListApprove(
+        receivingDate: LocalDate,
+    ): ResponseEntity<List<CheckingHistoryByLotResponse>> {
+        val result = checkingHistoryService.getListApproved(receivingDate, listOf("L000","L001"))
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
     @PostMapping("/approve")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun approve(@Valid @RequestBody request: List<CheckingHistoryApproveRequest>): ResponseEntity<*> {
@@ -80,6 +106,19 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
             MessageResponse(CommonUtils.getMessage("action.succeeded")),
             HttpStatus.CREATED
         )
+    }
+
+    @GetMapping("/export-sap-txt")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun exportSapTxt(): ResponseEntity<ByteArray> {
+        val data = checkingHistoryService.exportApprovedNotSyncedSapTxt()
+        val fileName = "receiving_sap_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))}.txt"
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$fileName\"")
+            .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+            .contentType(MediaType("text", "plain", Charsets.UTF_8))
+            .contentLength(data.size.toLong())
+            .body(data)
     }
 
 //    @GetMapping("/export-csv")

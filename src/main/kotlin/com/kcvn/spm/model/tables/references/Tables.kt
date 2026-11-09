@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
+import com.kcvn.spm.model.tables.CenterMaster
 import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
@@ -28,6 +29,7 @@ import com.kcvn.spm.model.tables.NewTempSendingTransactionsChecking
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SapBacklog
 import com.kcvn.spm.model.tables.SendingFormList
 import com.kcvn.spm.model.tables.SendingPickingList
 import com.kcvn.spm.model.tables.SendingRequestList
@@ -38,9 +40,11 @@ import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingChecking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
+import com.kcvn.spm.model.tables.TempNewBacklogWh
 import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.TempSendingImported
 import com.kcvn.spm.model.tables.TempSendingTransactions
+import com.kcvn.spm.model.tables.TempSplitting
 import com.kcvn.spm.model.tables.WestFactoryLayout
 
 
@@ -111,6 +115,11 @@ val CANCEL_RECEIVING_TRANSACTIONS: CancelReceivingTransactions = CancelReceiving
 val CANCEL_SENDING_TRANSACTIONS: CancelSendingTransactions = CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS
 
 /**
+ * The table <code>public.center_master</code>.
+ */
+val CENTER_MASTER: CenterMaster = CenterMaster.CENTER_MASTER
+
+/**
  * The table <code>public.checking</code>.
  */
 val CHECKING: Checking = Checking.CHECKING
@@ -166,6 +175,11 @@ val RECEIVING_CHECKING: ReceivingChecking = ReceivingChecking.RECEIVING_CHECKING
 val RECEIVING_TRANSACTIONS: ReceivingTransactions = ReceivingTransactions.RECEIVING_TRANSACTIONS
 
 /**
+ * The table <code>public.sap_backlog</code>.
+ */
+val SAP_BACKLOG: SapBacklog = SapBacklog.SAP_BACKLOG
+
+/**
  * The table <code>public.sending_form_list</code>.
  */
 val SENDING_FORM_LIST: SendingFormList = SendingFormList.SENDING_FORM_LIST
@@ -216,6 +230,11 @@ val STOCK_TAKING_STATUS: StockTakingStatus = StockTakingStatus.STOCK_TAKING_STAT
 val TEMP_CHECKING_IMPORTED: TempCheckingImported = TempCheckingImported.TEMP_CHECKING_IMPORTED
 
 /**
+ * The table <code>public.temp_new_backlog_wh</code>.
+ */
+val TEMP_NEW_BACKLOG_WH: TempNewBacklogWh = TempNewBacklogWh.TEMP_NEW_BACKLOG_WH
+
+/**
  * The table <code>public.temp_sending_checking_transactions</code>.
  */
 val TEMP_SENDING_CHECKING_TRANSACTIONS: TempSendingCheckingTransactions = TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS
@@ -229,6 +248,11 @@ val TEMP_SENDING_IMPORTED: TempSendingImported = TempSendingImported.TEMP_SENDIN
  * The table <code>public.temp_sending_transactions</code>.
  */
 val TEMP_SENDING_TRANSACTIONS: TempSendingTransactions = TempSendingTransactions.TEMP_SENDING_TRANSACTIONS
+
+/**
+ * The table <code>public.temp_splitting</code>.
+ */
+val TEMP_SPLITTING: TempSplitting = TempSplitting.TEMP_SPLITTING
 
 /**
  * The table <code>public.west_factory_layout</code>.

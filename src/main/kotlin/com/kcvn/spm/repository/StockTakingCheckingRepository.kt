@@ -9,6 +9,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
+import com.kcvn.spm.model.tables.references.STOCK_TAKING
 import com.kcvn.spm.model.tables.references.STOCK_TAKING_CHECKING
 import org.jooq.DSLContext
 import org.jooq.TableField
@@ -16,6 +17,7 @@ import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -332,32 +334,33 @@ class StockTakingCheckingRepository(private val context: DSLContext) : SortingRe
         return Pair(data, count)
     }
 
-    fun findByPackageCode(packageCode: String): StockTaking? {
+    fun findByPackageCodeAndLot(yearNumber: Int, monthNumber: Int, packageCode: String, lotNo: String?): StockTaking? {
         return context.selectFrom(STOCK_TAKING_CHECKING)
             .where(
-                STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(packageCode)
+                STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
+                    .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
+                    .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(packageCode))
+                    .and(STOCK_TAKING_CHECKING.LOT_NO.isNotDistinctFrom(lotNo))
             )
             .fetchInto(StockTaking::class.java)
             .firstOrNull()
     }
 
+    // runs inside the caller's Spring transaction; context.transaction{} would commit early and release the status share lock
     fun update(yearNumber: Int, monthNumber: Int, request: ScanRequest) {
-        context.transaction { configuration ->
-            val transactionalContext = DSL.using(configuration)
-
-            transactionalContext.update(STOCK_TAKING_CHECKING)
-                .set(STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE, request.actualLocationCode)
-                .set(STOCK_TAKING_CHECKING.ACTUAL_QTY, request.actualQty)
-                .set(STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, request.actualBoxQty)
-                .set(STOCK_TAKING_CHECKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
-                .set(STOCK_TAKING_CHECKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
-                .where(
-                    STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
-                        .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
-                        .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
-                )
-                .execute()
-        }
+        context.update(STOCK_TAKING_CHECKING)
+            .set(STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE, request.actualLocationCode)
+            .set(STOCK_TAKING_CHECKING.ACTUAL_QTY, request.actualQty)
+            .set(STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, request.actualBoxQty)
+            .set(STOCK_TAKING_CHECKING.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(STOCK_TAKING_CHECKING.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(
+                STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
+                    .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
+                    .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
+                    .and(STOCK_TAKING_CHECKING.LOT_NO.isNotDistinctFrom(request.lotNo))
+            )
+            .execute()
     }
 
     fun updateSystem(yearNumber: Int, monthNumber: Int, request: StockTakingMonthlyResponse) {
@@ -371,23 +374,22 @@ class StockTakingCheckingRepository(private val context: DSLContext) : SortingRe
                     STOCK_TAKING_CHECKING.YEAR_NUMBER.eq(yearNumber)
                         .and(STOCK_TAKING_CHECKING.MONTH_NUMBER.eq(monthNumber))
                         .and(STOCK_TAKING_CHECKING.PACKAGE_CODE.eq(request.packageCode))
+                        .and(STOCK_TAKING_CHECKING.LOT_NO.isNotDistinctFrom(request.lotNo))
                 )
                 .execute()
 
     }
 
-    fun save(domain: StockTaking) {
-        context.insertInto(
-            STOCK_TAKING_CHECKING, STOCK_TAKING_CHECKING.YEAR_NUMBER, STOCK_TAKING_CHECKING.MONTH_NUMBER, STOCK_TAKING_CHECKING.PO_NUMBER,
-            STOCK_TAKING_CHECKING.PACKAGE_CODE, STOCK_TAKING_CHECKING.ACTUAL_LOCATION_CODE, STOCK_TAKING_CHECKING.ACTUAL_QTY,
-            STOCK_TAKING_CHECKING.ACTUAL_BOX_QTY, STOCK_TAKING_CHECKING.CREATED_BY
-        )
-            .values(
-                domain.yearNumber, domain.monthNumber, domain.poNumber,
-                domain.packageCode, domain.actualLocationCode, domain.actualQty,
-                domain.actualBoxQty, CommonUtils.loggedInUser() ?: Constants.SYSTEM
-            )
-            .execute()
+    fun save(data: StockTaking) {
+        val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+        val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+        context.newRecord(STOCK_TAKING_CHECKING, data).apply {
+            createdBy = user
+            createdDate = currentTime
+            updatedBy = user
+            updatedDate = currentTime
+        }.insert()
     }
 
     fun deleteByYearAndMonth(yearNumber: Int, monthNumber: Int) {

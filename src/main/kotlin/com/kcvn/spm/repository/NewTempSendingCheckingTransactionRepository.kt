@@ -46,11 +46,11 @@ class NewTempSendingCheckingTransactionRepository(private val context: DSLContex
     }
 
     /**
-     * Khoá theo package + lot + ngày đến hết transaction (advisory lock), để 2 lần lưu đồng thời
-     * không cùng đọc ra 1 max(seq_no). Các phiếu khác nhau có thể cùng scan 1 package-lot nên không khoá theo picking được.
+     * Khoá theo lot + ngày đến hết transaction (advisory lock), để 2 lần lưu đồng thời
+     * không cùng đọc ra 1 max(seq_no). Khoá theo lot cho khớp với findMaxSeqNo (chỉ lọc theo lot).
      */
-    fun lockSeqNo(packageCode: String, lotNo: String, date: LocalDate) {
-        context.fetch("select pg_advisory_xact_lock(hashtext(?))", "new_temp_sending|$packageCode|$lotNo|$date")
+    fun lockSeqNo(lotNo: String, date: LocalDate) {
+        context.fetch("select pg_advisory_xact_lock(hashtext(?))", "new_temp_sending_checking|$lotNo|$date")
     }
 
     // seq_no lớn nhất của package + lot trong ngày (giờ VN); tính cả bản ghi đã huỷ để không dùng lại số cũ

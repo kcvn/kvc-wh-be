@@ -34,7 +34,9 @@ data class PurchaseOrderBacklog(
     var updatedBy: String? = null,
     var lotNo: String? = null,
     var approved: Boolean? = null,
-    var synced: Boolean? = null
+    var synced: Boolean? = null,
+    var unitPrice: BigDecimal? = null,
+    var costCenter: String? = null
 ): Serializable {
 
 
@@ -166,6 +168,18 @@ data class PurchaseOrderBacklog(
         }
         else if (this.synced != o.synced)
             return false
+        if (this.unitPrice == null) {
+            if (o.unitPrice != null)
+                return false
+        }
+        else if (this.unitPrice != o.unitPrice)
+            return false
+        if (this.costCenter == null) {
+            if (o.costCenter != null)
+                return false
+        }
+        else if (this.costCenter != o.costCenter)
+            return false
         return true
     }
 
@@ -192,6 +206,8 @@ data class PurchaseOrderBacklog(
         result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
         result = prime * result + (if (this.approved == null) 0 else this.approved.hashCode())
         result = prime * result + (if (this.synced == null) 0 else this.synced.hashCode())
+        result = prime * result + (if (this.unitPrice == null) 0 else this.unitPrice.hashCode())
+        result = prime * result + (if (this.costCenter == null) 0 else this.costCenter.hashCode())
         return result
     }
 
@@ -218,6 +234,8 @@ data class PurchaseOrderBacklog(
         sb.append(", ").append(lotNo)
         sb.append(", ").append(approved)
         sb.append(", ").append(synced)
+        sb.append(", ").append(unitPrice)
+        sb.append(", ").append(costCenter)
 
         sb.append(")")
         return sb.toString()

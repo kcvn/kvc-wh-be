@@ -29,7 +29,8 @@ data class StockTaking(
     var createdBy: String? = null,
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
-    var itemName: String? = null
+    var itemName: String? = null,
+    var lotNo: String? = null
 ): Serializable {
 
 
@@ -137,6 +138,12 @@ data class StockTaking(
         }
         else if (this.itemName != o.itemName)
             return false
+        if (this.lotNo == null) {
+            if (o.lotNo != null)
+                return false
+        }
+        else if (this.lotNo != o.lotNo)
+            return false
         return true
     }
 
@@ -159,6 +166,7 @@ data class StockTaking(
         result = prime * result + (if (this.updatedDate == null) 0 else this.updatedDate.hashCode())
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
+        result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
         return result
     }
 
@@ -181,6 +189,7 @@ data class StockTaking(
         sb.append(", ").append(updatedDate)
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(itemName)
+        sb.append(", ").append(lotNo)
 
         sb.append(")")
         return sb.toString()

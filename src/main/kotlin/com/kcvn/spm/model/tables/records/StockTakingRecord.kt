@@ -83,6 +83,10 @@ open class StockTakingRecord() : UpdatableRecordImpl<StockTakingRecord>(StockTak
         set(value): Unit = set(15, value)
         get(): String? = get(15) as String?
 
+    open var lotNo: String?
+        set(value): Unit = set(16, value)
+        get(): String? = get(16) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -92,7 +96,7 @@ open class StockTakingRecord() : UpdatableRecordImpl<StockTakingRecord>(StockTak
     /**
      * Create a detached, initialised StockTakingRecord
      */
-    constructor(id: String? = null, yearNumber: Int? = null, monthNumber: Int? = null, poNumber: String? = null, packageCode: String? = null, systemLocationCode: String? = null, actualLocationCode: String? = null, systemQty: BigDecimal? = null, actualQty: BigDecimal? = null, systemBoxQty: Int? = null, actualBoxQty: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, itemName: String? = null): this() {
+    constructor(id: String? = null, yearNumber: Int? = null, monthNumber: Int? = null, poNumber: String? = null, packageCode: String? = null, systemLocationCode: String? = null, actualLocationCode: String? = null, systemQty: BigDecimal? = null, actualQty: BigDecimal? = null, systemBoxQty: Int? = null, actualBoxQty: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, itemName: String? = null, lotNo: String? = null): this() {
         this.id = id
         this.yearNumber = yearNumber
         this.monthNumber = monthNumber
@@ -109,6 +113,7 @@ open class StockTakingRecord() : UpdatableRecordImpl<StockTakingRecord>(StockTak
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
         this.itemName = itemName
+        this.lotNo = lotNo
         resetChangedOnNotNull()
     }
 
@@ -133,6 +138,7 @@ open class StockTakingRecord() : UpdatableRecordImpl<StockTakingRecord>(StockTak
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
             this.itemName = value.itemName
+            this.lotNo = value.lotNo
             resetChangedOnNotNull()
         }
     }

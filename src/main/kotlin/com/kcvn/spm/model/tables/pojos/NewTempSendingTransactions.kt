@@ -34,7 +34,8 @@ data class NewTempSendingTransactions(
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     var packageCode: String? = null,
-    var lotNo: String? = null
+    var lotNo: String? = null,
+    var sourceLocationCode: String? = null
 ): Serializable {
 
 
@@ -136,6 +137,12 @@ data class NewTempSendingTransactions(
         }
         else if (this.lotNo != o.lotNo)
             return false
+        if (this.sourceLocationCode == null) {
+            if (o.sourceLocationCode != null)
+                return false
+        }
+        else if (this.sourceLocationCode != o.sourceLocationCode)
+            return false
         return true
     }
 
@@ -157,6 +164,7 @@ data class NewTempSendingTransactions(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.packageCode == null) 0 else this.packageCode.hashCode())
         result = prime * result + (if (this.lotNo == null) 0 else this.lotNo.hashCode())
+        result = prime * result + (if (this.sourceLocationCode == null) 0 else this.sourceLocationCode.hashCode())
         return result
     }
 
@@ -178,6 +186,7 @@ data class NewTempSendingTransactions(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(packageCode)
         sb.append(", ").append(lotNo)
+        sb.append(", ").append(sourceLocationCode)
 
         sb.append(")")
         return sb.toString()

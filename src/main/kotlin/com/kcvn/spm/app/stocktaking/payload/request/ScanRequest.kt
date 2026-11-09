@@ -8,4 +8,5 @@ data class ScanRequest(
     var actualQty : BigDecimal? = BigDecimal.ZERO,
     var actualBoxQty : Int? = 0,
     var poNumber: String? = null,
+    var lotNo: String? = null,
 )

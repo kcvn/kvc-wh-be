@@ -1,6 +1,8 @@
 package com.kcvn.spm.app.transaction.receiving.controller
 
+import com.kcvn.spm.app.transaction.receiving.payload.request.CheckingReceivingCompareRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
+import com.kcvn.spm.app.transaction.receiving.payload.response.CheckingReceivingCompareResponse
 import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
 import com.kcvn.spm.app.transaction.receiving.service.ReceivingTransactionsService
 import com.kcvn.spm.common.constants.PagingDefault
@@ -30,6 +32,18 @@ class ReceivingTransactionsController(private val receivingService: ReceivingTra
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<RecTransResponse>> {
         val result = receivingService.getList(request, pageable)
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    /** So sanh du lieu da check voi du lieu da nhan hang, chia theo invoice (chi inquiry, khong chia thuc te) */
+    @GetMapping("/compare-checking")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun compareWithChecking(
+        request: CheckingReceivingCompareRequest,
+        @PageableDefault(size = PagingDefault.SIZE, page = PagingDefault.PAGE)
+        pageable: Pageable
+    ): ResponseEntity<BasePagingResponse<CheckingReceivingCompareResponse>> {
+        val result = receivingService.compareWithChecking(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }
 }

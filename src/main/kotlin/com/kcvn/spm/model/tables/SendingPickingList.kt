@@ -151,6 +151,16 @@ open class SendingPickingList(
      */
     val UPDATED_BY: TableField<SendingPickingListRecord, String?> = createField(DSL.name("updated_by"), SQLDataType.VARCHAR(100), this, "")
 
+    /**
+     * The column <code>public.sending_picking_list.storage_location</code>.
+     */
+    val STORAGE_LOCATION: TableField<SendingPickingListRecord, String?> = createField(DSL.name("storage_location"), SQLDataType.VARCHAR(30), this, "")
+
+    /**
+     * The column <code>public.sending_picking_list.unit</code>.
+     */
+    val UNIT: TableField<SendingPickingListRecord, String?> = createField(DSL.name("unit"), SQLDataType.VARCHAR(5), this, "")
+
     private constructor(alias: Name, aliased: Table<SendingPickingListRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SendingPickingListRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<SendingPickingListRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

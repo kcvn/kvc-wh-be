@@ -1,20 +1,22 @@
 package com.kcvn.spm.app.transaction.receiving.service
 
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
+import com.kcvn.spm.app.transaction.receiving.payload.request.CheckingReceivingCompareRequest
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequest
+import com.kcvn.spm.app.transaction.receiving.payload.response.CheckingReceivingCompareResponse
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransRequestWithSeq
 import com.kcvn.spm.app.transaction.receiving.payload.request.RecTransSearchRequest
 import com.kcvn.spm.app.transaction.receiving.payload.response.RecTransResponse
-import com.kcvn.spm.common.exception.BusinessExceptionDetail
 import com.kcvn.spm.common.payload.BasePagingResponse
-import com.kcvn.spm.common.util.CommonUtils
-import com.kcvn.spm.model.tables.pojos.BacklogWh
+import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
+import com.kcvn.spm.repository.NewCheckingTransactionRepository
 import com.kcvn.spm.repository.ReceivingTransactionsRepository
 import com.kcvn.spm.repository.SplittingRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -23,6 +25,7 @@ import java.time.ZoneOffset
 @Transactional
 class ReceivingTransactionsService(
     private val receivingRepo: ReceivingTransactionsRepository,
+    private val checkingTransactionRepo: NewCheckingTransactionRepository,
     private val backlogWhService: BacklogWhService,
     private val splittingRepo: SplittingRepository
 ) {
@@ -44,32 +47,131 @@ class ReceivingTransactionsService(
         )
     }
 
-    fun saveRecTrans(request: List<RecTransRequest>, receivingDate: LocalDate?) {
-        val list = createRecTransRequestWithSeq(request)
-        list.forEach {
-            val recTransaction = ReceivingTransactions(
-                null,
-                "KVC",
-                it.locationCode,
-                it.packageCode,
-                it.packageCode,
-                it.poNumber,
-                it.qty,
-                it.seqNo,
-                "IN_ONLY",
-                lotNo = it.lotNo,
-                issueDate = it.issueDate
+    /** So sanh so da check voi so da nhan theo ngay nhan hang / PO / lot, chia theo invoice (chi inquiry) */
+    fun compareWithChecking(request: CheckingReceivingCompareRequest, pageable: Pageable): BasePagingResponse<CheckingReceivingCompareResponse> {
+        val checkedList = receivingRepo.sumCheckedByInvoice(request)
+        val receivedMap = receivingRepo.sumReceivedByLot(request)
 
+        val checkedByKey = checkedList.groupBy { Triple(it.receivingDate, it.poNumber, it.lotNo) }
+        //hop key 2 ben: co check ma chua nhan, va nhan ma khong co check
+        val allKeys = checkedByKey.keys + receivedMap.keys
+
+        val result = allKeys.flatMap { key ->
+            allocateReceivedToInvoices(key, receivedMap[key] ?: BigDecimal.ZERO, checkedByKey[key].orEmpty())
+        }
+            //loc theo invoice / dong lech SAU khi phan bo => khong lam thay doi so phan bo
+            .filter { row -> request.invoiceNumber.isNullOrBlank() || row.invoiceNumber?.contains(request.invoiceNumber!!.trim(), ignoreCase = true) == true }
+            .filter { row ->
+                when (request.result) {
+                    "SAME" -> row.diffQty!!.signum() == 0
+                    "DIFFERENT" -> row.diffQty!!.signum() != 0
+                    else -> true
+                }
+            }
+            .sortedWith(
+                compareByDescending<CheckingReceivingCompareResponse> { it.receivingDate }
+                    .thenBy { it.poNumber }
+                    .thenBy { it.lotNo }
+                    .thenBy(nullsLast()) { it.invoiceNumber }
             )
-            /*val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)
+
+        val pageData = result.drop(pageable.offset.toInt()).take(pageable.pageSize)
+        return BasePagingResponse(pageData, result.size)
+    }
+
+    /**
+     * Phan bo dan tong so da nhan cho tung invoice (theo thu tu invoiceNumber):
+     * moi invoice nhan toi da bang so da check cua no, con du chuyen sang invoice sau.
+     * Neu nhan vuot tong so check (hoac khong co check) => them 1 dong invoiceNumber = null cho phan vuot.
+     * Chi dung de inquiry, thuc te receiving khong chia theo invoice.
+     */
+    fun allocateReceivedToInvoices(
+        key: Triple<LocalDate?, String?, String?>,
+        totalReceived: BigDecimal,
+        invoices: List<CheckingReceivingCompareResponse>,
+    ): List<CheckingReceivingCompareResponse> {
+        var remaining = totalReceived
+        val rows = invoices.sortedWith(compareBy(nullsLast()) { it.invoiceNumber }).map { inv ->
+            val checked = inv.checkedQty ?: BigDecimal.ZERO
+            val allocated = remaining.min(checked).max(BigDecimal.ZERO)
+            remaining -= allocated
+            inv.copy(checkedQty = checked, receivedQty = allocated)
+        }.toMutableList()
+
+        if (remaining.signum() > 0) {
+            rows += CheckingReceivingCompareResponse(
+                receivingDate = key.first,
+                poNumber = key.second,
+                lotNo = key.third,
+                invoiceNumber = null,
+                checkedQty = BigDecimal.ZERO,
+                receivedQty = remaining,
+            )
+        }
+
+        return rows.map { row ->
+            val checked = row.checkedQty!!
+            val received = row.receivedQty!!
+            row.copy(
+                diffQty = checked - received,
+                result = when {
+                    checked.compareTo(received) == 0 -> "SAME"
+                    else -> "DIFFERENT"
+                }
+            )
+        }
+    }
+
+    // checkingLotByPackage = true: lot no ben checking chinh la packageCode (chuyen lot)
+    fun saveRecTrans(request: List<RecTransRequest>, receivingDate: LocalDate?, isTransferLot: Boolean = false) {
+        val lotList = request.groupBy {it.lotNo}
+        lotList.forEach { lot ->
+            val list = createRecTransRequestWithSeq(lot.value)
+            list.forEach {
+                val recTransaction = ReceivingTransactions(
+                    null,
+                    "KVC",
+                    it.locationCode,
+                    it.packageCode,
+                    it.packageCode,
+                    it.poNumber,
+                    it.qty,
+                    it.seqNo,
+                    "IN_ONLY",
+                    receivingDate,
+                    lotNo = it.lotNo,
+                    issueDate = it.issueDate
+
+                )
+                /*val splitting = splittingRepo.findByLocationAndPackage(it.locationCode!!, it.packageCode!!)
                 ?: throw BusinessExceptionDetail(CommonUtils.getMessage("data.not.found.in.splitting"), "locationCode = ${it.locationCode}, packageCode = ${it.packageCode}")*/
-            // save receiving transactions
-            val refId = receivingRepo.save(recTransaction)
-            // save backlog and backlog history
-            val backlogData = BacklogWh(
-                null, it.locationCode, it.poNumber, it.packageCode, it.qty, 1, receivingDate, isEntried = false, lotNo = it.lotNo, issueDate = it.issueDate
-            )
-            backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId)
+                // save receiving transactions
+                val refId = receivingRepo.save(recTransaction)
+                // save backlog and backlog history
+                val checkingLotNo = if (isTransferLot) it.packageCode!! else it.lotNo!!
+                val checkingRecord = checkingTransactionRepo.findByRecDatePoAndLot(
+                    receivingDate!!,
+                    it.poNumber!!,
+                    checkingLotNo).firstOrNull() //vi 1 lot, 1 PO co the thuoc nhieu invoice, nhung phai trung cac thong tin khac, nen lay dong dau tien
+                val backlogData = NewBacklogWh(
+                    receivingDate = receivingDate,
+                    poNumber = it.poNumber,
+                    packageCode = it.packageCode,
+                    backlogQty = it.qty,
+                    boxQty = 1,
+                    itemCode = checkingRecord?.itemCode,
+                    itemName = checkingRecord?.itemName,
+                    productionGroup = checkingRecord?.department,
+                    lotNo = it.lotNo,
+                    issueDate = it.issueDate,
+                    storageLocation = checkingRecord?.storageLocation,
+                    itemType = checkingRecord?.itemType,
+                    unit = checkingRecord?.unit,
+                    unitPrice = checkingRecord?.unitPrice,
+                    costCenter = checkingRecord?.costCenter,
+                )
+                backlogWhService.plusBacklog(backlogData, "IN_ONLY", refId, true)
+            }
         }
     }
 

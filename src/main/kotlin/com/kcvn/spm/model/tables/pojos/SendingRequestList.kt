@@ -29,7 +29,9 @@ data class SendingRequestList(
     var itemCode: String? = null,
     var itemName: String? = null,
     var productionGroup: String? = null,
-    var sendingFormId: String? = null
+    var sendingFormId: String? = null,
+    var backlogQty: BigDecimal? = null,
+    var availableQty: BigDecimal? = null
 ): Serializable {
 
 
@@ -131,6 +133,18 @@ data class SendingRequestList(
         }
         else if (this.sendingFormId != o.sendingFormId)
             return false
+        if (this.backlogQty == null) {
+            if (o.backlogQty != null)
+                return false
+        }
+        else if (this.backlogQty != o.backlogQty)
+            return false
+        if (this.availableQty == null) {
+            if (o.availableQty != null)
+                return false
+        }
+        else if (this.availableQty != o.availableQty)
+            return false
         return true
     }
 
@@ -152,6 +166,8 @@ data class SendingRequestList(
         result = prime * result + (if (this.itemName == null) 0 else this.itemName.hashCode())
         result = prime * result + (if (this.productionGroup == null) 0 else this.productionGroup.hashCode())
         result = prime * result + (if (this.sendingFormId == null) 0 else this.sendingFormId.hashCode())
+        result = prime * result + (if (this.backlogQty == null) 0 else this.backlogQty.hashCode())
+        result = prime * result + (if (this.availableQty == null) 0 else this.availableQty.hashCode())
         return result
     }
 
@@ -173,6 +189,8 @@ data class SendingRequestList(
         sb.append(", ").append(itemName)
         sb.append(", ").append(productionGroup)
         sb.append(", ").append(sendingFormId)
+        sb.append(", ").append(backlogQty)
+        sb.append(", ").append(availableQty)
 
         sb.append(")")
         return sb.toString()

@@ -3,8 +3,10 @@ package com.kcvn.spm.app.checkinghistory.service
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryApproveRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryByLotResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
+import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistorySummaryResponse
 import com.kcvn.spm.common.exception.BusinessException
 import com.kcvn.spm.common.payload.BasePagingResponse
 import com.kcvn.spm.common.util.CommonUtils
@@ -16,6 +18,8 @@ import com.kcvn.spm.repository.PurchaseOrderBacklogRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.plus
 
 @Service
@@ -24,13 +28,17 @@ class CheckingHistoryService(
     private val checkingTransRepo: NewCheckingTransactionRepository,
     private val orderBacklogRepo: PurchaseOrderBacklogRepository,
 ) {
-    fun getList(request: CheckingHistorySearchRequest, pageable: Pageable): BasePagingResponse<CheckingHistoryResponse> {
-        val checkingHistoryData = checkingTransRepo.searchCheckingHistory(request, pageable)
+    fun getList(request: CheckingHistorySearchRequest, pageable: Pageable, isExport: Boolean): BasePagingResponse<CheckingHistoryResponse> {
+        val checkingHistoryData = checkingTransRepo.searchCheckingHistory(request, pageable, isExport)
         val data = checkingHistoryData.first
         return BasePagingResponse(
             data,
             checkingHistoryData.second
         )
+    }
+
+    fun getSummary(request: CheckingHistorySearchRequest): CheckingHistorySummaryResponse {
+        return checkingTransRepo.summaryCheckingHistory(request)
     }
 
     fun searchCheckingHistoryDetail(poNumber: String, invoiceNumber: String, seqNo: Int, pageable: Pageable): BasePagingResponse<CheckingHistoryDetailResponse> {
@@ -40,6 +48,27 @@ class CheckingHistoryService(
             data,
             checkingHistoryDataDetail.second
         )
+    }
+
+    fun getListApproved(recDate: LocalDate, storageLocationList: List<String>): List<CheckingHistoryByLotResponse> {
+        val checkingHistoryData = checkingTransRepo.findByRecDate(recDate).filter { it.isApprove == true }.filter { it.storageLocation in storageLocationList }
+        if (checkingHistoryData.isEmpty()) throw BusinessException("Không có dữ liệu check hàng ngày $recDate")
+        val checkingHistoryByLotData = checkingHistoryData.map { CheckingHistoryByLotResponse(
+            checkingHistoryId = it.id,
+            receivingDate = it.receivingDate,
+            poNumber = it.poNumber,
+            invoiceNumber = it.invoiceNumber,
+            department = it.department,
+            storageLocation = it.storageLocation,
+            lotNo = it.lotNo,
+            itemType = it.itemType,
+            seqNo = it.checkTimes,
+            scanQty = it.scanQty,
+            status = it.isApprove,
+            scannedDate = it.createdDate?.toLocalDate(),
+            scannedBy = it.createdBy,
+        )}
+        return checkingHistoryByLotData
     }
 
     fun saveCheckingTransaction(requestList: List<CheckingHistoryRequest>) {
@@ -132,14 +161,38 @@ class CheckingHistoryService(
                 checkTimes = seqNo,
                 receivingDate = request.receivingDate,
                 specifyInvoice = request.specifyInvoice,
+                itemName = order.itemName,
+                itemCode = order.itemCode,
+                unit = order.unit,
+                unitPrice = order.unitPrice,
+                costCenter = order.costCenter,
                 isApprove = false,
-                isSyncedSap = false
+                isSyncedSap = false,
             )
             checkingTransRepo.save(domain)
         } else {
             existing.scanQty = (existing.scanQty ?: BigDecimal.ZERO) + request.qty
             checkingTransRepo.update(existing)
         }
+    }
+
+    // file txt (tab-separated, không header): receivingDate, invoice, po, 1, storageLocation, lotNo, receiveQty, unit
+    @Transactional(readOnly = true)
+    fun exportApprovedNotSyncedSapTxt(): ByteArray {
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+        val content = checkingTransRepo.getApprovedNotSyncedSapLots().joinToString(separator = "\r\n") {
+            listOf(
+                it.receivingDate?.format(dateFormatter).orEmpty(),
+                it.invoiceNumber.orEmpty(),
+                it.poNumber.orEmpty(),
+                "00001",
+                it.storageLocation.orEmpty(),
+                it.lotNo.orEmpty(),
+                (it.scanQty ?: BigDecimal.ZERO).stripTrailingZeros().toPlainString(),
+                it.unit.orEmpty(),
+            ).joinToString("\t")
+        }
+        return content.toByteArray(Charsets.UTF_8)
     }
 
     fun approveCheckingTransaction(requestList: List<CheckingHistoryApproveRequest>) {
@@ -190,6 +243,4 @@ class CheckingHistoryService(
         checkingTransRepo.update(it)
         }
     }
-
-
 }

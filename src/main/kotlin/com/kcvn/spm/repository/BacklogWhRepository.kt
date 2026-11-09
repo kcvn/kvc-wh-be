@@ -10,9 +10,11 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.NewBacklogWh
 import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
+import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
 import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
+import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.SPLITTING
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -24,6 +26,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -124,7 +127,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
 
     private fun createGetListForSendingRequestSqlQuery(request: BacklogWhSearchForSendingRequest, exactMatch: Boolean): Pair<String, List<Any>> {
         val params = mutableListOf<Any>()
-        val conditions = mutableListOf("nbw.backlog_qty > 0")
+        val conditions = mutableListOf("nbw.backlog_qty > 0 and s.is_synced_sap = true and s.is_synced_amoeba = true")
 
         fun addCondition(column: String, values: List<String>, exact: Boolean) {
             conditions += if (exact) "$column in (${values.joinToString(", ") { "?" }})"
@@ -155,6 +158,8 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                 sum(nbw.backlog_qty) - coalesce(max(processing.processing_qty), 0) as available_backlog_qty,
                 count(*) over() as total_count
             from new_backlog_wh nbw
+            inner join (select * from splitting s where s.is_deleted = false) s 
+            on s.package_code = nbw.package_code 
                 left join (
                     select
                         srld.receiving_date,
@@ -209,6 +214,17 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
      * Khóa (SELECT ... FOR UPDATE) các dòng backlog của receivingDate-PO đến hết transaction hiện tại.
      * Gọi theo thứ tự cố định để tránh deadlock giữa các transaction.
      */
+    /** Tong ton theo ngay nhan hang + PO (tat ca package/lot) */
+    fun sumBacklogQtyByRecDatePo(receivingDate: LocalDate, poNumber: String): BigDecimal {
+        return context.select(DSL.coalesce(DSL.sum(NEW_BACKLOG_WH.BACKLOG_QTY), BigDecimal.ZERO))
+            .from(NEW_BACKLOG_WH)
+            .where(
+                NEW_BACKLOG_WH.RECEIVING_DATE.eq(receivingDate)
+                    .and(NEW_BACKLOG_WH.PO_NUMBER.eq(poNumber))
+            )
+            .fetchOne(0, BigDecimal::class.java) ?: BigDecimal.ZERO
+    }
+
     fun lockBacklogByRecDatePo(receivingDate: LocalDate, poNumber: String) {
         context.select(NEW_BACKLOG_WH.ID)
             .from(NEW_BACKLOG_WH)
@@ -227,6 +243,30 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
                     .and (NEW_BACKLOG_WH.LOT_NO.eq(lotNo))
             )
             .fetchOneInto(NewBacklogWh::class.java)
+    }
+
+    fun findByPackageCode(packageCode: String): List<BacklogWh> {
+        return context.selectFrom(NEW_BACKLOG_WH)
+            .where(
+                NEW_BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
+            )
+            .fetchInto(BacklogWh::class.java)
+    }
+
+    fun save(rec: NewBacklogWh): String{
+        val currentTime = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+        val user = CommonUtils.loggedInUser() ?: Constants.SYSTEM
+
+        val record = context.newRecord(NEW_BACKLOG_WH, rec).apply {
+            createdBy = user
+            createdDate = currentTime
+            updatedBy = user
+            updatedDate = currentTime
+        }
+        return context.insertInto(NEW_BACKLOG_WH)
+            .set(record)
+            .returning(NEW_BACKLOG_WH.ID)
+            .fetchOne()!!.id!!
     }
 
     fun update(data: NewBacklogWh) {
@@ -299,14 +339,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             .firstOrNull()
     }
 
-    fun findByPackageCode(packageCode: String): BacklogWh? {
-        return context.selectFrom(BACKLOG_WH)
-            .where(
-                BACKLOG_WH.PACKAGE_CODE.eq(packageCode)
-            )
-            .fetchInto(BacklogWh::class.java)
-            .firstOrNull()
-    }
+
 
     fun findExistBacklogByPackageCode(packageCode: String): BacklogWh? {
         return context.selectFrom(BACKLOG_WH)

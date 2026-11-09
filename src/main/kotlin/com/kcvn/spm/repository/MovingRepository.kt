@@ -42,12 +42,10 @@ class MovingRepository(private val context: DSLContext) : SortingRepository() {
     }
 
 
-    fun findLatestMoving(sourceLocationCode: String, sourcePackageCode: String, poNumber: String, todayUtc: LocalDate): Moving? {
+    fun findLatestMoving(sourcePackageCode: String, todayUtc: LocalDate): Moving? {
         return context.selectFrom(MOVING)
             .where(
-                MOVING.SOURCE_LOCATION_CODE.eq(sourceLocationCode)
-                    .and(MOVING.SOURCE_PACKAGE_CODE.eq(sourcePackageCode))
-                    .and(MOVING.PO_NUMBER.eq(poNumber))
+                MOVING.SOURCE_PACKAGE_CODE.eq(sourcePackageCode)
                     .and(MOVING.CREATED_DATE.cast(LocalDate::class.java).eq(todayUtc))
             )
             .orderBy(MOVING.SEQ_NO.sort(SortOrder.DESC))

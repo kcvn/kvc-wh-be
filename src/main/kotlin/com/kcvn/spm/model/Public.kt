@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
+import com.kcvn.spm.model.tables.CenterMaster
 import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
@@ -28,6 +29,7 @@ import com.kcvn.spm.model.tables.NewTempSendingTransactionsChecking
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SapBacklog
 import com.kcvn.spm.model.tables.SendingFormList
 import com.kcvn.spm.model.tables.SendingPickingList
 import com.kcvn.spm.model.tables.SendingRequestList
@@ -38,9 +40,11 @@ import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingChecking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
+import com.kcvn.spm.model.tables.TempNewBacklogWh
 import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.TempSendingImported
 import com.kcvn.spm.model.tables.TempSendingTransactions
+import com.kcvn.spm.model.tables.TempSplitting
 import com.kcvn.spm.model.tables.WestFactoryLayout
 
 import kotlin.collections.List
@@ -129,6 +133,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val CANCEL_SENDING_TRANSACTIONS: CancelSendingTransactions get() = CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS
 
     /**
+     * The table <code>public.center_master</code>.
+     */
+    val CENTER_MASTER: CenterMaster get() = CenterMaster.CENTER_MASTER
+
+    /**
      * The table <code>public.checking</code>.
      */
     val CHECKING: Checking get() = Checking.CHECKING
@@ -184,6 +193,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val RECEIVING_TRANSACTIONS: ReceivingTransactions get() = ReceivingTransactions.RECEIVING_TRANSACTIONS
 
     /**
+     * The table <code>public.sap_backlog</code>.
+     */
+    val SAP_BACKLOG: SapBacklog get() = SapBacklog.SAP_BACKLOG
+
+    /**
      * The table <code>public.sending_form_list</code>.
      */
     val SENDING_FORM_LIST: SendingFormList get() = SendingFormList.SENDING_FORM_LIST
@@ -234,6 +248,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     val TEMP_CHECKING_IMPORTED: TempCheckingImported get() = TempCheckingImported.TEMP_CHECKING_IMPORTED
 
     /**
+     * The table <code>public.temp_new_backlog_wh</code>.
+     */
+    val TEMP_NEW_BACKLOG_WH: TempNewBacklogWh get() = TempNewBacklogWh.TEMP_NEW_BACKLOG_WH
+
+    /**
      * The table <code>public.temp_sending_checking_transactions</code>.
      */
     val TEMP_SENDING_CHECKING_TRANSACTIONS: TempSendingCheckingTransactions get() = TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS
@@ -247,6 +266,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
      * The table <code>public.temp_sending_transactions</code>.
      */
     val TEMP_SENDING_TRANSACTIONS: TempSendingTransactions get() = TempSendingTransactions.TEMP_SENDING_TRANSACTIONS
+
+    /**
+     * The table <code>public.temp_splitting</code>.
+     */
+    val TEMP_SPLITTING: TempSplitting get() = TempSplitting.TEMP_SPLITTING
 
     /**
      * The table <code>public.west_factory_layout</code>.
@@ -269,6 +293,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         BacklogWhHistory.BACKLOG_WH_HISTORY,
         CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS,
         CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS,
+        CenterMaster.CENTER_MASTER,
         Checking.CHECKING,
         CheckingHistory.CHECKING_HISTORY,
         Locations.LOCATIONS,
@@ -280,6 +305,7 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG,
         ReceivingChecking.RECEIVING_CHECKING,
         ReceivingTransactions.RECEIVING_TRANSACTIONS,
+        SapBacklog.SAP_BACKLOG,
         SendingFormList.SENDING_FORM_LIST,
         SendingPickingList.SENDING_PICKING_LIST,
         SendingRequestList.SENDING_REQUEST_LIST,
@@ -290,9 +316,11 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
         StockTakingChecking.STOCK_TAKING_CHECKING,
         StockTakingStatus.STOCK_TAKING_STATUS,
         TempCheckingImported.TEMP_CHECKING_IMPORTED,
+        TempNewBacklogWh.TEMP_NEW_BACKLOG_WH,
         TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS,
         TempSendingImported.TEMP_SENDING_IMPORTED,
         TempSendingTransactions.TEMP_SENDING_TRANSACTIONS,
+        TempSplitting.TEMP_SPLITTING,
         WestFactoryLayout.WEST_FACTORY_LAYOUT
     )
 }

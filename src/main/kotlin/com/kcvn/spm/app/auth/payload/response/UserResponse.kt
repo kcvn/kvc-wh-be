@@ -15,5 +15,6 @@ data class UserResponse(
     var isAdmin: Boolean,
     val positions: List<String> = listOf(),
     val roleIds: List<String> = listOf(),
-    val permissionCodes: List<String> = listOf()
+    val permissionCodes: List<String> = listOf(),
+    var department: String? = null,
 )

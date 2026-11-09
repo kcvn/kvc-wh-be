@@ -17,6 +17,7 @@ import com.kcvn.spm.model.tables.BacklogWh
 import com.kcvn.spm.model.tables.BacklogWhHistory
 import com.kcvn.spm.model.tables.CancelReceivingTransactions
 import com.kcvn.spm.model.tables.CancelSendingTransactions
+import com.kcvn.spm.model.tables.CenterMaster
 import com.kcvn.spm.model.tables.Checking
 import com.kcvn.spm.model.tables.CheckingHistory
 import com.kcvn.spm.model.tables.Locations
@@ -26,15 +27,18 @@ import com.kcvn.spm.model.tables.NewCheckingTransaction
 import com.kcvn.spm.model.tables.PurchaseOrderBacklog
 import com.kcvn.spm.model.tables.ReceivingChecking
 import com.kcvn.spm.model.tables.ReceivingTransactions
+import com.kcvn.spm.model.tables.SapBacklog
 import com.kcvn.spm.model.tables.SendingTransactions
 import com.kcvn.spm.model.tables.Splitting
 import com.kcvn.spm.model.tables.StockTaking
 import com.kcvn.spm.model.tables.StockTakingChecking
 import com.kcvn.spm.model.tables.StockTakingStatus
 import com.kcvn.spm.model.tables.TempCheckingImported
+import com.kcvn.spm.model.tables.TempNewBacklogWh
 import com.kcvn.spm.model.tables.TempSendingCheckingTransactions
 import com.kcvn.spm.model.tables.TempSendingImported
 import com.kcvn.spm.model.tables.TempSendingTransactions
+import com.kcvn.spm.model.tables.TempSplitting
 import com.kcvn.spm.model.tables.WestFactoryLayout
 import com.kcvn.spm.model.tables.records.AmoebaRecord
 import com.kcvn.spm.model.tables.records.ApkVersionRecord
@@ -49,6 +53,7 @@ import com.kcvn.spm.model.tables.records.BacklogWhHistoryRecord
 import com.kcvn.spm.model.tables.records.BacklogWhRecord
 import com.kcvn.spm.model.tables.records.CancelReceivingTransactionsRecord
 import com.kcvn.spm.model.tables.records.CancelSendingTransactionsRecord
+import com.kcvn.spm.model.tables.records.CenterMasterRecord
 import com.kcvn.spm.model.tables.records.CheckingHistoryRecord
 import com.kcvn.spm.model.tables.records.CheckingRecord
 import com.kcvn.spm.model.tables.records.LocationsRecord
@@ -58,15 +63,18 @@ import com.kcvn.spm.model.tables.records.NewCheckingTransactionRecord
 import com.kcvn.spm.model.tables.records.PurchaseOrderBacklogRecord
 import com.kcvn.spm.model.tables.records.ReceivingCheckingRecord
 import com.kcvn.spm.model.tables.records.ReceivingTransactionsRecord
+import com.kcvn.spm.model.tables.records.SapBacklogRecord
 import com.kcvn.spm.model.tables.records.SendingTransactionsRecord
 import com.kcvn.spm.model.tables.records.SplittingRecord
 import com.kcvn.spm.model.tables.records.StockTakingCheckingRecord
 import com.kcvn.spm.model.tables.records.StockTakingRecord
 import com.kcvn.spm.model.tables.records.StockTakingStatusRecord
 import com.kcvn.spm.model.tables.records.TempCheckingImportedRecord
+import com.kcvn.spm.model.tables.records.TempNewBacklogWhRecord
 import com.kcvn.spm.model.tables.records.TempSendingCheckingTransactionsRecord
 import com.kcvn.spm.model.tables.records.TempSendingImportedRecord
 import com.kcvn.spm.model.tables.records.TempSendingTransactionsRecord
+import com.kcvn.spm.model.tables.records.TempSplittingRecord
 import com.kcvn.spm.model.tables.records.WestFactoryLayoutRecord
 
 import org.jooq.ForeignKey
@@ -95,6 +103,7 @@ val BACKLOG_WH_UN: UniqueKey<BacklogWhRecord> = Internal.createUniqueKey(Backlog
 val BACKLOG_WH_HISTORY_PKEY: UniqueKey<BacklogWhHistoryRecord> = Internal.createUniqueKey(BacklogWhHistory.BACKLOG_WH_HISTORY, DSL.name("backlog_wh_history_pkey"), arrayOf(BacklogWhHistory.BACKLOG_WH_HISTORY.ID), true)
 val CANCEL_RECEIVING_TRANSACTIONS_PKEY: UniqueKey<CancelReceivingTransactionsRecord> = Internal.createUniqueKey(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS, DSL.name("cancel_receiving_transactions_pkey"), arrayOf(CancelReceivingTransactions.CANCEL_RECEIVING_TRANSACTIONS.ID), true)
 val CANCEL_SENDING_TRANSACTIONS_PKEY: UniqueKey<CancelSendingTransactionsRecord> = Internal.createUniqueKey(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS, DSL.name("cancel_sending_transactions_pkey"), arrayOf(CancelSendingTransactions.CANCEL_SENDING_TRANSACTIONS.ID), true)
+val AMOEBA_PKEY_1_1_1: UniqueKey<CenterMasterRecord> = Internal.createUniqueKey(CenterMaster.CENTER_MASTER, DSL.name("amoeba_pkey_1_1_1"), arrayOf(CenterMaster.CENTER_MASTER.ID), true)
 val CHECKING_PKEY: UniqueKey<CheckingRecord> = Internal.createUniqueKey(Checking.CHECKING, DSL.name("checking_pkey"), arrayOf(Checking.CHECKING.ID), true)
 val CHECKING_HISTORY_PKEY: UniqueKey<CheckingHistoryRecord> = Internal.createUniqueKey(CheckingHistory.CHECKING_HISTORY, DSL.name("checking_history_pkey"), arrayOf(CheckingHistory.CHECKING_HISTORY.ID), true)
 val LOCATIONS_PK: UniqueKey<LocationsRecord> = Internal.createUniqueKey(Locations.LOCATIONS, DSL.name("locations_pk"), arrayOf(Locations.LOCATIONS.LOCATION_CODE), true)
@@ -106,15 +115,18 @@ val AMOEBA_PKEY_1_1: UniqueKey<PurchaseOrderBacklogRecord> = Internal.createUniq
 val PURCHASE_ORDER_BACKLOG_UN_1: UniqueKey<PurchaseOrderBacklogRecord> = Internal.createUniqueKey(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG, DSL.name("purchase_order_backlog_un_1"), arrayOf(PurchaseOrderBacklog.PURCHASE_ORDER_BACKLOG.LOT_NO), true)
 val CHECKING_HISTORY_PKEY_1: UniqueKey<ReceivingCheckingRecord> = Internal.createUniqueKey(ReceivingChecking.RECEIVING_CHECKING, DSL.name("checking_history_pkey_1"), arrayOf(ReceivingChecking.RECEIVING_CHECKING.ID), true)
 val RECEIVING_TRANSACTIONS_PKEY: UniqueKey<ReceivingTransactionsRecord> = Internal.createUniqueKey(ReceivingTransactions.RECEIVING_TRANSACTIONS, DSL.name("receiving_transactions_pkey"), arrayOf(ReceivingTransactions.RECEIVING_TRANSACTIONS.ID), true)
+val AMOEBA_PKEY_2: UniqueKey<SapBacklogRecord> = Internal.createUniqueKey(SapBacklog.SAP_BACKLOG, DSL.name("amoeba_pkey_2"), arrayOf(SapBacklog.SAP_BACKLOG.ID), true)
 val SENDING_TRANSACTIONS_PKEY: UniqueKey<SendingTransactionsRecord> = Internal.createUniqueKey(SendingTransactions.SENDING_TRANSACTIONS, DSL.name("sending_transactions_pkey"), arrayOf(SendingTransactions.SENDING_TRANSACTIONS.ID), true)
 val SPLITTING_PKEY: UniqueKey<SplittingRecord> = Internal.createUniqueKey(Splitting.SPLITTING, DSL.name("splitting_pkey"), arrayOf(Splitting.SPLITTING.ID), true)
 val STOCK_TAKING_PKEY_1: UniqueKey<StockTakingRecord> = Internal.createUniqueKey(StockTaking.STOCK_TAKING, DSL.name("stock_taking_pkey_1"), arrayOf(StockTaking.STOCK_TAKING.ID), true)
 val STOCK_TAKING_PKEY_1_1: UniqueKey<StockTakingCheckingRecord> = Internal.createUniqueKey(StockTakingChecking.STOCK_TAKING_CHECKING, DSL.name("stock_taking_pkey_1_1"), arrayOf(StockTakingChecking.STOCK_TAKING_CHECKING.ID), true)
 val STOCK_TAKING_STATUS_PKEY: UniqueKey<StockTakingStatusRecord> = Internal.createUniqueKey(StockTakingStatus.STOCK_TAKING_STATUS, DSL.name("stock_taking_status_pkey"), arrayOf(StockTakingStatus.STOCK_TAKING_STATUS.ID), true)
 val TEMP_CHECKING_IMPORTED_DATE_PKEY: UniqueKey<TempCheckingImportedRecord> = Internal.createUniqueKey(TempCheckingImported.TEMP_CHECKING_IMPORTED, DSL.name("temp_checking_imported_date_pkey"), arrayOf(TempCheckingImported.TEMP_CHECKING_IMPORTED.ID), true)
+val NEW_BACKLOG_WH_PK_1: UniqueKey<TempNewBacklogWhRecord> = Internal.createUniqueKey(TempNewBacklogWh.TEMP_NEW_BACKLOG_WH, DSL.name("new_backlog_wh_pk_1"), arrayOf(TempNewBacklogWh.TEMP_NEW_BACKLOG_WH.ID), true)
 val TEMP_SENDING_TRANSACTIONS_PKEY_1: UniqueKey<TempSendingCheckingTransactionsRecord> = Internal.createUniqueKey(TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS, DSL.name("temp_sending_transactions_pkey_1"), arrayOf(TempSendingCheckingTransactions.TEMP_SENDING_CHECKING_TRANSACTIONS.ID), true)
 val TEMP_SENDING_IMPORTED_PKEY_1: UniqueKey<TempSendingImportedRecord> = Internal.createUniqueKey(TempSendingImported.TEMP_SENDING_IMPORTED, DSL.name("temp_sending_imported_pkey_1"), arrayOf(TempSendingImported.TEMP_SENDING_IMPORTED.ID), true)
 val TEMP_SENDING_TRANSACTIONS_PKEY: UniqueKey<TempSendingTransactionsRecord> = Internal.createUniqueKey(TempSendingTransactions.TEMP_SENDING_TRANSACTIONS, DSL.name("temp_sending_transactions_pkey"), arrayOf(TempSendingTransactions.TEMP_SENDING_TRANSACTIONS.ID), true)
+val SPLITTING_PKEY_1: UniqueKey<TempSplittingRecord> = Internal.createUniqueKey(TempSplitting.TEMP_SPLITTING, DSL.name("splitting_pkey_1"), arrayOf(TempSplitting.TEMP_SPLITTING.ID), true)
 val WEST_FACTORY_LAYOUT_PKEY: UniqueKey<WestFactoryLayoutRecord> = Internal.createUniqueKey(WestFactoryLayout.WEST_FACTORY_LAYOUT, DSL.name("west_factory_layout_pkey"), arrayOf(WestFactoryLayout.WEST_FACTORY_LAYOUT.ID), true)
 
 // -------------------------------------------------------------------------

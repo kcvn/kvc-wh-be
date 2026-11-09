@@ -100,6 +100,14 @@ open class PurchaseOrderBacklogRecord() : UpdatableRecordImpl<PurchaseOrderBackl
         set(value): Unit = set(19, value)
         get(): Boolean? = get(19) as Boolean?
 
+    open var unitPrice: BigDecimal?
+        set(value): Unit = set(20, value)
+        get(): BigDecimal? = get(20) as BigDecimal?
+
+    open var costCenter: String?
+        set(value): Unit = set(21, value)
+        get(): String? = get(21) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -109,7 +117,7 @@ open class PurchaseOrderBacklogRecord() : UpdatableRecordImpl<PurchaseOrderBackl
     /**
      * Create a detached, initialised PurchaseOrderBacklogRecord
      */
-    constructor(id: String? = null, seqNo: BigDecimal? = null, orderDate: LocalDate? = null, itemCode: String? = null, itemName: String? = null, prodGroup: String? = null, storageLocation: String? = null, orderQty: BigDecimal? = null, unit: String? = null, poNumber: String? = null, invoiceNumber: String? = null, detail: String? = null, itemType: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, lotNo: String? = null, approved: Boolean? = null, synced: Boolean? = null): this() {
+    constructor(id: String? = null, seqNo: BigDecimal? = null, orderDate: LocalDate? = null, itemCode: String? = null, itemName: String? = null, prodGroup: String? = null, storageLocation: String? = null, orderQty: BigDecimal? = null, unit: String? = null, poNumber: String? = null, invoiceNumber: String? = null, detail: String? = null, itemType: String? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, lotNo: String? = null, approved: Boolean? = null, synced: Boolean? = null, unitPrice: BigDecimal? = null, costCenter: String? = null): this() {
         this.id = id
         this.seqNo = seqNo
         this.orderDate = orderDate
@@ -130,6 +138,8 @@ open class PurchaseOrderBacklogRecord() : UpdatableRecordImpl<PurchaseOrderBackl
         this.lotNo = lotNo
         this.approved = approved
         this.synced = synced
+        this.unitPrice = unitPrice
+        this.costCenter = costCenter
         resetChangedOnNotNull()
     }
 
@@ -158,6 +168,8 @@ open class PurchaseOrderBacklogRecord() : UpdatableRecordImpl<PurchaseOrderBackl
             this.lotNo = value.lotNo
             this.approved = value.approved
             this.synced = value.synced
+            this.unitPrice = value.unitPrice
+            this.costCenter = value.costCenter
             resetChangedOnNotNull()
         }
     }

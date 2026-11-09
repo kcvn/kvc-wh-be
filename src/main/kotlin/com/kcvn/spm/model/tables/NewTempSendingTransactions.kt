@@ -156,6 +156,12 @@ open class NewTempSendingTransactions(
      */
     val LOT_NO: TableField<NewTempSendingTransactionsRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(10000).nullable(false), this, "")
 
+    /**
+     * The column
+     * <code>public.new_temp_sending_transactions.source_location_code</code>.
+     */
+    val SOURCE_LOCATION_CODE: TableField<NewTempSendingTransactionsRecord, String?> = createField(DSL.name("source_location_code"), SQLDataType.VARCHAR(5), this, "")
+
     private constructor(alias: Name, aliased: Table<NewTempSendingTransactionsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<NewTempSendingTransactionsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<NewTempSendingTransactionsRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

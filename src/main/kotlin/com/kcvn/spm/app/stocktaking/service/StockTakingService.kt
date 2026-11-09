@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.stocktaking.service
 
+import com.kcvn.spm.common.enums.EProductionGroup
 import com.kcvn.spm.app.stocktaking.payload.request.*
 import com.kcvn.spm.app.stocktaking.payload.response.*
 import com.kcvn.spm.common.constants.ExcelConstant
@@ -11,11 +12,13 @@ import com.kcvn.spm.common.payload.BaseResponse
 import com.kcvn.spm.common.payload.model.FileContentModel
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.Amoeba
+import com.kcvn.spm.model.tables.pojos.SapBacklog
 import com.kcvn.spm.model.tables.pojos.StockTaking
 import com.kcvn.spm.model.tables.pojos.StockTakingStatus
 import com.kcvn.spm.repository.*
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -37,6 +40,8 @@ class StockTakingService(
     private val stockTakingCheckingRepo: StockTakingCheckingRepository,
     private val backlogBinEntryRepo: BacklogBinEntryRepository,
     private val backlogWhRepo: BacklogWhRepository,
+    private val sapBacklogRepo: SapBacklogRepository,
+    private val sapStockTakingRepo: SapStockTakingRepository,
 ) {
     fun getListForAndroid(pageable: Pageable): BasePagingResponse<StockTakingForAndroid> {
         val sTT = stockTakingStatusRepo.findByStatus("on-going")
@@ -83,7 +88,7 @@ class StockTakingService(
         if (stt != null) {
             // stock taking again
             stockTakingRepo.deleteByYearAndMonth(request.yearNumber!!, request.monthNumber!!)
-            stockTakingRepo.copyFromBacklogWhToStockTaking(request)
+//            stockTakingRepo.copyFromBacklogWhToStockTaking(request)
             return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
         } else {
             // stock taking new
@@ -94,13 +99,13 @@ class StockTakingService(
             )
             stockTakingStatusRepo.save(sttDomain)
             // copy data from backlog_wh to stock_taking
-            stockTakingRepo.copyFromBacklogWhToStockTaking(request)
+            //stockTakingRepo.copyFromBacklogWhToStockTaking(request)
             return BaseResponse(null, "${request.monthNumber}/${request.yearNumber} " + CommonUtils.getMessage("start.inventory"))
         }
     }
 
     fun scan(request: List<ScanRequest>) {
-        val sTT = stockTakingStatusRepo.findByStatus("on-going")
+        val sTT = stockTakingStatusRepo.findByStatusForShare("on-going")
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
         request.forEach { element ->
 //            val backlog = backlogWhRepo.findByPackageCode(element.packageCode!!)
@@ -117,12 +122,16 @@ class StockTakingService(
                 null,
                 element.actualQty,
                 null,
-                element.actualBoxQty
+                element.actualBoxQty,
+                lotNo = element.lotNo
             )
 
-            val stockTaking = stockTakingRepo.findByPackageCode(element.packageCode!!)
+            val stockTaking = stockTakingRepo.findByPackageCodeAndPoAndLot(sTT.yearNumber!!, sTT.monthNumber!!, element.packageCode!!, element.poNumber!!, element.lotNo!!)
             if (stockTaking != null) {
-                stockTakingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
+                stockTaking.actualQty = element.actualQty
+                stockTaking.actualBoxQty = element.actualBoxQty
+                stockTaking.actualLocationCode = element.actualLocationCode
+                stockTakingRepo.update(stockTaking)
             } else {
                 stockTakingRepo.save(domain)
             }
@@ -130,7 +139,7 @@ class StockTakingService(
     }
 
     fun checkingScan(request: List<ScanRequest>) {
-        val sTT = stockTakingStatusRepo.findByStatus("on-going")
+        val sTT = stockTakingStatusRepo.findByStatusForShare("on-going")
             ?: throw BusinessExceptionDetail(CommonUtils.getMessage("no.months.taking.inventory"), "")
         request.forEach { element ->
 //            val backlog = backlogWhRepo.findByPackageCode(element.packageCode!!)
@@ -147,10 +156,11 @@ class StockTakingService(
                 null,
                 element.actualQty,
                 null,
-                element.actualBoxQty
+                element.actualBoxQty,
+                lotNo = element.lotNo
             )
 
-            val stockTakingChecking = stockTakingCheckingRepo.findByPackageCode(element.packageCode!!)
+            val stockTakingChecking = stockTakingCheckingRepo.findByPackageCodeAndLot(sTT.yearNumber!!, sTT.monthNumber!!, element.packageCode!!, element.lotNo)
             if (stockTakingChecking != null) {
                 stockTakingCheckingRepo.update(sTT.yearNumber!!, sTT.monthNumber!!, element)
             } else {
@@ -160,14 +170,42 @@ class StockTakingService(
     }
 
     fun stopActual(request: StopActualRequest) {
+        val yearNumber = request.yearNumber!!
+        val monthNumber = request.monthNumber!!
+
+        // lock the month status first: scans take FOR SHARE on it, so no scan can run until this stop commits
+        val stt = stockTakingStatusRepo.findByYearAndMonthForUpdate(yearNumber, monthNumber)
+            ?: throw BusinessExceptionDetail(CommonUtils.getMessage("stock.taking.not.start.yet"), arrayOf(""))
+        if (stt.status != "on-going") {
+            throw BusinessExceptionDetail("$monthNumber/$yearNumber " + CommonUtils.getMessage("closed.inventory"), arrayOf(""))
+        }
+        stockTakingRepo.lockByYearAndMonth(yearNumber, monthNumber)
+
         val newRequest = StockTakingMonthlyRequest(
-            yearNumber = request.yearNumber,
-            monthNumber = request.monthNumber
+            yearNumber = yearNumber,
+            monthNumber = monthNumber
         )
         val stockTakingList = stockTakingRepo.getListOnGoingForStopByRawSql(newRequest)
-        stockTakingList.forEach{p ->
-        stockTakingRepo.updateSystem(newRequest.yearNumber!!, newRequest.monthNumber!!, p)}
-        stockTakingStatusRepo.updateStatus(request.yearNumber!!, request.monthNumber!!)
+        stockTakingList.forEach { p ->
+            val updated = stockTakingRepo.updateSystem(yearNumber, monthNumber, p)
+            // in backlog but never scanned: snapshot it so the closed month no longer depends on live backlog
+            if (updated == 0 && p.systemQty != null) {
+                stockTakingRepo.save(
+                    StockTaking(
+                        yearNumber = yearNumber,
+                        monthNumber = monthNumber,
+                        poNumber = p.poNumber,
+                        packageCode = p.packageCode,
+                        lotNo = p.lotNo,
+                        itemName = p.itemName,
+                        systemLocationCode = p.systemLocationCode,
+                        systemQty = p.systemQty,
+                        systemBoxQty = p.systemBoxQty
+                    )
+                )
+            }
+        }
+        stockTakingStatusRepo.updateStatus(yearNumber, monthNumber)
     }
 
     fun getListSystemStockByRawSql(request: StockTakingDailyRequest, pageable: Pageable): BasePagingResponse<SystemStockTakingResponse> {
@@ -236,6 +274,7 @@ class StockTakingService(
             ActualStockTakingResponse(
                 poNumber = it.poNumber,
                 packageCode = it.packageCode,
+                lotNo = it.lotNo,
                 itemName = it.itemName,
                 systemLocationCode = it.systemLocationCode,
                 actualLocationCode = it.actualLocationCode,
@@ -360,6 +399,12 @@ class StockTakingService(
             throw BusinessException(CommonUtils.getMessage("data.notFound"))
         }
 
+        // template has no lot column yet, append header after RESULT
+        val lotHeaderCell = dataRow.createCell(13)
+        lotHeaderCell.setCellValue("LOT NO")
+        dataRow.getCell(12)?.let { lotHeaderCell.cellStyle = it.cellStyle }
+        sheet.setColumnWidth(13, sheet.getColumnWidth(12))
+
         var rowNumberFill = 1
         for (item in listActualStockTaking) {
             val row: Row = sheet.createRow(rowNumberFill++)
@@ -377,6 +422,7 @@ class StockTakingService(
             ExcelHelper.setCellValueInt(row, 10, numberStyle, item.actualBoxQty ?: 0, numberFormat)
             ExcelHelper.setCellValueInt(row, 11, numberStyle, item.checkingBoxQty ?: 0, numberFormat)
             ExcelHelper.setCellValue(row, 12, style, item.result)
+            ExcelHelper.setCellValue(row, 13, style, item.lotNo)
         }
 
         sheet.createFreezePane(0, 1)
@@ -444,5 +490,112 @@ class StockTakingService(
         } catch (e: Exception) {
             throw e
         }
+    }
+
+    fun importSAPBacklog(file: MultipartFile): BaseResponse<Int> {
+        //val templateUrl = "${System.getProperty("user.dir")}/target/classes/assets/template/TempCheckingImportedTemplate.xlsx"
+        val workbook = WorkbookFactory.create(file.inputStream)
+        try {
+            val sheet = workbook.getSheetAt(0)
+            val rowIndex = 1
+//            val headerRow = sheet.getRow(4)
+//            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 4, 4))
+//                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
+            if (!sheet.any { x -> x.rowNum >= rowIndex } || ExcelHelper.fileIsEmpty(sheet, rowIndex))
+                throw BusinessException(CommonUtils.getMessage("import.file.empty"))
+
+            val errorList = mutableListOf<SapBacklog>()
+            var count = 0
+            sapBacklogRepo.deleteAll()
+            val validData = mutableListOf<SapBacklog>()
+            for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
+                val storageLocation = ExcelHelper.getCellValueAmoeba(row, 2)
+                val itemType = ExcelHelper.getCellValueAmoeba(row, 25)
+                if (storageLocation.contains("M")) continue
+                val lotNo = ExcelHelper.getCellValueAmoeba(row, 7)
+                if (lotNo == "") continue
+                val productionGroup = ExcelHelper.getCellValueAmoeba(row, 1)
+                val convertedProductionGroup = EProductionGroup.nameOfSapCode(productionGroup)
+
+                val data = SapBacklog(
+                    itemCode = ExcelHelper.getCellValueAmoeba(row, 0),
+                    productionGroup = convertedProductionGroup,
+                    storageLocation = storageLocation,
+                    lotNo = lotNo,
+                    backlogQty = ExcelHelper.getCellValueAmoeba(row, 9).toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    itemType = itemType,
+                )
+                validData.add(data)
+            }
+            sapBacklogRepo.saveAll(validData)
+            return BaseResponse(count, CommonUtils.getMessage("action.succeeded"))
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            workbook.close()
+        }
+    }
+
+    fun getSapStockTakingList(request: SapStockTakingSearchRequest, pageable: Pageable): BasePagingResponse<SapStockTakingResponse> {
+        val sapStockTakingData = sapStockTakingRepo.searchSapStockTaking(request, pageable)
+        return BasePagingResponse(
+            sapStockTakingData.first,
+            sapStockTakingData.second
+        )
+    }
+
+    fun exportSapStockTakingList(request: SapStockTakingSearchRequest, pageable: Pageable): BaseResponse<FileContentModel> {
+        val fileTemplate = File("${System.getProperty("user.dir")}/target/classes/assets/template/ExportSAPStockTakingTemplate.xlsx")
+        val workbook = FileInputStream(fileTemplate).use { x -> XSSFWorkbook(x) }
+        val sheet = workbook.getSheetAt(0)
+
+        val rowNumber = 0
+        val dataRow: Row = sheet.getRow(rowNumber) ?: sheet.createRow(rowNumber)
+        val style = ExcelHelper.getCellStyleCommon(workbook)
+        style.alignment = HorizontalAlignment.CENTER
+
+        val numberStyle = workbook.createCellStyle()
+        numberStyle.cloneStyleFrom(style)
+        numberStyle.alignment = HorizontalAlignment.RIGHT
+
+        val numberFormat = workbook.createDataFormat().getFormat("#,##0")
+
+        val listActualStockTaking = sapStockTakingRepo.searchSapStockTaking(request, pageable, true)
+
+        if (listActualStockTaking.first.isEmpty()) {
+            throw BusinessException(CommonUtils.getMessage("data.notFound"))
+        }
+
+        var rowNumberFill = 1
+        for (item in listActualStockTaking.first) {
+            val row: Row = sheet.createRow(rowNumberFill++)
+
+            ExcelHelper.setCellValue(row, 0, style, item.lotNo)
+            ExcelHelper.setCellValue(row, 1, style, item.itemCode)
+            ExcelHelper.setCellValue(row, 2, style, item.productionGroup)
+            ExcelHelper.setCellValue(row, 3, style, item.storageLocation)
+            ExcelHelper.setCellValue(row, 4, style, item.itemType)
+            ExcelHelper.setCellValueDouble(row, 5, numberStyle, item.sapQty.toDouble(), numberFormat)
+            ExcelHelper.setCellValueDouble(row, 6, numberStyle, item.systemQty.toDouble(), numberFormat)
+            ExcelHelper.setCellValue(row, 7, style, item.result)
+        }
+
+        sheet.createFreezePane(0, 1)
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        workbook.write(byteArrayOutputStream)
+        val excelBytes = byteArrayOutputStream.toByteArray()
+
+        val response = FileContentModel(
+            fileName = CommonUtils.getMessage("ExportSAPStockTaking.xlsx", arrayOf(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+            )),
+            contentType = ExcelConstant.EXCEL_CONTENT_TYPE,
+            content = excelBytes
+        )
+
+        workbook.close()
+
+        return BaseResponse(response)
     }
 }

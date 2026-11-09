@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.purchaseOrderBacklog.service
 
+import com.kcvn.spm.common.enums.EProductionGroup
 import com.kcvn.spm.app.purchaseOrderBacklog.payload.response.PurchaseOrderBacklogResponse
 import com.kcvn.spm.common.constants.ExcelConstant
 import com.kcvn.spm.common.exception.BusinessException
@@ -30,7 +31,7 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
         val workbook = WorkbookFactory.create(file.inputStream)
         try {
             val sheet = workbook.getSheetAt(0)
-            val rowIndex = 3
+            val rowIndex = 1
 //            val headerRow = sheet.getRow(4)
 //            if (!ExcelHelper.columnIsMatchingTemplate(templateUrl, headerRow, 4, 4))
 //                throw BusinessException(CommonUtils.getMessage("validate.excel.invalidFormat"))
@@ -41,43 +42,42 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
 
             for (row in sheet.filter { x -> x.rowNum >= rowIndex }) {
                 val seqNo = ExcelHelper.getCellValueAmoeba(row, 0).toBigDecimal()
-                val poNo = ExcelHelper.getCellValueAmoeba(row, 28)
+                val poNo = ExcelHelper.getCellValueAmoeba(row, 27)
                 val invoice = ExcelHelper.getCellValueAmoeba(row, 1)
-                val productionGroup = ExcelHelper.getCellValueAmoeba(row, 12)
-                val productionGroupCode = when (productionGroup) {
-                    "2317" -> "C"
-                    "2311" -> "D"
-                    "2314" -> "E"
-                    "2315" -> "F"
-                    "2318" -> "G"
-                    "2316" -> "H"
-                    "2312" -> "I"
-                    "2313" -> "J"
-                    else -> "Z"
-                }
+                val itemType = ExcelHelper.getCellValueAmoeba(row, 62)
+                val productionGroup = ExcelHelper.getCellValueAmoeba(row, 11)
+                val productionGroupCode = EProductionGroup.lotPrefixOfSapCode(productionGroup)
+                val convertedProductionGroup = EProductionGroup.nameOfSapCode(productionGroup)
 
                 val lotNo = generateLotNo(seqNo, invoice, poNo, productionGroupCode)
 
                 val data = PurchaseOrderBacklog(
                     seqNo = seqNo,
-                    orderDate = ExcelHelper.getCellValueDate(row, 5),
-                    itemCode = ExcelHelper.getCellValueAmoeba(row, 6),
-                    itemName = ExcelHelper.getCellValueAmoeba(row, 7),
-                    prodGroup = productionGroup,
-                    storageLocation = ExcelHelper.getCellValueAmoeba(row, 13),
-                    orderQty = ExcelHelper.getCellValueAmoeba(row, 14).toBigDecimalOrNull() ?: BigDecimal.ZERO,
-                    unit = ExcelHelper.getCellValueAmoeba(row, 15),
+                    orderDate = ExcelHelper.getCellValueDate(row, 4),
+                    itemCode = ExcelHelper.getCellValueAmoeba(row, 5),
+                    itemName = ExcelHelper.getCellValueAmoeba(row, 6),
+                    prodGroup = convertedProductionGroup,
+                    storageLocation = ExcelHelper.getCellValueAmoeba(row, 12),
+                    orderQty = ExcelHelper.getCellValueAmoeba(row, 13).toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    unit = ExcelHelper.getCellValueAmoeba(row, 14),
                     poNumber = poNo,
                     invoiceNumber = invoice,
-                    detail = ExcelHelper.getCellValueAmoeba(row, 29),
-                    itemType = ExcelHelper.getCellValueAmoeba(row, 63),
-                    lotNo = lotNo.second
+                    detail = ExcelHelper.getCellValueAmoeba(row, 28),
+                    itemType = if (itemType == "") "ZLAG" else itemType,
+                    lotNo = lotNo.second,
+                    unitPrice = ExcelHelper.getCellValueAmoeba(row, 15).toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                    costCenter = ExcelHelper.getCellValueAmoeba(row, 51),
                 )
                 if (lotNo.first == "Insert") {
                     purchaseOrderBacklogRepo.save(data)
                     count++
                 }
                 else if (lotNo.first == "Update") {
+                    //lay id va cac truong khong co trong file tu ban ghi da ton tai, tranh update ra null
+                    val existing = lotNo.third!!
+                    data.id = existing.id
+                    data.approved = existing.approved
+                    data.synced = existing.synced
                     purchaseOrderBacklogRepo.update(data)
                     count++
                 }
@@ -90,20 +90,21 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
         }
     }
 
-    fun generateLotNo(seqNo: BigDecimal, invoice: String, poNo: String, productionGroup: String): Pair<String,String> {
+    fun generateLotNo(seqNo: BigDecimal, invoice: String, poNo: String, productionGroup: String): Triple<String, String, PurchaseOrderBacklog?> {
         val currentDate = OffsetDateTime.now().toLocalDate()
             .format(DateTimeFormatter.ofPattern("yyMMdd"))
         val latestLot = purchaseOrderBacklogRepo.findLatestLotOfDay(currentDate, productionGroup)
-        val existedLot = purchaseOrderBacklogRepo.findLotOfPoInvoiceOnDay(seqNo, poNo, invoice, currentDate)
+        val replacedLot = purchaseOrderBacklogRepo.findLotOfPoInvoiceOnDay(seqNo, poNo, invoice, currentDate)
+        if (replacedLot != null && replacedLot.approved == true) throw BusinessException("PO $poNo, Invoice $invoice đã được duyệt, không thể cập nhật")
 
         if (latestLot == null) //neu la lot dau cua ngay cua 1 bo phan thi mac dinh la 000
-             return "Insert" to "$productionGroup${currentDate}000"
-        else if (existedLot == null) //neu khong phai lot dau cua ngay va PO-Invoice do chua ton tai thi phai tang seq
+             return Triple("Insert", "$productionGroup${currentDate}000", null)
+        else if (replacedLot == null) //neu khong phai lot dau cua ngay va PO-Invoice do chua ton tai thi phai tang seq
             {
                 val nextSequence = latestLot?.lotNo!!.takeLast(3).toInt() + 1
-                return "Insert" to "$productionGroup$currentDate${nextSequence.toString().padStart(3, '0')}"
+                return Triple("Insert", "$productionGroup$currentDate${nextSequence.toString().padStart(3, '0')}", null)
             }
-        else return "Update" to existedLot.lotNo.toString() //neu PO-Invoice da ton tai trong ngay do thi tra ve lot da ton tai
+        else return Triple("Update", replacedLot.lotNo.toString(), replacedLot) //neu PO-Invoice da ton tai trong ngay do thi tra ve lot da ton tai
     }
 
     fun downloadTemplate(): BaseResponse<FileContentModel> {
@@ -131,7 +132,7 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
                 "${order.invoiceNumber} ~ ${
                     order.createdDate?.toLocalDate()?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}",
             )
-        }.toMutableList()
+        }.toMutableList().distinct()
         return BaseResponse(data = dropDownList)
     }
 

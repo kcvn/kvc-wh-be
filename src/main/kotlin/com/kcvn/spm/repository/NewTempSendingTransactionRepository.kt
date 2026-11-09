@@ -6,6 +6,7 @@ import com.kcvn.spm.common.constants.Constants
 import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.NewTempSendingTransactions
+import com.kcvn.spm.app.transaction.sending.payload.response.SendingSapExportResponse
 import com.kcvn.spm.model.tables.references.NEW_TEMP_SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.SENDING_FORM_LIST
 import com.kcvn.spm.model.tables.references.SENDING_PICKING_LIST
@@ -106,6 +107,49 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
     }
 
     // Bỏ scan đã huỷ và request đã decline (3) để không trừ backlog cho chúng khi duyệt
+    /**
+     * Dong xuat hang chua sync SAP cua cac form da duyet (bo request da decline).
+     * storage location + unit lay tu picking list (copy tu backlog luc tao picking).
+     */
+    fun getNotSyncedSapForExport(): List<SendingSapExportResponse> {
+        return context.select(
+            SENDING_PICKING_LIST.ITEM_CODE,
+            SENDING_PICKING_LIST.LOT_NO,
+            NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_DATE,
+            SENDING_PICKING_LIST.PRODUCTION_GROUP,
+            SENDING_PICKING_LIST.STORAGE_LOCATION,
+            NEW_TEMP_SENDING_TRANSACTIONS.SCANNED_QTY,
+            SENDING_PICKING_LIST.UNIT,
+        )
+            .from(NEW_TEMP_SENDING_TRANSACTIONS)
+            .join(SENDING_PICKING_LIST).on(NEW_TEMP_SENDING_TRANSACTIONS.SENDING_PICKING_LIST_ID.eq(SENDING_PICKING_LIST.ID))
+            .join(SENDING_REQUEST_LIST_DETAIL).on(SENDING_PICKING_LIST.SENDING_REQUEST_DETAIL_ID.eq(SENDING_REQUEST_LIST_DETAIL.ID))
+            .join(SENDING_REQUEST_LIST).on(SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID.eq(SENDING_REQUEST_LIST.ID))
+            .join(SENDING_FORM_LIST).on(SENDING_REQUEST_LIST.SENDING_FORM_ID.eq(SENDING_FORM_LIST.ID))
+            .where(
+                SENDING_FORM_LIST.IS_APPROVED.eq(true)
+                    .and(NEW_TEMP_SENDING_TRANSACTIONS.IS_DELETED.eq(false))
+                    .and(NEW_TEMP_SENDING_TRANSACTIONS.IS_SYNCED_SAP.eq(false))
+                    .and(SENDING_REQUEST_LIST.STATUS.ne(3))
+            )
+            .orderBy(
+                NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_DATE,
+                SENDING_PICKING_LIST.LOT_NO,
+                NEW_TEMP_SENDING_TRANSACTIONS.SEQ_NO,
+            )
+            .fetch {
+                SendingSapExportResponse(
+                    itemCode = it.get(SENDING_PICKING_LIST.ITEM_CODE),
+                    lotNo = it.get(SENDING_PICKING_LIST.LOT_NO),
+                    updatedDate = it.get(NEW_TEMP_SENDING_TRANSACTIONS.UPDATED_DATE),
+                    productionGroup = it.get(SENDING_PICKING_LIST.PRODUCTION_GROUP),
+                    storageLocation = it.get(SENDING_PICKING_LIST.STORAGE_LOCATION),
+                    quantity = it.get(NEW_TEMP_SENDING_TRANSACTIONS.SCANNED_QTY),
+                    unit = it.get(SENDING_PICKING_LIST.UNIT),
+                )
+            }
+    }
+
     fun getTempSendingListByFormCode(formCode:String): List<NewTempSendingTransactions>?{
         return context.select(
             NEW_TEMP_SENDING_TRANSACTIONS.ID,

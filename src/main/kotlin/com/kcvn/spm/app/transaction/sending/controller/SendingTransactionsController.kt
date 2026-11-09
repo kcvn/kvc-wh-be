@@ -33,11 +33,15 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.data.web.SortDefault
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/api/sending")
@@ -340,5 +344,18 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
     ): ResponseEntity<BaseResponse<List<ImportSending>>> {
         val data = sendingService.importExcel(file)
         return ResponseEntity(data, HttpStatus.OK)
+    }
+
+    @GetMapping("/export-sap-txt")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun exportSapTxt(): ResponseEntity<ByteArray> {
+        val data = sendingService.exportNotSyncedSapTxt()
+        val fileName = "sending_sap_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))}.txt"
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$fileName\"")
+            .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+            .contentType(MediaType("text", "plain", Charsets.UTF_8))
+            .contentLength(data.size.toLong())
+            .body(data)
     }
 }

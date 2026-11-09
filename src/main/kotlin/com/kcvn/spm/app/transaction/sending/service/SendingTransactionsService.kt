@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.transaction.sending.service
 
+import com.kcvn.spm.common.enums.EProductionGroup
 import com.kcvn.spm.app.backlogwh.service.BacklogWhService
 import com.kcvn.spm.app.transaction.sending.payload.request.*
 import com.kcvn.spm.app.transaction.sending.payload.response.NewTempSendingResponse
@@ -298,6 +299,8 @@ class SendingTransactionsService(
                         productionGroup = current.productionGroup,
                         lotNo = detail.lotNo,
                         issueDate = current.issueDate,
+                        storageLocation = current.storageLocation,
+                        unit = current.unit,
                         isDeleted = false
                     )
                     remainQty -= pickQty
@@ -545,6 +548,34 @@ class SendingTransactionsService(
                 )
             }
         }
+    }
+
+    // file txt (tab-separated, khong header): 1, itemCode, lotNo, lotNo, updatedDate, prodGroup, sourceSloc, destSloc, quantity, unit
+    @Transactional(readOnly = true)
+    fun exportNotSyncedSapTxt(): ByteArray {
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+        val content = newTempSendingTransactionRepository.getNotSyncedSapForExport().joinToString(separator = "\r\n") {
+            listOf(
+                "1",
+                it.itemCode.orEmpty(),
+                it.lotNo.orEmpty(),
+                it.lotNo.orEmpty(),
+                it.updatedDate?.atZoneSameInstant(ZoneId.systemDefault())?.format(dateFormatter).orEmpty(),
+                EProductionGroup.sapCodeOfName(it.productionGroup),
+                it.storageLocation.orEmpty(),
+                toDestStorageLocation(it.storageLocation),
+                (it.quantity ?: BigDecimal.ZERO).stripTrailingZeros().toPlainString(),
+                it.unit.orEmpty(),
+            ).joinToString("\t")
+        }
+        return content.toByteArray(Charsets.UTF_8)
+    }
+
+    // kho WH (L...) xuat sang kho tuong ung (M...)
+    private fun toDestStorageLocation(sourceStorageLocation: String?): String = when (sourceStorageLocation) {
+        "L000" -> "M000"
+        "L001" -> "M001"
+        else -> ""
     }
 
     fun approveSendingForm(formCode: String){

@@ -85,10 +85,18 @@ open class SendingPickingListRecord() : TableRecordImpl<SendingPickingListRecord
         set(value): Unit = set(15, value)
         get(): String? = get(15) as String?
 
+    open var storageLocation: String?
+        set(value): Unit = set(16, value)
+        get(): String? = get(16) as String?
+
+    open var unit: String?
+        set(value): Unit = set(17, value)
+        get(): String? = get(17) as String?
+
     /**
      * Create a detached, initialised SendingPickingListRecord
      */
-    constructor(id: String? = null, sendingRequestDetailId: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, packageCode: String? = null, requestQty: BigDecimal? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, lotNo: String? = null, issueDate: String? = null, isDeleted: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null): this() {
+    constructor(id: String? = null, sendingRequestDetailId: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, packageCode: String? = null, requestQty: BigDecimal? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, lotNo: String? = null, issueDate: String? = null, isDeleted: Boolean? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, storageLocation: String? = null, unit: String? = null): this() {
         this.id = id
         this.sendingRequestDetailId = sendingRequestDetailId
         this.receivingDate = receivingDate
@@ -105,6 +113,8 @@ open class SendingPickingListRecord() : TableRecordImpl<SendingPickingListRecord
         this.createdBy = createdBy
         this.updatedDate = updatedDate
         this.updatedBy = updatedBy
+        this.storageLocation = storageLocation
+        this.unit = unit
         resetChangedOnNotNull()
     }
 
@@ -129,6 +139,8 @@ open class SendingPickingListRecord() : TableRecordImpl<SendingPickingListRecord
             this.createdBy = value.createdBy
             this.updatedDate = value.updatedDate
             this.updatedBy = value.updatedBy
+            this.storageLocation = value.storageLocation
+            this.unit = value.unit
             resetChangedOnNotNull()
         }
     }

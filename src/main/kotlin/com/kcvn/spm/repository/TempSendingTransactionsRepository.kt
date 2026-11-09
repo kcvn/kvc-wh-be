@@ -7,6 +7,7 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.SendingTransactions
 import com.kcvn.spm.model.tables.pojos.TempSendingTransactions
+import com.kcvn.spm.model.tables.references.SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_TRANSACTIONS
 import org.jooq.DSLContext
@@ -305,6 +306,15 @@ FULL OUTER JOIN (
             .orderBy(TEMP_SENDING_TRANSACTIONS.SEQ_NO.desc())
             .limit(1)
             .fetchOneInto(TempSendingTransactions::class.java)
+    }
+
+    fun findOneRecordById(id: String?): SendingTransactions?{
+        return context.selectFrom(TEMP_SENDING_TRANSACTIONS)
+            .where(
+                TEMP_SENDING_TRANSACTIONS.ID.eq(id)
+            )
+            .fetchInto(SendingTransactions::class.java)
+            .firstOrNull()
     }
 
 

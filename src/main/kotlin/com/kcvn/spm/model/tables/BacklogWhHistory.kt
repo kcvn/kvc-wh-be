@@ -142,6 +142,11 @@ open class BacklogWhHistory(
      */
     val REF_ID: TableField<BacklogWhHistoryRecord, String?> = createField(DSL.name("ref_id"), SQLDataType.VARCHAR(50), this, "")
 
+    /**
+     * The column <code>public.backlog_wh_history.lot_no</code>.
+     */
+    val LOT_NO: TableField<BacklogWhHistoryRecord, String?> = createField(DSL.name("lot_no"), SQLDataType.VARCHAR(20), this, "")
+
     private constructor(alias: Name, aliased: Table<BacklogWhHistoryRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<BacklogWhHistoryRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<BacklogWhHistoryRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

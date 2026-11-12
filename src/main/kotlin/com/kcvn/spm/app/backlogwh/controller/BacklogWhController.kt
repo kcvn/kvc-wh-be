@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.backlogwh.controller
 
+import com.kcvn.spm.app.auth.security.jwt.JwtUtils
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchForSendingRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhSearchRequest
 import com.kcvn.spm.app.backlogwh.payload.request.BacklogWhUpdateRequest
@@ -27,7 +28,10 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/backlog-wh")
-class BacklogWhController(private val backlogWhService: BacklogWhService) {
+class BacklogWhController(
+    private val backlogWhService: BacklogWhService,
+    private val jwtUtils: JwtUtils
+) {
     @GetMapping("/get-list")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun getList(
@@ -66,6 +70,13 @@ class BacklogWhController(private val backlogWhService: BacklogWhService) {
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<BacklogWhForSendingResponse>> {
+        // User thuộc department sản xuất chỉ được xem tồn kho của department mình
+        jwtUtils.getCurrentUser().getRestrictedDepartment()?.let { department ->
+            if (department.isBlank()) {
+                return ResponseEntity(BasePagingResponse(emptyList(), 0), HttpStatus.OK)
+            }
+            request.productionGroup = department
+        }
         val result = backlogWhService.getListForSendingRequest(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }

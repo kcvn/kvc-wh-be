@@ -21,6 +21,8 @@ class UserDetailsImpl(
     companion object {
         private const val serialVersionUID = 1L
         private const val ROLE_ADMIN = "ROLE_ADMIN"
+        // Department kho: được xem dữ liệu của mọi department
+        private const val WAREHOUSE_DEPARTMENT = "WH"
 
         fun build(user: AuthUser, roles: List<AuthRole>, permissions: List<EPermission>, position: String?): UserDetailsImpl {
             val authorities = mutableListOf<GrantedAuthority>()
@@ -54,6 +56,23 @@ class UserDetailsImpl(
 
     fun getEmployeeCode(): String? {
         return employeeCode
+    }
+
+    fun getDepartment(): String? {
+        return department
+    }
+
+    fun isAdmin(): Boolean {
+        return authorities.any { it.authority == ROLE_ADMIN }
+    }
+
+    /**
+     * Department mà user bị giới hạn dữ liệu.
+     * Trả về null nếu user được xem mọi department (admin hoặc thuộc kho),
+     * chuỗi rỗng nếu user bị giới hạn nhưng chưa được gán department.
+     */
+    fun getRestrictedDepartment(): String? {
+        return if (isAdmin() || department == WAREHOUSE_DEPARTMENT) null else department.orEmpty()
     }
 
     override fun getPassword(): String {

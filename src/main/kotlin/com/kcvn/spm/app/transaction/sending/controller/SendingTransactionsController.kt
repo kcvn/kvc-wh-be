@@ -1,5 +1,6 @@
 package com.kcvn.spm.app.transaction.sending.controller
 
+import com.kcvn.spm.app.auth.security.jwt.JwtUtils
 import com.kcvn.spm.app.transaction.sending.payload.request.ExportPDFSendingRequestListRequest
 import com.kcvn.spm.app.transaction.sending.payload.request.ImportSending
 import com.kcvn.spm.app.transaction.sending.payload.request.NewTempSendingSearchRequest
@@ -45,7 +46,10 @@ import java.time.format.DateTimeFormatter
 
 @RestController
 @RequestMapping("/api/sending")
-class SendingTransactionsController(private val sendingService: SendingTransactionsService) {
+class SendingTransactionsController(
+    private val sendingService: SendingTransactionsService,
+    private val jwtUtils: JwtUtils
+) {
     @PostMapping("/create/sending-request")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).DEPARTMENT.value) || hasAuthority(T(com.kcvn.spm.common.enums.EPermission).V_INVENTORY.value) || hasRole('ADMIN')")
     fun createSendRequest(@Valid @RequestBody request: List<SendingRequest>): ResponseEntity<*> {
@@ -72,6 +76,13 @@ class SendingTransactionsController(private val sendingService: SendingTransacti
         )
         pageable: Pageable
     ): ResponseEntity<BasePagingResponse<SendingRequestListResponse>> {
+        // User thuộc department sản xuất chỉ được xem yêu cầu xuất kho của department mình
+        jwtUtils.getCurrentUser().getRestrictedDepartment()?.let { department ->
+            if (department.isBlank()) {
+                return ResponseEntity(BasePagingResponse(emptyList(), 0), HttpStatus.OK)
+            }
+            request.productionGroup = department
+        }
         val result = sendingService.getSendingRequestList(request, pageable)
         return ResponseEntity(result, HttpStatus.OK)
     }

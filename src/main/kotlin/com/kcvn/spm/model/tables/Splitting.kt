@@ -129,7 +129,7 @@ open class Splitting(
     /**
      * The column <code>public.splitting.temp_splitting_id</code>.
      */
-    val TEMP_SPLITTING_ID: TableField<SplittingRecord, String?> = createField(DSL.name("temp_splitting_id"), SQLDataType.VARCHAR(50).nullable(false), this, "")
+    val TEMP_SPLITTING_ID: TableField<SplittingRecord, String?> = createField(DSL.name("temp_splitting_id"), SQLDataType.VARCHAR(50), this, "")
 
     private constructor(alias: Name, aliased: Table<SplittingRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SplittingRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

@@ -13,6 +13,7 @@ data class BacklogWhResponse(
     var boxQty: Int? = null,
     var receivingDate: LocalDate? = null,
     var itemName: String? = null,
+    var itemType: String? = null,
     var lotNo: String? = null,
     var issueDate: String? = null,
     var availableBacklogQty: BigDecimal? = null,

@@ -9,13 +9,8 @@ import com.kcvn.spm.common.repository.SortingRepository
 import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.BacklogWh
 import com.kcvn.spm.model.tables.pojos.NewBacklogWh
-import com.kcvn.spm.model.tables.pojos.PurchaseOrderBacklog
-import com.kcvn.spm.model.tables.pojos.ReceivingTransactions
 import com.kcvn.spm.model.tables.references.BACKLOG_WH
 import com.kcvn.spm.model.tables.references.NEW_BACKLOG_WH
-import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
-import com.kcvn.spm.model.tables.references.RECEIVING_TRANSACTIONS
-import com.kcvn.spm.model.tables.references.SPLITTING
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SortOrder
@@ -68,6 +63,9 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
         request.listPoNumber?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.po_number", it, exactMatch) }
         request.listPackageCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.package_code", it, exactMatch) }
         request.lotNo?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.lot_no", it, false) }
+        request.itemCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.item_code", it, false) }
+        request.itemType?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.item_type", it, false) }
+        request.productionGroup?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("nbw.production_group", it, false) }
         if (request.fromDate != null && request.toDate != null) {
             conditions += "nbw.receiving_date between ? and ?"
             params += request.fromDate!!

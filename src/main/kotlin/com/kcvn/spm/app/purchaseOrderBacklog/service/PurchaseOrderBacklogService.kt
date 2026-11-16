@@ -137,7 +137,8 @@ class PurchaseOrderBacklogService(private val purchaseOrderBacklogRepo: Purchase
     }
 
     fun getListByInvoiceSeqNoAndDate(invoiceNumber: String, createdDate: LocalDate, status: String): List<PurchaseOrderBacklogResponse> {
-        val listOrder = purchaseOrderBacklogRepo.getListByInvoiceSeqNoAndDate(invoiceNumber, createdDate, status)
+        val listOrder = purchaseOrderBacklogRepo.getListByInvoiceSeqNoAndDate(invoiceNumber, createdDate, status).filter {
+            it.itemType != "ZALG" && it.storageLocation != "M000" && it.storageLocation != "M001" }
         return listOrder.map { PurchaseOrderBacklogResponse(
             seqNo = it.seqNo?.toInt() ?: 0,
             orderDate = it.orderDate ?: LocalDate.MIN,

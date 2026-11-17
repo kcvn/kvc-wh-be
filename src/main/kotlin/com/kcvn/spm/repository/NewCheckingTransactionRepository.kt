@@ -10,9 +10,11 @@ import com.kcvn.spm.common.util.CommonUtils
 import com.kcvn.spm.model.tables.pojos.NewCheckingTransaction
 import com.kcvn.spm.model.tables.references.CHECKING_HISTORY
 import com.kcvn.spm.model.tables.references.NEW_CHECKING_TRANSACTION
+import com.kcvn.spm.model.tables.references.PURCHASE_ORDER_BACKLOG
 import org.jooq.DSLContext
 import org.jooq.SortOrder
 import org.jooq.TableField
+import org.jooq.impl.DSL
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -54,6 +56,27 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
             .orderBy(NEW_CHECKING_TRANSACTION.CHECK_TIMES.sort(SortOrder.DESC))
             .fetchInto(NewCheckingTransaction::class.java)
             .firstOrNull()
+    }
+
+    // lần check lớn nhất của PO trên tất cả invoice chưa duyệt (invoice đã duyệt không tính),
+    // null nếu các invoice chưa duyệt của PO chưa được check lần nào
+    fun findLatestSeqOfPo(poNumber: String): Int? {
+        return context.select(DSL.max(NEW_CHECKING_TRANSACTION.CHECK_TIMES))
+            .from(NEW_CHECKING_TRANSACTION)
+            .where(
+                NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(poNumber)
+                    .and(
+                        NEW_CHECKING_TRANSACTION.INVOICE_NUMBER.`in`(
+                            context.select(PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER)
+                                .from(PURCHASE_ORDER_BACKLOG)
+                                .where(
+                                    PURCHASE_ORDER_BACKLOG.PO_NUMBER.eq(poNumber)
+                                        .and(PURCHASE_ORDER_BACKLOG.APPROVED.isNull.or(PURCHASE_ORDER_BACKLOG.APPROVED.eq(false)))
+                                )
+                        )
+                    )
+            )
+            .fetchOne(0, Int::class.java)
     }
 
     fun findByRecDate(recDate: LocalDate): List<NewCheckingTransaction> {
@@ -315,7 +338,7 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                 .fetchInto(NewCheckingTransaction::class.java)
     }
 
-    // các lot đã approve nhưng chưa sync SAP
+    // các lot đã approve nhưng chưa sync SAP, lock row để 2 lần export đồng thời không lấy trùng
     fun getApprovedNotSyncedSapLots(): List<NewCheckingTransaction> {
         return context.selectFrom(NEW_CHECKING_TRANSACTION)
             .where(
@@ -328,7 +351,18 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                 NEW_CHECKING_TRANSACTION.PO_NUMBER,
                 NEW_CHECKING_TRANSACTION.LOT_NO,
             )
+            .forUpdate()
             .fetchInto(NewCheckingTransaction::class.java)
+    }
+
+    fun markSyncedSap(ids: List<String>) {
+        if (ids.isEmpty()) return
+        context.update(NEW_CHECKING_TRANSACTION)
+            .set(NEW_CHECKING_TRANSACTION.IS_SYNCED_SAP, true)
+            .set(NEW_CHECKING_TRANSACTION.UPDATED_BY, CommonUtils.loggedInUser() ?: Constants.SYSTEM)
+            .set(NEW_CHECKING_TRANSACTION.UPDATED_DATE, OffsetDateTime.now(ZoneOffset.UTC))
+            .where(NEW_CHECKING_TRANSACTION.ID.`in`(ids))
+            .execute()
     }
 
     override fun getTableField(sortFieldName: String): TableField<*, *> {

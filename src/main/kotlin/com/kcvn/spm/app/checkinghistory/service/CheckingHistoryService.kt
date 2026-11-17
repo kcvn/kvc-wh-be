@@ -83,6 +83,13 @@ class CheckingHistoryService(
             .sortedWith(compareBy({ it.first }, { it.second }))
             .forEach { (poNumber, invoiceNumber) -> orderBacklogRepo.lockOrderByPoInvoice(poNumber, invoiceNumber) }
 
+        // seqNo check lại dùng chung cho mọi invoice của PO = lần check lớn nhất của PO + 1.
+        // Tính 1 lần trước khi save, tránh seqNo tăng tiếp sau khi invoice trước của cùng PO đã save.
+        val reCheckSeqNoByPo = requestList.filter { it.reChecking }
+            .map { it.poNumber }
+            .distinct()
+            .associateWith { (checkingTransRepo.findLatestSeqOfPo(it) ?: 0) + 1 }
+
         specifyInvoice.forEach { request ->
             if (request.key.second == "File lam tem goi") return@forEach
             val order = orderBacklogRepo.findOrderByPoInvoice(request.key.first, request.key.second)
@@ -90,22 +97,16 @@ class CheckingHistoryService(
             if (order.approved == true)
                 throw BusinessException(CommonUtils.getMessage("Order đã được duyệt, không thể scan thêm ${request.key.first}" +
                         "-${request.key.second}"))
-            val latest = checkingTransRepo.findLatestSeqOfOrder(request.key.first, request.key.second)
-            val seqNo = (latest?.checkTimes?: 0).plus(1)
             request.value.forEach {
-                if (!it.reChecking) {
-                    saveOrUpdate(it, order, 1)
-                } else {
-                    saveOrUpdate(it, order, seqNo)
-                }
+                saveOrUpdate(it, order, if (it.reChecking) reCheckSeqNoByPo.getValue(it.poNumber) else 1)
             }
         }
 
-        notSpecifyInvoiceNotReCheck.forEach { (poNumber, lots) -> allocateByInvoice(poNumber, lots, false) }
-        notSpecifyInvoiceReCheck.forEach { (poNumber, lots) -> allocateByInvoice(poNumber, lots, true) }
+        notSpecifyInvoiceNotReCheck.forEach { (poNumber, lots) -> allocateByInvoice(poNumber, lots, 1) }
+        notSpecifyInvoiceReCheck.forEach { (poNumber, lots) -> allocateByInvoice(poNumber, lots, reCheckSeqNoByPo.getValue(poNumber)) }
     }
 
-    private fun allocateByInvoice(poNumber: String, lots: List<CheckingHistoryRequest>, reChecking: Boolean) {
+    private fun allocateByInvoice(poNumber: String, lots: List<CheckingHistoryRequest>, seqNo: Int) {
         // Chỉ lặp qua các invoice có trong request, sắp theo invoice tăng dần
         val orders = lots.map { it.invoiceNumber }.distinct().sorted().map { invoiceNumber ->
             val order = orderBacklogRepo.findOrderByPoInvoice(poNumber, invoiceNumber)
@@ -115,15 +116,6 @@ class CheckingHistoryService(
             order
         }
 
-        // Tính seqNo 1 lần cho mỗi invoice, tránh tăng seqNo sau khi lot trước đã save
-        val seqNoByInvoice = orders.associate { order ->
-            val invoiceNumber = order.invoiceNumber!!
-            val seqNo = if (reChecking) {
-                (checkingTransRepo.findLatestSeqOfOrder(poNumber, invoiceNumber)?.checkTimes ?: 0) + 1
-            } else 1
-            invoiceNumber to seqNo
-        }
-
         // lots giữ nguyên thứ tự như trong request, chỉ invoice được sắp tăng dần
         lots.forEach { lot ->
             if (lot.qty == BigDecimal.ZERO) return@forEach //bỏ qua các record rác, các record này chỉ để lấy danh sách invoice đã chọn
@@ -131,7 +123,6 @@ class CheckingHistoryService(
             for ((i, order) in orders.withIndex()) {
                 if (remaining <= BigDecimal.ZERO) break
                 val invoiceNumber = order.invoiceNumber!!
-                val seqNo = seqNoByInvoice.getValue(invoiceNumber)
                 val isLast = i == orders.lastIndex
 
                 val scannedQty = checkingTransRepo.findByPoInvoiceAndSeq(poNumber, invoiceNumber, seqNo)
@@ -177,10 +168,12 @@ class CheckingHistoryService(
     }
 
     // file txt (tab-separated, không header): receivingDate, invoice, po, 1, storageLocation, lotNo, receiveQty, unit
-    @Transactional(readOnly = true)
+    // lấy danh sách xong thì đánh dấu đã sync SAP luôn (cùng transaction)
     fun exportApprovedNotSyncedSapTxt(): ByteArray {
         val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-        val content = checkingTransRepo.getApprovedNotSyncedSapLots().joinToString(separator = "\r\n") {
+        val lots = checkingTransRepo.getApprovedNotSyncedSapLots()
+        checkingTransRepo.markSyncedSap(lots.mapNotNull { it.id })
+        val content = lots.joinToString(separator = "\r\n") {
             listOf(
                 it.receivingDate?.format(dateFormatter).orEmpty(),
                 it.invoiceNumber.orEmpty(),
@@ -202,7 +195,27 @@ class CheckingHistoryService(
             .forEach { (poNumber, invoiceNumber) -> orderBacklogRepo.lockOrderByPoInvoice(poNumber, invoiceNumber) }
 
         validateSelectAllPoInInvoice(requestList)
+        validateSameSeqNoOfPo(requestList)
         requestList.forEach { processEachPOInvoice(it) }
+    }
+
+    // 1 PO thuộc nhiều invoice thì các invoice chưa duyệt của PO đó phải được check chung 1 lần và duyệt chung 1 lần:
+    // phải chọn đủ tất cả invoice chưa duyệt của PO, và seqNo được chọn phải bằng nhau
+    fun validateSameSeqNoOfPo(requestList: List<CheckingHistoryApproveRequest>) {
+        requestList.groupBy { it.poNumber }.forEach { (poNumber, requests) ->
+            val notApprovedInvoices = orderBacklogRepo.findOrderByPo(poNumber)
+                .filter { it.approved != true }
+                .mapNotNull { it.invoiceNumber }
+                .toSet()
+            val missingInvoices = notApprovedInvoices - requests.map { it.invoiceNumber }.toSet()
+            if (missingInvoices.isNotEmpty())
+                throw BusinessException(CommonUtils.getMessage("PO $poNumber thuộc nhiều invoice, phải duyệt cùng lúc tất cả invoice chưa duyệt, thiếu: " +
+                        missingInvoices.sorted().joinToString()))
+
+            if (requests.map { it.seqNo }.distinct().size > 1)
+                throw BusinessException(CommonUtils.getMessage("PO $poNumber thuộc nhiều invoice, phải chọn cùng 1 lần check: " +
+                        requests.joinToString { "${it.invoiceNumber} (lần ${it.seqNo})" }))
+        }
     }
 
     fun validateSelectAllPoInInvoice(requestList: List<CheckingHistoryApproveRequest>) {

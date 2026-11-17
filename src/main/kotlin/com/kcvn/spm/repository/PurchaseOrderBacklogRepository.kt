@@ -38,6 +38,12 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
             .fetchInto(PurchaseOrderBacklog::class.java)
     }
 
+    fun findOrderByPo(poNo: String): List<PurchaseOrderBacklog> {
+        return context.selectFrom(PURCHASE_ORDER_BACKLOG)
+            .where(PURCHASE_ORDER_BACKLOG.PO_NUMBER.eq(poNo))
+            .fetchInto(PurchaseOrderBacklog::class.java)
+    }
+
     /**
      * Khóa (SELECT ... FOR UPDATE) các dòng order của PO-invoice đến hết transaction hiện tại.
      * Gọi theo thứ tự cố định để tránh deadlock giữa các transaction.
@@ -109,6 +115,28 @@ class PurchaseOrderBacklogRepository(private val context: DSLContext) : SortingR
                     .and (if (status == "ALL") DSL.noCondition() else PURCHASE_ORDER_BACKLOG.APPROVED.eq(status.toBoolean()))
             )
             .orderBy(PURCHASE_ORDER_BACKLOG.CREATED_DATE.desc())
+            .fetchInto(PurchaseOrderBacklog::class.java)
+            .filterNotNull()
+    }
+
+    /**
+     * Lấy toàn bộ order của các invoice khác (khác [excludeInvoiceNumber]) có chứa ít nhất một PO trong [poNumbers].
+     */
+    fun getListOfOtherInvoicesByPoNumbers(poNumbers: Collection<String>, excludeInvoiceNumber: String, status: String): List<PurchaseOrderBacklog> {
+        if (poNumbers.isEmpty()) return emptyList()
+        val otherInvoices = context.selectDistinct(PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER)
+            .from(PURCHASE_ORDER_BACKLOG)
+            .where(
+                PURCHASE_ORDER_BACKLOG.PO_NUMBER.`in`(poNumbers)
+                    .and(PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER.ne(excludeInvoiceNumber))
+            )
+        return context.select(PURCHASE_ORDER_BACKLOG)
+            .from(PURCHASE_ORDER_BACKLOG)
+            .where(
+                PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER.`in`(otherInvoices)
+                    .and (if (status == "ALL") DSL.noCondition() else PURCHASE_ORDER_BACKLOG.APPROVED.eq(status.toBoolean()))
+            )
+            .orderBy(PURCHASE_ORDER_BACKLOG.INVOICE_NUMBER, PURCHASE_ORDER_BACKLOG.CREATED_DATE.desc())
             .fetchInto(PurchaseOrderBacklog::class.java)
             .filterNotNull()
     }

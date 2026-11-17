@@ -386,6 +386,7 @@ class BacklogWhService(
             BacklogWhForSendingResponse(
                 poNumber = it.poNumber,
                 itemCode = it.itemCode,
+                itemType = it.itemType,
                 productionGroup = it.productionGroup,
                 receivingDate = it.receivingDate,
                 itemName = it.itemName,

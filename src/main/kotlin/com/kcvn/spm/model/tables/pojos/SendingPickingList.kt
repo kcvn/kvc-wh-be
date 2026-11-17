@@ -34,7 +34,8 @@ data class SendingPickingList(
     var updatedDate: OffsetDateTime? = null,
     var updatedBy: String? = null,
     var storageLocation: String? = null,
-    var unit: String? = null
+    var unit: String? = null,
+    var itemType: String? = null
 ): Serializable {
 
 
@@ -154,6 +155,12 @@ data class SendingPickingList(
         }
         else if (this.unit != o.unit)
             return false
+        if (this.itemType == null) {
+            if (o.itemType != null)
+                return false
+        }
+        else if (this.itemType != o.itemType)
+            return false
         return true
     }
 
@@ -178,6 +185,7 @@ data class SendingPickingList(
         result = prime * result + (if (this.updatedBy == null) 0 else this.updatedBy.hashCode())
         result = prime * result + (if (this.storageLocation == null) 0 else this.storageLocation.hashCode())
         result = prime * result + (if (this.unit == null) 0 else this.unit.hashCode())
+        result = prime * result + (if (this.itemType == null) 0 else this.itemType.hashCode())
         return result
     }
 
@@ -202,6 +210,7 @@ data class SendingPickingList(
         sb.append(", ").append(updatedBy)
         sb.append(", ").append(storageLocation)
         sb.append(", ").append(unit)
+        sb.append(", ").append(itemType)
 
         sb.append(")")
         return sb.toString()

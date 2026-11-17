@@ -5,6 +5,7 @@ import java.time.OffsetDateTime
 class SendingRequestListSearchRequest {
     var poNumber: String? = null
     var itemCode: String? = null
+    var itemType: String? = null
     var itemName: String? = null
     var productionGroup: String? = null
     var status: Int? = null

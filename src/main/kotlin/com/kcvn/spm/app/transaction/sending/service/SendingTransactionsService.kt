@@ -89,6 +89,7 @@ class SendingTransactionsService(
             val (receivingDate, poNumber) = key
             val existedRequest = sendingRequestListRepository.findByReceivingDatePO(poNumber, receivingDate)
             val itemCode = requests[0].itemCode
+            val itemType = requests[0].itemType
             val itemName = requests[0].itemName
             val productionGroup = requests[0].productionGroup
             // Snapshot tai thoi diem tao yeu cau (da lock backlog theo receivingDate-PO o tren):
@@ -99,6 +100,7 @@ class SendingTransactionsService(
                 receivingDate = receivingDate,
                 poNumber = poNumber,
                 itemCode = itemCode,
+                itemType = itemType,
                 itemName = itemName,
                 productionGroup = productionGroup,
                 requestQty = requests.sumOf { it.requestQty },
@@ -295,6 +297,7 @@ class SendingTransactionsService(
                         packageCode = current.packageCode,
                         requestQty = pickQty,
                         itemCode = current.itemCode,
+                        itemType = current.itemType,
                         itemName = current.itemName,
                         productionGroup = current.productionGroup,
                         lotNo = detail.lotNo,
@@ -320,6 +323,17 @@ class SendingTransactionsService(
                 formCode
             )
         }
+
+        return BaseResponse(data = dropDownList)
+    }
+
+    // Dropdown location group của 1 phiếu (form code): ký tự đầu của BIN các dòng picking, không trùng
+    fun getLocationGroupDropDown(formCode: String): BaseResponse<List<DropdownResponse>> {
+        val dropDownList = sendingPickingListRepository.findBinListByFormCode(formCode.trim())
+            .mapNotNull { it.trim().firstOrNull()?.toString() }
+            .distinct()
+            .sorted()
+            .map { DropdownResponse(it, it) }
 
         return BaseResponse(data = dropDownList)
     }

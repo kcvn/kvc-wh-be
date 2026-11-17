@@ -7,10 +7,12 @@ import com.kcvn.spm.model.tables.pojos.NewCheckingTransaction
 import com.kcvn.spm.model.tables.pojos.SendingPickingList
 import com.kcvn.spm.model.tables.pojos.SendingRequestListDetail
 import com.kcvn.spm.model.tables.references.NEW_CHECKING_TRANSACTION
+import com.kcvn.spm.model.tables.references.NEW_TEMP_SENDING_TRANSACTIONS
 import com.kcvn.spm.model.tables.references.SENDING_FORM_LIST
 import com.kcvn.spm.model.tables.references.SENDING_PICKING_LIST
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST
 import com.kcvn.spm.model.tables.references.SENDING_REQUEST_LIST_DETAIL
+import com.kcvn.spm.model.tables.references.SPLITTING
 import com.kcvn.spm.model.tables.references.TEMP_SENDING_IMPORTED
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -107,6 +109,44 @@ class SendingPickingListRepository(private val context: DSLContext) : SortingRep
             .orderBy(SENDING_PICKING_LIST.ID)
             .forUpdate().of(SENDING_PICKING_LIST)
             .fetchInto(SendingPickingList::class.java)
+    }
+
+    /**
+     * Danh sách BIN (không trùng) của các dòng picking thuộc 1 form code.
+     * Cùng quy tắc với màn hình temp sending result: đã duyệt thì lấy BIN cố định lúc duyệt
+     * (source_location_code), chưa duyệt thì lấy BIN hiện tại ở splitting. Bỏ request đã decline (3).
+     */
+    fun findBinListByFormCode(formCode: String): List<String> {
+        val scannedBin = DSL.max(NEW_TEMP_SENDING_TRANSACTIONS.SOURCE_LOCATION_CODE).`as`("source_location_code")
+        val scanned = context
+            .select(NEW_TEMP_SENDING_TRANSACTIONS.SENDING_PICKING_LIST_ID, scannedBin)
+            .from(NEW_TEMP_SENDING_TRANSACTIONS)
+            .where(NEW_TEMP_SENDING_TRANSACTIONS.IS_DELETED.eq(false))
+            .groupBy(NEW_TEMP_SENDING_TRANSACTIONS.SENDING_PICKING_LIST_ID)
+            .asTable("scanned")
+        val bin = DSL.coalesce(scanned.field(scannedBin), SPLITTING.LOCATION_CODE)
+
+        return context.selectDistinct(bin)
+            .from(SENDING_FORM_LIST)
+            .innerJoin(SENDING_REQUEST_LIST)
+            .on(SENDING_REQUEST_LIST.SENDING_FORM_ID.eq(SENDING_FORM_LIST.ID))
+            .innerJoin(SENDING_REQUEST_LIST_DETAIL)
+            .on(SENDING_REQUEST_LIST_DETAIL.SENDING_REQUEST_ID.eq(SENDING_REQUEST_LIST.ID))
+            .innerJoin(SENDING_PICKING_LIST)
+            .on(SENDING_PICKING_LIST.SENDING_REQUEST_DETAIL_ID.eq(SENDING_REQUEST_LIST_DETAIL.ID))
+            .leftJoin(SPLITTING)
+            .on(SPLITTING.PACKAGE_CODE.eq(SENDING_PICKING_LIST.PACKAGE_CODE).and(SPLITTING.IS_DELETED.eq(false)))
+            .leftJoin(scanned)
+            .on(scanned.field(NEW_TEMP_SENDING_TRANSACTIONS.SENDING_PICKING_LIST_ID)!!.eq(SENDING_PICKING_LIST.ID))
+            .where(
+                SENDING_FORM_LIST.FORM_CODE.eq(formCode)
+                    .and (SENDING_PICKING_LIST.IS_DELETED.eq(false))
+                    .and (SENDING_REQUEST_LIST.STATUS.ne(3))
+                    .and (bin.isNotNull)
+            )
+            .orderBy(bin)
+            .fetch(bin)
+            .filterNotNull()
     }
 
     fun saveAll(dataList: List<SendingPickingList>) {

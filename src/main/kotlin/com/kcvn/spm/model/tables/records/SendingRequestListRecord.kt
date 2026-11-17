@@ -87,10 +87,14 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
         set(value): Unit = set(16, value)
         get(): BigDecimal? = get(16) as BigDecimal?
 
+    open var itemType: String?
+        set(value): Unit = set(17, value)
+        get(): String? = get(17) as String?
+
     /**
      * Create a detached, initialised SendingRequestListRecord
      */
-    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, requestQty: BigDecimal? = null, seqNo: Int? = null, status: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, comment: String? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, sendingFormId: String? = null, backlogQty: BigDecimal? = null, availableQty: BigDecimal? = null): this() {
+    constructor(id: String? = null, receivingDate: LocalDate? = null, poNumber: String? = null, requestQty: BigDecimal? = null, seqNo: Int? = null, status: Int? = null, createdDate: OffsetDateTime? = null, createdBy: String? = null, updatedDate: OffsetDateTime? = null, updatedBy: String? = null, comment: String? = null, itemCode: String? = null, itemName: String? = null, productionGroup: String? = null, sendingFormId: String? = null, backlogQty: BigDecimal? = null, availableQty: BigDecimal? = null, itemType: String? = null): this() {
         this.id = id
         this.receivingDate = receivingDate
         this.poNumber = poNumber
@@ -108,6 +112,7 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
         this.sendingFormId = sendingFormId
         this.backlogQty = backlogQty
         this.availableQty = availableQty
+        this.itemType = itemType
         resetChangedOnNotNull()
     }
 
@@ -133,6 +138,7 @@ open class SendingRequestListRecord() : TableRecordImpl<SendingRequestListRecord
             this.sendingFormId = value.sendingFormId
             this.backlogQty = value.backlogQty
             this.availableQty = value.availableQty
+            this.itemType = value.itemType
             resetChangedOnNotNull()
         }
     }

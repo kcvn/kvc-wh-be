@@ -11,6 +11,7 @@ data class NewTempSendingResponse(
     var locationCode: String? = null,
     var packageCode: String? = null,
     var itemName: String? = null,
+    var itemType: String? = null,
     var productionGroup: String? = null,
     var requestQty: BigDecimal? = null,
     var scannedQty: BigDecimal? = null,

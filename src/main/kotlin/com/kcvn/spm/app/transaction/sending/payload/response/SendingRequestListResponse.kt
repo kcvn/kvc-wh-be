@@ -8,6 +8,7 @@ import java.time.OffsetDateTime
 data class SendingRequestListResponse(
     var poNumber: String? = null,
     var itemCode: String? = null,
+    var itemType: String? = null,
     var itemName: String? = null,
     var productionGroup: String? = null,
     var receivingDate: LocalDate? = null,

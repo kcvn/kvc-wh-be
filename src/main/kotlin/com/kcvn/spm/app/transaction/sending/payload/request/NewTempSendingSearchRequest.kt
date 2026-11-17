@@ -4,5 +4,6 @@ class NewTempSendingSearchRequest (
     var formCode: String? = null,
     var poNumber: String? = null,
     var lotNo: String? = null,
-    var packageCode: String? = null
+    var packageCode: String? = null,
+    var locationGroupList: List<String>? = null
 )

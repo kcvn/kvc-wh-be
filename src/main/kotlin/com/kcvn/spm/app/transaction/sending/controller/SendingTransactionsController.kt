@@ -150,6 +150,13 @@ class SendingTransactionsController(
         return ResponseEntity<BaseResponse<List<DropdownResponse>>>(data, HttpStatus.OK)
     }
 
+    @GetMapping("/get-picking-location-group-dropdown")
+    @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
+    fun getPickingLocationGroupDropDown(@RequestParam formCode: String): ResponseEntity<BaseResponse<List<DropdownResponse>>> {
+        val data = sendingService.getLocationGroupDropDown(formCode)
+        return ResponseEntity(data, HttpStatus.OK)
+    }
+
     @PostMapping("/save-temp-sending-transaction")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
     fun saveTempSendingTransaction(@Valid @RequestBody request: List<TempSendingTransactionRequest>): ResponseEntity<*> {

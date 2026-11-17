@@ -6,6 +6,7 @@ import java.time.LocalDate
 data class BacklogWhForSendingResponse(
     var poNumber: String? = null,
     var itemCode: String? = null,
+    var itemType: String? = null,
     var productionGroup: String? = null,
     var itemName: String? = null,
     var receivingDate: LocalDate? = null,

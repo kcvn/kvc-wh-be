@@ -148,6 +148,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             select
                 nbw.po_number,
                 nbw.item_code,
+                nbw.item_type,
                 nbw.production_group,
                 nbw.receiving_date,
                 nbw.item_name,
@@ -176,6 +177,7 @@ class BacklogWhRepository(private val context: DSLContext) : SortingRepository()
             group by
                 nbw.po_number,
                 nbw.item_code,
+                nbw.item_type,
                 nbw.production_group,
                 nbw.receiving_date,
                 nbw.item_name,

@@ -161,6 +161,11 @@ open class SendingPickingList(
      */
     val UNIT: TableField<SendingPickingListRecord, String?> = createField(DSL.name("unit"), SQLDataType.VARCHAR(5), this, "")
 
+    /**
+     * The column <code>public.sending_picking_list.item_type</code>.
+     */
+    val ITEM_TYPE: TableField<SendingPickingListRecord, String?> = createField(DSL.name("item_type"), SQLDataType.VARCHAR(5), this, "")
+
     private constructor(alias: Name, aliased: Table<SendingPickingListRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SendingPickingListRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<SendingPickingListRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

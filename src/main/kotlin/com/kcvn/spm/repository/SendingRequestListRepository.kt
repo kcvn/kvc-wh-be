@@ -160,6 +160,7 @@ class SendingRequestListRepository(private val context: DSLContext) : SortingRep
 
         request.poNumber?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("srl.po_number", it) }
         request.itemCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("srl.item_code", it) }
+        request.itemType?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("srl.item_type", it) }
         request.itemName?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("srl.item_name", it) }
         request.productionGroup?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("srl.production_group", it) }
         request.status?.let { conditions += "srl.status = ?"; params += it }

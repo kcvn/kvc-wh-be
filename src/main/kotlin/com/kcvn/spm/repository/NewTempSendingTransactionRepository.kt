@@ -213,14 +213,27 @@ class NewTempSendingTransactionRepository(private val context: DSLContext) : Sor
         request.poNumber?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("list.po_number", it) }
         request.lotNo?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("picking.lot_no", it) }
         request.packageCode?.takeIf { it.isNotBlank() }?.split(",")?.let { addCondition("picking.package_code", it) }
+        // BIN bắt đầu bằng 1 trong các location group; tách từng phần tử (kể cả phần tử dạng "A,B") thành từng group riêng
+        // dùng cùng biểu thức BIN với cột location_code bên dưới
+        request.locationGroupList.orEmpty()
+            .flatMap { it.split(",") }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .takeIf { it.isNotEmpty() }?.let { groups ->
+                conditions += groups.joinToString(" or ", "(", ")") {
+                    "coalesce(scanned.source_location_code, locations.location_code) ilike ? || '%'"
+                }
+                params.addAll(groups)
+            }
 
         val sql = """
                         select
 	list.receiving_date,
 	list.po_number,
 	list.item_name,
+    picking.item_type,
 	list.production_group,
-	-- Đã duyệt thì lấy BIN cố định lúc duyệt, chưa duyệt thì lấy BIN hiện tại ở splitting
 	coalesce(scanned.source_location_code, locations.location_code) as location_code,
 	picking.package_code,
     picking.lot_no,

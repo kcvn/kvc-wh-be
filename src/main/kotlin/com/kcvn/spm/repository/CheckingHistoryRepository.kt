@@ -97,7 +97,8 @@ on
                     itemType = it.get("item_type", String::class.java),
                     orderQty = it.get("order_qty", BigDecimal::class.java),
                     scanQty = it.get("scan_qty", BigDecimal::class.java),
-                    status = it.get("approved", Boolean::class.java),
+                    // CheckingHistoryResponse.status đã đổi sang String
+                    status = it.get("approved", Boolean::class.java)?.let { approved -> if (approved) "APPROVED" else "NOT_APPROVED" },
                     result = it.get("result", Int::class.java),
                     seqNo = it.get("seq_no", Int::class.java),
                 )

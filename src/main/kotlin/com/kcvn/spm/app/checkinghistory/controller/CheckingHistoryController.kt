@@ -108,10 +108,14 @@ class CheckingHistoryController(private val checkingHistoryService: CheckingHist
         )
     }
 
-    @GetMapping("/export-sap-txt")
+    @PostMapping("/export-sap-txt")
     @PreAuthorize("hasAuthority(T(com.kcvn.spm.common.enums.EPermission).WH.value) || hasRole('ADMIN')")
-    fun exportSapTxt(): ResponseEntity<ByteArray> {
-        val data = checkingHistoryService.exportApprovedNotSyncedSapTxt()
+    fun exportSapTxt(@Valid @RequestBody request: List<CheckingHistoryApproveRequest>): ResponseEntity<ByteArray> {
+        val data = checkingHistoryService.exportApprovedNotSyncedSapTxt(request)
+        val logger = KotlinLogging.logger {}
+        logger.info(
+            "USER: " + CommonUtils.loggedInUser() + ", API: post checking-history/export-sap-txt" + ", REQUEST: " + request
+        )
         val fileName = "receiving_sap_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))}.txt"
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$fileName\"")

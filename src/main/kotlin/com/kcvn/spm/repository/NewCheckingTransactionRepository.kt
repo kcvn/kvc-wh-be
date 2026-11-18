@@ -1,5 +1,6 @@
 package com.kcvn.spm.repository
 
+import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistoryApproveRequest
 import com.kcvn.spm.app.checkinghistory.payload.request.CheckingHistorySearchRequest
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryDetailResponse
 import com.kcvn.spm.app.checkinghistory.payload.response.CheckingHistoryResponse
@@ -126,7 +127,8 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
     fun searchCheckingHistory(request: CheckingHistorySearchRequest, pageable: Pageable, isExport: Boolean = false) : Pair<List<CheckingHistoryResponse>, Int> {
         val (sql, params) = createSqlQuery(request)
 
-        var paginatedSql = "$sql order by pob.invoice_number, pob.po_number, pob.seq_no, check_times"
+        // thêm is_approve, is_synced_sap để thứ tự cố định khi 1 lần check bị tách nhiều dòng (dữ liệu lẫn trạng thái), phân trang không bị lặp/mất dòng
+        var paginatedSql = "$sql order by pob.invoice_number, pob.po_number, pob.seq_no, check_times, scanned_data.is_approve, scanned_data.is_synced_sap"
         val paginatedParams = params.toMutableList()
         if (!isExport) {
             paginatedSql = "$paginatedSql limit ? offset ?"
@@ -155,50 +157,28 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                     scanQty = it.get("scan_qty", BigDecimal::class.java),
                     scannedDate = it.get("scan_date", OffsetDateTime::class.java)?.toLocalDate(),
                     result = it.get("result", Int::class.java),
-                    status = it.get("approved", Boolean::class.java)
+                    status = it.get("status", String::class.java),
+                    isSyncedSap = it.get("is_synced_sap", Boolean::class.java)
                 )
             }
 
         return result to totalCount
     }
 
-    // same filters as createSqlQuery, but reads purchase_order_backlog directly so each backlog row counts once
+    // Dùng chung from + where với createSqlQuery để tổng hợp khớp với danh sách.
+    // 1 backlog có thể ra nhiều dòng (mỗi lần check 1 dòng) nên distinct theo pob.id trước rồi mới cộng, để mỗi backlog chỉ tính 1 lần
     fun summaryCheckingHistory(request: CheckingHistorySearchRequest): CheckingHistorySummaryResponse {
-        val params = mutableListOf<Any>()
-        val conditions = mutableListOf<String>()
-
-        val statusCondition = if (request.status == "APPROVED") true else if (request.status == "NOT_APPROVED") false else null
-
-        request.invoiceNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.invoice_number = ?"; params += it }
-        request.poNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.po_number = ?"; params += it }
-        request.storageLocation?.takeIf { it.isNotBlank() }?.let { conditions += "pob.storage_location = ?"; params += it }
-        request.itemType?.takeIf { it.isNotBlank() }?.let { conditions += "pob.item_type = ?"; params += it }
-        statusCondition?.let { conditions += "pob.approved = ?"; params += it }
-        request.receivingDate?.let {
-            conditions += """
-                exists (
-                    select 1
-                    from new_checking_transaction nct
-                    where nct.invoice_number = pob.invoice_number
-                        and nct.po_number = pob.po_number
-                    group by nct.check_times
-                    having max(nct.receiving_date) = ?
-                )
-            """.trimIndent()
-            params += it
-        }
-        request.fromDate?.let { conditions += "pob.created_date >= ?"; params += it }
-        request.toDate?.let { conditions += "pob.created_date < ?"; params += it }
-
-        val whereClause = if (conditions.isNotEmpty()) "where " + conditions.joinToString(" and ") else ""
+        val (fromWhere, params) = createFromWhereClause(request)
 
         val sql = """
             select
-                count(distinct pob.po_number) as total_po,
-                count(distinct pob.invoice_number) as total_invoice,
-                coalesce(sum(pob.order_qty), 0) as total_order_qty
-            from purchase_order_backlog pob
-            $whereClause
+                count(distinct matched.po_number) as total_po,
+                count(distinct matched.invoice_number) as total_invoice,
+                coalesce(sum(matched.order_qty), 0) as total_order_qty
+            from (
+                select distinct pob.id, pob.po_number, pob.invoice_number, pob.order_qty
+                $fromWhere
+            ) matched
         """.trimIndent()
 
         val record = context.fetchOne(sql, *params.toTypedArray())
@@ -268,22 +248,20 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
         return result to totalCount
     }
 
+    // Trạng thái của từng lần check:
+    // - pob.approved = false                                 -> NOT_APPROVED (chưa duyệt)
+    // - pob.approved = true và lần check này is_approve = true -> APPROVED (đã duyệt)
+    // - pob.approved = true và lần check này is_approve = false -> CANCELLED (đã huỷ)
+    private val checkingStatusExpr = """
+        case
+            when coalesce(pob.approved, false) = false then 'NOT_APPROVED'
+            when coalesce(scanned_data.is_approve, false) = true then 'APPROVED'
+            else 'CANCELLED'
+        end
+    """.trimIndent()
+
     private fun createSqlQuery(request: CheckingHistorySearchRequest): Pair<String, List<Any>> {
-        val params = mutableListOf<Any>()
-        val conditions = mutableListOf<String>()
-
-        val statusCondition = if (request.status == "APPROVED") true else if (request.status == "NOT_APPROVED") false else null
-
-        request.invoiceNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.invoice_number = ?"; params += it }
-        request.poNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.po_number = ?"; params += it }
-        request.storageLocation?.takeIf { it.isNotBlank() }?.let { conditions += "pob.storage_location = ?"; params += it }
-        request.itemType?.takeIf { it.isNotBlank() }?.let { conditions += "pob.item_type = ?"; params += it }
-        statusCondition?.let { conditions += "pob.approved = ?"; params += it }
-        request.receivingDate?.let { conditions += "scanned_data.receiving_date = ?"; params += it }
-        request.fromDate?.let { conditions += "pob.created_date >= ?"; params += it }
-        request.toDate?.let { conditions += "pob.created_date < ?"; params += it }
-
-        val whereClause = if (conditions.isNotEmpty()) "where " + conditions.joinToString(" and ") else ""
+        val (fromWhere, params) = createFromWhereClause(request)
 
         val sql = """
             select
@@ -308,19 +286,48 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
                     when scanned_data.scan_qty = pob.order_qty then 2
                     else 3
                 end as result,
-                pob.approved,
+                $checkingStatusExpr as status,
+                scanned_data.is_synced_sap,
                 count(*) over() as total_count
+            $fromWhere
+        """.trimIndent()
+
+        return sql to params
+    }
+
+    // from + where dùng chung cho danh sách (createSqlQuery) và tổng hợp (summaryCheckingHistory)
+    private fun createFromWhereClause(request: CheckingHistorySearchRequest): Pair<String, List<Any>> {
+        val params = mutableListOf<Any>()
+        val conditions = mutableListOf<String>()
+
+        request.invoiceNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.invoice_number = ?"; params += it }
+        request.poNumber?.takeIf { it.isNotBlank() }?.let { conditions += "pob.po_number = ?"; params += it }
+        request.storageLocation?.takeIf { it.isNotBlank() }?.let { conditions += "pob.storage_location = ?"; params += it }
+        request.itemType?.takeIf { it.isNotBlank() }?.let { conditions += "pob.item_type = ?"; params += it }
+        request.status?.takeIf { it in listOf("APPROVED", "NOT_APPROVED", "CANCELLED") }
+            ?.let { conditions += "($checkingStatusExpr) = ?"; params += it }
+        request.receivingDate?.let { conditions += "scanned_data.receiving_date = ?"; params += it }
+        request.fromDate?.let { conditions += "pob.created_date >= ?"; params += it }
+        request.toDate?.let { conditions += "pob.created_date < ?"; params += it }
+        // backlog chưa có lần check nào thì scanned_data.is_synced_sap = null -> coi như chưa sync SAP
+        request.isSyncedSap?.let { conditions += "coalesce(scanned_data.is_synced_sap, false) = ?"; params += it }
+
+        val whereClause = if (conditions.isNotEmpty()) "where " + conditions.joinToString(" and ") else ""
+
+        val sql = """
             from purchase_order_backlog pob
                 left join lateral (
                     select
                         nct.check_times,
                         sum(nct.scan_qty) as scan_qty,
                         max(coalesce(nct.updated_date, nct.created_date)) as scan_date,
-                        max(nct.receiving_date) as receiving_date
+                        max(nct.receiving_date) as receiving_date,
+                        nct.is_approve,
+                        nct.is_synced_sap
                     from new_checking_transaction nct
                     where nct.invoice_number = pob.invoice_number
                         and nct.po_number = pob.po_number
-                    group by nct.check_times
+                    group by nct.check_times, nct.is_approve, nct.is_synced_sap
                 ) as scanned_data on true
             $whereClause
         """.trimIndent()
@@ -339,11 +346,19 @@ class NewCheckingTransactionRepository(private val context: DSLContext) : Sortin
     }
 
     // các lot đã approve nhưng chưa sync SAP, lock row để 2 lần export đồng thời không lấy trùng
-    fun getApprovedNotSyncedSapLots(): List<NewCheckingTransaction> {
+    fun getApprovedNotSyncedSapLots(requestList: List<CheckingHistoryApproveRequest>): List<NewCheckingTransaction> {
+        if (requestList.isEmpty()) return emptyList()
+        // chỉ lấy các lần check (PO-invoice-seqNo) được chọn
+        val selected = DSL.or(requestList.distinct().map {
+            NEW_CHECKING_TRANSACTION.PO_NUMBER.eq(it.poNumber)
+                .and(NEW_CHECKING_TRANSACTION.INVOICE_NUMBER.eq(it.invoiceNumber))
+                .and(NEW_CHECKING_TRANSACTION.CHECK_TIMES.eq(it.seqNo))
+        })
         return context.selectFrom(NEW_CHECKING_TRANSACTION)
             .where(
                 NEW_CHECKING_TRANSACTION.IS_APPROVE.eq(true)
                     .and(NEW_CHECKING_TRANSACTION.IS_SYNCED_SAP.eq(false))
+                    .and(selected)
             )
             .orderBy(
                 NEW_CHECKING_TRANSACTION.RECEIVING_DATE,

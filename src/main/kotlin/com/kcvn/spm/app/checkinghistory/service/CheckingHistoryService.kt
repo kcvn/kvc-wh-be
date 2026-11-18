@@ -168,10 +168,13 @@ class CheckingHistoryService(
     }
 
     // file txt (tab-separated, không header): receivingDate, invoice, po, 1, storageLocation, lotNo, receiveQty, unit
+    // chỉ lấy các lần check (PO-invoice-seqNo) được chọn, đã duyệt và chưa sync SAP
     // lấy danh sách xong thì đánh dấu đã sync SAP luôn (cùng transaction)
-    fun exportApprovedNotSyncedSapTxt(): ByteArray {
+    fun exportApprovedNotSyncedSapTxt(requestList: List<CheckingHistoryApproveRequest>): ByteArray {
+        if (requestList.isEmpty()) throw BusinessException(CommonUtils.getMessage("Chưa chọn dữ liệu để xuất SAP"))
         val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-        val lots = checkingTransRepo.getApprovedNotSyncedSapLots()
+        val lots = checkingTransRepo.getApprovedNotSyncedSapLots(requestList)
+        if (lots.isEmpty()) throw BusinessException(CommonUtils.getMessage("Không có dữ liệu đã duyệt và chưa sync SAP trong các dòng đã chọn"))
         checkingTransRepo.markSyncedSap(lots.mapNotNull { it.id })
         val content = lots.joinToString(separator = "\r\n") {
             listOf(

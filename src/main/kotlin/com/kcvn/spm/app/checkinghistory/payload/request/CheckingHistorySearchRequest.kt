@@ -12,4 +12,6 @@ class CheckingHistorySearchRequest {
     var status: String? = null
     var storageLocation: String? = null
     var itemType: String? = null
+    // null = không lọc; true = đã sync SAP; false = chưa sync SAP (gồm cả backlog chưa có lần check nào)
+    var isSyncedSap: Boolean? = null
 }

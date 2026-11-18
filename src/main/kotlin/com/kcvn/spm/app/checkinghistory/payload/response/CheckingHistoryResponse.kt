@@ -20,5 +20,7 @@ data class CheckingHistoryResponse(
     var scannedDate: LocalDate? = null,
     var scannedBy: String? = null,
     var result: Int? = null,
-    var status: Boolean? = null
+    var status: String? = null,
+    // is_synced_sap của lần check (scanned_data); null nếu chưa có lần check nào
+    var isSyncedSap: Boolean? = null
 )
